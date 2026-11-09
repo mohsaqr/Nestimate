@@ -19,25 +19,36 @@ as_netobject(x)
 \method{as_netobject}{default}(x)
 }
 \arguments{
-\item{x}{A \code{psychnet} object, a \code{cograph_network}, or a
-\code{netobject}.}
+\item{x}{The network to convert: a \code{psychnet} object, a \code{cograph_network}
+or a \code{netobject}. Any other object raises an error.}
 }
 \value{
-A \code{c("netobject", "cograph_network")} object.
+A \code{netobject} (class \code{c("netobject", "cograph_network")}), read by
+the same verbs as one from \code{\link[=build_network]{build_network()}}; \code{\link[=validate_netobject]{validate_netobject()}}
+checks its structure.
 }
 \description{
-Promotes a \pkg{psychnets} result (class \code{c("psychnet",
-"cograph_network")}) or any bare \code{cograph_network} to the dual-class
-\code{c("netobject", "cograph_network")} used throughout Nestimate, so it
-dispatches to the package's verbs (\code{centrality()}, \code{plot()},
-bootstrap, reliability, ...). A \code{netobject} is returned unchanged.
+\code{as_netobject()} converts a \pkg{psychnets} result (class
+\code{c("psychnet", "cograph_network")}) or any bare \code{cograph_network} into the
+\code{c("netobject", "cograph_network")} object the rest of Nestimate reads, so
+it can be passed to \code{\link[=net_centrality]{net_centrality()}} and the other verbs that read a
+network. The resampling verbs (\code{\link[=bootstrap_network]{bootstrap_network()}},
+\code{\link[=network_reliability]{network_reliability()}}) need the source data, which a psychnets result
+does not carry, so build the network with \code{\link[=build_network]{build_network()}} for those. A
+\code{netobject} is returned unchanged.
 }
 \details{
-The psychnet method re-derives the integer-indexed edge table that Nestimate
-expects (psychnet stores character-labelled edges), preserves the estimator
-name in \code{$method}, and parks every psychnet-specific field - including
-the graphical-lasso \code{$kkt} optimality certificate - under
-\code{$meta$psychnet} so nothing is lost in translation.
+For a \code{psychnet}, the edge table is rebuilt with integer node indices (a
+\code{psychnet} stores character-labelled edges), the estimator name is kept
+in \code{method}, and every field specific to the \code{psychnet}, including the
+graphical-lasso \code{kkt} optimality certificate, is kept in the \code{psychnet}
+entry of \code{meta}, so nothing is lost in the conversion.
+
+For a bare \code{cograph_network}, the method is read from the \code{tna} entry of
+its \code{meta}; without one, a symmetric weight matrix is taken as
+\code{"co_occurrence"} and any other as \code{"relative"}. A missing \code{directed}
+field is read as \code{TRUE}. Numeric state codes in the stored data of a
+converted tna model are decoded to their labels.
 }
 \examples{
 net <- build_cor(data.frame(a = rnorm(50), b = rnorm(50), c = rnorm(50)))

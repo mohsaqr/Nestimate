@@ -16,19 +16,38 @@ as_netdifference(x, ...)
 \method{as_netdifference}{default}(x, ...)
 }
 \arguments{
-\item{x}{An object with network-difference fields.}
+\item{x}{The comparison: a \code{net_bayes} from \code{\link[=bayes_compare]{bayes_compare()}}, or a
+\code{netdifference}, which is returned as it is. Any other object raises an
+error.}
 
-\item{...}{Additional arguments passed to methods.}
+\item{...}{Not used.}
 
-\item{significant_only}{Logical. For inferential objects, keep only
-supported differences in the plotted weight matrix while retaining the
-full difference and interval matrices. Default \code{TRUE}.}
+\item{significant_only}{For a \code{net_bayes}: whether the drawn weights keep
+only the credible differences (those \code{\link[=bayes_compare]{bayes_compare()}} marks in \code{sig}),
+with every other edge set to 0. The full difference and interval
+matrices are kept either way. Default \code{TRUE}.}
 }
 \value{
-A \code{netdifference} object suitable for \code{cograph::splot()}.
+A \code{netdifference} object, which is also a \code{netobject} (method
+\code{"difference"}); \code{print()} lists its edges and \code{cograph::splot()} draws
+it. From a \code{net_bayes}, its \code{weights} are the posterior mean
+differences (all of them, or only the credible ones, by
+\code{significant_only}), and it keeps the full posterior mean difference
+(\code{difference_matrix}), the two posterior mean matrices (\code{x}, \code{y}), the
+interval bounds (\code{ci_lower}, \code{ci_upper}), the Bayesian p-equivalents
+(\code{p_values}), the probabilities of direction (\code{p_difference}), the
+credibility matrix (\code{sig}), \code{significant_only}, and
+\code{netdifference_type = "bayes_compare"}.
 }
 \description{
-Coerce an inferential comparison to a network difference
+\code{as_netdifference()} turns the result of a network comparison into a
+plain \code{netdifference} object, the signed difference network that
+\code{\link[=subtract_networks]{subtract_networks()}} returns, so that cograph's difference renderer
+draws it. It reads a \code{\link[=bayes_compare]{bayes_compare()}} result (\code{net_bayes}), and returns
+a \code{netdifference} unchanged. The drawn weights are the posterior mean
+differences, by default only those of the credible edges, while the full
+difference, its credible intervals and its probabilities of direction
+are kept beside them.
 }
 \examples{
 s1 <- data.frame(V1 = c("A", "B", "C"), V2 = c("B", "C", "A"))

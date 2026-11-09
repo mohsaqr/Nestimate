@@ -178,7 +178,7 @@
 # action go too. `p` is one period index per action.
 #' @noRd
 .period_keep <- function(p, n_periods, trim) {
-  stopifnot(is.numeric(trim), length(trim) == 1L, !is.na(trim), trim > 0)
+  .assert(is.numeric(trim), length(trim) == 1L, !is.na(trim), trim > 0)
   if (trim >= 1) return(seq_len(n_periods) <= round(trim))
   .keep_busiest(tabulate(p, nbins = n_periods), trim)
 }
@@ -187,7 +187,7 @@
 # actor's first `rows` actions (a count) or first share of them (a fraction).
 #' @noRd
 .period_row_keep <- function(a, p, step, rows) {
-  stopifnot(
+  .assert(
     "the row half of `trim` must be a single positive number" =
       is.numeric(rows) && length(rows) == 1L && !is.na(rows) && rows > 0
   )
@@ -290,7 +290,7 @@
                                    legend_title, legend_ncol, legend_border,
                                    legend_bty, trim = NULL, group = NULL,
                                    ncol = NULL, nrow = NULL, combined = TRUE) {
-  stopifnot(
+  .assert(
     "`periods` must be a single column name" =
       is.character(periods) && length(periods) == 1L && !is.na(periods),
     "`row_gap` must be a single number in [0, 1)" =
@@ -341,7 +341,7 @@
   } else if (is.null(nrow)) {
     nrow <- as.integer(ceiling(G / ncol))
   }
-  stopifnot("`ncol * nrow` must hold every group" = ncol * nrow >= G)
+  .assert("`ncol * nrow` must hold every group" = ncol * nrow >= G)
 
   op <- graphics::par(no.readonly = TRUE); on.exit(graphics::par(op), add = TRUE)
   oma <- .legend_oma_size(levels_all, legend, legend_size,
@@ -377,7 +377,7 @@
     .period_panel(lay, ord, palette, gap, na_color, cell_border, frame,
                   fill, tick, time_label)
     if (!is.null(k) && !is.null(tree)) {
-      stopifnot(is.numeric(k), length(k) == 1L, k >= 2L, k < n_rows)
+      .assert(is.numeric(k), length(k) == 1L, k >= 2L, k < n_rows)
       mem <- stats::cutree(stats::as.hclust(tree), k = as.integer(k))[ord]
       boundaries <- which(diff(mem) != 0L)
       if (length(boundaries) > 0L) {

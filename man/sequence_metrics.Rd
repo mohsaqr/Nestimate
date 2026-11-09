@@ -10,80 +10,106 @@ sequence_metrics(
   omega = 1,
   meta = FALSE,
   cols = NULL,
+  actor = NULL,
+  action = NULL,
+  time = NULL,
   ...
 )
 }
 \arguments{
-\item{x}{Sequence data, in any form accepted by
-\code{\link{extract_sequences}()}.}
+\item{x}{The sequence data, in any form \code{\link[=extract_sequences]{extract_sequences()}} accepts.}
 
-\item{favorable}{Optional character vector of favourable states; adds
-\code{integrative_potential}. States not in the data raise
-\code{nestimate_bad_input} when none of them occur.}
+\item{favorable}{The favourable states; giving them adds
+\code{integrative_potential}. States that do not occur in the data are
+ignored, and an error of class \code{nestimate_bad_input} is raised when
+none of them occur. Default \code{NULL}.}
 
-\item{omega}{Exponent of the position weights in
-\code{integrative_potential}. Default \code{1}.}
+\item{omega}{The exponent of the position weights in
+\code{integrative_potential}; a positive value gives later positions more
+weight, \code{0} weights every position equally and a negative value gives
+earlier positions more weight; any single finite number is accepted.
+Ignored without \code{favorable}. Default \code{1}.}
 
-\item{meta}{Logical. Put each sequence's covariates (actor, session,
+\item{meta}{Whether to put each sequence's covariates (actor, session,
 group, metadata) before the indices. Default \code{FALSE}.}
 
-\item{cols}{State columns of a wide data frame; see
-\code{\link{extract_sequences}()}.}
+\item{cols}{The state columns of a wide data frame, as in
+\code{\link[=extract_sequences]{extract_sequences()}}. Default \code{NULL}.}
 
-\item{...}{Passed to \code{\link{extract_sequences}()}, e.g.
-\code{actor}, \code{action} and \code{time} for a long event log.}
+\item{actor, action, time}{The actor, action and timestamp columns of a
+long event log, as in \code{\link[=extract_sequences]{extract_sequences()}}: setting \code{action} declares
+\code{x} an event log. Default \code{NULL}.}
+
+\item{...}{Further arguments passed to \code{\link[=prepare]{prepare()}} for a long event log,
+such as \code{time_threshold} or \code{order}.}
 }
 \value{
-A \code{data.frame} with one row per sequence, in the order of
-\code{\link{extract_sequences}()}, and the columns described in Details
-(\code{integrative_potential} only with \code{favorable}).
+A data frame with one row per sequence, in the order of
+\code{\link[=extract_sequences]{extract_sequences()}}, and the columns described in \emph{Details}
+(\code{integrative_potential} only with \code{favorable}). With \code{meta = TRUE},
+the input's covariate columns, if it has any, come first.
 }
 \description{
-Computes descriptive indices for every sequence: length and validity,
-composition and diversity, spells, transitions, the fate of the initial
-state, the dominant and emergent states, cyclic recurrence, and a
-composite complexity index. The indices are those of
-\code{codyna::sequence_indices()}, with three corrections listed under
-Details. One row per sequence, so the result can be described, plotted,
-or used as predictors.
+\code{sequence_metrics()} computes descriptive indices for every sequence and
+returns one row per sequence: length and validity, composition and
+diversity, spells, transitions, the fate of the initial state, the
+dominant and emergent states, cyclic recurrence and a composite
+complexity index, plus the integrative potential of a set of favourable
+states when \code{favorable} is given. It reads any input
+\code{\link[=extract_sequences]{extract_sequences()}} reads: a wide table of positions, an event log, the
+output of \code{\link[=prepare]{prepare()}}, a sequence network or group of networks, or a
+\code{tna} model. The indices are those of \code{codyna::sequence_indices()}, with
+three corrections listed under \emph{Details}.
+
+The indices describe each sequence as it was observed, and several of
+them (spells, transitions, recurrence) rest on few positions in a short
+sequence; read them beside \code{valid_n}. Because there is one row per
+sequence, the result can be summarised, plotted or used as predictors;
+\code{\link[=sequence_patterns]{sequence_patterns()}} and \code{\link[=pattern_outcome]{pattern_outcome()}} look at which subsequences
+recur and how they relate to an outcome.
 }
 \details{
 Positions after a sequence's last observed state are not part of it;
 \code{p} below is the position of the last observed state.
 \describe{
-\item{valid_n, valid_proportion}{Observed states, and their share of
-the first \code{p} positions.}
-\item{unique_states}{Number of distinct states.}
-\item{mean_spell_duration, max_spell_duration}{Mean and longest run of
-one state.}
-\item{longitudinal_entropy}{Shannon entropy of the state proportions,
-divided by the log of the number of states in the data (0 to 1).}
+\item{valid_n, valid_proportion}{The number of observed states, and
+their share of the first \code{p} positions.}
+\item{unique_states}{The number of distinct states.}
+\item{mean_spell_duration, max_spell_duration}{The mean and the longest
+run of one state.}
+\item{longitudinal_entropy}{The Shannon entropy of the state
+proportions, divided by the log of the number of states in the data
+(0 to 1; 0 when the data hold one state).}
 \item{simpson_diversity}{One minus the sum of squared proportions.}
-\item{self_loop_tendency, transition_rate}{Share of transitions (pairs
-of adjacent observed states) that repeat the state, and share that
-change it; the two sum to 1.}
-\item{transition_complexity}{Distinct state-changing transitions, as a
-share of the \eqn{a(a - 1)} possible ones.}
-\item{initial_state_persistence}{Length of the opening spell as a share
-of \code{p}.}
-\item{initial_state_proportion}{Share of the sequence in its first
-state.}
-\item{initial_state_influence_decay}{Share of the first third spent in
-the first state minus the share of the last third.}
-\item{cyclic_feedback_strength}{Largest share, over lags of 2 or more,
-of positions whose state recurs that many steps later.}
+\item{self_loop_tendency, transition_rate}{The share of transitions
+(pairs of adjacent observed states) that repeat the state, and the
+share that change it; the two sum to 1.}
+\item{transition_complexity}{The number of distinct state-changing
+transitions, as a share of the \eqn{a(a - 1)} possible ones, where
+\eqn{a} is the number of states in the data; \code{NA} when the data
+hold one state.}
+\item{initial_state_persistence}{The length of the opening spell as a
+share of \code{p}.}
+\item{initial_state_proportion}{The share of the observed states that
+are the first state.}
+\item{initial_state_influence_decay}{The share of the first third spent
+in the first state minus the share of the last third.}
+\item{cyclic_feedback_strength}{The largest share, over lags of 2 or
+more, of positions whose state recurs that many steps later.}
 \item{first_state, last_state, dominant_state, dominant_proportion,
-dominant_max_spell}{Opening and closing states; the most frequent
-state, its share, and its longest spell.}
+dominant_max_spell}{The opening and closing states; the most frequent
+state (ties go to the state that sorts first), its share and its
+longest spell.}
 \item{emergent_state, emergent_state_persistence,
-emergent_state_proportion}{A state that settles in later (a spell of
-at least 3 that outlasts the dominant spell, a dominant state that is
-not the first, or a return to the first state in a spell of at least 3
-and more than half the opening one), its spell and its share;
-\code{NA} when none.}
-\item{integrative_potential}{With \code{favorable}: position-weighted
-share of favourable states over the observed positions, weights
-\code{position^omega} (Brzinsky-Fay 2018).}
+emergent_state_proportion}{A state that settles in later, its spell
+and its share; \code{NA} when there is none. The candidates are a
+spell of at least 3 that outlasts the dominant spell, the dominant
+state when it is not the first and has a spell of at least 3, and a
+return to the first state in a spell of at least 3 and more than half
+the opening one; the longest of them is taken.}
+\item{integrative_potential}{With \code{favorable}: the
+position-weighted share of favourable states over the observed
+positions, with weights \code{position^omega} (Brzinsky-Fay 2018).}
 \item{complexity_index}{\code{0.4 * longitudinal_entropy + 0.4 *
     transition_rate + 0.2 * min(CV of spell durations, 1)}; 0 for a
 sequence of one spell (one state, no change). This is codyna's
@@ -95,11 +121,13 @@ Missing values: a missing position is not an observation. The first
 state is the first observed one, a missing position inside a sequence
 ends a spell, and a pair of states across it is not a transition.
 Indices that are undefined for a sequence (for example a rate with no
-transition) are \code{NA}. On sequences without internal gaps the
-indices shared with TraMineR (\code{seqindic()}, \code{seqistatd()},
-\code{seqdur()}, \code{seqintegr()}) agree exactly; at an internal gap
-TraMineR joins the states on either side into one sequence, so spells
-and transitions differ there.
+transition) are \code{NA}; a sequence with no observed state has
+\code{valid_n} and \code{unique_states} 0 and every other index
+\code{NA}. On sequences without
+internal gaps the indices shared with TraMineR (\code{seqindic()},
+\code{seqistatd()}, \code{seqdur()}, \code{seqintegr()}) agree exactly;
+at an internal gap TraMineR joins the states on either side into one
+sequence, so spells and transitions differ there.
 
 Corrections relative to \code{codyna::sequence_indices()} 1.0.0, which
 otherwise agrees value for value: \code{dominant_max_spell} is computed

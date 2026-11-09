@@ -3,71 +3,92 @@
 #' Permutation Test for Network Comparison
 #'
 #' @description
-#' Tests whether two networks estimated by \code{\link{build_network}}
-#' differ more than chance would produce. The sequences (or rows) of both
-#' networks are pooled, the group labels are shuffled \code{iter} times, both
-#' networks are re-estimated on every shuffle, and the observed differences
-#' are compared with the shuffled ones. Works with every built-in method and
-#' with registered custom estimators.
+#' `permutation()` tests whether two networks differ more than chance would
+#' produce. The sequences (or, for association networks, the rows) behind
+#' both networks are pooled, the group labels are shuffled `iter` times, both
+#' networks are re-estimated on every shuffle, and each observed difference
+#' is compared with the shuffled ones. It tests every edge, the network as a
+#' whole and, with `measures`, the nodes' centralities.
+#'
+#' It compares two `netobject`s from [build_network()] estimated with the
+#' same method on the same nodes, for every built-in method and for
+#' registered estimators whose result keeps the data (`cleaned_data`, see
+#' [register_estimator()]). A `netobject_group` (or an `mcml`, converted with
+#' [as_tna()]) is tested pair by pair: every pair of its groups when `y` is
+#' `NULL`, or the groups of the same name in a second `netobject_group`. Two
+#' `wtna_mixed` results of [wtna()] are tested on their transition and
+#' co-occurrence networks, and two [net_edge_betweenness()] results on their
+#' edge betweenness.
+#'
+#' A small p-value says that the observed difference is larger than the
+#' shuffles produce; it does not say how large or how probable the
+#' difference is, which [bayes_compare()] estimates. With many edges, some
+#' fall below `alpha` by chance: set `adjust` to correct for that. The
+#' shuffle treats every sequence as exchangeable; when sequences are nested
+#' in persons or teams, set `actor`, and see what the nesting changes with
+#' [permutation_diagnostics()].
 #'
 #' @section What is tested:
 #' Two kinds of question are answered from the same shuffles.
 #' \describe{
 #'   \item{Edge tests}{One test per edge: is the difference in this edge's
-#'     weight, \code{x - y}, larger than the shuffles produce? Reported in
-#'     \code{summary()} with an effect size (observed difference divided by
-#'     the SD of the shuffled differences) and a p-value
-#'     \code{(number of shuffles at least as extreme + 1) / (iter + 1)}. With
-#'     many edges, some fall below \code{alpha} by chance; use \code{adjust}
-#'     to correct for that.}
+#'     weight, `x - y`, larger in absolute value than the shuffles produce?
+#'     `summary()` reports each with an effect size (the observed difference
+#'     divided by the SD of the shuffled differences, 0 when that SD is 0)
+#'     and a p-value, `(number of shuffles at least as extreme + 1) /
+#'     (iter + 1)`.}
 #'   \item{Global test}{One test for the whole network: do the two networks
-#'     differ at all? Two statistics: \strong{M}, the sum of the absolute edge
-#'     differences (the total amount of difference), and \strong{S}, the
-#'     largest absolute edge difference. Being a single test, it needs no
-#'     multiplicity correction. It is shown by \code{print()}.}
+#'     differ at all? Two statistics: **M**, the sum of the absolute
+#'     differences over all cells of the weight matrix (the total amount of
+#'     difference; an undirected edge counts twice), and **S**, the largest
+#'     absolute difference. Being a single test, it needs no multiplicity
+#'     correction. `print()` shows it.}
 #' }
-#' The letters follow this function's historical convention. In
-#' \code{\link{nct}}, M is instead the largest absolute edge difference and
-#' S the difference in global strength. The sum of absolute edge differences
-#' here measures total edge difference, not a difference in global strength.
-#' The smallest attainable p-value is \code{1 / (iter + 1)}; with the
-#' default \code{iter = 1000} it is 0.000999, meaning no shuffle came close.
+#' The letters follow this function's historical convention. In [nct()], M
+#' is instead the largest absolute edge difference and S the difference in
+#' global strength; the sum of absolute edge differences here measures total
+#' edge difference, not a difference in global strength. The smallest
+#' attainable p-value is `1 / (iter + 1)`; with the default `iter = 1000` it
+#' is 0.000999, meaning that no shuffle came close.
 #'
 #' @section Nested data and \code{actor}:
 #' Shuffling treats every sequence as an exchangeable unit. When several
 #' sequences come from the same actor (sessions of one person, students of
-#' one team), \code{actor} names the column identifying that actor. The
-#' shuffle then respects it (Good, 2005; Anderson & ter Braak, 2003): a
-#' person whose sequences are all in one group moves to the other group
-#' as a whole; a person with sequences in both groups has their labels
-#' shuffled among their own sequences only. Mixed designs combine the two.
-#' The observed differences do not change; only the p-values and effect
-#' sizes do. With few persons there are few distinct ways to shuffle them,
-#' and a warning (class \code{nestimate_few_actors}) is raised when no
-#' p-value could fall below \code{alpha}.
+#' one team), `actor` names the column identifying that actor, and the
+#' shuffle respects it (Good, 2005; Anderson & ter Braak, 2003): an actor
+#' whose sequences are all in one group moves to the other group as a whole,
+#' and an actor with sequences in both groups has their labels shuffled
+#' among their own sequences only. Mixed designs combine the two. The
+#' observed differences do not change; only the p-values and effect sizes
+#' do. With few actors there are few distinct ways to shuffle them, and a
+#' warning of class `nestimate_few_actors` is raised when no p-value could
+#' fall below `alpha`.
 #'
-#' \code{actor} is available for transition networks (\code{"relative"},
-#' \code{"frequency"}, \code{"co_occurrence"}). Association networks
-#' (\code{"cor"}, \code{"pcor"}, \code{"glasso"}, ...) do not keep row
-#' identifiers after estimation and raise \code{nestimate_actor_unsupported}.
+#' `actor` is available for transition networks built from sequences
+#' (`"relative"`, `"frequency"`, `"co_occurrence"`). On one-hot data the
+#' actor column is held per row rather than per unit, so the call raises an
+#' error of class `nestimate_actor_misaligned`. The other methods, association networks (`"cor"`,
+#' `"pcor"`, `"glasso"`, ...) among them, do not keep row identifiers after
+#' estimation and raise an error of class `nestimate_actor_unsupported`.
 #'
 #' @section ICC and design effect:
-#' With \code{actor}, \code{print()} also reports:
+#' With `actor`, `print()` also reports:
 #' \describe{
 #'   \item{ICC}{The intraclass correlation, the proportion of the total
 #'     variance that lies between actors (Shrout & Fleiss, 1979). An ICC
-#'     close to 0 indicates little evidence of a nesting effect. Computed as
-#'     the one-way ANOVA ICC of each sequence's transition shares within each
-#'     group, averaged over edges weighted by edge frequency, jackknife
+#'     close to 0 indicates little evidence of a nesting effect. It is the
+#'     one-way ANOVA ICC of each sequence's transition shares within each
+#'     group, averaged over edges weighted by edge frequency and jackknife
 #'     bias-corrected, with a 95% interval from the leave-one-actor-out
 #'     jackknife (Efron & Tibshirani, 1993).}
 #'   \item{Design effect}{The ratio of the variance of an estimate under the
 #'     clustered design to its variance had the units been sampled
-#'     independently (Kish, 1965). Here: the variance of the shuffled
+#'     independently (Kish, 1965). Here it is the variance of the shuffled
 #'     differences when whole actors are moved, divided by the variance when
-#'     single sequences are moved, both drawn in the same run. Reported as
+#'     single sequences are moved, both drawn in the same run, reported as
 #'     the median over edges and for the global statistic M. For equal
-#'     numbers of sequences per actor m, Kish gives the approximation \code{1 + (m - 1) * ICC}.}
+#'     numbers of sequences per actor m, Kish gives the approximation
+#'     `1 + (m - 1) * ICC`.}
 #' }
 #'
 #' @section Reading the printed output:
@@ -79,137 +100,179 @@
 #'   Nesting in Group: ICC = -0.002 [95\% CI -0.006, 0.002]  |  between design
 #'   Design effect (1 = nesting does not matter): edges 1.03  |  global 1.20
 #' }
-#' Line 2: settings, and the actor column with its number of actors.
-#' Line 3: edges present in either network and how many differ at
-#' \code{alpha}. Line 4: the global test. Lines 5-6, only with
-#' \code{actor}: the ICC with its interval, whether actors sit in one group
-#' (\code{between}), in both (\code{within}) or either (\code{mixed}), and
-#' the design effects.
+#' Line 2: the settings, and the actor column with its number of actors.
+#' Line 3: the edges present in either network and how many differ at
+#' `alpha`. Line 4: the global test. Lines 5 and 6, only with `actor`: the
+#' ICC with its interval, whether actors sit in one group (`between`), in
+#' both (`within`) or either (`mixed`), and the design effects. With `actor`,
+#' when no p-value can fall below `alpha` (too few actors, or too small an
+#' `iter`), a last line says so.
 #'
-#' @section Other inputs:
-#' For transition methods, per-sequence count matrices are computed once
-#' and each shuffle only re-sums them, which keeps large \code{iter} fast.
-#' For association methods the estimator is re-run on every shuffle. A network
-#' that rests on one sequence, or one-hot data with no actor or session, has
-#' nothing to shuffle and raises an error of class
-#' \code{nestimate_single_sequence}.
+#' @details
+#' For transition methods, per-sequence count matrices are computed once and
+#' each shuffle only re-sums them, which keeps a large `iter` fast; the
+#' networks' `scaling` and `threshold` are applied to every shuffled network
+#' as to the observed one. For the other methods the estimator is re-run on
+#' every shuffle (`cor` and `pcor` through a lighter direct path).
+#' For `glasso`, every shuffled network is estimated as [build_network()]
+#' estimated the observed ones, with `x`'s `params` (each sample's own
+#' lambda path, `nlambda`, `lambda.min.ratio`, `gamma`,
+#' `penalize.diagonal`, `refit`), so the observed difference and its null
+#' come from one estimator (van Borkulo et al. 2022). Two glasso networks
+#' built with different settings raise an error of class
+#' `nestimate_bad_input`.
+#' A network that rests on one sequence, or one-hot data with no actor or
+#' session, has nothing to shuffle and raises an error of class
+#' `nestimate_single_sequence`.
 #'
-#' Wide rows combined with \code{params = list(concat = k)} are shuffled
-#' as the merged sequences used by the estimator, keeping their internal
-#' joins. A merged sequence must lie within one actor when \code{actor}
-#' is supplied; paired tests need the same number of merged sequences.
-#' Both networks must use the same \code{weighted} setting.
+#' Wide rows combined with `params = list(concat = k)` are shuffled as the
+#' merged sequences the estimator used, keeping their internal joins. A
+#' merged sequence must lie within one actor when `actor` is set (class
+#' `nestimate_actor_misaligned` otherwise), and paired tests need the same
+#' number of merged sequences. Both networks must use the same `weighted`
+#' setting (class `nestimate_bad_input` otherwise).
 #'
-#' An association refit that fails or produces non-finite weights makes
-#' the permutation statistic undefined for that draw. In that case the
-#' test raises \code{nestimate_permutation_failed}, reporting the number
-#' of failed draws, and returns no p-values. Failed draws are neither
-#' counted as non-exceedances nor silently discarded from the null.
+#' A refit that fails or produces non-finite weights makes the permutation
+#' statistic undefined for that shuffle. The test then raises an error of
+#' class `nestimate_permutation_failed` that reports the number of failed
+#' shuffles, and returns no p-values: failed shuffles are neither counted as
+#' non-exceedances nor dropped from the null.
 #'
-#' \code{permutation()} also accepts two \code{\link{net_edge_betweenness}}
-#' objects. It then permutes the source networks, recomputes edge
-#' betweenness for each shuffle, and tests the edge-betweenness
-#' differences. Both objects must come from the same source method and use
-#' the same \code{invert} setting.
+#' For [net_edge_betweenness()] input, the source networks are shuffled and
+#' edge betweenness is recomputed on each shuffle. Both objects must come
+#' from the same source method and use the same `invert` setting.
 #'
-#' @param x A \code{netobject} (from \code{\link{build_network}}) or a
-#'   \code{\link{net_edge_betweenness}} object. For the \code{print()} method: an object of class \code{net_permutation}, \code{net_permutation_group} or \code{wtna_perm_mixed}.
-#' @param y A \code{netobject} (from \code{\link{build_network}}) or a
-#'   \code{\link{net_edge_betweenness}} object.
-#'   Must use the same method and have the same nodes as \code{x}.
-#'   Default \code{NULL}: when \code{x} is a \code{netobject_group} (or an
-#'   \code{mcml}) and \code{y} is left \code{NULL}, every pair of groups is
-#'   tested and the result is a \code{net_permutation_group} named
-#'   \code{"<group i> vs <group j>"}.
-#' @param iter Integer. Number of permutation iterations (default: 1000).
-#' @param alpha Numeric. Significance level (default: 0.05).
-#' @param paired Logical. If \code{TRUE}, permute within pairs (requires
-#'   equal number of observations in \code{x} and \code{y}). Default: FALSE.
-#' @param adjust Character. p-value adjustment method passed to
-#'   \code{\link[stats]{p.adjust}} (default: \code{"none"}). Common choices:
-#'   \code{"holm"}, \code{"BH"}, \code{"bonferroni"}.
-#' @param measures Character vector of centrality measures to permutation-test
-#'   in addition to the edges, or \code{"all"} for every built-in measure.
-#'   Default \code{NULL} (edges only). When supplied, the result gains a
-#'   \code{$centralities} block matching the layout of
-#'   \code{tna::permutation_test(measures = )}: per state and measure it reports
-#'   the observed difference, an effect size (difference / SD of the permutation
-#'   null), and a permutation p-value, all using the same permuted networks as
-#'   the edge test. \code{Diffusion} is compared after min-max scaling to
-#'   0-1 in each network, as in \code{net_centrality()}. Not supported for
-#'   \code{net_edge_betweenness} inputs.
-#' @param nlambda Integer. Number of lambda values for the EBIC-glasso
-#'   regularisation path (only used when \code{method = "glasso"}).
-#'   Higher values give finer lambda resolution at the cost of speed.
-#'   Default: 50.
-#' @param seed Integer or NULL. RNG seed for reproducibility.
-#' @param actor Character or NULL. Name of the column identifying the actor
-#'   each sequence belongs to: the person whose sessions they are, or the
-#'   team of a student. Looked up in the network's \code{$metadata} (e.g.
-#'   \code{"student_id"} when sessions are nested in students,
-#'   \code{"Group"} for students nested in teams) or in its wide sequence
-#'   data. When supplied, whole actors are permuted and the ICC and design
-#'   effect are reported; see the sections \emph{Nested data and actor} and
-#'   \emph{ICC and design effect}. Supported for transition
-#'   methods (\code{"relative"}, \code{"frequency"}, \code{"co_occurrence"});
-#'   cannot be combined with \code{paired = TRUE}, which is the special case
-#'   of one actor per pair. Default \code{NULL}: sequences are permuted
-#'   individually.
+#' The centrality block follows the layout of
+#' `tna::permutation_test(measures = )`: a centrality whose shuffled
+#' differences do not vary gets an effect size of `NaN` or `Inf`, as there,
+#' rather than the 0 the edge table uses.
 #'
-#' @return An object of class \code{"net_permutation"} containing:
+#' @param x The first network: a `netobject` from [build_network()] (a bare
+#'   `cograph_network` is converted to one), a `netobject_group` or `mcml`,
+#'   a `wtna_mixed`, or a [net_edge_betweenness()] result. For the `print()`
+#'   methods: a `net_permutation`, `net_permutation_group` or
+#'   `wtna_perm_mixed`.
+#' @param y The second network, of the same kind as `x`, estimated with the
+#'   same method on the same nodes (their order may differ); other methods
+#'   or nodes raise an error. Default `NULL`: when `x` is a
+#'   `netobject_group` or an `mcml`, every pair of its groups is tested.
+#'   When both are `netobject_group`s, the groups present in both under the
+#'   same name are tested, and having none in common raises an error.
+#' @param iter The number of shuffles, at least 2. Default `1000`. The
+#'   smallest attainable p-value is `1 / (iter + 1)`.
+#' @param alpha The significance level, strictly between 0 and 1, that marks
+#'   an edge or centrality as significant (`sig`, `diff_sig`) and that the
+#'   `nestimate_few_actors` warning is checked against. It does not change
+#'   the p-values. Default `0.05`.
+#' @param paired Whether the two networks hold paired observations (the
+#'   i-th sequence or row of `x` with the i-th of `y`, such as the same
+#'   people measured twice). Each shuffle then swaps the two members of a
+#'   pair at random instead of shuffling all labels, so `x` and `y` need the
+#'   same number of sequences (after `concat`) or rows; otherwise an error is
+#'   raised. It cannot be combined with `actor`, of which it is the special
+#'   case of one actor per pair. Default `FALSE`.
+#' @param adjust The multiplicity correction for the p-values, a method of
+#'   [stats::p.adjust()]: `"none"` (default), `"holm"`, `"hochberg"`,
+#'   `"hommel"`, `"bonferroni"`, `"BH"`, `"BY"` or `"fdr"`. The correction
+#'   runs over the tested edges: the cells non-zero in either network (a
+#'   self-loop included), each pair counted once in an undirected network,
+#'   whose matrix stays symmetric. Cells zero in both networks keep their
+#'   raw p-value, 1. The centrality p-values are corrected separately, over
+#'   all states and measures. Any other value raises an error of class
+#'   `nestimate_bad_input` before anything runs.
+#' @param measures Centrality measures to test as well as the edges: any of
+#'   `"OutStrength"`, `"InStrength"`, `"ClosenessIn"`, `"ClosenessOut"`,
+#'   `"Closeness"`, `"Betweenness"`, `"BetweennessRSP"`, `"Diffusion"` and
+#'   `"Clustering"` (`"InCloseness"` and `"OutCloseness"` are accepted for
+#'   `"ClosenessIn"` and `"ClosenessOut"`), or `"all"` for the nine. Default
+#'   `NULL` (edges only). Every state and measure gets the observed
+#'   difference, an effect size and a p-value from the same shuffled
+#'   networks as the edge test. The centralities are computed as by
+#'   [net_centrality()] with its defaults: self-loops left out, heavier edges
+#'   as shorter steps, and `Diffusion` range-normalised to 0--1 in each
+#'   network. An unknown name raises an error, and so does any `measures`
+#'   with [net_edge_betweenness()] input.
+#' @param nlambda Ignored, kept so existing calls run. Default `NULL`. The
+#'   shuffled glasso networks use the `nlambda` the networks were built with
+#'   (see *Details*); a value other than `NULL` gives a warning of class
+#'   `nestimate_ignored_argument`.
+#' @param seed An integer that makes the shuffles reproducible. Default
+#'   `NULL`. The session's own random stream is left as it was; with grouped
+#'   input each pair,
+#'   or each shared group, is tested from the same seed.
+#' @param actor The column identifying the actor each sequence belongs to:
+#'   the person whose sessions they are, or the team of a student. It is
+#'   looked up in the network's metadata (such as `"student_id"` when
+#'   sessions are nested in students, or `"Group"` for students nested in
+#'   teams) and then in its wide sequence data. Whole actors are then
+#'   shuffled, and the ICC and design effect are reported; see the sections
+#'   *Nested data and actor* and *ICC and design effect*. Default `NULL`:
+#'   sequences are shuffled one by one. A value that is not one column name,
+#'   or `actor` with `paired = TRUE`, raises an error of class
+#'   `nestimate_bad_actor`; a column that is absent or has missing values,
+#'   `nestimate_actor_missing`; a column whose values do not give one id per
+#'   sequence (or, with `concat`, that joins rows of different actors),
+#'   `nestimate_actor_misaligned`; a method other than the transition
+#'   methods, `nestimate_actor_unsupported`.
+#'
+#' @return A `net_permutation` object. `print()` shows the settings, the
+#'   number of edges tested and significant, the global test and, with
+#'   `actor`, the ICC and design effects; `summary()` returns the edge table,
+#'   one row per edge present in either network; `cograph::splot()` draws
+#'   the difference network. Grouped input gives a `net_permutation_group`, a
+#'   named list of `net_permutation` results (one per group pair, named
+#'   `"<group i> vs <group j>"`, when `y` is `NULL`; one per shared group
+#'   name otherwise), whose `print()` prints each and whose `summary()`
+#'   stacks the edge tables with a leading `group` column naming the pair or
+#'   group. Two `wtna_mixed` inputs give a `wtna_perm_mixed`, the
+#'   `net_permutation` results of the `transition` and `cooccurrence`
+#'   networks, whose `print()` prints both and whose `summary()` returns a
+#'   list of their two edge tables. The `print()` methods return their input
+#'   invisibly. The `net_permutation`'s fields:
 #' \describe{
-#'   \item{x}{The first \code{netobject}.}
-#'   \item{y}{The second \code{netobject}.}
-#'   \item{diff}{Observed difference matrix (\code{x - y}).}
-#'   \item{diff_sig}{Observed difference where \code{p < alpha}, else 0.}
-#'   \item{p_values}{P-value matrix (adjusted if \code{adjust != "none"}).}
-#'   \item{effect_size}{Effect size matrix (observed diff / SD of permutation diffs).}
-#'   \item{summary}{Long-format data frame, one row per edge present in
-#'     either network (undirected networks keep one row per unordered
-#'     pair), with columns \code{from}, \code{to}, \code{weight_x},
-#'     \code{weight_y}, \code{diff}, \code{effect_size}, \code{p_value},
-#'     \code{sig}.}
-#'   \item{global}{Data frame of the two global difference statistics, one
-#'     row each: \code{statistic} (\code{"M"}, the sum of absolute edge
-#'     differences, and \code{"S"}, the largest absolute edge difference),
-#'     \code{observed}, and \code{p_value} from the same permutation null
-#'     as the edge test. Absent on the edge-betweenness path.}
-#'   \item{method}{The network estimation method.}
-#'   \item{source_method}{For edge-betweenness tests, the source network method.}
-#'   \item{iter}{Number of permutation iterations.}
-#'   \item{alpha}{Significance level used.}
-#'   \item{paired}{Whether paired permutation was used.}
-#'   \item{adjust}{p-value adjustment method used.}
-#'   \item{actor}{The \code{actor} column name, or \code{NULL}.}
-#'   \item{n_actors}{Number of distinct actors, or \code{NULL}.}
-#'   \item{null_sd}{Matrix of the SD of each edge difference over the
-#'     permutation null (the effect-size denominator).}
-#'   \item{null_sd_m}{SD of the global \code{M} statistic over the
-#'     permutation null. Absent on the edge-betweenness path.}
-#'   \item{clustering}{Present only with \code{actor}. One-row data frame:
-#'     \code{n_sequences}, \code{n_actors}, \code{design}
-#'     (\code{"between"}, \code{"within"}, \code{"mixed"}), \code{icc} with
-#'     \code{icc_ci_lower}/\code{icc_ci_upper} (how alike sequences of one
-#'     actor are; see \code{\link{permutation_diagnostics}}),
-#'     \code{deff_edges} (median over edges) and \code{deff_global} (for
-#'     \code{M}): the actor-level over the sequence-level null variance, drawn in the
-#'     same run (the design effect; Kish, 1965). \code{min_p} is the
-#'     smallest attainable p-value.}
-#'   \item{clustering_edges}{Present only with \code{actor}. One row per
-#'     edge of \code{summary}: \code{from}, \code{to}, \code{icc},
-#'     \code{null_sd_actor}, \code{null_sd_sequence}, \code{deff}.}
-#'   \item{centralities}{Present only when \code{measures} is supplied. A list
-#'     with \code{stats} (one row per state-by-measure: \code{state},
-#'     \code{centrality}, \code{diff_true}, \code{effect_size}, \code{p_value}),
-#'     \code{diffs_true} (wide observed differences), and \code{diffs_sig}
-#'     (observed differences where \code{p < alpha}, else 0).}
+#'   \item{x, y}{The two networks compared.}
+#'   \item{diff}{The observed difference matrix, `x - y`.}
+#'   \item{diff_sig}{The observed difference where `p < alpha`, else 0.}
+#'   \item{p_values}{The p-value matrix (adjusted when `adjust` is not
+#'     `"none"`).}
+#'   \item{effect_size}{The effect-size matrix: the observed difference
+#'     divided by the SD of the shuffled differences.}
+#'   \item{summary}{The edge table `summary()` returns: one row per edge
+#'     present in either network (an undirected network has one row per
+#'     unordered pair), with columns `from`, `to`, `weight_x`, `weight_y`,
+#'     `diff`, `effect_size`, `p_value` and `sig`.}
+#'   \item{global}{The global test, one row per statistic: `statistic`
+#'     (`"M"`, the sum of absolute differences, and `"S"`, the largest
+#'     absolute difference), `observed`, and `p_value` from the same
+#'     shuffles as the edge test. Absent for edge-betweenness input.}
+#'   \item{method}{The network estimation method (`"edge_betweenness"` for
+#'     edge-betweenness input).}
+#'   \item{source_method}{For edge-betweenness input: the source networks'
+#'     method.}
+#'   \item{edge_betweenness}{For edge-betweenness input: the `invert`
+#'     setting and the source method used.}
+#'   \item{iter, alpha, paired, adjust}{The settings used.}
+#'   \item{actor}{The `actor` column name, or `NULL`.}
+#'   \item{n_actors}{The number of distinct actors, or `NULL`.}
+#'   \item{null_sd}{The SD of each edge's shuffled differences (the
+#'     effect-size denominator), as a matrix.}
+#'   \item{null_sd_m}{The SD of the global statistic M over the shuffles.
+#'     Absent for edge-betweenness input.}
+#'   \item{clustering}{Only with `actor`: a one-row data frame with
+#'     `n_sequences`, `n_actors`, `design` (`"between"`, `"within"` or
+#'     `"mixed"`), `icc` with `icc_ci_lower` and `icc_ci_upper` (how alike
+#'     the sequences of one actor are), `deff_edges` (the median design
+#'     effect over edges), `deff_global` (the design effect for M) and
+#'     `min_p`, the smallest attainable p-value.}
+#'   \item{clustering_edges}{Only with `actor`: one row per edge of the edge
+#'     table, with `from`, `to`, `icc`, `null_sd_actor`, `null_sd_sequence`
+#'     and `deff`.}
+#'   \item{centralities}{Only with `measures`: a list of `stats` (one row
+#'     per state and measure, with `state`, `centrality`, `diff_true`,
+#'     `effect_size` and `p_value`), `diffs_true` (the observed differences,
+#'     one row per state and one column per measure) and `diffs_sig` (the
+#'     same where `p < alpha`, else 0).}
 #' }
-#' Grouped input returns a \code{"net_permutation_group"} (a named list of
-#' \code{net_permutation} results): one element per matching group name
-#' when both \code{x} and \code{y} are \code{netobject_group}s, or one per
-#' group pair when \code{y} is \code{NULL}. Two \code{wtna_mixed} inputs
-#' return a \code{"wtna_perm_mixed"} with \code{$transition} and
-#' \code{$cooccurrence} results.
 #'
 #' @examples
 #' s1 <- data.frame(V1 = c("A","B","C"), V2 = c("B","C","A"))
@@ -261,13 +324,11 @@
 #' Comparing network structures on three aspects: A permutation test.
 #' \emph{Psychological Methods}, 28(6), 1273-1285.
 #'
-#' @seealso \code{\link{permutation_diagnostics}} to compare the
-#'   actor-level and ordinary tests side by side; \code{\link{bayes_compare}} for the Bayesian complement: instead of
-#'   "is this difference more extreme than chance?" it answers "how probable is
-#'   a difference, and how large?";
-#'   \code{\link{build_network}}, \code{\link{bootstrap_network}},
-#'   \code{\link{print.net_permutation}},
-#'   \code{\link{summary.net_permutation}}
+#' @seealso [permutation_diagnostics()] to compare the actor-level and
+#'   ordinary tests side by side; [bayes_compare()] for the Bayesian
+#'   complement, which instead of "is this difference more extreme than
+#'   chance?" answers "how probable is a difference, and how large?";
+#'   [build_network()], [bootstrap_network()]
 #'
 #' @importFrom stats p.adjust sd
 #' @export
@@ -277,14 +338,25 @@ permutation <- function(x, y = NULL,
                              paired = FALSE,
                              adjust = "none",
                              measures = NULL,
-                             nlambda = 50L,
+                             nlambda = NULL,
                              seed = NULL,
                              actor = NULL) {
+  # Validate `adjust` before any shuffle runs: p.adjust() would otherwise
+  # reject a typo only after the whole permutation run.
+  .check_permutation_adjust(adjust)
+  if (!is.null(nlambda)) {
+    warning(warningCondition(paste0(
+      "`nlambda` is ignored: glasso networks are re-estimated on every ",
+      "shuffle with the settings they were built with (their `params`)."),
+      class = "nestimate_ignored_argument", call = NULL))
+    nlambda <- NULL
+  }
 
   # ---- wtna_mixed dispatch: permute both components ----
   if (inherits(x, "wtna_mixed") || inherits(y, "wtna_mixed")) {
     if (!inherits(x, "wtna_mixed") || !inherits(y, "wtna_mixed")) {
-      stop("Both x and y must be wtna_mixed objects.", call. = FALSE)
+      stop(errorCondition("Both x and y must be wtna_mixed objects.",
+        class = "nestimate_bad_input", call = NULL))
     }
     result <- list(
       transition = permutation(
@@ -311,8 +383,9 @@ permutation <- function(x, y = NULL,
     grp_names <- names(x)
     n_grps <- length(grp_names)
     if (n_grps < 2L) {
-      stop("Need at least 2 groups for pairwise permutation tests.",
-           call. = FALSE)
+      stop(errorCondition(
+        "Need at least 2 groups for pairwise permutation tests.",
+        class = "nestimate_bad_input", call = NULL))
     }
     pairs <- combn(n_grps, 2L)
     results <- lapply(seq_len(ncol(pairs)), function(k) {
@@ -334,7 +407,8 @@ permutation <- function(x, y = NULL,
   if (inherits(x, "netobject_group") && inherits(y, "netobject_group")) {
     common <- intersect(names(x), names(y))
     if (length(common) == 0L) {
-      stop("No matching group names between x and y.", call. = FALSE)
+      stop(errorCondition("No matching group names between x and y.",
+        class = "nestimate_bad_input", call = NULL))
     }
     .stop_single_unit_group(x[common])
     .stop_single_unit_group(y[common])
@@ -363,7 +437,7 @@ permutation <- function(x, y = NULL,
   }
 
   # ---- Input validation ----
-  stopifnot(
+  .assert(
     inherits(x, "netobject"),
     inherits(y, "netobject"),
     is.numeric(iter), length(iter) == 1, iter >= 2,
@@ -375,21 +449,25 @@ permutation <- function(x, y = NULL,
   .check_permutation_block(actor, paired)
 
   if (is.null(x$data)) {
-    stop("'x' does not contain $data. Rebuild with build_network().",
-         call. = FALSE)
+    stop(errorCondition(
+      "'x' does not contain $data. Rebuild with build_network().",
+      class = "nestimate_bad_input", call = NULL))
   }
   if (is.null(y$data)) {
-    stop("'y' does not contain $data. Rebuild with build_network().",
-         call. = FALSE)
+    stop(errorCondition(
+      "'y' does not contain $data. Rebuild with build_network().",
+      class = "nestimate_bad_input", call = NULL))
   }
 
   if (x$method != y$method) {
-    stop("Methods must match: x uses '", x$method,
-         "', y uses '", y$method, "'.", call. = FALSE)
+    stop(errorCondition(paste0("Methods must match: x uses '", x$method,
+         "', y uses '", y$method, "'."),
+      class = "nestimate_bad_input", call = NULL))
   }
 
   if (!setequal(x$nodes$label, y$nodes$label)) {
-    stop("Nodes must be the same in both networks.", call. = FALSE)
+    stop(errorCondition("Nodes must be the same in both networks.",
+      class = "nestimate_bad_input", call = NULL))
   }
 
   # Ensure same node order
@@ -405,14 +483,15 @@ permutation <- function(x, y = NULL,
   count_method <- .resampling_method(method, x$params)
   if (paired && !count_method %in% c("relative", "frequency", "co_occurrence")) {
     if (nrow(x$data) != nrow(y$data)) {
-      stop("Paired test requires equal number of observations in x and y.",
-           call. = FALSE)
+      stop(errorCondition(
+        "Paired test requires equal number of observations in x and y.",
+        class = "nestimate_bad_input", call = NULL))
     }
   }
 
   if (!is.null(seed)) {
-    stopifnot(is.numeric(seed), length(seed) == 1)
-    set.seed(seed)
+    .assert(is.numeric(seed), length(seed) == 1)
+    .local_seed(seed)
   }
 
   # ---- Observed difference ----
@@ -425,9 +504,13 @@ permutation <- function(x, y = NULL,
     }
     bad <- setdiff(measures, .centrality_builtin_measures())
     if (length(bad) > 0L) {
-      stop("Unknown measures: ", paste(bad, collapse = ", "),
-           ". Options: ", paste(.centrality_builtin_measures(), collapse = ", "),
-           call. = FALSE)
+      stop(errorCondition(
+        paste0(
+          "Unknown measures: ",
+          paste(bad, collapse = ", "),
+          ". Options: ",
+          paste(.centrality_builtin_measures(), collapse = ", ")),
+        class = "nestimate_bad_input", call = NULL))
     }
     obs_cent_diff <- .perm_cent_diff_mat(x$weights, y$weights, nodes,
                                          directed, measures)
@@ -443,9 +526,12 @@ permutation <- function(x, y = NULL,
   has_data_y <- is.data.frame(y$data) && ncol(y$data) > 0L
   if (count_method %in% c("relative", "frequency", "co_occurrence")) {
     if (!has_data_x || !has_data_y) {
-      stop("Permutation test requires the original data stored in the netobject. ",
-           "For wtna/cna networks, use wtna() directly instead of ",
-           "build_network(method='cna').", call. = FALSE)
+      stop(errorCondition(
+        paste0(
+          "Permutation test requires the original data stored in the netobject. ",
+          "For wtna/cna networks, use wtna() directly instead of ",
+          "build_network(method='cna')."),
+        class = "nestimate_bad_input", call = NULL))
     }
     x$data <- .resampling_transition_data(x$data, x$metadata, x$params)
     y$data <- .resampling_transition_data(y$data, y$metadata, y$params)
@@ -469,11 +555,10 @@ permutation <- function(x, y = NULL,
   obs_flat <- as.vector(obs_diff)
   p_values_flat <- (perm_result$exceed_counts + 1L) / (iter + 1L)
 
-  # Apply multiple comparison correction
-  p_values_flat <- p.adjust(p_values_flat, method = adjust)
-
   p_mat <- matrix(p_values_flat, n_nodes, n_nodes,
                   dimnames = list(nodes, nodes))
+  # Multiple comparison correction over the tested edges only
+  p_mat <- .adjust_edge_p(p_mat, x$weights, y$weights, directed, adjust)
 
   # ---- Effect size ----
   # Cohen's d style: observed_diff / sd(perm_diffs)
@@ -541,6 +626,121 @@ permutation <- function(x, y = NULL,
 
   class(result) <- "net_permutation"
   result
+}
+
+#' The estimator a shuffle uses to turn rows into a network
+#'
+#' Returns a function of a row subset. Applied to a network's own rows it
+#' reproduces that network's weights before scaling and threshold.
+#' @noRd
+.perm_row_estimator <- function(method, params_x, nodes) {
+  n_nodes <- length(nodes)
+  cor_method <- .param_get(params_x, "cor_method", "pearson")
+  # Select fast path based on method. glasso is NOT on the fast path: the
+  # observed networks were selected by build_network()'s estimator (each
+  # sample's own lambda path, its nlambda, lambda.min.ratio and refit), so
+  # every shuffled network is estimated by that same estimator with x's
+  # params; the observed difference and its null then come from one
+  # procedure, as in the network comparison test (van Borkulo et al. 2022,
+  # each permuted group re-estimated like the observed groups).
+  use_fast <- method %in% c("cor", "pcor")
+
+  # Build the per-iteration estimator function
+  if (use_fast) {
+    estimate_from_rows <- switch(method,
+      cor = function(mat_subset) {
+        S <- cor(mat_subset, method = cor_method)
+        diag(S) <- 0
+        S
+      },
+      pcor = function(mat_subset) {
+        S <- cor(mat_subset, method = cor_method)
+        Wi <- tryCatch(solve(S), error = function(e) NULL)
+        if (is.null(Wi)) return(NULL) # nocov
+        .precision_to_pcor(Wi, threshold = 0)
+      }
+    )
+  } else {
+    # Fallback: full estimator for custom methods
+    estimator <- get_estimator(method)
+    estimate_from_rows <- function(mat_subset) {
+      df <- as.data.frame(mat_subset)
+      est <- tryCatch(
+        do.call(estimator$fn, c(list(data = df), params_x)),
+        error = function(e) NULL
+      )
+      if (is.null(est)) return(NULL)
+      mat <- est$matrix
+      if (!identical(rownames(mat), nodes)) {
+        common <- intersect(nodes, rownames(mat))
+        if (length(common) < n_nodes) return(NULL)
+        mat <- mat[nodes, nodes] # nocov
+      }
+      mat
+    }
+  }
+
+  estimate_from_rows
+}
+
+
+#' Refuse glasso networks estimated with different settings
+#'
+#' Every shuffled network is estimated with x's settings, so y must have
+#' been built with the same ones for its observed weights to belong to the
+#' same estimator.
+#' @noRd
+.check_same_glasso_settings <- function(params_x, params_y) {
+  defaults <- formals(.estimator_glasso)
+  keys <- c("gamma", "nlambda", "lambda.min.ratio", "penalize.diagonal",
+            "refit", "cor_method", "threshold")
+  differs <- vapply(keys, function(k) {
+    !isTRUE(all.equal(.param_get(params_x, k, eval(defaults[[k]])),
+                      .param_get(params_y, k, eval(defaults[[k]])),
+                      check.attributes = FALSE))
+  }, logical(1))
+  if (any(differs)) {
+    stop(errorCondition(paste0(
+      "x and y are glasso networks built with different settings (",
+      paste(keys[differs], collapse = ", "), "); build both with the same ",
+      "`params` so their difference and its permutation null come from one ",
+      "estimator."),
+      class = "nestimate_bad_input", call = NULL))
+  }
+  invisible(TRUE)
+}
+
+#' Correct edge p-values over the tested edges only
+#'
+#' The family is the cells non-zero (and non-NA) in either network; for an
+#' undirected network each pair counts once (upper triangle with the
+#' diagonal), and the lower triangle is mirrored from the corrected upper
+#' one. Cells zero in both networks keep their raw p-value (1). Same rule
+#' as tna's permutation_test() (tna R/permutation.R, owner 2026-11-08).
+#' @noRd
+.adjust_edge_p <- function(p_mat, wx, wy, directed, adjust) {
+  if (identical(adjust, "none")) return(p_mat)
+  wx <- unclass(as.matrix(wx))
+  wy <- unclass(as.matrix(wy))
+  tested <- (!is.na(wx) & wx != 0) | (!is.na(wy) & wy != 0)
+  undirected <- isFALSE(directed)
+  if (undirected) tested <- tested & upper.tri(tested, diag = TRUE)
+  p_mat[tested] <- stats::p.adjust(p_mat[tested], method = adjust)
+  if (undirected) p_mat[lower.tri(p_mat)] <- t(p_mat)[lower.tri(p_mat)]
+  p_mat
+}
+
+#' Refuse an unknown `adjust` before the shuffles run
+#' @noRd
+.check_permutation_adjust <- function(adjust) {
+  if (!is.character(adjust) || length(adjust) != 1L || is.na(adjust) ||
+      !adjust %in% stats::p.adjust.methods) {
+    stop(errorCondition(paste0(
+      "`adjust` must be one of ",
+      paste0("\"", stats::p.adjust.methods, "\"", collapse = ", "), "."),
+      class = "nestimate_bad_input", call = NULL))
+  }
+  invisible(adjust)
 }
 
 # ---- Global difference statistics ----
@@ -621,17 +821,17 @@ permutation <- function(x, y = NULL,
 #' @noRd
 .edge_betweenness_source_net <- function(x) {
   if (!inherits(x, "net_edge_betweenness")) {
-    stop("Both x and y must be net_edge_betweenness objects.",
-         call. = FALSE)
+    stop(errorCondition("Both x and y must be net_edge_betweenness objects.",
+      class = "nestimate_bad_input", call = NULL))
   }
   source_method <- x$edge_betweenness$source_method
   if (is.null(source_method) || length(source_method) != 1L ||
       is.na(source_method) || !nzchar(source_method)) {
-    stop(
-      "net_edge_betweenness object does not carry its source method. ",
-      "Recreate it with net_edge_betweenness() before permutation().",
-      call. = FALSE
-    )
+    stop(errorCondition(
+      paste0(
+        "net_edge_betweenness object does not carry its source method. ",
+        "Recreate it with net_edge_betweenness() before permutation()."),
+      class = "nestimate_bad_input", call = NULL))
   }
   src <- x
   src$method <- source_method
@@ -651,15 +851,16 @@ permutation <- function(x, y = NULL,
                                           actor = NULL) {
   if (!inherits(x, "net_edge_betweenness") ||
       !inherits(y, "net_edge_betweenness")) {
-    stop("Both x and y must be net_edge_betweenness objects.",
-         call. = FALSE)
+    stop(errorCondition("Both x and y must be net_edge_betweenness objects.",
+      class = "nestimate_bad_input", call = NULL))
   }
   if (!is.null(measures)) {
-    stop("`measures` is not supported for edge-betweenness permutation tests.",
-         call. = FALSE)
+    stop(errorCondition(
+      "`measures` is not supported for edge-betweenness permutation tests.",
+      class = "nestimate_bad_input", call = NULL))
   }
 
-  stopifnot(
+  .assert(
     is.numeric(iter), length(iter) == 1, iter >= 2,
     is.numeric(alpha), length(alpha) == 1, alpha > 0, alpha < 1,
     is.logical(paired), length(paired) == 1,
@@ -669,16 +870,19 @@ permutation <- function(x, y = NULL,
   .check_permutation_block(actor, paired)
 
   if (is.null(x$data)) {
-    stop("'x' does not contain $data. Rebuild with build_network().",
-         call. = FALSE)
+    stop(errorCondition(
+      "'x' does not contain $data. Rebuild with build_network().",
+      class = "nestimate_bad_input", call = NULL))
   }
   if (is.null(y$data)) {
-    stop("'y' does not contain $data. Rebuild with build_network().",
-         call. = FALSE)
+    stop(errorCondition(
+      "'y' does not contain $data. Rebuild with build_network().",
+      class = "nestimate_bad_input", call = NULL))
   }
 
   if (!setequal(x$nodes$label, y$nodes$label)) {
-    stop("Nodes must be the same in both networks.", call. = FALSE)
+    stop(errorCondition("Nodes must be the same in both networks.",
+      class = "nestimate_bad_input", call = NULL))
   }
 
   nodes <- x$nodes$label
@@ -691,8 +895,9 @@ permutation <- function(x, y = NULL,
   method <- .resolve_method_alias(x_src$method)
   y_method <- .resolve_method_alias(y_src$method)
   if (method != y_method) {
-    stop("Source methods must match: x uses '", method,
-         "', y uses '", y_method, "'.", call. = FALSE)
+    stop(errorCondition(paste0("Source methods must match: x uses '", method,
+         "', y uses '", y_method, "'."),
+      class = "nestimate_bad_input", call = NULL))
   }
 
   directed <- x$directed
@@ -701,20 +906,22 @@ permutation <- function(x, y = NULL,
   count_method <- .resampling_method(method, x_src$params)
   if (paired && !count_method %in% c("relative", "frequency", "co_occurrence") &&
       nrow(x$data) != nrow(y$data)) {
-    stop("Paired test requires equal number of observations in x and y.",
-         call. = FALSE)
+    stop(errorCondition(
+      "Paired test requires equal number of observations in x and y.",
+      class = "nestimate_bad_input", call = NULL))
   }
 
   if (!is.null(seed)) {
-    stopifnot(is.numeric(seed), length(seed) == 1)
-    set.seed(seed)
+    .assert(is.numeric(seed), length(seed) == 1)
+    .local_seed(seed)
   }
 
   obs_diff <- x$weights - y$weights
   invert <- isTRUE(x$edge_betweenness$invert)
   if (!identical(isTRUE(y$edge_betweenness$invert), invert)) {
-    stop("x and y must use the same edge-betweenness `invert` setting.",
-         call. = FALSE)
+    stop(errorCondition(
+      "x and y must use the same edge-betweenness `invert` setting.",
+      class = "nestimate_bad_input", call = NULL))
   }
   transform_eb <- function(mat) {
     dimnames(mat) <- list(nodes, nodes)
@@ -728,9 +935,12 @@ permutation <- function(x, y = NULL,
   has_data_y <- is.data.frame(y_src$data) && ncol(y_src$data) > 0L
   if (count_method %in% c("relative", "frequency", "co_occurrence")) {
     if (!has_data_x || !has_data_y) {
-      stop("Permutation test requires the original data stored in the netobject. ",
-           "For wtna/cna networks, use wtna() directly instead of ",
-           "build_network(method='cna').", call. = FALSE)
+      stop(errorCondition(
+        paste0(
+          "Permutation test requires the original data stored in the netobject. ",
+          "For wtna/cna networks, use wtna() directly instead of ",
+          "build_network(method='cna')."),
+        class = "nestimate_bad_input", call = NULL))
     }
     x_src$data <- .resampling_transition_data(
       x_src$data, x_src$metadata, x_src$params
@@ -757,9 +967,9 @@ permutation <- function(x, y = NULL,
 
   obs_flat <- as.vector(obs_diff)
   p_values_flat <- (perm_result$exceed_counts + 1L) / (iter + 1L)
-  p_values_flat <- p.adjust(p_values_flat, method = adjust)
   p_mat <- matrix(p_values_flat, n_nodes, n_nodes,
                   dimnames = list(nodes, nodes))
+  p_mat <- .adjust_edge_p(p_mat, x$weights, y$weights, directed, adjust)
 
   perm_sd <- perm_result$perm_sd
   perm_sd[perm_sd == 0] <- NA_real_
@@ -1246,72 +1456,8 @@ permutation <- function(x, y = NULL,
   m_sum <- 0
   m_sumsq <- 0
 
-  # Select fast path based on method
-  use_fast <- method %in% c("cor", "pcor", "glasso")
-
-  # Pre-compute the glasso lambda path once from the pooled correlation;
-  # every permutation iteration reuses it via psychnets::ebic_glasso
-  if (use_fast && method == "glasso") {
-    gamma <- .param_get(params_x, "gamma", 0.5)
-    penalize_diag <- .param_get(params_x, "penalize.diagonal", FALSE)
-
-    S_pooled <- cor(pooled_mat, method = cor_method)
-    perm_rholist <- .compute_lambda_path(S_pooled, nlambda, 0.01)
-    p_glasso <- ncol(pooled_mat)
-  }
-
-  # Build the per-iteration estimator function
-  if (use_fast) {
-    estimate_from_rows <- switch(method,
-      cor = function(mat_subset) {
-        S <- cor(mat_subset, method = cor_method)
-        diag(S) <- 0
-        S
-      },
-      pcor = function(mat_subset) {
-        S <- cor(mat_subset, method = cor_method)
-        Wi <- tryCatch(solve(S), error = function(e) NULL)
-        if (is.null(Wi)) return(NULL) # nocov
-        .precision_to_pcor(Wi, threshold = 0)
-      },
-      glasso = function(mat_subset) {
-        S <- cor(mat_subset, method = cor_method)
-        n_obs <- nrow(mat_subset)
-        # Solver delegated to psychnets; the pooled lambda path is fixed
-        # once and reused per iteration, refit = FALSE reproduces the
-        # former select-from-path semantics exactly. Iteration-level
-        # failures stay NULL by the permutation contract (counted and
-        # reported upstream).
-        fit <- tryCatch(
-          psychnets::ebic_glasso(cor_matrix = S, n = n_obs, gamma = gamma,
-                                 lambda_path = perm_rholist,
-                                 penalize_diagonal = penalize_diag,
-                                 refit = FALSE, native = TRUE),
-          error = function(e) NULL
-        )
-        if (is.null(fit)) return(NULL) # nocov
-        .precision_to_pcor(fit$precision, threshold = 0)
-      }
-    )
-  } else {
-    # Fallback: full estimator for custom methods
-    estimator <- get_estimator(method)
-    estimate_from_rows <- function(mat_subset) {
-      df <- as.data.frame(mat_subset)
-      est <- tryCatch(
-        do.call(estimator$fn, c(list(data = df), params_x)),
-        error = function(e) NULL
-      )
-      if (is.null(est)) return(NULL)
-      mat <- est$matrix
-      if (!identical(rownames(mat), nodes)) {
-        common <- intersect(nodes, rownames(mat))
-        if (length(common) < n_nodes) return(NULL)
-        mat <- mat[nodes, nodes] # nocov
-      }
-      mat
-    }
-  }
+  if (method == "glasso") .check_same_glasso_settings(x$params, y$params)
+  estimate_from_rows <- .perm_row_estimator(method, params_x, nodes)
 
   # Running counters
   exceed_counts <- integer(nbins)
@@ -1443,13 +1589,9 @@ permutation <- function(x, y = NULL,
 # ---- S3 Methods ----
 
 #' @rdname permutation
-#' @param ... In \code{print.net_permutation()}, \code{print.net_permutation_group()}, \code{print.wtna_perm_mixed()}, \code{summary.net_permutation()}, \code{summary.net_permutation_group()} and \code{summary.wtna_perm_mixed()}: Additional arguments (ignored).
-#' @param object For the \code{summary()} method: an object of class \code{net_permutation}, \code{net_permutation_group} or \code{wtna_perm_mixed}.
-#' @return In \code{print.net_permutation()} and \code{print.wtna_perm_mixed()}: The input object, invisibly.
-#' @return In \code{summary.net_permutation()}: The \code{$summary} data frame: one row per edge present in either network, with columns \code{from}, \code{to}, \code{weight_x}, \code{weight_y}, \code{diff}, \code{effect_size}, \code{p_value}, \code{sig}.
-#' @return In \code{print.net_permutation_group()}: \code{x} invisibly.
-#' @return In \code{summary.net_permutation_group()}: The per-group summaries stacked into one data frame: the columns of \code{\link{summary.net_permutation}} prefixed by a \code{group} column naming the group (or group pair) each row came from.
-#' @return In \code{summary.wtna_perm_mixed()}: A list with transition and co-occurrence permutation summaries.
+#' @param ... For the `print()` and `summary()` methods: not used.
+#' @param object For the `summary()` methods: a `net_permutation`,
+#'   `net_permutation_group` or `wtna_perm_mixed`.
 #' @export
 print.net_permutation <- function(x, ...) {
   method_labels <- c(
@@ -1533,8 +1675,6 @@ print.net_permutation_group <- function(x, ...) {
 }
 
 #' @rdname permutation
-#' @section Methods:
-#' * \code{summary.net_permutation_group()}: Returns a combined summary data frame across all groups.
 #' @export
 summary.net_permutation_group <- function(object, ...) {
   do.call(rbind, lapply(names(object), function(nm) {

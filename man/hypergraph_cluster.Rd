@@ -26,71 +26,93 @@ hypergraph_cluster(
 \method{plot}{net_hypergraph_cluster}(x, what = c("both", "spectrum", "embedding"), n_values = NULL, ...)
 }
 \arguments{
-\item{hg}{A connected \code{net_hypergraph}.}
+\item{hg}{The hypergraph: a connected \code{net_hypergraph}, as for
+\code{\link[=hypergraph_laplacian]{hypergraph_laplacian()}}.}
 
-\item{k}{Integer number of clusters, \verb{2 <= k <= n_nodes - 1}.}
+\item{k}{The number of clusters, a whole number from 2 to one less than
+the number of nodes. Required; a value that is not a single whole
+number in that range raises an error.}
 
-\item{type, edge_weights}{Passed to \code{\link[=hypergraph_laplacian]{hypergraph_laplacian()}}.}
+\item{type, edge_weights}{The Laplacian and its hyperedge weights, passed
+to \code{\link[=hypergraph_laplacian]{hypergraph_laplacian()}}. Defaults \code{"zhou"} and \code{NULL}.}
 
-\item{nstart}{Integer. k-means random restarts (default 25).}
+\item{nstart}{The number of random starts k-means tries, keeping the
+best. Default \code{25}.}
 
-\item{seed}{Optional integer seed for the k-means initialization.}
+\item{seed}{A whole number that makes the k-means starts reproducible.
+The session's own random stream is left as it was. Default \code{NULL}.}
 
-\item{x}{For the \code{print()}, \code{as.data.frame()} and \code{plot()} methods: an object of class \code{net_hypergraph_cluster}.}
+\item{x}{For the \code{print()}, \code{as.data.frame()} and \code{plot()} methods: a
+\code{net_hypergraph_cluster} object.}
 
-\item{...}{In \code{as.data.frame.net_hypergraph_cluster()}, \code{plot.net_hypergraph_cluster()}, \code{print.net_hypergraph_cluster()} and \code{summary.net_hypergraph_cluster()}: Additional arguments (ignored).}
+\item{...}{For the methods: ignored.}
 
-\item{object}{For the \code{summary()} method: an object of class \code{net_hypergraph_cluster}.}
+\item{object}{For the \code{summary()} method: a \code{net_hypergraph_cluster}
+object.}
 
-\item{what}{Character. \code{"both"} (default), \code{"spectrum"}, or \code{"embedding"}.}
+\item{what}{For the \code{plot()} method: the panel to draw. \code{"spectrum"} is
+a scree plot of the smallest eigenvalues with the \code{k} used marked, so
+the eigengap after \code{k} can be read; \code{"embedding"} places the nodes on
+the first two embedding dimensions, labelled, coloured and shaped by
+cluster and sized by stationary probability, which is the geometry
+k-means clustered; \code{"both"} (default) draws the two side by side.}
 
-\item{n_values}{Integer. How many smallest eigenvalues to show in the spectrum panel (default: \code{min(3 * k, n_nodes)}).}
+\item{n_values}{For the \code{plot()} method: how many of the smallest
+eigenvalues the spectrum panel shows. Default \code{NULL}, which shows
+\code{min(3 * k, n_nodes)}.}
 }
 \value{
-An object of class \code{net_hypergraph_cluster}: a list with
-\verb{$clusters} (data.frame, one row per node: \code{node}, \code{cluster} - labels
-\code{"Cluster 1"}, \code{"Cluster 2"}, ... ordered by first appearance),
-\verb{$embedding} (node x k row-normalized spectral embedding used by
-k-means, dims \code{dim1..dimk}), \verb{$k}, \verb{$type}, \verb{$eigenvalues} (full
-Laplacian spectrum, increasing), \verb{$eigengap} (gap after the k-th
-eigenvalue), \verb{$sizes} (data.frame \code{cluster}/\code{size}), \verb{$pi}
-(named stationary distribution), \verb{$n_nodes}, \verb{$n_hyperedges} and
-\verb{$params} (the \code{edge_weights} used, \code{nstart}, \code{seed},
-\code{tot_withinss}). Has \code{print}, \code{summary},
-\code{plot} and \code{as.data.frame} methods; \code{as.data.frame()} returns one row
-per node with \code{node}, \code{cluster}, the stationary probability \code{pi}, and
-the embedding coordinates.
+A \code{net_hypergraph_cluster} object. \code{print()} reports the
+Laplacian, the cluster sizes and the eigengap; \code{\link[=summary]{summary()}} returns one
+row per cluster; \code{plot()} draws the spectrum and the embedding. The
+object's fields:
+\describe{
+\item{clusters}{A data frame with one row per node: \code{node} and
+\code{cluster}. Clusters are labelled \code{"Cluster 1"}, \code{"Cluster 2"}, ...
+in the order they first appear among the nodes.}
+\item{embedding}{The node-by-\code{k} spectral embedding k-means
+clustered, each row of unit length, with columns \code{dim1} to
+\code{dimk}.}
+\item{k, type}{The number of clusters and the Laplacian type.}
+\item{eigenvalues}{The full spectrum of the Laplacian, increasing.}
+\item{eigengap}{The \code{(k + 1)}-th minus the \code{k}-th eigenvalue.}
+\item{sizes}{A data frame of \code{cluster} and \code{size}.}
+\item{pi}{The stationary distribution of the walk, named by node.}
+\item{n_nodes, n_hyperedges}{The size of the hypergraph.}
+\item{params}{The \code{edge_weights} used, \code{nstart}, \code{seed} and the
+k-means total within-cluster sum of squares (\code{tot_withinss}).}
+}
 
-In \code{print.net_hypergraph_cluster()}: The input object, invisibly.
-
-In \code{summary.net_hypergraph_cluster()}: A data.frame, one row per cluster: \code{cluster}, \code{size}, \code{share}.
-
-In \code{as.data.frame.net_hypergraph_cluster()}: The tidy assignment table: one row per node, columns \code{node}, \code{cluster}, \code{pi} (stationary probability of the node under the Laplacian's random walk) and the spectral-embedding coordinates \code{dim1..dimk}.
-
-In \code{plot.net_hypergraph_cluster()}: For \code{"spectrum"}/\code{"embedding"}, the ggplot object. For \code{"both"}, the arranged gtable when gridExtra is installed (drawn on the current device), otherwise the two panels are drawn via grid viewports and the list of the two ggplots is returned invisibly.
+The \code{print()} method returns its input invisibly. The \code{summary()}
+method returns a data frame with one row per cluster: \code{cluster}, \code{size}
+and \code{share} (the proportion of nodes). The \code{as.data.frame()} method
+returns a data frame with one row per node: \code{node}, \code{cluster}, \code{pi}
+(the node's stationary probability under the Laplacian's walk) and the
+embedding coordinates \code{dim1} to \code{dimk}. The \code{plot()} method returns a
+\code{ggplot} for \code{"spectrum"} or \code{"embedding"}. For \code{"both"} it draws the
+two panels and returns the arranged \code{gtable} invisibly when
+\pkg{gridExtra} is installed, and otherwise draws them in grid
+viewports and returns the two \code{ggplot}s as a list, invisibly.
 }
 \description{
-Partitions the nodes of a hypergraph into \code{k} clusters with the
-Laplacian-eigenmap + k-means algorithm of Hayashi et al. (2020,
-"RDC-Spec"): the eigenvectors of the \code{k} smallest eigenvalues of the
-normalized hypergraph Laplacian are row-normalized to unit length and
-clustered with k-means. With \code{type = "random_walk"} and a weighted
-incidence (e.g. from \code{\link[=bipartite_groups]{bipartite_groups()}} with \verb{weight =}), the
-edge-dependent vertex weights genuinely change the partition - with
-edge-independent weights the walk collapses to a graph random walk
-(Chitra & Raphael 2019).
-}
-\details{
-k-means is stochastic: \code{nstart} restarts are used and a \code{seed} fixes
-the result. Report stability across seeds for consequential results.
-}
-\section{Methods}{
+\code{hypergraph_cluster()} partitions the nodes of a hypergraph into \code{k}
+clusters with the spectral algorithm of Hayashi et al. (2020,
+"RDC-Spec"): it takes the eigenvectors of the \code{k} smallest eigenvalues of
+the normalised Laplacian from \code{\link[=hypergraph_laplacian]{hypergraph_laplacian()}}, scales each
+node's row of them to unit length, and clusters the rows with k-means.
+It works with either Laplacian. With \code{type = "random_walk"} and a
+weighted incidence (for example from \code{\link[=bipartite_groups]{bipartite_groups()}} with
+\code{weight}), the edge-dependent vertex weights can change the partition;
+with edge-independent weights the walk reduces to a random walk on a
+graph (Chitra & Raphael 2019).
 
-\itemize{
-\item \code{plot.net_hypergraph_cluster()}: Two diagnostic panels. \code{"spectrum"}: scree plot of the Laplacian spectrum with the k used for clustering marked - the eigengap after k supports (or questions) the choice of k. \code{"embedding"}: the nodes in the first two spectral-embedding dimensions, labelled, coloured and shaped by cluster, sized by stationary probability - the geometry k-means actually clustered. \code{"both"} (default) arranges the two side by side (via gridExtra when available, base grid viewports otherwise).
+The eigengap, the distance between the \code{k}-th and the next eigenvalue,
+shows how well the spectrum separates \code{k} groups: a large gap supports
+\code{k}, a small one means the spectrum does not single it out. \code{plot()}
+draws the spectrum, so neighbouring values of \code{k} can be compared.
+k-means is stochastic, so a partition that matters is worth refitting
+with other seeds to see whether it holds.
 }
-}
-
 \examples{
 events <- data.frame(
   person = c("a", "b", "c", "a", "b", "c", "d", "e", "f",

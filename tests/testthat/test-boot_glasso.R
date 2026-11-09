@@ -1259,3 +1259,52 @@ test_that("edge_diff plot handles diff_max == 0 gracefully (L1080)", {
 
 # Reference (naive) implementation: double nested loop
 
+
+
+# ---- glasso settings of the network are honoured ----
+
+test_that("boot_glasso re-estimates a glasso network with its own settings", {
+  net <- build_network(srl_strategies, method = "glasso",
+                       params = list(lambda.min.ratio = 0.1,
+                                     penalize.diagonal = TRUE))
+  bg <- boot_glasso(net, iter = 2L, cs_iter = 1L, cs_drop = 0.5,
+                    centrality = "strength", seed = 1)
+  # was 0.037 apart when the settings were ignored
+  expect_equal(unname(bg$original_pcor), unname(net$weights),
+               tolerance = 1e-12)
+  expect_equal(min(bg$lambda_path) / max(bg$lambda_path), 0.1)
+  net0 <- build_network(srl_strategies, method = "glasso")
+  bg0 <- boot_glasso(net0, iter = 2L, cs_iter = 1L, cs_drop = 0.5,
+                     centrality = "strength", seed = 1)
+  expect_equal(unname(bg0$original_pcor), unname(net0$weights),
+               tolerance = 1e-12)
+})
+
+test_that("failed resamples are counted, stored and reported", {
+  # D is 1 in row 1 only: a resample without row 1 has a constant D, whose
+  # correlations are undefined, so that resample fails.
+  set.seed(3)
+  d <- data.frame(A = rnorm(10), C = rnorm(10), D = c(1, rep(0, 9)))
+  d$B <- d$A + rnorm(10, sd = 0.5)
+  # record the classed warnings; cor()'s own "standard deviation is zero"
+  # warnings are the diagnosed cause and are muffled
+  seen <- character()
+  bf <- withCallingHandlers(
+    boot_glasso(d, iter = 20L, cs_iter = 5L, cs_drop = 0.5,
+                centrality = "strength", seed = 1),
+    warning = function(w) {
+      seen <<- c(seen, conditionMessage(w)[inherits(w,
+                                                    "nestimate_resample_failed")])
+      invokeRestart("muffleWarning")
+    })
+  expect_length(seen, 2L)                 # bootstrap and case-dropping
+  expect_match(seen[1], sprintf("%d of 20", bf$n_failed))
+  expect_match(seen[2], sprintf("%d of 5", bf$cs_n_failed))
+  set.seed(1)
+  draws <- lapply(seq_len(20L), function(i) sample.int(10L, 10L, TRUE))
+  expected <- sum(vapply(draws, function(idx) !(1L %in% idx), logical(1)))
+  expect_identical(bf$n_failed, expected)
+  expect_identical(sum(is.na(bf$boot_edges[, 1L])), expected)
+  expect_true(bf$n_failed > 0L)
+  expect_output(print(bf), "Failed resamples")
+})

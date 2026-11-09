@@ -511,7 +511,9 @@
       class = "nestimate_bad_input", call = NULL))
     }
     if (is.null(data$data)) { # nocov start
-      stop("netobject has no $data. Pass the original sequence data.", call. = FALSE)
+      stop(errorCondition(
+        "netobject has no $data. Pass the original sequence data.",
+        class = "nestimate_bad_input", call = NULL))
     } # nocov end
     if (.is_onehot_params(data$params)) return(.onehot_unit_sequences(data))
     return(as.data.frame(data$data, stringsAsFactors = FALSE))
@@ -520,7 +522,9 @@
   # --- tna model (integer-encoded with $labels) ---
   if (inherits(data, "tna")) {
     if (is.null(data$data) || is.null(data$labels)) { # nocov start
-      stop("tna object missing $data or $labels.", call. = FALSE)
+      stop(errorCondition(
+        "tna object missing $data or $labels.",
+        class = "nestimate_bad_input", call = NULL))
     } # nocov end
     # Decode integer matrix back to state names
     decoded <- matrix(data$labels[data$data], nrow = nrow(data$data),
@@ -532,8 +536,9 @@
   # --- cograph_network ---
   if (inherits(data, "cograph_network")) {
     if (is.null(data$data)) { # nocov start
-      stop("cograph_network has no $data. Pass the original sequence data.",
-           call. = FALSE)
+      stop(errorCondition(
+        "cograph_network has no $data. Pass the original sequence data.",
+        class = "nestimate_bad_input", call = NULL))
     } # nocov end
     return(as.data.frame(data$data, stringsAsFactors = FALSE))
   }
@@ -543,9 +548,12 @@
     return(as.data.frame(data, stringsAsFactors = FALSE))
   }
 
-  stop("Unsupported input type: ", paste(class(data), collapse = ", "),
-       ". Expected data.frame, matrix, netobject, tna, or cograph_network.",
-       call. = FALSE)
+  stop(errorCondition(
+    paste0(
+      "Unsupported input type: ",
+      paste(class(data), collapse = ", "),
+      ". Expected data.frame, matrix, netobject, tna, or cograph_network."),
+    class = "nestimate_bad_input", call = NULL))
 }
 
 #' Split a wide frame into sequence positions and set-aside covariates
@@ -587,124 +595,176 @@
 #' Cluster Sequences by Dissimilarity
 #'
 #' @description
-#' Clusters wide-format sequences using pairwise string dissimilarity and
-#' either PAM (Partitioning Around Medoids) or hierarchical clustering.
-#' Supports 9 distance metrics including temporal weighting for Hamming
-#' distance. When the \pkg{stringdist} package is available, uses C-level
-#' distance computation for 100-1000x speedup on edit distances.
+#' `build_clusters()` splits a set of sequences into `k` groups of similar
+#' sequences. It computes the dissimilarity between every pair of sequences
+#' (the Hamming distance, an edit distance, a q-gram distance or the
+#' Jaro-Winkler distance) and partitions that matrix with PAM (partitioning
+#' around medoids) or a hierarchical method. It takes wide sequence data, a
+#' `netobject` or bare `cograph_network` built from sequences, or a `tna`
+#' model. A one-hot network built with `"relative"`, `"frequency"` or
+#' `"co_occurrence"` is clustered by unit, each actor's or session's windows
+#' forming one sequence; a `wtna` network is refused (see `data`).
+#' Covariates can be related to the clusters after the fit (see
+#' `covariates`); they never change the assignments.
 #'
-#' @param data Input data. Accepts multiple formats:
-#' \describe{
-#'   \item{data.frame / matrix}{Wide-format sequences (rows = sequences,
-#'     columns = time points, values = state names). Columns of a data frame
-#'     take the same roles as in \code{\link{build_network}}: an id or a
-#'     covariate is not a sequence position. Those set aside are named in a
-#'     message and kept in \code{$metadata}.}
-#'   \item{netobject}{A network object from \code{\link{build_network}}.
-#'     Extracts the stored sequence data. Only valid for sequence-based
-#'     methods (relative, frequency, co_occurrence, attention).}
-#'   \item{tna}{A tna model from the tna package. Decodes the
-#'     integer-encoded sequence data using stored labels.}
-#'   \item{cograph_network}{A cograph network object. Extracts the
-#'     stored sequence data.}
-#' }
-#' @param k Integer. Number of clusters (must be between 2 and
-#'   \code{nrow(data) - 1}).
-#' @param dissimilarity Character. Distance metric. One of \code{"hamming"},
-#'   \code{"osa"} (optimal string alignment), \code{"lv"} (Levenshtein),
-#'   \code{"dl"} (Damerau-Levenshtein), \code{"lcs"} (longest common
-#'   subsequence), \code{"qgram"}, \code{"cosine"}, \code{"jaccard"},
-#'   \code{"jw"} (Jaro-Winkler). Default: \code{"hamming"}.
-#' @param method Character. Clustering method. \code{"pam"} for Partitioning
-#'   Around Medoids, or a hierarchical method: \code{"ward.D2"},
-#'   \code{"ward.D"}, \code{"complete"}, \code{"average"}, \code{"single"},
-#'   \code{"mcquitty"}, \code{"median"}, \code{"centroid"}.
-#'   Default: \code{"pam"}.
-#' @param na_syms Character vector. Symbols treated as missing values.
-#'   Default: \code{c("*", "\%")}.
+#' Every dissimilarity and method returns `k` groups, whether or not the
+#' sequences fall into groups. The average silhouette width (Rousseeuw,
+#' 1987), which `print()` reports, compares each sequence's mean
+#' dissimilarity to its own cluster with that to the nearest other cluster:
+#' it runs from -1 to 1, values near 1 meaning well-separated clusters and
+#' values near 0 overlapping ones. It describes one solution and is not a
+#' test. Compare values of `k`, dissimilarities and methods with
+#' [cluster_choice()], check the classification with [cluster_diagnostics()],
+#' and build one network per cluster with [build_network()] (or
+#' [cluster_network()] in one call) to see how the groups differ.
 #'
-#'   \strong{Missing-value distance rule:} after symbols are converted to
-#'   \code{NA}, missing values are encoded as a single comparable sentinel
-#'   state -- \emph{not} pairwise-deleted. Two missing values in the same
-#'   position match (distance contribution 0); a missing value paired with
-#'   any observed state mismatches (distance contribution 1 for Hamming,
-#'   etc.). This is the conventional behaviour for aligned sequence
-#'   matrices because pairwise deletion would change the effective length
-#'   of every pair and break the metric. If you want pairwise deletion or
-#'   a different missing-value semantic, drop or recode the missing cells
-#'   before passing the data in.
-#' @param weighted Logical. Apply exponential decay weighting to Hamming
-#'   distance positions? Only valid when \code{dissimilarity = "hamming"}.
-#'   Default: \code{FALSE}.
-#' @param lambda Numeric. Non-negative decay rate for weighted Hamming.
-#'   Higher values weight earlier positions more strongly. Default: 1.
-#' @param seed Integer or NULL. Random seed for reproducibility. Default:
-#'   \code{NULL}.
-#' @param q Integer. Size of q-grams for \code{"qgram"}, \code{"cosine"},
-#'   and \code{"jaccard"} distances. Default: \code{2L}.
-#' @param p Numeric. Winkler prefix penalty for Jaro-Winkler distance.
-#'   Must be between 0 and 0.25. Default: \code{0.1}.
-#' @param covariates Optional. Post-hoc covariate analysis of cluster
-#'   membership. Named covariate columns present in raw sequence data are
-#'   excluded from the sequence distances before clustering. Columns matching
-#'   a separately supplied covariate frame by both name and values are also
-#'   excluded; unrelated sequence columns remain unchanged. Accepts:
-#'   \describe{
-#'     \item{string}{Single column name, e.g. \code{"Age"}. Resolved
-#'       against \code{x$metadata} (and \code{x$data}) for
-#'       \code{netobject} or \code{cograph_network} input.}
-#'     \item{character vector}{\code{c("Age", "Gender")}, same lookup.}
-#'     \item{formula}{\code{~ Age + Gender}, same lookup; supports
-#'       \code{"Age + Gender"} string form too.}
-#'     \item{data.frame}{All columns used as covariates verbatim;
-#'       must have one row per sequence.}
-#'     \item{NULL}{No covariate analysis (default).}
-#'   }
-#'   For \code{netobject} or \code{cograph_network} input, names are
-#'   resolved against \code{$metadata} first and then non-state columns
-#'   of \code{$data}, so a typical call looks like
-#'   \code{build_clusters(net, k = 3, covariates = "session_label")}
-#'   without pre-extracting a data.frame. \code{tna} input requires the
-#'   data.frame form. Results are stored in \code{$covariates}.
-#' @param estimator Multinomial logit fitter for the covariate analysis.
-#'   \code{"auto"} (default) inspects the cluster x covariate cross-tab
-#'   and falls back to \code{"firth"} only when any cell has fewer than
-#'   5 observations (quasi-complete separation risk); otherwise uses
-#'   the much faster \code{"multinom"}. \code{"firth"} forces Firth's
-#'   penalised likelihood via \code{brglm2::brmultinom} -- bias-reduced
-#'   and finite under separation, but ~200x slower than multinom on
-#'   well-conditioned data. \code{"multinom"} forces classical ML via
-#'   \code{nnet::multinom}; warns because rare-cell separation produces
-#'   astronomical ORs with degenerate CIs (silent failure).
-#'   \code{"chisq"} runs WeightedCluster-style descriptive tests
-#'   (chi-square + Cramer's V + standardized adjusted residuals for
-#'   factors; Kruskal-Wallis + eta-squared for numerics).
-#' @param ... Unsupported. Supplying unused arguments raises an error.
-#' In \code{plot.net_clustering()}, \code{print.net_clustering()} and \code{summary.net_clustering()}: Unsupported. Supplying unused arguments raises an error. In \code{print.tidy_covariates()}: Ignored.
-#' @return An object of class \code{"net_clustering"} containing:
+#' @details
+#' With the \pkg{stringdist} package installed, the distances are computed
+#' by `stringdist::stringdistmatrix()` in C, many times faster than the base
+#' R implementation for the edit distances. The base R implementation is
+#' used when \pkg{stringdist} is absent, for weighted Hamming, and when the
+#' data hold 62 or more states.
+#'
+#' @param data The sequences: a data frame or matrix with one row per
+#'   sequence and one column per position, holding state names; a
+#'   `netobject` or bare `cograph_network` built from sequences with method
+#'   `"relative"`, `"frequency"`, `"co_occurrence"` or `"attention"`, whose
+#'   stored sequences are used; or a `tna` model, whose integer-coded
+#'   sequences are decoded to their labels. Columns of a data frame take the
+#'   same roles as in [build_network()]: an id or a covariate is not a
+#'   position, and the columns set aside are named in a message and kept as
+#'   metadata. A one-hot network needs an `actor` or `session` to define its
+#'   units. A one-hot network without one, and a network of any other
+#'   method, raise an error of class `nestimate_bad_input`.
+#' @param k The number of clusters, a whole number from 2 to one less than
+#'   the number of sequences. Required.
+#' @param dissimilarity How two sequences are compared. `"hamming"`
+#'   (default) counts the positions where they differ. `"lv"` (Levenshtein)
+#'   counts the insertions, deletions and substitutions that turn one into
+#'   the other; `"osa"` (optimal string alignment) and `"dl"`
+#'   (Damerau-Levenshtein) also count a swap of two adjacent states as one
+#'   edit; `"lcs"` counts the states left unpaired by their longest common
+#'   subsequence. `"qgram"`, `"cosine"` and `"jaccard"` compare the runs of
+#'   `q` consecutive states (q-grams) the sequences contain: the summed
+#'   absolute difference of their counts, one minus the cosine similarity of
+#'   the counts, and one minus the share of distinct q-grams they have in
+#'   common. `"jw"` is the Jaro-Winkler distance, which weighs agreement in
+#'   the first states more (see `p`).
+#' @param method The clustering algorithm. `"pam"` (default) partitions
+#'   around medoids: it chooses `k` sequences as centres and assigns every
+#'   sequence to the nearest one (Kaufman & Rousseeuw, 1990). `"ward.D2"`,
+#'   `"ward.D"`, `"complete"`, `"average"`, `"single"`, `"mcquitty"`,
+#'   `"median"` and `"centroid"` build a tree with [stats::hclust()] using
+#'   that linkage and cut it into `k` groups.
+#' @param na_syms The symbols read as missing values, besides `NA`. Default
+#'   `c("*", "%")`. A missing cell is not dropped from a comparison: it is
+#'   treated as one more state, so two missing cells at the same position
+#'   match and a missing cell against an observed state is a mismatch (a
+#'   distance of 1 for Hamming). This is the usual rule for aligned
+#'   sequences, because dropping missing cells pair by pair would change
+#'   each pair's effective length and break the metric. For every
+#'   dissimilarity except Hamming, a sequence ends at its last observed
+#'   state, so trailing missing cells are not compared. To treat missing
+#'   cells differently, drop or recode them before the call.
+#' @param weighted Whether to weight the Hamming distance by position, so
+#'   that a difference early in the sequences counts more than a late one
+#'   (see `lambda`). Default `FALSE`. With any dissimilarity other than
+#'   `"hamming"`, `TRUE` raises an error.
+#' @param lambda The decay rate of the position weights when
+#'   `weighted = TRUE`: position \eqn{t} gets weight
+#'   \eqn{e^{-\lambda (t - 1)}}{exp(-lambda * (t - 1))}, so a larger value
+#'   puts more of the distance on the earlier positions. A finite
+#'   non-negative number; default `1`. Ignored, and stored as `0`, when
+#'   `weighted = FALSE`.
+#' @param seed An integer used as the random seed for clustering; the
+#'   session's own random stream is left as it was. Default `NULL`. PAM and the
+#'   hierarchical methods are deterministic, so it does not change the
+#'   clusters; it is stored with the result.
+#' @param q The length of the q-grams compared by `"qgram"`, `"cosine"` and
+#'   `"jaccard"`, a positive whole number. Default `2`. Ignored by the other
+#'   dissimilarities.
+#' @param p The Winkler prefix weight of `"jw"`: how much agreement in the
+#'   first states (up to four) lowers the Jaro distance, from 0 (the plain
+#'   Jaro distance) to 0.25. Default `0.1`. Ignored by the other
+#'   dissimilarities.
+#' @param covariates Variables describing each sequence (such as an
+#'   achievement level or a course), related to the clusters after they are
+#'   found; they never change the assignments. Give a column name, a
+#'   character vector of names, a one-sided formula such as
+#'   `~ Age + Gender` (or the string `"Age + Gender"`), or a data frame with
+#'   one row per sequence, all of whose columns are used. For a `netobject`
+#'   or `cograph_network`, names are looked up in its metadata first and
+#'   then among the columns of its data, so a typical call is
+#'   `build_clusters(net, k = 3, covariates = "Achiever")`; for a data frame
+#'   or matrix, among its columns. A `tna` model takes only the data-frame
+#'   form. Named covariate columns are taken out of the sequence data before
+#'   the distances are computed, and so are the columns of a supplied data
+#'   frame that match a sequence column in name and values; a sequence
+#'   column that shares only a name is kept. For a network, a name found in
+#'   its metadata leaves a same-named data column in place as a sequence
+#'   position. Rows with a missing covariate
+#'   are left out of the analysis with a warning, and a constant covariate
+#'   raises an error. How the analysis is run is set by `estimator`.
+#'   Default `NULL` (none).
+#' @param estimator How the relation between the covariates and the
+#'   clusters is estimated; it never affects the clustering. `"auto"`
+#'   (default) fits a multinomial logit of cluster membership on the
+#'   covariates: with Firth's bias-reduced penalised likelihood
+#'   (`brglm2::brmultinom()`, finite under quasi-complete separation) when a
+#'   cell of the cluster-by-covariate table of a categorical covariate holds
+#'   fewer than 5 sequences, and with `nnet::multinom()` otherwise.
+#'   `"firth"` forces the Firth fit, which is about 200 times slower on
+#'   well-conditioned data. `"multinom"` forces classical maximum likelihood
+#'   and warns that rare cells can give extreme odds ratios with degenerate
+#'   confidence intervals. `"chisq"` runs descriptive tests instead of a
+#'   logit, as WeightedCluster does: for each categorical covariate a
+#'   chi-square test with Cramer's V and standardised adjusted residuals,
+#'   for each numeric one a Kruskal-Wallis test with eta-squared. Ignored
+#'   without `covariates`.
+#' @param ... Not used: an extra argument raises an error, here and in the
+#'   `print()`, `summary()` and `plot()` methods for a `net_clustering`.
+#'   `print()` of a `tidy_covariates` table ignores it.
+#' @return A `net_clustering` object. `print()` shows the method,
+#'   dissimilarity and average silhouette width, then one row per cluster
+#'   with its size (count and percentage), mean within-cluster distance and,
+#'   for PAM, its medoid; after a logit covariate analysis it adds a line
+#'   naming the predictors. [summary()] prints the method, dissimilarity and
+#'   average silhouette width and a per-cluster table of sizes and mean
+#'   within-cluster distances, followed by the covariate analysis when there
+#'   is one, and returns a per-cluster table, or the covariate table after a
+#'   covariate analysis (see the methods' return value below). `plot()` draws
+#'   the silhouette widths, a map of the distances, the distance matrix or
+#'   the covariate effects. [build_network()] turns the clustering into one
+#'   network per cluster (a `netobject_group`), and
+#'   [cluster_diagnostics()] and [session_ids()] give the classification
+#'   quality and each sequence's cluster. The object's fields:
 #' \describe{
-#'   \item{data}{The original input data.}
+#'   \item{data}{The sequence positions that were clustered, one row per
+#'     sequence: covariates and set-aside columns are removed, and a
+#'     one-hot network gives one row per unit.}
 #'   \item{k}{Number of clusters.}
-#'   \item{assignments}{Named integer vector of cluster assignments.}
-#'   \item{silhouette}{Overall average silhouette width.}
+#'   \item{assignments}{Integer vector of cluster memberships (1 to
+#'     \code{k}), one per sequence in row order.}
+#'   \item{silhouette}{Average silhouette width over all sequences.}
 #'   \item{sizes}{Named integer vector of cluster sizes.}
 #'   \item{method}{Clustering method used.}
-#'   \item{dissimilarity}{Distance metric used.}
-#'   \item{distance}{The computed dissimilarity matrix (\code{dist} object).}
-#'   \item{medoids}{Integer vector of medoid row indices (PAM only; NULL
-#'     for hierarchical methods).}
-#'   \item{seed}{Seed used (or NULL).}
-#'   \item{weighted}{Logical, whether weighted Hamming was used.}
-#'   \item{lambda}{Lambda value used (0 if not weighted).}
-#'   \item{covariates}{The post-hoc covariate analysis (a list; see the
-#'     \code{estimator} argument), or NULL when \code{covariates = NULL}.}
+#'   \item{dissimilarity}{Dissimilarity used.}
+#'   \item{distance}{The pairwise dissimilarities, a \code{dist} object.}
+#'   \item{medoids}{For PAM, the row numbers of the \code{k} medoid
+#'     sequences; NULL for the hierarchical methods.}
+#'   \item{seed}{Seed given (or NULL).}
+#'   \item{weighted}{Whether weighted Hamming was used.}
+#'   \item{lambda}{Decay rate used (0 when not weighted).}
+#'   \item{covariates}{The covariate analysis (a list; see
+#'     \code{estimator}), or NULL when \code{covariates = NULL}.}
 #'   \item{network_method, build_args}{For \code{netobject} input, the
 #'     source network's method and stored build arguments, so per-cluster
-#'     networks can be rebuilt the same way. NULL otherwise.}
+#'     networks can be rebuilt the same way. NULL otherwise, and
+#'     \code{build_args} is NULL for a one-hot network.}
 #'   \item{metadata}{For \code{netobject} input, its per-sequence metadata,
 #'     one row per clustered sequence, so \code{\link{session_ids}} can name
 #'     each sequence. For a data frame, the columns set aside as covariates
-#'     (see \code{data}). NULL otherwise.}
+#'     (see \code{data}). NULL otherwise, and for a one-hot network.}
 #'   \item{htna_partition}{For HTNA input, the preserved node-to-actor
 #'     partition used to restore HTNA children when networks are built.}
 #' }
@@ -746,9 +806,10 @@ build_clusters <- function(data, k, dissimilarity = "hamming", method = "pam",
   if (length(dots) > 0L) {
     dot_names <- names(dots)
     dot_names[!nzchar(dot_names)] <- paste0("..", which(!nzchar(dot_names)))
-    stop("build_clusters() got unsupported argument",
+    stop(errorCondition(paste0("build_clusters() got unsupported argument",
          if (length(dots) == 1L) ": " else "s: ",
-         paste(dot_names, collapse = ", "), call. = FALSE)
+         paste(dot_names, collapse = ", ")),
+         class = "nestimate_bad_input", call = NULL))
   }
 
   # --- Extract sequence data from supported objects ---
@@ -778,8 +839,9 @@ build_clusters <- function(data, k, dissimilarity = "hamming", method = "pam",
     data <- .keep_window_attrs(data[, setdiff(names(data), cov_cols), drop = FALSE],
                                data)
     if (ncol(data) == 0L) {
-      stop("No sequence columns remain after excluding post-hoc covariates.",
-           call. = FALSE)
+      stop(errorCondition(
+        "No sequence columns remain after excluding post-hoc covariates.",
+        class = "nestimate_bad_input", call = NULL))
     }
   }
   # Same roles as build_network(): an id or a covariate is not a position.
@@ -793,7 +855,7 @@ build_clusters <- function(data, k, dissimilarity = "hamming", method = "pam",
   # --- Input validation ---
   # Use named-condition stopifnot for type checks so the failure message
   # names the offending argument instead of dumping the predicate.
-  stopifnot(
+  .assert(
     "'k' must be a single numeric value"            = is.numeric(k) && length(k) == 1L,
     "'dissimilarity' must be a single character"    = is.character(dissimilarity) && length(dissimilarity) == 1L,
     "'method' must be a single character"           = is.character(method) && length(method) == 1L,
@@ -804,56 +866,71 @@ build_clusters <- function(data, k, dissimilarity = "hamming", method = "pam",
     "'p' must be a single numeric"                  = is.numeric(p) && length(p) == 1L
   )
   if (!is.finite(k) || k != floor(k)) {
-    stop("'k' must be a whole finite number.", call. = FALSE)
+    stop(errorCondition(
+      "'k' must be a whole finite number.",
+      class = "nestimate_bad_input", call = NULL))
   }
   if (is.na(weighted)) {
-    stop("'weighted' must be TRUE or FALSE, not NA.", call. = FALSE)
+    stop(errorCondition(
+      "'weighted' must be TRUE or FALSE, not NA.",
+      class = "nestimate_bad_input", call = NULL))
   }
   if (!is.finite(lambda) || lambda < 0) {
-    stop("'lambda' must be a finite non-negative number.", call. = FALSE)
+    stop(errorCondition(
+      "'lambda' must be a finite non-negative number.",
+      class = "nestimate_bad_input", call = NULL))
   }
   if (!is.finite(q) || q != floor(q) || q < 1) {
-    stop("'q' must be a positive whole number.", call. = FALSE)
+    stop(errorCondition(
+      "'q' must be a positive whole number.",
+      class = "nestimate_bad_input", call = NULL))
   }
   if (!is.finite(p) || p < 0 || p > 0.25) {
-    stop("'p' must be a finite number between 0 and 0.25.", call. = FALSE)
+    stop(errorCondition(
+      "'p' must be a finite number between 0 and 0.25.",
+      class = "nestimate_bad_input", call = NULL))
   }
   k <- as.integer(k)
   q <- as.integer(q)
   n <- nrow(data)
   if (k < 2L) {
-    stop(sprintf(
+    stop(errorCondition(sprintf(
       "'k' must be at least 2 (got k = %d). Clustering with one group is not meaningful.",
       k
-    ), call. = FALSE)
+    ), class = "nestimate_bad_input", call = NULL))
   }
   if (k > n - 1L) {
-    stop(sprintf(
+    stop(errorCondition(sprintf(
       paste0("'k' (= %d) must be <= n - 1 where n = %d sequences. ",
              "Either reduce k or supply more sequences (need at least %d)."),
       k, n, k + 1L
-    ), call. = FALSE)
+    ), class = "nestimate_bad_input", call = NULL))
   }
 
   dissimilarity <- match.arg(dissimilarity, .clustering_metrics)
   method <- match.arg(method, .clustering_methods)
 
   if (weighted && dissimilarity != "hamming") {
-    stop("Weighting is only supported for Hamming distance.", call. = FALSE)
+    stop(errorCondition(
+      "Weighting is only supported for Hamming distance.",
+      class = "nestimate_bad_input", call = NULL))
   }
   lambda <- if (weighted) lambda else 0
 
-  if (!is.null(seed)) set.seed(seed)
+  if (!is.null(seed)) .local_seed(seed)
 
   # --- Encode sequences ---
   enc <- .encode_sequences(data, na_syms)
 
   if (enc$n_states == 0L) {
-    stop("No observed sequence states were found after applying na_syms = ",
-         sprintf("c(%s)", paste(shQuote(na_syms), collapse = ", ")),
-         ". Check that the input data contains at least one non-missing ",
-         "state cell, or adjust na_syms to exclude symbols that should ",
-         "be treated as observed states.", call. = FALSE)
+    stop(errorCondition(
+      paste0(
+        "No observed sequence states were found after applying na_syms = ",
+        sprintf("c(%s)", paste(shQuote(na_syms), collapse = ", ")),
+        ". Check that the input data contains at least one non-missing ",
+        "state cell, or adjust na_syms to exclude symbols that should ",
+        "be treated as observed states."),
+      class = "nestimate_bad_input", call = NULL))
   }
 
   # --- Compute distance matrix ---
@@ -921,14 +998,13 @@ build_clusters <- function(data, k, dissimilarity = "hamming", method = "pam",
 
 #' Cluster sequence data (deprecated alias)
 #'
-#' Renamed to \code{\link{build_clusters}} in Nestimate 0.4.3. This thin
-#' wrapper is preserved so the function name in older tutorials and the
-#' historical pkgdown reference continues to work; it issues a one-shot
-#' deprecation warning and forwards every argument unchanged.
+#' `cluster_data()` is the old name of [build_clusters()], renamed in
+#' Nestimate 0.4.3. It is kept so older tutorials and the historical pkgdown
+#' reference still run: every call raises a deprecation warning and passes
+#' its arguments to [build_clusters()] unchanged.
 #'
-#' @param ... Passed verbatim to \code{\link{build_clusters}}.
-#' @return The \code{net_clustering} object returned by
-#'   \code{\link{build_clusters}}.
+#' @param ... Arguments passed unchanged to [build_clusters()].
+#' @return The `net_clustering` object that [build_clusters()] returns.
 #' @seealso \code{\link{build_clusters}}, \code{\link{cluster_network}},
 #'   \code{\link{cluster_mmm}}.
 #' @keywords internal
@@ -1015,18 +1091,42 @@ cluster_data <- function(...) {
 }
 
 #' @rdname build_clusters
-#' @section Methods:
-#' * \code{print.net_clustering()}: Compact, fixed-width summary of a sequence-clustering result. The header carries the clustering method and dissimilarity; the per-cluster table carries cluster size (count and percentage) and mean within-cluster distance when available. Optional medoid and covariate lines surface only when those fields are populated.
-#' * \code{print.tidy_covariates()}: Prints a one-line header naming the estimator, then the data.frame. The full human-readable view (per-cluster stats, profiles, OR/test tables) was already printed by `summary()` when this object was produced, so this method intentionally stays minimal to avoid duplication. Auto-prints when the user types the variable at the REPL.
-#' @param x For the \code{print()} and \code{plot()} methods: an object of class \code{net_clustering} or \code{tidy_covariates}.
-#' @param digits Integer. Decimal places used for floating-point statistics in the printout. Default \code{3}. Non-breaking: existing \code{print(x)} calls keep their previous formatting.
-#' @param object For the \code{summary()} method: an object of class \code{net_clustering}.
-#' @param type Character. Plot type: \code{"silhouette"} (per-observation silhouette bars), \code{"mds"} (2D MDS projection), \code{"heatmap"} (distance matrix heatmap ordered by cluster), or \code{"predictors"} (odds-ratio forest plot of the post-hoc covariate analysis; requires \code{covariates} and an estimator that produces coefficients). Default: \code{"silhouette"}.
-#' @param combined Logical. For \code{type = "predictors"} only: when \code{TRUE} (default), covariate forest panels are combined into a single faceted plot; when \code{FALSE}, a list of separate ggplots is returned.
-#' @return In \code{print.net_clustering()}: The input object, invisibly.
-#' @return In \code{summary.net_clustering()}: A data frame of per-cluster statistics, one row per cluster, with columns \code{cluster}, \code{size} and \code{mean_within_dist}, returned \emph{visibly}. When the clustering was fitted with \code{covariates}, a \code{tidy_covariates}/\code{data.frame} (the tidied covariate table, with cluster sizes, fit statistics and profiles attached as attributes) is returned \emph{invisibly} instead. In both cases the printed summary is a side effect.
-#' @return In \code{plot.net_clustering()}: A \code{ggplot} object (invisibly); for \code{type = "predictors"} with \code{combined = FALSE}, a list of \code{ggplot} objects named by cluster (invisibly).
-#' @return In \code{print.tidy_covariates()}: The input invisibly.
+#' @param x For the `print()` and `plot()` methods: a `net_clustering`; for
+#'   `print()`, also the `tidy_covariates` table that `summary()` returns.
+#' @param digits For `print()` of a `net_clustering`: decimal places of the
+#'   silhouette width and the within-cluster distances, a non-negative whole
+#'   number. Default `3`.
+#' @param object For `summary()`: a `net_clustering`.
+#' @param type For `plot()`: the view. `"silhouette"` (default) draws each
+#'   sequence's silhouette width as a bar, grouped by cluster, with the
+#'   average as a dashed line; `"mds"` places the sequences on the first two
+#'   dimensions of a classical multidimensional scaling of the distances,
+#'   coloured by cluster; `"heatmap"` draws the distance matrix with the
+#'   sequences ordered by cluster; `"predictors"` draws a forest plot of the
+#'   covariates' odds ratios (log scale) for each cluster against the
+#'   reference cluster. `"predictors"` needs a fit with `covariates` and a
+#'   logit estimator; with `estimator = "chisq"`, which has no odds ratios,
+#'   it raises an error.
+#' @param combined For `plot()` with `type = "predictors"`: `TRUE` (default)
+#'   draws one plot with a panel per non-reference cluster; `FALSE` returns
+#'   a list of plots, one per non-reference cluster. Ignored by the other
+#'   views.
+#' @return For the `print()` methods: the input, invisibly. `print()` of a
+#'   `tidy_covariates` table prints a header naming the estimator, then the
+#'   table. For `summary()`: a data frame with one row per cluster and
+#'   columns `cluster`, `size` and `mean_within_dist`, returned visibly
+#'   after the printed summary. For a clustering fitted with `covariates`,
+#'   the printed summary adds the covariate profiles and the logit or test
+#'   tables, and a `tidy_covariates` data frame is returned invisibly
+#'   instead: one row per cluster and predictor (`cluster`, `predictor`,
+#'   `OR`, `CI_low`, `CI_high`, `p`, `sig`) for a logit, or one row per
+#'   covariate (`variable`, `type`, `statistic`, `df`, `p`, `effect`,
+#'   `effect_kind`, `sig`) for `estimator = "chisq"`, with the per-cluster
+#'   table, fit statistics and profiles attached as attributes. For
+#'   `plot()`: a `ggplot` object, drawn and returned invisibly; with
+#'   `type = "predictors"` and `combined = FALSE`, a list of `ggplot`
+#'   objects, one per non-reference cluster and named by it, returned
+#'   invisibly without drawing.
 #' @export
 print.net_clustering <- function(x, digits = 3L, ...) {
   .net_clustering_check_unused_dots("print.net_clustering", ...)
@@ -1128,19 +1228,22 @@ plot.net_clustering <- function(x, type = c("silhouette", "mds", "heatmap",
                                  combined = TRUE, ...) {
   .net_clustering_check_unused_dots("plot.net_clustering", ...)
   type <- match.arg(type)
-  stopifnot(is.logical(combined), length(combined) == 1L)
+  .assert(is.logical(combined), length(combined) == 1L, !is.na(combined))
 
   if (type == "predictors") {
     if (is.null(x$covariates)) {
-      stop("No covariate analysis found. Run build_clusters() with covariates.",
-           call. = FALSE)
+      stop(errorCondition(
+        "No covariate analysis found. Run build_clusters() with covariates.",
+        class = "nestimate_bad_input", call = NULL))
     }
     if (is.null(x$covariates$coefficients)) {
-      stop("plot(..., type = \"predictors\") requires odds-ratio coefficients ",
-           "from estimator = \"multinom\". The current covariate analysis ",
-           "(estimator = \"chisq\") has no coefficients; inspect ",
-           "x$covariates$tests and x$covariates$residuals instead.",
-           call. = FALSE)
+      stop(errorCondition(
+        paste0(
+          "plot(..., type = \"predictors\") requires odds-ratio coefficients ",
+          "from estimator = \"multinom\". The current covariate analysis ",
+          "(estimator = \"chisq\") has no coefficients; inspect ",
+          "x$covariates$tests and x$covariates$residuals instead."),
+        class = "nestimate_bad_input", call = NULL))
     }
     return(.plot_covariate_forest(
       x$covariates$coefficients,
@@ -1221,19 +1324,20 @@ plot.net_clustering <- function(x, type = c("silhouette", "mds", "heatmap",
   }
   dot_names <- names(dots)
   dot_names[!nzchar(dot_names)] <- paste0("..", which(!nzchar(dot_names)))
-  stop(
+  stop(errorCondition(paste0(
     method, "() got unsupported argument",
     if (length(dots) == 1L) ": " else "s: ",
-    paste(dot_names, collapse = ", "),
-    call. = FALSE
+    paste(dot_names, collapse = ", ")),
+    class = "nestimate_bad_input", call = NULL)
   )
 }
 
 .net_clustering_check_digits <- function(digits) {
   if (!is.numeric(digits) || length(digits) != 1L || !is.finite(digits) ||
       digits != floor(digits) || digits < 0L) {
-    stop("'digits' must be a single non-negative whole finite number.",
-         call. = FALSE)
+    stop(errorCondition(
+      "'digits' must be a single non-negative whole finite number.",
+      class = "nestimate_bad_input", call = NULL))
   }
   invisible(TRUE)
 }
@@ -1263,10 +1367,10 @@ plot.net_clustering <- function(x, type = c("silhouette", "mds", "heatmap",
   # --- Covariates supplied as a data.frame: use all columns ---
   if (is.data.frame(covariates)) {
     if (nrow(covariates) != n) {
-      stop(sprintf(
+      stop(errorCondition(sprintf(
         "Covariate data.frame has %d rows but sequence data has %d rows.",
         nrow(covariates), n
-      ), call. = FALSE)
+      ), class = "nestimate_bad_input", call = NULL))
     }
     rhs <- paste(names(covariates), collapse = " + ")
     return(list(cov_df = covariates, rhs = rhs))
@@ -1286,12 +1390,15 @@ plot.net_clustering <- function(x, type = c("silhouette", "mds", "heatmap",
     cov_names <- covariates
     rhs_text <- paste(cov_names, collapse = " + ")
   } else {
-    stop("covariates must be a formula, character vector, string, or data.frame.",
-         call. = FALSE)
+    stop(errorCondition(
+      "covariates must be a formula, character vector, string, or data.frame.",
+      class = "nestimate_bad_input", call = NULL))
   }
 
   if (length(cov_names) == 0L) {
-    stop("No covariate variables specified.", call. = FALSE)
+    stop(errorCondition(
+      "No covariate variables specified.",
+      class = "nestimate_bad_input", call = NULL))
   }
 
   # --- Look up columns in metadata or raw data ---
@@ -1319,26 +1426,32 @@ plot.net_clustering <- function(x, type = c("silhouette", "mds", "heatmap",
       }
     }
     if (length(avail_names) == 0L) {
-      stop("Network object has no $metadata or $data slot to resolve ",
-           "column-name covariates against. Pass covariates as a ",
-           "data.frame instead.", call. = FALSE)
+      stop(errorCondition(
+        paste0(
+          "Network object has no $metadata or $data slot to resolve ",
+          "column-name covariates against. Pass covariates as a ",
+          "data.frame instead."),
+        class = "nestimate_bad_input", call = NULL))
     }
     if (all(cov_names %in% avail_names)) {
       cov_df <- avail_df[, cov_names, drop = FALSE]
     } else {
       missing <- setdiff(cov_names, avail_names)
-      stop(sprintf(
+      stop(errorCondition(sprintf(
         "Covariate columns not found in network object: %s. Available: %s",
         paste(missing, collapse = ", "),
         paste(avail_names, collapse = ", ")
-      ), call. = FALSE)
+      ), class = "nestimate_bad_input", call = NULL))
     }
   }
 
   # tna objects: require data.frame covariates (no canonical metadata slot).
   if (is.null(cov_df) && inherits(raw_data, "tna")) {
-    stop("Column-name covariates are not supported for tna inputs. ",
-         "Pass covariates as a data.frame instead.", call. = FALSE)
+    stop(errorCondition(
+      paste0(
+        "Column-name covariates are not supported for tna inputs. ",
+        "Pass covariates as a data.frame instead."),
+      class = "nestimate_bad_input", call = NULL))
   }
 
   # Try raw data.frame columns
@@ -1349,11 +1462,11 @@ plot.net_clustering <- function(x, type = c("silhouette", "mds", "heatmap",
                                stringsAsFactors = FALSE)
     } else {
       missing <- setdiff(cov_names, avail)
-      stop(sprintf(
+      stop(errorCondition(sprintf(
         "Covariate columns not found: %s. Available: %s",
         paste(missing, collapse = ", "),
         paste(avail, collapse = ", ")
-      ), call. = FALSE)
+      ), class = "nestimate_bad_input", call = NULL))
     }
   }
 
@@ -1522,7 +1635,9 @@ plot.net_clustering <- function(x, type = c("silhouette", "mds", "heatmap",
   fit_df$cluster <- factor(assignments)
   for (nm in setdiff(names(fit_df), "cluster")) {
     if (length(unique(fit_df[[nm]][!is.na(fit_df[[nm]])])) < 2L) {
-      stop(sprintf("Covariate '%s' is constant. Remove it.", nm), call. = FALSE)
+      stop(errorCondition(
+        sprintf("Covariate '%s' is constant. Remove it.", nm),
+        class = "nestimate_bad_input", call = NULL))
     }
   }
   profiles_df <- if (n_dropped > 0L) cov_df[complete, , drop = FALSE] else cov_df
@@ -1614,10 +1729,11 @@ plot.net_clustering <- function(x, type = c("silhouette", "mds", "heatmap",
         stringsAsFactors = FALSE
       )
     } else {
-      stop(sprintf(
+      stop(errorCondition(paste0(sprintf(
         "Covariate '%s' has unsupported type '%s' for estimator = 'chisq'. ",
         nm, class(x)[1L]),
-        "Convert to factor or numeric.", call. = FALSE)
+        "Convert to factor or numeric."),
+        class = "nestimate_bad_input", call = NULL))
     }
   }
 
@@ -2092,6 +2208,20 @@ print.tidy_covariates <- function(x, ...) {
   .restore_htna_group(nets, x$htna_partition)
 }
 
+# A network's estimator settings live in `$params` (an attention network's
+# `lambda`, an n-gram's `n_gram`), not in `$build_args`; without them the
+# per-cluster rebuild silently fell back to the defaults. The caller's own
+# `params`, and a method other than the network's, take precedence.
+#' @noRd
+.inherit_estimator_params <- function(build_dots, net) {
+  same_method <- identical(.resolve_method_alias(build_dots$method),
+                           .resolve_method_alias(net$method))
+  if (is.null(build_dots$params) && same_method && length(net$params) > 0L) {
+    build_dots$params <- net$params
+  }
+  build_dots
+}
+
 # Add the columns set aside at fitting time to one component's network. The
 # rebuild can find metadata of its own (a position that is empty in this
 # component), so it joins what is there instead of giving way to it.
@@ -2112,38 +2242,77 @@ print.tidy_covariates <- function(x, ...) {
 
 #' Cluster data and build per-cluster networks in one step
 #'
-#' Combines sequence clustering and network estimation into a single call.
-#' Clusters the data using the specified algorithm, then calls
-#' \code{\link{build_network}} on each cluster subset.
+#' @description
+#' `cluster_network()` clusters a set of sequences and estimates one network
+#' per cluster in a single call. It runs [build_clusters()] (dissimilarity
+#' clustering with PAM or a hierarchical method) or, with
+#' `cluster_by = "mmm"`, [build_mmm()] (a mixture of Markov chains), then
+#' [build_network()] on each cluster's sequences. The network method is
+#' the `method` given in `...`; without one, a `netobject` input passes on
+#' its own method and stored build arguments, so the per-cluster networks
+#' are of the same type as the input, and other input gives `"relative"`
+#' transition networks.
 #'
-#' If \code{data} is a \code{netobject} and \code{method} is not provided in
-#' \code{...}, the original network method is inherited automatically so the
-#' per-cluster networks match the type of the input network.
+#' The clusters were formed to make the sequences within each one alike, so
+#' their networks differ partly by construction. Check the classification
+#' with [cluster_diagnostics()] and the choice of `k` with
+#' [cluster_choice()] or [compare_mmm()], and see how far each cluster's
+#' edges move under resampling with [bootstrap_network()] before reading
+#' differences between the networks.
 #'
-#' @param data Sequence data. Accepts a data frame, matrix, or
-#'   \code{netobject}. See \code{\link{build_clusters}} for supported formats.
-#' @param k Integer. Number of clusters.
-#' @param cluster_by Character. Clustering algorithm passed to
-#'   \code{\link{build_clusters}}'s \code{method} parameter (\code{"pam"},
-#'   \code{"ward.D2"}, \code{"ward.D"}, \code{"complete"}, \code{"average"},
-#'   \code{"single"}, \code{"mcquitty"}, \code{"median"}, \code{"centroid"}),
-#'   or \code{"mmm"} for Mixed Markov Model clustering. Default: \code{"pam"}.
-#' @param dissimilarity Character. Distance metric for sequence clustering.
-#'   Only valid when \code{cluster_by != "mmm"}. Default: \code{"hamming"}.
-#' @param ... Routed to two stages. For distance clustering
-#'   (\code{cluster_by != "mmm"}), \code{\link{build_clusters}} arguments
-#'   \code{na_syms}, \code{weighted}, \code{lambda}, \code{seed}, \code{q},
-#'   \code{p}, and \code{covariates} are intercepted and forwarded to the
-#'   clusterer; recognised network-estimation arguments flow to
-#'   \code{\link{build_network}}. Unknown arguments error before either stage
-#'   is run. When
-#'   \code{cluster_by = "mmm"}, the recognised \code{\link{build_mmm}}
-#'   arguments (\code{n_starts}, \code{max_iter}, \code{tol}, \code{smooth},
-#'   \code{seed}, \code{covariates}) are intercepted instead, and the rest
-#'   flows to \code{build_network}. In both modes, when \code{data} is a
-#'   \code{netobject}, its \code{build_args} are merged into the
-#'   \code{build_network} side (caller's explicit values take precedence).
-#' @return A \code{netobject_group}.
+#' @param data The sequences: a data frame, matrix, `netobject`, bare
+#'   `cograph_network` or `tna` model, as accepted by [build_clusters()] (or
+#'   by [build_mmm()] when `cluster_by = "mmm"`). A `wtna` network is
+#'   accepted only with `cluster_by = "mmm"`; dissimilarity clustering
+#'   refuses it with an error of class `nestimate_bad_input`.
+#' @param k The number of clusters, a whole number from 2 to one less than
+#'   the number of sequences. Required.
+#' @param cluster_by The clustering algorithm. `"pam"` (default) and the
+#'   hierarchical methods `"ward.D2"`, `"ward.D"`, `"complete"`,
+#'   `"average"`, `"single"`, `"mcquitty"`, `"median"` and `"centroid"` are
+#'   passed to [build_clusters()] as its `method`; `"mmm"` fits a mixed
+#'   Markov model with [build_mmm()] instead.
+#' @param dissimilarity The distance between sequences for dissimilarity
+#'   clustering, one of those [build_clusters()] accepts. Default
+#'   `"hamming"`. Giving it with `cluster_by = "mmm"` raises an error.
+#' @param ... Arguments for the two stages, routed by name. For
+#'   dissimilarity clustering, [build_clusters()]'s `na_syms`, `weighted`,
+#'   `lambda`, `seed`, `q`, `p`, `covariates` and `estimator` go to the
+#'   clustering; with `cluster_by = "mmm"`, [build_mmm()]'s `n_starts`,
+#'   `max_iter`, `tol`, `smooth`, `seed`, `covariates`, `covariate_effect`
+#'   and `estimator` go to the mixture fit. Everything else is meant for the
+#'   network stage and must be an argument of [build_network()] or of a
+#'   registered estimator; any other name raises an error before either
+#'   stage runs. A name both stages accept goes to the clustering: under
+#'   dissimilarity clustering a `lambda` given here is the Hamming decay of
+#'   the clustering and never reaches an attention network, and the same
+#'   holds for `weighted`. When `data` is a `netobject`, its stored build
+#'   arguments are reused for the per-cluster networks, and a value given in
+#'   the call replaces the stored one. The *Details* section lists which
+#'   network arguments take effect.
+#' @details
+#' `method`, the estimators' own arguments (such as `n_gram` or
+#' `direction`) and [build_network()]'s `threshold`, `scaling`, `start`,
+#' `end` and `params` reach the per-cluster networks. A `netobject` input
+#' of the same method also passes on its estimator settings (`$params`, such
+#' as an attention network's `lambda`) unless `params` is given. With
+#' `cluster_by = "mmm"` and the default relative networks, which are the
+#' fitted chains, `scaling` and `threshold` are applied to the fitted
+#' weights, and an estimator argument, `start`, `end` or a new `params`
+#' raises an error of class `nestimate_bad_input`. For a one-hot `netobject`
+#' the stored build arguments are not used. Under `"mmm"`, rebuilding a
+#' network built from
+#' long-format data with any method other than `"relative"` currently raises
+#' an error, because its column names are passed on to the wide per-cluster
+#' data.
+#' @return A `netobject_group`: one `netobject` per cluster, named
+#'   `"Cluster 1"`, `"Cluster 2"`, and so on, with the clustering (a
+#'   `net_clustering`, or for `"mmm"` a `net_mmm_clustering`) kept as
+#'   its `"clustering"` attribute. `print()` names the clustering method and
+#'   shows each cluster's network size, weight range and share of the
+#'   sequences; [cluster_diagnostics()] reads the clustering, and
+#'   [summary()] (the networks' metrics, a column per cluster),
+#'   [bootstrap_network()] and [net_centrality()] take the group as it is.
 #' @seealso \code{\link{build_clusters}}, \code{\link{cluster_mmm}},
 #'   \code{\link{build_network}}
 #' @examples
@@ -2160,11 +2329,6 @@ print.tidy_covariates <- function(x, ...) {
 #' # Default: PAM clustering, relative (transition) networks
 #' grp <- cluster_network(seqs, k = 3)
 #'
-#' # Specify network method (cor requires numeric panel data)
-#' \dontrun{
-#' panel <- as.data.frame(matrix(rnorm(1500), nrow = 300, ncol = 5))
-#' grp <- cluster_network(panel, k = 2, method = "cor")
-#' }
 #'
 #' # MMM-based clustering
 #' grp <- cluster_network(seqs, k = 2, cluster_by = "mmm")
@@ -2181,10 +2345,10 @@ cluster_network <- function(data, k, cluster_by = "pam",
 
   if (identical(cluster_by, "mmm")) {
     if (!missing(dissimilarity)) {
-      stop(
+      stop(errorCondition(paste0(
         "`dissimilarity` is only valid for distance clustering. ",
-        "Omit it when `cluster_by = \"mmm\"`.",
-        call. = FALSE
+        "Omit it when `cluster_by = \"mmm\"`."),
+        class = "nestimate_bad_input", call = NULL)
       )
     }
 
@@ -2231,6 +2395,7 @@ cluster_network <- function(data, k, cluster_by = "pam",
       build_dots <- modifyList(data$build_args, build_dots)
     if (is.null(build_dots$method))
       build_dots$method <- data$method
+    build_dots <- .inherit_estimator_params(build_dots, data)
   }
   .validate_cluster_network_build_args(build_dots)
 
@@ -2256,12 +2421,12 @@ cluster_network <- function(data, k, cluster_by = "pam",
 
   unknown <- setdiff(arg_names, accepted)
   if (length(unknown)) {
-    stop(
+    stop(errorCondition(paste0(
       "Unknown argument(s) in cluster_network(): ",
       paste(unknown, collapse = ", "), ". ",
       "Pass estimator-specific options through `params = list(...)` ",
-      "when using custom estimators.",
-      call. = FALSE
+      "when using custom estimators."),
+      class = "nestimate_bad_input", call = NULL)
     )
   }
 

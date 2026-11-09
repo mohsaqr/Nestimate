@@ -7,11 +7,16 @@
 list_estimators()
 }
 \value{
-A data frame with columns \code{name}, \code{description},
-\code{directed}.
+A data frame with one row per registered estimator, sorted by
+name, and columns \code{name}, \code{description} and \code{directed} (\code{TRUE} for
+directed networks). With an empty registry it has no rows.
 }
 \description{
-Return a data frame summarising all registered network estimators.
+\code{list_estimators()} returns the estimators \code{\link[=build_network]{build_network()}} can call by
+name: the fourteen built-ins and any added with
+\code{\link[=register_estimator]{register_estimator()}}. Aliases such as
+\code{"tna"} or \code{"ebicglasso"} are not listed; the \emph{Estimators} section of
+\code{\link[=build_network]{build_network()}} gives them.
 }
 \examples{
 list_estimators()

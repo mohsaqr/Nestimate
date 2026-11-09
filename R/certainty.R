@@ -19,59 +19,79 @@
 #' Analytic certainty of network edges (Bayesian Dirichlet-Multinomial)
 #'
 #' @description
-#' Closed-form alternative to \code{\link{bootstrap_network}} for transition
-#' networks. Models the outgoing transitions from each state as a
-#' Dirichlet-Multinomial process: with a Jeffreys prior the posterior for state
-#' \eqn{i} is \eqn{\mathrm{Dirichlet}(c_i + \mathrm{prior})}, so each edge is
-#' marginally Beta and its posterior mean, standard deviation, credible interval
-#' and stability decision are available analytically. No resampling, so it runs
-#' in microseconds.
+#' `certainty()` gives each edge of a transition-probability network a
+#' posterior mean, standard deviation, credible interval and a decision on
+#' whether the edge is certain, all in closed form, and returns them in the
+#' layout of [bootstrap_network()]. It models the outgoing transitions of
+#' each state as a Dirichlet-Multinomial process: with a Dirichlet prior of
+#' concentration `prior`, the posterior for state \eqn{i} is
+#' \eqn{\mathrm{Dirichlet}(c_i + \mathrm{prior})}, where \eqn{c_i} are its
+#' transition counts, so each edge probability is marginally Beta. It reads a
+#' `netobject` built with `method = "relative"`, or a `netobject_group` of
+#' them.
 #'
-#' The return value has the same structure as \code{\link{bootstrap_network}}
-#' (same slots and summary columns) and carries class \code{c("net_certainty",
-#' "net_bootstrap")}, so \code{summary()} and any code that consumes a
-#' \code{net_bootstrap} object work unchanged.
+#' With `inference = "stability"`, an edge is certain when the posterior
+#' mass outside a band around its weight (`consistency_range`) is below
+#' `ci_level`; with `"threshold"`, when the mass below `edge_threshold` is.
+#' Certainty says how precisely the observed counts pin an edge down, not
+#' whether the edge survives resampling the sequences ([bootstrap_network()])
+#' or holds across split halves ([network_reliability()]). Certainty and
+#' bootstrap stability agree on homogeneous data. Certainty treats every
+#' transition as independent, so it is over-confident when the sequences come
+#' from a mixture of latent classes, the more so the longer they are; use
+#' [bootstrap_network()] there.
 #'
 #' @details
-#' Certainty (this function), stability (\code{\link{bootstrap_network}}) and
-#' reliability (\code{\link[=network_reliability]{reliability}}) answer different questions about an
-#' edge: how precisely it is pinned down by the observed counts, whether it
-#' survives resampling the sequences, and whether it is consistent across
-#' split-halves. Certainty and stability agree on homogeneous data; certainty is
-#' over-confident when the data are a mixture of latent classes, because it
-#' treats transitions clustered within a sequence as independent.
+#' Nothing is resampled: the posterior quantities are Beta means, variances
+#' and quantiles (`stats::qbeta()`, `stats::pbeta()`), so a call takes
+#' milliseconds.
 #'
-#' @param x A \code{netobject} from \code{\link{build_network}} using a
-#'   transition-probability method (\code{"relative"} / \code{"tna"}), or a
-#'   \code{netobject_group}. For the \code{print()} method: an object of class \code{net_certainty}.
-#' @param prior Numeric. Dirichlet prior concentration added to every cell
-#'   (default \code{0.5}, the Jeffreys prior).
-#' @param ci_level Numeric in (0,1). Tail level for credible intervals and the
-#'   stability decision (default \code{0.05}, i.e. a 95% interval). Named to
-#'   match \code{bootstrap_network()}.
-#' @param inference Character. \code{"stability"} (default) tests whether the
-#'   posterior keeps the edge within a multiplicative \code{consistency_range}
-#'   of its weight; \code{"threshold"} tests whether the edge exceeds
-#'   \code{edge_threshold}.
-#' @param consistency_range Numeric vector of length 2. Multiplicative bounds
-#'   for stability inference (default \code{c(0.75, 1.25)}).
-#' @param edge_threshold Numeric or NULL. Fixed threshold for
-#'   \code{inference = "threshold"}. If NULL, defaults to the 10th percentile of
-#'   non-zero edge weights.
+#' @param x The network: a `netobject` built with [build_network()] using
+#'   `method = "relative"` (or its aliases `"tna"`, `"transition"`), without
+#'   `scaling`, or a `netobject_group` of such networks, each handled on its
+#'   own. A bare `cograph_network` is recounted from the sequences it
+#'   carries, and used only when they reproduce its weights; otherwise, and
+#'   for an `mcml`, an error of class `nestimate_bad_input` is raised.
+#'   Another method or a scaled network raises an error.
+#'   For the `print()` method: a `net_certainty` object.
+#' @param prior The Dirichlet concentration added to every cell of the count
+#'   matrix, zero cells and self-loops included; a positive number. Default
+#'   `0.5`, the Jeffreys prior.
+#' @param ci_level The tail level, in (0, 1), of the equal-tailed credible
+#'   intervals and of the decision: an edge is certain when its posterior
+#'   mass (the `p_value` column) is below it. Default `0.05`, a 95%
+#'   interval. Named to match [bootstrap_network()].
+#' @param inference The decision rule. `"stability"` (default) takes the
+#'   posterior mass outside the band `consistency_range` times the edge's
+#'   weight; `"threshold"` takes the posterior mass below `edge_threshold`.
+#' @param consistency_range For `inference = "stability"`: the two
+#'   multiplicative bounds of the band around each weight, positive numbers
+#'   in either order. Default `c(0.75, 1.25)`.
+#' @param edge_threshold For `inference = "threshold"`: the weight an edge
+#'   must exceed. Default `NULL`: the 10th percentile of the non-zero
+#'   weights. Ignored for `"stability"`.
 #'
-#' @return For a \code{netobject}: an object of class
-#'   \code{c("net_certainty", "net_bootstrap")} with the same fields as
-#'   \code{\link{bootstrap_network}}: \code{original}, \code{mean},
-#'   \code{sd}, \code{p_values}, \code{significant}, \code{ci_lower},
-#'   \code{ci_upper}, \code{cr_lower}, \code{cr_upper}, \code{summary},
-#'   \code{model}, \code{method}, \code{params}, \code{ci_level},
-#'   \code{inference}, \code{consistency_range}, \code{edge_threshold}, plus
-#'   \code{prior}, \code{ci_method = "analytic"} and \code{iter = NA} (no
-#'   iterations).
+#' @return For a `netobject`: a `net_certainty` object (class
+#'   `c("net_certainty", "net_bootstrap")`), so the `net_bootstrap` methods
+#'   work on it. `print()` lists up to five certain edges with the largest
+#'   absolute posterior means (with their intervals), then the prior, the
+#'   count of certain edges and the settings;
+#'   [summary()] returns one row per non-zero edge with columns `from`,
+#'   `to`, `weight`, `mean`, `sd`, `p_value`, `sig`, `ci_lower` and
+#'   `ci_upper`, plus `cr_lower` and `cr_upper` (the band) for
+#'   `inference = "stability"`; `cograph::splot()` draws it. The object has
+#'   the fields of a [bootstrap_network()] result: `original` (the input
+#'   network), `mean`, `sd`, `p_values`, `significant` (the weights of the
+#'   certain edges, zero elsewhere), `ci_lower`, `ci_upper`, `cr_lower`,
+#'   `cr_upper` (matrices), `summary`, `model` (the network of certain edges
+#'   only), `method`, `params`, `ci_level`, `inference`,
+#'   `consistency_range` and `edge_threshold`, plus `prior`,
+#'   `ci_method = "analytic"` and `iter = NA` (no iterations).
 #'
-#'   For a \code{netobject_group}: a named list of those objects, one per
-#'   constituent network, of class
-#'   \code{c("net_certainty_group", "net_bootstrap_group", "list")}.
+#'   For a `netobject_group`: a named list of those objects, one per
+#'   network, of class `c("net_certainty_group", "net_bootstrap_group",
+#'   "list")`, printed and summarised by the `net_bootstrap_group` methods
+#'   ([summary()] stacks the per-network tables with a `group` column).
 #'
 #' @examples
 #' seqs <- data.frame(V1 = c("A","B","A","C","B"), V2 = c("B","C","B","A","C"),
@@ -108,8 +128,11 @@ certainty <- function(x,
     return(results)
   }
 
+  if (inherits(x, "mcml")) {
+    .stop_mcml_input("certainty()", "reads one transition network")
+  }
   if (inherits(x, "cograph_network")) x <- .as_netobject(x)
-  stopifnot(
+  .assert(
     inherits(x, "netobject"),
     is.numeric(prior), length(prior) == 1, prior > 0,
     is.numeric(ci_level), length(ci_level) == 1, ci_level > 0, ci_level < 1,
@@ -119,21 +142,26 @@ certainty <- function(x,
 
   method <- .resolve_method_alias(x$method)
   if (method != "relative") {
-    stop("certainty() needs a transition-probability network ",
-         "(method = \"relative\"); got '", x$method, "'. The ",
-         "Dirichlet-Multinomial models per-state outgoing probabilities.",
-         call. = FALSE)
+    stop(errorCondition(
+      paste0(
+        "certainty() needs a transition-probability network ",
+        "(method = \"relative\"); got '",
+        x$method,
+        "'. The ",
+        "Dirichlet-Multinomial models per-state outgoing probabilities."),
+      class = "nestimate_bad_input", call = NULL))
   }
-  if (is.null(x$frequency_matrix)) {
-    stop("Transition counts ($frequency_matrix) not found. ",
-         "Rebuild with build_network(method = \"relative\").", call. = FALSE)
-  }
+  x$frequency_matrix <- .network_transition_counts(x, "certainty()")
   if (!is.null(x$scaling) && !identical(x$scaling, "none")) {
-    stop("certainty() needs an unscaled transition network; got scaling = '",
-         x$scaling, "'. The Dirichlet posterior is on the row-probability ",
-         "scale, so the consistency band would compare it against transformed ",
-         "weights. Rebuild with build_network(method = \"relative\") and no ",
-         "scaling.", call. = FALSE)
+    stop(errorCondition(
+      paste0(
+        "certainty() needs an unscaled transition network; got scaling = '",
+        x$scaling,
+        "'. The Dirichlet posterior is on the row-probability ",
+        "scale, so the consistency band would compare it against transformed ",
+        "weights. Rebuild with build_network(method = \"relative\") and no ",
+        "scaling."),
+      class = "nestimate_bad_input", call = NULL))
   }
 
   states <- x$nodes$label
@@ -221,8 +249,8 @@ certainty <- function(x,
 
 
 #' @rdname certainty
-#' @param ... In \code{print.net_certainty()}: Additional arguments (ignored).
-#' @return In \code{print.net_certainty()}: The input object, invisibly.
+#' @param ... For the `print()` method: ignored.
+#' @return The `print()` method returns its input invisibly.
 #' @export
 print.net_certainty <- function(x, ...) {
   method_labels <- c(

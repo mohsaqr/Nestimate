@@ -62,318 +62,373 @@ sequence_plot(
 \method{print}{mcml_sequence_plot}(x, ...)
 }
 \arguments{
-\item{x}{Sequence data. Accepts:
+\item{x}{The sequences to draw:
 \describe{
-\item{long data.frame}{One row per action, with \code{action =}
-naming the action column (and \code{actor}, \code{time},
-\code{order} as needed). Converted with \code{\link{prepare}}: one
-row per actor, or per actor-period with \code{periods}.}
-\item{data.frame / matrix}{Rows = sequences, columns = time points.}
-\item{netobject}{Extracts \code{$data}.}
-\item{net_clustering}{From \code{\link{build_clusters}}. Uses
-\code{$data}, \code{$assignments} for grouping, and \code{$distance}
-for dendrogram.}
-\item{netobject_group}{From \code{\link{cluster_network}} or
-\code{\link{build_network}} on a clustering. Extracts data and
-assignments from \code{attr(, "clustering")}.
+\item{event log}{A data frame with one row per action and \code{action}
+naming the action column (with \code{actor}, \code{time} and \code{order} as
+needed). It is converted with \code{\link[=prepare]{prepare()}}: one row per actor, or
+per actor-period with \code{periods}.}
+\item{data frame or matrix}{One row per sequence, one column per
+time point; for a data frame, \code{cols} names the position columns
+when they are not a numbered run.}
+\item{netobject}{A network built from sequences; its sequence data is
+drawn. A network without its sequence data (built from a matrix)
+raises an error, and a one-hot or association network raises an
+error of class \code{nestimate_bad_input}.}
+\item{net_clustering}{From \code{\link[=build_clusters]{build_clusters()}}: its sequences, with
+the cluster assignments as groups and its distance matrix as the
+heatmap's dendrogram.}
+\item{netobject_group}{From \code{\link[=cluster_network]{cluster_network()}} or \code{\link[=build_network]{build_network()}}
+on a clustering: the full sequences and assignments carried by the
+clustering, or, for a plain group split, the groups' sequences
+stacked and labelled by group.}
+\item{net_mmm}{From \code{\link[=build_mmm]{build_mmm()}}: its sequences (or, when the fit
+stores none, those of its first component model), with the hard
+assignments as groups.}
+\item{tna}{A \code{tna} model; its integer-coded sequences are decoded to
+their state labels.}
+\item{mcml}{From \code{\link[=build_mcml]{build_mcml()}}, built from sequences (an \code{mcml}
+built from a matrix carries none and raises an error). It gives
+the multichannel figure: one panel per cluster plus a macro
+\code{Summary} panel. \code{type = "heatmap"} and \code{"index"} draw the carpet
+(each channel's own states solid, the other clusters a faded
+wash); \code{type = "distribution"} draws the stacked distribution (add
+\code{normalize = TRUE} for a TraMineR-style \code{seqdplot}, where each time
+point sums to 1).}
 }
-\item{net_mmm}{From \code{\link{build_mmm}}. Uses \code{$data} (falling
-back to \code{$models[[1]]$data}) and \code{$assignments}.}
-\item{tna}{From the tna package. Decodes integer-encoded sequences.}
-\item{mcml}{From \code{\link{build_mcml}} (built from sequences).
-Produces a \strong{multichannel} plot: one panel per cluster plus a
-macro \code{Summary} panel. \code{type = "heatmap"}/\code{"index"}
-draw the carpet (each channel's own states solid, other clusters a
-faded wash); \code{type = "distribution"} draws the stacked
-distribution (add \code{normalize = TRUE} for a TraMineR-style
-\code{seqdplot} where each time point sums to 1). See the section
-\emph{Multichannel view of an mcml} for the options that shape it,
-and \emph{Value} for what it returns.}
-} For the \code{print()} method: an object of class \code{mcml_sequence_plot}.}
+For the \code{print()} method: an \code{mcml_sequence_plot}.}
 
-\item{type}{One of \code{"heatmap"} (default), \code{"index"}, or
+\item{type}{The view: \code{"heatmap"} (default), \code{"index"} or
 \code{"distribution"}.}
 
-\item{sort}{Row-ordering strategy for heatmap / within-panel for index.
-One of \code{"lcs"} (default), \code{"frequency"}, \code{"start"},
-\code{"end"}, or any \code{\link{build_clusters}} distance
-(\code{"hamming"}, \code{"osa"}, \code{"lv"}, \code{"dl"},
-\code{"qgram"}, \code{"cosine"}, \code{"jaccard"}, \code{"jw"}).}
+\item{sort}{How rows are ordered, in the heatmap and within each panel of
+the index view. \code{"lcs"} (default) orders them by a Ward (\code{ward.D2})
+hierarchical clustering of their longest-common-subsequence distances,
+and any other \code{\link[=build_clusters]{build_clusters()}} distance (\code{"hamming"}, \code{"osa"},
+\code{"lv"}, \code{"dl"}, \code{"qgram"}, \code{"cosine"}, \code{"jaccard"}, \code{"jw"}) does the
+same with that distance. \code{"frequency"} clusters the rows by how often
+each state occurs in them. \code{"start"} sorts the rows alphabetically by
+their states from the first time point on, \code{"end"} from the last time
+point back; these two draw no dendrogram. A clustering input (a
+\code{net_clustering}, or a \code{netobject_group} from \code{\link[=cluster_network]{cluster_network()}})
+orders the heatmap by a hierarchical clustering of its own distance
+matrix, using its linkage when it was clustered hierarchically and
+\code{ward.D2} otherwise (for example with the default \code{pam}), unless \code{tree}
+is given.}
 
-\item{tree}{Optional \code{hclust}/\code{dendrogram}/\code{agnes}
-object to supply row ordering (heatmap only; overrides \code{sort}).}
+\item{tree}{A \code{hclust}, \code{dendrogram} or \code{agnes} object that gives the row
+order of the heatmap and is drawn beside it; it overrides \code{sort}. It
+must have one leaf per row. Default \code{NULL}.}
 
-\item{group}{Optional grouping vector (length \code{nrow(x)}) producing
-one facet per group. Index/distribution only. Ignored for heatmap.
-With \code{periods}, the name of a column of the long data (or of the
-network's metadata) that is constant within actor, e.g. a class or a
-condition: one panel per value, one row per actor, all panels on the
-same period axis.}
+\item{group}{The groups to draw in separate panels, one value per
+sequence (\code{nrow(x)} values), for the index and distribution views; the
+heatmap ignores it. \code{NULL} (default) uses the cluster assignments of a
+\code{net_clustering}, \code{net_mmm} or \code{netobject_group} input, and draws one
+panel otherwise. With \code{periods}, \code{group} instead names a column of the
+event log (or of the network's metadata) that is constant within
+actor, such as a class or a condition: one panel per value, one row
+per actor, all panels on the same period axis. With an event log it
+works only together with \code{periods}; otherwise it raises an error of
+class \code{nestimate_bad_input}.}
 
-\item{periods}{Name of the column that splits each actor's sequence into
-periods (days, weeks, ...): a column of the long data, or of the
-network's metadata. \code{x} must be a
-long data frame with \code{actor =} and \code{action =}, or a
-netobject built with \code{actor =} and \code{session = periods}, so
-that each actor-period pair holds one sequence. The plot then has one
-row per actor and the time axis is split into equal-width blocks, one
-per period. A \code{Date} column gives one block per calendar day and
-a whole-number column (a day or week counter) one block per number,
-from the first to the last, so a period in which nobody acted is an
-empty block; factor levels give their order (an unused level is an
-empty block); other columns are sorted. Ticks mark the period
-boundaries and each label sits under its block; \code{tick} thins the
-labels. Heatmap and index types only. \code{trim} then counts periods,
-not time points, and \code{group} names a column (index type).
-Default \code{NULL} plots the sequences as they are.}
+\item{periods}{The column that splits each actor's sequence into periods
+(days, weeks, ...): a column of the event log, or of the network's
+metadata. \code{x} must be an event log with \code{actor} and \code{action}, or a
+netobject built with \code{actor} and \code{session = periods}, so that each
+actor-period pair holds one sequence; anything else raises an error of
+class \code{nestimate_bad_input}. The plot then has one row per actor and
+the time axis is split into equal-width blocks, one per period. A
+\code{Date} column gives one block per calendar day and a whole-number
+column (a day or week counter) one block per number, from the first to
+the last, so a period in which nobody acted is an empty block; factor
+levels give their order (an unused level is an empty block); other
+columns are sorted. Ticks mark the period boundaries and each label
+sits under its block; \code{tick} thins the labels, and the x-axis label
+defaults to the column name. Heatmap and index views only (the
+distribution view raises an error of class \code{nestimate_bad_input}).
+\code{trim} then counts periods, not time points. Default \code{NULL} plots the
+sequences as they are.}
 
-\item{fill}{With \code{periods}: how an actor's steps fill a block.
-\code{"stretch"} (default) spreads them over the whole block, so one
-step fills it and three steps take a third each; the cell width differs
-between actors. \code{"pad"} gives every block as many fixed slots as
-the busiest actor-period and leaves unused slots as \code{NA}, so a
-slot is the same step position for every actor (minor ticks mark the
-slots when there are at most 60 in all). With \code{periods}, empty
-space is white unless \code{na_color} is given, so it is never confused
-with a state drawn in grey. Repeats of a state merge into one spell;
-\code{cell_border = "white"} (TraMineR's \code{border}) outlines each
-action so they show as separate, equal shares of the period.}
+\item{fill}{With \code{periods}, how an actor's steps fill a block.
+\code{"stretch"} (default) spreads them over the whole block, so one step
+fills it and three steps take a third each; the cell width differs
+between actors. \code{"pad"} gives every block as many fixed slots as the
+busiest actor-period and leaves unused slots as \code{NA}, so a slot is the
+same step position for every actor (minor ticks mark the slots when
+there are at most 60 in all). With \code{periods}, empty space is white
+unless \code{na_color} is given, so it is never confused with a state drawn
+in grey. Repeats of a state merge into one spell; \code{cell_border = "white"} (TraMineR's \code{border}) outlines each action so they show as
+separate, equal shares of the period. Setting \code{fill} without \code{periods}
+raises an error of class \code{nestimate_bad_input}; an \code{mcml} ignores it.}
 
-\item{actor, action, time, order}{Long data only: column names, as in
-\code{\link{build_network}}. Giving \code{action} marks \code{x} as
-long data (one row per action); \code{actor} identifies who acted (one
-row per actor in the plot), \code{time} and \code{order} put each
-actor's actions in order (otherwise row order is used). Without
-\code{periods}, a \code{time} column also splits an actor's actions
-into sessions at gaps over 15 minutes, as \code{prepare()} does; with
-\code{periods} it does not, so each actor-period is one sequence.
-\code{group} combines with long data only together with
-\code{periods}, as a column name.}
+\item{actor, action, time, order}{For an event log: column names, as in
+\code{\link[=build_network]{build_network()}}. Giving \code{action} declares \code{x} an event log (one row
+per action); \code{actor} identifies who acted (one row per actor in the
+plot), and \code{time} and \code{order} put each actor's actions in order
+(otherwise row order is used). Without \code{periods}, a \code{time} column also
+splits an actor's actions into sessions at gaps over 15 minutes, as
+\code{\link[=prepare]{prepare()}} does; with \code{periods} it does not, so each actor-period is
+one sequence. \code{actor}, \code{time} or \code{order} without \code{action}, a column
+that is not in \code{x}, and a missing actor or period raise an error of
+class \code{nestimate_bad_input}. Default \code{NULL} each.}
 
-\item{scale, geom, na}{Passed to \code{\link{distribution_plot}} when
-\code{type = "distribution"}.
-For an \code{mcml} (\code{type = "distribution"}), \code{na = FALSE}
-drops the \code{NA} (ended) band and shows every time point as shares
-of the sequences still running there, so each panel stacks to 100
-percent (cluster panels only with \code{rest = "clusters"} or
-\code{"pooled"}; a time point where no sequence is running stays empty).}
+\item{scale, geom, na}{For the distribution view, passed to
+\code{\link[=distribution_plot]{distribution_plot()}}: \code{scale} is \code{"proportion"} (default) or
+\code{"count"}, \code{geom} is \code{"area"} (default) or \code{"bar"}, and \code{na = TRUE}
+(default) draws missing cells as a band of their own. For an \code{mcml}
+distribution, \code{na = FALSE} drops the \code{NA} (ended) band and shows every
+time point as shares of the sequences still running there, so each
+panel stacks to 100 percent (cluster panels only with \code{rest = "clusters"} or \code{"pooled"}; a time point where no sequence is running
+stays empty).}
 
-\item{normalize}{\code{mcml} + \code{type = "distribution"} only. When
-\code{TRUE}, each time point is normalised to sum to 1 within its channel
-(TraMineR-style \code{seqdplot} composition); when \code{FALSE} (default)
-the stack shows prevalence and is capped with an \code{NA} band.}
+\item{normalize}{For an \code{mcml} distribution only: \code{TRUE} normalises each
+time point to sum to 1 within its channel (the composition of
+TraMineR's \code{seqdplot}); \code{FALSE} (default) shows prevalence, capped with
+an \code{NA} band.}
 
-\item{trim}{Optional truncation of the time axis (one number) or of
-the time axis and the rows (two numbers), to stop a few long
-sequences from stretching the plot and a few near-empty ones from
-padding it. Applies to all three types (including the \code{mcml}
-multichannel view). \code{NULL} (default) plots everything.
+\item{trim}{A cut of the time axis (one number) or of the time axis and
+the rows (two numbers), to stop a few long sequences from stretching
+the plot and a few near-empty ones from padding it. It applies to all
+three views, the \code{mcml} multichannel figure included. Default \code{NULL}
+plots everything.
 
-The first number cuts the time axis. A fraction in \code{(0, 1)}
-judges each time point on its own activity and keeps the busiest ones
-that together hold that share of the observed states, ties going to the
-earlier one; the rest are removed wherever they sit and the kept ones
-close up under their own labels. So \code{trim = 0.9} removes the quiet
-time points holding the last tenth of the states, which is what a long
-tail consists of, and those with no data. A value \code{>= 1} is an absolute
-cut (\code{trim = 50} keeps the first 50 time points). With
-\code{periods} the unit is the period block: \code{trim = 60} keeps the
-first 60 periods and a fraction judges each period by its actions. Only
-the drawing changes, not the data.
+The first number cuts the time axis. A fraction in (0, 1) judges each
+time point on its own activity and keeps the busiest ones that together
+hold that share of the observed states, ties going to the earlier one;
+the rest are removed wherever they sit and the kept ones close up under
+their own labels. So \code{trim = 0.9} removes the quiet time points holding
+the last tenth of the states, which is what a long tail consists of,
+and those with no data. A value \verb{>= 1} is an absolute cut (\code{trim = 50}
+keeps the first 50 time points). With \code{periods} the unit is the period
+block: \code{trim = 60} keeps the first 60 periods and a fraction judges
+each period by its actions.
 
 The second number ends each row earlier and never removes a row,
-counted over the time points kept by the first: a value \code{>= 1}
-keeps each row's first that many observed states
-(\code{trim = c(60, 5)}), a fraction its first share of them
-(\code{trim = c(0.9, 0.9)}). What is left stays in place; the row is
-white after that point. Only the drawing changes, not the data.
-\code{NA} leaves an axis alone (\code{trim = c(NA, 5)}).}
+counted over the time points kept by the first: a value \verb{>= 1} keeps
+each row's first that many observed states (\code{trim = c(60, 5)}), a
+fraction its first share of them (\code{trim = c(0.9, 0.9)}). What is left
+stays in place; the row is white after that point. \code{NA} leaves an axis
+alone (\code{trim = c(NA, 5)}). Either way only the drawing changes, not the
+data.}
 
-\item{panel}{\code{mcml} + \code{type = "distribution"} only. Which panel
-to draw. \code{"both"} (default) stacks the macro \code{Summary}
-channel and the per-cluster channels on one figure, each with its own
-legend; \code{"summary"} draws the macro channel alone,
-keyed and coloured by cluster; \code{"channels"} draws the per-cluster
-channels alone, keyed and coloured by state. The macro channel is keyed
-by cluster and the rest by state, so a cluster and a state can land on
-the same colour -- drawing one panel avoids that and gives it a default
-title.}
+\item{panel}{For an \code{mcml} distribution only: which panels to draw.
+\code{"both"} (default) stacks the macro \code{Summary} channel and the
+per-cluster channels on one figure, each with its own legend;
+\code{"summary"} draws the macro channel alone, keyed and coloured by
+cluster; \code{"channels"} draws the per-cluster channels alone, keyed and
+coloured by state. The macro channel is keyed by cluster and the rest
+by state, so a cluster and a state can land on the same colour; drawing
+one panel avoids that and gives it a default title. With an \code{mcml} heatmap
+or index view, a value other than \code{"both"} raises an error.}
 
-\item{expand}{For an \code{mcml}, names of clusters whose member states
-are shown individually in the Summary band; \code{"all"} or \code{TRUE}
-expands every cluster. The per-cluster channels are unaffected. Default
-\code{NULL} keys the Summary band by cluster.}
+\item{expand}{For an \code{mcml}: the clusters whose member states are shown
+individually in the \code{Summary} panel; \code{"all"} or \code{TRUE} expands every
+cluster. The per-cluster panels are unaffected. Default \code{NULL} keys the
+\code{Summary} panel by cluster.}
 
-\item{combine}{For an \code{mcml}, clusters to merge into one channel. A
-character vector merges one group (e.g.
-\code{combine = c("Cognitive", "Affective")}); a list merges several,
-and its names label the merged channels (default label
-\code{"Cognitive + Affective"}). A merged group acts as one cluster
-throughout the figure: one per-cluster panel holding all its states, one
-key in the Summary band, and one faded band in the other panels.
-\code{expand} is resolved after merging, so it can name the merged
-label. Errors on unknown clusters, a group of fewer than two, or a
-cluster in two groups. Default \code{NULL} draws the partition as built.}
+\item{combine}{For an \code{mcml}: clusters to merge into one channel. A
+character vector merges one group (e.g. \code{combine = c("Cognitive", "Affective")}); a list merges several, and its names label the merged
+channels (default label \code{"Cognitive + Affective"}). A merged group acts
+as one cluster throughout the figure: one per-cluster panel holding all
+its states, one key in the \code{Summary} panel, and one faded band in the
+other panels. \code{expand} is resolved after merging, so it can name the
+merged label. An unknown cluster, a group of fewer than two, or a
+cluster in two groups raises an error. Default \code{NULL} draws the
+partition as built.}
 
-\item{rest}{For an \code{mcml}, how a cluster's panel shows the time its
-subjects spend in \emph{other} clusters. \code{"clusters"} (default): one
-faded band (or wash, in the carpet) per other cluster.
-\code{"pooled"}: all other clusters as one grey band labelled
-\code{rest_label}.
-\code{"none"}: left blank, so the panel shows only its own states; in the
-distribution view the \code{NA} (ended) band is dropped too, and the
+\item{rest}{For an \code{mcml}: how a cluster's panel shows the time its
+subjects spend in \emph{other} clusters. \code{"clusters"} (default) draws one
+faded band (or wash, in the carpet) per other cluster; \code{"pooled"} draws
+all other clusters as one grey band labelled \code{rest_label}; \code{"none"}
+leaves them blank, so the panel shows only its own states. In the
+distribution view \code{"none"} drops the \code{NA} (ended) band too, and the
 panel's height at each time point is the share of subjects in that
-cluster. Ignored with \code{normalize = TRUE}, which rescales each panel
-to its own states. The Summary panel is unaffected.}
+cluster. Ignored with \code{normalize = TRUE}, which rescales each panel to
+its own states. The \code{Summary} panel is unaffected.}
 
-\item{rest_label}{For an \code{mcml}, the legend text for time spent in
-other clusters. Default \code{"Other states"}; e.g. \code{"Others"} or
-\code{"Rest of states"}. The pooled band (\code{rest = "pooled"}) takes
-it as is; the per-cluster bands read \code{"Social (Other states)"}.
-Must not equal a state or cluster name.}
+\item{rest_label}{For an \code{mcml}: the legend text for time spent in other
+clusters. Default \code{"Other states"}; \code{"Others"} or \code{"Rest of states"}
+are alternatives. The pooled band (\code{rest = "pooled"}) takes it as is;
+the per-cluster bands read \code{"Social (Other states)"}. A label equal to
+a state or cluster name, or to \code{"NA"}, raises an error. \code{combine},
+\code{expand}, \code{rest} and \code{rest_label} on any input other than an \code{mcml}
+raise an error.}
 
-\item{trim_clusterwise}{Grouped \code{type = "index"} /
-\code{"distribution"} only, and only when \code{trim} is a fraction.
-\code{FALSE} (default) computes one cutoff on the pooled data and
-applies it to every panel, so all facets share the same width and the
-time axes stay aligned. \code{TRUE} judges the time points within each
-group, so panels can end up at different widths (ragged
-axes). Absolute \code{trim} (\code{>= 1}) ignores this - the column is
-the same everywhere either way.}
+\item{trim_clusterwise}{For a grouped index or distribution view with a
+fractional \code{trim}: \code{FALSE} (default) computes one cut on the pooled
+data and applies it to every panel, so all panels share the same width
+and the time axes stay aligned; \code{TRUE} judges the time points within
+each group, so panels can end up at different widths. An absolute
+\code{trim} (\verb{>= 1}) ignores it, since the cut is the same everywhere.}
 
-\item{row_gap}{Fraction of row height used as vertical gap between
-sequences in index plots. \code{0} (default) = dense like heatmap.
-Try \code{0.15} for visible separators at low row counts.}
+\item{row_gap}{The vertical gap between rows of the index view, as a
+fraction of the row height, in [0, 1). Default \code{0} (dense, like the
+heatmap); \code{0.15} gives visible separators when there are few rows.}
 
-\item{dendrogram_width}{Width ratio of the dendrogram panel (heatmap).}
+\item{dendrogram_width}{The width of the heatmap's dendrogram panel,
+against a carpet width of 4: the default \code{1.2} makes the dendrogram 0.3
+times as wide as the carpet. Used only when a dendrogram is drawn.}
 
-\item{k}{Optional integer. When supplied in \code{type = "heatmap"},
-cuts the dendrogram into \code{k} clusters and draws thin horizontal
-separators between them in the carpet. Ignored when there is no
-dendrogram (e.g. \code{sort = "start"}) or for other types.}
+\item{k}{For the heatmap: the number of clusters to cut the dendrogram
+into, a single number of at least 2 and less than the number of rows;
+thin horizontal lines then separate them in the carpet. Ignored
+without a dendrogram (e.g. \code{sort = "start"}) and in the other views.
+Default \code{NULL} (no separators).}
 
-\item{k_color}{Colour for the cluster separator lines. Default
+\item{k_color}{The colour of the cluster separator lines. Default
 \code{"white"}.}
 
-\item{k_line_width}{Line width for the cluster separators. Default
+\item{k_line_width}{The line width of the cluster separators. Default
 \code{2.5}.}
 
-\item{state_colors}{Colours for the fill keys. Two forms:
-\emph{unnamed} - one colour per state, in level order (states are
-ordered as \code{sort(unique(...))}); \emph{named} - a lookup, where
-only the keys you name are overridden and every other key keeps its
-default. Names this figure does not draw are dropped with a message
-naming them, so one project-wide palette can be handed to every plot
-and each takes the keys that apply to it.
+\item{state_colors}{Colours for the fill keys, in one of two forms:
+\emph{unnamed}, one colour per state in level order (states are ordered as
+\code{sort(unique(...))}); or \emph{named}, a lookup where only the keys you name
+are overridden and every other key keeps its default (Okabe-Ito).
+Names this figure does not draw are dropped with a message naming
+them, so one project-wide palette can be handed to every plot and each
+takes the keys that apply to it. Default \code{NULL} uses the palette
+attached to \code{x} with \code{\link[=set_state_colors]{set_state_colors()}}, if any; a palette given
+here wins for this figure.
 
-For an \code{mcml} the named form reaches the whole figure, not just
-the states: a cluster name colours its \code{Summary} band, its
-channel strip and its faded band in the other panels, and a group
-merged by \code{combine} is named by its label (the list name you
-gave it, or \code{"A + B"}). \code{rest_label} is a key too. So
-\code{state_colors = c(plan = "#0072B2", "Planning + Monitoring" =
-  "#D55E00")} recolours one state and one combined cluster and leaves
-the rest of the palette alone.}
+For an \code{mcml} the named form reaches the whole figure, not only the
+states: a cluster name colours its \code{Summary} band, its channel strip
+and its faded band in the other panels, and a group merged by
+\code{combine} is named by its label (the list name you gave it, or \code{"A + B"}). \code{rest_label} is a key too. So \code{state_colors = c(plan = "#0072B2", "Planning + Monitoring" = "#D55E00")} recolours one state
+and one combined cluster and leaves the rest of the palette alone.}
 
-\item{na_color}{Colour for \code{NA} cells.}
+\item{na_color}{The colour of missing cells. Default \code{"grey90"}; with
+\code{periods}, \code{"white"} unless given.}
 
-\item{cell_border}{Cell border colour. \code{NA} (default) = off.}
+\item{cell_border}{The colour of each cell's border. Default \code{NA} (no
+border).}
 
-\item{frame}{\code{FALSE} (default) draws no box - axis ticks and labels
-still appear. \code{TRUE} draws a box around each panel.}
+\item{frame}{Whether to draw a box around each panel; axis ticks and
+labels appear either way. Default \code{FALSE}.}
 
-\item{width, height}{Optional device dimensions in inches. When supplied,
-opens a new graphics device via \code{grDevices::dev.new()}. In knitr
-chunks use the \code{fig.width} / \code{fig.height} chunk options
-instead.}
+\item{width, height}{Device dimensions in inches. In an interactive
+session, giving either opens a new graphics device with
+\code{grDevices::dev.new()} (the other defaults to 7); otherwise they are
+ignored. In knitr chunks, use the \code{fig.width} and \code{fig.height} chunk
+options instead. Default \code{NULL}.}
 
-\item{main}{Plot title.}
+\item{main}{The plot title. Default \code{NULL}: no title, apart from
+\code{"n = N"} when \code{show_n = TRUE}. With several groups, \code{main} is drawn
+once above the panels, and not at all when \code{combined = FALSE}.}
 
-\item{show_n}{Append \code{"(n = N)"} to the title.}
+\item{show_n}{Whether to append \code{"(n = N)"} to the title (to each panel
+title when grouped). Default \code{TRUE}.}
 
-\item{time_label, xlab}{X-axis label. \code{xlab} is an alias.}
+\item{time_label, xlab}{The x-axis label; \code{xlab} is an alias that wins
+when given. Default \code{"Time"} (with \code{periods}, the period column's
+name).}
 
-\item{y_label, ylab}{Y-axis label (distribution only). \code{ylab} alias.}
+\item{y_label, ylab}{The y-axis label of the distribution view; \code{ylab} is
+an alias. Default \code{NULL}, which \code{\link[=distribution_plot]{distribution_plot()}} reads as
+\code{"Proportion"} or \code{"Count"} according to \code{scale}.}
 
-\item{tick}{Show every Nth x-axis label. \code{NULL} = auto.}
+\item{tick}{Label every \code{tick}-th time point on the x-axis. Default
+\code{NULL} thins the labels to about 15.}
 
-\item{ncol, nrow}{Facet grid dimensions (index + distribution).
-Ignored when \code{combined = FALSE}.}
+\item{ncol, nrow}{The panel grid of the grouped index and distribution
+views. Default \code{NULL}: with neither given, \code{ncol = ceiling(sqrt(G))}
+for \code{G} groups and \code{nrow = ceiling(G / ncol)}; with one given, the
+other follows. With \code{combined = FALSE} the grid does not affect the
+layout, but \code{ncol * nrow} must still be at least the number of groups
+or an error is raised.}
 
-\item{combined}{Index and distribution types only. When \code{TRUE}
-(default), groups are arranged on one figure via
-\code{graphics::layout()}. When \code{FALSE}, each group is drawn
-on its own page (one full-size figure per group, with its own
-legend). Single-group calls (\code{G == 1}) ignore this argument.
-Heatmap is always single-figure.}
+\item{combined}{For the grouped index and distribution views: \code{TRUE}
+(default) arranges the groups on one figure with \code{graphics::layout()};
+\code{FALSE} draws each group on its own page, at full size with its own
+legend. A single group ignores it, and the heatmap is always one
+figure.}
 
-\item{legend}{Legend position: \code{"bottom"}, \code{"right"}, or
-\code{"none"}. \code{NULL} (default) resolves to \code{"right"} for
-every type.}
+\item{legend}{The legend position: \code{"right"}, \code{"bottom"} or \code{"none"}.
+Default \code{NULL}, read as \code{"right"} for every view.}
 
-\item{legend_size}{Legend text size. \code{NULL} (default) auto-scales
-from the device width so the legend looks proportional at 5 in vs
-12 in figures (clamped to \code{[0.65, 1.2]}).}
+\item{legend_size}{The legend text size. Default \code{NULL} scales it with
+the device width so the legend stays in proportion on a 5-inch and a
+12-inch figure (between 0.65 and 1.2).}
 
-\item{legend_title}{Optional legend title.}
+\item{legend_title}{The legend title. Default \code{NULL} (none).}
 
-\item{legend_ncol}{Number of legend columns.}
+\item{legend_ncol}{The number of legend columns. Default \code{NULL}: one row
+for a bottom legend, one column for a right legend.}
 
-\item{legend_border}{Swatch border colour.}
+\item{legend_border}{The colour of the legend swatches' borders. Default
+\code{NA} (none).}
 
-\item{legend_bty}{\code{"n"} or \code{"o"}.}
+\item{legend_bty}{The legend box: \code{"n"} (default, none) or \code{"o"} (boxed).}
 
-\item{cols}{Character vector or \code{NULL}. For a wide data frame: the columns
-holding the positions. Needed when they are not a numbered run (\code{T1},
-\code{T2}, ...) or one of them is called \code{action}.}
+\item{cols}{For a wide data frame: the columns holding the positions.
+Needed when they are not a numbered run (\code{T1}, \code{T2}, ...), when one of
+them is called \code{action}, or when any other column sits beside them;
+given for any other input it raises an error of class
+\code{nestimate_bad_input}, except for an \code{mcml}, which ignores it.
+Default \code{NULL}.}
 
-\item{...}{In \code{print.mcml_sequence_plot()}: Ignored.}
+\item{...}{For the \code{print()} method: ignored.}
 }
 \value{
-An \code{mcml} input returns the multichannel figure: one panel
-per channel (the macro \code{Summary} and one per cluster), stacked,
-each with its own legend of its own clusters or states. When more than
-one channel is drawn this is an \code{mcml_sequence_plot} (a
-\code{gtable} whose print method draws it); when \code{panel =
-  "summary"} leaves a single channel it is a plain \code{ggplot}. Every
-other input draws with base graphics and
-returns, invisibly, a list whose shape depends on \code{type}:
-\describe{
-\item{\code{"heatmap"}}{\code{ord} (integer row order actually
-plotted), \code{codes} (the integer-encoded, trimmed sequence
-matrix), \code{palette}, \code{levels} (state labels, parallel to
-\code{palette}), and \code{sort_used} (the ordering strategy
-applied, \code{"net_clustering"} when a clustering dendrogram was
-used).}
-\item{\code{"index"}}{\code{codes}, \code{palette}, \code{levels},
-\code{orders} (list of integer row orders, one per panel, indexing
-the original rows) and \code{groups} (panel labels).}
-\item{with \code{periods}}{\code{ord} (row order of the actors),
-\code{codes} (integer matrix, one row per actor and one column per
-period slot, in the \code{fill = "pad"} layout, named
-\code{"<period>.<slot>"}), \code{palette}, \code{levels},
-\code{periods} (period labels in plotted order, after \code{trim})
-and \code{fill}; with \code{group}, also \code{groups} (panel
-labels) and \code{orders} (one row order per panel, indexing the
-actors), \code{ord} being their concatenation.}
-\item{\code{"distribution"}}{Whatever
-\code{\link{distribution_plot}} returns: \code{counts},
-\code{proportions}, \code{levels}, \code{palette}, \code{groups}.}
-}
+For an \code{mcml}: the multichannel figure, one panel per channel
+(the macro \code{Summary} and one per cluster), stacked, each with its own
+legend of its clusters or states. When more than one channel is drawn
+it is an \code{mcml_sequence_plot}, a \code{gtable} that its \code{print()} method
+draws on a new page; when \code{panel = "summary"} leaves a single channel it
+is a \code{ggplot}. The \code{print()} method returns its input invisibly.
 
-In \code{print.mcml_sequence_plot()}: \code{x}, invisibly. Called for the side effect of drawing it on a new page of the current graphics device.
+Every other input is drawn with base graphics, and the call returns,
+invisibly, a list describing the figure, whose fields depend on the
+view:
+\describe{
+\item{heatmap}{\code{ord} (the row order plotted, as integer indices),
+\code{codes} (the integer-coded, trimmed sequence matrix), \code{palette},
+\code{levels} (the state labels, parallel to \code{palette}) and \code{sort_used}
+(the ordering applied; \code{"net_clustering"} when a clustering's
+dendrogram was used).}
+\item{index}{\code{codes}, \code{palette}, \code{levels}, \code{orders} (a list of row
+orders, one per panel, indexing the original rows) and \code{groups}
+(the panel labels).}
+\item{with \code{periods}}{\code{ord} (the row order of the actors), \code{codes}
+(an integer matrix, one row per actor and one column per period
+slot in the \code{fill = "pad"} layout, named \code{"<period>.<slot>"}),
+\code{palette}, \code{levels}, \code{periods} (the period labels in plotted
+order, after \code{trim}) and \code{fill}; with \code{group}, also \code{groups} (the
+panel labels) and \code{orders} (one row order per panel, indexing the
+actors), \code{ord} being their concatenation.}
+\item{distribution}{What \code{\link[=distribution_plot]{distribution_plot()}} returns: \code{counts},
+\code{proportions}, \code{levels}, \code{palette} and \code{groups}.}
+}
 }
 \description{
-Single entry point for three categorical-sequence visualisations.
+\code{sequence_plot()} draws categorical sequences: one row per sequence and
+one coloured cell per time point, or the share of sequences in each state
+at every time point. Three views share one call:
 \itemize{
-\item \code{type = "heatmap"} (default): dense carpet, rows reordered
-by \code{sort} / dendrogram (single panel).
-\item \code{type = "index"}: same data layout, but rows separated by
-thin gaps (no dendrogram). Supports grouping via \code{group} or a
-\code{net_clustering}, plus a \code{ncol} x \code{nrow} facet grid.
-\item \code{type = "distribution"}: dispatches to
-\code{\link{distribution_plot}}.
+\item \code{type = "heatmap"} (default): a dense carpet in a single panel,
+rows ordered by \code{sort} or a dendrogram.
+\item \code{type = "index"}: the same layout with optional thin gaps between
+rows and no dendrogram, split into one panel per group (\code{group}, or
+the clusters of a clustering) on an \code{ncol} x \code{nrow} grid.
+\item \code{type = "distribution"}: the stacked state distribution over
+time, drawn by \code{\link[=distribution_plot]{distribution_plot()}}.
 }
+It reads wide sequences, event logs (with \code{action}), networks built from
+sequences, clusterings, mixture fits and \code{tna} models; \code{periods} gives one
+row per actor with the time axis split into days, weeks or another
+period. An \code{mcml} from \code{\link[=build_mcml]{build_mcml()}} gets a multichannel figure instead:
+a macro \code{Summary} panel and one panel per cluster (see the section
+\emph{Multichannel view of an mcml}). That figure is drawn with ggplot2 and
+takes only \code{type}, \code{trim}, \code{state_colors}, \code{na_color}, \code{main},
+\code{time_label} (or \code{xlab}) and the mcml options (\code{normalize}, \code{na},
+\code{panel}, \code{expand}, \code{combine}, \code{rest}, \code{rest_label}); every other figure
+is drawn with base graphics.
+
+The plot describes the sequences; it does not model them. The row order
+of a heatmap comes from \code{sort} and is a display choice, so blocks of
+similar rows are a reason to cluster the sequences with
+\code{\link[=build_clusters]{build_clusters()}}, not a clustering in themselves. \code{trim} changes only
+what is drawn, never the data.
 }
 \section{Multichannel view of an mcml}{
 
@@ -403,9 +458,9 @@ band labelled \code{rest_label} (\code{"pooled"}), or nothing
 \item \code{na} (distribution only) keeps the \code{NA} band of
 sequences that have ended (\code{TRUE}, shares of all subjects) or
 drops it (\code{FALSE}, shares of the subjects still running, so every
-panel stacks to 100 percent unless \code{rest = "none"}). \code{normalize = TRUE} instead rescales each
-cluster panel to its own states, which ignores \code{rest} and
-\code{na}.
+panel stacks to 100 percent unless \code{rest = "none"}).
+\code{normalize = TRUE} instead rescales each cluster panel to its
+own states, which ignores \code{rest} and \code{na}.
 }
 \code{panel} draws the Summary or the cluster panels alone, and
 \code{trim} cuts the time axis for every panel at once.
@@ -414,7 +469,10 @@ cluster panel to its own states, which ignores \code{rest} and
 \section{Methods}{
 
 \itemize{
-\item \code{print.mcml_sequence_plot()}: Print method for the figure \code{\link{sequence_plot}} returns for an \code{mcml} with more than one channel: one panel per channel (the macro \code{Summary} and one per cluster), each with its own legend.
+\item \code{print.mcml_sequence_plot()} draws the figure \code{sequence_plot()} returns
+for an \code{mcml} with more than one channel (the macro \code{Summary} and one
+panel per cluster, each with its own legend) on a new page of the
+current graphics device.
 }
 }
 

@@ -14,42 +14,47 @@ long_to_wide(
 )
 }
 \arguments{
-\item{data}{Data frame in long format.}
+\item{data}{A data frame in long format, one row per action.}
 
-\item{id_col}{Character. Name of the column identifying sequences.
-Default: "Actor".}
+\item{id_col}{The column identifying each sequence. Default \code{"Actor"};
+a missing column raises an error.}
 
-\item{time_col}{Character. Name of the column identifying time points.
-Default: "Time".}
+\item{time_col}{The column that orders the actions within a sequence.
+Default \code{"Time"}. Its values only order the actions; they do not set
+the column numbers, so gaps between time points are not kept. Actions
+with the same time keep their row order. When the column is absent, the
+row order is used.}
 
-\item{action_col}{Character. Name of the column containing actions/states.
-Default: "Action".}
+\item{action_col}{The column holding the actions (states). Default
+\code{"Action"}; a missing column raises an error.}
 
-\item{time_prefix}{Character. Prefix for time point columns in output.
-Default: "V".}
+\item{time_prefix}{The prefix of the position columns in the output.
+Default \code{"V"}.}
 
-\item{fill_na}{Logical. Whether to fill missing time points with NA.
-Default: TRUE.}
+\item{fill_na}{How to handle sequences of different lengths. With \code{TRUE}
+(default), shorter sequences are padded with \code{NA}, so every row has the
+columns of the longest sequence. With \code{FALSE}, only the positions present
+in every sequence are kept, so longer sequences are cut to the length of
+the shortest.}
 }
 \value{
-A data frame in wide format, one row per sequence: the
-\code{id_col} column followed by the time point columns
-\code{V1}, \code{V2}, ... (named with \code{time_prefix}) holding the
-action at each time point. With \code{fill_na = TRUE} short sequences
-are padded with \code{NA} so every row shares the same columns; with
-\code{fill_na = FALSE} only the time points present in every sequence
-are kept.
+A data frame in wide format, one row per sequence in the sorted
+order of \code{id_col}: the \code{id_col} column followed by the position columns
+(\code{V1}, \code{V2}, ..., named with \code{time_prefix}) holding the action at each
+position. Other columns of \code{data} are dropped. A missing action stays a
+missing cell.
 }
 \description{
-Convert sequence data from long format (one row per action) to wide format
-(one row per sequence, columns as time points).
+\code{long_to_wide()} turns a long event table (one row per action) into wide
+sequences, with one row per sequence and one column per position
+(\code{V1}, \code{V2}, ...). Each sequence's actions are ordered by \code{time_col}, and
+the k-th action fills column k.
 }
 \details{
-Converts long format data (one row per action) to the wide format expected
-by \code{\link{build_network}}, \code{tna::tna()} and related functions.
-
-If \code{time_col} contains non-integer values (e.g., timestamps), the function
-will use the ordering within each sequence to create time indices.
+The wide format is the one \code{\link[=build_network]{build_network()}}, \code{tna::tna()} and related
+functions read without column declarations, since the position columns
+form a numbered run; \code{\link[=build_network]{build_network()}} sets the \code{id_col} column aside as
+metadata, with a message.
 }
 \examples{
 long_data <- data.frame(

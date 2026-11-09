@@ -38,169 +38,237 @@ build_clusters(
 \method{print}{tidy_covariates}(x, ...)
 }
 \arguments{
-\item{data}{Input data. Accepts multiple formats:
-\describe{
-\item{data.frame / matrix}{Wide-format sequences (rows = sequences,
-columns = time points, values = state names). Columns of a data frame
-take the same roles as in \code{\link{build_network}}: an id or a
-covariate is not a sequence position. Those set aside are named in a
-message and kept in \code{$metadata}.}
-\item{netobject}{A network object from \code{\link{build_network}}.
-Extracts the stored sequence data. Only valid for sequence-based
-methods (relative, frequency, co_occurrence, attention).}
-\item{tna}{A tna model from the tna package. Decodes the
-integer-encoded sequence data using stored labels.}
-\item{cograph_network}{A cograph network object. Extracts the
-stored sequence data.}
-}}
+\item{data}{The sequences: a data frame or matrix with one row per
+sequence and one column per position, holding state names; a
+\code{netobject} or bare \code{cograph_network} built from sequences with method
+\code{"relative"}, \code{"frequency"}, \code{"co_occurrence"} or \code{"attention"}, whose
+stored sequences are used; or a \code{tna} model, whose integer-coded
+sequences are decoded to their labels. Columns of a data frame take the
+same roles as in \code{\link[=build_network]{build_network()}}: an id or a covariate is not a
+position, and the columns set aside are named in a message and kept as
+metadata. A one-hot network needs an \code{actor} or \code{session} to define its
+units. A one-hot network without one, and a network of any other
+method, raise an error of class \code{nestimate_bad_input}.}
 
-\item{k}{Integer. Number of clusters (must be between 2 and
-\code{nrow(data) - 1}).}
+\item{k}{The number of clusters, a whole number from 2 to one less than
+the number of sequences. Required.}
 
-\item{dissimilarity}{Character. Distance metric. One of \code{"hamming"},
-\code{"osa"} (optimal string alignment), \code{"lv"} (Levenshtein),
-\code{"dl"} (Damerau-Levenshtein), \code{"lcs"} (longest common
-subsequence), \code{"qgram"}, \code{"cosine"}, \code{"jaccard"},
-\code{"jw"} (Jaro-Winkler). Default: \code{"hamming"}.}
+\item{dissimilarity}{How two sequences are compared. \code{"hamming"}
+(default) counts the positions where they differ. \code{"lv"} (Levenshtein)
+counts the insertions, deletions and substitutions that turn one into
+the other; \code{"osa"} (optimal string alignment) and \code{"dl"}
+(Damerau-Levenshtein) also count a swap of two adjacent states as one
+edit; \code{"lcs"} counts the states left unpaired by their longest common
+subsequence. \code{"qgram"}, \code{"cosine"} and \code{"jaccard"} compare the runs of
+\code{q} consecutive states (q-grams) the sequences contain: the summed
+absolute difference of their counts, one minus the cosine similarity of
+the counts, and one minus the share of distinct q-grams they have in
+common. \code{"jw"} is the Jaro-Winkler distance, which weighs agreement in
+the first states more (see \code{p}).}
 
-\item{method}{Character. Clustering method. \code{"pam"} for Partitioning
-Around Medoids, or a hierarchical method: \code{"ward.D2"},
-\code{"ward.D"}, \code{"complete"}, \code{"average"}, \code{"single"},
-\code{"mcquitty"}, \code{"median"}, \code{"centroid"}.
-Default: \code{"pam"}.}
+\item{method}{The clustering algorithm. \code{"pam"} (default) partitions
+around medoids: it chooses \code{k} sequences as centres and assigns every
+sequence to the nearest one (Kaufman & Rousseeuw, 1990). \code{"ward.D2"},
+\code{"ward.D"}, \code{"complete"}, \code{"average"}, \code{"single"}, \code{"mcquitty"},
+\code{"median"} and \code{"centroid"} build a tree with \code{\link[stats:hclust]{stats::hclust()}} using
+that linkage and cut it into \code{k} groups.}
 
-\item{na_syms}{Character vector. Symbols treated as missing values.
-Default: \code{c("*", "\%")}.
+\item{na_syms}{The symbols read as missing values, besides \code{NA}. Default
+\code{c("*", "\%")}. A missing cell is not dropped from a comparison: it is
+treated as one more state, so two missing cells at the same position
+match and a missing cell against an observed state is a mismatch (a
+distance of 1 for Hamming). This is the usual rule for aligned
+sequences, because dropping missing cells pair by pair would change
+each pair's effective length and break the metric. For every
+dissimilarity except Hamming, a sequence ends at its last observed
+state, so trailing missing cells are not compared. To treat missing
+cells differently, drop or recode them before the call.}
 
-\strong{Missing-value distance rule:} after symbols are converted to
-\code{NA}, missing values are encoded as a single comparable sentinel
-state -- \emph{not} pairwise-deleted. Two missing values in the same
-position match (distance contribution 0); a missing value paired with
-any observed state mismatches (distance contribution 1 for Hamming,
-etc.). This is the conventional behaviour for aligned sequence
-matrices because pairwise deletion would change the effective length
-of every pair and break the metric. If you want pairwise deletion or
-a different missing-value semantic, drop or recode the missing cells
-before passing the data in.}
+\item{weighted}{Whether to weight the Hamming distance by position, so
+that a difference early in the sequences counts more than a late one
+(see \code{lambda}). Default \code{FALSE}. With any dissimilarity other than
+\code{"hamming"}, \code{TRUE} raises an error.}
 
-\item{weighted}{Logical. Apply exponential decay weighting to Hamming
-distance positions? Only valid when \code{dissimilarity = "hamming"}.
-Default: \code{FALSE}.}
+\item{lambda}{The decay rate of the position weights when
+\code{weighted = TRUE}: position \eqn{t} gets weight
+\eqn{e^{-\lambda (t - 1)}}{exp(-lambda * (t - 1))}, so a larger value
+puts more of the distance on the earlier positions. A finite
+non-negative number; default \code{1}. Ignored, and stored as \code{0}, when
+\code{weighted = FALSE}.}
 
-\item{lambda}{Numeric. Non-negative decay rate for weighted Hamming.
-Higher values weight earlier positions more strongly. Default: 1.}
+\item{seed}{An integer used as the random seed for clustering; the
+session's own random stream is left as it was. Default \code{NULL}. PAM and the
+hierarchical methods are deterministic, so it does not change the
+clusters; it is stored with the result.}
 
-\item{seed}{Integer or NULL. Random seed for reproducibility. Default:
-\code{NULL}.}
+\item{q}{The length of the q-grams compared by \code{"qgram"}, \code{"cosine"} and
+\code{"jaccard"}, a positive whole number. Default \code{2}. Ignored by the other
+dissimilarities.}
 
-\item{q}{Integer. Size of q-grams for \code{"qgram"}, \code{"cosine"},
-and \code{"jaccard"} distances. Default: \code{2L}.}
+\item{p}{The Winkler prefix weight of \code{"jw"}: how much agreement in the
+first states (up to four) lowers the Jaro distance, from 0 (the plain
+Jaro distance) to 0.25. Default \code{0.1}. Ignored by the other
+dissimilarities.}
 
-\item{p}{Numeric. Winkler prefix penalty for Jaro-Winkler distance.
-Must be between 0 and 0.25. Default: \code{0.1}.}
+\item{covariates}{Variables describing each sequence (such as an
+achievement level or a course), related to the clusters after they are
+found; they never change the assignments. Give a column name, a
+character vector of names, a one-sided formula such as
+\code{~ Age + Gender} (or the string \code{"Age + Gender"}), or a data frame with
+one row per sequence, all of whose columns are used. For a \code{netobject}
+or \code{cograph_network}, names are looked up in its metadata first and
+then among the columns of its data, so a typical call is
+\code{build_clusters(net, k = 3, covariates = "Achiever")}; for a data frame
+or matrix, among its columns. A \code{tna} model takes only the data-frame
+form. Named covariate columns are taken out of the sequence data before
+the distances are computed, and so are the columns of a supplied data
+frame that match a sequence column in name and values; a sequence
+column that shares only a name is kept. For a network, a name found in
+its metadata leaves a same-named data column in place as a sequence
+position. Rows with a missing covariate
+are left out of the analysis with a warning, and a constant covariate
+raises an error. How the analysis is run is set by \code{estimator}.
+Default \code{NULL} (none).}
 
-\item{covariates}{Optional. Post-hoc covariate analysis of cluster
-membership. Named covariate columns present in raw sequence data are
-excluded from the sequence distances before clustering. Columns matching
-a separately supplied covariate frame by both name and values are also
-excluded; unrelated sequence columns remain unchanged. Accepts:
-\describe{
-\item{string}{Single column name, e.g. \code{"Age"}. Resolved
-against \code{x$metadata} (and \code{x$data}) for
-\code{netobject} or \code{cograph_network} input.}
-\item{character vector}{\code{c("Age", "Gender")}, same lookup.}
-\item{formula}{\code{~ Age + Gender}, same lookup; supports
-\code{"Age + Gender"} string form too.}
-\item{data.frame}{All columns used as covariates verbatim;
-must have one row per sequence.}
-\item{NULL}{No covariate analysis (default).}
-}
-For \code{netobject} or \code{cograph_network} input, names are
-resolved against \code{$metadata} first and then non-state columns
-of \code{$data}, so a typical call looks like
-\code{build_clusters(net, k = 3, covariates = "session_label")}
-without pre-extracting a data.frame. \code{tna} input requires the
-data.frame form. Results are stored in \code{$covariates}.}
+\item{estimator}{How the relation between the covariates and the
+clusters is estimated; it never affects the clustering. \code{"auto"}
+(default) fits a multinomial logit of cluster membership on the
+covariates: with Firth's bias-reduced penalised likelihood
+(\code{brglm2::brmultinom()}, finite under quasi-complete separation) when a
+cell of the cluster-by-covariate table of a categorical covariate holds
+fewer than 5 sequences, and with \code{nnet::multinom()} otherwise.
+\code{"firth"} forces the Firth fit, which is about 200 times slower on
+well-conditioned data. \code{"multinom"} forces classical maximum likelihood
+and warns that rare cells can give extreme odds ratios with degenerate
+confidence intervals. \code{"chisq"} runs descriptive tests instead of a
+logit, as WeightedCluster does: for each categorical covariate a
+chi-square test with Cramer's V and standardised adjusted residuals,
+for each numeric one a Kruskal-Wallis test with eta-squared. Ignored
+without \code{covariates}.}
 
-\item{estimator}{Multinomial logit fitter for the covariate analysis.
-\code{"auto"} (default) inspects the cluster x covariate cross-tab
-and falls back to \code{"firth"} only when any cell has fewer than
-5 observations (quasi-complete separation risk); otherwise uses
-the much faster \code{"multinom"}. \code{"firth"} forces Firth's
-penalised likelihood via \code{brglm2::brmultinom} -- bias-reduced
-and finite under separation, but ~200x slower than multinom on
-well-conditioned data. \code{"multinom"} forces classical ML via
-\code{nnet::multinom}; warns because rare-cell separation produces
-astronomical ORs with degenerate CIs (silent failure).
-\code{"chisq"} runs WeightedCluster-style descriptive tests
-(chi-square + Cramer's V + standardized adjusted residuals for
-factors; Kruskal-Wallis + eta-squared for numerics).}
+\item{...}{Not used: an extra argument raises an error, here and in the
+\code{print()}, \code{summary()} and \code{plot()} methods for a \code{net_clustering}.
+\code{print()} of a \code{tidy_covariates} table ignores it.}
 
-\item{...}{Unsupported. Supplying unused arguments raises an error.
-In \code{plot.net_clustering()}, \code{print.net_clustering()} and \code{summary.net_clustering()}: Unsupported. Supplying unused arguments raises an error. In \code{print.tidy_covariates()}: Ignored.}
+\item{x}{For the \code{print()} and \code{plot()} methods: a \code{net_clustering}; for
+\code{print()}, also the \code{tidy_covariates} table that \code{summary()} returns.}
 
-\item{x}{For the \code{print()} and \code{plot()} methods: an object of class \code{net_clustering} or \code{tidy_covariates}.}
+\item{digits}{For \code{print()} of a \code{net_clustering}: decimal places of the
+silhouette width and the within-cluster distances, a non-negative whole
+number. Default \code{3}.}
 
-\item{digits}{Integer. Decimal places used for floating-point statistics in the printout. Default \code{3}. Non-breaking: existing \code{print(x)} calls keep their previous formatting.}
+\item{object}{For \code{summary()}: a \code{net_clustering}.}
 
-\item{object}{For the \code{summary()} method: an object of class \code{net_clustering}.}
+\item{type}{For \code{plot()}: the view. \code{"silhouette"} (default) draws each
+sequence's silhouette width as a bar, grouped by cluster, with the
+average as a dashed line; \code{"mds"} places the sequences on the first two
+dimensions of a classical multidimensional scaling of the distances,
+coloured by cluster; \code{"heatmap"} draws the distance matrix with the
+sequences ordered by cluster; \code{"predictors"} draws a forest plot of the
+covariates' odds ratios (log scale) for each cluster against the
+reference cluster. \code{"predictors"} needs a fit with \code{covariates} and a
+logit estimator; with \code{estimator = "chisq"}, which has no odds ratios,
+it raises an error.}
 
-\item{type}{Character. Plot type: \code{"silhouette"} (per-observation silhouette bars), \code{"mds"} (2D MDS projection), \code{"heatmap"} (distance matrix heatmap ordered by cluster), or \code{"predictors"} (odds-ratio forest plot of the post-hoc covariate analysis; requires \code{covariates} and an estimator that produces coefficients). Default: \code{"silhouette"}.}
-
-\item{combined}{Logical. For \code{type = "predictors"} only: when \code{TRUE} (default), covariate forest panels are combined into a single faceted plot; when \code{FALSE}, a list of separate ggplots is returned.}
+\item{combined}{For \code{plot()} with \code{type = "predictors"}: \code{TRUE} (default)
+draws one plot with a panel per non-reference cluster; \code{FALSE} returns
+a list of plots, one per non-reference cluster. Ignored by the other
+views.}
 }
 \value{
-An object of class \code{"net_clustering"} containing:
+A \code{net_clustering} object. \code{print()} shows the method,
+dissimilarity and average silhouette width, then one row per cluster
+with its size (count and percentage), mean within-cluster distance and,
+for PAM, its medoid; after a logit covariate analysis it adds a line
+naming the predictors. \code{\link[=summary]{summary()}} prints the method, dissimilarity and
+average silhouette width and a per-cluster table of sizes and mean
+within-cluster distances, followed by the covariate analysis when there
+is one, and returns a per-cluster table, or the covariate table after a
+covariate analysis (see the methods' return value below). \code{plot()} draws
+the silhouette widths, a map of the distances, the distance matrix or
+the covariate effects. \code{\link[=build_network]{build_network()}} turns the clustering into one
+network per cluster (a \code{netobject_group}), and
+\code{\link[=cluster_diagnostics]{cluster_diagnostics()}} and \code{\link[=session_ids]{session_ids()}} give the classification
+quality and each sequence's cluster. The object's fields:
 \describe{
-\item{data}{The original input data.}
+\item{data}{The sequence positions that were clustered, one row per
+sequence: covariates and set-aside columns are removed, and a
+one-hot network gives one row per unit.}
 \item{k}{Number of clusters.}
-\item{assignments}{Named integer vector of cluster assignments.}
-\item{silhouette}{Overall average silhouette width.}
+\item{assignments}{Integer vector of cluster memberships (1 to
+\code{k}), one per sequence in row order.}
+\item{silhouette}{Average silhouette width over all sequences.}
 \item{sizes}{Named integer vector of cluster sizes.}
 \item{method}{Clustering method used.}
-\item{dissimilarity}{Distance metric used.}
-\item{distance}{The computed dissimilarity matrix (\code{dist} object).}
-\item{medoids}{Integer vector of medoid row indices (PAM only; NULL
-for hierarchical methods).}
-\item{seed}{Seed used (or NULL).}
-\item{weighted}{Logical, whether weighted Hamming was used.}
-\item{lambda}{Lambda value used (0 if not weighted).}
-\item{covariates}{The post-hoc covariate analysis (a list; see the
-\code{estimator} argument), or NULL when \code{covariates = NULL}.}
+\item{dissimilarity}{Dissimilarity used.}
+\item{distance}{The pairwise dissimilarities, a \code{dist} object.}
+\item{medoids}{For PAM, the row numbers of the \code{k} medoid
+sequences; NULL for the hierarchical methods.}
+\item{seed}{Seed given (or NULL).}
+\item{weighted}{Whether weighted Hamming was used.}
+\item{lambda}{Decay rate used (0 when not weighted).}
+\item{covariates}{The covariate analysis (a list; see
+\code{estimator}), or NULL when \code{covariates = NULL}.}
 \item{network_method, build_args}{For \code{netobject} input, the
 source network's method and stored build arguments, so per-cluster
-networks can be rebuilt the same way. NULL otherwise.}
+networks can be rebuilt the same way. NULL otherwise, and
+\code{build_args} is NULL for a one-hot network.}
 \item{metadata}{For \code{netobject} input, its per-sequence metadata,
 one row per clustered sequence, so \code{\link{session_ids}} can name
 each sequence. For a data frame, the columns set aside as covariates
-(see \code{data}). NULL otherwise.}
+(see \code{data}). NULL otherwise, and for a one-hot network.}
 \item{htna_partition}{For HTNA input, the preserved node-to-actor
 partition used to restore HTNA children when networks are built.}
 }
 
-In \code{print.net_clustering()}: The input object, invisibly.
-
-In \code{summary.net_clustering()}: A data frame of per-cluster statistics, one row per cluster, with columns \code{cluster}, \code{size} and \code{mean_within_dist}, returned \emph{visibly}. When the clustering was fitted with \code{covariates}, a \code{tidy_covariates}/\code{data.frame} (the tidied covariate table, with cluster sizes, fit statistics and profiles attached as attributes) is returned \emph{invisibly} instead. In both cases the printed summary is a side effect.
-
-In \code{plot.net_clustering()}: A \code{ggplot} object (invisibly); for \code{type = "predictors"} with \code{combined = FALSE}, a list of \code{ggplot} objects named by cluster (invisibly).
-
-In \code{print.tidy_covariates()}: The input invisibly.
+For the \code{print()} methods: the input, invisibly. \code{print()} of a
+\code{tidy_covariates} table prints a header naming the estimator, then the
+table. For \code{summary()}: a data frame with one row per cluster and
+columns \code{cluster}, \code{size} and \code{mean_within_dist}, returned visibly
+after the printed summary. For a clustering fitted with \code{covariates},
+the printed summary adds the covariate profiles and the logit or test
+tables, and a \code{tidy_covariates} data frame is returned invisibly
+instead: one row per cluster and predictor (\code{cluster}, \code{predictor},
+\code{OR}, \code{CI_low}, \code{CI_high}, \code{p}, \code{sig}) for a logit, or one row per
+covariate (\code{variable}, \code{type}, \code{statistic}, \code{df}, \code{p}, \code{effect},
+\code{effect_kind}, \code{sig}) for \code{estimator = "chisq"}, with the per-cluster
+table, fit statistics and profiles attached as attributes. For
+\code{plot()}: a \code{ggplot} object, drawn and returned invisibly; with
+\code{type = "predictors"} and \code{combined = FALSE}, a list of \code{ggplot}
+objects, one per non-reference cluster and named by it, returned
+invisibly without drawing.
 }
 \description{
-Clusters wide-format sequences using pairwise string dissimilarity and
-either PAM (Partitioning Around Medoids) or hierarchical clustering.
-Supports 9 distance metrics including temporal weighting for Hamming
-distance. When the \pkg{stringdist} package is available, uses C-level
-distance computation for 100-1000x speedup on edit distances.
-}
-\section{Methods}{
+\code{build_clusters()} splits a set of sequences into \code{k} groups of similar
+sequences. It computes the dissimilarity between every pair of sequences
+(the Hamming distance, an edit distance, a q-gram distance or the
+Jaro-Winkler distance) and partitions that matrix with PAM (partitioning
+around medoids) or a hierarchical method. It takes wide sequence data, a
+\code{netobject} or bare \code{cograph_network} built from sequences, or a \code{tna}
+model. A one-hot network built with \code{"relative"}, \code{"frequency"} or
+\code{"co_occurrence"} is clustered by unit, each actor's or session's windows
+forming one sequence; a \code{wtna} network is refused (see \code{data}).
+Covariates can be related to the clusters after the fit (see
+\code{covariates}); they never change the assignments.
 
-\itemize{
-\item \code{print.net_clustering()}: Compact, fixed-width summary of a sequence-clustering result. The header carries the clustering method and dissimilarity; the per-cluster table carries cluster size (count and percentage) and mean within-cluster distance when available. Optional medoid and covariate lines surface only when those fields are populated.
-\item \code{print.tidy_covariates()}: Prints a one-line header naming the estimator, then the data.frame. The full human-readable view (per-cluster stats, profiles, OR/test tables) was already printed by \code{summary()} when this object was produced, so this method intentionally stays minimal to avoid duplication. Auto-prints when the user types the variable at the REPL.
+Every dissimilarity and method returns \code{k} groups, whether or not the
+sequences fall into groups. The average silhouette width (Rousseeuw,
+1987), which \code{print()} reports, compares each sequence's mean
+dissimilarity to its own cluster with that to the nearest other cluster:
+it runs from -1 to 1, values near 1 meaning well-separated clusters and
+values near 0 overlapping ones. It describes one solution and is not a
+test. Compare values of \code{k}, dissimilarities and methods with
+\code{\link[=cluster_choice]{cluster_choice()}}, check the classification with \code{\link[=cluster_diagnostics]{cluster_diagnostics()}},
+and build one network per cluster with \code{\link[=build_network]{build_network()}} (or
+\code{\link[=cluster_network]{cluster_network()}} in one call) to see how the groups differ.
 }
+\details{
+With the \pkg{stringdist} package installed, the distances are computed
+by \code{stringdist::stringdistmatrix()} in C, many times faster than the base
+R implementation for the edit distances. The base R implementation is
+used when \pkg{stringdist} is absent, for weighted Hamming, and when the
+data hold 62 or more states.
 }
-
 \examples{
 seqs <- data.frame(V1 = c("A","B","C","A","B"), V2 = c("B","C","A","B","A"),
                    V3 = c("C","A","B","C","B"))

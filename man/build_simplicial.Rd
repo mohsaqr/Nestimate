@@ -22,97 +22,129 @@ build_simplicial(
 \method{plot}{simplicial_complex}(x, combined = TRUE, ...)
 }
 \arguments{
-\item{x}{A square matrix, \code{tna}, \code{netobject},
-\code{net_hon}, \code{net_hypa}, or \code{net_mogen}. For the \code{print()} and \code{plot()} methods: an object of class \code{simplicial_complex}.}
+\item{x}{The network: a square weight matrix, a \code{tna} model, a
+\code{netobject} or \code{cograph_network}, or a \code{net_hon}, \code{net_hypa} or
+\code{net_mogen}. With \code{type = "vr"}, the matrix holds non-negative
+distances. The clique and Vietoris-Rips constructions read the weight
+matrix of any of these networks; with \code{type = "pathway"}, a bare
+\code{cograph_network} or a matrix raises an error. For the \code{print()} and
+\code{plot()} methods: a \code{simplicial_complex} object.}
 
-\item{type}{Construction type: \code{"clique"} (default), \code{"pathway"},
-or \code{"vr"} (alias \code{"rips"}).}
+\item{type}{The construction: \code{"clique"} (default), \code{"pathway"} or
+\code{"vr"} (alias \code{"rips"}, stored as \code{"vr"}).}
 
-\item{threshold}{For \code{type = "clique"}: minimum non-zero absolute
-edge weight to include an edge (default 0). Edges below this are
-ignored; zero-weight non-edges are never included. Ignored for
-\code{type = "vr"} (use \code{max_scale} instead) and for
-\code{type = "pathway"}.}
+\item{threshold}{For \code{type = "clique"}: the smallest absolute edge weight
+an edge needs to enter (edges at exactly \code{threshold} are included). Zero
+weights are never edges. Default \code{0}. Ignored for \code{"vr"}, which uses
+\code{max_scale}, and for \code{"pathway"}.}
 
-\item{max_dim}{Maximum simplex dimension (default 10). Must be a single
-non-negative integer. A k-simplex has k+1 nodes.}
+\item{max_dim}{The highest simplex dimension built (a k-simplex has k + 1
+nodes), a non-negative whole number. Default \code{10}. When a larger clique
+is cut at this dimension, the clique or Vietoris-Rips complex is marked
+truncated; \code{\link[=betti_numbers]{betti_numbers()}} then warns with class
+\code{nestimate_truncated_complex}, as does \code{\link[=persistent_homology]{persistent_homology()}} on a
+Vietoris-Rips complex. A pathway with more than \code{max_dim + 1} distinct
+states is cut to its faces of that size, without the truncated mark.}
 
-\item{max_pathways}{For \code{type = "pathway"}: maximum number of
-pathways to include, ranked by count (HON) or ratio (HYPA).
-\code{NULL} includes all. Default \code{NULL}.}
+\item{max_pathways}{For \code{type = "pathway"}, how many pathways to keep:
+the most frequent higher-order paths for a \code{net_hon}, the most frequent
+transitions of \code{\link[=mogen_transitions]{mogen_transitions()}} at the optimal order for a
+\code{net_mogen} (the highest order fitted when the optimal one is 0), and
+for a \code{net_hypa} the anomalous paths ranked by their observed /
+expected ratio (see \code{anomaly}). Default \code{NULL} (all).}
 
-\item{anomaly}{For HYPA pathway complexes, which anomaly direction to
-include: \code{"all"} (default), \code{"over"}, or \code{"under"}.
-Under-represented HYPA paths are ranked by smallest observed/expected
-ratio; over-represented paths are ranked by largest ratio. Possible
-paths that never occur are left out: a pathway simplex is a set of
-states observed together on a path.}
+\item{anomaly}{For \code{type = "pathway"} on a \code{net_hypa}: which anomalous
+paths become simplices: \code{"all"} (default), \code{"over"} or \code{"under"}.
+Over-represented and \code{"all"} paths are ranked by the largest ratio,
+under-represented ones by the smallest. Possible paths that never occur
+are left out, since a pathway simplex is a set of states observed
+together on a path.}
 
-\item{max_scale}{For \code{type = "vr"}: maximum edge length to include
-in the filtration. \code{NULL} (default) uses \code{max(d)}.}
+\item{max_scale}{For \code{type = "vr"}: the largest distance at which an edge
+enters; longer edges are left out. Default \code{NULL}, the largest finite
+distance.}
 
-\item{...}{Additional arguments passed to \code{build_hon()} when
-\code{x} is a \code{tna}/\code{netobject} with \code{type = "pathway"}.
-In \code{plot.simplicial_complex()}: Ignored. In \code{print.simplicial_complex()}: Additional arguments (unused).}
+\item{...}{For \code{type = "pathway"} on a \code{tna} model or \code{netobject}: \code{method}
+(\code{"hon"}, the default, \code{"hypa"} or \code{"mogen"}) chooses the higher-order
+model built from it, and the other arguments go to \code{\link[=build_hon]{build_hon()}},
+\code{\link[=build_hypa]{build_hypa()}} or \code{\link[=build_mogen]{build_mogen()}}. For the \code{print()} and \code{plot()}
+methods: ignored.}
 
-\item{combined}{When \code{TRUE} (default), the four panels are stitched into a 2x2 gtable via \code{gridExtra::arrangeGrob} and drawn. When \code{FALSE}, returns a named list of the four ggplots (\code{f_vector}, \code{betti}, \code{degree}, \code{degree_heatmap}) so each can be printed, saved, or re-laid-out independently.}
+\item{combined}{For the \code{plot()} method: \code{TRUE} (default) draws the four
+panels (f-vector, Betti numbers, simplicial degree per node and degree
+by dimension) as one 2 x 2 figure, which needs \pkg{gridExtra};
+\code{FALSE} returns the four ggplots in a named list (\code{f_vector}, \code{betti},
+\code{degree}, \code{degree_heatmap}) to print, save or arrange separately.}
 }
 \value{
-A \code{simplicial_complex} object - a list with:
+A \code{simplicial_complex} object. \code{print()} shows the counts, the
+density, the f-vector (simplices per dimension), the Euler
+characteristic and the non-zero Betti numbers; \code{plot()} draws the
+f-vector, the Betti numbers and the simplicial degree of each node;
+\code{\link[=betti_numbers]{betti_numbers()}}, \code{\link[=euler_characteristic]{euler_characteristic()}}, \code{\link[=simplicial_degree]{simplicial_degree()}},
+\code{\link[=q_analysis]{q_analysis()}} and \code{\link[=persistent_homology]{persistent_homology()}} read it. The object's
+fields:
 \describe{
 \item{simplices}{List of integer vectors, one per simplex, each holding
-the (sorted) node indices it spans. Every face of every simplex is
-present, including all 0-simplices (isolated vertices included).}
-\item{nodes}{Character vector of node labels; \code{simplices} index
-into it.}
-\item{n_nodes, n_simplices}{Integer counts.}
-\item{dimension}{Integer. Highest simplex dimension present
-(a k-simplex has k+1 nodes).}
-\item{f_vector}{Named integer vector \code{dim_0}, \code{dim_1}, ... -
-the number of simplices of each dimension.}
-\item{density}{Numeric. \code{n_simplices} divided by the number of
-simplices a complete complex on \code{n_nodes} would have up to
-\code{dimension}.}
-\item{mean_dim}{Numeric. Mean simplex dimension.}
-\item{type}{\code{"clique"}, \code{"pathway"}, or \code{"vr"}.}
+the sorted indices of the nodes it spans. Every face of every simplex
+is present, as are all 0-simplices (isolated nodes included).}
+\item{nodes}{Character vector of node labels, which \code{simplices} index.}
+\item{n_nodes, n_simplices}{Counts of nodes and simplices.}
+\item{dimension}{Highest simplex dimension present.}
+\item{f_vector}{Named integer vector \code{dim_0}, \code{dim_1}, ...: the number
+of simplices of each dimension.}
+\item{density}{\code{n_simplices} divided by the number of simplices a
+complete complex on \code{n_nodes} nodes would have up to \code{dimension}.}
+\item{mean_dim}{Mean simplex dimension.}
+\item{type}{\code{"clique"}, \code{"pathway"} or \code{"vr"}.}
+\item{truncated}{For the clique and Vietoris-Rips complexes: whether
+\code{max_dim} cut a larger clique.}
 }
-For \code{type = "vr"} two further elements are attached:
-\code{$filtration} (numeric, parallel to \code{$simplices}: the value at
-which each simplex enters) and \code{$max_scale} (the cap actually
-used). \code{persistent_homology()} consumes them directly.
+A Vietoris-Rips complex also holds \code{filtration} (the scale at which each
+simplex enters, in the order of \code{simplices}) and \code{max_scale} (the cap
+used), which \code{\link[=persistent_homology]{persistent_homology()}} reads.
 
-In \code{print.simplicial_complex()}: The input object, invisibly.
-
-In \code{plot.simplicial_complex()}: A grid grob (invisibly) when \code{combined = TRUE}; a named list of four ggplots when \code{combined = FALSE}.
+The \code{print()} method returns its input invisibly. \code{plot()}
+returns the drawn grid grob invisibly with \code{combined = TRUE}, and the
+named list of four ggplots invisibly with \code{combined = FALSE}.
 }
 \description{
-Constructs a simplicial complex from a network or higher-order pathway
-object. Two construction methods are available:
+\code{build_simplicial()} builds a simplicial complex, the higher-order
+structure of a network: besides nodes (0-simplices) and edges
+(1-simplices) it holds filled triangles (2-simplices), tetrahedra and
+larger groups of nodes. Three constructions are available through \code{type}:
 
 \itemize{
-\item \strong{Clique complex} (\code{"clique"}): every clique in the
-thresholded non-zero graph becomes a simplex. Edges with absolute
-weight \eqn{\geq} \code{threshold} are retained. The standard bridge
-from graph theory to algebraic topology.
-\item \strong{Pathway complex} (\code{"pathway"}): each higher-order
-pathway from a \code{net_hon} or \code{net_hypa} becomes a simplex.
+\item \strong{Clique complex} (\code{"clique"}): every clique of the network
+whose edges reach \code{threshold} becomes a simplex, the standard bridge
+from a graph to algebraic topology.
+\item \strong{Pathway complex} (\code{"pathway"}): the states on each
+higher-order pathway of a \code{net_hon}, \code{net_hypa} or \code{net_mogen} (or of
+one built from a \code{tna} model or \code{netobject}) become a simplex.
+\item \strong{Vietoris-Rips complex} (\code{"vr"}, alias \code{"rips"}): the input
+is a non-negative distance matrix, every group of nodes whose pairwise
+distances are all at most \code{max_scale} becomes a simplex, and each
+simplex records the scale at which it enters (its largest pairwise
+distance), so \code{\link[=persistent_homology]{persistent_homology()}} can read the filtration.
 }
 
-For \code{type = "vr"} (or alias \code{"rips"}), the input is treated as
-a non-negative distance / dissimilarity matrix and a Vietoris-Rips
-filtration is constructed: each k-simplex \eqn{\sigma} enters at
-\eqn{\max_{(i,j) \in \sigma} d(i,j)}. Use \code{max_scale} to cap the
-filtration diameter; edges with \code{d(i,j) > max_scale} are excluded.
-Filtration values are attached as \code{$filtration} on the returned
-object so \code{persistent_homology()} can read them directly.
+A clique complex is fixed by the thresholded graph, since every clique is
+filled in; its Betti numbers count the holes that remain, such as cycles
+of edges that no triangles fill. Its shape depends on \code{threshold}, so
+read \code{\link[=betti_numbers]{betti_numbers()}} at more than one threshold, or follow the features
+across all of them with \code{\link[=persistent_homology]{persistent_homology()}}. A pathway complex is
+built from paths observed in the sequences, so its simplices say which
+states occur together on a path.
+\code{\link[=simplicial_degree]{simplicial_degree()}} and \code{\link[=q_analysis]{q_analysis()}} describe how the nodes take part
+in the complex.
 }
-\section{Methods}{
-
-\itemize{
-\item \code{plot.simplicial_complex()}: Produces a four-panel summary: f-vector, Betti numbers, simplicial degree ranking, and degree-by-dimension heatmap.
+\details{
+For the clique and Vietoris-Rips complexes the weight matrix is made
+symmetric first (the larger absolute weight of the two directions for a
+clique complex, the larger distance for a Vietoris-Rips complex) and its
+diagonal is not read. Cliques are found with \code{igraph::cliques()} when
+\pkg{igraph} is installed, and by Bron-Kerbosch otherwise.
 }
-}
-
 \examples{
 mat <- matrix(c(0,.6,.5,.6,0,.4,.5,.4,0), 3, 3)
 colnames(mat) <- rownames(mat) <- c("A","B","C")

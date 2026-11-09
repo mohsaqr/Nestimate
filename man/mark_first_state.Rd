@@ -7,37 +7,43 @@
 mark_first_state(data, state = "Start", cols = NULL)
 }
 \arguments{
-\item{data}{A wide-format matrix or data.frame (rows = actors,
-cols = time steps) of state labels with \code{NA} for missing
-observations.}
+\item{data}{The sequences: a matrix or data frame with one row per actor
+and one column per position, holding state labels, with \code{NA} for a
+missing observation. Without \code{cols}, the frame must be one column or a
+numbered run of positions (\code{T1}, \code{T2}, ...); other columns beside them
+raise an error of class \code{nestimate_bad_input}.}
 
-\item{state}{Character. Label to insert in leading-NA cells.
-Default \code{"Start"}. If the label already occurs somewhere in \code{data},
-the function warns and appends \verb{_1}, \verb{_2}, ... until it is unique, so
-the inserted marker is never confused with an observed state.}
+\item{state}{The label written into the leading missing cells, a single
+non-empty string. Default \code{"Start"}. If the label already occurs in
+\code{data}, a warning is given and \verb{_1}, \verb{_2}, ... is appended until it is
+unique, so the marker is never confused with an observed state.}
 
-\item{cols}{Optional state-column names; otherwise all columns.}
+\item{cols}{The columns holding the positions, in order; only they are
+returned. A name not in \code{data} raises an error of class
+\code{nestimate_bad_input}. Default \code{NULL} (every column).}
 }
 \value{
-A character \code{data.frame} of the same shape as \code{data} (or of
-\code{data[cols]} when \code{cols} is given) with leading NAs filled by \code{state}.
-The label actually used is attached as the \code{"leading_state"}
-attribute, which matters when it had to be made unique.
+A data frame of character columns with the shape of \code{data} (or of
+its \code{cols}), the leading missing cells filled with the marker. The label
+used is kept in the \code{"leading_state"} attribute, which differs from
+\code{state} when it had to be made unique. The columns are marked as
+positions, so \code{\link[=build_network]{build_network()}} reads them without \code{state_cols}.
 }
 \description{
-Mirror of \code{\link[=mark_terminal_state]{mark_terminal_state()}} for \emph{left-censored} sequence data.
-Replaces every cell \emph{before} each row's first observed state with
-the label given by \code{state}. The resulting chain has a structurally
-\emph{recurrent} "Start" state that everyone enters from - useful for
-cohort-entry analyses where students join at different time points
-and you want a uniform pre-observation marker.
-}
-\details{
-Unlike \code{\link[=mark_terminal_state]{mark_terminal_state()}}, the marked state is \strong{not}
-absorbing in the resulting transition matrix - every transition
-from "Start" goes to one of the original states (the actor's
-first observed state), and the "Start" row is row-stochastic
-exactly as the data dictates.
+\code{mark_first_state()} fills every missing cell before each sequence's
+first observed state with an explicit state, \code{"Start"} by default, and
+returns the wide table. It is the counterpart of \code{\link[=mark_terminal_state]{mark_terminal_state()}}
+for \emph{left-censored} data, such as students who join a course at
+different times: a network built from the result shows into
+which states the late entrants arrive. Internal and trailing missing
+cells are left as they are, and so are rows observed from the first
+position or not at all.
+
+The marked state is a transient entry point, not an absorbing state:
+once a sequence leaves it, it never returns. In a transition network
+built from the result, its row holds the moves from it, which go to the
+first observed states and, for sequences with two or more leading
+missing cells, back to itself.
 }
 \examples{
 M <- mark_first_state(trajectories, state = "Start")

@@ -31,93 +31,108 @@ entropy_trajectory(
 )
 }
 \arguments{
-\item{data}{A long-format data.frame of timestamped events.}
+\item{data}{An event log: a data frame with one row per event.}
 
-\item{action}{Character. Name of the column holding the state/action.}
+\item{action}{The column holding each event's state.}
 
-\item{actor}{Character or NULL. Column identifying sequences; transitions
-are only formed between consecutive events of the same actor. NULL
-treats the data as one sequence.}
+\item{actor}{The column identifying sequences: transitions are formed only
+between consecutive events of the same actor (within the same group).
+Default \code{NULL}, which reads the data as one sequence.}
 
-\item{time}{Character or NULL. Timestamp column used to order events
-within actors and to place windows on a real time axis. NULL keeps the
-row order and uses the transition index as the axis.}
+\item{time}{The timestamp column, which orders the events within each
+actor and places the windows on a time axis. Default \code{NULL}, which keeps
+the row order and uses the row number of the event that ends each
+transition as the axis. The column must be numeric, a \code{Date} or a
+\code{POSIXct}; a character timestamp fails, so parse it first.}
 
-\item{group}{Character or NULL. Column splitting the data into parallel
-trajectories (e.g. condition, achievement level).}
+\item{group}{A column splitting the data into parallel trajectories (for
+example a condition or an achievement level), each with its own windows.
+Default \code{NULL} (one trajectory, labelled \code{"all"}).}
 
-\item{window}{Integer. Number of transitions per window (default
-\code{500}).}
+\item{window}{The number of transitions per window, at least 10. Default
+\code{500}.}
 
-\item{step}{Integer. Stride between window starts (default
-\code{window \%/\% 5}).}
+\item{step}{The number of transitions between the starts of consecutive
+windows. Default \code{NULL}, which uses \code{window \%/\% 5} (at least 1).}
 
-\item{base}{Numeric. Logarithm base (default \code{2}, bits).}
+\item{base}{The logarithm base, which sets the unit: \code{2} (default) for
+bits. Any positive number other than 1.}
 
-\item{x}{For the \code{print()} and \code{plot()} methods: an object of class \code{net_entropy_trajectory}.}
+\item{x}{For the \code{print()} and \code{plot()} methods: an
+\code{entropy_trajectory()} result.}
 
-\item{digits}{Integer. Digits to round numeric output. Default \code{3}.}
+\item{digits}{For \code{print()}: decimal places of the entropies. Default
+\code{3}.}
 
-\item{...}{In \code{plot.net_entropy_trajectory()}, \code{print.net_entropy_trajectory()} and \code{summary.net_entropy_trajectory()}: Ignored.}
+\item{...}{For the \code{print()}, \code{summary()} and \code{plot()} methods: not used.}
 
-\item{object}{For the \code{summary()} method: an object of class \code{net_entropy_trajectory}.}
+\item{object}{For \code{summary()}: an \code{entropy_trajectory()} result.}
 
-\item{normalized}{Logical. Plot \code{entropy_norm} instead of raw bits (default \code{FALSE}).}
+\item{normalized}{For \code{plot()}: whether to draw \code{entropy_norm} instead of
+the raw entropy. Default \code{FALSE}.}
 
-\item{span}{Numeric. Loess span (default \code{0.4}).}
+\item{span}{For \code{plot()}: the loess span of the trend line. Default
+\code{0.4}.}
 
-\item{title}{Character. Plot title.}
+\item{title}{For \code{plot()}: the plot title. Default
+\code{"Transition entropy over time"}.}
 }
 \value{
-An object of class \code{"net_entropy_trajectory"} with:
+A \code{net_entropy_trajectory} object. \code{print()} shows each group's
+number of windows and its mean and range of entropy, and returns its
+input invisibly. \code{summary()} returns a data frame with one row per
+group: \code{group}, \code{windows}, the \code{mean}, \code{sd}, \code{min} and \code{max} of the
+window entropies, the entropy of the \code{first} and \code{last} windows, and
+their difference \code{change} (negative when the transitions became more
+predictable). \code{plot()} returns a \code{ggplot} with the per-window entropy as
+faint lines and a loess-smoothed trend (with its standard-error band) per
+group, in Okabe-Ito colours. The object's fields:
 \describe{
-\item{trajectory}{Tidy data.frame, one row per window: \code{group},
-\code{window} (index), \code{time} (window midpoint; transition
-index when no \code{time} column), \code{time_start},
-\code{time_end}, \code{n_transitions}, \code{n_states} (distinct
-states in the window), \code{entropy} (bits per transition) and
-\code{entropy_norm} (divided by \eqn{\log_b} of the window's
-active-state count, floored at 2 states so the ceiling is never
-zero; in \eqn{[0, 1]}).}
-\item{window, step, base, states}{Call metadata; \code{states} is the
-global state set.}
+\item{trajectory}{Data frame, one row per window: \code{group}, \code{window}
+(index within the group), \code{time} (the window's midpoint; a row number
+when there is no \code{time} column), \code{time_start} and \code{time_end} (the
+time, or row number, of the window's first and last transition),
+\code{n_transitions}, \code{n_states} (distinct states in the window), \code{entropy}
+(in \code{base} units per transition) and \code{entropy_norm} (divided by
+\eqn{\log_b} of the window's number of states, floored at 2 states so
+the ceiling is never zero; in \eqn{[0, 1]}).}
+\item{window, step, base}{The settings used.}
+\item{states}{The states of the whole log.}
 }
-
-In \code{print.net_entropy_trajectory()}: \code{x} invisibly.
-
-In \code{summary.net_entropy_trajectory()}: Tidy per-group data.frame: windows, mean/sd/min/max entropy, entropy at the first and last window, and their difference (negative = routinization).
-
-In \code{plot.net_entropy_trajectory()}: A ggplot object.
 }
 \description{
-Tracks transition entropy over time: transitions are built within each
-actor's sequence, pooled in temporal order, and a window of fixed size
-slides across the stream, yielding one entropy estimate per window. This
-turns transition entropy from a snapshot into a process measure -
-declining entropy signals routinization, rising entropy exploration, and
-level shifts mark phase changes (cf. Krejtz et al., 2025, who track gaze
-transition entropy through task phases this way).
+\code{entropy_trajectory()} tracks transition entropy over time: it forms the
+transitions within each actor's sequence of an event log, pools them in
+time order, and slides a window of a fixed number of transitions across
+the stream, giving one entropy estimate per window. A \code{group} column gives
+one trajectory per group. This turns transition entropy from a snapshot
+into a process measure, as Krejtz et al. (2025) do when they track gaze
+transition entropy through the phases of a task.
+
+A falling trajectory means the transitions become more predictable
+(routinisation), a rising one less predictable (exploration), and a level
+shift marks a change of phase. Each window's estimate rests on \code{window}
+transitions, and with the default \code{step} neighbouring windows share four
+fifths of them, so their estimates are not independent: read the smoothed trend of \code{plot()} rather
+than single windows. For the whole-process value with credible intervals,
+use \code{\link[=transition_entropy]{transition_entropy()}} and \code{\link[=entropy_bayes]{entropy_bayes()}}.
 }
 \details{
-Per-window entropy is the empirical conditional entropy
-\eqn{-\sum_{ij} (n_{ij}/N) \log_b(n_{ij}/n_{i\cdot})} - rows weighted by
-observed occupancy rather than the eigenvector stationary distribution.
-Within a short window the chain is routinely non-ergodic (absorbing
-fragments, unvisited states), where the eigenvector is undefined or
-misleading; the empirical estimator is the standard windowed choice and
-converges to the stationary entropy rate for long stationary stretches.
+Each window's entropy is the empirical conditional entropy
+\eqn{-\sum_{ij} (n_{ij}/N) \log_b(n_{ij}/n_{i\cdot})}, which weights rows
+by their observed occupancy rather than by the stationary distribution
+from the eigenvector. Within a short window the chain is often not ergodic
+(absorbing fragments, unvisited states), where that eigenvector is
+undefined or misleading; the empirical estimator is the standard windowed
+choice and converges to the stationary entropy rate over long stationary
+stretches.
 
-Windows shorter than \code{window} at the tail are dropped; if the whole
-stream is shorter than \code{window}, one window covering everything is
-returned with a warning.
+The transitions of all actors are pooled in time order within each group
+(ties broken by actor, then by input order). A window shorter than
+\code{window} at the end of a stream is dropped; a group whose stream is
+shorter than \code{window} gets one window covering all of it, with a warning.
+Fewer than two transitions in all raise an error.
 }
-\section{Methods}{
-
-\itemize{
-\item \code{plot.net_entropy_trajectory()}: Raw per-window entropy as faint lines with a loess-smoothed trend per group, Okabe-Ito coloured. Declining trend = routinization; level shifts = phase changes.
-}
-}
-
 \examples{
 tr <- entropy_trajectory(group_regulation_long,
                          action = "Action", actor = "Actor",

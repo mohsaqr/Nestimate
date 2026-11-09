@@ -59,96 +59,171 @@ compare_model(x, ...)
 )
 }
 \arguments{
-\item{x}{A \code{netobject}, \code{cograph_network}, or numeric square matrix, or a
-\code{netobject_group} whose members \code{i} and \code{j} are compared. For the
-\code{print()} and \code{plot()} methods: an object of class
-\code{net_comparison}.}
+\item{x}{The first network: a \code{netobject}, a \code{cograph_network} or a
+numeric square matrix, or a \code{netobject_group} whose members \code{i} and \code{j}
+are compared. For the \code{print()} and \code{plot()} methods: a
+\code{net_comparison} object.}
 
-\item{...}{Ignored. In \code{plot.net_comparison()} and \code{print.net_comparison()}: Ignored.}
+\item{...}{Not used.}
 
-\item{y}{A \code{netobject}, \code{cograph_network}, or numeric square matrix.}
+\item{y}{The second network, in the same forms (not used for a
+\code{netobject_group}). The two must hold the same nodes and have no missing
+weights. Named inputs are aligned by node name, so the node order may
+differ; different node sets, or missing, empty or duplicated names,
+raise an error. A matrix without names is matched to the other input by
+position and takes its node names; when neither input has names the
+nodes are labelled \code{V1}, \code{V2}, ....}
 
-\item{scaling}{Scaling applied to both weight matrices before comparison.
-One of:
+\item{scaling}{The scaling applied to each weight matrix before
+comparison. Default \code{"none"}. One of:
 \describe{
-\item{\code{"none"}}{Identity (default).}
-\item{\code{"minmax"}}{\eqn{(w - \min) / (\max - \min)}; maps to \eqn{[0, 1]}.}
-\item{\code{"max"}}{\eqn{w / \max(|w|)}; preserves sign.}
-\item{\code{"rank"}}{Min-max of average ranks; ordinal scaling.}
-\item{\code{"zscore"}}{\eqn{(w - \bar w) / s_w}; standard score.}
-\item{\code{"robust"}}{\eqn{(w - \mathrm{med}(w)) / \mathrm{mad}(w)};
-Huber-style robust z-score, resists outliers.}
-\item{\code{"log"}}{\eqn{\log(w)}; requires \eqn{w > 0}.}
-\item{\code{"log1p"}}{\eqn{\log(1 + w)}; admits \eqn{w \ge 0}.}
-\item{\code{"softmax"}}{Numerically stable softmax over the flattened
-vector.}
-\item{\code{"quantile"}}{Empirical CDF of the flattened vector.}
-\item{\code{"frobenius"}}{Divide the matrix by its Frobenius norm
-\eqn{\|W\|_F = \sqrt{\sum w_{ij}^2}}; matrix-level normalisation.}
-\item{\code{"row"}}{Row-stochastic normalisation (each row's absolute
-values sum to 1). Only meaningful for non-negative matrices; rows
-summing to zero are left unchanged.}
+\item{\code{"none"}}{The weights as they are.}
+\item{\code{"minmax"}}{\eqn{(w - \min) / (\max - \min)}{(w - min) / (max - min)},
+which maps them to \eqn{[0, 1]}{[0, 1]}; a constant matrix is left as it is.}
+\item{\code{"max"}}{\eqn{w / \max|w|}{w / max(|w|)}, dividing by the
+largest absolute weight, so signs are kept; a matrix of zeros is
+left as it is.}
+\item{\code{"rank"}}{Average ranks, mapped to \eqn{[0, 1]}{[0, 1]} by min-max; an
+ordinal scaling. A constant matrix keeps its (equal) ranks.}
+\item{\code{"zscore"}}{\eqn{(w - \bar w) / s_w}{(w - mean(w)) / sd(w)}, the
+standard score; a
+constant matrix is only centred.}
+\item{\code{"robust"}}{\eqn{(w - \mathrm{med}(w)) / \mathrm{mad}(w)}{(w - median(w)) / mad(w)},
+a standard score from the median and the median absolute deviation,
+less affected by outliers; with a MAD of 0 the weights are only
+centred.}
+\item{\code{"log"}}{\eqn{\log(w)}{log(w)}; needs \eqn{w > 0}{w > 0}: a
+weight at or below 0 raises an error of class
+\code{nestimate_bad_input} (use \code{"log1p"} for networks with zeros).}
+\item{\code{"log1p"}}{\eqn{\log(1 + w)}{log(1 + w)}; defined for
+\eqn{w > -1}{w > -1}. A weight of -1 or below makes the comparison
+fail with an error.}
+\item{\code{"softmax"}}{A numerically stable softmax over all the cells.}
+\item{\code{"quantile"}}{The empirical cumulative distribution of the
+cells.}
+\item{\code{"frobenius"}}{The matrix divided by its Frobenius norm
+\eqn{\|W\|_F = \sqrt{\sum w_{ij}^2}}{||W||_F = sqrt(sum w_ij^2)}, a
+matrix-level
+normalisation.}
+\item{\code{"row"}}{Each row divided by the sum of its absolute values, so
+the rows sum to 1 for non-negative weights; rows summing to zero
+are left unchanged.}
 }
-Scalings that produce negative weights (\code{zscore}, \code{robust}) are
-compatible with \code{network = TRUE} because the side-by-side metrics use
-Nestimate's base-R Floyd-Warshall, which handles negative weights.}
+Scalings that produce negative weights (\code{"zscore"}, \code{"robust"}) work
+with \code{network = TRUE}: the side-by-side distances are computed on the
+absolute weights.}
 
-\item{measures}{Character vector of centrality measures to compare. Empty
-by default (no centrality block). Any built-in measure is valid:
-\code{"OutStrength"}, \code{"InStrength"}, \code{"ClosenessIn"},
-\code{"ClosenessOut"}, \code{"Closeness"}, \code{"Betweenness"},
-\code{"BetweennessRSP"}, \code{"Diffusion"}, \code{"Clustering"},
-\code{"InCloseness"}, \code{"OutCloseness"}. Unknown names are ignored
-with a warning.}
+\item{measures}{Centrality measures to compare. Default \code{character(0)}
+(none). Any built-in measure of \code{\link[=net_centrality]{net_centrality()}} can be named:
+\code{"OutStrength"}, \code{"InStrength"}, \code{"ClosenessIn"}, \code{"ClosenessOut"},
+\code{"Closeness"}, \code{"Betweenness"}, \code{"BetweennessRSP"}, \code{"Diffusion"} and
+\code{"Clustering"} (\code{"InCloseness"} and \code{"OutCloseness"} are accepted for
+\code{"ClosenessIn"} and \code{"ClosenessOut"}). Unknown names are
+dropped with a warning. The centralities are computed on the scaled
+matrices as directed networks, without self-loops.}
 
-\item{network}{Logical. Include side-by-side network metrics from
-\code{summary()}? Default \code{TRUE}.}
+\item{network}{Whether to add the two networks' metrics side by side (the
+metrics \code{\link[=summary]{summary()}} reports for a \code{netobject}). Default \code{TRUE}.}
 
-\item{i, j}{For a \code{netobject_group}: index or name of the two member
-networks to compare. Defaults \code{1L} and \code{2L}.}
+\item{i, j}{For a \code{netobject_group}: the two members to compare, by index
+or name. Defaults \code{1} and \code{2}; the two must differ, and a member that
+does not exist raises an error.}
 
-\item{type}{Character. One of \code{"scatter"} (default - edge-weight scatter with OLS fit and correlation overlay), \code{"heatmap"} (n by n grid of x - y differences using the diverging palette), \code{"diff_hist"} (histogram of |x - y| absolute differences with rug + density), \code{"weight_dist"} (overlaid distributions of |x| and |y| edge weights), or \code{"all"} (2 by 2 grid of all four panels; requires the gridExtra package).}
+\item{type}{For \code{plot()}: the view. \code{"scatter"} (default) plots each
+cell's weight in \code{y} against its weight in \code{x}, with the line of
+perfect agreement (dashed), an OLS fit with its 95\% band and the
+Pearson, Spearman and Kendall correlations. \code{"heatmap"} draws the
+difference matrix \code{x - y} on the diverging palette: blue where \code{x} is
+larger, red where \code{y} is larger, white where they agree. \code{"diff_hist"}
+is a histogram of the absolute differences \verb{|x - y|}, with a density
+curve, a rug of the cells and lines at the mean and median.
+\code{"weight_dist"} overlays the distributions of \verb{|x|} and \verb{|y|}. \code{"all"}
+draws these four views in a 2 x 2 grid.}
 
-\item{combined}{When \code{type = "all"} and \code{combined = TRUE} (default), the four panels are stitched into a 2x2 gtable. When \code{FALSE}, returns a named list of the four ggplots so each can be printed, saved, or re-laid-out independently. Ignored for other \code{type} values.}
+\item{combined}{For \code{plot()} with \code{type = "all"}: \code{TRUE} (default)
+arranges the four views into one 2 x 2 gtable, which needs the
+gridExtra package; \code{FALSE} returns them as a named list of ggplots, to
+print, save or lay out separately. Ignored for the other views.}
 }
 \value{
-A \code{net_comparison} object: a named list with \code{matrices},
-\code{difference_matrix}, \code{edge_metrics}, \code{summary_metrics}, optionally
-\code{network_metrics}, \code{centrality_differences}, \code{centrality_correlations}.
-
-In \code{print.net_comparison()}: \code{x}, invisibly.
-
-In \code{plot.net_comparison()}: A \code{ggplot} object; for \code{type = "all"} with \code{combined = TRUE} a \code{gtable} arranged 2 by 2; for \code{type = "all"} with \code{combined = FALSE} a named list of four ggplots.
+A \code{net_comparison} object. Print it for the agreement measures,
+the side-by-side network metrics and the centrality correlations;
+\code{plot()} draws the edge-weight scatter or another view (see \code{type}).
+The object is a list with:
+\describe{
+\item{matrices}{The two scaled weight matrices, \code{x} and \code{y}, aligned
+by node.}
+\item{difference_matrix}{The scaled \code{x} minus the scaled \code{y}.}
+\item{edge_metrics}{A data frame with one row per cell (\code{source},
+\code{target}, self-loops included): the two weights and their raw,
+absolute, squared, relative and rank differences, percentile
+difference, ratio (\code{similarity_strength_index}), relative change
+(\code{difference_index}), log ratio of 1 + weight
+(\code{logarithmic_ratio}, \code{NA} where a weight is -1 or below),
+standardised weights and their ratio. A ratio is \code{NA} where its
+denominator is zero, and the standardised weights are \code{NA} when a
+matrix is constant.}
+\item{summary_metrics}{A data frame of the 22 agreement measures, with
+columns \code{category}, \code{metric} and \code{value}.}
+\item{network_metrics}{When \code{network = TRUE}: a data frame with
+columns \code{metric}, \code{x} and \code{y}, one row per network metric.}
+\item{centrality_differences, centrality_correlations}{When
+\code{measures} is not empty (empty data frames when none of its names
+is valid): one row per node and measure
+(\code{state}, \code{centrality}, \code{x}, \code{y}, \code{difference}), and one row per
+measure with the correlation of the two networks' values.}
+}
+\code{print()} returns its input invisibly.
+\code{plot()} returns a ggplot; with \code{type = "all"}, it draws the 2 x 2
+grid and returns it invisibly as a gtable, or with \code{combined = FALSE}
+returns the four ggplots invisibly as a named list.
 }
 \description{
-Computes a battery of descriptive comparison metrics between two networks
-or two weight matrices: weight deviations (mean / median / RMS / max
-absolute difference, relative mean absolute difference, coefficient-of-
-variation ratio), four correlation measures (Pearson, Spearman, Kendall,
-distance correlation), five dissimilarity measures (Euclidean, Manhattan,
-Canberra, Bray-Curtis, Frobenius), five similarity measures (Cosine,
-Jaccard, Dice, Overlap, RV), pattern agreements, and side-by-side network
-metrics. Optionally adds centrality differences and centrality
-correlations.
+\code{compare_model()} compares two networks, or two weight matrices, edge by
+edge and returns a battery of descriptive agreement measures: weight
+deviations (mean, median, root-mean-square and maximum absolute
+difference, relative mean absolute difference, coefficient-of-variation
+ratio), four correlations (Pearson, Spearman, Kendall, distance
+correlation), five dissimilarities (Euclidean, Manhattan, Canberra,
+Bray-Curtis, Frobenius), five similarities (cosine, Jaccard, Dice,
+overlap, RV coefficient) and two pattern agreements (rank and sign
+agreement), with the two networks' metrics side by side and, on request,
+their centrality differences. It takes two \code{netobject}s,
+\code{cograph_network}s or square numeric matrices, or two members of a
+\code{netobject_group}. Both weight matrices are scaled with the same
+\code{scaling} before comparison, which decides how weights from different
+estimators are put on a common footing.
+
+The measures describe how alike the two estimated networks are; they say
+nothing about whether a difference is larger than sampling variation
+would produce. For that, test the difference with \code{\link[=permutation]{permutation()}} (two
+transition networks) or with \code{\link[=nct]{nct()}} on the two groups' observations
+(psychological networks).
+\code{\link[=compare_networks]{compare_networks()}} compares any number of networks with tidy tables
+and a \code{plot()} that draws one view per call.
 }
 \details{
-Mirrors \code{tna::compare()} numerically. Inputs are converted to weight
-matrices and scaled before comparison; the choice of scaling determines
-how weights from different estimators are placed on a common footing.
-Named inputs are aligned by node names; different node sets or duplicate
-names raise an error. A fully unnamed matrix is matched by position.
+The measures, scalings and edge metrics mirror \code{tna::compare()} (tna
+1.5.4 and later) numerically. The distance correlation is that of
+Szekely, Rizzo and Bakirov (2007), \code{NA} when one network is constant, and
+the RV coefficient that of Robert and Escoufier (1976). A network's own
+\code{directed} flag decides how its network metrics are computed; a plain
+matrix has none, so an asymmetric matrix is read as directed and a
+symmetric one as undirected.
 }
-\section{Methods}{
-
-\itemize{
-\item \code{compare_model.netobject_group()}: Selects two members of a \code{netobject_group} (by index or name) and dispatches to \code{compare_model.netobject()}. See also \code{\link{compare_networks}}, the N-way successor with tidy tables and a \code{plot()} that draws one view per call.
-\item \code{plot.net_comparison()}: Visualises a \code{net_comparison} object. Currently supports the edge-weight scatterplot (default), with the diagonal reference (perfect agreement) and the OLS regression line annotated by Pearson, Spearman, and Kendall correlations.
-}
-}
-
 \examples{
 nets <- build_network(group_regulation_long, method = "relative",
                       actor = "Actor", action = "Action", time = "Time",
                       group = "Achiever")
 compare_model(nets)
+}
+\references{
+Szekely, G. J., Rizzo, M. L., & Bakirov, N. K. (2007). Measuring and
+testing dependence by correlation of distances. \emph{The Annals of
+Statistics}, 35(6), 2769--2794. \doi{10.1214/009053607000000505}
+
+Robert, P., & Escoufier, Y. (1976). A unifying tool for linear
+multivariate statistical methods: The RV-coefficient. \emph{Journal of
+the Royal Statistical Society, Series C (Applied Statistics)}, 25(3),
+257--265. \doi{10.2307/2347233}
 }

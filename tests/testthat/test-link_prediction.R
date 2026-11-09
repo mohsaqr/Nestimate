@@ -296,7 +296,8 @@ test_that("predict_links errors on netobject_group", {
     stringsAsFactors = FALSE
   )
   nets <- build_network(seqs, method = "relative", group = "grp")
-  expect_error(predict_links(nets), "single network")
+  # classed refusal (was an unclassed message match)
+  expect_error(predict_links(nets), class = "nestimate_bad_input")
 })
 
 
@@ -483,4 +484,54 @@ test_that("summary() reports NA, not -Inf/NaN, when no links are missing", {
   score_cols <- c("score_mean", "score_sd", "score_max", "score_min")
   expect_true(all(is.na(unlist(s[score_cols]))))
   expect_false(any(is.infinite(unlist(s[score_cols]))))
+})
+
+test_that("weighted jaccard is the Ruzicka index (hand values)", {
+  # Neighbourhoods: B = (A 2, D 1), C = (A 4, D 3); A = (B 2, C 4),
+  # D = (B 1, C 3). Ruzicka: sum of minima over sum of maxima.
+  W <- matrix(0, 4, 4, dimnames = list(LETTERS[1:4], LETTERS[1:4]))
+  W["A", "B"] <- W["B", "A"] <- 2
+  W["A", "C"] <- W["C", "A"] <- 4
+  W["B", "D"] <- W["D", "B"] <- 1
+  W["C", "D"] <- W["D", "C"] <- 3
+  s <- predict_links(W, methods = "jaccard")$scores$jaccard
+  expect_equal(s["B", "C"], (2 + 1) / (4 + 3))
+  expect_equal(s["A", "D"], (1 + 3) / (2 + 4))
+  # On 0/1 weights it equals the binary index, directed included.
+  A <- matrix(c(0, 1, 0, 0,
+                0, 0, 1, 1,
+                1, 0, 0, 0,
+                0, 1, 1, 0), 4, 4, byrow = TRUE,
+              dimnames = list(LETTERS[1:4], LETTERS[1:4]))
+  expect_equal(predict_links(A, methods = "jaccard")$scores$jaccard,
+               predict_links(A, methods = "jaccard",
+                             weighted = FALSE)$scores$jaccard)
+})
+
+test_that("n_existing counts each undirected edge once", {
+  W <- matrix(0, 3, 3, dimnames = list(c("A", "B", "C"), c("A", "B", "C")))
+  W["A", "B"] <- W["B", "A"] <- 3
+  W["B", "C"] <- W["C", "B"] <- 3
+  expect_identical(predict_links(W)$n_existing, 2L)
+})
+
+test_that("evaluate_links matches undirected pairs in either order", {
+  # Chain A-B-C-D: common neighbours score A-C 1, B-D 1, A-D 0, so with
+  # A-C known the AUC is (1 + 0.5) / 2 = 0.75.
+  W <- matrix(0, 4, 4, dimnames = list(LETTERS[1:4], LETTERS[1:4]))
+  W["A", "B"] <- W["B", "A"] <- 1
+  W["B", "C"] <- W["C", "B"] <- 1
+  W["C", "D"] <- W["D", "C"] <- 1
+  p <- predict_links(W, methods = "common_neighbors")
+  fwd <- evaluate_links(p, data.frame(from = "A", to = "C"), k = 1)
+  rev <- evaluate_links(p, data.frame(from = "C", to = "A"), k = 1)
+  expect_equal(rev$auc, 0.75)
+  expect_equal(rev, fwd)
+})
+
+test_that("predict_links refuses an mcml with a classed error", {
+  seqs <- data.frame(T1 = c("A", "B", "A", "C"), T2 = c("B", "C", "C", "D"),
+                     T3 = c("C", "D", "D", "A"))
+  mc <- build_mcml(seqs, list(Z = c("A", "B"), G = c("C", "D")))
+  expect_error(predict_links(mc), class = "nestimate_bad_input")
 })

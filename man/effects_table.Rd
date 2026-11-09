@@ -13,27 +13,32 @@ effects_table(
 )
 }
 \arguments{
-\item{x}{A \code{net_outcome_model} from \code{\link{outcome_model}}.}
+\item{x}{An \code{\link[=outcome_model]{outcome_model()}} result; anything else raises an error.}
 
-\item{intercept}{Keep the intercept row? Default \code{FALSE}.}
+\item{intercept}{Whether to keep the intercept row. Default \code{FALSE}.}
 
-\item{significant}{Keep only terms whose corrected p-value is below
-\code{alpha}? Default \code{FALSE}.}
+\item{significant}{Whether to keep only the terms whose corrected p-value
+(\code{p_adj}) is below \code{alpha}. Default \code{FALSE}.}
 
-\item{alpha}{Threshold used by \code{significant}. Default \code{0.05}.}
+\item{alpha}{The threshold for \code{significant}, between 0 and 1. Default
+\code{0.05}.}
 
-\item{digits}{Rounding for the numeric columns. Default \code{3};
+\item{digits}{The decimal places of the numeric columns. Default \code{3};
 \code{p_value} and \code{p_adj} are never rounded.}
 }
 \value{
-A \code{data.frame} with the same columns as the model's effect
-table, one row per retained term. The intercept row is dropped unless
-\code{intercept = TRUE}, and every term is kept unless
+A data frame with the columns of the model's effect table (\code{term},
+\code{estimate}, \code{std_error}, \code{statistic}, \code{ci_lower}, \code{ci_upper}, \code{p_value},
+\code{p_adj}, and for a binomial fit \code{odds_ratio}, \code{or_lower} and
+\code{or_upper}), one row per retained term. The intercept row is dropped
+unless \code{intercept = TRUE}, and every term is kept unless
 \code{significant = TRUE} restricts them to \code{p_adj < alpha}.
 }
 \description{
-The tidy one-row-per-term table of estimates, confidence intervals and
-corrected p-values.
+\code{effects_table()} returns the effect table of an \code{\link[=outcome_model]{outcome_model()}} fit:
+one row per term, with its estimate, confidence interval and corrected
+p-value, rounded for reading. Arguments keep the intercept or only the
+significant terms.
 }
 \examples{
 set.seed(1)

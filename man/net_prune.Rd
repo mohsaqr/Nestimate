@@ -48,64 +48,110 @@ net_prune(
 )
 }
 \arguments{
-\item{x}{A \code{netobject} or \code{netobject_group}.}
+\item{x}{The network: a \code{netobject} or a \code{netobject_group}. Another class
+raises an error. A network whose pruning is active raises an error of
+class \code{nestimate_bad_input}; after \code{\link[=net_deprune]{net_deprune()}} it can be pruned
+again with other settings, which replaces its pruning record.}
 
-\item{method}{One of \code{"threshold"}, \code{"lowest"},
-\code{"disparity"}, \code{"bootstrap"}. Default \code{"threshold"}.}
+\item{method}{The pruning method: \code{"threshold"} (default), \code{"lowest"},
+\code{"disparity"} or \code{"bootstrap"} (see \emph{Methods}).}
 
-\item{threshold}{Numeric cut-off for \code{method = "threshold"}.
-Default \code{0.1}.}
+\item{threshold}{For \code{method = "threshold"}: the largest weight that is
+removed. Default \code{0.1}. Ignored by the other methods, but must still
+be a single number.}
 
-\item{lowest}{Quantile (0-1) for \code{method = "lowest"}. Default
-\code{0.05}.}
+\item{lowest}{For \code{method = "lowest"}: the quantile, between 0 and 1, of
+the positive weights that sets the cut-off. Default \code{0.05}. Ignored by
+the other methods, but checked whatever the method: a value outside
+\verb{[0, 1]} raises an error.}
 
-\item{level}{Significance level (0-1) for \code{method = "disparity"}.
-Default \code{0.5}.}
+\item{level}{For \code{method = "disparity"}: the significance level, between
+0 and 1; an edge is kept when its p-value is below it. Default \code{0.5}.
+Ignored by the other methods, but checked whatever the method: a value
+outside \verb{[0, 1]} raises an error.}
 
-\item{boot}{Optional precomputed \code{net_bootstrap} for
-\code{method = "bootstrap"}.}
+\item{boot}{For \code{method = "bootstrap"}: a \code{net_bootstrap} from
+\code{\link[=bootstrap_network]{bootstrap_network()}} of this network. With the default \code{NULL}, the
+bootstrap is run here on \code{x}. For a \code{netobject_group}, pass the
+\code{net_bootstrap_group} of \code{\link[=bootstrap_network]{bootstrap_network()}} on the group, matched
+to the networks by name, or \code{NULL} to bootstrap each network on its
+own. Another object, a bootstrap of another network (its weights
+differ), a single \code{net_bootstrap} for a group, or a group bootstrap
+missing one of the networks raises an error of class
+\code{nestimate_bad_input}.}
 
-\item{...}{Passed to \code{\link{bootstrap_network}} when
-\code{method = "bootstrap"}.}
+\item{...}{For \code{method = "bootstrap"} with \code{boot = NULL}: arguments
+passed to \code{\link[=bootstrap_network]{bootstrap_network()}}, such as \code{iter}. Ignored otherwise.}
 }
 \value{
-The input network (or group) with pruned \code{$weights} and a
-\code{"pruning"} attribute. Class is unchanged.
+The input, of the same class, with the pruned weights, its edge
+table and edge count updated to them, and the \code{"pruning"} attribute
+described above. \code{\link[=net_pruning_details]{net_pruning_details()}} reads the record,
+\code{\link[=net_deprune]{net_deprune()}} and \code{\link[=net_reprune]{net_reprune()}} switch between the original and
+the pruned weights. For a \code{netobject_group}, each network is pruned
+and carries its own record.
 }
 \description{
-Removes weak or non-significant edges from a network, keeping a record so
-the operation can be reversed. This is Nestimate's counterpart of
-\code{tna::prune()}; the \code{net_} prefix avoids a name clash with
-\code{tna::prune()}.
-}
-\details{
-Pruning is non-destructive: the pruned network carries a \code{"pruning"}
-attribute holding the original weights, the pruned weights, the parameters
-used, and a tidy table of removed edges. Use \code{\link{net_deprune}} to
-restore the original weights and \code{\link{net_reprune}} to re-apply the
-pruning, both without recomputation. \code{\link{net_pruning_details}}
-reports what was removed.
+\code{net_prune()} removes weak or non-significant edges from a network and
+returns the pruned network with a record of what it removed, so the
+pruning can be undone and re-applied. It is Nestimate's counterpart of
+\code{tna::prune()}; the \code{net_} prefix avoids a name clash with it. It takes a
+\code{netobject} or a \code{netobject_group}, whose networks are pruned one by one
+with the same settings, and offers four methods (see \emph{Methods}).
 
-Methods:
+Pruning is non-destructive: the network carries a \code{"pruning"} attribute
+with the original weights, the pruned weights, the settings used and a
+table of the removed edges. \code{\link[=net_deprune]{net_deprune()}} restores the original weights
+and \code{\link[=net_reprune]{net_reprune()}} re-applies the pruning, both without recomputing
+anything; \code{\link[=net_pruning_details]{net_pruning_details()}} lists what was removed.
+
+\code{"threshold"} and \code{"lowest"} remove small weights; they do not show that
+those edges are absent, and the cut-off is the analyst's choice.
+\code{"disparity"} and \code{"bootstrap"} keep an edge on a statistical criterion.
+Before reading a pruned network, see which edges went with
+\code{\link[=net_pruning_details]{net_pruning_details()}} and whether the conclusions hold at another
+cut-off; \code{\link[=bootstrap_network]{bootstrap_network()}} gives the uncertainty of each edge.
+}
+\section{Methods}{
+
 \describe{
-\item{\code{"threshold"}}{Remove edges with weight \eqn{\le}
+\item{\code{"threshold"}}{Removes positive edges with weight at most
 \code{threshold}.}
-\item{\code{"lowest"}}{Remove the lowest \code{lowest} quantile of
-non-zero edges.}
-\item{\code{"disparity"}}{Serrano disparity-filter backbone at
-significance \code{level}.}
-\item{\code{"bootstrap"}}{Remove edges deemed non-significant by
-\code{\link{bootstrap_network}} (pass a precomputed result via
-\code{boot}, or extra bootstrap arguments via \code{...}).}
+\item{\code{"lowest"}}{Removes positive edges with weight at most the
+\code{lowest} quantile of the positive weights (self-loops included in
+the quantile; each pair counted once on an undirected network).}
+\item{\code{"disparity"}}{Keeps the backbone found by the disparity filter
+of Serrano, Boguna & Vespignani (2009): an edge stays when, at its
+source's outgoing or its target's incoming edges, its share of the
+strength is significant at \code{level} against a uniform split of that
+strength; the filter is defined for non-negative weights.}
+\item{\code{"bootstrap"}}{Removes the edges that \code{\link[=bootstrap_network]{bootstrap_network()}} finds
+non-significant: pass a computed result as \code{boot}, or bootstrap
+arguments through \code{...}.}
 }
-For \code{"threshold"}, \code{"lowest"}, and \code{"disparity"} an edge is
-dropped only when its removal leaves the network weakly connected.
+For \code{"threshold"} and \code{"lowest"}, the candidate edges are visited one at
+a time, column by column and down each column, and each is removed
+only when the network
+stays weakly connected without it, so a network that is not weakly
+connected to begin with loses no edge to these two methods.
+\code{"disparity"} and \code{"bootstrap"} apply no connectivity check. Negative
+edges are never candidates for \code{"threshold"} and \code{"lowest"}, whatever
+their size. On a signed network, \code{"disparity"} treats negative edges as
+not significant and removes them at the default \code{level}; at a \code{level}
+above 0.5, a negative edge leaving a state with no positive outgoing edge
+(or entering one with no positive incoming edge) can stay. \code{"bootstrap"}
+removes the non-significant edges of either sign.
 
-Diagonal self-loops (self-transitions) are observed data: they are counted
-equally when computing the cut-off but are never removed by any method.
-(This is a deliberate divergence from \code{tna::prune()}, which prunes
-self-loops like any other edge.)
+On an undirected network an edge is a pair of cells: it is removed in
+both directions or kept in both, so the pruned matrix stays symmetric,
+and the record lists and counts it once.
+
+Self-loops (the diagonal) are observed data: they count towards the
+\code{"lowest"} quantile but are never removed by any method. This is a
+deliberate difference from \code{tna::prune()}, which prunes self-loops like
+any other edge.
 }
+
 \examples{
 seqs <- data.frame(
   V1 = c("A","B","A","C","B"), V2 = c("B","C","B","A","C"),
@@ -114,6 +160,12 @@ net    <- build_network(seqs, method = "relative")
 pruned <- net_prune(net, method = "threshold", threshold = 0.2)
 net_pruning_details(pruned)
 
+}
+\references{
+Serrano, M. A., Boguna, M., & Vespignani, A. (2009). Extracting the
+multiscale backbone of complex weighted networks. \emph{Proceedings of
+the National Academy of Sciences}, 106(16), 6483--6488.
+\doi{10.1073/pnas.0808904106}
 }
 \seealso{
 \code{\link{net_deprune}}, \code{\link{net_reprune}},

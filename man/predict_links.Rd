@@ -22,88 +22,127 @@ predict_links(
 \method{summary}{net_link_prediction}(object, ...)
 }
 \arguments{
-\item{x}{A \code{netobject}, \code{mcml}, \code{cograph_network}, or
-numeric square matrix. For the \code{print()} method: an object of class \code{net_link_prediction}.}
+\item{x}{The network: a \code{netobject}, a \code{cograph_network}, a \code{tna} model,
+or a numeric square weight matrix. A network keeps its own direction; a
+matrix or \code{tna} model is directed unless it is symmetric. A
+\code{netobject_group} or an \code{mcml} raises an error of class
+\code{nestimate_bad_input}: predict each network separately. For the \code{print()}
+method: a \code{predict_links()} result.}
 
-\item{methods}{Character vector. One or more of:
-\code{"common_neighbors"}, \code{"resource_allocation"},
-\code{"adamic_adar"}, \code{"jaccard"}, \code{"preferential_attachment"},
-\code{"katz"}. Default: all six methods.}
+\item{methods}{The indices to compute, one or more of
+\code{"common_neighbors"}, \code{"resource_allocation"}, \code{"adamic_adar"},
+\code{"jaccard"}, \code{"preferential_attachment"} and \code{"katz"} (defined under
+\emph{Details}). By default all six.}
 
-\item{weighted}{Logical. If \code{TRUE}, use the weight matrix directly
-instead of binarizing. Default: \code{TRUE}.}
+\item{weighted}{Whether common neighbours, resource allocation,
+Adamic-Adar and Jaccard use the edge weights (\code{TRUE}, default) or the
+binary adjacency (\code{FALSE}). Preferential attachment, Katz and the degrees
+that resource allocation and Adamic-Adar divide by always use the binary
+adjacency.}
 
-\item{top_n}{Integer or NULL. Return only the top N predictions per method.
-Default: \code{NULL} (all pairs).}
+\item{top_n}{The number of predictions kept per index, the highest
+scores. Default \code{NULL} (every pair). The ranks are computed before the
+cut, so they stay the same.}
 
-\item{exclude_existing}{Logical. If \code{TRUE}, exclude node pairs that
-already have an edge. Default: \code{TRUE}.}
+\item{exclude_existing}{Whether pairs that already have an edge are left
+out of the predictions. Default \code{TRUE}.}
 
-\item{include_self}{Logical. If \code{TRUE}, include self-loop predictions.
-Default: \code{FALSE}.}
+\item{include_self}{Whether self-pairs (a node with itself) are listed for
+a directed network; an undirected network never lists them. All indices
+score self-pairs 0. It also decides whether self-loops count in the
+number of existing edges. Default \code{FALSE}.}
 
-\item{katz_damping}{Numeric or NULL. Attenuation factor for Katz index.
-If NULL, auto-computed as \code{0.9 / spectral_radius(A)}.
-Default: \code{NULL}.}
+\item{katz_damping}{The attenuation factor \eqn{\beta} of the Katz index.
+Default \code{NULL}, which uses \eqn{0.9 / \rho(A)} for the spectral radius
+\eqn{\rho(A)} of the adjacency (\code{0.1} when it is 0). A value at or above
+\eqn{1 / \rho(A)}, where the series diverges, is replaced by
+\eqn{0.9 / \rho(A)} with a warning.}
 
-\item{...}{In \code{print.net_link_prediction()} and \code{summary.net_link_prediction()}: Additional arguments (ignored).}
+\item{...}{For the \code{print()} and \code{summary()} methods: not used.}
 
-\item{object}{For the \code{summary()} method: an object of class \code{net_link_prediction}.}
+\item{object}{For \code{summary()}: a \code{predict_links()} result.}
 }
 \value{
-An object of class \code{"net_link_prediction"} containing:
+A \code{net_link_prediction} object. \code{print()} lists the top ten
+predicted links (by consensus rank with several indices, by score with
+one) and returns its input invisibly. \code{summary()} returns a data frame
+with one row per index: \code{method}, \code{n_predictions}, and the \code{score_mean},
+\code{score_sd}, \code{score_max} and \code{score_min} of its predictions; an index
+with no predictions (every possible link already exists) has
+\code{n_predictions = 0} and \code{NA} scores. \code{\link[=evaluate_links]{evaluate_links()}} scores the
+predictions against known edges, and \code{\link[=pathways]{pathways()}} writes them as pathway
+strings. The object's fields:
 \describe{
-\item{predictions}{Data frame, one row per (node pair, method), with
-columns \code{from}, \code{to}, \code{method}, \code{score},
-\code{existing} (was the pair already an edge?) and \code{rank}.
-Sorted by score (descending) within each method.}
-\item{consensus}{Data frame, one row per node pair, with columns
-\code{from}, \code{to}, \code{avg_rank}, \code{n_methods} and
-\code{consensus_rank}, ordered by \code{avg_rank}. \code{NULL} when
-only one method was requested.}
-\item{scores}{Named list of score matrices (one per method).}
-\item{adjacency}{Integer 0/1 adjacency matrix of the input network.}
-\item{methods}{Character vector of methods used.}
-\item{nodes}{Character vector of node names.}
-\item{directed}{Logical.}
-\item{weighted}{Logical.}
-\item{n_nodes}{Integer.}
-\item{n_existing}{Integer. Number of existing edges.}
+\item{predictions}{Data frame, one row per node pair and index:
+\code{from}, \code{to}, \code{method}, \code{score}, \code{existing} (whether the pair already
+has an edge) and \code{rank}, sorted by score (highest first) within each
+index. An undirected network lists each pair once.}
+\item{consensus}{Data frame, one row per node pair: \code{from}, \code{to},
+\code{avg_rank} (the pair's mean rank over the indices that list it),
+\code{n_methods} (how many do) and \code{consensus_rank}, ordered by \code{avg_rank}.
+\code{NULL} when only one index was computed.}
+\item{scores}{Named list of score matrices, one per index.}
+\item{adjacency}{The 0/1 adjacency matrix of the input network.}
+\item{methods}{The indices computed.}
+\item{nodes}{The node names.}
+\item{directed, weighted}{Whether the network was read as directed, and
+whether weights were used.}
+\item{n_nodes}{The number of nodes.}
+\item{n_existing}{The number of existing edges: non-zero cells of the
+adjacency matrix, each undirected edge counted once, self-loops
+counted only with \code{include_self = TRUE}.}
 }
-
-In \code{print.net_link_prediction()}: The input object, invisibly.
-
-In \code{summary.net_link_prediction()}: A data frame, one row per method, with columns \code{method}, \code{n_predictions}, \code{score_mean}, \code{score_sd}, \code{score_max} and \code{score_min}. A method with no predictions (every possible link already exists) has \code{n_predictions = 0} and \code{NA} scores.
 }
 \description{
-Computes link prediction scores for all node pairs using one or more
-structural similarity methods. Accepts \code{netobject}, \code{mcml},
-\code{cograph_network}, or a raw weight matrix.
+\code{predict_links()} scores every pair of nodes for how strongly the
+network's structure suggests a link between them, with one or more
+similarity indices: common neighbours, resource allocation, Adamic-Adar,
+Jaccard, preferential attachment and Katz (Liben-Nowell & Kleinberg,
+2007). It returns one row per pair and index, ranked within each index,
+and a consensus ranking across the indices. It takes a \code{netobject}, a
+\code{cograph_network}, a \code{tna} model or a square weight matrix, weighted or
+binary, directed or undirected.
 
-All methods are fully vectorized using matrix operations - no loops.
-Supports both weighted and binary adjacency, directed and undirected
-networks.
+A high score says that a pair resembles linked pairs in the network's
+structure (shared neighbours, busy endpoints, many connecting paths), not
+that the link exists in the population or will form. The indices are
+heuristics and often disagree; the consensus rank shows the pairs on which
+they agree. How well an index recovers links is measured by scoring
+held-out edges with \code{\link[=evaluate_links]{evaluate_links()}}; \code{\link[=pathways]{pathways()}} writes the top
+predictions as pathway strings.
 }
 \details{
 \subsection{Methods}{
 
 \describe{
-\item{common_neighbors}{Number of shared neighbors. For directed graphs,
-sums shared out-neighbors and shared in-neighbors.
-Vectorized as \code{A \%*\% t(A) + t(A) \%*\% A}.}
-\item{resource_allocation}{Zhou et al. (2009). Like common neighbors but
-weights each shared neighbor z by \code{1/degree(z)}.
-Penalizes hubs, rewards rare shared connections.}
-\item{adamic_adar}{Adamic & Adar (2003). Like resource allocation but
-weights by \code{1/log(degree(z))}. Less aggressive penalty than RA.}
-\item{jaccard}{Ratio of shared neighbors to total neighbors.
-For directed graphs, computed on combined (out+in) neighbor sets.}
-\item{preferential_attachment}{Product of source out-degree and target
-in-degree. Captures the "rich-get-richer" effect.}
-\item{katz}{Katz (1953). Weighted sum of all paths between nodes,
-exponentially damped by path length. Computed via matrix inversion:
-\code{(I - beta * A)^{-1} - I}. Captures global structure.}
+\item{common_neighbors}{The number of shared neighbours. For a directed
+network, shared out-neighbours plus shared in-neighbours, computed as
+\code{A \%*\% t(A) + t(A) \%*\% A}.}
+\item{resource_allocation}{Zhou et al. (2009). Like common neighbours,
+but each shared neighbour z is weighted by \code{1/degree(z)} (in- plus
+out-degree for a directed network). It penalises hubs and rewards rare
+shared connections.}
+\item{adamic_adar}{Adamic & Adar (2003). Like resource allocation, but
+weighted by \code{1/log(degree(z))}, a milder penalty; a neighbour of
+degree 1 adds nothing.}
+\item{jaccard}{Shared neighbours divided by all neighbours of the two
+nodes. With \code{weighted = TRUE} it is the weighted Jaccard (Ruzicka)
+index, \eqn{\sum_z \min(|w_{iz}|, |w_{jz}|) / \sum_z \max(|w_{iz}|,
+    |w_{jz}|)}, which equals the binary index on 0/1 weights and lies
+between 0 and 1. For a directed network, computed on the combined (out +
+in) neighbourhoods, each neighbour weighted by the larger of its two
+directions.}
+\item{preferential_attachment}{The source's out-degree times the
+target's in-degree (Barabasi & Albert, 1999): the "rich get richer"
+effect.}
+\item{katz}{Katz (1953). A sum over all paths between the two nodes,
+damped exponentially by path length, computed by matrix inversion as
+\code{(I - beta * A)^{-1} - I}. It reads the global structure. If the
+inversion fails, the series is truncated after six terms.}
 }
+
+Every index is computed with matrix operations on the whole network at
+once.
 }
 }
 \examples{
@@ -134,6 +173,10 @@ Katz, L. (1953). A new status index derived from sociometric analysis.
 Jaccard, P. (1901). Etude comparative de la distribution florale dans une
 portion des Alpes et des Jura. \emph{Bulletin de la Societe Vaudoise des
 Sciences Naturelles}, 37, 547--579.
+
+Ioffe, S. (2010). Improved consistent sampling, weighted minhash and L1
+sketching. \emph{IEEE International Conference on Data Mining},
+246--255.
 
 Barabasi, A.-L. & Albert, R. (1999). Emergence of scaling in random
 networks. \emph{Science}, 286(5439), 509--512.

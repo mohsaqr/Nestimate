@@ -14,19 +14,27 @@
 
 #' Rename the models of a `netobject_group`
 #'
-#' Replaces the names of the constituent networks in a `netobject_group`
-#' (or any object inheriting from it). Useful when `build_network()`
-#' produced generic labels (e.g. `"Cluster 1"`, `"Cluster 2"`) and you
-#' want to substitute meaningful ones (e.g. `"High engagement"`,
-#' `"Low engagement"`).
+#' @description
+#' `rename_models()` replaces the names of the networks in a
+#' `netobject_group` and returns the group with nothing else changed. The
+#' names label every later report (print methods, plot panels, bootstrap
+#' and permutation output), so this is the step that turns the generic
+#' labels [build_network()] gives clusters (`"Cluster 1"`, `"Cluster 2"`)
+#' into meaningful ones (`"High engagement"`, `"Low engagement"`) once it is
+#' known what each cluster represents. It is the Nestimate counterpart of
+#' `tna::rename_groups()`.
 #'
-#' @param x A `netobject_group` (or any object inheriting from it, such
-#'   as `net_mlvar`).
-#' @param new_names A character vector of new names. Must have the same
-#'   length as `x`, contain no `NA` or empty strings, and be unique.
-#' @return A `netobject_group` of the same class and length as `x`, with
-#'   `names()` replaced by `new_names`. The constituent networks are
-#'   returned unchanged.
+#' @param x A `netobject_group`, or an object inheriting from it. Any other
+#'   object raises an error. A `net_mlvar` is accepted too, but its
+#'   `print()` and `summary()` find the three layers by their names
+#'   (`temporal`, `contemporaneous`, `between`): after renaming, `print()`
+#'   shows none of the model's dimensions and `summary()` fails.
+#' @param new_names The new names, a character vector in the order of the
+#'   networks in `x`: one per network, none missing or empty, and no two the
+#'   same. Anything else raises an error.
+#' @return An object of the same class and length as `x`, its networks and
+#'   attributes (such as `group_col`) unchanged and its names replaced by
+#'   `new_names`.
 #' @examples
 #' grp <- build_network(group_regulation_long, method = "tna",
 #'                      actor = "Actor", action = "Action", time = "Time",
@@ -41,7 +49,7 @@ rename_models <- function(x, new_names) {
 #' @rdname rename_models
 #' @export
 rename_models.netobject_group <- function(x, new_names) {
-  stopifnot(
+  .assert(
     is.character(new_names),
     length(new_names) == length(x),
     !anyNA(new_names),
@@ -55,6 +63,10 @@ rename_models.netobject_group <- function(x, new_names) {
 #' @rdname rename_models
 #' @export
 rename_models.default <- function(x, new_names) {
-  stop("rename_models() expects a netobject_group (or subclass). Got: ",
-       paste(class(x), collapse = ", "), ".", call. = FALSE)
+  stop(errorCondition(
+    paste0(
+      "rename_models() expects a netobject_group (or subclass). Got: ",
+      paste(class(x), collapse = ", "),
+      "."),
+    class = "nestimate_bad_input", call = NULL))
 }

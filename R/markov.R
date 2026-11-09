@@ -21,7 +21,8 @@ utils::globalVariables(c("fill", "label", "txt_col"))
       inherits(x, "tna")) {
     P <- x$weights
     if (is.null(P) || !is.matrix(P) || !is.numeric(P))
-      stop("Object has no numeric weight matrix.", call. = FALSE)
+      stop(errorCondition("Object has no numeric weight matrix.",
+                          class = "nestimate_bad_input", call = NULL))
     # Correlation-type networks (signed, or positive by chance) are not
     # transition weights; row-normalising them makes a meaningless "chain".
     # A co-occurrence network row-normalises to its random walk, a valid one.
@@ -41,11 +42,11 @@ utils::globalVariables(c("fill", "label", "txt_col"))
     net <- build_network(x, method = "relative")
     return(net$weights)
   }
-  stop(
-    "'x' must be a numeric matrix (transition matrix), a netobject / ",
+  stop(errorCondition(
+    paste0("'x' must be a numeric matrix (transition matrix), a netobject / ",
     "cograph_network / tna object, or a wide sequence data.frame / ",
-    "character matrix.",
-    call. = FALSE
+    "character matrix."),
+    class = "nestimate_bad_input", call = NULL)
   )
 }
 
@@ -56,19 +57,20 @@ utils::globalVariables(c("fill", "label", "txt_col"))
   zero_rows <- which(row_sums <= 0)
   if (length(zero_rows)) {
     bad <- state_names[zero_rows]
-    stop(
-      "Transition matrix has zero-sum row(s) for state(s): ",
+    stop(errorCondition(
+      paste0("Transition matrix has zero-sum row(s) for state(s): ",
       paste(bad, collapse = ", "),
-      ". These states have no outgoing transitions, so the chain is not ",
-      "ergodic and mean first passage times are undefined. Remove the ",
-      "state(s) or supply a different transition matrix.",
-      call. = FALSE
+      ". These states have no outgoing transitions, so their rows hold no ",
+      "transition probabilities. Remove the state(s), or make an end state ",
+      "absorbing with mark_terminal_state() instead of `end = TRUE`."),
+      class = "nestimate_bad_input", call = NULL)
     )
   }
 
   if (any(abs(row_sums - 1) > 1e-6)) {
     if (!normalize)
-      stop("Transition matrix rows must sum to 1.", call. = FALSE)
+      stop(errorCondition("Transition matrix rows must sum to 1.",
+                          class = "nestimate_bad_input", call = NULL))
     warning("Rows do not sum to 1; normalizing.", call. = FALSE)
     P <- P / row_sums
   }
@@ -97,45 +99,141 @@ utils::globalVariables(c("fill", "label", "txt_col"))
   M
 }
 
+# Mean first passage times of a chain that is not irreducible. m[i, j] =
+# E[T_j | X_0 = i] is finite only when j is reached from i with probability
+# 1; it is then the minimal non-negative solution of
+# m_i = 1 + sum_{k != j} P[i, k] m_k over those states (Norris 1997,
+# Thm 1.3.5), and Inf otherwise. The diagonal is the mean return time
+# 1 + sum_{k != j} P[j, k] m[k, j] (Inf when a step leaves j for a state
+# that may never come back). On an irreducible chain this equals the
+# Kemeny-Snell matrix of .mpt_full().
+#' @noRd
+.mpt_hitting_times <- function(P) {
+  n <- nrow(P)
+  A <- (P > 0) * 1L
+  cols <- lapply(seq_len(n), function(j) {
+    # Support graph in which the walk stops at the target j: only paths
+    # that have not yet hit j decide whether j is certain.
+    A_stop <- A
+    A_stop[j, ] <- 0L
+    R <- .cs_reachability(A_stop)
+    diag(R) <- 1L
+    # j is hit surely from i iff every state i can reach before j can reach j.
+    sure <- vapply(seq_len(n), function(i) all(R[R[i, ] > 0, j] > 0),
+                   logical(1))
+    m <- rep(Inf, n)
+    S <- setdiff(which(sure), j)
+    if (length(S) > 0L) {
+      m[S] <- drop(solve(diag(length(S)) - P[S, S, drop = FALSE],
+                         rep(1, length(S))))
+    }
+    leave <- setdiff(which(P[j, ] > 0), j)
+    m[j] <- if (any(is.infinite(m[leave]))) Inf else
+      1 + sum(P[j, leave] * m[leave])
+    m
+  })
+  M <- do.call(cbind, cols)
+  dimnames(M) <- dimnames(P)
+  M
+}
+
 # ---- passage_time() ----
 
 #' Mean First Passage Times
 #'
 #' @description
-#' Computes the full matrix of mean first passage times (MFPT) for a Markov
-#' chain. Element \eqn{M_{ij}} is the expected number of steps to travel from
-#' state \eqn{i} to state \eqn{j} for the first time. The diagonal equals
-#' the mean recurrence time \eqn{1/\pi_i}.
+#' `passage_time()` computes the mean first passage times of a Markov chain:
+#' the entry in row \eqn{i} and column \eqn{j} is the expected number of
+#' steps a chain started in state \eqn{i} takes to reach state \eqn{j} for
+#' the first time, and the diagonal entry is the mean recurrence time,
+#' the expected number of steps to return to state \eqn{i}. On an
+#' irreducible chain it equals \eqn{1/\pi_i}.
+#' The stationary distribution \eqn{\pi} is returned with them. It reads a
+#' transition network, a `tna` model, a transition matrix or wide sequences,
+#' and analyses a grouped network one network at a time.
 #'
-#' @param x A \code{netobject}, \code{cograph_network}, \code{tna} object,
-#'   row-stochastic numeric transition matrix, or a wide sequence data.frame
-#'   (rows = actors, columns = time-steps; a relative transition network is
-#'   built automatically). For the \code{print()} and \code{plot()} methods: an object of class \code{net_mpt} or \code{net_mpt_group} (or its \code{summary()}).
-#' @param object A \code{net_mpt} object (for \code{summary}).
-#' @param states Character vector. Restrict output to these states.
-#'   \code{NULL} (default) keeps all states.
-#' @param normalize Logical. If \code{TRUE} (default), rows that do not sum
-#'   to 1 are normalized automatically (with a warning).
-#' @param ... Ignored.
-#' In \code{plot.net_mpt()}, \code{print.net_mpt()}, \code{print.summary.net_mpt()} and \code{summary.net_mpt()}: Ignored. In \code{print.net_mpt_group()}: Forwarded to `print.net_mpt` for each element.
-#' @return An object of class \code{"net_mpt"} with:
+#' The times describe the estimated chain, in which a transition never seen
+#' in the data counts as impossible. In an irreducible chain every state can
+#' be reached from every other and every time is finite; in any other chain
+#' a time into a state that is not reached with certainty is `Inf` (see
+#' *Details*), so check the structure with [chain_structure()] first. [markov_stability()] condenses the matrix into
+#' per-state summaries beside each state's persistence and sojourn time.
+#'
+#' @param x The chain: a `netobject`, bare `cograph_network` or `tna` model
+#'   with non-negative transition weights, typically method `"relative"` or
+#'   `"frequency"` (a co-occurrence network is read as its random walk), a
+#'   non-negative numeric transition matrix (states are named `S1`, `S2`,
+#'   ... when it has no names), or a wide sequence data frame or character
+#'   matrix, from which a `"relative"` network is estimated. A data frame
+#'   needs its position columns named as a numbered run, as in
+#'   [build_network()]; build the network first for any other layout. A
+#'   `netobject_group` gives one result per group. An association network
+#'   (`cor`, `pcor`, `glasso`, `ising`, `mgm`) or negative weights raise an
+#'   error of class `nestimate_not_markov`. For the `print()` methods: a
+#'   `net_mpt`, a `net_mpt_group`, or the result of `summary()`; for the
+#'   `plot()` methods: a `net_mpt` or `net_mpt_group`.
+#' @param object For the `summary()` method: a `net_mpt`.
+#' @param states The states to keep in the result. The times are computed
+#'   on the whole chain and then subset, so they still count paths through
+#'   the states left out. A name that is not a state raises an error.
+#'   Default `NULL` (all states).
+#' @param normalize Whether to rescale rows that do not sum to 1 so that
+#'   they do, with a warning, as for a `"frequency"` network. With `FALSE`,
+#'   such rows raise an error. A state with no outgoing transitions (a zero
+#'   row) raises an error either way. Default `TRUE`.
+#' @param ... For `print()` of a `net_mpt_group`: passed to `print()` of
+#'   each group's result (for example `digits`). Otherwise not used.
+#' @return A `net_mpt` object; for a `netobject_group`, a `net_mpt_group`,
+#'   a named list holding one `net_mpt` per group. `print()` shows the
+#'   passage-time matrix and the stationary distribution. `summary()`
+#'   returns a `summary.net_mpt` object, a list holding the per-state table
+#'   (`table`) and the summarised `net_mpt` (`object`); its `print()` shows
+#'   the table, one row per state: `state`, `return_time` (mean recurrence time),
+#'   `stationary` (\eqn{\pi_i}), `mean_out` (the mean number of steps from
+#'   the state to the others) and
+#'   `mean_in` (the mean number of steps from the others to the state),
+#'   rounded to 2 decimals (`stationary` to 4). `plot()` returns a `ggplot`
+#'   heatmap of the matrix, rows the starting state and columns the target;
+#'   for a `net_mpt_group`, one panel per group on a shared colour scale.
+#'   The `print()` methods return their input invisibly. A `net_mpt` holds:
 #' \describe{
-#'   \item{matrix}{Full \eqn{n \times n} MFPT matrix. Row \eqn{i}, column
-#'     \eqn{j} = expected steps from state \eqn{i} to state \eqn{j}.
-#'     Diagonal = mean recurrence time \eqn{1/\pi_i}.}
-#'   \item{stationary}{Named numeric vector: stationary distribution \eqn{\pi}.}
-#'   \item{return_times}{Named numeric vector: \eqn{1/\pi_i} per state.}
-#'   \item{states}{Character vector of state names.}
+#'   \item{matrix}{The \eqn{n \times n} matrix of mean first passage times:
+#'     row \eqn{i}, column \eqn{j} is the expected number of steps from
+#'     state \eqn{i} to state \eqn{j}; the diagonal is the mean recurrence
+#'     time, equal to \eqn{1/\pi_i} on an irreducible chain.}
+#'   \item{stationary}{The stationary distribution \eqn{\pi}, a named
+#'     numeric vector; zero outside the closed class of a chain with one
+#'     closed class, and `NA` for a chain with several, whose stationary
+#'     distribution is not unique.}
+#'   \item{return_times}{The mean recurrence time of each state (the
+#'     diagonal of `matrix`), a named numeric vector: \eqn{1/\pi_i} in an
+#'     irreducible chain, `Inf` for a transient state.}
+#'   \item{states}{The state names.}
 #' }
-#'   For a \code{netobject_group} the result is a \code{"net_mpt_group"}: a
-#'   named list holding one \code{net_mpt} per group.
 #'
 #' @details
-#' Uses the Kemeny-Snell fundamental matrix formula:
+#' The times follow the Kemeny-Snell fundamental matrix formula:
 #' \deqn{M_{ij} = \frac{Z_{jj} - Z_{ij}}{\pi_j}, \quad
 #'       Z = (I - P + \Pi)^{-1}}
-#' where \eqn{\Pi_{ij} = \pi_j}. Requires an ergodic (irreducible,
-#' aperiodic) chain.
+#' where \eqn{\Pi_{ij} = \pi_j}, and \eqn{\pi} is the left eigenvector
+#' of \eqn{P} for eigenvalue 1, scaled to sum to 1. The fundamental matrix
+#' exists for every irreducible chain (an ergodic chain in Kemeny and
+#' Snell's terms), periodic ones included.
+#'
+#' A chain that is not irreducible (for example one with an absorbing state,
+#' or with several closed classes) has no fundamental matrix. Its times are
+#' the expected hitting times: the time from \eqn{i} to \eqn{j} is `Inf`
+#' when the chain started in \eqn{i} may never reach \eqn{j}, and
+#' otherwise the minimal non-negative solution of
+#' \eqn{m_i = 1 + \sum_{k \ne j} P_{ik} m_k} (Norris, 1997). Times into
+#' the states outside a closed class are therefore `Inf` from inside it, and
+#' times into the closed class are finite from every state that cannot
+#' avoid it. The diagonal is the mean return time, `Inf` for a transient
+#' state. On an irreducible chain both routes give the same matrix.
+#' Nestimate 1.0.9 and earlier raised the zero stationary probabilities to
+#' machine precision instead, giving times near \eqn{10^{15}} with a
+#' warning, and stopped with an error for a chain with several closed
+#' classes.
 #'
 #' @examples
 #' net <- build_network(as.data.frame(trajectories), method = "relative")
@@ -150,6 +248,8 @@ utils::globalVariables(c("fill", "label", "txt_col"))
 #' @references
 #' Kemeny, J.G. and Snell, J.L. (1976). \emph{Finite Markov Chains}.
 #' Springer-Verlag.
+#'
+#' Norris, J. R. (1997). \emph{Markov Chains}. Cambridge University Press.
 #'
 #' @export
 passage_time <- function(x, states = NULL, normalize = TRUE) {
@@ -169,31 +269,46 @@ passage_time <- function(x, states = NULL, normalize = TRUE) {
 
   P <- .mpt_normalize_rows(P, state_names, normalize = normalize)
 
-  pi <- .mpt_stationary(P)
-  names(pi) <- state_names
-  if (any(pi <= 0)) {
-    warning("Non-positive stationary probabilities; chain may not be ergodic.",
-            call. = FALSE)
-    pi <- pmax(pi, .Machine$double.eps)
-    pi <- pi / sum(pi)
+  classes <- .cs_scc((P > 0) * 1L)
+  if (length(classes) == 1L) {
+    # Irreducible: Kemeny-Snell fundamental matrix, pi > 0 everywhere.
+    pi <- .mpt_stationary(P)
+    M  <- .mpt_full(P, pi)
+  } else {
+    # Reducible: a time into a state that is not reached with certainty is
+    # Inf (formerly pi was floored at machine epsilon, giving ~1e15). pi is
+    # unique only with one closed class, where it is zero off that class.
+    M <- .mpt_hitting_times(P)
+    closed <- Filter(function(cl) {
+      all(P[cl, setdiff(seq_len(nrow(P)), cl), drop = FALSE] == 0)
+    }, classes)
+    pi <- rep(if (length(closed) == 1L) 0 else NA_real_, nrow(P))
+    if (length(closed) == 1L) {
+      cl <- closed[[1L]]
+      pi[cl] <- if (length(cl) == 1L) 1 else
+        .mpt_stationary(P[cl, cl, drop = FALSE])
+    }
   }
-
-  M           <- .mpt_full(P, pi)
+  names(pi)   <- state_names
   dimnames(M) <- list(state_names, state_names)
+  return_times <- diag(M)
 
   if (!is.null(states)) {
     bad <- setdiff(states, state_names)
     if (length(bad))
-      stop("Unknown states: ", paste(bad, collapse = ", "), call. = FALSE)
+      stop(errorCondition(
+        paste0("Unknown states: ", paste(bad, collapse = ", ")),
+        class = "nestimate_bad_input", call = NULL))
     M  <- M[states, states, drop = FALSE]
     pi <- pi[states]
+    return_times <- return_times[states]
   }
 
   structure(
     list(
       matrix       = M,
       stationary   = pi,
-      return_times = 1 / pi,
+      return_times = return_times,
       states       = rownames(M)
     ),
     class = "net_mpt"
@@ -201,15 +316,18 @@ passage_time <- function(x, states = NULL, normalize = TRUE) {
 }
 
 #' @rdname passage_time
-#' @return In \code{print.net_mpt()}: \code{x}, invisibly.
-#' @param log_scale Logical. Apply log transform to the fill scale for better contrast? Default \code{TRUE}.
-#' @param digits Integer. Decimal places displayed in cells. Default \code{1}.
-#' @param title Character. Plot title.
-#' @param low Character. Hex colour for the low end (short passage time). Default dark green \code{"#004d00"}.
-#' @param high Character. Hex colour for the high end (long passage time). Default pale green \code{"#ccffcc"}.
-#' @return In \code{print.net_mpt_group()}: `x` invisibly.
-#' @return In \code{summary.net_mpt()}: \code{summary.net_mpt} returns an object of class \code{"summary.net_mpt"}: a list whose \code{table} is a data frame with one row per state and columns \code{state}, \code{return_time}, \code{stationary}, \code{mean_out} (mean steps to other states) and \code{mean_in} (mean steps from other states), and whose \code{object} is the \code{net_mpt} it summarises. Its print method shows the table.
-#' @return In \code{plot.net_mpt()}: \code{plot.net_mpt} returns a ggplot object: a from-by-to heatmap of the mean first passage time matrix.
+#' @param log_scale For the `plot()` methods: whether to colour the tiles by
+#'   the logarithm of the passage time, so that short and long times can
+#'   both be told apart; the legend and the tile labels still show steps.
+#'   Default `TRUE`.
+#' @param digits Decimal places of the printed matrix (`print()`) and of
+#'   the tile labels (`plot()`). The stationary distribution is always
+#'   printed with 4. Default `1`.
+#' @param title For the `plot()` methods: the plot title. Default
+#'   `"Mean First Passage Times"`.
+#' @param low,high For the `plot()` methods: the fill colours for the
+#'   shortest and the longest passage times. Default `"#004d00"` (dark
+#'   green) and `"#ccffcc"` (pale green).
 #' @export
 print.net_mpt <- function(x, digits = 1, ...) {
   n <- length(x$states)
@@ -255,7 +373,6 @@ summary.net_mpt <- function(object, ...) {
 }
 
 #' @rdname passage_time
-#' @return In \code{print.summary.net_mpt()}: \code{x}, invisibly.
 #' @export
 print.summary.net_mpt <- function(x, ...) {
   cat("Mean First Passage Times - Summary\n\n")
@@ -276,8 +393,6 @@ plot.net_mpt <- function(x,
 }
 
 #' @rdname passage_time
-#' @return In \code{plot.net_mpt_group()}: a \code{ggplot} object, one
-#'   heatmap panel per group on a shared colour scale.
 #' @export
 plot.net_mpt_group <- function(x,
                                 log_scale = TRUE,
@@ -341,41 +456,81 @@ plot.net_mpt_group <- function(x,
 #' Markov Stability Analysis
 #'
 #' @description
-#' Computes per-state stability metrics from a transition network:
-#' persistence (self-loop probability), stationary distribution, mean
-#' recurrence time, sojourn time, and mean accessibility to/from other states.
+#' `markov_stability()` describes how stable each state of a Markov chain
+#' is and returns a `net_markov_stability` object holding one row per state:
+#' its persistence (the probability of staying, \eqn{P_{ii}}), stationary
+#' probability (\eqn{\pi_i}, the long-run share of steps spent in it), mean
+#' recurrence time, sojourn time (the expected number of
+#' consecutive steps in it, \eqn{1/(1 - P_{ii})}), and the mean of its first
+#' passage times to the other states and of theirs to it, taken from
+#' [passage_time()]. It reads the same inputs as [passage_time()] and
+#' analyses a grouped network one network at a time.
 #'
-#' @param x A \code{netobject}, \code{cograph_network}, \code{tna} object,
-#'   row-stochastic numeric transition matrix, or a wide sequence data.frame
-#'   (rows = actors, columns = time-steps). For the \code{print()} and \code{plot()} methods: an object of class \code{net_markov_stability} or \code{net_markov_stability_group}.
-#' @param normalize Logical. Normalize rows to sum to 1? Default \code{TRUE}.
-#' @param ... Ignored.
-#' In \code{plot.net_markov_stability()}, \code{print.net_markov_stability()} and \code{summary.net_markov_stability()}: Ignored. In \code{print.net_markov_stability_group()}: Forwarded to `print.net_markov_stability` for each element.
-#' @return An object of class \code{"net_markov_stability"} with:
+#' Persistence and sojourn time describe staying in a state; the passage
+#' times describe how long it takes to get from it to the other states, or
+#' from them to it. All of them are computed from the estimated transition
+#' matrix. On an irreducible chain, the mean recurrence time is
+#' \eqn{1/\pi_i}. On a reducible chain, recurrence times are computed within
+#' each closed class and are `Inf` for transient states; passage times to
+#' states not reached with certainty are `Inf`. The stationary probabilities
+#' are `NA` when there is more than one closed class, because the stationary
+#' distribution is not unique. [chain_structure()] identifies the classes;
+#' how far the underlying transition probabilities move under resampling is
+#' shown by [bootstrap_network()].
+#'
+#' @param x The chain, as in [passage_time()]: a `netobject`, bare
+#'   `cograph_network` or `tna` model with non-negative transition weights,
+#'   a non-negative numeric transition matrix, or a wide sequence data frame
+#'   or character matrix (a `"relative"` network is estimated from it). A
+#'   `netobject_group` gives one result per group. An association network or
+#'   negative weights raise an error of class `nestimate_not_markov`. For
+#'   the `print()` and `plot()` methods: a `net_markov_stability` or
+#'   `net_markov_stability_group`.
+#' @param normalize Whether to rescale rows that do not sum to 1 so that
+#'   they do, with a warning, as for a `"frequency"` network. With `FALSE`,
+#'   such rows raise an error. A state with no outgoing transitions (a zero
+#'   row) raises an error either way. Default `TRUE`.
+#' @param ... Not used (`print()` of a group passes it on to each group's
+#'   `print()`, which ignores it).
+#' @return A `net_markov_stability` object; for a `netobject_group`, a
+#'   `net_markov_stability_group`, a named list holding one such object per
+#'   group. `print()` shows the per-state table and returns its input
+#'   invisibly. `summary()` prints the most accessible state (the lowest
+#'   mean passage time from the other states) and the most persistent one
+#'   (the longest sojourn time), and returns the per-state table as a data
+#'   frame. `plot()` returns a `ggplot` with one panel of bars per metric and
+#'   the states ordered by stationary probability; with `combined = FALSE`,
+#'   invisibly, a list of one-panel plots named by metric. For a group,
+#'   `plot()` draws one panel per metric with one row per state and one
+#'   point per group (told apart by colour and shape) joined by a line, the
+#'   states ordered by their mean stationary probability; more than 81
+#'   groups (9 colours times 9 shapes) raise an error of class
+#'   `nestimate_bad_input`. A `net_markov_stability` holds:
 #' \describe{
-#'   \item{stability}{Data frame with one row per state and columns:
-#'     \code{state}, \code{persistence} (\eqn{P_{ii}}),
-#'     \code{stationary_prob} (\eqn{\pi_i}),
-#'     \code{return_time} (\eqn{1/\pi_i}),
-#'     \code{sojourn_time} (\eqn{1/(1-P_{ii})}),
-#'     \code{avg_time_to_others} (mean MFPT leaving state \eqn{i}),
-#'     \code{avg_time_from_others} (mean MFPT arriving at state \eqn{i}).}
-#'   \item{mpt}{The underlying \code{net_mpt} object.}
+#'   \item{stability}{The per-state table, one row per state, with the
+#'     columns `state`, `persistence` (\eqn{P_{ii}}), `stationary_prob`
+#'     (\eqn{\pi_i}), `return_time` (the mean recurrence time), `sojourn_time`
+#'     (\eqn{1/(1-P_{ii})}), `avg_time_to_others` (the mean first passage
+#'     time from the state to the others) and `avg_time_from_others` (the
+#'     mean first passage time from the others to the state).
+#'     `persistence` and `stationary_prob` are rounded to 4 decimals, the
+#'     times to 2.}
+#'   \item{mpt}{The `net_mpt` from [passage_time()] the times come from.}
 #' }
-#'   For a \code{netobject_group} the result is a
-#'   \code{"net_markov_stability_group"}: a named list holding one such
-#'   object per group.
 #'
 #' @details
-#' \strong{Sojourn time} is the expected consecutive time steps spent in a
-#' state before leaving: \eqn{1/(1-P_{ii})}. States with
-#' \code{persistence = 1} have \code{sojourn_time = Inf}.
+#' \strong{Sojourn time} is the expected number of consecutive steps spent
+#' in a state before leaving it, \eqn{1/(1-P_{ii})}, the mean of a geometric
+#' distribution. A state with `persistence = 1` never leaves and has
+#' `sojourn_time = Inf`.
 #'
-#' \strong{avg_time_to_others}: mean passage time from this state to all
-#' others; reflects how "sticky" or "isolated" the state is.
+#' \strong{avg_time_to_others} is the mean passage time from the state to
+#' each other state: a high value means the chain takes long to get
+#' anywhere else from it.
 #'
-#' \strong{avg_time_from_others}: mean passage time from all other states
-#' to this one; reflects accessibility (attractor strength).
+#' \strong{avg_time_from_others} is the mean passage time from each other
+#' state to this one: a low value means the state is reached quickly from
+#' elsewhere.
 #'
 #' @examples
 #' net <- build_network(as.data.frame(trajectories), method = "relative")
@@ -424,7 +579,7 @@ markov_stability <- function(x, normalize = TRUE) {
     state                = state_names,
     persistence          = round(persistence,  4),
     stationary_prob      = round(pi,            4),
-    return_time          = round(1 / pi,        2),
+    return_time          = round(mpt$return_times, 2),
     sojourn_time         = round(sojourn,       2),
     avg_time_to_others   = round(avg_to,        2),
     avg_time_from_others = round(avg_from,      2),
@@ -437,11 +592,14 @@ markov_stability <- function(x, normalize = TRUE) {
 }
 
 #' @rdname markov_stability
-#' @return In \code{print.net_markov_stability()}: \code{x}, invisibly.
-#' @param metrics Character vector. Which metrics to plot. Options: \code{"persistence"}, \code{"stationary_prob"}, \code{"return_time"}, \code{"sojourn_time"}, \code{"avg_time_to_others"}, \code{"avg_time_from_others"}. Default: all six.
-#' @param combined When \code{TRUE} (default), all selected metrics are shown in one ggplot via \code{facet_wrap(~ metric)}. When \code{FALSE}, returns a named list of single-panel ggplots, one per metric, so each can be printed, saved, or re-laid-out independently.
-#' @return In \code{print.net_markov_stability_group()}: `x` invisibly.
-#' @return In \code{plot.net_markov_stability()}: \code{plot.net_markov_stability} returns a faceted ggplot object when \code{combined = TRUE}, and (invisibly) a named list of single-metric ggplots, one per entry of \code{metrics}, when \code{combined = FALSE}.
+#' @param metrics For the `plot()` methods: the metrics to draw, one panel
+#'   each, any of `"persistence"`, `"stationary_prob"`, `"return_time"`,
+#'   `"sojourn_time"`, `"avg_time_to_others"` and `"avg_time_from_others"`.
+#'   Default all six.
+#' @param combined For `plot()` of a single network: `TRUE` (default) draws
+#'   the metrics as panels of one plot; `FALSE` returns a named list of
+#'   one-panel plots, one per metric, to print or save separately. Ignored
+#'   for a group, whose `plot()` always draws one plot.
 #' @export
 print.net_markov_stability <- function(x, ...) {
   cat("Markov Stability Analysis\n\n")
@@ -463,9 +621,7 @@ print.net_markov_stability_group <- function(x, ...) {
 }
 
 #' @rdname markov_stability
-#' @return In \code{summary.net_markov_stability()}: the per-state stability table (the \code{$stability} data frame: one row per state with \code{state}, \code{persistence}, \code{stationary_prob}, \code{return_time}, \code{sojourn_time}, \code{avg_time_to_others}, \code{avg_time_from_others}), after printing the attractor and the most persistent state.
-#' @param object For the \code{summary()} method: an object of class
-#'   \code{net_markov_stability}.
+#' @param object For the `summary()` method: a `net_markov_stability`.
 #' @export
 summary.net_markov_stability <- function(object, ...) {
   df      <- object$stability
@@ -489,7 +645,7 @@ plot.net_markov_stability <- function(x,
                                        ...) {
   df <- x$stability
   metrics <- match.arg(metrics, several.ok = TRUE)
-  stopifnot(is.logical(combined), length(combined) == 1L)
+  .assert(is.logical(combined), length(combined) == 1L, !is.na(combined))
 
   labels <- c(
     persistence          = "Persistence",
@@ -540,9 +696,6 @@ plot.net_markov_stability <- function(x,
 }
 
 #' @rdname markov_stability
-#' @return In \code{plot.net_markov_stability_group()}: a \code{ggplot}
-#'   object: one panel per metric, one row per state, one point per group
-#'   (colour and shape), joined by a line.
 #' @export
 plot.net_markov_stability_group <- function(x,
                                              metrics = c("persistence",

@@ -8,75 +8,127 @@ utils::globalVariables(c(
 #' Compare Subsequence Patterns Between Groups
 #'
 #' @description
-#' Extracts all k-gram patterns (subsequences of length k) from sequences
-#' in each group, computes standardized residuals against the independence
-#' model, and optionally runs a permutation or chi-square test of
-#' group differences.
+#' `sequence_compare()` compares how often short subsequences occur in two
+#' or more groups of sequences. For each pattern length in `sub` it counts
+#' every k-gram (a run of k consecutive states, such as `"A->B->C"`) in
+#' each group, keeps the patterns that are frequent enough in every group,
+#' and returns a `net_sequence_comparison` whose pattern table has one row
+#' per pattern with its count, proportion and standardised residual in each
+#' group and, optionally, a permutation or chi-square test of whether its
+#' frequency differs between the groups. It takes a grouped network, a
+#' single network or wide sequences with a grouping.
+#'
+#' A residual says how far a group's count of a pattern lies from the count
+#' expected if pattern and group were independent, in approximately
+#' standard-normal units (Haberman, 1973); a positive value means the
+#' pattern is more frequent in that group than independence predicts. The
+#' p-values are adjusted across every pattern tested. The permutation test
+#' treats the sequence as the
+#' unit, while the chi-square test treats every occurrence as independent,
+#' which overstates the evidence when occurrences within a sequence depend
+#' on each other (see *Details*). Patterns of different lengths overlap
+#' (each 3-gram contains two 2-grams), so their tests are not independent of
+#' each other. [sequence_patterns()] with `group` asks the related question
+#' of whether a pattern is present in more sequences of one group.
 #'
 #' @details
-#' Standardized residuals are always computed from a 2xG contingency table
-#' of (this pattern vs. everything else) using the textbook formula
-#' \code{(o - e) / sqrt(e * (1 - r/N) * (1 - c/N))}. They describe how much
-#' each group's count for a given pattern deviates from expectation under
-#' independence, scaled to be approximately N(0,1) under the null.
+#' The standardised residuals come from the 2 x G table of the pattern's
+#' counts against the counts of all other k-grams of the same length in
+#' each group, with the formula
+#' \code{(o - e) / sqrt(e * (1 - r/N) * (1 - c/N))}. They are always
+#' computed, whatever `test` is. A k-gram that spans a missing position is
+#' not counted.
 #'
-#' The optional \code{test} argument chooses an inference method:
+#' `test` chooses the inference:
 #' \describe{
-#'   \item{\code{"permutation"}}{Shuffles group labels across sequences and
-#'     recomputes a per-pattern statistic (row-wise Euclidean residual norm).
-#'     Answers: "is this pattern's distribution associated with group
-#'     membership at the \emph{actor} level?" Respects the sequence as the
-#'     unit of analysis; can be underpowered when the number of sequences
-#'     is small.}
-#'   \item{\code{"chisq"}}{Runs \code{chisq.test} on the 2xG table per
-#'     pattern. Answers: "do the group \emph{streams} generate this pattern
-#'     at different rates?" Treats each k-gram occurrence as an event; fast
-#'     and powerful even with few sequences, but the iid assumption it makes
-#'     is optimistic when sequences are strongly autocorrelated.}
-#'   \item{\code{"none"}}{Skip inference. Only residuals, frequencies, and
-#'     proportions are returned.}
+#'   \item{\code{"permutation"}}{Shuffles the group labels across
+#'     sequences `iter` times and recomputes, for each pattern, the
+#'     Euclidean norm of its row of differences between observed and
+#'     expected counts in the patterns-by-groups table of the patterns kept
+#'     at that length (expected under independence). It asks whether the
+#'     pattern's distribution is associated with group membership at the
+#'     level of the sequence,
+#'     which respects the sequence as the unit of analysis but has little
+#'     power when there are few sequences. The p-value is
+#'     `(b + 1) / (iter + 1)`, where `b` counts the permutations with a
+#'     statistic at least as large as the observed one, so it cannot fall
+#'     below `1 / (iter + 1)`. The effect size is the observed statistic
+#'     minus the mean of the permuted ones, divided by their standard
+#'     deviation (taken as 1 when the permuted statistics do not vary; with
+#'     `iter = 1` the effect size is `NA`, since at least two permutations
+#'     are needed). The shuffles use R's random number generator: call
+#'     [base::set.seed()] first for reproducible p-values.}
+#'   \item{\code{"chisq"}}{Runs [stats::chisq.test()] on each pattern's
+#'     2 x G table (with Yates' continuity correction when there are two
+#'     groups). It asks whether the groups' streams of k-grams produce the
+#'     pattern at different rates, treating every occurrence as an
+#'     independent event: it is fast and has power with few sequences, but
+#'     the independence it assumes is optimistic when sequences are
+#'     strongly autocorrelated.}
+#'   \item{\code{"none"}}{No test; the counts, proportions and residuals
+#'     only.}
 #' }
 #'
-#' P-values are adjusted once across all patterns (not per-pattern) using
-#' any method supported by \code{\link[stats]{p.adjust}}. The default is
-#' \code{"fdr"} (Benjamini-Hochberg).
+#' The p-values are adjusted once across all patterns of all lengths, with
+#' [stats::p.adjust()].
 #'
-#' @param x A \code{netobject_group} (from grouped \code{build_network}),
-#'   a \code{netobject}, \code{tna} or \code{cograph_network} model
-#'   (requires \code{group}), or a wide-format
-#'   \code{data.frame} (requires \code{group}). For the \code{print()} and \code{plot()} methods: an object of class \code{net_sequence_comparison}.
-#' @param group Character or vector. Column name or vector of group labels.
-#'   Not needed for \code{netobject_group}.
-#' @param sub Integer vector. Pattern lengths to analyze. Default: \code{3:5}.
-#' @param min_freq Integer. Minimum frequency in each group for a pattern
-#'   to be included: a pattern is kept only when its count reaches this
-#'   threshold in \emph{every} group. Default: 5.
-#' @param test Character. Inference method: one of \code{"permutation"}
-#'   (default), \code{"chisq"}, or \code{"none"}. See Details.
-#' @param iter Integer. Permutation iterations. Only used when
-#'   \code{test = "permutation"}. Default: 1000.
-#' @param adjust Character. P-value correction method (see
-#'   \code{\link[stats]{p.adjust}}). Default: \code{"fdr"}.
+#' @param x The sequences: a `netobject_group` (from [build_network()] with
+#'   `group`, or from a clustering), whose groups are compared; a
+#'   `netobject`, `tna` model or `cograph_network` built from sequences; a
+#'   wide data frame with one row per sequence and one column per position,
+#'   whose position columns are named as a numbered run, as in
+#'   [build_network()] (any column beside them other than the `group`
+#'   column raises an error of class `nestimate_bad_input`); or a character
+#'   matrix with one row per sequence and one column per position, whatever
+#'   its column names. A numeric or logical matrix of only 0 and 1, and
+#'   one-hot or association networks, raise `nestimate_bad_input`. Every
+#'   input except a `netobject_group` needs `group`. For the `print()` and
+#'   `plot()` methods: a `net_sequence_comparison`.
+#' @param group The group of each sequence: the name of a column of a data
+#'   frame or matrix `x` (that column is then not read as a position), or a
+#'   vector with one label per sequence. Ignored for a `netobject_group`;
+#'   required otherwise. At least two groups are needed. Default `NULL`.
+#' @param sub The pattern lengths to count, positive whole numbers.
+#'   Lengths longer than the sequences are dropped, and an error is raised
+#'   when none remains. Default `3:5`.
+#' @param min_freq The smallest count a pattern must reach in every group
+#'   to be kept, a positive whole number; when no pattern of any length
+#'   reaches it, an error is raised. Default `5`.
+#' @param test The inference: `"permutation"` (default), `"chisq"` or
+#'   `"none"`; see *Details*.
+#' @param iter The number of permutations for `test = "permutation"`, a
+#'   positive whole number; ignored otherwise. Default `1000`.
+#' @param adjust The p-value adjustment, any method of [stats::p.adjust()]
+#'   (`"holm"`, `"hochberg"`, `"hommel"`, `"bonferroni"`, `"BH"`, `"BY"`,
+#'   `"fdr"` or `"none"`). Default `"fdr"` (Benjamini-Hochberg).
 #'
-#' @return An object of class \code{"net_sequence_comparison"} containing:
+#' @return A `net_sequence_comparison` object. `print()` shows the numbers
+#'   of patterns and groups, the settings and the first 10 rows of the
+#'   pattern table, and returns its input invisibly; `summary()` returns the
+#'   pattern table, a data frame with one row per pattern; `plot()` draws
+#'   the residuals of the top patterns (see *Plot styles*). The object
+#'   holds:
 #' \describe{
-#'   \item{patterns}{Tidy data.frame, one row per retained k-gram pattern.
-#'     Always present: \code{pattern}, \code{length}, and one
-#'     \code{freq_<group>}, \code{prop_<group>} and \code{resid_<group>}
-#'     column per group. If \code{test = "permutation"}: \code{effect_size},
-#'     \code{p_value}. If \code{test = "chisq"}: \code{statistic},
-#'     \code{p_value}. Rows are ordered by ascending adjusted \code{p_value}
-#'     when a test was run, and by descending maximum absolute residual
-#'     otherwise.}
-#'   \item{groups}{Character vector of group names, sorted.}
-#'   \item{n_patterns}{Integer. Number of rows in \code{patterns}, i.e. the
-#'     patterns meeting \code{min_freq} in every group.}
-#'   \item{params}{List of sub, min_freq, test, iter, adjust.}
+#'   \item{patterns}{The pattern table, one row per k-gram kept. Always:
+#'     `pattern`, `length`, and per group `freq_<group>` (the count),
+#'     `prop_<group>` (the count as a share of all k-grams of that length
+#'     in the group, rare ones included) and `resid_<group>` (the
+#'     standardised residual). With `test = "permutation"` also
+#'     `effect_size` and `p_value`; with `test = "chisq"`, `statistic` and
+#'     `p_value`. The p-values are adjusted. Rows are ordered by ascending
+#'     `p_value` (ties by the larger absolute effect size, or the larger
+#'     statistic) when a test
+#'     was run, and by descending largest absolute residual otherwise.}
+#'   \item{groups}{The group names, sorted.}
+#'   \item{n_patterns}{The number of rows of the pattern table: the
+#'     patterns that reach `min_freq` in every group.}
+#'   \item{params}{The settings used: `sub` (after dropping lengths longer
+#'     than the sequences), `min_freq`, `test`, `iter` and `adjust`.}
 #' }
 #'
 #' @references
 #' Haberman, S. J. (1973). The analysis of residuals in cross-classified
-#' tables. \emph{Biometrics}, 29(1), 205--220. (standardized residuals)
+#' tables. \emph{Biometrics}, 29(1), 205--220. (standardised residuals)
 #'
 #' Benjamini, Y. & Hochberg, Y. (1995). Controlling the false discovery rate.
 #' \emph{Journal of the Royal Statistical Society B}, 57(1), 289--300.
@@ -106,7 +158,7 @@ sequence_compare <- function(x, group = NULL, sub = 3:5,
   min_freq <- as.integer(min_freq)
   iter <- as.integer(iter)
   sub <- as.integer(sub)
-  stopifnot(
+  .assert(
     length(sub) >= 1L, all(sub >= 1L),
     min_freq >= 1L,
     iter >= 1L
@@ -119,12 +171,12 @@ sequence_compare <- function(x, group = NULL, sub = 3:5,
   group_vec <- parsed$group
   groups <- sort(unique(group_vec))
   n_groups <- length(groups)
-  stopifnot("Need at least 2 groups" = n_groups >= 2L)
+  .assert("Need at least 2 groups" = n_groups >= 2L)
 
   n <- nrow(seq_mat)
   p <- ncol(seq_mat)
   sub <- sub[sub <= p]
-  stopifnot("No valid pattern lengths (sub > sequence length)" = length(sub) >= 1L)
+  .assert("No valid pattern lengths (sub > sequence length)" = length(sub) >= 1L)
 
   pat_list <- .cs_extract_patterns(seq_mat, sub)
 
@@ -236,8 +288,9 @@ sequence_compare <- function(x, group = NULL, sub = 3:5,
   }
 
   if (!length(row_list)) {
-    stop(sprintf("No patterns with min_freq >= %d in all groups.", min_freq),
-         call. = FALSE)
+    stop(errorCondition(
+      sprintf("No patterns with min_freq >= %d in all groups.", min_freq),
+      class = "nestimate_bad_input", call = NULL))
   }
 
   results <- rbindlist(row_list)
@@ -281,7 +334,9 @@ sequence_compare <- function(x, group = NULL, sub = 3:5,
     group_names <- names(x)
     mats <- lapply(seq_along(x), function(i) {
       d <- .coerce_sequence_input(x[[i]])
-      if (is.null(d)) stop("netobject_group element has no $data.", call. = FALSE)
+      if (is.null(d)) stop(errorCondition(
+        "netobject_group element has no $data.",
+        class = "nestimate_bad_input", call = NULL))
       as.matrix(as.data.frame(d, stringsAsFactors = FALSE))
     })
     # Align column count
@@ -302,7 +357,10 @@ sequence_compare <- function(x, group = NULL, sub = 3:5,
       inherits(x, "cograph_network")) {
     .refuse_onehot_network(x, "sequence_compare()")
     d <- .coerce_sequence_input(x)
-    if (is.null(d)) stop("Object has no $data.", call. = FALSE)
+    if (is.null(d)) {
+      stop(errorCondition("Object has no $data.",
+                          class = "nestimate_bad_input", call = NULL))
+    }
     seq_mat <- as.matrix(as.data.frame(d, stringsAsFactors = FALSE))
   } else if (is.data.frame(x) || is.matrix(x)) {
     if (is.data.frame(x)) {
@@ -313,19 +371,21 @@ sequence_compare <- function(x, group = NULL, sub = 3:5,
     .refuse_binary_matrix(x, "sequence_compare()")
     seq_mat <- as.matrix(as.data.frame(x, stringsAsFactors = FALSE))
   } else {
-    stop("x must be a netobject_group, netobject, tna, data.frame, or matrix.",
-         call. = FALSE)
+    stop(errorCondition(
+      "x must be a netobject_group, netobject, tna, data.frame, or matrix.",
+      class = "nestimate_bad_input", call = NULL))
   }
 
   # Resolve group
   if (is.null(group)) {
-    stop("'group' is required when x is not a netobject_group.", call. = FALSE)
+    stop(errorCondition("'group' is required when x is not a netobject_group.",
+                        class = "nestimate_bad_input", call = NULL))
   }
   if (length(group) == 1L && is.character(group) && group %in% colnames(seq_mat)) {
     group_vec <- seq_mat[, group]
     seq_mat <- seq_mat[, colnames(seq_mat) != group, drop = FALSE]
   } else {
-    stopifnot("'group' length must match nrow(x)" = length(group) == nrow(seq_mat))
+    .assert("'group' length must match nrow(x)" = length(group) == nrow(seq_mat))
     group_vec <- as.character(group)
   }
 
@@ -379,16 +439,26 @@ sequence_compare <- function(x, group = NULL, sub = 3:5,
 # ---- S3 Methods ----
 
 #' @rdname sequence_compare
-#' @param ... In \code{plot.net_sequence_comparison()}, \code{print.net_sequence_comparison()} and \code{summary.net_sequence_comparison()}: Additional arguments (ignored).
-#' @param object For the \code{summary()} method: an object of class \code{net_sequence_comparison}.
-#' @param top_n Integer. Show top N patterns. Default: 10.
-#' @param style Character. \code{"auto"} (default) draws the back-to-back pyramid for exactly 2 groups and the heatmap for any other number; \code{"pyramid"} and \code{"heatmap"} force a specific style.
-#' @param sort Character. \code{"statistic"} (default) ranks patterns by test statistic or residual magnitude. \code{"frequency"} ranks by total occurrence count across all groups.
-#' @param alpha Numeric. Significance threshold for p-value display in the pyramid: patterns with \code{p_value < alpha} are starred and drawn in bold dark text, the rest stay plain grey. Default: 0.05.
-#' @param show_residuals Logical. If \code{TRUE}, print the standardized residual value inside each pyramid bar. Default: \code{FALSE}. Ignored for the heatmap (which always shows residuals).
-#' @return In \code{print.net_sequence_comparison()}: The input object, invisibly.
-#' @return In \code{summary.net_sequence_comparison()}: The \code{patterns} data.frame: tidy, one row per k-gram pattern, with a frequency, proportion and standardized-residual column per group, and the test columns when \code{test} was not \code{"none"}.
-#' @return In \code{plot.net_sequence_comparison()}: The drawn \code{ggplot} object, invisibly (the plot is also printed). \code{NULL}, invisibly, when the object holds no patterns.
+#' @param ... Not used.
+#' @param object For the `summary()` method: a `net_sequence_comparison`.
+#' @param top_n For `plot()`: the number of patterns drawn, the first ones
+#'   after ranking by `sort`. Default `10`.
+#' @param style For `plot()`: `"auto"` (default) draws the back-to-back
+#'   pyramid for exactly 2 groups and the heatmap for any other number;
+#'   `"pyramid"` and `"heatmap"` force one. `"pyramid"` with other than 2
+#'   groups raises an error.
+#' @param sort For `plot()`: how to pick and order the patterns.
+#'   `"statistic"` (default) ranks them by the absolute effect size after a
+#'   permutation test, by the chi-square statistic after a chi-square test,
+#'   and by the largest absolute residual without a test. `"frequency"`
+#'   ranks them by their total count across the groups.
+#' @param alpha For the pyramid: the significance level for the p-value
+#'   labels. Patterns with `p_value < alpha` are starred and drawn in bold
+#'   dark text, the rest in plain grey. Default `0.05`. The heatmap and a
+#'   comparison without a test ignore it.
+#' @param show_residuals For the pyramid: whether to print each bar's
+#'   standardised residual inside it. Default `FALSE`. The heatmap always
+#'   prints the residuals.
 #' @export
 print.net_sequence_comparison <- function(x, ...) {
   cat(sprintf("Sequence Comparison  [%d patterns | %d groups: %s]\n",
@@ -425,19 +495,22 @@ summary.net_sequence_comparison <- function(object, ...) {
 
 #' @rdname sequence_compare
 #' @section Plot styles:
-#' Visualizes pattern-level standardized residuals across groups. Two styles
-#' are available, and \code{style = "auto"} (the default) picks between them
-#' by the number of groups:
+#' `plot()` draws the standardised residuals of the top `top_n` patterns,
+#' prints the plot and returns the `ggplot` invisibly (`NULL`, with a
+#' message, when there are no patterns). `style = "auto"` (the default)
+#' picks the style from the number of groups:
 #' \describe{
-#'   \item{\code{"pyramid"}}{Back-to-back bars of pattern proportions, shaded
-#'     by each side's standardized residual. Requires exactly 2 groups; an
-#'     explicit \code{style = "pyramid"} on any other number is an error.}
-#'   \item{\code{"heatmap"}}{One tile per (pattern, group) cell, colored by
-#'     standardized residual. Works for any number of groups.}
+#'   \item{\code{"pyramid"}}{Back-to-back bars of each pattern's proportion
+#'     in the two groups, each bar shaded by that group's standardised
+#'     residual (the colour saturates at plus or minus 3), with the
+#'     (adjusted) p-value in the gap between the bars when a test was run.
+#'     Needs exactly 2 groups.}
+#'   \item{\code{"heatmap"}}{One tile per pattern and group, coloured by
+#'     the standardised residual (the colour saturates at plus or minus 3)
+#'     and labelled with its value. Works for any number of groups.}
 #' }
-#' Residuals are read directly from the \code{resid_<group>} columns in
-#' \code{$patterns}, which are always populated regardless of the inference
-#' method chosen in \code{sequence_compare}.
+#' The residuals are filled whatever `test` was chosen, so both styles work
+#' after `test = "none"`.
 #' @import ggplot2
 #' @export
 plot.net_sequence_comparison <- function(x, top_n = 10L,
@@ -486,9 +559,12 @@ plot.net_sequence_comparison <- function(x, top_n = 10L,
 #' @noRd
 .sc_plot_pyramid <- function(pat, groups, alpha, show_residuals = FALSE) {
   if (length(groups) != 2L) {
-    stop("style = 'pyramid' requires exactly 2 groups; got ",
-         length(groups), ". Use style = 'heatmap' instead.",
-         call. = FALSE)
+    stop(errorCondition(
+      paste0(
+        "style = 'pyramid' requires exactly 2 groups; got ",
+        length(groups),
+        ". Use style = 'heatmap' instead."),
+      class = "nestimate_bad_input", call = NULL))
   }
   g1 <- groups[1]; g2 <- groups[2]
   prop1 <- paste0("prop_", g1); prop2 <- paste0("prop_", g2)

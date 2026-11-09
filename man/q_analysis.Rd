@@ -13,43 +13,58 @@ q_analysis(sc)
 \method{plot}{q_analysis}(x, combined = TRUE, ...)
 }
 \arguments{
-\item{sc}{A \code{simplicial_complex} object.}
+\item{sc}{A \code{simplicial_complex} from \code{\link[=build_simplicial]{build_simplicial()}}.}
 
-\item{x}{For the \code{print()} and \code{plot()} methods: an object of class \code{q_analysis}.}
+\item{x}{For the \code{print()} and \code{plot()} methods: a \code{q_analysis} object.}
 
-\item{...}{In \code{plot.q_analysis()}: Ignored. In \code{print.q_analysis()}: Additional arguments (unused).}
+\item{...}{For the \code{print()} and \code{plot()} methods: ignored.}
 
-\item{combined}{When \code{TRUE} (default), the two panels are stitched side-by-side via \code{gridExtra::arrangeGrob}. When \code{FALSE}, returns a named list (\code{q_vector}, \code{structure_vector}) of ggplots.}
+\item{combined}{For the \code{plot()} method: \code{TRUE} (default) draws the
+Q-vector and the structure vector side by side, which needs
+\pkg{gridExtra}; \code{FALSE} returns them as a named list of ggplots
+(\code{q_vector}, \code{structure_vector}).}
 }
 \value{
-A \code{q_analysis} object with \code{$q_vector},
-\code{$structure_vector}, and \code{$max_q}.
+A \code{q_analysis} object. \code{print()} shows the components at each
+level, the level at which the complex first splits and the structure
+vector; \code{plot()} draws the two vectors. The object's fields:
+\describe{
+\item{q_vector}{Named integer vector, one entry per level from the
+highest down (\code{q_2}, \code{q_1}, \code{q_0} for a complex of dimension 2):
+the number of q-connected components at that level.}
+\item{max_q}{The largest simplex dimension, the highest level.}
+\item{structure_vector}{Named integer vector, one entry per node: the
+dimension of the largest simplex containing it.}
+}
 
-In \code{print.q_analysis()}: The input object, invisibly.
-
-In \code{plot.q_analysis()}: A grid grob (invisibly) when \code{combined = TRUE}; a named list of two ggplots when \code{combined = FALSE}.
+The \code{print()} method returns its input invisibly. \code{plot()}
+returns the drawn grid grob invisibly with \code{combined = TRUE}, and the
+named list of two ggplots invisibly with \code{combined = FALSE}.
 }
 \description{
-Computes Q-connectivity structure (Atkin 1974). Two maximal simplices
-are q-near if they share a face of dimension \eqn{\geq q}; q-connectivity
-is the transitive closure of q-nearness. Reports:
+\code{q_analysis()} describes how the maximal simplices of a simplicial complex
+(those not contained in a larger one) hang together, after Atkin (1974).
+Two maximal simplices are q-near when they share a face of dimension at
+least q (q + 1 shared nodes), and q-connected when a chain of q-near
+simplices joins them. The result has two parts:
 \itemize{
 \item \strong{Q-vector}: \eqn{Q_q}, the number of q-connected
-components among the maximal simplices of dimension \eqn{\geq q}.
-Lower-dimensional simplices do not exist at level q and are not
-counted.
-\item \strong{Structure vector}: here the highest simplex dimension of
-each node. (Atkin uses "structure vector" for the Q-vector itself;
-the name is kept for compatibility.)
-}
-}
-\section{Methods}{
-
-\itemize{
-\item \code{plot.q_analysis()}: Two panels: Q-vector (components at each connectivity level) and structure vector (max simplex dimension per node).
-}
+components among the maximal simplices of dimension at least q, for
+each q from the largest simplex dimension down to 0. Simplices of lower
+dimension do not exist at level q and are not counted.
+\item \strong{Structure vector}: here the dimension of the largest
+simplex each node belongs to. (Atkin uses "structure vector" for the
+Q-vector itself; the name is kept for compatibility.)
 }
 
+A Q-vector of 1 at every level means the maximal simplices stay in one
+piece however many shared nodes are required. Requiring more shared
+nodes splits the complex more, but fewer simplices take part at higher
+q, so the count can rise or fall with q; \code{print()} reports the lowest
+level at which there is more than one. Like
+the complex itself, the vectors depend on the threshold or pathways
+\code{\link[=build_simplicial]{build_simplicial()}} was given.
+}
 \examples{
 mat <- matrix(c(0,.6,.5,.6,0,.4,.5,.4,0), 3, 3)
 colnames(mat) <- rownames(mat) <- c("A","B","C")

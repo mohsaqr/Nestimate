@@ -10,26 +10,48 @@ subtract_networks(x, y)
 \method{print}{netdifference}(x, max_print = 12L, ...)
 }
 \arguments{
-\item{x, y}{A \code{netobject}, \code{cograph_network}, or numeric square
-matrix. Both must share the same nodes in the same order. For the
-\code{print()} method, \code{x} is the \code{netdifference} object.}
+\item{x, y}{The two networks: \code{netobject}s, \code{cograph_network}s or square
+numeric matrices. They must have the same number of nodes, with the
+same labels in the same order, or an error is raised; any other kind of
+object raises an error too. A matrix without dimnames is labelled \code{V1},
+\code{V2}, ..., so it matches only a network with those labels. The
+difference is directed when \code{x} is a directed
+\code{netobject}; when \code{x} is not a \code{netobject}, it is directed when \code{x}'s
+weights are not symmetric. For the \code{print()} method: \code{x} is the
+\code{netdifference} object.}
 
-\item{max_print}{Integer. Rows to show in \code{print()}. Default \code{12}.}
+\item{max_print}{For the \code{print()} method: the most edges to list; the
+number left out is reported. Default \code{12}.}
 
-\item{...}{In \code{print.netdifference()}: Ignored.}
+\item{...}{For the \code{print()} method: ignored.}
 }
 \value{
-A \code{netdifference} object: a \code{netobject} whose
-\code{$weights} and \code{$difference_matrix} are \code{x - y}, carrying
-the source matrices \code{$x} and \code{$y}.
+A \code{netdifference} object, which is also a \code{netobject} (method
+\code{"difference"}). \code{print()} lists the edges present in either network,
+largest absolute difference first, with both weights and their
+difference (for an undirected difference, each pair once);
+\code{cograph::splot()} draws it. Beside the usual \code{netobject} fields, its
+\code{weights} and \code{difference_matrix} both hold \code{x - y}, and \code{x} and \code{y}
+hold the two weight matrices that were subtracted.
+
+The \code{print()} method returns its input invisibly.
 }
 \description{
-Returns \code{x - y} as a \code{netdifference} object: the element-wise
-difference of the two weight matrices. Works on any pair of networks; for an
-edge-betweenness difference, subtract two \code{\link{net_edge_betweenness}}
-results. Draw the signed difference network with \code{cograph::splot(d)}
-or \code{cograph::plot_difference(d)}; cograph handles the colouring and
-node palette.
+\code{subtract_networks()} subtracts one network's weights from another's,
+cell by cell, and returns the difference \code{x - y} as a \code{netdifference}
+object: a network whose edge weights are the signed differences. It takes
+any pair of networks on the same nodes (\code{netobject}s, \code{cograph_network}s
+or square numeric matrices); for an edge-betweenness difference, subtract
+two \code{\link{net_edge_betweenness}} results. \code{cograph::splot(d)} or
+\code{cograph::plot_difference(d)} draws the signed difference network, with
+cograph's colouring and node palette.
+
+The difference is taken between two point estimates and carries no
+uncertainty, so a large difference on a rarely observed edge can be
+noise. To see which edges differ beyond sampling variation, compare the
+two networks with \code{\link[=permutation]{permutation()}} or \code{\link[=bayes_compare]{bayes_compare()}};
+\code{\link[=as_netdifference]{as_netdifference()}} turns a \code{\link[=bayes_compare]{bayes_compare()}} result into the same kind
+of object, keeping, by default, only the credible differences.
 }
 \examples{
 early <- data.frame(

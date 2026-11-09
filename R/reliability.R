@@ -3,45 +3,86 @@
 #' Split-Half Reliability for Network Estimates
 #'
 #' @description
-#' Assesses the stability of network estimates by repeatedly splitting
-#' sequences into two halves, building networks from each half, and
-#' comparing them. Supports single-model reliability assessment and
-#' multi-model comparison with optional scaling for cross-method
-#' comparability.
+#' `network_reliability()` measures how much a network's weights depend on
+#' the particular sample: it splits the sequences (for an association
+#' network, the rows of its data) at random into two halves, estimates the
+#' network on each half with the original network's method and settings,
+#' compares the two weight matrices, and repeats this `iter` times. Each
+#' comparison gives four numbers: the mean, median and largest absolute
+#' difference between the halves' weights and their Pearson correlation,
+#' taken over all cells of the weight matrix. It takes
+#' one network or several, so the reliability of different methods or
+#' groups can be set side by side; a `netobject_group` contributes one
+#' network per group.
 #'
-#' For transition methods (\code{"relative"}, \code{"frequency"},
-#' \code{"co_occurrence"}), uses pre-computed per-sequence count matrices
-#' for fast resampling (same infrastructure as
-#' \code{\link{bootstrap_network}}).
+#' Each half holds only part of the sequences, so the agreement is that of
+#' networks estimated from a sample of that size. Differences are on the
+#' scale of the weights: counts of a `"frequency"` network and
+#' probabilities of a `"relative"` one are not comparable without `scale`.
+#' To see how far single edges move, use [bootstrap_network()]; to check
+#' centrality rankings, [centrality_stability()].
 #'
-#' @param ... One or more \code{netobject}s (from \code{\link{build_network}}).
-#'   If unnamed, each model is auto-named from its \code{$method}; duplicate
-#'   names are made unique with \code{make.unique()}. A
-#'   \code{netobject_group} is flattened into its constituent models (named
-#'   by group), and an \code{mcml} or \code{cograph_network} is converted
-#'   first. In \code{plot.net_reliability()} and \code{print.net_reliability()}: Additional arguments (ignored). In \code{summary.net_reliability()}: Ignored.
-#' @param iter Integer. Number of split-half iterations (default: 1000).
-#' @param split Numeric. Fraction of sequences assigned to the first half
-#'   (default: 0.5).
-#' @param scale Character. Scaling applied to both split-half matrices
-#'   before computing metrics. One of \code{"none"} (default),
-#'   \code{"minmax"}, \code{"standardize"}, or \code{"proportion"}.
-#'   Use scaling when comparing models on different scales (e.g. frequency
-#'   vs relative).
-#' @param seed Integer or NULL. RNG seed for reproducibility.
+#' @details
+#' The first half holds `round(split * n)` of the `n` sequences (at least
+#' one), the second the rest; a `split` that leaves the second half empty
+#' (few sequences, `split` far from 0.5) raises an error of class
+#' `nestimate_bad_input`. For the transition methods (`"relative"`,
+#' `"frequency"`, `"co_occurrence"`, and one-hot `wtna` networks, which are
+#' counted the same way), each sequence's transition counts are computed
+#' once and each half is summed from them, as in [bootstrap_network()].
+#' Other methods are re-estimated on each half of the rows. The network's
+#' own scaling and threshold are applied to both halves. A half on which
+#' the estimator fails, or that loses a variable (a column constant in
+#' that half), gives `NA` for that iteration, counted in a warning of class
+#' `nestimate_resample_failed`. The summary leaves out missing values, such
+#' as a correlation that is undefined because one half's weights are all
+#' equal.
 #'
-#' @return An object of class \code{"net_reliability"} containing:
+#' @param ... The networks: one or more `netobject`s from
+#'   [build_network()]. A `netobject_group` is split into its networks,
+#'   named by group; an `mcml` is converted with
+#'   \code{\link[=as_tna]{as_tna()}} first, and a bare `cograph_network`
+#'   is read as a `netobject`. Each network is named by its argument name
+#'   or, failing that, its method; repeated names get a suffix (`"_1"`,
+#'   `"_2"`, ...). A network without its sequence data (which
+#'   [build_network()] keeps) raises an error, a
+#'   network resting on one sequence an error of class
+#'   `nestimate_single_sequence`, and networks of different methods with
+#'   `scale = "none"` a warning. For the `print()`, `summary()` and
+#'   `plot()` methods: ignored.
+#' @param iter The number of split-half iterations, at least 2. Default
+#'   `1000`.
+#' @param split The share of the sequences that goes to the first half, the
+#'   rest forming the second, strictly between 0 and 1. Default `0.5`.
+#' @param scale The rescaling applied to both halves' weight matrices
+#'   before they are compared, so that networks on different scales can be
+#'   set side by side: `"none"` (default); `"minmax"`, which maps each
+#'   matrix to 0--1; `"standardize"`, which subtracts the mean of its cells
+#'   and divides by their SD; or `"proportion"`, which divides by the sum
+#'   of its cells. A matrix whose cells are all equal, or sum to 0, is left
+#'   as it is.
+#' @param seed A seed for the random splits, so the result repeats exactly.
+#'   The session's own random stream is left as it was. Default `NULL`.
+#'
+#' @return A `net_reliability` object. `print()` shows the mean and SD of
+#'   each metric over the iterations, per network; [summary()] returns
+#'   them as a data frame with one row per network and metric and the
+#'   columns `model`, `metric` (`mean_dev`, `median_dev`, `cor`,
+#'   `max_dev`), `mean` and `sd`; `plot()` draws their distributions. The
+#'   object's fields:
 #' \describe{
-#'   \item{iterations}{Data frame with columns \code{model}, \code{mean_dev},
-#'     \code{median_dev}, \code{cor}, \code{max_dev} (one row per iteration
-#'     per model).}
-#'   \item{summary}{Data frame with columns \code{model}, \code{metric},
-#'     \code{mean}, \code{sd}.}
-#'   \item{models}{Named list of the original \code{netobject}s.}
-#'   \item{iter}{Number of iterations.}
-#'   \item{split}{Split fraction.}
-#'   \item{scale}{Scaling method used.}
+#'   \item{iterations}{A data frame with one row per iteration and
+#'     network, and the columns `model`, `mean_dev`, `median_dev`, `cor`
+#'     and `max_dev`.}
+#'   \item{summary}{The table `summary()` returns.}
+#'   \item{models}{The networks compared, as a named list.}
+#'   \item{iter, split, scale}{The settings of the call.}
 #' }
+#' `print()` returns its input invisibly. `plot()` draws the histograms
+#' (see *Methods*) and returns the `ggplot` invisibly; with
+#' `combined = FALSE` it returns, without drawing, a list of four
+#' `ggplot`s named by the metric labels (`"Max Abs. Diff."`,
+#' `"Mean Abs. Diff."`, `"Median Abs. Diff."`, `"Pearson"`).
 #'
 #' @examples
 #' net <- build_network(data.frame(V1 = c("A","B","C","A"),
@@ -68,7 +109,7 @@ network_reliability <- function(..., iter = 1000L, split = 0.5,
   dots <- list(...)
 
   # ---- Input validation ----
-  stopifnot(
+  .assert(
     is.numeric(iter), length(iter) == 1, iter >= 2,
     is.numeric(split), length(split) == 1, split > 0, split < 1,
     is.character(scale), length(scale) == 1
@@ -77,8 +118,8 @@ network_reliability <- function(..., iter = 1000L, split = 0.5,
   scale <- match.arg(scale, c("none", "minmax", "standardize", "proportion"))
 
   if (!is.null(seed)) {
-    stopifnot(is.numeric(seed), length(seed) == 1)
-    set.seed(seed)
+    .assert(is.numeric(seed), length(seed) == 1)
+    .local_seed(seed)
   }
 
   # ---- Flatten netobject_group elements ----
@@ -99,13 +140,15 @@ network_reliability <- function(..., iter = 1000L, split = 0.5,
       objs <- c(objs, list(obj))
       labels <- c(labels, label)
     } else {
-      stop("All arguments must be netobject or netobject_group objects.",
-           call. = FALSE)
+      stop(errorCondition(
+        "All arguments must be netobject or netobject_group objects.",
+        class = "nestimate_bad_input", call = NULL))
     }
   }
 
   if (length(objs) == 0L) {
-    stop("At least one netobject is required.", call. = FALSE)
+    stop(errorCondition("At least one netobject is required.",
+                        class = "nestimate_bad_input", call = NULL))
   }
   invisible(Map(.stop_single_unit, objs, label = labels))
 
@@ -129,9 +172,9 @@ network_reliability <- function(..., iter = 1000L, split = 0.5,
     net <- model_list[[model_name]]
 
     if (is.null(net$data)) {
-      stop("netobject '", model_name,
-           "' does not contain $data. Rebuild with build_network().",
-           call. = FALSE)
+      stop(errorCondition(paste0("netobject '", model_name,
+           "' does not contain $data. Rebuild with build_network()."),
+           class = "nestimate_bad_input", call = NULL))
     }
 
     method <- .resampling_method(.resolve_method_alias(net$method), net$params)
@@ -202,6 +245,7 @@ network_reliability <- function(..., iter = 1000L, split = 0.5,
                                        states)
   n_seq <- nrow(trans_2d)
   n_half <- max(1L, round(n_seq * split))
+  .reliability_check_halves(n_half, n_seq, split)
 
   # Post-process raw counts into the appropriate matrix form
   postprocess <- function(counts) {
@@ -265,6 +309,7 @@ network_reliability <- function(..., iter = 1000L, split = 0.5,
   estimator <- get_estimator(method)
   n <- nrow(data)
   n_half <- max(1L, round(n * split))
+  .reliability_check_halves(n_half, n, split)
 
   postprocess <- function(mat) {
     if (!is.null(scaling)) { # nocov start
@@ -327,6 +372,17 @@ network_reliability <- function(..., iter = 1000L, split = 0.5,
 
 # ---- Helpers ----
 
+# Both halves need at least one unit: with few units a split far from 0.5
+# leaves the second half empty, and comparing it with zeros means nothing.
+.reliability_check_halves <- function(n_half, n, split) {
+  if (n_half >= n) {
+    stop(errorCondition(sprintf(paste0(
+      "`split` = %g puts all %d units in the first half, so the second half ",
+      "is empty. Use a split nearer 0.5 or more units."), split, n),
+      class = "nestimate_bad_input", call = NULL))
+  }
+}
+
 #' Compute split-half metrics between two matrices
 #'
 #' Thin wrapper around `.network_similarity()` (R/compare_network.R) that
@@ -367,13 +423,14 @@ network_reliability <- function(..., iter = 1000L, split = 0.5,
 # ---- S3 Methods ----
 
 #' @rdname network_reliability
-#' @param x For the \code{print()} and \code{plot()} methods: an object of class \code{net_reliability}.
-#' @param object For the \code{summary()} method: an object of class \code{net_reliability}.
-#' @param bins Integer. Number of histogram bins per panel (default 60).
-#' @param combined When \code{TRUE} (default), all four metrics are shown in one ggplot via \code{facet_wrap(~ metric)}. When \code{FALSE}, returns a named list of four single-panel ggplots, one per metric.
-#' @return In \code{print.net_reliability()}: The input object, invisibly.
-#' @return In \code{summary.net_reliability()}: A tidy data frame with columns \code{model}, \code{metric}, \code{mean}, \code{sd} summarising the split-half iterations.
-#' @return In \code{plot.net_reliability()}: A \code{ggplot} object (invisibly), or a named list of four ggplots when \code{combined = FALSE}.
+#' @param x For the `print()` and `plot()` methods: a `net_reliability`
+#'   object.
+#' @param object For the `summary()` method: a `net_reliability` object.
+#' @param bins For the `plot()` method: the number of histogram bins per
+#'   panel. Default `60`.
+#' @param combined For the `plot()` method: `TRUE` (default) draws the four
+#'   metrics as panels of one plot; `FALSE` returns a named list of four
+#'   single-panel plots, one per metric, without drawing them.
 #' @export
 print.net_reliability <- function(x, ...) {
   cat(sprintf("Split-Half Reliability (%d iterations, split = %.0f%%",
@@ -415,10 +472,13 @@ summary.net_reliability <- function(object, ...) {
 
 #' @rdname network_reliability
 #' @section Methods:
-#' * \code{plot.net_reliability()}: Density plots of split-half metrics faceted by metric type. Multi-model comparisons show overlaid densities colored by model.
+#' * `plot()`: histograms of the split-half metrics over the iterations, one
+#'   panel per metric, the mean marked by a dashed line and a label. With
+#'   several networks, their histograms are overlaid, one colour per
+#'   network, with a legend below.
 #' @export
 plot.net_reliability <- function(x, bins = 60L, combined = TRUE, ...) {
-  stopifnot(is.logical(combined), length(combined) == 1L)
+  .assert(is.logical(combined), length(combined) == 1L, !is.na(combined))
   iters <- x$iterations
   models <- unique(iters$model)
   multi <- length(models) > 1L

@@ -94,3 +94,31 @@ test_that("certainty dispatches over netobject_group", {
   expect_length(cg, 2L)
   expect_true(inherits(cg[[1]], "net_certainty"))
 })
+
+test_that("a bare cograph_network is recounted from its sequences", {
+  # Every off-diagonal transition observed once: row A of counts + 0.5 is
+  # (0.5, 1.5, 1.5), sum 3.5, so A->A = 1/7 and A->B = 3/7.
+  seqs <- data.frame(V1 = c("A", "A", "B", "B", "C", "C"),
+                     V2 = c("B", "C", "A", "C", "A", "B"))
+  net <- build_network(seqs, method = "relative")
+  bare <- net
+  class(bare) <- "cograph_network"
+  cert <- certainty(bare, prior = 0.5)
+  expect_equal(cert$mean["A", "A"], 1 / 7)
+  expect_equal(cert$mean["A", "B"], 3 / 7)
+  expect_equal(cert$mean, certainty(net, prior = 0.5)$mean)
+  # Without sequences, or with weights its sequences do not reproduce: refused.
+  no_data <- bare
+  no_data$data <- NULL
+  expect_error(certainty(no_data), class = "nestimate_bad_input")
+  changed <- bare
+  changed$weights["A", "B"] <- 0
+  expect_error(certainty(changed), class = "nestimate_bad_input")
+})
+
+test_that("certainty refuses an mcml with a classed error", {
+  seqs <- data.frame(T1 = c("A", "B", "A", "C"), T2 = c("B", "C", "C", "D"),
+                     T3 = c("C", "D", "D", "A"))
+  mc <- build_mcml(seqs, list(Z = c("A", "B"), G = c("C", "D")))
+  expect_error(certainty(mc), class = "nestimate_bad_input")
+})

@@ -19,21 +19,29 @@ net_pruning_details(x, ...)
 \method{print}{net_pruning_details}(x, ...)
 }
 \arguments{
-\item{x}{A pruned \code{netobject} or \code{netobject_group}. For the \code{print()} method: an object of class \code{net_pruning_details}.}
+\item{x}{A pruned \code{netobject} or \code{netobject_group}; a network that was
+never pruned, or another class, raises an error. For the \code{print()}
+method: a \code{net_pruning_details}.}
 
-\item{...}{Ignored. In \code{print.net_pruning_details()}: Ignored.}
+\item{...}{Ignored.}
 }
 \value{
-For a \code{netobject}: a \code{net_pruning_details} data frame
-(columns \code{from}, \code{to}, \code{weight}) of removed edges. For a
-\code{netobject_group}: a named list of such data frames.
-
-In \code{print.net_pruning_details()}: \code{x}, invisibly.
+For a \code{netobject}: a \code{net_pruning_details} data frame of the
+removed edges, with columns \code{from}, \code{to} and \code{weight} (the weight
+before pruning). The method, its setting, the cut-off and the counts
+are attributes; \code{print()} shows the method, its setting and the
+counts. The counts are edges: non-zero cells of either sign
+(self-loops included), one per pair on an undirected network. The
+retained count is the non-zero edges left after pruning. For a
+\code{netobject_group}: a named list of such data frames, one per network.
+The \code{print()} method returns its input invisibly.
 }
 \description{
-Returns the edges removed by \code{\link{net_prune}} as a tidy
-one-row-per-edge data frame, with the method, cut-off, and retained/removed
-counts attached as attributes and shown by its print method.
+\code{net_pruning_details()} lists the edges that \code{\link[=net_prune]{net_prune()}} removed from a
+network, one row per edge, and prints the method with its setting and
+the numbers of edges removed and retained above the table. It reads the
+pruning record, so it works on a network whose pruning was undone by
+\code{\link[=net_deprune]{net_deprune()}} as well.
 }
 \examples{
 seqs <- data.frame(

@@ -19,100 +19,120 @@ path_dependence(x, order = 2L, min_count = 5L, base = 2)
 \method{plot}{net_path_dependence}(x, top = 15L, title = NULL, ...)
 }
 \arguments{
-\item{x}{A wide sequence data.frame / matrix (rows = actors, columns =
-time-steps), or a \code{netobject} that carries the source data. For the \code{print()} and \code{plot()} methods: an object of class \code{net_path_dependence} (or its \code{summary()}).}
+\item{x}{The sequences: a wide data frame or matrix (one row per
+sequence, one column per time step), or a \code{netobject} built from
+sequences, whose stored data are read. A data frame needs position
+columns named as a numbered run (\code{T1}, \code{T2}, ...); any other frame, a
+one-hot network and an association network raise an error of class
+\code{nestimate_bad_input}, and a network without its data stops
+\code{path_dependence()}. Paths that touch a missing cell are left out. For
+the \code{print()} methods: a \code{net_path_dependence} object or its
+\code{summary()}; for the \code{plot()} method: a \code{net_path_dependence} object.}
 
-\item{order}{Integer. Order of the conditioning context. \code{order = 2}
-(default) compares 2-step memory against 1-step; \code{order = 3}
-compares 3-step memory; etc. Must be a whole number; a non-integer
-value is an error rather than being silently truncated.}
+\item{order}{The length k of the conditioning context, a whole number of
+at least 2; a non-integer value is an error, not truncated. Default
+\code{2}, which compares a two-state history with the last state alone; \code{3}
+compares a three-state history, and so on. The data need at least
+\code{order + 1} time steps.}
 
-\item{min_count}{Integer. Drop contexts seen fewer than this many times.
-Default 5. Very small samples produce noisy KL estimates.}
+\item{min_count}{The number of times a context must be observed to be
+reported, a whole number of at least 1. Default \code{5}. Contexts seen less
+often give noisy KL estimates; when no context reaches \code{min_count},
+\code{path_dependence()} stops with an error.}
 
-\item{base}{Numeric. Logarithm base for entropy and KL. Default 2 (bits).}
+\item{base}{The logarithm base for the entropies and the KL divergence:
+\code{2} (default) gives bits, \code{exp(1)} nats and \code{10} hartleys. A positive
+number other than 1.}
 
-\item{top}{In \code{print.net_path_dependence()}: Integer. Number of top contexts to show. Default 10. In \code{plot.net_path_dependence()}: Integer. Number of contexts to show (top by KL). Default 15.}
+\item{top}{For the \code{print()} and \code{plot()} methods: how many contexts to
+show, highest KL first. Default \code{10} for \code{print()} and \code{15} for
+\code{plot()}.}
 
-\item{digits}{Integer. Digits to round numeric output. Default 3.}
+\item{digits}{For the \code{print()} methods: decimal places of the
+entropies, the entropy drop and the KL, in the table and in the
+chain-level summaries. Default \code{3}.}
 
-\item{...}{In \code{plot.net_path_dependence()}, \code{print.net_path_dependence()}, \code{print.summary.net_path_dependence()} and \code{summary.net_path_dependence()}: Ignored.}
+\item{...}{For the \code{print()}, \code{summary()} and \code{plot()} methods: ignored.}
 
-\item{object}{For the \code{summary()} method: an object of class \code{net_path_dependence}.}
+\item{object}{For the \code{summary()} method: a \code{net_path_dependence}
+object.}
 
-\item{title}{Character or \code{NULL}. Plot title. Default \code{NULL}, which builds "Path dependence: order k vs order 1" from the fitted order.}
+\item{title}{For the \code{plot()} method: the plot title. Default \code{NULL},
+which builds \code{"Path dependence: order k vs order 1"} from the fitted
+order.}
 }
 \value{
-An object of class \code{"net_path_dependence"} with
+A \code{net_path_dependence} object. \code{print()} shows the chain-level
+summaries and the \code{top} contexts by KL; \code{summary()} returns a
+\code{summary.net_path_dependence} holding the full sorted table, which
+prints every context and the chain-level summaries; \code{plot()} returns a
+ggplot lollipop chart of each context's KL, highest first, with point
+size proportional to the context's count and the contexts whose modal
+next state flips coloured and labelled with the change. The \code{print()}
+methods return their input invisibly. The object's fields:
 \describe{
-\item{contexts}{tidy data.frame, one row per order-k context, sorted
-by KL descending. Columns: \code{context} (e.g. "A -> B"), \code{n}
-(count), \code{H_order1} (entropy of \eqn{P(\cdot \mid s_{k-1})}),
-\code{H_orderk} (entropy of \eqn{P(\cdot \mid \mathrm{context})}),
-\code{H_drop} (= \code{H_order1} - \code{H_orderk}), \code{KL}
-(= \eqn{D_{KL}(P_k \| P_1)}), \code{top_o1} (most likely next state
-under order-1), \code{top_ok} (most likely next state under order-k),
-\code{flips} (logical: did the most likely next state change?).}
-\item{chain}{list with chain-level summaries: \code{KL_weighted}
-(count-weighted mean KL across contexts), \code{H_drop_weighted}
-(count-weighted mean entropy drop), \code{n_contexts}, \code{n_flips}
-(contexts where the most-likely next state changed).}
-\item{order}{integer}
-\item{base}{numeric}
-\item{min_count}{integer}
-\item{states}{character vector}
+\item{contexts}{Data frame with one row per context, sorted by KL
+(descending), with columns \code{context} (such as \code{"A -> B"}), \code{n} (its
+count), \code{H_order1} (entropy of \eqn{P_1(\cdot \mid s_k)}{P_1(. | s_k)}),
+\code{H_orderk} (entropy of \eqn{P_k(\cdot \mid c)}{P_k(. | c)}), \code{H_drop}
+(\code{H_order1 - H_orderk}), \code{KL}
+(\eqn{D_{KL}(P_k \| P_1)}{KL(P_k || P_1)}), \code{top_o1} (the most
+likely next state under order 1), \code{top_ok} (the most likely next
+state under order k) and \code{flips} (whether the two differ).}
+\item{chain}{List of chain-level summaries: \code{KL_weighted} (the
+count-weighted mean KL over contexts), \code{H_drop_weighted} (the
+count-weighted mean entropy drop), \code{n_contexts} and \code{n_flips} (the
+number of contexts whose most likely next state changes).}
+\item{order}{The context length used.}
+\item{base}{The logarithm base used.}
+\item{min_count}{The minimum context count used.}
+\item{states}{The states observed.}
 }
-
-In \code{print.net_path_dependence()} and \code{print.summary.net_path_dependence()}: \code{x} invisibly.
-
-In \code{summary.net_path_dependence()}: A \code{summary.net_path_dependence} with the full sorted table and chain-level summaries.
-
-In \code{plot.net_path_dependence()}: A ggplot object.
 }
 \description{
-Diagnoses where a chain's order-1 Markov assumption fails by comparing,
-for each order-k context \eqn{(s_1, \ldots, s_{k-1})}, the empirical
-next-state distribution \eqn{P(s_k \mid s_1, \ldots, s_{k-1})} against
-the order-1 prediction \eqn{P(s_k \mid s_{k-1})} that uses only the most
-recent state. Returns a tidy per-context table sorted by Kullback-Leibler
-divergence so the analyst can see exactly \emph{which} histories carry extra
-predictive information.
+\code{path_dependence()} shows, context by context, where a first-order
+Markov chain misses what longer histories say about the next state. For
+every context of k = \code{order} consecutive states
+\eqn{c = (s_1, \ldots, s_k)}{c = (s_1, ..., s_k)}, it compares the
+observed distribution of the next state after that context,
+\eqn{P_k(s_{k+1} \mid c)}{P_k(s_(k+1) | c)}, with the first-order
+prediction \eqn{P_1(s_{k+1} \mid s_k)}{P_1(s_(k+1) | s_k)} from the last
+state alone. Its table has one row per context, sorted by the
+Kullback-Leibler divergence between the two, with both entropies and
+whether the most likely next state changes. It reads wide sequence data
+or a network built from sequences.
+
+A KL of 0 means the longer history adds nothing in that context; a
+positive entropy drop means it sharpens the prediction; and a flip means
+it changes which next state is most likely, not only how confident the
+prediction is. The values are computed from the observed counts and
+come without a test, and a context seen a few times gives a noisy KL:
+read \code{n} beside it and raise \code{min_count} when small contexts lead the
+table. Whether order k is needed for the chain as a whole is tested by
+\code{\link[=markov_order_test]{markov_order_test()}}; \code{path_dependence()} breaks that decision down by
+context.
 }
 \details{
-For each context \eqn{c = (s_1, \ldots, s_{k-1})} occurring at least
-\code{min_count} times, the function computes:
+For each context \eqn{c} observed at least \code{min_count} times, the
+function computes:
 \itemize{
-\item the empirical conditional \eqn{P_k(\cdot \mid c)} from k-gram counts;
-\item the order-1 prediction \eqn{P_1(\cdot \mid s_{k-1})} from the
-most recent state alone (the bigram-marginal estimator);
-\item the entropy drop \eqn{H(P_1) - H(P_k)} - bits of uncertainty
-removed by extending memory by one step in this specific context;
-\item the Kullback-Leibler divergence \eqn{D_{KL}(P_k \,\|\, P_1)} -
-bits of "surprise" if you used the order-1 model when the order-k
-model is true.
+\item the empirical conditional \eqn{P_k(\cdot \mid c)}{P_k(. | c)}
+from the counts of the paths of k + 1 states;
+\item the first-order prediction \eqn{P_1(\cdot \mid s_k)}{P_1(. | s_k)}
+from the most recent state alone, estimated from all pairs of
+consecutive states;
+\item the entropy drop \eqn{H(P_1) - H(P_k)}{H(P_1) - H(P_k)}, the
+uncertainty removed by the longer memory in this context;
+\item the Kullback-Leibler divergence
+\eqn{D_{KL}(P_k \,\|\, P_1)}{KL(P_k || P_1)}, the expected extra
+surprise of predicting with the first-order model when the order-k
+distribution holds.
 }
 
-\code{KL = 0} means longer history adds no information for that context.
-\code{H_drop > 0} means longer history sharpens the prediction;
-\code{H_drop < 0} indicates the order-k context happens to spread
-probability across more outcomes than order-1 alone (small-sample noise
-or genuine context-induced uncertainty - inspect \code{n}).
-
-Contexts where \code{flips = TRUE} are the substantively interesting
-ones: the longer history changes the \emph{modal} prediction, not just its
-confidence.
-
-Pair this with \code{\link{markov_order_test}} (which decides whether
-order-k is needed \emph{globally}) to see the chain-level decision broken
-down per context.
+A negative \code{H_drop} means the order-k context spreads its probability
+over more outcomes than the last state alone does, which can be
+small-sample noise or uncertainty the context adds; inspect \code{n}.
 }
-\section{Methods}{
-
-\itemize{
-\item \code{plot.net_path_dependence()}: Lollipop chart of per-context KL divergence, sorted descending. Point size is proportional to context count; points where the modal next state flips between orders are marked with an X to highlight substantively meaningful order-2 effects.
-}
-}
-
 \examples{
 data(trajectories, package = "Nestimate")
 pd <- path_dependence(as.data.frame(trajectories), order = 2)

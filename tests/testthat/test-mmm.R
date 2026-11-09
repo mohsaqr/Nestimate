@@ -911,3 +911,15 @@ test_that("build_network(net_mmm) keeps set-aside columns on every path", {
   # The EM fit keeps its own object untouched.
   expect_null(fit$models[[1L]]$metadata$id)
 })
+
+test_that("classification_error is 1 - mean max posterior (Vermunt & Magidson)", {
+  # Hand computation: max posteriors 0.9, 0.6, 0.7 -> errors 0.1, 0.4, 0.3,
+  # mean 0.8 / 3. The former rule (share with max posterior < 0.5) gave 0,
+  # as it must for any k = 2 posterior.
+  post <- matrix(c(0.9, 0.1,
+                   0.6, 0.4,
+                   0.3, 0.7), ncol = 2, byrow = TRUE)
+  q <- .mmm_quality(post, assignments = c(1L, 1L, 2L), M = 2L)
+  expect_equal(q$classification_error, 0.8 / 3, tolerance = 1e-12)
+  expect_equal(q$classification_error, 1 - q$avepp_overall, tolerance = 1e-12)
+})

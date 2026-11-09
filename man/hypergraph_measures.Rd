@@ -10,65 +10,78 @@ hypergraph_measures(hg)
 \method{print}{hypergraph_measures}(x, ...)
 }
 \arguments{
-\item{hg}{A \code{net_hypergraph} (from \code{\link[=build_hypergraph]{build_hypergraph()}} or
-\code{\link[=bipartite_groups]{bipartite_groups()}}).}
+\item{hg}{A \code{net_hypergraph}, from \code{\link[=build_hypergraph]{build_hypergraph()}} or
+\code{\link[=bipartite_groups]{bipartite_groups()}}. Any other object raises an error.}
 
-\item{x}{For the \code{print()} method: an object of class \code{hypergraph_measures}.}
+\item{x}{For the \code{print()} method: a \code{hypergraph_measures} object.}
 
-\item{...}{In \code{print.hypergraph_measures()}: Additional arguments (ignored).}
+\item{...}{For the \code{print()} method: not used.}
 }
 \value{
-An object of class \code{hypergraph_measures} (a named list) with
-components:
+A \code{hypergraph_measures} object, a named list; \code{print()} shows the
+density, mean hyperedge size and pairwise participation, the minimum,
+median and maximum of hyperdegree, node strength and hyperedge size,
+and the intersection profile, and returns its input invisibly.
+Its components, node-level first:
 
 \describe{
-\item{\strong{Node-level (length \code{n_nodes})}}{}
-\item{\code{hyperdegree}}{Number of hyperedges containing each node.}
+\item{\strong{Node-level (one value per node)}}{}
+\item{\code{hyperdegree}}{The number of hyperedges containing each node.}
 \item{\code{node_strength}}{Total participation: for node \eqn{i},
-\eqn{\sum_{e \ni i} |e|}. A node in many large hyperedges has
+\eqn{\sum_{e \ni i} |e|}{sum of |e| over the hyperedges e
+    containing i}. A node in many large hyperedges has
 high strength.}
-\item{\code{max_edge_size}}{Size of the largest hyperedge containing
-each node.}
-\item{\code{co_degree}}{\code{n_nodes} x \code{n_nodes} matrix:
-\verb{co_degree[i, j] = |\{e : i, j in e\}|} (number of hyperedges
-co-containing nodes \eqn{i} and \eqn{j}). Diagonal is zero.}
-\item{\strong{Hyperedge-level (length \code{n_hyperedges} or m x m)}}{}
-\item{\code{edge_sizes}}{Hyperedge sizes \eqn{|e|}.}
-\item{\code{edge_pairwise_overlap}}{\code{m} x \code{m} matrix:
-\verb{|e_i intersect e_j|}. Diagonal is zero.}
-\item{\code{overlap_coefficient}}{\code{m} x \code{m}:
-\verb{|e_i and e_j| / min(|e_i|, |e_j|)}. Measures how much the
-smaller hyperedge is contained in the larger.}
-\item{\code{jaccard}}{\code{m} x \code{m}: symmetric overlap index
-\verb{|e_i and e_j| / |e_i union e_j|}.}
+\item{\code{max_edge_size}}{The size of the largest hyperedge containing
+each node (0 for a node in none).}
+\item{\code{co_degree}}{An \code{n_nodes} x \code{n_nodes} matrix:
+\verb{co_degree[i, j] = |\{e : i, j in e\}|}, the number of hyperedges
+containing both nodes \eqn{i} and \eqn{j}. The diagonal is zero.}
+\item{\strong{Hyperedge-level (one value per hyperedge, or m x m)}}{}
+\item{\code{edge_sizes}}{The hyperedge sizes \eqn{|e|}.}
+\item{\code{edge_pairwise_overlap}}{An \code{m} x \code{m} matrix of
+\verb{|e_i intersect e_j|}. The diagonal is zero.}
+\item{\code{overlap_coefficient}}{An \code{m} x \code{m} matrix of
+\verb{|e_i intersect e_j| / min(|e_i|, |e_j|)}: how much of the smaller
+hyperedge lies in the larger. The diagonal is zero.}
+\item{\code{jaccard}}{An \code{m} x \code{m} matrix of the symmetric overlap index
+\verb{|e_i intersect e_j| / |e_i union e_j|}. The diagonal is zero.}
 \item{\strong{Global (scalars)}}{}
-\item{\code{density}}{For \code{k}-uniform hypergraphs: \code{m / choose(n, k)}.
-For mixed sizes: \verb{sum(|e|) / (n * m)} (mean fraction of nodes
-per hyperedge).}
-\item{\code{avg_edge_size}}{Mean of \code{edge_sizes}.}
-\item{\code{size_distribution}}{Tabulation of hyperedge sizes (passed
-through from \code{hg}).}
-\item{\code{intersection_profile}}{Distribution of pairwise hyperedge
-intersection sizes - useful for spotting whether hyperedges
-overlap mostly trivially or share substantial cores
-(Do et al. 2020).}
-\item{\code{pairwise_participation}}{Fraction of node pairs co-appearing
-in at least one hyperedge.}
-\item{\code{n_nodes}, \code{n_hyperedges}}{Convenience scalars.}
+\item{\code{density}}{For a hypergraph whose hyperedges all have size \code{k}:
+\code{m / choose(n, k)}. For mixed sizes:
+\verb{sum(|e|) / (n * m)}, the mean fraction of nodes per hyperedge.}
+\item{\code{avg_edge_size}}{The mean of \code{edge_sizes}.}
+\item{\code{size_distribution}}{The count of hyperedges of each size,
+passed through from \code{hg}.}
+\item{\code{intersection_profile}}{The number of hyperedge pairs at each
+intersection size that occurs, named \verb{overlap_<size>} (sizes with no
+pairs are left out); empty with fewer than two hyperedges.}
+\item{\code{pairwise_participation}}{The fraction of node pairs that
+appear together in at least one hyperedge (0 with fewer than two
+nodes).}
+\item{\code{n_nodes}, \code{n_hyperedges}}{The numbers of nodes and
+hyperedges.}
 }
-
-In \code{print.hypergraph_measures()}: The input \code{x} invisibly.
 }
 \description{
-Computes a comprehensive structural-statistics suite for a
-\link[=build_hypergraph]{net_hypergraph}: node-level, hyperedge-level, and
-global measures. All measures are derived in a few BLAS calls on the
-incidence matrix.
+\code{hypergraph_measures()} computes the structural statistics of a
+hypergraph at three levels: for each node (how many hyperedges it
+belongs to, how large they are, and how many it shares with each other
+node), for each hyperedge and pair of hyperedges (their sizes and how
+much they overlap), and for the hypergraph as a whole (density, mean
+hyperedge size, the intersection profile). It reads the \code{net_hypergraph}
+objects that \code{\link[=build_hypergraph]{build_hypergraph()}} and \code{\link[=bipartite_groups]{bipartite_groups()}} return.
+
+The measures describe the hypergraph as observed: they carry no
+uncertainty and test nothing. The intersection profile shows whether
+hyperedges mostly share no or few nodes or share substantial cores (Do
+et al., 2020; Lee, Choe & Shin, 2021). To rank nodes by their position
+in the hypergraph, use \code{\link[=hypergraph_centrality]{hypergraph_centrality()}}; to read it as an
+ordinary pairwise network, project it with \code{\link[=clique_expansion]{clique_expansion()}}.
 }
 \details{
-All measures are computed via standard matrix operations on the binary
-incidence \eqn{B = (b_{ij})} where \eqn{b_{ij} = 1} iff node \eqn{i}
-is in hyperedge \eqn{j}:
+All measures are matrix operations on the binary incidence matrix
+\eqn{B = (b_{ij})}, where \eqn{b_{ij} = 1} if node \eqn{i} is in
+hyperedge \eqn{j}; a weighted incidence is binarised first:
 \itemize{
 \item \code{hyperdegree = rowSums(B)},
 \code{edge_sizes = colSums(B)}
@@ -77,9 +90,11 @@ is in hyperedge \eqn{j}:
 \item \code{overlap_coefficient[i, j] = overlap[i, j] / min(edge_sizes[i], edge_sizes[j])}
 \item \code{jaccard[i, j] = overlap[i, j] / (edge_sizes[i] + edge_sizes[j] - overlap[i, j])}
 }
+A ratio whose denominator is 0 is set to 0.
 
-Empty hypergraph (\code{n_hyperedges == 0}) returns trivial zeros and
-empty matrices.
+A hypergraph without hyperedges (\code{n_hyperedges == 0}) gives zeros for
+the node measures, empty hyperedge matrices, a density and pairwise
+participation of 0, and an \code{avg_edge_size} of \code{NA}.
 }
 \examples{
 df <- data.frame(
@@ -101,5 +116,5 @@ and generative models of real-world hypergraphs. arXiv:2006.07060.
 }
 \seealso{
 \code{\link[=build_hypergraph]{build_hypergraph()}}, \code{\link[=bipartite_groups]{bipartite_groups()}},
-\code{\link[=clique_expansion]{clique_expansion()}}.
+\code{\link[=hypergraph_centrality]{hypergraph_centrality()}}, \code{\link[=clique_expansion]{clique_expansion()}}.
 }

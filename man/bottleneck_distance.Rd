@@ -7,35 +7,55 @@
 bottleneck_distance(d1, d2, dimension = NULL, tol = .Machine$double.eps^0.5)
 }
 \arguments{
-\item{d1, d2}{\code{persistent_homology} objects, or data.frames with
-columns \code{dimension}, \code{birth}, \code{death}.}
+\item{d1, d2}{The two diagrams: \code{\link[=persistent_homology]{persistent_homology()}} results, or data
+frames with the columns \code{dimension}, \code{birth} and \code{death} (other
+columns are ignored). Any other input, or a data frame missing one of
+those columns, raises an error.}
 
-\item{dimension}{Integer vector of dimensions to compare. \code{NULL}
-(default) compares all dimensions appearing in either diagram and
-returns a named numeric vector.}
+\item{dimension}{The homology dimensions to compare, as whole numbers.
+Default \code{NULL}: every dimension that appears in either diagram. A
+dimension absent from both gives 0.}
 
-\item{tol}{Numerical tolerance for binary search (default
-\code{.Machine$double.eps ^ 0.5}).}
+\item{tol}{The tolerance added to each candidate cost when checking
+whether a matching exists, so that floating-point error does not miss
+an exact match. Default \code{.Machine$double.eps ^ 0.5}.}
 }
 \value{
-Named numeric vector. Names are \code{"dim_<k>"}. \code{Inf}
-indicates a structural mismatch (different essential counts in that
-dimension); a self-distance is always 0.
+A named numeric vector with one distance per dimension, named
+\code{"dim_<k>"} (empty when there is no dimension to compare). \code{Inf} marks
+a structural mismatch: different numbers of essential classes in that
+dimension. The distance of a diagram to itself is 0.
 }
 \description{
-Computes the bottleneck distance between two persistence diagrams. For
-finite pairs, the bottleneck distance is
+\code{bottleneck_distance()} returns the bottleneck distance between two
+persistence diagrams, one value per homology dimension. It takes two
+\code{\link[=persistent_homology]{persistent_homology()}} results, or two data frames of persistence
+pairs. For the finite pairs, the distance is
 \deqn{W_\infty(D_1, D_2) = \inf_{\gamma} \sup_{p \in D_1} \|p - \gamma(p)\|_\infty,}
 where \eqn{\gamma} ranges over bijections \eqn{D_1 \cup \Delta \to
 D_2 \cup \Delta} and \eqn{\Delta = \{(x,x)\}} is the diagonal. Each
-point may match a point in the other diagram or its projection onto
-the diagonal at cost \eqn{|d - b|/2}. Computed via binary search on
-\eqn{\varepsilon} plus a Kuhn bipartite-matching feasibility check.
+point is matched to a point of the other diagram or to its projection
+onto the diagonal, at cost \eqn{|d - b|/2}.
 
-Essential classes (death = Inf in VR mode, or death = 0 in clique mode)
-are matched one-to-one within each dimension. If the diagrams have
-different numbers of essential classes in some dimension, the
-bottleneck distance for that dimension is \code{Inf}.
+The distance is the largest shift needed to match the two diagrams'
+features: a small value means every feature of either diagram has a close
+counterpart in the other or is short-lived enough to sit near the
+diagonal. It is a distance between two observed diagrams and carries no
+sampling uncertainty of its own; to compare diagrams on a common grid,
+or to average several, use \code{\link[=persistence_landscape]{persistence_landscape()}}.
+}
+\details{
+The smallest feasible \eqn{\varepsilon} is found by binary search over
+the candidate costs (every pairwise \eqn{L_\infty} distance and every
+diagonal projection), checking each with a Kuhn bipartite matching.
+
+Essential classes (\code{death = Inf} in VR mode, \code{death = 0} with
+\code{birth > 0} in clique mode, as \code{\link[=persistence_landscape]{persistence_landscape()}} reads them; a
+\verb{(0, 0)} pair is a zero-length finite point) are matched one-to-one within
+each
+dimension by their sorted births. When the two diagrams have different
+numbers of essential classes in a dimension, the distance for that
+dimension is \code{Inf}.
 }
 \examples{
 mat1 <- matrix(c(0, .6, .5, .6, 0, .4, .5, .4, 0), 3, 3)

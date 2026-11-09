@@ -33,65 +33,98 @@ markov_stability(x, normalize = TRUE)
 )
 }
 \arguments{
-\item{x}{A \code{netobject}, \code{cograph_network}, \code{tna} object,
-row-stochastic numeric transition matrix, or a wide sequence data.frame
-(rows = actors, columns = time-steps). For the \code{print()} and \code{plot()} methods: an object of class \code{net_markov_stability} or \code{net_markov_stability_group}.}
+\item{x}{The chain, as in \code{\link[=passage_time]{passage_time()}}: a \code{netobject}, bare
+\code{cograph_network} or \code{tna} model with non-negative transition weights,
+a non-negative numeric transition matrix, or a wide sequence data frame
+or character matrix (a \code{"relative"} network is estimated from it). A
+\code{netobject_group} gives one result per group. An association network or
+negative weights raise an error of class \code{nestimate_not_markov}. For
+the \code{print()} and \code{plot()} methods: a \code{net_markov_stability} or
+\code{net_markov_stability_group}.}
 
-\item{normalize}{Logical. Normalize rows to sum to 1? Default \code{TRUE}.}
+\item{normalize}{Whether to rescale rows that do not sum to 1 so that
+they do, with a warning, as for a \code{"frequency"} network. With \code{FALSE},
+such rows raise an error. A state with no outgoing transitions (a zero
+row) raises an error either way. Default \code{TRUE}.}
 
-\item{...}{Ignored.
-In \code{plot.net_markov_stability()}, \code{print.net_markov_stability()} and \code{summary.net_markov_stability()}: Ignored. In \code{print.net_markov_stability_group()}: Forwarded to \code{print.net_markov_stability} for each element.}
+\item{...}{Not used (\code{print()} of a group passes it on to each group's
+\code{print()}, which ignores it).}
 
-\item{object}{For the \code{summary()} method: an object of class
-\code{net_markov_stability}.}
+\item{object}{For the \code{summary()} method: a \code{net_markov_stability}.}
 
-\item{metrics}{Character vector. Which metrics to plot. Options: \code{"persistence"}, \code{"stationary_prob"}, \code{"return_time"}, \code{"sojourn_time"}, \code{"avg_time_to_others"}, \code{"avg_time_from_others"}. Default: all six.}
+\item{metrics}{For the \code{plot()} methods: the metrics to draw, one panel
+each, any of \code{"persistence"}, \code{"stationary_prob"}, \code{"return_time"},
+\code{"sojourn_time"}, \code{"avg_time_to_others"} and \code{"avg_time_from_others"}.
+Default all six.}
 
-\item{combined}{When \code{TRUE} (default), all selected metrics are shown in one ggplot via \code{facet_wrap(~ metric)}. When \code{FALSE}, returns a named list of single-panel ggplots, one per metric, so each can be printed, saved, or re-laid-out independently.}
+\item{combined}{For \code{plot()} of a single network: \code{TRUE} (default) draws
+the metrics as panels of one plot; \code{FALSE} returns a named list of
+one-panel plots, one per metric, to print or save separately. Ignored
+for a group, whose \code{plot()} always draws one plot.}
 }
 \value{
-An object of class \code{"net_markov_stability"} with:
+A \code{net_markov_stability} object; for a \code{netobject_group}, a
+\code{net_markov_stability_group}, a named list holding one such object per
+group. \code{print()} shows the per-state table and returns its input
+invisibly. \code{summary()} prints the most accessible state (the lowest
+mean passage time from the other states) and the most persistent one
+(the longest sojourn time), and returns the per-state table as a data
+frame. \code{plot()} returns a \code{ggplot} with one panel of bars per metric and
+the states ordered by stationary probability; with \code{combined = FALSE},
+invisibly, a list of one-panel plots named by metric. For a group,
+\code{plot()} draws one panel per metric with one row per state and one
+point per group (told apart by colour and shape) joined by a line, the
+states ordered by their mean stationary probability; more than 81
+groups (9 colours times 9 shapes) raise an error of class
+\code{nestimate_bad_input}. A \code{net_markov_stability} holds:
 \describe{
-\item{stability}{Data frame with one row per state and columns:
-\code{state}, \code{persistence} (\eqn{P_{ii}}),
-\code{stationary_prob} (\eqn{\pi_i}),
-\code{return_time} (\eqn{1/\pi_i}),
-\code{sojourn_time} (\eqn{1/(1-P_{ii})}),
-\code{avg_time_to_others} (mean MFPT leaving state \eqn{i}),
-\code{avg_time_from_others} (mean MFPT arriving at state \eqn{i}).}
-\item{mpt}{The underlying \code{net_mpt} object.}
+\item{stability}{The per-state table, one row per state, with the
+columns \code{state}, \code{persistence} (\eqn{P_{ii}}), \code{stationary_prob}
+(\eqn{\pi_i}), \code{return_time} (the mean recurrence time), \code{sojourn_time}
+(\eqn{1/(1-P_{ii})}), \code{avg_time_to_others} (the mean first passage
+time from the state to the others) and \code{avg_time_from_others} (the
+mean first passage time from the others to the state).
+\code{persistence} and \code{stationary_prob} are rounded to 4 decimals, the
+times to 2.}
+\item{mpt}{The \code{net_mpt} from \code{\link[=passage_time]{passage_time()}} the times come from.}
 }
-For a \code{netobject_group} the result is a
-\code{"net_markov_stability_group"}: a named list holding one such
-object per group.
-
-In \code{print.net_markov_stability()}: \code{x}, invisibly.
-
-In \code{print.net_markov_stability_group()}: \code{x} invisibly.
-
-In \code{plot.net_markov_stability()}: \code{plot.net_markov_stability} returns a faceted ggplot object when \code{combined = TRUE}, and (invisibly) a named list of single-metric ggplots, one per entry of \code{metrics}, when \code{combined = FALSE}.
-
-In \code{summary.net_markov_stability()}: the per-state stability table (the \code{$stability} data frame: one row per state with \code{state}, \code{persistence}, \code{stationary_prob}, \code{return_time}, \code{sojourn_time}, \code{avg_time_to_others}, \code{avg_time_from_others}), after printing the attractor and the most persistent state.
-
-In \code{plot.net_markov_stability_group()}: a \code{ggplot}
-object: one panel per metric, one row per state, one point per group
-(colour and shape), joined by a line.
 }
 \description{
-Computes per-state stability metrics from a transition network:
-persistence (self-loop probability), stationary distribution, mean
-recurrence time, sojourn time, and mean accessibility to/from other states.
+\code{markov_stability()} describes how stable each state of a Markov chain
+is and returns a \code{net_markov_stability} object holding one row per state:
+its persistence (the probability of staying, \eqn{P_{ii}}), stationary
+probability (\eqn{\pi_i}, the long-run share of steps spent in it), mean
+recurrence time, sojourn time (the expected number of
+consecutive steps in it, \eqn{1/(1 - P_{ii})}), and the mean of its first
+passage times to the other states and of theirs to it, taken from
+\code{\link[=passage_time]{passage_time()}}. It reads the same inputs as \code{\link[=passage_time]{passage_time()}} and
+analyses a grouped network one network at a time.
+
+Persistence and sojourn time describe staying in a state; the passage
+times describe how long it takes to get from it to the other states, or
+from them to it. All of them are computed from the estimated transition
+matrix. On an irreducible chain, the mean recurrence time is
+\eqn{1/\pi_i}. On a reducible chain, recurrence times are computed within
+each closed class and are \code{Inf} for transient states; passage times to
+states not reached with certainty are \code{Inf}. The stationary probabilities
+are \code{NA} when there is more than one closed class, because the stationary
+distribution is not unique. \code{\link[=chain_structure]{chain_structure()}} identifies the classes;
+how far the underlying transition probabilities move under resampling is
+shown by \code{\link[=bootstrap_network]{bootstrap_network()}}.
 }
 \details{
-\strong{Sojourn time} is the expected consecutive time steps spent in a
-state before leaving: \eqn{1/(1-P_{ii})}. States with
-\code{persistence = 1} have \code{sojourn_time = Inf}.
+\strong{Sojourn time} is the expected number of consecutive steps spent
+in a state before leaving it, \eqn{1/(1-P_{ii})}, the mean of a geometric
+distribution. A state with \code{persistence = 1} never leaves and has
+\code{sojourn_time = Inf}.
 
-\strong{avg_time_to_others}: mean passage time from this state to all
-others; reflects how "sticky" or "isolated" the state is.
+\strong{avg_time_to_others} is the mean passage time from the state to
+each other state: a high value means the chain takes long to get
+anywhere else from it.
 
-\strong{avg_time_from_others}: mean passage time from all other states
-to this one; reflects accessibility (attractor strength).
+\strong{avg_time_from_others} is the mean passage time from each other
+state to this one: a low value means the state is reached quickly from
+elsewhere.
 }
 \examples{
 net <- build_network(as.data.frame(trajectories), method = "relative")

@@ -251,80 +251,122 @@
 
 #' Build Multi-Order Generative Model (MOGen)
 #'
-#' Constructs higher-order De Bruijn graphs from sequential trajectory data and
-#' selects the optimal Markov order using AIC, BIC, or likelihood ratio tests.
-#' This is the multi-order model of Scholtes (2017), the model pathpy 2 calls
-#' \code{MultiOrderModel}. It is not the multi-order generative model of
-#' Gote et al. (2023), which adds start and end states and selects by AIC
-#' only; the function name is kept for compatibility.
+#' @description
+#' `build_mogen()` fits Markov chains of every order from 0 to `max_order`
+#' to a set of sequences and selects the order that best balances fit
+#' against the number of parameters, by AIC, BIC or likelihood-ratio tests.
+#' At order k the chain is a De Bruijn graph: its nodes are the k-tuples of
+#' consecutive states seen in the data, and an edge joins two tuples that
+#' overlap in k - 1 states, so each edge is an observed path of k + 1
+#' states. Order 0 is the marginal distribution of the states. It is the
+#' multi-order model of Scholtes (2017), and takes wide sequence data, a
+#' list of state vectors, a `tna` model or a network built from sequences.
 #'
-#' With \code{criterion = "lrt"} the selected order is the largest
-#' \eqn{k} whose test against order \eqn{k-1} rejects at
-#' \code{lrt_alpha} (Scholtes 2017), or 0 when none does; all p-values are
-#' returned in \code{lrt_p}, so a non-monotone sequence is visible.
+#' The selected order is the number of earlier states the next state
+#' depends on, as far as the sample can show. The number of parameters
+#' grows quickly with the order (`summary()` lists them per order), so few
+#' or short sequences favour low orders, and AIC and BIC can disagree:
+#' `print()` shows both. Before reading a higher-order transition, check how
+#' often its context was observed with [mogen_transitions()];
+#' [markov_order_test()] tests the order against a permutation null, and
+#' [path_dependence()] shows which contexts carry the extra information.
 #'
-#' At order k, nodes are k-tuples of states and edges represent transitions
-#' between overlapping k-tuples. The model tests increasingly complex Markov
-#' orders and selects the one that best balances fit and parsimony.
+#' @details
+#' The log-likelihood of the order-k model scores the first state of each
+#' trajectory by the marginal distribution, the j-th state by the order
+#' j - 1 transitions while j <= k, and every later state by the order-k
+#' transitions. The likelihood-ratio test of order k against order k - 1
+#' refers twice the gain in log-likelihood to a chi-square distribution with
+#' the order-k layer's degrees of freedom; its p-value is `NA` for order 0
+#' and where the statistic or the degrees of freedom are not positive. With
+#' `criterion = "lrt"` the selected order is the largest k whose test
+#' rejects at `lrt_alpha` (Scholtes 2017), or 0 when none does. Every
+#' p-value is kept in the result, so a non-monotone run of tests is visible.
 #'
-#' @param data A data.frame (rows = trajectories, columns = time points), a
-#'   list of character/numeric vectors (one per trajectory), a \code{tna}
-#'   object, or a \code{netobject} with sequence data. For
-#'   \code{tna}/\code{netobject}, numeric state IDs are automatically
-#'   converted to label names.
-#' @param max_order Integer. Maximum Markov order to test (default 5).
-#'   Must be a whole number; a non-integer value (e.g. \code{2.7}) is an
-#'   error rather than being silently truncated. A \code{max_order} at or
-#'   above the longest trajectory is capped at (longest path - 1) with a
-#'   message.
-#' @param criterion Character. Model selection criterion: \code{"aic"}
-#'   (default), \code{"bic"}, or \code{"lrt"} (likelihood ratio test).
-#' @param lrt_alpha Numeric. Significance threshold for LRT (default 0.01).
-#' @param dof Character. How the parameters of each layer are counted.
-#'   \code{"paths"} (default) counts every transition of the paths of
-#'   length \eqn{k} that the observed first-order topology allows, as
-#'   Scholtes (2017, Eq. 7) and pathpy do. \code{"observed"} counts only the
-#'   transitions seen in the data (the rule before Nestimate 0.9.28); it
-#'   can fall as the order rises and under-penalises high orders on sparse
-#'   data.
-#' @return An object of class \code{c("net_mogen", "cograph_network")} with
-#'   components:
+#' The model is the one pathpy 2 calls `MultiOrderModel`. It is not the
+#' multi-order generative model of Gote et al. (2023), which adds start and
+#' end states and selects by AIC only; the function name is kept for
+#' compatibility.
+#'
+#' @param data The sequences: a data frame with one row per trajectory and
+#'   one column per time point, a character matrix laid out the same way, a
+#'   list of state vectors (one per trajectory), a `tna` model (its integer
+#'   states are decoded to their labels) or a `netobject` built from
+#'   sequences (its states are read as stored). A data frame needs position
+#'   columns named as a numbered run (`T1`, `T2`, ...); any other frame
+#'   raises an error of class `nestimate_bad_input` that says to declare the
+#'   roles in [build_network()] and pass the network. A missing value ends a
+#'   run of observed states, so each run is its own trajectory, and
+#'   trajectories with fewer than two states are dropped; with none left,
+#'   `build_mogen()` stops. A one-hot network, an association network
+#'   (`cor`, `pcor`, `glasso`, `ising`, `mgm`), a `netobject_group` and a
+#'   0/1 matrix raise an error of class `nestimate_bad_input`.
+#' @param max_order The highest order fitted, a whole number of at least 1;
+#'   a value such as `2.7` is an error, not truncated. Default `5`. A value
+#'   at or above the length of the longest trajectory is lowered to that
+#'   length minus 1, with a message.
+#' @param criterion How the order is selected: `"aic"` (default) or
+#'   `"bic"` takes the order with the smallest criterion, and `"lrt"` uses
+#'   the sequential likelihood-ratio tests described in *Details*.
+#' @param lrt_alpha The significance level of the likelihood-ratio tests,
+#'   strictly between 0 and 1. Default `0.01`. It only affects the selection
+#'   with `criterion = "lrt"`; the p-values are computed under every
+#'   criterion.
+#' @param dof How the parameters of each layer are counted. `"paths"`
+#'   (default) counts every transition of the paths of length k that the
+#'   observed first-order topology allows, as Scholtes (2017, Eq. 7) and
+#'   pathpy do. `"observed"` counts only the transitions seen in the data
+#'   (the rule before Nestimate 0.9.28); that count can fall as the order
+#'   rises, and it under-penalises high orders on sparse data.
+#' @return A `net_mogen` object (class `c("net_mogen", "cograph_network")`).
+#'   `print()` shows the selected order and the AIC and BIC of every order,
+#'   with each minimum starred. `summary()` prints the states and the
+#'   selection, then returns, visibly, one row per order as a data frame
+#'   (`order`, `layer_dof`, `cum_dof`, `loglik`, `aic`, `bic`, `best`
+#'   (`"AIC"`, `"BIC"` or `"AIC+BIC"` on the order each criterion picks,
+#'   empty elsewhere) and `selected` (`"<--"` on the chosen order)).
+#'   `plot()` draws the criteria or the log-likelihood against the order and
+#'   returns its input invisibly; `print()` also returns its input
+#'   invisibly. [mogen_transitions()] gives the transitions of one
+#'   order, one row per path, and [pathways()] the same as character
+#'   strings. The object's fields:
 #'   \describe{
-#'     \item{optimal_order}{Selected optimal Markov order.}
-#'     \item{criterion}{Which criterion was used for selection.}
-#'     \item{orders}{Integer vector of tested orders (0 to max_order, after
-#'       any capping).}
-#'     \item{aic}{Named numeric vector of AIC values per order.}
-#'     \item{bic}{Named numeric vector of BIC values per order.}
-#'     \item{log_likelihood}{Named numeric vector of log-likelihoods.}
-#'     \item{dof}{Named numeric vector of cumulative DOF per model.}
-#'     \item{layer_dof}{Named numeric vector of per-layer DOF.}
-#'     \item{dof_method}{\code{"paths"} or \code{"observed"}.}
+#'     \item{optimal_order}{The selected order.}
+#'     \item{criterion}{The criterion used for the selection.}
+#'     \item{orders}{The orders fitted, 0 to `max_order` after any capping.}
+#'     \item{aic, bic, log_likelihood}{Named numeric vectors, one value per
+#'       order.}
+#'     \item{dof}{Named numeric vector of the cumulative degrees of freedom
+#'       of each model.}
+#'     \item{layer_dof}{Named numeric vector of the degrees of freedom of
+#'       each layer.}
+#'     \item{dof_method}{`"paths"` or `"observed"`.}
 #'     \item{lrt_p}{Named numeric vector: the likelihood-ratio p-value of
-#'       order \eqn{k} against order \eqn{k-1} (\code{NA} for order 0 and
-#'       where the test is undefined).}
-#'     \item{transition_matrices}{List of row-stochastic transition matrices
-#'       (index 1 = order 0, held as the marginal named numeric vector).}
-#'     \item{count_matrices}{List of the matching raw count matrices, same
-#'       indexing; read by \code{\link{mogen_transitions}()}.}
-#'     \item{states}{Unique first-order states.}
-#'     \item{n_paths}{Number of trajectories.}
+#'       order k against order k - 1.}
+#'     \item{transition_matrices}{List of row-stochastic transition
+#'       matrices (a context never followed by another state keeps a zero
+#'       row), the first (order 0) held as the named vector of marginal
+#'       probabilities.}
+#'     \item{count_matrices}{List of the matching counts, in the same
+#'       order, the first (order 0) as a named vector of state counts;
+#'       [mogen_transitions()] reads them.}
+#'     \item{states}{The distinct first-order states.}
+#'     \item{n_paths}{Number of trajectories fitted.}
 #'     \item{n_observations}{Total number of state observations.}
-#'     \item{weights}{\code{cograph_network} weight matrix: the transition
-#'       matrix of the selected optimal order (a 1 x n matrix named
-#'       \code{"marginal"} when the optimal order is 0). Its dimnames are the
-#'       internal k-gram keys (states joined by a non-printing separator),
-#'       not arrow notation.}
-#'     \item{nodes}{data.frame (\code{id}, \code{label}, \code{name}) of the
-#'       optimal-order De Bruijn nodes.}
-#'     \item{edges}{\code{cograph_network} edge data.frame with integer
-#'       \code{from}/\code{to} node indices and a numeric \code{weight}. The
-#'       readable arrow-notation table is
-#'       \code{\link{mogen_transitions}()}.}
-#'     \item{directed}{Logical. Always \code{TRUE}.}
-#'     \item{n_nodes, n_edges}{Counts for the optimal-order graph.}
-#'     \item{meta}{\code{cograph_network} metadata list.}
-#'     \item{node_groups}{Always \code{NULL}.}
+#'     \item{weights}{The transition matrix of the selected order, as the
+#'       `cograph_network` weight matrix (a 1 x n matrix named `"marginal"`
+#'       when the selected order is 0). Its dimnames are internal k-tuple
+#'       keys (states joined by a non-printing separator), not arrow
+#'       notation.}
+#'     \item{nodes}{Data frame (`id`, `label`, `name`) of the nodes of the
+#'       selected order.}
+#'     \item{edges}{The `cograph_network` edge data frame, with integer
+#'       `from` and `to` node indices and a numeric `weight`;
+#'       [mogen_transitions()] gives the readable table.}
+#'     \item{directed}{Always `TRUE`.}
+#'     \item{n_nodes, n_edges}{Counts for the graph of the selected order.}
+#'     \item{meta}{The `cograph_network` metadata list.}
+#'     \item{node_groups}{Always `NULL`.}
 #'   }
 #'
 #' @references
@@ -359,7 +401,7 @@ build_mogen <- function(data, max_order = 5L, criterion = c("aic", "bic", "lrt")
   data <- .coerce_sequence_input(data)
   criterion <- match.arg(criterion)
   dof <- match.arg(dof)
-  stopifnot(
+  .assert(
     "'data' must be a data.frame or list" =
       is.data.frame(data) || is.list(data),
     "'max_order' must be a whole number" =
@@ -372,7 +414,9 @@ build_mogen <- function(data, max_order = 5L, criterion = c("aic", "bic", "lrt")
 
   trajectories <- .hon_parse_input(data, collapse_repeats = FALSE)
   if (length(trajectories) == 0L) {
-    stop("No valid trajectories (each must have at least 2 states)")
+    stop(errorCondition(
+      "No valid trajectories (each must have at least 2 states)",
+      class = "nestimate_bad_input", call = NULL))
   }
 
   # Cap max_order at max path length - 1
@@ -502,36 +546,44 @@ build_mogen <- function(data, max_order = 5L, criterion = c("aic", "bic", "lrt")
 
 #' Extract Transition Table from a MOGen Model
 #'
-#' Returns a data frame of all transitions at a given Markov order,
-#' sorted by count (descending). Each row shows the full path as a readable
-#' sequence of states, along with the observed count and transition probability.
+#' @description
+#' `mogen_transitions()` returns the transitions of a fitted [build_mogen()]
+#' model at one order, one row per path, most frequent first, with the
+#' path written out in arrow notation, its observed count and its
+#' transition probability. At order k each edge of the De Bruijn graph is a
+#' path of k + 1 states: at order 2, the edge from node `"AI -> FAIL"` to
+#' node `"FAIL -> SOLVE"` is the path `AI -> FAIL -> SOLVE`, read as the
+#' probability of `SOLVE` after the context `AI -> FAIL`.
 #'
-#' At order k, each edge in the De Bruijn graph represents a (k+1)-step path.
-#' For example, at order 2, the edge from node "AI -> FAIL" to node
-#' "FAIL -> SOLVE" represents the three-step path AI -> FAIL -> SOLVE.
-#' The \code{path} column reconstructs this full sequence for readability.
+#' A probability is the share of its context's observations that moved to
+#' that state, so in a context seen a few times it rests on those few
+#' observations: read it with its `count`, and use `min_count` to leave
+#' rare transitions out.
 #'
-#' @param x A \code{net_mogen} object from \code{build_mogen()}.
-#' @param order Integer >= 1 and at most the highest order tested. Which
-#'   order's transitions to extract. Must be a whole number; a non-integer
-#'   value is an error rather than being silently truncated. Defaults to the
-#'   optimal order selected by the model - pass an explicit \code{order} when
-#'   that optimal order is 0, which has no transition table and therefore
-#'   errors.
-#' @param min_count Integer. Minimum observed count to include (default 1).
-#'   Use this to filter out rare transitions that have unreliable probabilities.
-#' @return A data frame with one row per retained transition, sorted by
-#'   \code{count} (descending), with columns:
+#' @param x A `net_mogen` object from [build_mogen()].
+#' @param order The order whose transitions are returned, a whole number
+#'   from 1 to the highest order fitted; a non-integer value is an error,
+#'   not truncated. Default `NULL`, the order the model selected. Order 0
+#'   has no transitions, so when the model selected order 0, give `order`
+#'   explicitly; otherwise `mogen_transitions()` stops.
+#' @param min_count The smallest observed count a transition needs to be
+#'   listed. Default `1`, every observed transition. A value below 1 also
+#'   lists the transitions that never occurred, with count and probability
+#'   0: every pair of observed contexts where the second continues the first
+#'   (at order 1, every pair of states).
+#' @return A data frame with one row per listed transition, sorted by
+#'   `count` (descending), with columns:
 #'   \describe{
-#'     \item{path}{The full state sequence (e.g., "AI -> FAIL -> SOLVE").}
-#'     \item{count}{Number of times this transition was observed.}
-#'     \item{probability}{Transition probability P(to | from), rounded to 4
-#'       decimal places.}
-#'     \item{from}{The context / conditioning states (k-gram source node).}
-#'     \item{to}{The predicted next state.}
+#'     \item{path}{The full sequence of states, such as
+#'       `"AI -> FAIL -> SOLVE"`.}
+#'     \item{count}{How often the transition was observed.}
+#'     \item{probability}{The transition probability P(to | from), rounded
+#'       to 4 decimal places.}
+#'     \item{from}{The context: the k states the transition starts from.}
+#'     \item{to}{The next state.}
 #'   }
-#'   A zero-row data frame with the same columns when no transition reaches
-#'   \code{min_count}.
+#'   When no transition reaches `min_count`, a data frame with the same
+#'   columns and no rows.
 #'
 #' @examples
 #' seqs <- list(c("A","B","C","D"), c("A","B","C","A"), c("B","C","D","A"))
@@ -547,16 +599,16 @@ build_mogen <- function(data, max_order = 5L, criterion = c("aic", "bic", "lrt")
 #'
 #' @export
 mogen_transitions <- function(x, order = NULL, min_count = 1L) {
-  stopifnot(inherits(x, "net_mogen"))
+  .assert(inherits(x, "net_mogen"))
   if (is.null(order)) order <- x$optimal_order
-  stopifnot(
+  .assert(
     "'order' must be a whole number" =
       is.numeric(order) && length(order) == 1L &&
       order == round(order)
   )
   order <- as.integer(order)
   min_count <- as.integer(min_count)
-  stopifnot(
+  .assert(
     "'order' must be >= 1" = order >= 1L,
     "'order' exceeds max tested order" = order <= max(x$orders)
   )
@@ -584,9 +636,15 @@ mogen_transitions <- function(x, order = NULL, min_count = 1L) {
     list(
       path = paste(c(from_parts, next_state), collapse = " -> "),
       from = paste(from_parts, collapse = " -> "),
-      to = next_state
+      to = next_state,
+      # the next context must continue this one (its first k - 1 states are
+      # this context's last k - 1); always true at order 1
+      follows = identical(from_parts[-1L], to_parts[-length(to_parts)])
     )
   })
+  follows <- vapply(parsed, `[[`, logical(1L), "follows")
+  parsed <- parsed[follows]
+  idx <- idx[follows, , drop = FALSE]
 
   result <- data.frame(
     path = vapply(parsed, `[[`, character(1L), "path"),
@@ -607,22 +665,31 @@ mogen_transitions <- function(x, order = NULL, min_count = 1L) {
 
 #' Count Path Frequencies in Trajectory Data
 #'
-#' Counts the frequency of k-step paths (k-grams) across all trajectories.
-#' Useful for understanding which sequences dominate the data before applying
-#' formal models.
+#' @description
+#' `path_counts()` counts how often each path of `k` consecutive states
+#' (a k-gram) occurs across all trajectories, and returns one row per path,
+#' most frequent first. Every position of a trajectory starts a path, so the
+#' paths of one trajectory overlap. The counts are descriptive: they show
+#' which runs of states dominate the data before a model such as
+#' [build_mogen()] or [build_hon()] is fitted to them.
 #'
-#' @param data A list of character vectors (trajectories) or a data.frame
-#'   (rows = trajectories, columns = time points).
-#' @param k Integer >= 2. Length of the path / n-gram (default 2). A k of 2
-#'   counts individual transitions; k of 3 counts two-step paths, etc. Must be
-#'   a whole number; a non-integer value is an error rather than being
-#'   silently truncated.
-#' @param top Integer or NULL. If set, returns only the top N most frequent
-#'   paths (default NULL = all).
-#' @return A data frame with one row per distinct k-gram, sorted by
-#'   \code{count} (descending), with columns \code{path} (the k states in
-#'   arrow notation, e.g. "A -> B"), \code{count} and \code{proportion}
-#'   (share of all k-grams, rounded to 4 decimal places).
+#' @param data The trajectories: a list of state vectors, a data frame or
+#'   character matrix with one row per trajectory and one column per time
+#'   point, a `tna` model or a `netobject` built from sequences. A data
+#'   frame needs position columns named as a numbered run (`T1`, `T2`, ...);
+#'   any other frame, a one-hot or association network and a 0/1 matrix
+#'   raise an error of class `nestimate_bad_input`. A missing value ends a
+#'   run of observed states, and no path spans it.
+#' @param k The number of states in each path, a whole number of at least
+#'   2; a non-integer value is an error, not truncated. Default `2`, which
+#'   counts single transitions; `3` counts two-step paths, and so on.
+#' @param top The number of most frequent paths to keep. Default `NULL`,
+#'   every path.
+#' @return A data frame with one row per distinct path, sorted by `count`
+#'   (descending), with columns `path` (the k states in arrow notation, such
+#'   as `"A -> B"`), `count` and `proportion` (the path's share of all paths
+#'   counted, rounded to 4 decimal places). When no trajectory holds `k`
+#'   consecutive observed states, the data frame has no rows.
 #'
 #' @examples
 #' trajs <- list(c("A","B","C","D"), c("A","B","D","C"))
@@ -641,12 +708,12 @@ path_counts <- function(data, k = 2L, top = NULL) {
                              whole_frame = TRUE)
   }
   data <- .coerce_sequence_input(data)
-  stopifnot(
+  .assert(
     "'k' must be a whole number" =
       is.numeric(k) && length(k) == 1L && k == round(k)
   )
   k <- as.integer(k)
-  stopifnot("'k' must be >= 2" = k >= 2L)
+  .assert("'k' must be >= 2" = k >= 2L)
 
   # Normalize input
   if (is.data.frame(data)) {
@@ -689,14 +756,20 @@ path_counts <- function(data, k = 2L, top = NULL) {
 
 #' Compute State Frequencies from Trajectory Data
 #'
-#' Counts how often each state appears across all trajectories. Returns a
-#' data frame sorted by frequency (descending).
+#' @description
+#' `state_frequencies()` counts how often each state occurs across all
+#' trajectories, and returns one row per state, most frequent first.
+#' Missing values are not counted.
 #'
-#' @param data A list of character vectors (trajectories) or a data.frame.
-#' @return A data frame with one row per distinct state, sorted by
-#'   \code{count} (descending), with columns \code{state}, \code{count} and
-#'   \code{proportion} (share of all observations, rounded to 4 decimal
-#'   places).
+#' @param data The trajectories: a list of state vectors, a data frame or
+#'   character matrix with one row per trajectory and one column per time
+#'   point, a `tna` model or a `netobject` built from sequences. A data
+#'   frame needs position columns named as a numbered run (`T1`, `T2`, ...);
+#'   any other frame, a one-hot or association network and a 0/1 matrix
+#'   raise an error of class `nestimate_bad_input`.
+#' @return A data frame with one row per distinct state, sorted by `count`
+#'   (descending), with columns `state`, `count` and `proportion` (the
+#'   state's share of all observed states, rounded to 4 decimal places).
 #'
 #' @examples
 #' trajs <- list(c("A","B","C"), c("A","B","A"))
@@ -731,12 +804,13 @@ state_frequencies <- function(data) {
 # ---------------------------------------------------------------------------
 
 #' @rdname build_mogen
-#' @param x For the \code{print()} and \code{plot()} methods: an object of class \code{net_mogen}.
-#' @param ... In \code{plot.net_mogen()}: Additional arguments passed to \code{\link[graphics]{plot}}. In \code{print.net_mogen()} and \code{summary.net_mogen()}: Additional arguments (ignored).
-#' @param object For the \code{summary()} method: an object of class \code{net_mogen}.
-#' @param type Character. Plot type: \code{"ic"} (default) or \code{"likelihood"}.
-#' @return In \code{print.net_mogen()} and \code{plot.net_mogen()}: The input object, invisibly.
-#' @return In \code{summary.net_mogen()}: A per-order model-selection data.frame with columns \code{order}, \code{layer_dof}, \code{cum_dof}, \code{loglik}, \code{aic}, \code{bic}, \code{best} (\code{"AIC"}/\code{"BIC"}/\code{"AIC+BIC"} marker) and \code{selected} (\code{"<--"} on the chosen order), returned visibly; the summary text is printed as a side effect.
+#' @param x For the `print()` and `plot()` methods: a `net_mogen` object.
+#' @param ... For the `plot()` method: further arguments passed to
+#'   [graphics::plot()]. For the `print()` and `summary()` methods: ignored.
+#' @param object For the `summary()` method: a `net_mogen` object.
+#' @param type For the `plot()` method: `"ic"` (default) draws AIC and BIC
+#'   against the order; `"likelihood"` draws the log-likelihood against the
+#'   order. Both mark the selected order with a dashed line.
 #' @export
 print.net_mogen <- function(x, ...) {
   cat("Multi-Order Generative Model (MOGen)\n")

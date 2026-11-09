@@ -1,23 +1,41 @@
 #' Human-AI Vibe Coding Interaction Data (Long Format)
 #'
-#' Coded interaction sequences from 429 human-AI pair programming sessions
-#' across 34 projects, in long format.
+#' Coded turns from 429 human-AI pair-programming ("vibe coding") sessions
+#' across 34 projects, held between 5 February and 8 March 2026, in long
+#' format with one row per code. `human_long` holds the codes of the human
+#' turns and `ai_long` those of the AI turns (428 of the sessions have AI
+#' turns). The two data frames share their columns and their sessions, and
+#' interleave on `order_in_session`.
 #'
-#' @format Data frames in long format with 9 columns:
+#' @format Two data frames with the same 9 columns:
 #' \describe{
-#'   \item{message_id}{Integer. Turn index.}
-#'   \item{project}{Character. Project identifier (Project_1 .. Project_34).}
-#'   \item{session_id}{Character. Unique session hash.}
-#'   \item{timestamp}{Integer. Unix timestamp for ordering.}
-#'   \item{session_date}{Character. Date of the session (YYYY-MM-DD).}
-#'   \item{code}{Character. Interaction code. The two data frames use
-#'     disjoint code sets -- 9 labels in \code{human_long}, 8 in
-#'     \code{ai_long}, 17 in total.}
-#'   \item{cluster}{Character. High-level cluster. \code{human_long} uses
-#'     Directive, Evaluative and Metacognitive; \code{ai_long} uses Action,
+#'   \item{message_id}{Integer identifier of the message (turn); the codes of
+#'     one message share it, and no identifier occurs in both data frames.}
+#'   \item{project}{Character project identifier, `Project_1` to
+#'     `Project_34`.}
+#'   \item{session_id}{Character session identifier, a 12-character hash.}
+#'   \item{timestamp}{Integer Unix time (seconds) of midnight, UTC+2, on
+#'     `session_date`. It has day resolution, so the rows of one day share
+#'     it; `build_network(time = "timestamp")` keeps tied rows in row order,
+#'     which follows `order_in_session`. With the default `time_threshold`
+#'     (900 seconds), each change of day also starts a new sequence, so the
+#'     84 sessions that run over more than one day are split (526 sequences
+#'     instead of 429); to keep every session whole, use
+#'     `time = "order_in_session"`.}
+#'   \item{session_date}{Character date of the row (`YYYY-MM-DD`); 84
+#'     sessions run over more than one day.}
+#'   \item{code}{Character interaction code. The two data frames use
+#'     disjoint code sets: 9 labels in `human_long` (Command, Correct,
+#'     Frustrate, Inquire, Interrupt, Refine, Request, Specify, Verify) and
+#'     8 in `ai_long` (Ask, Delegate, Execute, Explain, Investigate, Plan,
+#'     Repair, Report), 17 in total.}
+#'   \item{cluster}{Character high-level cluster of the code. `human_long`
+#'     uses Directive, Evaluative and Metacognitive; `ai_long` uses Action,
 #'     Communication and Repair.}
-#'   \item{code_order}{Integer. Order of the code within the session.}
-#'   \item{order_in_session}{Integer. Absolute turn order within the session.}
+#'   \item{code_order}{Integer order of the code within its message,
+#'     starting at 1.}
+#'   \item{order_in_session}{Integer position of the row in its session,
+#'     counting the rows of both data frames together.}
 #' }
 #'
 #' \tabular{ll}{
@@ -47,19 +65,21 @@ NULL
 
 #' Group Regulation in Collaborative Learning (Long Format)
 #'
-#' Students' regulation strategies during collaborative learning, in long
-#' format. Contains 27,533 timestamped action records from multiple students
-#' working in groups across two courses.
+#' Students' regulation actions during collaborative learning, in long
+#' format: 27,533 timestamped actions by 2,000 students working in 200
+#' groups across three courses, one row per action.
 #'
 #' @format A data frame with 27,533 rows and 6 columns:
 #' \describe{
-#'   \item{Actor}{Integer. Student identifier.}
-#'   \item{Achiever}{Character. Achievement level: \code{"High"} or \code{"Low"}.}
-#'   \item{Group}{Numeric. Collaboration group identifier.}
-#'   \item{Course}{Character. Course identifier (\code{"A"}, \code{"B"}, or \code{"C"}).}
-#'   \item{Time}{POSIXct. Timestamp of the action.}
-#'   \item{Action}{Character. Regulation action (e.g., cohesion, consensus,
-#'     discuss, synthesis).}
+#'   \item{Actor}{Integer student identifier, 1 to 2,000.}
+#'   \item{Achiever}{Character achievement level, `"High"` or `"Low"`.}
+#'   \item{Group}{Numeric collaboration group identifier, 1 to 200; each
+#'     student belongs to one group.}
+#'   \item{Course}{Character course identifier, `"A"`, `"B"` or `"C"`.}
+#'   \item{Time}{POSIXct timestamp of the action.}
+#'   \item{Action}{Character regulation action, one of adapt, cohesion,
+#'     consensus, coregulate, discuss, emotion, monitor, plan and
+#'     synthesis.}
 #' }
 #'
 #' @source Synthetically generated from the \code{group_regulation} dataset
@@ -78,17 +98,20 @@ NULL
 
 #' Self-Regulated Learning Strategy Frequencies
 #'
-#' Simulated frequency counts of 9 self-regulated learning (SRL) strategies
-#' for 250 university students. Strategies are grouped into three clusters:
+#' Simulated counts of how often 250 university students used 9
+#' self-regulated learning (SRL) strategies, in three clusters:
 #' metacognitive (Planning, Monitoring, Evaluating), cognitive (Elaboration,
-#' Organization, Rehearsal), and resource management (Help_Seeking, Time_Mgmt,
-#' Effort_Reg). Within-cluster correlations are moderate (0.3--0.6),
-#' cross-cluster correlations are weaker.
+#' Organization, Rehearsal) and resource management (Help_Seeking,
+#' Time_Mgmt, Effort_Reg). Strategies of the same cluster were simulated to
+#' correlate moderately and those of different clusters more weakly; in the
+#' bundled sample the correlations range from 0.18 to 0.49 within clusters
+#' and from -0.13 to 0.31 across them.
 #'
-#' @format A data frame with 250 rows and 9 columns, one row per student.
-#'   Every column is numeric (double) and holds a whole-number count of how
-#'   often that student used the strategy; observed values range from 0
-#'   to 37.
+#' @format A data frame with 250 rows and 9 columns, one row per student
+#'   and one column per strategy. Every column is numeric (double) and
+#'   holds a whole-number count of how often that student used the
+#'   strategy; the observed values range from 0 to 37, with no missing
+#'   values.
 #'
 #' @examples
 #' net <- build_network(srl_strategies, method = "glasso",
@@ -100,21 +123,25 @@ NULL
 
 #' Online Learning Activity Indicators
 #'
-#' Simulated binary time-series data for 200 students across 30 time points.
-#' At each time point, one or more learning activities may be active (1) or
-#' inactive (0). Activities: Reading, Video, Forum, Quiz, Coding, Review.
-#' Includes temporal persistence (activities tend to continue across
-#' adjacent time points).
+#' Simulated binary (one-hot) indicator time series of six online learning
+#' activities (Reading, Video, Forum, Quiz, Coding, Review) for 200
+#' students over 30 time points. Each row is one time point of one student
+#' and marks every activity active then (1) or not (0); at least one
+#' activity is active in every row, and several often are. Activities tend
+#' to continue from one time point to the next. The rows of each student
+#' are consecutive and in time order, so the data are ready for [wtna()]
+#' with `actor = "student"`.
 #'
 #' @format A data frame with 6,000 rows and 7 columns:
 #' \describe{
-#'   \item{student}{Integer. Student identifier (1--200).}
-#'   \item{Reading}{Integer (0/1). Reading activity indicator.}
-#'   \item{Video}{Integer (0/1). Video watching indicator.}
-#'   \item{Forum}{Integer (0/1). Discussion forum indicator.}
-#'   \item{Quiz}{Integer (0/1). Quiz/assessment indicator.}
-#'   \item{Coding}{Integer (0/1). Coding practice indicator.}
-#'   \item{Review}{Integer (0/1). Review/revision indicator.}
+#'   \item{student}{Integer student identifier, 1 to 200, with 30 rows
+#'     each.}
+#'   \item{Reading}{Integer reading indicator (0/1).}
+#'   \item{Video}{Integer video-watching indicator (0/1).}
+#'   \item{Forum}{Integer discussion-forum indicator (0/1).}
+#'   \item{Quiz}{Integer quiz or assessment indicator (0/1).}
+#'   \item{Coding}{Integer coding-practice indicator (0/1).}
+#'   \item{Review}{Integer review or revision indicator (0/1).}
 #' }
 #'
 #' @examples
@@ -125,18 +152,21 @@ NULL
 
 #' ChatGPT Self-Regulated Learning Scale Scores
 #'
-#' Scale scores on five self-regulated learning (SRL) constructs for 1,000
-#' responses generated by ChatGPT to a validated SRL questionnaire. Part of a
-#' larger dataset comparing LLM-generated responses to human norms across seven
-#' large language models.
+#' Scores on five self-regulated learning (SRL) scales for 1,000 responses
+#' that ChatGPT generated to a validated SRL questionnaire. The data are
+#' part of a larger set comparing the responses of seven large language
+#' models with human norms.
 #'
-#' @format A data frame with 1,000 rows and 5 columns:
+#' @format A data frame with 1,000 rows and 5 columns, one row per
+#'   response; each column is the numeric mean of one scale's items (13
+#'   items for `CSU`, 4 for `TA` and 9 for each of the others), with
+#'   observed values from 2 to 6.5 and no missing values:
 #' \describe{
-#'   \item{CSU}{Numeric. Comprehension and Study Understanding scale mean.}
-#'   \item{IV}{Numeric. Intrinsic Value scale mean.}
-#'   \item{SE}{Numeric. Self-Efficacy scale mean.}
-#'   \item{SR}{Numeric. Self-Regulation scale mean.}
-#'   \item{TA}{Numeric. Task Avoidance scale mean.}
+#'   \item{CSU}{Cognitive Strategy Use.}
+#'   \item{IV}{Intrinsic Value.}
+#'   \item{SE}{Self-Efficacy.}
+#'   \item{SR}{Self-Regulation.}
+#'   \item{TA}{Test Anxiety.}
 #' }
 #'
 #' @source Vogelsmeier, L.V.D.E., Oliveira, E., Misiejuk, K.,
@@ -155,17 +185,17 @@ NULL
 
 #' Student Engagement Trajectories
 #'
-#' Wide-format state sequences of student engagement over 15 weekly
-#' observations. Each row is one student; columns \code{1}..\code{15}
-#' hold the engagement state for that week. States: \code{"Active"},
-#' \code{"Average"}, \code{"Disengaged"}. Missing weeks are \code{NA}.
+#' Wide-format sequences of student engagement over 15 consecutive
+#' observations, one row per student and one column per observation. The
+#' states are `"Active"`, `"Average"` and `"Disengaged"`. A missing value
+#' occurs only as a run at the end of a row, which marks drop-out; two rows
+#' are missing throughout.
 #'
-#' @format A character matrix with 138 rows and 15 columns, one row per
-#'   student. Columns are named \code{"1"}..\code{"15"} (the week). Entries
-#'   are one of \code{"Active"}, \code{"Average"}, \code{"Disengaged"}, or
-#'   \code{NA}; \code{NA} runs at the end of a row mark drop-out, which the
-#'   right-censored sequence verbs (\code{\link{actor_endpoints}},
-#'   \code{\link{mark_terminal_state}}) are built to read.
+#' @format A character matrix with 138 rows and 15 columns named `"1"` to
+#'   `"15"`, in time order. Each entry is `"Active"`, `"Average"`,
+#'   `"Disengaged"` or `NA`. The trailing `NA` runs are what the
+#'   right-censored sequence verbs ([actor_endpoints()],
+#'   [mark_terminal_state()]) are built to read.
 #'
 #' @examples
 #' sequence_plot(trajectories, main = "Engagement trajectories")

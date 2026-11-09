@@ -7,15 +7,17 @@
 euler_characteristic(sc)
 }
 \arguments{
-\item{sc}{A \code{simplicial_complex} object.}
+\item{sc}{A \code{simplicial_complex} from \code{\link[=build_simplicial]{build_simplicial()}}.}
 }
 \value{
-Integer.
+A single integer.
 }
 \description{
-Computes \eqn{\chi = \sum_{k=0}^{d} (-1)^k f_k} where \eqn{f_k} is the
-number of k-simplices. By the Euler-Poincare theorem,
-\eqn{\chi = \sum_{k} (-1)^k \beta_k}.
+\code{euler_characteristic()} returns the Euler characteristic of a simplicial
+complex, \eqn{\chi = \sum_{k=0}^{d} (-1)^k f_k}, where \eqn{f_k} is the
+number of k-simplices and \eqn{d} the dimension of the complex. By the
+Euler-Poincare theorem it also equals \eqn{\sum_{k} (-1)^k \beta_k}, the
+alternating sum of the \code{\link[=betti_numbers]{betti_numbers()}}.
 }
 \examples{
 mat <- matrix(c(0,.6,.5,.6,0,.4,.5,.4,0), 3, 3)

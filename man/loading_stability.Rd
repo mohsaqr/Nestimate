@@ -13,47 +13,72 @@ loading_stability(x, iter = 200L, ci_level = 0.05, seed = NULL)
 \method{plot}{pc_loading_stability}(x, ...)
 }
 \arguments{
-\item{x}{An \code{mcml_pc} object that carries raw data. For the \code{print()} and \code{plot()} methods: an object of class \code{pc_loading_stability}.}
+\item{x}{An \code{mcml_pc} object that carries its raw data; one built from a
+network without data raises an error, and so does an older saved fit
+with custom weights, which must be rebuilt with \code{\link[=build_mcml_pc]{build_mcml_pc()}} to
+keep its weighting. For the \code{print()} and \code{plot()} methods: a
+\code{pc_loading_stability} object.}
 
-\item{iter}{Integer. Bootstrap replicates (default 200; node-level
-re-estimation makes this heavier than a plain bootstrap).}
+\item{iter}{The number of bootstrap replicates, at least 2. Default \code{200};
+each replicate re-estimates the node-level network, so this is slower
+than a plain bootstrap.}
 
-\item{ci_level}{Numeric. Significance level for percentile CIs
-(default 0.05).}
+\item{ci_level}{The tail level of the percentile intervals: \code{0.05}
+(default) gives 95\% intervals.}
 
-\item{seed}{Integer or NULL. RNG seed.}
+\item{seed}{An integer that makes the resampling reproducible. Default
+\code{NULL}. The session's own random stream is left as it was.}
 
-\item{digits}{Number of digits to display (default 3).}
+\item{digits}{For the \code{print()} method: the decimal places of the
+numeric columns. Default \code{3}.}
 
-\item{...}{In \code{plot.pc_loading_stability()} and \code{print.pc_loading_stability()}: Additional arguments (ignored).}
+\item{...}{For the \code{print()} and \code{plot()} methods: ignored.}
 }
 \value{
-An object of class \code{"pc_loading_stability"}: a list with
-\code{summary} (tidy data frame: \code{node}, \code{cluster},
-\code{weight}, \code{boot_mean}, \code{boot_sd}, \code{ci_lower},
-\code{ci_upper}, \code{sign_flips} - the proportion of replicates
-in which the item's sign differed from the observed one),
-\code{boot_weights} (iter x n_nodes matrix), \code{iter}, and
-\code{ci_level}. Has print and plot methods.
+A \code{pc_loading_stability} object. \code{print()} shows the item table;
+\code{plot()} draws each item's signed weight with its interval, one panel
+per cluster. The object's fields:
+\describe{
+\item{summary}{A data frame with one row per item: \code{node}, \code{cluster},
+\code{weight} (the observed signed weight), \code{boot_mean}, \code{boot_sd},
+\code{ci_lower}, \code{ci_upper} and \code{sign_flips} (the share of replicates in
+which the item's sign differed from the observed one).}
+\item{boot_weights}{The \code{iter} x items matrix of resampled signed
+weights.}
+\item{iter, ci_level}{The settings used.}
+}
 
-In \code{print.pc_loading_stability()}: \code{x}, invisibly.
-
-In \code{plot.pc_loading_stability()}: A ggplot object.
+For the methods: \code{print()} returns \code{x} invisibly, \code{plot()} a
+\code{ggplot}.
 }
 \description{
-\strong{Experimental.} Bootstraps the item weights of a
-\code{\link{build_mcml_pc}} fit: rows of the raw data are resampled,
-the node-level network is re-estimated each time, and the
-fitted weighting scheme is reapplied, including data-dependent and custom
-weights and the factor-analysis options. Fixed equal or supplied numeric
-weights retain their magnitudes across resamples; item signs may vary.
-Older saved custom-weight fits must be rebuilt to retain their specification.
-Wide intervals mean the weighting should not be over-interpreted.
+\code{loading_stability()} bootstraps the item weights of a \code{\link[=build_mcml_pc]{build_mcml_pc()}}
+fit and returns a \code{pc_loading_stability} object with each item's observed
+signed weight, its bootstrap mean and standard deviation, a percentile
+interval and how often its sign flipped. Each replicate resamples the rows
+of the raw data with replacement, re-estimates the node-level network
+with the fit's estimator (\code{cor}, \code{pcor} or \code{glasso}; any other node-level
+method is re-estimated as \code{cor}) and correlation type, and reapplies the
+fitted weighting scheme, data-dependent and custom weights and the
+factor-analysis options included. A fit with a descriptive aggregation
+(\code{"average"}, \code{"escoufier"}, \code{"cancor"}) has its item-table weights, the
+\code{"strength"} weights, resampled. \strong{Experimental.}
+
+Wide intervals mean the weighting should not be over-interpreted. Equal
+weights keep their magnitudes in every replicate, so for them only the
+sign flips carry information; a sign that flips often marks an item whose
+reverse-keying is not settled by the data. Supplied numeric weights are
+fixed in magnitude and sign, so their intervals have zero width and
+resampling them tells nothing. The intervals describe the weights, not
+the macro network: edge-weight intervals for it come from
+\code{\link[=bootstrap_network]{bootstrap_network()}} on its macro network.
 }
 \section{Methods}{
 
 \itemize{
-\item \code{plot.pc_loading_stability()}: Signed composite weights with bootstrap percentile intervals, faceted by cluster.
+\item \code{plot()} draws each item's observed signed composite weight with its
+bootstrap percentile interval, one panel per cluster, with a dashed line
+at zero.
 }
 }
 

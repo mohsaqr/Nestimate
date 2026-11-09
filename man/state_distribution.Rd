@@ -22,34 +22,39 @@ state_distribution(x, ...)
 \method{state_distribution}{default}(x, ...)
 }
 \arguments{
-\item{x}{A \code{netobject}, \code{netobject_group}, \code{mcml}, or
-\code{htna} object.}
+\item{x}{A \code{netobject}, \code{netobject_group}, \code{mcml} or \code{htna} network
+built from sequences. A network without sequence data raises an error;
+in a \code{netobject_group} or \code{mcml}, groups without it are left out, and
+an error is raised only when none has any. Other classes raise an
+error.}
 
-\item{...}{Currently unused.}
+\item{...}{Not used. The \code{mcml} method raises an error for any argument
+it does not take; the other methods ignore it.}
 
-\item{include_macro}{For \code{mcml}: when \code{TRUE}, prepend a
-\code{group = "macro"} block aggregating across clusters. Ignored for
-the other classes.}
+\item{include_macro}{For an \code{mcml}: whether to add a \code{"macro"} group in
+front, holding the state counts over all clusters. Default \code{FALSE}.}
 }
 \value{
-A \code{data.frame} with one row per (group, state) cell and
-columns \code{group} (character), \code{state} (character),
-\code{count} (integer), and \code{proportion} (numeric, within-group
-share). A single ungrouped network yields a single group labelled
-\code{"all"}.
+A data frame with one row per group and state and the columns
+\code{group} (character), \code{state} (character), \code{count} (integer) and
+\code{proportion} (the state's share of its group's events). Within a group
+the rows run from the most to the least frequent state; the \code{"macro"}
+group is in alphabetical order.
 }
 \description{
-Returns a tidy \code{data.frame(group, state, count, proportion)} with one
-row per (group, state) cell. Companion to \code{\link{state_frequencies}}
-(which counts unique states in raw sequence input);
-\code{state_distribution()} pulls the same shape of frame from a fitted
-Nestimate object so analyses don't have to reach for the underlying
-\code{$data} slot directly.
-}
-\details{
-Used internally by \code{\link{plot_state_frequencies}} as the data layer
-behind every chart, and surfaced as the \code{$table} slot of the
-returned \code{state_freq} object.
+\code{state_distribution()} counts how often each state occurs in the
+sequences behind a network and returns one row per group and state,
+with the count and the share within the group. The groups follow the
+class: a single \code{netobject} is one group, \code{"all"}, unless it carries node
+groups, which then form the groups (states in none are \code{"(ungrouped)"});
+an \code{htna} network has one group per actor; a \code{netobject_group} one per
+network, named as in the group (or \code{"Group 1"}, \code{"Group 2"}, ...); an
+\code{mcml} one per cluster, with the node labels it was given in place of
+the raw codes. Missing and empty cells are not counted.
+
+The table is the one behind \code{\link[=plot_state_frequencies]{plot_state_frequencies()}}, and the per-group
+counterpart of \code{\link[=state_frequencies]{state_frequencies()}}, which counts the states of raw
+sequence data.
 }
 \examples{
 data(group_regulation_long, package = "Nestimate")

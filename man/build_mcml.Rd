@@ -40,204 +40,255 @@ build_mcml(
 \method{summary}{mcml}(object, ...)
 }
 \arguments{
-\item{x}{Input data. Accepts multiple formats:
+\item{x}{The data. Accepted forms:
 \describe{
-\item{data.frame with \code{from} and \code{to} set}{Edge list, with
-optional \code{weight}.}
-\item{data.frame with \code{action} set}{Event log, read by
-\code{\link{prepare}}.}
-\item{data.frame of positions}{Sequence data, either nothing but a
-numbered run of columns or the columns set in \code{cols}. Each row is
-a sequence, columns are time steps. Consecutive pairs (t, t+1) become
-transitions.}
-\item{tna object}{If \code{x$data} is non-NULL, uses sequence path on
-the raw data. Otherwise falls back to \code{\link{cluster_summary}}.}
-\item{netobject}{If \code{x$data} is non-NULL, uses sequence path on
-it. Otherwise falls back to \code{\link{cluster_summary}}.}
-\item{mcml}{An \code{mcml} object is returned unchanged, unless
-\code{clusters}, \code{combine} or \code{expand} changes its
-partition: it is then re-estimated from the sequences it carries
-(see \code{combine}).}
-\item{square numeric matrix}{Falls back to \code{\link{cluster_summary}}.}
-\item{non-square or character matrix}{Treated as sequence data.}
+\item{data frame with \code{from} and \code{to} set}{An edge list: one row per
+transition, with an optional \code{weight} column.}
+\item{data frame with \code{action} set}{An event log, turned into
+sequences by \code{\link[=prepare]{prepare()}}.}
+\item{data frame of positions}{Sequences, one row per sequence and one
+column per time step: either a numbered run of columns (\code{T1}, \code{T2},
+...) and nothing else, or the columns named in \code{cols}. Each pair of
+adjacent columns (t, t + 1) whose two states are both observed is a
+transition; a missing cell breaks the sequence.}
+\item{\code{tna} model}{Its stored sequences are decoded and counted; a
+model without data is passed to \code{\link[=cluster_summary]{cluster_summary()}}.}
+\item{\code{netobject} or bare \code{cograph_network}}{A network of a counting
+method (\code{relative}, \code{frequency}, \code{co_occurrence} and their aliases)
+is re-counted from the data it carries. A network of another method
+(such as an association or attention network), a one-hot network, or one
+without data is passed to \code{\link[=cluster_summary]{cluster_summary()}}, which aggregates its
+weights.}
+\item{\code{mcml}}{Returned unchanged, unless \code{clusters}, \code{combine} or
+\code{expand} changes its partition: it is then re-estimated from the
+sequences it carries (see \code{combine}).}
+\item{square numeric matrix}{Passed to \code{\link[=cluster_summary]{cluster_summary()}}.}
+\item{non-square or character matrix}{Read as sequences.}
 }
-For the \code{print()} method: an object of class \code{mcml_layer} or \code{mcml}.}
+A data frame that declares no role and is not a numbered run of
+positions, or whose columns hold only 0 and 1, raises an error of class
+\code{nestimate_bad_input}. For the \code{print()} methods: an \code{mcml} object or
+one of its layers (an \code{mcml_layer}).}
 
-\item{clusters}{Cluster/group assignments. Accepts:
+\item{clusters}{The cluster of each state. Accepted forms:
 \describe{
-\item{named list}{Direct mapping. List names = cluster names, values =
-character vectors of node labels.
-Example: \code{list(A = c("N1","N2"), B = c("N3","N4"))}}
-\item{data.frame}{A data frame where the first column contains node names
-and the second column contains group/cluster names.
-Example: \code{data.frame(node = c("N1","N2","N3"), group = c("A","A","B"))}}
-\item{membership vector}{Character or numeric vector. Node names are
-extracted from the data.
-Example: \code{c("A","A","B","B")}}
-\item{column name string}{For edge list data.frames, the name of a
-column containing cluster labels. The mapping is built from unique
-(node, group) pairs in both from and to columns. \strong{Limitation:}
-this mode assigns the row's group label to \emph{both} endpoints, so
-it only makes sense for edge lists where source and target nodes
-always share the same group (within-group edges only). For general
-edge lists where a single node may be source in some rows and target
-in others, or where source and target belong to different groups,
-pass an explicit named list (\code{list(G1 = c("N1","N2"), ...)})
-or a two-column data frame \code{data.frame(node, group)} instead.}
-\item{NULL}{Auto-detect from a \code{netobject}'s node table (a
-\code{clusters}/\code{cluster}/\code{groups}/\code{group} column) or
-from its \code{node_groups}. Only \code{netobject} input can
-auto-detect; data frames and matrices require an explicit
-assignment.}
-}}
-
-\item{method}{Aggregation method for combining edge weights: "sum", "mean",
-"median", "max", "min", "density", "geomean". Default "sum". For raw
-sequence/event-log inputs the function is counting observed transitions,
-so \code{"sum"} is the only interpretation that preserves the count
-semantics -- the other methods are useful when aggregating
-weighted edge lists or pre-existing weight matrices, where each row
-already represents a measurement rather than a single observation.}
-
-\item{type}{Post-processing of the aggregated count matrix. One of:
-\describe{
-\item{"tna"}{(default) Row-normalize so each row sums to 1
-(first-order Markov transition probabilities).}
-\item{"raw"}{Return the un-normalized count matrix.}
-\item{"frequency"}{Explicit alias of \code{"raw"} -- identical raw
-count construction (kept as a synonym for callers using
-frequency-network terminology).}
-\item{"cooccurrence"}{Symmetrize the matrix (undirected
-co-occurrence).}
+\item{named list}{Cluster names mapped to their states, such as
+\code{list(A = c("N1", "N2"), B = c("N3", "N4"))}.}
+\item{data frame}{State names in the first column, cluster names in
+the second, such as
+\code{data.frame(node = c("N1", "N2", "N3"), group = c("A", "A", "B"))}.}
+\item{membership vector}{One cluster per state, such as
+\code{c("A", "A", "B", "B")}, matched to the states of the data in
+alphabetical order (a named vector is matched by name).}
+\item{column name}{For an edge list only: a column holding each row's
+cluster, given to both its endpoints. It suits edge lists whose
+edges never cross clusters; a node that gets two clusters raises an
+error, so pass a list or a data frame for any other edge list.}
+\item{\code{NULL}}{(default) Read from a \code{netobject}'s node table (a
+column \code{clusters}, \code{cluster}, \code{groups} or \code{group}) or from its
+\code{node_groups} (aligned to the node table by label). The values are
+then taken in the order of the node table, which must list the
+states in the order \code{\link[=build_network]{build_network()}} gives them (alphabetical for
+sequence data). Other input needs an explicit assignment and raises
+an error without one.}
 }
-\code{"semi_markov"} is \emph{not} accepted: the package does not
-implement a semi-Markov / holding-time construction, so passing it
-errors rather than silently aliasing \code{"tna"}.}
+Every state must belong to exactly one cluster, the \code{end} state
+included. On the sequence and edge-list routes the clusters of the
+result come in alphabetical order.}
 
-\item{directed}{Logical. If \code{TRUE} (default), treat transitions as
-directed. If \code{FALSE}, symmetrize sequence- and edge-derived weights
-before returning raw/frequency weights or before row-normalizing
-transition probabilities.}
+\item{method}{How the transitions between (or within) two clusters are
+combined into one weight, with \code{\link[=net_aggregate_weights]{net_aggregate_weights()}}: \code{"sum"}
+(default), \code{"mean"}, \code{"median"}, \code{"max"}, \code{"min"}, \code{"density"} or
+\code{"geomean"}. On sequences and event logs every transition weighs 1, so
+only \code{"sum"} keeps the counts: \code{"mean"}, \code{"median"}, \code{"max"}, \code{"min"}
+and \code{"geomean"} give 1 for every pair of clusters with a transition, and
+\code{"density"} divides each count by \code{n_i * n_j}. The other methods suit
+weighted edge lists and weight matrices, where each row is already a
+measurement rather than one observation. On sequences and event logs the
+within-cluster networks likewise get 1 for each observed pair of states
+under every method but \code{"sum"} (\code{"density"} too, which is not divided by
+\code{n_i * n_j} there); on an edge list they hold the aggregated weights.}
 
-\item{compute_within}{Logical. Compute within-cluster matrices? Default TRUE.}
+\item{type}{How the aggregated counts are turned into weights:
+\describe{
+\item{\code{"tna"}}{(default) Each row is normalised to sum to 1, giving
+first-order Markov transition probabilities.}
+\item{\code{"raw"}}{The counts as they are.}
+\item{\code{"frequency"}}{The same counts as \code{"raw"}, under the name
+frequency networks use.}
+\item{\code{"cooccurrence"}}{The mean of the count matrix and its
+transpose (undirected co-occurrence); the result is recorded as
+undirected.}
+}
+\code{"semi_markov"} raises an error: the package has no semi-Markov
+(holding-time) construction. For input passed to \code{\link[=cluster_summary]{cluster_summary()}}
+(a weight matrix, a \code{tna} model or \code{netobject} without data, or a
+\code{netobject} of a method that is not a count, such as \code{"attention"} or
+\code{"glasso"}) \code{type} has no effect; setting it gives a warning for a
+matrix, or for a \code{tna} model or \code{netobject} without data.}
 
-\item{actor, action, time, order, session, time_threshold}{Long-format event-log
-shortcut. When \code{action} is supplied on a data.frame input, the data
-is passed through \code{prepare()} to derive a wide sequence, which is
-then routed to the existing sequence path. Behaves identically to
-\code{prepare(...) |> build_network() |> build_mcml()}.}
+\item{directed}{Whether transitions are directed. Default \code{TRUE}. \code{FALSE}
+replaces the counts by the mean of the count matrix and its transpose
+before \code{type} is applied.}
 
-\item{exclude}{Optional character vector of state labels to drop before
-the network is built (e.g. a technical-void marker). On long-format
-input the matching events are removed before sequences are formed, so a
-dropped state never occupies a sequence position; on wide sequence input
-the matching cells are set to \code{NA}.}
+\item{compute_within}{Whether to build the within-cluster networks.
+Default \code{TRUE}. An \code{mcml} built with \code{FALSE} keeps no per-cluster
+sequences, so it cannot be re-partitioned (see \code{combine}).}
 
-\item{trim}{Optional truncation of each sequence. \code{NULL} (default)
-keeps every time point. A fraction in \code{(0, 1)} keeps the columns
-covering that quantile of sequence lengths (\code{trim = 0.95} keeps the
-shortest 95\%); a value \code{>= 1} is an absolute cut
-(\code{trim = 10} keeps the first 10 time points). This changes the
-data, so it only ever cuts the end of a sequence. The fraction in
-\code{\link{sequence_plot}}'s \code{trim} works differently, because it
+\item{actor, action, time, order, session, time_threshold}{For an event log:
+the columns and the session gap (in seconds, default \code{900}) passed to
+\code{\link[=prepare]{prepare()}}, which forms the sequences that are then counted, as
+\code{prepare(...) |> build_network() |> build_mcml()} would. Setting
+\code{action} declares the data an event log.}
+
+\item{exclude}{States to drop before anything is counted, such as a
+technical marker. In an event log the matching events are removed
+before sequences are formed, so a dropped state never takes a position;
+in wide sequences the matching cells become missing. Default \code{NULL}.
+Only for wide sequences and event logs: an edge list, a \code{netobject} or
+a \code{tna} model raises an error. The same holds for \code{trim} and \code{end}. On
+an existing \code{mcml} they raise an error together with a re-partition
+(\code{clusters}, \code{combine} or \code{expand}); without one the \code{mcml} is returned
+unchanged and they have no effect (see \code{combine}).}
+
+\item{trim}{How much of each sequence to keep. \code{NULL} (default) keeps
+every time step. A fraction in (0, 1) keeps the columns up to that
+quantile of the sequence lengths (the last observed position of each
+row), so \code{trim = 0.95} cuts only the longest 5\% of sequences; a value of
+1 or more keeps that many leading columns (\code{trim = 10} keeps the first
+10). It changes the data, so it only ever cuts the end of a sequence;
+the fraction in \code{\link[=sequence_plot]{sequence_plot()}}'s \code{trim} works differently because it
 changes only the drawing.}
 
-\item{end}{Terminal state appended after each sequence's last observed
-state. \code{FALSE} (default) adds none, \code{TRUE} adds one labelled
-\code{"End"}, and a string supplies the label. Applied \emph{after}
-\code{trim}, so trimming can never remove the marker.}
+\item{end}{A terminal state put in the cell after each sequence's last
+observed state. \code{FALSE} (default) adds none, \code{TRUE} adds one labelled
+\code{"End"}, and a single string adds one with that label; assign it to a
+cluster in \code{clusters}. It is added after \code{trim}, so trimming never
+removes it.}
 
-\item{end_by}{Optional column name(s) grouping the terminal marker at a
-coarser unit than the sequence. \code{NULL} (default) marks every
-sequence. When supplied, only the \emph{last} sequence of each group is
-marked -- e.g. \code{session = "AttemptID", end = "Conclude",
-  end_by = "SkillID"} closes each skill once, not each attempt. Requires
-long-format input, since the grouping column lives there.}
+\item{end_by}{Columns grouping the terminal marker at a coarser unit than
+the sequence: only the sequence holding each group's last event is
+marked. For example,
+\verb{session = "AttemptID", end = "Conclude", end_by = "SkillID"}
+closes each skill once, not each attempt. It needs
+\code{end} and an event log, and raises an error otherwise. Default \code{NULL}
+(every sequence is marked).}
 
-\item{labels}{Optional name -> label remap applied to within-cluster nodes
-(the macro layer is left untouched because its labels are cluster
-names). Accepts a 2-column data.frame \code{(name, label)}, a named
-character vector \code{c(name = "label")}, or a named list. Unmapped
-names pass through unchanged.}
+\item{labels}{New display labels for the states of the within-cluster
+networks, applied after estimation: a two-column data frame
+(\code{name}, \code{label}), a named character vector \code{c(name = "label")} or a
+named list. States not listed keep their names. The new labels also
+replace the state names in the cluster membership and the edge table;
+the macro network keeps its cluster names.}
 
-\item{combine, expand}{Change the partition. On new input they apply to
-\code{clusters} (in any of its accepted forms, including
-auto-detection) before estimation, so
-\code{build_mcml(data, clusters = cl, combine = c("A", "B"))} equals a
-build with \code{A} and \code{B} merged in \code{cl} (the merged
-cluster lists its states in cluster-name order); this works for every
-input type, matrices included. On an existing \code{mcml} they
-re-partition it (see below).
-\code{combine} merges clusters into one: a character vector merges one
-group, a list merges several and its names label them (default label
-\code{"A + B"}). \code{expand} then splits the named clusters (or
-\code{"all"}/\code{TRUE}) into one cluster per member state, named by
-the state. For an existing \code{mcml} the model is re-estimated --
-macro network, within-cluster
-networks and stored sequences -- from the sequences the \code{mcml}
-carries, with its original \code{type}, \code{method} and
-\code{directed} unless passed explicitly. Any session split,
-\code{exclude}, \code{trim} or \code{end} applied when it was built is
-already in those sequences, so passing any of these (or \code{actor},
-\code{action}, \code{time}, \code{session}, \code{labels}) together
-with a re-partition is an error. Passing a new \code{clusters} list
-instead re-estimates under that partition; with the partition unchanged
-the result equals the input. Errors with class
-\code{nestimate_mcml_no_sequences} when the \code{mcml} was built from a
-matrix, from an edge list (only within-cluster edges are kept), or with
-\code{compute_within = FALSE}.
-\code{\link{sequence_plot}} accepts the same two arguments as display
-options: its \code{combine} draws exactly what it draws for
-\code{build_mcml(x, combine = )}, while its \code{expand} opens clusters
-in the Summary panel only and keeps one panel per cluster.}
+\item{combine, expand}{Change the partition. \code{combine} merges clusters into
+one: a character vector merges one group, and a list merges several,
+labelled by its names (default label \code{"A + B"}); the merged cluster
+lists its states in cluster-name order. \code{expand} then splits the named
+clusters (or every cluster, with \code{"all"} or \code{TRUE}) into one cluster per
+state, named by the state. On new input they apply to \code{clusters} (in any
+of its forms, auto-detection included) before estimation, so
+\code{build_mcml(data, clusters = cl, combine = c("A", "B"))} equals a build
+with \code{A} and \code{B} merged in \code{cl}; this works for every input, matrices
+included. On an existing \code{mcml} they re-estimate the model (macro
+network, within-cluster networks and stored sequences) from the
+sequences it carries, with its original \code{type}, \code{method} and \code{directed}
+unless these are passed; a new \code{clusters} does the same under that
+partition, and an unchanged partition returns an equal object. Any
+session split, \code{exclude}, \code{trim} or \code{end} applied at build time is
+already in those sequences, so passing one of them (or \code{actor},
+\code{action}, \code{time}, \code{order}, \code{session}, \code{time_threshold}, \code{end_by},
+\code{labels}, \code{from}, \code{to}, \code{weight}, \code{cols}) with a re-partition raises an
+error, as does passing \code{clusters} together with \code{combine} or \code{expand}.
+An \code{mcml} built from a matrix, from an edge list (it keeps only the
+within-cluster edges) or with \code{compute_within = FALSE} raises an error
+of class \code{nestimate_mcml_no_sequences}. \code{\link[=sequence_plot]{sequence_plot()}} takes the
+same two arguments as display options: its \code{combine} draws what it
+draws for \code{build_mcml(x, combine = )}, while its \code{expand} opens
+clusters in the Summary panel only and keeps one panel per cluster.}
 
-\item{from, to, weight}{Column names of an edge list, and its optional weight.
-Names give no role: a frame is an edge list only when these are set.}
-
-\item{cols}{Character vector or \code{NULL}. For a wide data frame: the columns
-holding the positions. Needed when the frame is anything but a numbered run
-(\code{T1}, \code{T2}, ...). Any other frame with no role declared raises
+\item{from, to, weight}{The columns of an edge list: its source, its target
+and an optional non-negative weight (each transition counts 1 without
+it). Names give no role: a frame is read as an edge list only when
+\code{from} and \code{to} are set, and setting them with \code{action} or \code{cols} raises
 an error of class \code{nestimate_bad_input}.}
 
-\item{...}{In \code{print.mcml()}, \code{print.mcml_layer()} and \code{summary.mcml()}: Unsupported. Supplying unused arguments raises an error.}
+\item{cols}{For a wide data frame: the columns holding the positions,
+needed when the frame is anything but a numbered run (\code{T1}, \code{T2}, ...).
+Default \code{NULL}.}
 
-\item{object}{For the \code{summary()} method: an object of class \code{mcml}.}
+\item{...}{For the \code{print()} and \code{summary()} methods: not used; any extra
+argument raises an error.}
+
+\item{object}{For \code{summary()}: an \code{mcml} object.}
 }
 \value{
-An \code{mcml} object with the same layout as the return value of
-\code{\link{cluster_summary}} (\code{macro}, \code{clusters},
-\code{cluster_members}, \code{edges}, \code{meta}). On the sequence and
-edge-list paths \code{meta$source} is \code{"transitions"},
-\code{meta$type} records the \code{type} post-processing, and
-\code{edges} is a tidy data frame with one row per observed node-level
-transition and columns \code{from}, \code{to}, \code{weight},
-\code{cluster_from}, \code{cluster_to}, \code{type}
-(\code{"within"}/\code{"between"}). Matrix input falls through to
-\code{\link{cluster_summary}}, so \code{meta$source} is \code{"matrix"}
-and \code{edges} is \code{NULL}. Works with \code{print()},
-\code{summary()}, \code{\link{as_tna}}, \code{\link{as_htna}} and
-\code{\link{macro_network}}.
+An \code{mcml} object with the layout described under
+\code{\link[=cluster_summary]{cluster_summary()}}. Print it for the type, the method, the node and
+cluster counts, the clusters,
+the number of transitions between and within clusters and the macro
+weights; printing one layer (an \code{mcml_layer}) shows its node and edge
+counts, weight range, weight matrix, initial probabilities and the size
+of the data it carries. \code{\link[=summary]{summary()}} returns a data frame with one row
+per cluster, with
+columns \code{cluster}, \code{size}, \code{within_total} (the total absolute weight of
+the within-cluster network, \code{NA} when it was not built), \code{between_out}
+and \code{between_in} (the absolute macro weight leaving and entering the
+cluster, diagonal excluded); for an undirected macro network, \code{between_out} is
+the total incident weight and \code{between_in} is \code{NA}.
+\code{\link[=as_tna]{as_tna()}} turns
+the levels into a \code{netobject_group}, \code{\link[=as_htna]{as_htna()}} rebuilds the
+node-level network with its clusters, \code{\link[=macro_network]{macro_network()}} opens chosen
+clusters into their states, and \code{\link[=sequence_plot]{sequence_plot()}} draws the sequences
+by cluster. The \code{print()} methods return their input invisibly.
 
-In \code{print.mcml_layer()}: The input \code{mcml_layer}, invisibly.
-
-In \code{print.mcml()}: The input object, invisibly.
-
-In \code{summary.mcml()}: A tidy data frame with one row per cluster and columns \code{cluster}, \code{size}, \code{within_total}, \code{between_out}, \code{between_in}. For undirected macro networks the in/out split is not meaningful, so \code{between_out} reports total incident weight and \code{between_in} is \code{NA}. The data frame is returned silently \emph{without} printing the full object -- call \code{print(object)} explicitly if you want the verbose dump.
+On the sequence and edge-list routes, the object differs from the
+matrix route's in these fields:
+\describe{
+\item{edges}{A data frame with one row per observed node-level
+transition and columns \code{from}, \code{to}, \code{weight}, \code{cluster_from},
+\code{cluster_to} and \code{type} (\code{"within"} or \code{"between"}).}
+\item{macro}{Its \code{inits} are the shares of the clusters among the
+first-column states (missing cells left out), or the normalised
+column sums for an edge list; its \code{data} holds the sequences recoded to
+cluster labels, or one \code{from}/\code{to} row per transition for an edge
+list.}
+\item{clusters}{Each layer counts only the transitions between states
+of its own cluster. Its \code{inits} are the shares of its states among
+the first-column states that belong to it (normalised column sums
+for an edge list), and its \code{data} the sequences with the states of other
+clusters set missing (for an edge list, its within-cluster
+transitions).}
+\item{meta}{\code{source} is \code{"transitions"}, \code{type} records the \code{type}
+used, and \code{directed} whether the stored weights are directed
+(\code{FALSE} for \code{type = "cooccurrence"}).}
+}
+Input passed to \code{\link[=cluster_summary]{cluster_summary()}} gives its result: \code{source}
+\code{"matrix"} in \code{meta}, and no edge table.
 }
 \description{
-Builds a Multi-Cluster Multi-Level (MCML) model from raw transition data
-(edge lists or sequences) by recoding node labels to cluster labels and
-counting actual transitions. Unlike \code{\link{cluster_summary}} which
-aggregates a pre-computed weight matrix, this function works from the
-original transition data to produce the TRUE Markov chain over cluster states.
-}
-\section{Methods}{
+\code{build_mcml()} builds a Multi-Cluster Multi-Level (MCML) model from
+transitions: it recodes every state to its cluster and counts the
+transitions that occur, which gives the Markov chain over clusters (the
+macro network) and one network per cluster of the transitions among its
+own states. It reads sequences (one row per sequence), event logs (with
+\code{action}), edge lists (with \code{from} and \code{to}), \code{tna} models and
+\code{netobject}s that carry their data, and it re-partitions an existing
+\code{mcml} (see \code{combine} and \code{expand}). A weight matrix has no transitions to
+count, so it is passed to \code{\link[=cluster_summary]{cluster_summary()}}, which aggregates the
+weights instead.
 
-\itemize{
-\item \code{print.mcml_layer()}: Compact view of one mcml layer (the macro layer or a single within-cluster network): a header line with the node and non-zero edge counts and the weight range, the rounded weight matrix, the initial probabilities as a bar chart, and the dimensions of any attached data -- rather than the raw list contents.
+With the defaults (\code{type = "tna"}, \code{method = "sum"}), a macro edge is the
+probability that the
+next state lies in cluster j given that the current one lies in cluster i;
+its diagonal is the probability of staying in a cluster, whether in the
+same state or a different one. Both levels depend on the partition, which
+is the analyst's: compare a few partitions with \code{combine} and \code{expand}
+rather than reading one. The weights are point estimates;
+\code{\link[=as_tna]{as_tna()}}
+turns the levels into networks that carry their sequences, so
+\code{\link[=bootstrap_network]{bootstrap_network()}} can show how far each edge moves under resampling.
 }
-}
-
 \examples{
 # Edge list with clusters: its columns are declared
 edges <- data.frame(

@@ -5,68 +5,94 @@
 
 #' Higher-order hypergraph from a network's clique structure
 #'
-#' Takes a network and produces a hypergraph by promoting k-cliques (k >= 3)
-#' to k-hyperedges. Each k-clique is independently included as a k-hyperedge
-#' with probability `p`. Optionally retains the underlying pairwise edges as
-#' 2-hyperedges. Foundation for higher-order analyses.
+#' @description
+#' `build_hypergraph()` turns a network into a hypergraph by promoting its
+#' cliques to hyperedges: every set of 3 to `max_size` nodes that are all
+#' tied to each other becomes a hyperedge, kept with probability `p`, and
+#' the pairwise edges can be kept as hyperedges of size 2. It takes a
+#' `netobject`, a bare `cograph_network`, a `simplicial_complex` or an
+#' adjacency or weight matrix, and returns a `net_hypergraph`, the input of
+#' the hypergraph verbs such as [hypergraph_measures()],
+#' [hypergraph_centrality()] and [clique_expansion()].
 #'
-#' @param net A `netobject`, `cograph_network`, `simplicial_complex`, or
-#'   numeric adjacency / weight matrix. Directed inputs are symmetrised by
-#'   the underlying clique enumerator.
-#' @param p Probability in `[0, 1]` that each k-clique with k >= 3 becomes a
-#'   k-hyperedge. Default `1` (deterministic - every found clique is
-#'   included).
-#' @param method Hyperedge enumeration. `"clique"` (default) promotes
-#'   k-cliques in the binarised adjacency to k-hyperedges. A metric
-#'   Vietoris-Rips construction is \strong{not implemented}; `"vr"` /
-#'   `"rips"` are accepted by `match.arg` but raise an error rather than
-#'   silently aliasing `"clique"`.
-#' @param include_pairwise Logical. Include 2-edges from the input network as
-#'   2-hyperedges. Default `TRUE`. Set `FALSE` for a "fully higher-order"
-#'   hypergraph containing only k-hyperedges with k >= 3.
-#' @param max_size Integer >= 2. Maximum hyperedge size to extract. Default
-#'   `3L` (triangles only). `4L` also includes 4-cliques as 4-hyperedges, etc.
-#' @param threshold Numeric. Edge weight cutoff used to binarise the
-#'   adjacency for clique enumeration. Default `0` (any non-zero weight is
-#'   an edge).
-#' @param seed Optional integer for reproducible Bernoulli sampling when
-#'   `0 < p < 1`.
+#' A hyperedge built this way records that every pair of its nodes is tied
+#' in the thresholded network; a pairwise network cannot show whether those
+#' nodes also act together as a group. When group memberships are observed
+#' directly, [bipartite_groups()] builds the hypergraph from them instead.
+#' Each clique also contributes its smaller cliques: with `max_size = 4`, a
+#' 4-clique gives one hyperedge of size 4 and four of size 3.
 #'
-#' @return A `net_hypergraph` object: a list with components
+#' @param net The network: a `netobject`, bare `cograph_network`,
+#'   `simplicial_complex` (its edges are read as ties of weight 1 and the
+#'   cliques are found again up to `max_size`), or a numeric or logical adjacency or weight
+#'   matrix (nodes are named `V1`, `V2`, ... when it has no row names). A
+#'   tie counts in either direction, so a directed network is symmetrised,
+#'   and self-loops are ignored.
+#' @param p The probability that each clique of 3 or more nodes becomes a
+#'   hyperedge, a number in `[0, 1]`; each clique is kept or dropped
+#'   independently. Default `1` (every clique is kept). Pairwise edges are
+#'   not sampled.
+#' @param method How hyperedges are found. `"clique"` (default) promotes
+#'   the cliques of the thresholded network. `"vr"` and `"rips"` (a metric
+#'   Vietoris-Rips construction) are not implemented and raise an error
+#'   instead of falling back to `"clique"`.
+#' @param include_pairwise Whether the pairwise edges of the thresholded
+#'   network become hyperedges of size 2. `FALSE` gives a hypergraph of
+#'   hyperedges of size 3 or more only. Default `TRUE`.
+#' @param max_size The largest hyperedge size, at least 2. Default `3`
+#'   (triangles); `4` adds the 4-cliques, and so on. With `2`, only the
+#'   pairwise edges remain (none, with `include_pairwise = FALSE`).
+#' @param threshold The cut-off that turns weights into ties: an edge is
+#'   kept when its absolute weight is non-zero and at least `threshold`, so
+#'   negative weights count by their size. A negative value raises an
+#'   error. Default `0` (every non-zero weight is a tie).
+#' @param seed An integer that makes the sampling reproducible when
+#'   `0 < p < 1`. The session's own random stream is left as it was.
+#'   Default `NULL`.
+#'
+#' @return A `net_hypergraph` object. `print()` shows the numbers of nodes
+#'   and hyperedges, the size distribution and the settings, and returns
+#'   its input invisibly. `summary()` prints the counts with the mean and
+#'   largest hyperedge size, and returns a data frame with one row per node:
+#'   `node` and `degree`, the number of hyperedges that contain it. The
+#'   object holds:
 #' \describe{
-#'   \item{`hyperedges`}{List of integer vectors. Each entry is a hyperedge
-#'     given as the sorted node indices it spans.}
-#'   \item{`incidence`}{Numeric matrix of size `n_nodes` x `n_hyperedges`.
-#'     `incidence[i, j] = 1` iff node i belongs to hyperedge j. Row names
-#'     are node names; column names are `h1`, `h2`, ...}
-#'   \item{`nodes`}{Character vector of node names.}
-#'   \item{`n_nodes`, `n_hyperedges`}{Scalar counts.}
-#'   \item{`size_distribution`}{Named integer vector: number of hyperedges
-#'     of each size, named `size_2`, `size_3`, ...}
-#'   \item{`params`}{Recorded call parameters: `method`, `p`,
-#'     `include_pairwise`, `max_size`, `threshold`, `seed`.}
+#'   \item{`hyperedges`}{A list of integer vectors, one per hyperedge,
+#'     each the sorted indices of the nodes it spans; pairwise edges, when
+#'     kept, come first.}
+#'   \item{`incidence`}{An integer matrix of nodes by hyperedges, 1 where a
+#'     node belongs to a hyperedge and 0 elsewhere. Its row names are the
+#'     node names and its column names `h1`, `h2`, ...}
+#'   \item{`nodes`}{The node names.}
+#'   \item{`n_nodes`, `n_hyperedges`}{The numbers of nodes and
+#'     hyperedges.}
+#'   \item{`size_distribution`}{A named integer vector with the number of
+#'     hyperedges of each size, named `size_2`, `size_3`, ...}
+#'   \item{`params`}{The settings used: `method`, `p`,
+#'     `include_pairwise`, `max_size`, `threshold` and `seed`.}
 #' }
 #'
 #' @details
-#' The construction follows Burgio, Matamalas, Gomez & Arenas (2020) on
-#' simplicial / hypergraph contagion. For each k-clique with k >= 3 found in
-#' the underlying graph (via [build_simplicial()]), an independent
-#' Bernoulli(`p`) trial decides whether that clique becomes a k-hyperedge.
-#' Underlying pairwise edges are always retained when
-#' `include_pairwise = TRUE`, so the resulting hypergraph contains both the
-#' original 2-edge structure and the sampled higher-order interactions.
+#' The construction follows Burgio, Matamalas, Gomez and Arenas (2020) on
+#' cooperation in networks and hypergraphs. The cliques are found with
+#' [build_simplicial()], and each clique of 3 or more nodes then goes
+#' through an independent Bernoulli(`p`) trial that decides whether it
+#' becomes a hyperedge. The pairwise edges are not sampled: with
+#' `include_pairwise = TRUE` all of them are kept, so the hypergraph holds
+#' the pairwise structure and the sampled higher-order interactions
+#' together.
 #'
 #' At the limits:
 #' \itemize{
-#'   \item `p = 0` with `include_pairwise = TRUE` reproduces the input
+#'   \item `p = 0` with `include_pairwise = TRUE` gives the thresholded
 #'     pairwise network as a hypergraph of size-2 edges.
-#'   \item `p = 1` with `include_pairwise = FALSE` returns a fully
-#'     higher-order hypergraph containing only the k-hyperedges (k >= 3)
-#'     found in the network's clique complex.
+#'   \item `p = 1` with `include_pairwise = FALSE` gives only the
+#'     hyperedges of size 3 or more, every clique of the network's clique
+#'     complex up to `max_size`.
 #' }
 #'
-#' @seealso [build_simplicial()] (underlying clique enumeration),
-#'   [build_network()].
+#' @seealso [build_simplicial()] (the clique enumeration),
+#'   [bipartite_groups()], [build_network()].
 #'
 #' @examples
 #' set.seed(1)
@@ -95,20 +121,22 @@ build_hypergraph <- function(net,
                               seed = NULL) {
   method <- match.arg(method)
   if (method == "vr" || method == "rips") {
-    stop("method = \"vr\" (Vietoris-Rips) is not implemented. A genuine ",
-         "metric Vietoris-Rips construction requires a distance-ball ",
-         "graph, which this package does not build. Use ",
-         "method = \"clique\" (cliques in the binarised adjacency).",
-         call. = FALSE)
+    stop(errorCondition(
+      paste0(
+        "method = \"vr\" (Vietoris-Rips) is not implemented. A genuine ",
+        "metric Vietoris-Rips construction requires a distance-ball ",
+        "graph, which this package does not build. Use ",
+        "method = \"clique\" (cliques in the binarised adjacency)."),
+      class = "nestimate_bad_input", call = NULL))
   }
-  stopifnot(
+  .assert(
     is.numeric(p), length(p) == 1L, p >= 0, p <= 1,
     is.logical(include_pairwise), length(include_pairwise) == 1L,
     is.numeric(max_size), length(max_size) == 1L, max_size >= 2L,
     is.numeric(threshold), length(threshold) == 1L
   )
   max_size <- as.integer(max_size)
-  if (!is.null(seed)) set.seed(as.integer(seed))
+  if (!is.null(seed)) .local_seed(as.integer(seed))
 
   # ---- Get adjacency + node names from any supported input ------------
   parsed <- .hg_extract_adj(net)
@@ -223,18 +251,19 @@ build_hypergraph <- function(net,
     return(list(adj = net, nodes = nm))
   }
 
-  stop("`net` must be a netobject, cograph_network, simplicial_complex, ",
-       "or numeric matrix.", call. = FALSE)
+  stop(errorCondition(
+    paste0(
+      "`net` must be a netobject, cograph_network, simplicial_complex, ",
+      "or numeric matrix."),
+    class = "nestimate_bad_input", call = NULL))
 }
 
 # ---- S3 methods ---------------------------------------------------------
 
 #' @rdname build_hypergraph
-#' @param x For the \code{print()} method: an object of class \code{net_hypergraph}.
-#' @param object For the \code{summary()} method: an object of class \code{net_hypergraph}.
-#' @param ... In \code{print.net_hypergraph()}: Additional arguments (ignored). In \code{summary.net_hypergraph()}: Ignored.
-#' @return In \code{print.net_hypergraph()}: For `print()`, the input `x` invisibly.
-#' @return In \code{summary.net_hypergraph()}: For `summary()`, a data.frame with one row per node and columns `node` (node name) and `degree` (number of hyperedges containing the node), returned visibly; the summary block (node / hyperedge counts, mean and maximum hyperedge size) is printed as a side effect.
+#' @param x For the `print()` method: a `net_hypergraph`.
+#' @param object For the `summary()` method: a `net_hypergraph`.
+#' @param ... Not used.
 #' @export
 print.net_hypergraph <- function(x, ...) {
   cat(sprintf("Hypergraph: %d nodes, %d hyperedges\n",

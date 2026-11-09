@@ -173,85 +173,131 @@
 #' Test the Markov order of a sequential process
 #'
 #' @description
-#' Principled test of whether a categorical sequence is best described
-#' as a \eqn{k}-th order Markov chain. At each order
-#' \eqn{k = 1, \ldots,} \code{max_order}, the function computes the
-#' classical likelihood-ratio statistic (\eqn{G^2}) for the conditional
-#' independence \eqn{s \perp x \mid w}, where \eqn{w} is the
-#' \eqn{(k-1)}-gram context, \eqn{x} is the extra (k-th-back) state
-#' added at order \eqn{k}, and \eqn{s} is the next state. Under
-#' \eqn{H_0} (order-\eqn{(k-1)} is correct), \eqn{s} is independent of
-#' \eqn{x} given \eqn{w}.
+#' `markov_order_test()` tests how many previous states are needed to
+#' predict the next one in a set of categorical sequences: the order of the
+#' Markov chain that describes them. At each order
+#' \eqn{k = 1, \ldots,} `max_order` it tests the null hypothesis that order
+#' \eqn{k - 1} is enough, with the likelihood-ratio statistic \eqn{G^2} for
+#' the conditional independence \eqn{s \perp x \mid w}{s _||_ x | w},
+#' where \eqn{w} is the \eqn{(k-1)}-gram context, \eqn{x} the extra state
+#' \eqn{k} steps back and \eqn{s} the next state. The p-value comes from a
+#' permutation null, with the asymptotic \eqn{\chi^2} p-value beside it for
+#' reference, and the order is chosen sequentially. It reads wide sequence
+#' tables, lists of sequences, sequence networks (single or grouped) and
+#' [prepare()] results.
 #'
-#' The null distribution is obtained by a \strong{within-\eqn{w}
-#' (conditional) permutation test}: for each context \eqn{w} the successor
-#' labels are exchangeable under \eqn{H_0}, so shuffling \eqn{s} within each
-#' \eqn{w}-group keeps every count the null hypothesis conditions on. The
-#' windows of a sequence overlap, so this approximates the reference
-#' distribution of \eqn{G^2} rather than giving it exactly (an exact test
-#' would sample whole sequences with the same counts; Besag & Mondal, 2013).
-#' No plug-in MLE bias and no refitting per replicate. An asymptotic
-#' \eqn{\chi^2} p-value is reported alongside for reference.
+#' The order is raised while the test rejects and stops at the first
+#' non-rejection, so the selected order is the highest \eqn{k} whose test,
+#' and every test below it, rejected at `alpha`: `0` when order 1 is
+#' already not rejected, and `max_order` when every test rejects. AIC and
+#' BIC of the fitted chains are reported beside it and can select a
+#' different order. With many observations even small departures from the
+#' lower order are rejected, so compare the log-likelihoods of neighbouring
+#' orders as well. A first-order network from [build_network()] assumes
+#' order 1; when a higher order is selected, [build_hon()] and
+#' [build_mogen()] model the longer memory.
 #'
-#' Order selection is sequential: the order is raised while the test
-#' rejects, and stops at the first non-rejection. The reported
-#' \code{optimal_order} is therefore the highest \eqn{k} whose test - and
-#' every test below it - rejected at level \code{alpha}, i.e. one below the
-#' first non-rejection; it is \code{0} when order 1 is already not
-#' rejected, and \code{max_order} when no test accepts.
+#' @details
+#' Under the null hypothesis the successors are exchangeable within each
+#' context \eqn{w}, so shuffling \eqn{s} within each \eqn{w}-group keeps
+#' every count the null hypothesis conditions on, with no plug-in estimate
+#' and no refit per permutation. The windows of a sequence overlap, so
+#' this approximates the reference distribution of \eqn{G^2} rather than
+#' giving it exactly (an exact test would sample whole sequences with the
+#' same counts; Besag & Mondal, 2013). The permutation p-value is
+#' `(number of permutations with a G^2 at least the observed + 1) /
+#' (n_perm + 1)`. An order at which no context holds both two different
+#' extra states and two different successors has no degrees of freedom; it gets
+#' no p-value and counts as not rejected.
 #'
-#' @param data A data.frame (wide format, one sequence per row), a list
-#'   of character vectors (one per trajectory), a \code{netobject} or
-#'   \code{netobject_group} carrying its \code{$data}, or a
-#'   \code{\link{prepare}} result (its \code{sequence_data} is used).
-#'   Sequences are split at missing values: no window spans an \code{NA},
-#'   and pieces with fewer than two states are dropped.
-#' @param max_order Integer. Highest Markov order to test. Default 3.
-#' @param n_perm Integer. Number of within-\eqn{w} permutations per order.
-#'   Default 500.
-#' @param alpha Numeric. Significance level for order selection. Default 0.05.
-#' @param parallel Logical. Use \code{parallel::mclapply} for permutations.
-#'   Default \code{FALSE} (set \code{TRUE} only on Unix-like systems).
-#' @param n_cores Integer. Cores for parallel execution. Default 2.
-#' @param seed Optional integer seed for reproducibility.
-#' @param dof Character. How the AIC / BIC columns count each layer's
-#'   parameters: \code{"paths"} (default; every transition the observed
-#'   first-order topology allows, as in Scholtes 2017 and pathpy) or
-#'   \code{"observed"} (transitions seen in the data, the rule before
-#'   Nestimate 0.9.28). The permutation test does not use it.
-#' @return An object of class \code{net_markov_order} with elements:
+#' The AIC and BIC columns come from the log-likelihood of each order's
+#' fitted chain and its cumulative number of parameters (see `dof`); BIC
+#' takes the number of observations (observed states) as the sample size.
+#' The deterministic columns agree with `tna::markov_order()` (tna 1.4.1
+#' or later).
+#'
+#' @param data The sequences: a data frame with one row per sequence and
+#'   one column per position, a list of character vectors (one per
+#'   sequence), a sequence `netobject` or `netobject_group` built with its
+#'   data, or a [prepare()] result (its sequence data is used). A data
+#'   frame is read whole, so it must hold only positions: one column, or
+#'   columns named as a numbered run (`T1`, `T2`, ...); anything else, such
+#'   as an id column beside the positions, a column named `action`, or
+#'   columns holding only 0 and 1, raises an error of class
+#'   `nestimate_bad_input`, and the positions are then declared with
+#'   [build_network()] (`state_cols`, or `action` for an event log) and the
+#'   network passed instead. A one-hot or association network raises the
+#'   same error. Sequences are split at missing values: no window spans an
+#'   `NA`, and pieces with fewer than two states are dropped.
+#' @param max_order The highest order to test, at least 1. Default `3`. It
+#'   is lowered, with a message, to one less than the length of the longest
+#'   sequence.
+#' @param n_perm The number of within-context permutations per order, at
+#'   least 1. Default `500`. The smallest attainable p-value is
+#'   `1 / (n_perm + 1)`, and a test rejects only when its p-value is below
+#'   `alpha`, so with `1 / alpha - 1` permutations or fewer (19 for the
+#'   default `alpha`) no order above 0 can be selected.
+#' @param alpha The significance level for the sequential selection,
+#'   strictly between 0 and 1. Default `0.05`.
+#' @param parallel Whether to run the permutations with
+#'   [parallel::mclapply()]. Default `FALSE`. Ignored on Windows, where
+#'   they run serially. With `TRUE` the permutations are reproducible from
+#'   `seed` only under `RNGkind("L'Ecuyer-CMRG")`; under the default
+#'   generator they differ from run to run.
+#' @param n_cores The number of cores for `parallel = TRUE`. Default `2`.
+#' @param seed An integer that makes the permutations reproducible (with
+#'   `parallel = TRUE`, only under the L'Ecuyer-CMRG generator). Default
+#'   `NULL`. The session's own random stream is left as it was; a group's
+#'   networks are each
+#'   started from the same seed.
+#' @param dof How the AIC and BIC columns count each layer's parameters:
+#'   `"paths"` (default) counts every transition the observed first-order
+#'   topology allows, as in Scholtes (2017) and pathpy; `"observed"` counts
+#'   the transitions seen in the data, the rule before Nestimate 0.9.28. The
+#'   permutation test does not use it.
+#' @return A `net_markov_order` object. `print()` shows the data size, the
+#'   order each criterion selects and the test table; `summary()` returns
+#'   the test table with the selected orders, `alpha` and `n_perm` as
+#'   attributes; `plot()` draws the fit across orders and the permutation
+#'   null of each test, and returns a ggplot, a gtable or a list of the two
+#'   ggplots (see `panel` and `combined`). For a `netobject_group`, the
+#'   result is a `net_markov_order_group`, a named list of
+#'   `net_markov_order` objects, one per group, whose `print()` prints
+#'   each. The `print()` methods return their input invisibly. The
+#'   `net_markov_order`'s fields:
 #' \describe{
-#'   \item{optimal_order}{Integer. Selected order via sequential permutation test.}
-#'   \item{bic_order}{Integer. Order minimising BIC (reported by
-#'     \code{print}/\code{plot}; not used in the permutation selection).}
-#'   \item{aic_order}{Integer. Order minimising AIC (reported by
-#'     \code{print}/\code{plot}; not used in the permutation selection).}
-#'   \item{test_table}{Tidy data.frame, one row per order tested with
-#'     columns \code{order}, \code{loglik}, \code{AIC}, \code{BIC},
-#'     \code{df}, \code{g2}, \code{p_permutation}, \code{p_asymptotic},
-#'     \code{significant}. \code{AIC}/\code{BIC} are the
-#'     information-criterion values used for the \code{ic} plot panel and
-#'     to derive \code{aic_order}/\code{bic_order}; the order-0 row has
-#'     \code{NA} for the test columns (\code{df}, \code{g2},
-#'     \code{p_permutation}, \code{p_asymptotic}, \code{significant}).}
-#'   \item{permutation_null}{List of numeric vectors (length \code{max_order}),
-#'     one empirical null \eqn{G^2} distribution per order.}
-#'   \item{logliks}{Named numeric vector of log-likelihoods per order
-#'     (for AIC / BIC panel only, not used in the test).}
-#'   \item{layer_dofs}{Named numeric vector of model degrees of freedom per
-#'     order (free parameters added at each layer), used to compute the
-#'     AIC / BIC columns; counted as set by \code{dof}.}
-#'   \item{dof_method}{\code{"paths"} or \code{"observed"}.}
-#'   \item{transition_matrices}{List of fitted transition matrices.}
-#'   \item{states}{Character vector of observed state labels.}
-#'   \item{n_sequences, n_observations}{Data summary.}
-#'   \item{n_perm, alpha, max_order}{Call settings. \code{max_order} is the
-#'     order actually tested, which is capped at
-#'     \code{length(longest sequence) - 1} with a message.}
+#'   \item{optimal_order}{The order selected by the sequential permutation
+#'     test.}
+#'   \item{bic_order, aic_order}{The orders with the lowest BIC and AIC,
+#'     shown by `print()` and `plot()` and not used in the selection.}
+#'   \item{test_table}{The test table, one row per order from 0 to
+#'     `max_order`, with columns `order`, `loglik`, `AIC`, `BIC`, `df`,
+#'     `g2`, `p_permutation`, `p_asymptotic` and `significant`. The order-0
+#'     row has `NA` in the test columns (`df` to `significant`).}
+#'   \item{permutation_null}{The permutation null of \eqn{G^2} at each
+#'     order, a list of numeric vectors named `order_1`, `order_2`, ...}
+#'   \item{logliks}{The log-likelihood of each order, as a named numeric
+#'     vector (for the AIC and BIC columns only; not used in the test).}
+#'   \item{layer_dofs}{The parameters added at each order, as a named
+#'     numeric vector, counted as set by `dof`.}
+#'   \item{dof_method}{`"paths"` or `"observed"`.}
+#'   \item{transition_matrices}{The fitted transition matrices, the
+#'     order-0 state distribution first.}
+#'   \item{states}{The observed states.}
+#'   \item{n_sequences, n_observations}{The number of sequences (after
+#'     splitting at missing values) and of observed states.}
+#'   \item{n_perm, alpha, max_order}{The settings used; `max_order` is the
+#'     highest order actually tested.}
 #' }
-#'   For a \code{netobject_group} the result is a
-#'   \code{"net_markov_order_group"}: a named list holding one
-#'   \code{net_markov_order} per group.
+#'
+#' @references
+#' Besag, J., & Mondal, D. (2013). Exact goodness-of-fit tests for Markov
+#' chains. \emph{Biometrics}, 69(2), 488--496. \doi{10.1111/biom.12009}
+#'
+#' Scholtes, I. (2017). When is a network a network? Multi-order graphical
+#' model selection in pathways and temporal networks. In \emph{Proceedings
+#' of the 23rd ACM SIGKDD International Conference on Knowledge Discovery
+#' and Data Mining} (pp. 1037--1046). \doi{10.1145/3097983.3098145}
 #'
 #' @examples
 #' # Is one previous state enough to predict the next one?
@@ -274,8 +320,9 @@ markov_order_test <- function(data, max_order = 3L, n_perm = 500L, alpha = 0.05,
     out <- lapply(data, function(net) {
       seq_data <- net$data
       if (is.null(seq_data)) {
-        stop("netobject_group member has no $data; rebuild with build_network().",
-             call. = FALSE)
+        stop(errorCondition(
+          "netobject_group member has no $data; rebuild with build_network().",
+          class = "nestimate_bad_input", call = NULL))
       }
       markov_order_test(net, max_order = max_order, n_perm = n_perm,
                         alpha = alpha, parallel = parallel,
@@ -286,20 +333,21 @@ markov_order_test <- function(data, max_order = 3L, n_perm = 500L, alpha = 0.05,
   }
   if (inherits(data, "netobject")) {
     if (is.null(data$data)) {
-      stop("netobject has no $data; rebuild with build_network().",
-           call. = FALSE)
+      stop(errorCondition(
+        "netobject has no $data; rebuild with build_network().",
+        class = "nestimate_bad_input", call = NULL))
     }
     data <- data$data
   }
   max_order <- as.integer(max_order)
   n_perm    <- as.integer(n_perm)
-  stopifnot(
+  .assert(
     "'max_order' must be >= 1" = max_order >= 1L,
     "'n_perm' must be >= 1"    = n_perm >= 1L,
     "'alpha' must be in (0, 1)" = alpha > 0 && alpha < 1,
     is.logical(parallel)
   )
-  if (!is.null(seed)) set.seed(as.integer(seed))
+  if (!is.null(seed)) .local_seed(as.integer(seed))
 
   # Accept a prepare() result directly: use its $sequence_data (wide df)
   if (is.list(data) && !is.data.frame(data) && "sequence_data" %in% names(data)) {
@@ -310,7 +358,7 @@ markov_order_test <- function(data, max_order = 3L, n_perm = 500L, alpha = 0.05,
     .hon_parse_input(data, collapse_repeats = FALSE)
   )
   n_seqs <- length(trajectories)
-  stopifnot("need >= 1 sequence after parsing" = n_seqs >= 1L)
+  .assert("need >= 1 sequence after parsing" = n_seqs >= 1L)
   seq_lens <- vapply(trajectories, length, integer(1L))
 
   longest <- max(seq_lens)
@@ -403,15 +451,22 @@ markov_order_test <- function(data, max_order = 3L, n_perm = 500L, alpha = 0.05,
 # ---------------------------------------------------------------------------
 
 #' @rdname markov_order_test
-#' @param x For the \code{print()} and \code{plot()} methods: an object of class \code{net_markov_order} or \code{net_markov_order_group}.
-#' @param ... In \code{plot.net_markov_order()}, \code{print.net_markov_order()} and \code{summary.net_markov_order()}: Ignored. In \code{print.net_markov_order_group()}: Forwarded to `print.net_markov_order` for each element.
-#' @param object For the \code{summary()} method: an object of class \code{net_markov_order}.
-#' @param panel Which panel(s) to render: \code{"both"}, \code{"ic"}, or \code{"permutation"}. Default \code{"both"}.
-#' @param combined When \code{panel = "both"} and \code{combined = TRUE} (default), the two panels are drawn side-by-side. If \pkg{gridExtra} is installed they are arranged into a single drawable/saveable gtable (returned); otherwise base \code{grid} viewports draw both panels and a named list of the two ggplots is returned invisibly. When \code{FALSE}, returns that named list (\code{ic}, \code{permutation}) without drawing. Ignored when \code{panel != "both"}.
-#' @return In \code{print.net_markov_order()}: The input object, invisibly.
-#' @return In \code{print.net_markov_order_group()}: `x` invisibly.
-#' @return In \code{summary.net_markov_order()}: The tidy \code{test_table} data.frame - one row per order tested - carrying the selection context as attributes: \code{optimal_order}, \code{bic_order}, \code{aic_order}, \code{alpha} and \code{n_perm}.
-#' @return In \code{plot.net_markov_order()}: A ggplot (single panel); for \code{panel = "both"}, either a \code{gridExtra} gtable (when \pkg{gridExtra} is installed) or a named list of two ggplots (\code{ic}, \code{permutation}) drawn side-by-side and returned invisibly.
+#' @param x For the `print()` methods: a `net_markov_order` or
+#'   `net_markov_order_group`; for the `plot()` method: a
+#'   `net_markov_order`.
+#' @param ... For the `print()` method of a `net_markov_order_group`:
+#'   passed on to the `print()` of each group. For the other methods: not
+#'   used.
+#' @param object For the `summary()` method: a `net_markov_order`.
+#' @param panel For the `plot()` method: which panels to draw. `"both"`
+#'   (default), `"ic"` (the fit across orders) or `"permutation"` (the
+#'   permutation nulls); a single panel is returned as a ggplot.
+#' @param combined For the `plot()` method with `panel = "both"`: `TRUE`
+#'   (default) draws the two panels side by side and returns them as one
+#'   gtable when \pkg{gridExtra} is installed, or, without it, draws them
+#'   with \pkg{grid} viewports and returns the two ggplots (`ic`,
+#'   `permutation`) invisibly as a named list. `FALSE` returns that list
+#'   invisibly without drawing. Ignored for a single panel.
 #' @export
 print.net_markov_order <- function(x, ...) {
   cat(sprintf("Markov Order Test  [within-w permutation, n_perm = %d, alpha = %.3f]\n",
@@ -458,23 +513,25 @@ summary.net_markov_order <- function(object, ...) {
 
 #' @rdname markov_order_test
 #' @section Plot panels:
-#' Two-panel professional visualization:
-#' \itemize{
-#'   \item Panel A: log-likelihood, AIC, BIC across tested orders with
-#'     the selected order highlighted (both the permutation-selected
-#'     order and the BIC-minimizing order are marked).
-#'   \item Panel B: permutation null density per order with the observed
-#'     \eqn{G^2} as a vertical marker; colored by rejection at
-#'     \code{alpha}.
+#' \describe{
+#'   \item{Fit across orders (`"ic"`)}{The log-likelihood, AIC and BIC of
+#'     each order, one facet each, with a dashed line at the order the
+#'     permutation test selects and a dotted line at the order with the
+#'     lowest BIC.}
+#'   \item{Permutation nulls (`"permutation"`)}{The density of the
+#'     permutation null of \eqn{G^2} for each order, one facet each, with
+#'     the observed \eqn{G^2} as a vertical line labelled with its p-value
+#'     and coloured by whether the test rejects at `alpha`.}
 #' }
-#' Uses the Okabe-Ito colorblind-safe palette.
+#' The lines and labels use the Okabe-Ito palette; the null densities are
+#' grey.
 #' @export
 plot.net_markov_order <- function(x,
                                    panel = c("both", "ic", "permutation"),
                                    combined = TRUE,
                                    ...) {
   panel <- match.arg(panel)
-  stopifnot(is.logical(combined), length(combined) == 1L)
+  .assert(is.logical(combined), length(combined) == 1L, !is.na(combined))
   pal <- c(reject = "#D55E00", accept = "#0072B2",
            ic_ll = "#009E73", ic_aic = "#E69F00", ic_bic = "#56B4E9",
            selected = "#D55E00")

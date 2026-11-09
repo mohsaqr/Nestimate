@@ -137,24 +137,38 @@
   H
 }
 
-#' Absorption analysis (transient -> absorbing) via fundamental matrix.
+#' Absorption analysis (transient -> closed classes) via fundamental matrix.
 #'
-#' Returns NULL when the canonical transient/absorbing partition is empty
-#' (no absorbing states or no transient states feeding into them).
+#' Kemeny & Snell (1976, ch. III): lump every closed (recurrent) class into
+#' one absorbing state. With Q the transient-to-transient block and R the
+#' transient-to-class block (row sums of P over each class), N = (I - Q)^-1,
+#' B = N R gives the probability of ending in each closed class (rows sum to
+#' 1) and t = N 1 the expected steps to enter one. A singleton absorbing
+#' state is its own class, labelled by its name; a class of several states is
+#' labelled by its states joined with "+". Using only the absorbing states as
+#' columns (as before) dropped the mass that flows into non-absorbing closed
+#' classes, so rows did not sum to 1. I - Q is non-singular because Q holds
+#' only transient states.
+#'
+#' Returns NULL fields when there is no transient state.
 #' @noRd
-.cs_absorption <- function(P, transient_idx, absorbing_idx, state_names) {
-  if (length(absorbing_idx) == 0L || length(transient_idx) == 0L) {
+.cs_absorption <- function(P, transient_idx, closed_classes, state_names) {
+  if (length(transient_idx) == 0L || length(closed_classes) == 0L) {
     return(list(probabilities = NULL, mean_time = NULL))
   }
+  closed_classes <- closed_classes[order(vapply(closed_classes, min,
+                                                integer(1)))]
   Q <- P[transient_idx, transient_idx, drop = FALSE]
-  R <- P[transient_idx, absorbing_idx,  drop = FALSE]
-  I <- diag(nrow(Q))
-  N <- tryCatch(solve(I - Q),
-                error = function(e) NULL)
-  if (is.null(N)) return(list(probabilities = NULL, mean_time = NULL))
+  R <- vapply(closed_classes, function(cl) {
+    rowSums(P[transient_idx, cl, drop = FALSE])
+  }, numeric(length(transient_idx)))
+  R <- matrix(R, nrow = length(transient_idx))
+  N <- solve(diag(nrow(Q)) - Q)
   abs_probs <- N %*% R
   rownames(abs_probs) <- state_names[transient_idx]
-  colnames(abs_probs) <- state_names[absorbing_idx]
+  colnames(abs_probs) <- vapply(closed_classes, function(cl) {
+    paste(state_names[sort(cl)], collapse = "+")
+  }, character(1))
   abs_time <- as.numeric(N %*% rep(1, nrow(N)))
   names(abs_time) <- state_names[transient_idx]
   list(probabilities = abs_probs, mean_time = abs_time)
@@ -166,76 +180,116 @@
 
 #' Qualitative structure of a discrete-time Markov chain
 #'
-#' Computes properties that depend only on the transition matrix support,
-#' not on any starting distribution: state classification, communicating
-#' classes, periods, irreducibility / aperiodicity / regularity /
-#' reversibility, hitting probabilities, and absorption analysis when
-#' absorbing states exist.
+#' @description
+#' `chain_structure()` describes the qualitative structure of a
+#' discrete-time Markov chain: the properties that depend only on which
+#' transitions are possible (the support of the transition matrix), not on
+#' any starting distribution. It classifies every state as absorbing,
+#' recurrent or transient, finds the communicating classes and the period of
+#' each recurrent state, says whether the chain is irreducible, aperiodic,
+#' regular and reversible, and computes the hitting probabilities and, when
+#' transient states exist, the probability that each ends in each closed
+#' class (an absorbing state or a closed class of several states) and the
+#' expected number of steps it takes to enter one. It reads a transition network, a `tna` model, a transition
+#' matrix or sequences, and analyses a grouped network one network at a
+#' time.
 #'
-#' @param x A `netobject`, `cograph_network`, `tna` model, transition
-#'   matrix, or sequence data.frame (passed through `build_network()` with
-#'   `method = "relative"`). A `netobject_group` is also accepted and
-#'   analysed constituent by constituent. For the \code{print()} and \code{plot()} methods: an object of class \code{chain_structure}, \code{chain_structure_group} or \code{summary_chain_structure}.
-#' @param normalize Logical. If `TRUE` (default), rows of the transition
-#'   matrix are renormalized to sum to 1 before analysis (see
-#'   [passage_time()] for the same convention).
-#' @param tol Numerical tolerance for the reversibility check (detailed
-#'   balance) and for treating near-zero entries as zero when building the
-#'   support graph (which drives `classification`, `communicating_classes`,
-#'   `period`, and `hitting_probabilities`). It does **not** govern the
-#'   absorbing-state test: a state is absorbing only when `P[i, i]` equals
-#'   1 to an internal fixed tolerance of `.Machine$double.eps^0.5`,
-#'   independent of `tol` (so raising `tol` to ignore tiny transition
+#' It is a diagnostic to run before trusting [passage_time()] or
+#' [markov_stability()]. Both assume a regular chain (irreducible and
+#' aperiodic), whose stationary distribution is unique; `is_regular` says
+#' whether that holds. The structure follows the estimated matrix: a
+#' transition never observed in the data counts as impossible, so a chain
+#' estimated from few sequences can look reducible because a rare move was
+#' not seen.
+#'
+#' @details
+#' The fundamental-matrix absorption analysis follows Kemeny & Snell (1976),
+#' with every closed class lumped into one absorbing state, so each
+#' transient state's absorption probabilities sum to 1;
+#' the hitting probabilities are the minimal non-negative solution of the
+#' linear system in Norris (1997), solved over the states that can reach the
+#' target. The diagonal of the hitting matrix uses the return-time
+#' convention, the probability of returning to the state in one or more
+#' steps, as `markovchain::hittingProbabilities()` does.
+#'
+#' @param x The chain: a `netobject`, bare `cograph_network` or `tna` model
+#'   with transition weights, a numeric transition matrix, or a wide
+#'   sequence data frame or character matrix (estimated with
+#'   `build_network(method = "relative")`). A `netobject_group` is analysed
+#'   network by network. An association network (`cor`, `pcor`, `glasso`,
+#'   `ising`, `mgm`) or a matrix with negative entries raises an error of
+#'   class `nestimate_not_markov`. For the `print()` and `plot()` methods: a
+#'   `chain_structure` object (`print()` also takes a
+#'   `chain_structure_group` or a `summary_chain_structure`).
+#' @param normalize Whether to rescale rows that do not sum to 1 so that
+#'   they do, with a warning, as [passage_time()] does. Default `TRUE`. With
+#'   `FALSE`, such a matrix raises an error. A state with no outgoing
+#'   transitions (a row of zeros) raises an error either way.
+#' @param tol The tolerance below which a transition probability counts as
+#'   zero when the support graph is built (it drives `classification`,
+#'   `communicating_classes`, `period` and `hitting_probabilities`), and the
+#'   tolerance of the reversibility check (detailed balance). Default
+#'   `1e-10`. It does **not** govern the absorbing-state test: a state is
+#'   absorbing only when `P[i, i]` equals 1 to a fixed internal tolerance of
+#'   `.Machine$double.eps^0.5`, so raising `tol` to ignore tiny transition
 #'   probabilities never reclassifies a near-deterministic state as
-#'   absorbing). Default `1e-10`.
-#' @return For a `netobject_group`, a `c("chain_structure_group", "list")`:
-#'   a named list holding one `chain_structure` per constituent network,
-#'   with its own `print()` and `summary()` methods.
+#'   absorbing.
+#' @return A `chain_structure` object, or for a `netobject_group` a
+#'   `chain_structure_group` (class `c("chain_structure_group", "list")`), a
+#'   named list holding one `chain_structure` per network. `print()` shows
+#'   the chain-level properties (for a group, one block per network);
+#'   `summary()` returns a data frame (see *Summary columns*): for a
+#'   `chain_structure`, one row per state, of class
+#'   `c("summary_chain_structure", "data.frame")`, carrying the chain-level
+#'   flags `is_regular`, `is_irreducible`, `is_aperiodic`, `is_reversible`,
+#'   `n_classes` and `absorbing_states` as attributes that its `print()`
+#'   method shows as a header above the table; for a
+#'   `chain_structure_group`, a plain data frame with one row per group and
+#'   state. `plot()` returns a `ggplot` heatmap of the hitting probabilities
+#'   (see *Plot colours*). The `print()` methods return their input
+#'   invisibly.
 #'
-#'   Otherwise a `chain_structure` object: a list with elements
+#'   The fields of a `chain_structure`:
 #'   \describe{
 #'     \item{`states`}{Character vector of state names.}
-#'     \item{`classification`}{Named character vector. One of `"absorbing"`,
-#'       `"recurrent"`, `"transient"` per state.}
-#'     \item{`communicating_classes`}{List of state-name vectors. Each
-#'       sublist is a strongly connected component of the support graph.}
-#'     \item{`recurrent_classes`}{Subset of `communicating_classes` that are
-#'       closed (no transitions leaving the class).}
-#'     \item{`transient_classes`}{Subset that are not closed.}
-#'     \item{`absorbing_states`}{Character vector of states with `P[i, i] = 1`
-#'       (tested exactly, to within `.Machine$double.eps^0.5`; the
-#'       user-facing `tol` does not relax this).}
-#'     \item{`period`}{Named integer vector. Period of each recurrent state;
-#'       `NA` for transient states.}
-#'     \item{`is_irreducible`}{Logical. `TRUE` iff there is exactly one
+#'     \item{`classification`}{Named character vector, one of
+#'       `"absorbing"`, `"recurrent"` or `"transient"` per state.}
+#'     \item{`communicating_classes`}{List of state-name vectors, one per
+#'       strongly connected component of the support graph.}
+#'     \item{`recurrent_classes`}{The communicating classes that are closed
+#'       (no transition leaves the class).}
+#'     \item{`transient_classes`}{The communicating classes that are not
+#'       closed.}
+#'     \item{`absorbing_states`}{Character vector of states with
+#'       `P[i, i] = 1`, tested to within `.Machine$double.eps^0.5`; `tol`
+#'       does not relax this.}
+#'     \item{`period`}{Named integer vector: the period of each recurrent
+#'       state, `NA` for transient states.}
+#'     \item{`is_irreducible`}{`TRUE` when there is exactly one
 #'       communicating class.}
-#'     \item{`is_aperiodic`}{Logical. `TRUE` iff every recurrent state has
-#'       period 1.}
-#'     \item{`is_regular`}{Logical. `is_irreducible && is_aperiodic`.}
-#'     \item{`is_reversible`}{Logical or `NA`. `TRUE` iff the chain
-#'       satisfies detailed balance against its stationary distribution.
-#'       `NA` for non-irreducible chains (no unique stationary).}
-#'     \item{`hitting_probabilities`}{`n x n` matrix. `[i, j] = P(ever reach j
-#'       starting from i)`, computed over the same `tol`-thresholded support
-#'       graph that drives `classification` so the two are mutually
-#'       consistent (a state classified `"absorbing"`/closed never shows
-#'       hitting probability to states outside its class).}
-#'     \item{`absorption_probabilities`}{`n_transient x n_absorbing` matrix
-#'       or `NULL` if no transient -> absorbing pathway exists. `[i, j] =
-#'       P(eventual absorption in j | start in i)`.}
-#'     \item{`mean_absorption_time`}{Named numeric vector or `NULL`. Expected
-#'       number of steps until absorption from each transient state.}
-#'     \item{`P`}{The (possibly normalized) transition matrix used.}
+#'     \item{`is_aperiodic`}{`TRUE` when every recurrent state has period
+#'       1.}
+#'     \item{`is_regular`}{`is_irreducible && is_aperiodic`.}
+#'     \item{`is_reversible`}{`TRUE` when the chain satisfies detailed
+#'       balance against its stationary distribution; `NA` for a chain that
+#'       is not irreducible (no unique stationary distribution).}
+#'     \item{`hitting_probabilities`}{`n x n` matrix whose `[i, j]` entry is
+#'       the probability of ever reaching `j` from `i`, computed over the
+#'       same `tol`-thresholded support graph as `classification`, so the
+#'       two agree: a state in a closed class has hitting probability 0 to
+#'       every state outside it.}
+#'     \item{`absorption_probabilities`}{`n_transient x n_closed` matrix
+#'       whose `[i, j]` entry is the probability that the chain started in
+#'       transient state `i` ends in closed class `j`; each row sums to 1.
+#'       An absorbing state is a column named after it; a closed class of
+#'       several states is one column named by its states joined with `+`
+#'       (for example `B+C`). `NULL` when the chain has no transient state.}
+#'     \item{`mean_absorption_time`}{Named numeric vector of the expected
+#'       number of steps each transient state takes to enter a closed class,
+#'       whichever it is. `NULL` when `absorption_probabilities` is.}
+#'     \item{`P`}{The transition matrix analysed (after any row
+#'       normalisation).}
 #'   }
-#' @details
-#'   Built specifically as a diagnostic to run *before* trusting the output
-#'   of [passage_time()] or [markov_stability()]. Both implicitly assume a
-#'   regular chain (irreducible + aperiodic) so that the stationary
-#'   distribution is unique and meaningful. Use `is_regular` to check.
-#'
-#'   The fundamental-matrix absorption math follows Kemeny & Snell (1976);
-#'   the hitting-probability linear system follows Norris (1997).
-#'
 #' @examples
 #' net <- build_network(as.data.frame(trajectories), method = "relative")
 #' cs  <- chain_structure(net)
@@ -337,7 +391,7 @@ chain_structure <- function(x, normalize = TRUE, tol = 1e-10) {
   reach <- .cs_reachability(A)
   diag(reach) <- 1L
   H <- .cs_hitting(P, reach = reach)
-  abs_info <- .cs_absorption(P, transient_idx, absorbing_idx, state_names)
+  abs_info <- .cs_absorption(P, transient_idx, recurrent_classes, state_names)
 
   structure(list(
     states                   = state_names,
@@ -363,14 +417,17 @@ chain_structure <- function(x, normalize = TRUE, tol = 1e-10) {
 # ---------------------------------------------------------------------------
 
 #' @rdname chain_structure
-#' @param ... In \code{plot.chain_structure()}, \code{print.chain_structure()}, \code{summary.chain_structure()} and \code{summary.chain_structure_group()}: Ignored. In \code{print.chain_structure_group()}: Forwarded to `print.chain_structure`. In \code{print.summary_chain_structure()}: Forwarded to `print.data.frame`.
-#' @param show_values Logical. If `TRUE` (default), prints the numeric probability inside each cell. Set `FALSE` for large state spaces (n > 10) where labels overlap.
-#' @param digits Integer. Decimal places for in-cell labels.
-#' @param object For the \code{summary()} method: an object of class \code{chain_structure} or \code{chain_structure_group}.
-#' @return In \code{print.chain_structure()}, \code{print.chain_structure_group()} and \code{print.summary_chain_structure()}: `x` invisibly.
-#' @return In \code{plot.chain_structure()}: A `ggplot` object.
-#' @return In \code{summary.chain_structure()}: A `data.frame` with one row per state, of class `c("summary_chain_structure", "data.frame")`, carrying the chain-level flags (`is_regular`, `is_irreducible`, `is_aperiodic`, `is_reversible`, `n_classes`, `absorbing_states`) as attributes, which its `print()` method shows as a header. Columns as described above.
-#' @return In \code{summary.chain_structure_group()}: A `data.frame` with columns `group`, `state`, `classification`, `period`, `persistence`, `return_probability`, `sojourn_steps`, plus `stationary_probability` if all groups are irreducible and `mean_absorption_time` if any group has absorbing states.
+#' @param ... Ignored, except by the `print()` methods of a
+#'   `chain_structure_group`, which pass it to each network's `print()`, and
+#'   of a `summary_chain_structure`, which pass it to `print.data.frame()`.
+#' @param show_values For the `plot()` method: whether to print each cell's
+#'   probability inside it. Default `TRUE`. Values are never printed for more
+#'   than 20 states; set `FALSE` earlier when the labels overlap (from about
+#'   10 states).
+#' @param digits For the `plot()` method: decimal places of the cell values.
+#'   Default `2`.
+#' @param object For the `summary()` methods: a `chain_structure` or
+#'   `chain_structure_group` object.
 #' @export
 print.chain_structure <- function(x, ...) {
   rev <- x$is_reversible
@@ -391,20 +448,18 @@ print.chain_structure <- function(x, ...) {
 }
 
 #' @rdname chain_structure
-#' @section Methods:
-#' * \code{plot.chain_structure()}: Renders the hitting-probability matrix as a heatmap, with rows and columns ordered by communicating class so the block structure is visible at a glance. State labels along both axes are coloured by classification (absorbing / recurrent / transient). The subtitle summarises the chain-level properties (regular, reversible).
-#' * \code{print.chain_structure()}: Prints a compact chain-level header. For the full per-state table, call `summary()` on the same object.
-#' * \code{print.chain_structure_group()}: One header line per group, followed by each group's per-state table (via `summary.chain_structure`).
-#' * \code{print.summary_chain_structure()}: Prints a one-line chain header followed by the tidy per-state table.
-#' * \code{summary.chain_structure()}: Returns a single data.frame with one row per state, combining every per-state metric `chain_structure()` computes. Always includes `state`, `classification`, `period`, `persistence` (the diagonal of the transition matrix), `return_probability` (the diagonal of the hitting matrix) and `sojourn_steps` (`1 / (1 - persistence)`, which is `Inf` for an absorbing state). Adds the chain's `stationary_probability` when the chain is irreducible, and absorption columns when it has any absorbing states: `absorption_probability` for a single absorbing state or one `absorbed_in_<state>` column per state when there are several, plus `mean_absorption_time`.
-#' * \code{summary.chain_structure_group()}: Produces a single tidy data.frame with one row per (group, state) combination, combining classification, persistence, sojourn, and -- when applicable -- stationary or mean-absorption-time columns. Useful for side-by-side reporting of `chain_structure()` across the members of a `netobject_group`.
 #' @section Plot colours:
-#' Cell colour encodes `P(ever reach j | start at i)`. The diagonal
-#' uses the return-time convention (`P(return to j in >= 1 steps)`),
-#' matching `markovchain::hittingProbabilities`. A non-irreducible chain
-#' shows zero off-block entries -- visual evidence of one-way doors
-#' between behavioural phases. An absorbing chain shows a column of 1's
-#' for the absorbing state.
+#' The `plot()` method draws the hitting-probability matrix as a heatmap,
+#' with rows and columns ordered by communicating class (closed classes
+#' first, larger classes before smaller ones) so the block structure is
+#' visible. Cell colour runs from white (0) to dark blue (1) and encodes
+#' `P(ever reach j | start at i)`; the diagonal uses the return-time
+#' convention, `P(return to j in >= 1 steps)`. The state labels on both axes
+#' name each state's class, as in `Active (recurrent)`, and the subtitle
+#' lists the chain-level properties. A
+#' chain that is not irreducible shows zero entries between classes that
+#' cannot reach each other; when every state ends in one absorbing state,
+#' that state's column is all 1s.
 #' @export
 plot.chain_structure <- function(x, show_values = TRUE, digits = 2L, ...) {
   if (!requireNamespace("ggplot2", quietly = TRUE)) {
@@ -437,11 +492,11 @@ plot.chain_structure <- function(x, show_values = TRUE, digits = 2L, ...) {
   df$from <- factor(df$from, levels = ordered_states)
   df$to   <- factor(df$to,   levels = ordered_states)
 
-  # Okabe-Ito-flavoured classification palette.
-  pal <- c(absorbing  = "#D55E00",   # vermillion
-           recurrent  = "#0072B2",   # blue
-           transient  = "#E69F00")   # orange
-  axis_cols <- pal[cls]
+  # Each axis label names the state's class in text: ggplot2 does not
+  # support one colour per tick label, and a colour alone would be the only
+  # cue for the class.
+  class_labels <- stats::setNames(sprintf("%s (%s)", ordered_states, cls),
+                                  ordered_states)
 
   subtitle <- sprintf(
     "irreducible: %s   aperiodic: %s   regular: %s   reversible: %s   classes: %d",
@@ -457,8 +512,9 @@ plot.chain_structure <- function(x, show_values = TRUE, digits = 2L, ...) {
                                   limits = c(0, 1),
                                   name = "P(reach)",
                                   na.value = "grey90") +
-    ggplot2::scale_x_discrete(position = "top") +
-    ggplot2::scale_y_discrete(limits = rev(ordered_states)) +
+    ggplot2::scale_x_discrete(position = "top", labels = class_labels) +
+    ggplot2::scale_y_discrete(limits = rev(ordered_states),
+                              labels = class_labels) +
     ggplot2::labs(
       title = "Hitting probabilities",
       subtitle = subtitle,
@@ -469,9 +525,7 @@ plot.chain_structure <- function(x, show_values = TRUE, digits = 2L, ...) {
     ggplot2::theme(
       panel.grid       = ggplot2::element_blank(),
       axis.text.x.top  = ggplot2::element_text(angle = 45, hjust = 0,
-                                                vjust = 0,
-                                                colour = axis_cols),
-      axis.text.y      = ggplot2::element_text(colour = rev(axis_cols)),
+                                                vjust = 0),
       plot.subtitle    = ggplot2::element_text(size = 10, colour = "grey30")
     )
 
@@ -495,8 +549,22 @@ plot.chain_structure <- function(x, show_values = TRUE, digits = 2L, ...) {
 
 #' @rdname chain_structure
 #' @section Summary columns:
+#' `summary()` of a `chain_structure` returns one row per state, combining
+#' every per-state result: `state`, `classification`, `period`,
+#' `persistence` (the diagonal of the transition matrix),
+#' `return_probability` (the diagonal of the hitting matrix) and
+#' `sojourn_steps` (`1 / (1 - persistence)`, `Inf` for an absorbing state).
+#' An irreducible chain adds `stationary_probability`. A chain with transient
+#' states adds `absorption_probability` (one closed class) or one
+#' `absorbed_in_<class>` column per closed class (named as the columns of
+#' `absorption_probabilities`), and `mean_absorption_time` (steps to enter a
+#' closed class); these are `NA` for states that are not transient. Probabilities are rounded to 4 decimals and step counts to 2.
 #' Columns are ordered for readability: identifiers first, classification
-#' second, dynamic per-state metrics last.
+#' second, per-state results last.
+#'
+#' `summary()` of a `chain_structure_group` stacks these tables into one
+#' data frame with a `group` column first, one row per group and state; a
+#' column that only some groups have is `NA` for the others.
 #' @export
 summary.chain_structure <- function(object, ...) {
   state_names <- object$states

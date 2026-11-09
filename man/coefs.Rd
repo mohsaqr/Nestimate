@@ -13,25 +13,32 @@ coefs(x, ...)
 \method{coefs}{default}(x, ...)
 }
 \arguments{
-\item{x}{A fitted model object - currently only \code{net_mlvar} is supported.}
+\item{x}{A fitted model; only a \code{net_mlvar} from \code{\link[=build_mlvar]{build_mlvar()}} has a
+method, and any other object raises an error.}
 
-\item{...}{Unused.}
+\item{...}{Not used.}
 }
 \value{
-A tidy \code{data.frame} of coefficient estimates.
+A data frame with one row per \verb{(outcome, predictor)} pair and the
+columns \code{outcome} (the variable predicted), \code{predictor} (the variable at
+the earlier occasion), \code{beta} (the fixed-effect coefficient), \code{se} (its
+standard error), \code{t} (\code{beta / se}), \code{p} (the two-sided p-value from the
+normal distribution, \code{2 * pnorm(-abs(t))}, which stays above zero for
+large \code{t}), \code{ci_lower} and \code{ci_upper} (the 95\% Wald interval,
+\code{beta} plus or minus \code{qnorm(0.975)} standard errors) and \code{significant}
+(\code{p < 0.05}).
 }
 \description{
-Generic accessor for the tidy coefficient table stored on a
-\code{\link[=build_mlvar]{build_mlvar()}} result. Returns a \code{data.frame} with one row per
-\verb{(outcome, predictor)} pair and columns \code{outcome}, \code{predictor},
-\code{beta}, \code{se}, \code{t}, \code{p}, \code{ci_lower}, \code{ci_upper}, \code{significant}.
-}
-\details{
-Only the within-person (temporal) coefficients are tabulated -
-these are the lagged fixed effects that populate \code{fit$temporal}.
-The between-subjects effects that go into \code{fit$between} are handled
-via the \code{D (I - Gamma)} transformation and are not exposed as a
-separate tidy table.
+\code{coefs()} returns the temporal coefficients of a \code{\link[=build_mlvar]{build_mlvar()}} fit as a
+data frame, one row per \verb{(outcome, predictor)} pair: the fixed-effect
+lagged regression coefficients that make up the temporal network, with
+their standard errors and tests.
+
+Only the within-person (temporal) coefficients are tabulated. The
+between-subjects effects that enter the between-subjects network through
+the \code{D (I - Gamma)} transformation are not given as a table of their own.
+The p-values are not adjusted for the number of coefficients, and
+\code{significant} is \code{p < 0.05} for each coefficient on its own.
 }
 \examples{
 # A three-variable ESM panel: 20 people x 20 beeps. `tired` is driven by

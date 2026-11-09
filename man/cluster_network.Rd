@@ -7,46 +7,84 @@
 cluster_network(data, k, cluster_by = "pam", dissimilarity = "hamming", ...)
 }
 \arguments{
-\item{data}{Sequence data. Accepts a data frame, matrix, or
-\code{netobject}. See \code{\link{build_clusters}} for supported formats.}
+\item{data}{The sequences: a data frame, matrix, \code{netobject}, bare
+\code{cograph_network} or \code{tna} model, as accepted by \code{\link[=build_clusters]{build_clusters()}} (or
+by \code{\link[=build_mmm]{build_mmm()}} when \code{cluster_by = "mmm"}). A \code{wtna} network is
+accepted only with \code{cluster_by = "mmm"}; dissimilarity clustering
+refuses it with an error of class \code{nestimate_bad_input}.}
 
-\item{k}{Integer. Number of clusters.}
+\item{k}{The number of clusters, a whole number from 2 to one less than
+the number of sequences. Required.}
 
-\item{cluster_by}{Character. Clustering algorithm passed to
-\code{\link{build_clusters}}'s \code{method} parameter (\code{"pam"},
-\code{"ward.D2"}, \code{"ward.D"}, \code{"complete"}, \code{"average"},
-\code{"single"}, \code{"mcquitty"}, \code{"median"}, \code{"centroid"}),
-or \code{"mmm"} for Mixed Markov Model clustering. Default: \code{"pam"}.}
+\item{cluster_by}{The clustering algorithm. \code{"pam"} (default) and the
+hierarchical methods \code{"ward.D2"}, \code{"ward.D"}, \code{"complete"},
+\code{"average"}, \code{"single"}, \code{"mcquitty"}, \code{"median"} and \code{"centroid"} are
+passed to \code{\link[=build_clusters]{build_clusters()}} as its \code{method}; \code{"mmm"} fits a mixed
+Markov model with \code{\link[=build_mmm]{build_mmm()}} instead.}
 
-\item{dissimilarity}{Character. Distance metric for sequence clustering.
-Only valid when \code{cluster_by != "mmm"}. Default: \code{"hamming"}.}
+\item{dissimilarity}{The distance between sequences for dissimilarity
+clustering, one of those \code{\link[=build_clusters]{build_clusters()}} accepts. Default
+\code{"hamming"}. Giving it with \code{cluster_by = "mmm"} raises an error.}
 
-\item{...}{Routed to two stages. For distance clustering
-(\code{cluster_by != "mmm"}), \code{\link{build_clusters}} arguments
-\code{na_syms}, \code{weighted}, \code{lambda}, \code{seed}, \code{q},
-\code{p}, and \code{covariates} are intercepted and forwarded to the
-clusterer; recognised network-estimation arguments flow to
-\code{\link{build_network}}. Unknown arguments error before either stage
-is run. When
-\code{cluster_by = "mmm"}, the recognised \code{\link{build_mmm}}
-arguments (\code{n_starts}, \code{max_iter}, \code{tol}, \code{smooth},
-\code{seed}, \code{covariates}) are intercepted instead, and the rest
-flows to \code{build_network}. In both modes, when \code{data} is a
-\code{netobject}, its \code{build_args} are merged into the
-\code{build_network} side (caller's explicit values take precedence).}
+\item{...}{Arguments for the two stages, routed by name. For
+dissimilarity clustering, \code{\link[=build_clusters]{build_clusters()}}'s \code{na_syms}, \code{weighted},
+\code{lambda}, \code{seed}, \code{q}, \code{p}, \code{covariates} and \code{estimator} go to the
+clustering; with \code{cluster_by = "mmm"}, \code{\link[=build_mmm]{build_mmm()}}'s \code{n_starts},
+\code{max_iter}, \code{tol}, \code{smooth}, \code{seed}, \code{covariates}, \code{covariate_effect}
+and \code{estimator} go to the mixture fit. Everything else is meant for the
+network stage and must be an argument of \code{\link[=build_network]{build_network()}} or of a
+registered estimator; any other name raises an error before either
+stage runs. A name both stages accept goes to the clustering: under
+dissimilarity clustering a \code{lambda} given here is the Hamming decay of
+the clustering and never reaches an attention network, and the same
+holds for \code{weighted}. When \code{data} is a \code{netobject}, its stored build
+arguments are reused for the per-cluster networks, and a value given in
+the call replaces the stored one. The \emph{Details} section lists which
+network arguments take effect.}
 }
 \value{
-A \code{netobject_group}.
+A \code{netobject_group}: one \code{netobject} per cluster, named
+\code{"Cluster 1"}, \code{"Cluster 2"}, and so on, with the clustering (a
+\code{net_clustering}, or for \code{"mmm"} a \code{net_mmm_clustering}) kept as
+its \code{"clustering"} attribute. \code{print()} names the clustering method and
+shows each cluster's network size, weight range and share of the
+sequences; \code{\link[=cluster_diagnostics]{cluster_diagnostics()}} reads the clustering, and
+\code{\link[=summary]{summary()}} (the networks' metrics, a column per cluster),
+\code{\link[=bootstrap_network]{bootstrap_network()}} and \code{\link[=net_centrality]{net_centrality()}} take the group as it is.
 }
 \description{
-Combines sequence clustering and network estimation into a single call.
-Clusters the data using the specified algorithm, then calls
-\code{\link{build_network}} on each cluster subset.
+\code{cluster_network()} clusters a set of sequences and estimates one network
+per cluster in a single call. It runs \code{\link[=build_clusters]{build_clusters()}} (dissimilarity
+clustering with PAM or a hierarchical method) or, with
+\code{cluster_by = "mmm"}, \code{\link[=build_mmm]{build_mmm()}} (a mixture of Markov chains), then
+\code{\link[=build_network]{build_network()}} on each cluster's sequences. The network method is
+the \code{method} given in \code{...}; without one, a \code{netobject} input passes on
+its own method and stored build arguments, so the per-cluster networks
+are of the same type as the input, and other input gives \code{"relative"}
+transition networks.
+
+The clusters were formed to make the sequences within each one alike, so
+their networks differ partly by construction. Check the classification
+with \code{\link[=cluster_diagnostics]{cluster_diagnostics()}} and the choice of \code{k} with
+\code{\link[=cluster_choice]{cluster_choice()}} or \code{\link[=compare_mmm]{compare_mmm()}}, and see how far each cluster's
+edges move under resampling with \code{\link[=bootstrap_network]{bootstrap_network()}} before reading
+differences between the networks.
 }
 \details{
-If \code{data} is a \code{netobject} and \code{method} is not provided in
-\code{...}, the original network method is inherited automatically so the
-per-cluster networks match the type of the input network.
+\code{method}, the estimators' own arguments (such as \code{n_gram} or
+\code{direction}) and \code{\link[=build_network]{build_network()}}'s \code{threshold}, \code{scaling}, \code{start},
+\code{end} and \code{params} reach the per-cluster networks. A \code{netobject} input
+of the same method also passes on its estimator settings (\verb{$params}, such
+as an attention network's \code{lambda}) unless \code{params} is given. With
+\code{cluster_by = "mmm"} and the default relative networks, which are the
+fitted chains, \code{scaling} and \code{threshold} are applied to the fitted
+weights, and an estimator argument, \code{start}, \code{end} or a new \code{params}
+raises an error of class \code{nestimate_bad_input}. For a one-hot \code{netobject}
+the stored build arguments are not used. Under \code{"mmm"}, rebuilding a
+network built from
+long-format data with any method other than \code{"relative"} currently raises
+an error, because its column names are passed on to the wide per-cluster
+data.
 }
 \examples{
 seqs <- data.frame(V1 = c("A","B","C","A","B"), V2 = c("B","C","A","B","A"),
@@ -62,11 +100,6 @@ seqs <- data.frame(
 # Default: PAM clustering, relative (transition) networks
 grp <- cluster_network(seqs, k = 3)
 
-# Specify network method (cor requires numeric panel data)
-\dontrun{
-panel <- as.data.frame(matrix(rnorm(1500), nrow = 300, ncol = 5))
-grp <- cluster_network(panel, k = 2, method = "cor")
-}
 
 # MMM-based clustering
 grp <- cluster_network(seqs, k = 2, cluster_by = "mmm")

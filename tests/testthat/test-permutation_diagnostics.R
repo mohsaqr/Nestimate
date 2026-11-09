@@ -159,3 +159,11 @@ test_that("unsupported or missing block inputs raise classed errors", {
   expect_error(permutation_diagnostics(net, actor = c("a", "b")),
                "single column name")
 })
+
+test_that("permutation_diagnostics refuses an mcml with a classed error", {
+  seqs <- data.frame(T1 = c("A", "B", "A", "C"), T2 = c("B", "C", "C", "D"),
+                     T3 = c("C", "D", "D", "A"))
+  mc <- build_mcml(seqs, list(Z = c("A", "B"), G = c("C", "D")))
+  expect_error(permutation_diagnostics(mc, actor = "id", iter = 10),
+               class = "nestimate_bad_input")
+})

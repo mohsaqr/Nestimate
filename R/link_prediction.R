@@ -3,72 +3,115 @@
 #' Predict Missing or Future Links in a Network
 #'
 #' @description
-#' Computes link prediction scores for all node pairs using one or more
-#' structural similarity methods. Accepts \code{netobject}, \code{mcml},
-#' \code{cograph_network}, or a raw weight matrix.
+#' `predict_links()` scores every pair of nodes for how strongly the
+#' network's structure suggests a link between them, with one or more
+#' similarity indices: common neighbours, resource allocation, Adamic-Adar,
+#' Jaccard, preferential attachment and Katz (Liben-Nowell & Kleinberg,
+#' 2007). It returns one row per pair and index, ranked within each index,
+#' and a consensus ranking across the indices. It takes a `netobject`, a
+#' `cograph_network`, a `tna` model or a square weight matrix, weighted or
+#' binary, directed or undirected.
 #'
-#' All methods are fully vectorized using matrix operations - no loops.
-#' Supports both weighted and binary adjacency, directed and undirected
-#' networks.
+#' A high score says that a pair resembles linked pairs in the network's
+#' structure (shared neighbours, busy endpoints, many connecting paths), not
+#' that the link exists in the population or will form. The indices are
+#' heuristics and often disagree; the consensus rank shows the pairs on which
+#' they agree. How well an index recovers links is measured by scoring
+#' held-out edges with [evaluate_links()]; [pathways()] writes the top
+#' predictions as pathway strings.
 #'
-#' @param x A \code{netobject}, \code{mcml}, \code{cograph_network}, or
-#'   numeric square matrix. For the \code{print()} method: an object of class \code{net_link_prediction}.
-#' @param methods Character vector. One or more of:
-#'   \code{"common_neighbors"}, \code{"resource_allocation"},
-#'   \code{"adamic_adar"}, \code{"jaccard"}, \code{"preferential_attachment"},
-#'   \code{"katz"}. Default: all six methods.
-#' @param weighted Logical. If \code{TRUE}, use the weight matrix directly
-#'   instead of binarizing. Default: \code{TRUE}.
-#' @param top_n Integer or NULL. Return only the top N predictions per method.
-#'   Default: \code{NULL} (all pairs).
-#' @param exclude_existing Logical. If \code{TRUE}, exclude node pairs that
-#'   already have an edge. Default: \code{TRUE}.
-#' @param include_self Logical. If \code{TRUE}, include self-loop predictions.
-#'   Default: \code{FALSE}.
-#' @param katz_damping Numeric or NULL. Attenuation factor for Katz index.
-#'   If NULL, auto-computed as \code{0.9 / spectral_radius(A)}.
-#'   Default: \code{NULL}.
+#' @param x The network: a `netobject`, a `cograph_network`, a `tna` model,
+#'   or a numeric square weight matrix. A network keeps its own direction; a
+#'   matrix or `tna` model is directed unless it is symmetric. A
+#'   `netobject_group` or an `mcml` raises an error of class
+#'   `nestimate_bad_input`: predict each network separately. For the `print()`
+#'   method: a `predict_links()` result.
+#' @param methods The indices to compute, one or more of
+#'   `"common_neighbors"`, `"resource_allocation"`, `"adamic_adar"`,
+#'   `"jaccard"`, `"preferential_attachment"` and `"katz"` (defined under
+#'   *Details*). By default all six.
+#' @param weighted Whether common neighbours, resource allocation,
+#'   Adamic-Adar and Jaccard use the edge weights (`TRUE`, default) or the
+#'   binary adjacency (`FALSE`). Preferential attachment, Katz and the degrees
+#'   that resource allocation and Adamic-Adar divide by always use the binary
+#'   adjacency.
+#' @param top_n The number of predictions kept per index, the highest
+#'   scores. Default `NULL` (every pair). The ranks are computed before the
+#'   cut, so they stay the same.
+#' @param exclude_existing Whether pairs that already have an edge are left
+#'   out of the predictions. Default `TRUE`.
+#' @param include_self Whether self-pairs (a node with itself) are listed for
+#'   a directed network; an undirected network never lists them. All indices
+#'   score self-pairs 0. It also decides whether self-loops count in the
+#'   number of existing edges. Default `FALSE`.
+#' @param katz_damping The attenuation factor \eqn{\beta} of the Katz index.
+#'   Default `NULL`, which uses \eqn{0.9 / \rho(A)} for the spectral radius
+#'   \eqn{\rho(A)} of the adjacency (`0.1` when it is 0). A value at or above
+#'   \eqn{1 / \rho(A)}, where the series diverges, is replaced by
+#'   \eqn{0.9 / \rho(A)} with a warning.
 #'
-#' @return An object of class \code{"net_link_prediction"} containing:
+#' @return A `net_link_prediction` object. `print()` lists the top ten
+#'   predicted links (by consensus rank with several indices, by score with
+#'   one) and returns its input invisibly. `summary()` returns a data frame
+#'   with one row per index: `method`, `n_predictions`, and the `score_mean`,
+#'   `score_sd`, `score_max` and `score_min` of its predictions; an index
+#'   with no predictions (every possible link already exists) has
+#'   `n_predictions = 0` and `NA` scores. [evaluate_links()] scores the
+#'   predictions against known edges, and [pathways()] writes them as pathway
+#'   strings. The object's fields:
 #' \describe{
-#'   \item{predictions}{Data frame, one row per (node pair, method), with
-#'     columns \code{from}, \code{to}, \code{method}, \code{score},
-#'     \code{existing} (was the pair already an edge?) and \code{rank}.
-#'     Sorted by score (descending) within each method.}
-#'   \item{consensus}{Data frame, one row per node pair, with columns
-#'     \code{from}, \code{to}, \code{avg_rank}, \code{n_methods} and
-#'     \code{consensus_rank}, ordered by \code{avg_rank}. \code{NULL} when
-#'     only one method was requested.}
-#'   \item{scores}{Named list of score matrices (one per method).}
-#'   \item{adjacency}{Integer 0/1 adjacency matrix of the input network.}
-#'   \item{methods}{Character vector of methods used.}
-#'   \item{nodes}{Character vector of node names.}
-#'   \item{directed}{Logical.}
-#'   \item{weighted}{Logical.}
-#'   \item{n_nodes}{Integer.}
-#'   \item{n_existing}{Integer. Number of existing edges.}
+#'   \item{predictions}{Data frame, one row per node pair and index:
+#'     `from`, `to`, `method`, `score`, `existing` (whether the pair already
+#'     has an edge) and `rank`, sorted by score (highest first) within each
+#'     index. An undirected network lists each pair once.}
+#'   \item{consensus}{Data frame, one row per node pair: `from`, `to`,
+#'     `avg_rank` (the pair's mean rank over the indices that list it),
+#'     `n_methods` (how many do) and `consensus_rank`, ordered by `avg_rank`.
+#'     `NULL` when only one index was computed.}
+#'   \item{scores}{Named list of score matrices, one per index.}
+#'   \item{adjacency}{The 0/1 adjacency matrix of the input network.}
+#'   \item{methods}{The indices computed.}
+#'   \item{nodes}{The node names.}
+#'   \item{directed, weighted}{Whether the network was read as directed, and
+#'     whether weights were used.}
+#'   \item{n_nodes}{The number of nodes.}
+#'   \item{n_existing}{The number of existing edges: non-zero cells of the
+#'     adjacency matrix, each undirected edge counted once, self-loops
+#'     counted only with `include_self = TRUE`.}
 #' }
 #'
 #' @details
 #' ## Methods
 #'
 #' \describe{
-#'   \item{common_neighbors}{Number of shared neighbors. For directed graphs,
-#'     sums shared out-neighbors and shared in-neighbors.
-#'     Vectorized as \code{A \%*\% t(A) + t(A) \%*\% A}.}
-#'   \item{resource_allocation}{Zhou et al. (2009). Like common neighbors but
-#'     weights each shared neighbor z by \code{1/degree(z)}.
-#'     Penalizes hubs, rewards rare shared connections.}
-#'   \item{adamic_adar}{Adamic & Adar (2003). Like resource allocation but
-#'     weights by \code{1/log(degree(z))}. Less aggressive penalty than RA.}
-#'   \item{jaccard}{Ratio of shared neighbors to total neighbors.
-#'     For directed graphs, computed on combined (out+in) neighbor sets.}
-#'   \item{preferential_attachment}{Product of source out-degree and target
-#'     in-degree. Captures the "rich-get-richer" effect.}
-#'   \item{katz}{Katz (1953). Weighted sum of all paths between nodes,
-#'     exponentially damped by path length. Computed via matrix inversion:
-#'     \code{(I - beta * A)^{-1} - I}. Captures global structure.}
+#'   \item{common_neighbors}{The number of shared neighbours. For a directed
+#'     network, shared out-neighbours plus shared in-neighbours, computed as
+#'     \code{A \%*\% t(A) + t(A) \%*\% A}.}
+#'   \item{resource_allocation}{Zhou et al. (2009). Like common neighbours,
+#'     but each shared neighbour z is weighted by \code{1/degree(z)} (in- plus
+#'     out-degree for a directed network). It penalises hubs and rewards rare
+#'     shared connections.}
+#'   \item{adamic_adar}{Adamic & Adar (2003). Like resource allocation, but
+#'     weighted by \code{1/log(degree(z))}, a milder penalty; a neighbour of
+#'     degree 1 adds nothing.}
+#'   \item{jaccard}{Shared neighbours divided by all neighbours of the two
+#'     nodes. With `weighted = TRUE` it is the weighted Jaccard (Ruzicka)
+#'     index, \eqn{\sum_z \min(|w_{iz}|, |w_{jz}|) / \sum_z \max(|w_{iz}|,
+#'     |w_{jz}|)}, which equals the binary index on 0/1 weights and lies
+#'     between 0 and 1. For a directed network, computed on the combined (out +
+#'     in) neighbourhoods, each neighbour weighted by the larger of its two
+#'     directions.}
+#'   \item{preferential_attachment}{The source's out-degree times the
+#'     target's in-degree (Barabasi & Albert, 1999): the "rich get richer"
+#'     effect.}
+#'   \item{katz}{Katz (1953). A sum over all paths between the two nodes,
+#'     damped exponentially by path length, computed by matrix inversion as
+#'     \code{(I - beta * A)^{-1} - I}. It reads the global structure. If the
+#'     inversion fails, the series is truncated after six terms.}
 #' }
+#'
+#' Every index is computed with matrix operations on the whole network at
+#' once.
 #'
 #' @references
 #' Liben-Nowell, D. & Kleinberg, J. (2007). The link-prediction problem for
@@ -86,6 +129,10 @@
 #' Jaccard, P. (1901). Etude comparative de la distribution florale dans une
 #' portion des Alpes et des Jura. \emph{Bulletin de la Societe Vaudoise des
 #' Sciences Naturelles}, 37, 547--579.
+#'
+#' Ioffe, S. (2010). Improved consistent sampling, weighted minhash and L1
+#' sketching. \emph{IEEE International Conference on Data Mining},
+#' 246--255.
 #'
 #' Barabasi, A.-L. & Albert, R. (1999). Emergence of scaling in random
 #' networks. \emph{Science}, 286(5439), 509--512.
@@ -122,7 +169,7 @@ predict_links <- function(x,
   nodes <- parsed$nodes
   n <- length(nodes)
 
-  stopifnot(is.numeric(W), nrow(W) == n, ncol(W) == n)
+  .assert(is.numeric(W), nrow(W) == n, ncol(W) == n)
   methods <- match.arg(methods, several.ok = TRUE)
 
   # Binary adjacency
@@ -130,7 +177,10 @@ predict_links <- function(x,
   # Working matrix: weighted or binary
   M <- if (isTRUE(weighted)) W else A
 
-  n_existing <- sum(A != 0)
+  # An undirected edge is one pair: count the upper triangle only, so the
+  # count matches the network's own n_edges (it used to count both cells).
+  counted <- if (directed) A != 0 else upper.tri(A, diag = TRUE) & A != 0
+  n_existing <- sum(counted)
   if (!include_self) {
     n_existing <- n_existing - sum(diag(A) != 0)
   }
@@ -263,16 +313,24 @@ predict_links <- function(x,
 
 #' @noRd
 .lp_jaccard <- function(M, directed) {
-  # Jaccard on combined neighbor sets (out + in for directed)
-  if (directed) {
-    B <- pmin(M + t(M), 1)  # symmetrized binary presence
-  } else {
-    B <- M
+  # Weighted Jaccard (Ruzicka similarity): sum_z min(w_iz, w_jz) over
+  # sum_z max(w_iz, w_jz), on absolute weights (a negative edge is still a
+  # neighbour, as in the adjacency). With 0/1 weights it is exactly
+  # |N(i) & N(j)| / |N(i) | N(j)| (Jaccard 1901; Ioffe 2010 for the weighted
+  # form). The old code divided a weighted intersection by a binary union,
+  # which went negative for weights above 1 and was clamped to 0.
+  # Directed: one weight per neighbour over both directions, the larger of
+  # the two, which reduces to the combined (out + in) neighbour set.
+  B <- abs(M)
+  if (directed) B <- pmax(B, t(B))
+  n <- nrow(B)
+  overlap <- function(f) {
+    vapply(seq_len(n), function(i) {
+      rowSums(f(B, matrix(B[i, ], n, n, byrow = TRUE)))
+    }, numeric(n))
   }
-  intersection <- tcrossprod(B)
-  # |N(i) union N(j)| = |N(i)| + |N(j)| - |N(i) intersect N(j)|
-  deg <- rowSums(B > 0)
-  union_mat <- outer(deg, deg, "+") - intersection
+  intersection <- overlap(pmin)
+  union_mat <- overlap(pmax)
   s <- ifelse(union_mat > 0, intersection / union_mat, 0)
   diag(s) <- 0
   s
@@ -322,11 +380,14 @@ predict_links <- function(x,
 
 #' @noRd
 .lp_parse_input <- function(x) {
-  if (inherits(x, "mcml")) x <- as_tna(x)
+  if (inherits(x, "mcml")) {
+    .stop_mcml_input("predict_links()", "scores one network")
+  }
   if (inherits(x, "netobject_group")) {
-    stop("predict_links() requires a single network, not a group. ",
-         "Use lapply(group, predict_links) for per-group predictions.",
-         call. = FALSE)
+    stop(errorCondition(paste(
+      "predict_links() scores one network, not a group: pass each group's",
+      "network on its own."),
+      class = "nestimate_bad_input", call = NULL))
   }
   if (inherits(x, "tna")) {
     return(list(
@@ -353,8 +414,9 @@ predict_links <- function(x,
       nodes    = nodes
     ))
   }
-  stop("x must be a netobject, cograph_network, or numeric matrix.",
-       call. = FALSE)
+  stop(errorCondition(
+    "x must be a netobject, cograph_network, or numeric matrix.",
+    class = "nestimate_bad_input", call = NULL))
 }
 
 
@@ -415,17 +477,39 @@ predict_links <- function(x,
 #' Evaluate Link Predictions Against Known Edges
 #'
 #' @description
-#' Computes AUC-ROC, precision\eqn{@}k, and average precision for link
-#' predictions against a set of known true edges.
+#' `evaluate_links()` measures how well each index of a [predict_links()]
+#' result recovers a set of known edges. For each index it returns the area
+#' under the ROC curve (AUC), the average precision, and the precision among
+#' the top `k` predictions.
 #'
-#' @param pred A \code{net_link_prediction} object.
-#' @param true_edges A data frame with columns \code{from} and \code{to},
-#'   or a binary matrix where 1 indicates a true edge.
-#' @param k Integer vector. Values of k for precision\eqn{@}k.
-#'   Default: \code{c(5, 10, 20)}.
+#' The AUC is the probability that a known edge scores higher than a pair
+#' that is not one (ties count half), so 0.5 is chance level. Average
+#' precision is the mean of the precisions at the rank of each known edge,
+#' and precision\eqn{@}k the share of known edges among the `k`
+#' highest-scoring pairs. Only the pairs listed in the predictions are
+#' evaluated: with `exclude_existing = TRUE`, the default of
+#' [predict_links()], the network's current edges are not scored, so the
+#' known edges should be ones held out of the network (a later period, a
+#' removed subset), and `top_n` limits the evaluation to the pairs it kept.
+#' The AUC is `NA` when the evaluated pairs include no known edge, or
+#' nothing but known edges.
 #'
-#' @return A data frame with columns: method, auc, average_precision,
-#'   and one precision_at_k column per k value.
+#' @param pred A [predict_links()] result.
+#' @param true_edges The known edges: a data frame with columns `from` and
+#'   `to` (every row is an edge, whatever its other columns, such as a
+#'   weight, hold), or a matrix whose non-zero cells are edges. Its row
+#'   names name both its rows and its columns (column names are not read),
+#'   so its columns must be in the same order as its rows; without row
+#'   names, the nodes of `pred` are used. For a directed prediction, pairs
+#'   are matched by `from` and `to`, direction included; for an undirected
+#'   one, in either order, so `(C, A)` matches the listed pair `(A, C)`.
+#' @param k The cut-offs for precision\eqn{@}k. Default `c(5, 10, 20)`. A
+#'   `k` larger than an index's number of predictions gives `NA`.
+#'
+#' @return A data frame with one row per index: `method`, `auc`,
+#'   `average_precision` (`0` when no evaluated pair is a known edge), and
+#'   one `precision_at_<k>` column per value of `k`. A prediction with no
+#'   listed pairs (every possible link already exists) gives `NULL`.
 #'
 #' @examples
 #' seqs <- data.frame(
@@ -441,24 +525,37 @@ predict_links <- function(x,
 #'
 #' @export
 evaluate_links <- function(pred, true_edges, k = c(5L, 10L, 20L)) {
-  stopifnot(inherits(pred, "net_link_prediction"))
+  .assert(
+    inherits(pred, "net_link_prediction"),
+    "`k` must be positive whole numbers" =
+      is.numeric(k) && length(k) >= 1L && all(is.finite(k)) &&
+        all(k >= 1) && all(k == round(k))
+  )
 
   # Parse true edges to a set of "from->to" keys
   if (is.matrix(true_edges)) {
     nodes <- rownames(true_edges) %||% pred$nodes
     idx <- which(true_edges != 0, arr.ind = TRUE)
-    true_keys <- paste0(nodes[idx[, 1]], "\t", nodes[idx[, 2]])
+    true_from <- nodes[idx[, 1]]
+    true_to <- nodes[idx[, 2]]
   } else {
-    stopifnot(is.data.frame(true_edges),
+    .assert(is.data.frame(true_edges),
               all(c("from", "to") %in% names(true_edges)))
-    true_keys <- paste0(true_edges$from, "\t", true_edges$to)
+    true_from <- as.character(true_edges$from)
+    true_to <- as.character(true_edges$to)
   }
+  # An undirected pair has no direction: match (C, A) to the listed (A, C).
+  pair_key <- function(from, to) {
+    if (isTRUE(pred$directed)) return(paste0(from, "\t", to))
+    paste0(pmin(from, to), "\t", pmax(from, to))
+  }
+  true_keys <- pair_key(true_from, true_to)
 
   methods <- unique(pred$predictions$method)
   results <- lapply(methods, function(m) {
     df <- pred$predictions[pred$predictions$method == m, , drop = FALSE]
     df <- df[order(-df$score), , drop = FALSE]
-    pred_keys <- paste0(df$from, "\t", df$to)
+    pred_keys <- pair_key(df$from, df$to)
     is_true <- pred_keys %in% true_keys
 
     # AUC via Wilcoxon-Mann-Whitney
@@ -476,6 +573,15 @@ evaluate_links <- function(pred, true_edges, k = c(5L, 10L, 20L)) {
 
     c(list(method = m, auc = auc, average_precision = ap), as.list(pk))
   })
+  if (!length(results)) {
+    # no candidate pairs (every pair is already an edge): an empty table with
+    # the same columns, not NULL
+    empty <- c(list(method = character(0), auc = numeric(0),
+                    average_precision = numeric(0)),
+               stats::setNames(rep(list(numeric(0)), length(k)),
+                               paste0("precision_at_", k)))
+    return(as.data.frame(empty, stringsAsFactors = FALSE))
+  }
   do.call(rbind, lapply(results, as.data.frame, stringsAsFactors = FALSE))
 }
 
@@ -503,10 +609,8 @@ evaluate_links <- function(pred, true_edges, k = c(5L, 10L, 20L)) {
 # ---- S3 Methods ----
 
 #' @rdname predict_links
-#' @param ... In \code{print.net_link_prediction()} and \code{summary.net_link_prediction()}: Additional arguments (ignored).
-#' @param object For the \code{summary()} method: an object of class \code{net_link_prediction}.
-#' @return In \code{print.net_link_prediction()}: The input object, invisibly.
-#' @return In \code{summary.net_link_prediction()}: A data frame, one row per method, with columns \code{method}, \code{n_predictions}, \code{score_mean}, \code{score_sd}, \code{score_max} and \code{score_min}. A method with no predictions (every possible link already exists) has \code{n_predictions = 0} and \code{NA} scores.
+#' @param ... For the `print()` and `summary()` methods: not used.
+#' @param object For `summary()`: a `predict_links()` result.
 #' @export
 print.net_link_prediction <- function(x, ...) {
   dir_lbl <- if (x$directed) "directed" else "undirected"

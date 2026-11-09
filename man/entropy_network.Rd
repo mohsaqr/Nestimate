@@ -13,89 +13,120 @@ entropy_network(
 )
 }
 \arguments{
-\item{x}{A \code{netobject}, \code{cograph_network}, \code{tna} object,
-row-stochastic numeric transition matrix, or a wide sequence data.frame
-(rows = actors, columns = time-steps; a relative transition network is
-built automatically).}
+\item{x}{The chain: a \code{netobject} or \code{cograph_network} with non-negative
+transition weights, a \code{tna} model, a numeric transition matrix, or wide
+sequence data (a data frame or a character matrix, one row per sequence)
+that holds a numbered run of positions (T1, T2, ...), from which a
+relative transition network is built; other columns are set aside with
+a message. For a frame without such a run, build the network with
+\code{\link[=build_network]{build_network()}} (\verb{state_cols =} or \verb{action =}) and pass that. An association network (\code{cor}, \code{pcor}, \code{glasso}, \code{ising}, \code{mgm})
+or a matrix with negative entries raises an error of class
+\code{nestimate_not_markov}. A \code{netobject_group} is not accepted; pass one
+network at a time.}
 
-\item{base}{Numeric. Logarithm base. \code{2} (default) for bits,
-\code{exp(1)} for nats, \code{10} for hartleys.}
+\item{base}{The logarithm base, which sets the unit: \code{2} (default) for
+bits, \code{exp(1)} for nats, \code{10} for hartleys. Any positive number other
+than 1.}
 
-\item{weight}{Character. Edge weight definition:
+\item{weight}{What each edge's weight measures:
 \describe{
-\item{\code{"contribution"}}{(default) \eqn{\pi_i P_{ij} \log_b(1/P_{ij})}
-- the edge's additive share of the entropy rate; all edge weights
-sum exactly to \eqn{h(P)}. Thick edges are transitions that are both
+\item{\code{"contribution"}}{(default) \eqn{\pi_i P_{ij} \log_b(1/P_{ij})},
+the edge's additive share of the entropy rate; all edge weights sum
+exactly to \eqn{h(P)}. Heavy edges are transitions that are both
 frequent \emph{and} unpredictable.}
-\item{\code{"surprisal"}}{\eqn{\log_b(1/P_{ij})} - the information
-content of observing the transition, ignoring how often it occurs.
-Thick edges are rare, surprising transitions. Low surprisal =
-expected transition; this is the edge-level predictability reading.}
+\item{\code{"surprisal"}}{\eqn{\log_b(1/P_{ij})}, the information content of
+observing the transition, ignoring how often it occurs. Heavy edges
+are rare, surprising transitions; a low surprisal marks an expected
+transition, which is the edge-level reading of predictability.}
 \item{\code{"production"}}{\eqn{F_{ij} \log_b(F_{ij}/F_{ji})} with
-\eqn{F_{ij} = \pi_i P_{ij}} - the edge's contribution to the entropy
-production rate (irreversibility). Positive on the dominant
-direction of a pair, negative on the reverse; the two always sum to
-\eqn{(F_{ij}-F_{ji}) \log_b(F_{ij}/F_{ji}) \ge 0}. Pairs with flow
-in only one direction have infinite production and are excluded
-(weight 0); their count is reported in
-\code{$params$n_oneway_pairs}. Total over included pairs is
-\code{$params$production_rate} - \code{0} iff the chain is
-reversible (detailed balance).}
+\eqn{F_{ij} = \pi_i P_{ij}}, the edge's contribution to the entropy
+production rate (irreversibility). It is positive on the dominant
+direction of a pair and negative on the reverse, and the two always
+sum to \eqn{(F_{ij}-F_{ji}) \log_b(F_{ij}/F_{ji}) \ge 0}. A pair with
+flow in one direction only has infinite production and is left out
+(weight 0); the number of such pairs is stored with the network's
+parameters. The total over the included pairs is the production rate.
+It is \code{0} for a reversible chain (detailed balance); when one-way
+pairs were left out, a total of 0 does not show reversibility, since
+such pairs mean the chain is not reversible.}
 }}
 
-\item{scaling}{Character. \code{"none"} (default) keeps weights in
-\code{base}-units. \code{"share"} (contribution only) expresses each
-edge as its \emph{percentage} of the entropy rate - weights sum to
-100 and each label reads "this transition holds x\% of the process's
-unpredictability"; comparable across networks regardless of state
-count or base. \code{"chance"} (surprisal only) divides by
-\eqn{\log_b n} - the surprisal of a chance-level transition when all
-\eqn{n} next states are equally likely: \code{1} = chance level,
-below 1 = expected transition, above 1 = rarer than chance.}
+\item{scaling}{How the weights are expressed. \code{"none"} (default) keeps
+them in \code{base} units. \code{"share"} (contribution only) gives each edge as a
+\emph{percentage} of the entropy rate: the weights sum to 100, each one
+reads "this transition holds x\% of the process's unpredictability", and
+they compare across networks whatever the number of states or the base.
+\code{"chance"} (surprisal only) divides by \eqn{\log_b n}, the surprisal of a
+transition when all \eqn{n} next states are equally likely: \code{1} is chance
+level, below 1 an expected transition, above 1 one rarer than chance.
+\code{"share"} with another weight, or \code{"chance"} with another weight, raises
+an error.}
 
-\item{normalize}{Logical. If \code{TRUE} (default), rows that do not sum
-to 1 are normalised automatically (with a warning).}
+\item{normalize}{Whether rows that do not sum to 1 (a frequency network, a
+count matrix) are divided by their sums, with a warning. With \code{FALSE},
+such rows raise an error. Default \code{TRUE}. A state with no outgoing
+transitions (a row summing to zero) is an error either way.}
 }
 \value{
-A \code{netobject} (also class \code{cograph_network}) whose
-\code{$weights} hold the per-edge entropy quantities. When \code{x} is a
-fitted network (or sequence data, from which a relative network is
-built), the result is that network with entropy weights swapped in -
-\code{$inits}, \code{$meta}, \code{$node_groups}, and node coordinates
-are inherited, so it plots with the same TNA styling and layout as its
-source. \code{$method} is \code{"entropy"}. \code{$params} carries
-\code{base}, \code{weight}, \code{scaling}, \code{entropy_rate}, and the
-stationary distribution \code{stationary} (plus \code{production_rate}
-and \code{n_oneway_pairs} when \code{weight = "production"}).
+A \code{netobject} (class \code{c("netobject", "cograph_network")}; for a
+bare \code{cograph_network} input, that network with its own class) with
+method \code{"entropy"}, whose weights are the per-edge entropy quantities.
+Print it for an overview; \code{summary()} (see \code{\link[=build_network]{build_network()}}) gives its
+network metrics,
+\code{\link[=extract_edges]{extract_edges()}} one row per edge, and \code{cograph::splot()} draws it.
+When \code{x} is a network (or sequence data, from which a relative network
+is built), the result is that network with the entropy weights swapped
+in: its initial probabilities, metadata, node groups and node
+coordinates are kept, so it plots with the same TNA styling and layout
+as its source. The stored parameters are \code{base}, \code{weight}, \code{scaling},
+the entropy rate \code{entropy_rate} (whatever the weight) and the stationary
+distribution \code{stationary}, plus \code{production_rate} and \code{n_oneway_pairs}
+when \code{weight = "production"}.
 
-The object also declares the entropy house style through the
-\code{$meta$splot} producer contract (honoured by cograph >= 2.4.4):
-no minimum-weight pruning (bit values are smaller than probabilities),
-2-digit edge labels, vermilion edges, node rings showing the stationary
-distribution, and TNA rather than psychometric geometry. Because the
-contract states the styling outright, cograph needs no knowledge of the
-\code{"entropy"} method. \code{cograph::splot(ent)} therefore renders
-correctly with no arguments; any user argument overrides the contract.
+The object also declares the entropy house style through its
+\code{meta$splot} producer contract (honoured by cograph >= 2.4.4): no
+minimum-weight pruning (bit values are smaller than probabilities), edge
+labels with 2 digits (1 for \code{"share"}), vermilion edges, node rings
+showing the stationary distribution, and TNA rather than psychometric
+geometry. The production weights are signed, so they keep cograph's
+positive and negative edge colours instead of the vermilion. With
+\code{weight = "surprisal"} and \code{scaling = "chance"}, the edges are drawn and
+sized by the transition probabilities, transitions likelier than chance
+in blues (darker for likelier) and those at or below chance dashed grey.
+Because the contract states the styling outright, cograph needs no
+knowledge of the \code{"entropy"} method: \code{cograph::splot(ent)} renders it
+with no arguments, and any argument given overrides the contract.
 }
 \description{
-Decomposes the entropy rate of a Markov transition process edge by edge
-and returns the decomposition as a network. The entropy rate
-\eqn{H = -\sum_{ij} \pi_i P_{ij} \log P_{ij}}
-(\code{\link{transition_entropy}}; Krejtz et al. 2015, 2025) is an
-additive sum over transitions, so every edge \eqn{i \to j} owns the exact
-term \eqn{\pi_i P_{ij} \log(1/P_{ij})} of the chain-level uncertainty.
-\strong{No new quantity is estimated}: the network displays the summands
-of the entropy-rate equation on the transition graph, locating the
-process's uncertainty spatially. The returned object is a regular
-\code{netobject} / \code{cograph_network}, so it prints, summarises, and
-plots (\code{cograph::splot()}) like any other Nestimate network.
+\code{entropy_network()} splits a chain's entropy rate into one term per
+transition and returns the terms as a network. The entropy rate
+\eqn{h(P) = -\sum_{ij} \pi_i P_{ij} \log_b P_{ij}}
+(\code{\link[=transition_entropy]{transition_entropy()}}; Krejtz et al., 2015, 2025) is a sum over
+transitions, so every edge \eqn{i \to j} owns the exact term
+\eqn{\pi_i P_{ij} \log_b(1/P_{ij})} of the chain-level uncertainty. No new
+quantity is estimated: the network places the summands of the
+entropy-rate equation on the transition graph, which shows where in the
+process the uncertainty lies. Two other edge weights are available: each
+transition's surprisal, and its contribution to the entropy production
+rate (irreversibility). The result is a regular \code{netobject}, so it prints,
+summarises and plots (\code{cograph::splot()}) like any other Nestimate
+network.
+
+Under the default weight, a heavy edge is a transition that is both
+frequent and unpredictable; under \code{"surprisal"}, a heavy edge is a rare
+one, whatever its frequency. The weights are computed from one estimated
+transition matrix, so an edge that rests on a few observations can carry a
+large weight by chance: \code{\link[=entropy_bayes]{entropy_bayes()}} gives each contribution a
+credible interval and keeps only the edges that credibly hold a share of
+the entropy rate.
 }
 \details{
-Impossible transitions (\eqn{P_{ij} = 0}) get weight \code{0} under both
-definitions (the \eqn{0 \log 0 := 0} convention), so the entropy network
-has the same support as the transition network. Self-loops are retained
-like any other edge. Deterministic transitions (\eqn{P_{ij} = 1}) also get
-weight \code{0}: observing the inevitable carries no information.
+An impossible transition (\eqn{P_{ij} = 0}) gets weight \code{0} under every
+definition (the \eqn{0 \log 0 = 0} convention), so the entropy network has
+no edge the transition network lacks. Self-loops are kept like any other
+edge; their production weight is always 0. A deterministic transition
+(\eqn{P_{ij} = 1}) also gets contribution and surprisal \code{0}: observing the
+inevitable carries no information.
 }
 \examples{
 net <- build_network(group_regulation_long,

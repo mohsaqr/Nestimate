@@ -4,48 +4,73 @@
 \alias{macro_network}
 \title{Cluster-Level Network, With One Cluster Expanded}
 \usage{
-macro_network(x, expand = NULL, method = "relative", ...)
+macro_network(
+  x,
+  expand = NULL,
+  method = "relative",
+  scaling = NULL,
+  threshold = 0,
+  params = list(),
+  ...
+)
 }
 \arguments{
-\item{x}{An \code{mcml} built from sequence data, or an
-\code{mcml_pc} from \code{\link{build_mcml_pc}}. A matrix-derived
-\code{mcml} carries no node-level data and cannot be expanded.}
+\item{x}{An \code{mcml} built from sequence data, or an \code{mcml_pc} from
+\code{\link[=build_mcml_pc]{build_mcml_pc()}}. An \code{mcml} built from a matrix or an edge list holds
+no sequences to count, so it raises an error of class
+\code{nestimate_no_expand_source}, even with \code{expand = NULL}; a name in
+\code{expand} that is not a cluster is reported first.}
 
-\item{expand}{Names of clusters to expand into their member states.
-\code{NULL} (default) collapses every cluster, reproducing the macro
-layer; \code{"all"} or \code{TRUE} expands every cluster, so each state
-is its own node.}
+\item{expand}{The clusters to expand into their member states. \code{NULL}
+(default) collapses every cluster, which reproduces the macro layer;
+\code{"all"} or \code{TRUE} expands every cluster, so each state is its own
+node. A name that is not a cluster raises an error. For an \code{mcml_pc},
+any value other than \code{NULL} raises an error of class
+\code{nestimate_no_expand}: there are no sequences to count again.}
 
-\item{method}{Estimator passed to \code{\link{build_network}}. Default
-\code{"relative"} (row-normalised transitions). Not used for an
-\code{mcml_pc}.}
+\item{method}{The estimator passed to \code{\link[=build_network]{build_network()}}. Default
+\code{"relative"} (row-normalised transitions). For an \code{mcml_pc}, giving it
+raises an error: the estimator was set by \code{\link[=build_mcml_pc]{build_mcml_pc()}}.}
 
-\item{...}{Further arguments passed to \code{\link{build_network}}. Not
-used for an \code{mcml_pc}.}
+\item{scaling, threshold, params}{Passed to \code{\link[=build_network]{build_network()}} for the
+re-counted network: \code{scaling} (default \code{NULL}, none), \code{threshold}
+(default \code{0}) and \code{params} (default \code{list()}), as there. For an
+\code{mcml_pc}, giving any raises an error, as for \code{method}.}
+
+\item{...}{Further arguments for \code{\link[=build_network]{build_network()}}, such as \code{start} or
+\code{end}. For an \code{mcml_pc}, giving any raises an error, as for \code{method}.}
 }
 \value{
-For an \code{mcml_pc}: its cluster-level network, the netobject
-estimated by \code{\link{build_mcml_pc}}, unchanged. Its estimator is
-set when the fit is built, so \code{method} or \code{...} raise an
-error, and \code{expand} errors with class \code{nestimate_no_expand}
-(there are no sequences to re-count).
+For an \code{mcml}: a \code{netobject} (also a \code{cograph_network}) whose
+nodes are the collapsed clusters plus the member states of any
+expanded cluster, with weights counted by \code{\link[=build_network]{build_network()}}. It is
+printed, resampled (for example with \code{\link[=bootstrap_network]{bootstrap_network()}}) and drawn
+like any other \code{netobject}; its node grouping is read by cograph's
+group-aware plots, such as \code{cograph::plot_mtna()}. Beside the usual
+\code{netobject} fields it holds \code{node_groups}, a data frame with the
+columns \code{node} and \code{group} that maps each node to its cluster (an
+expanded cluster's states map to that cluster, a collapsed cluster maps
+to itself), the same labels as a factor in the \code{groups} column of
+\code{nodes}, and
+\code{expanded}, the names of the clusters expanded (\code{NULL} when none
+were).
 
-For an \code{mcml}: a \code{netobject} (also a \code{cograph_network}) whose nodes are
-the collapsed clusters plus the member states of any expanded cluster,
-with weights re-counted from the sequence data by
-\code{\link{build_network}}. \code{$node_groups} is a two-column data
-frame (\code{node}, \code{group}) mapping every node to its cluster, and
-the same labels are a factor in \code{$nodes$groups}, so the result
-plots grouped; an expanded cluster's states each map to that cluster, a
-collapsed cluster maps to itself. \code{$expanded} records the cluster
-names that were expanded (\code{NULL} when none were).
+For an \code{mcml_pc}: its cluster-level network, the \code{netobject} estimated
+by \code{\link[=build_mcml_pc]{build_mcml_pc()}}, unchanged.
 }
 \description{
-Returns the macro (cluster-level) network of an \code{mcml}, optionally
-with one or more clusters expanded back into their member states. Every
-other cluster stays collapsed to a single node, so the result is a network
-at mixed resolution: the cluster of interest in detail, its context in
-summary.
+\code{macro_network()} returns the cluster-level (macro) network of an \code{mcml},
+optionally with one or more clusters expanded back into their member
+states. Every other cluster stays collapsed to a single node, so the
+result is a network at mixed resolution: the cluster of interest in
+detail, its context in summary, with weights counted from the sequences.
+For an \code{mcml_pc} from \code{\link[=build_mcml_pc]{build_mcml_pc()}}, it returns the cluster-level
+network that fit already holds.
+}
+\details{
+The weights are counted again from the sequences, after each state is
+recoded to its cluster (or kept, for an expanded cluster), because a
+cluster-level matrix cannot be split back into its states.
 }
 \examples{
 seqs <- data.frame(

@@ -40,180 +40,282 @@ compare_networks(
 )
 }
 \arguments{
-\item{...}{For \code{compare_networks()}: two or more networks, in any mix of:
-\code{netobject}, \code{netobject_group} (members are flattened and keep their
-names), \code{cograph_network} / \code{psychnet}, \code{mcml}, \code{tna}, \code{group_tna},
-square numeric matrices, or one unnamed \code{list} of these. Name the
-arguments to name the networks (\code{compare_networks(early = a, late = b)}).
-For \code{plot()}: passed to \code{cograph::splot()} for the network views (e.g.
-\code{layout}, \code{node_size}, \code{minimum}); ignored by the other views and by
-\code{print()}.}
+\item{...}{The networks, two or more, in any mix of \code{netobject},
+\code{netobject_group} (its members are compared individually and keep their
+names), \code{cograph_network}, \code{psychnet}, \code{mcml}, \code{tna}, \code{group_tna},
+square numeric matrices, or one unnamed list of these. Name the
+arguments to name the networks, as in \code{compare_networks(early = a, late = b)}; an unnamed network is named after its method, or \verb{network_<i>}.
+Nested lists, non-square matrices and other classes raise an error of
+class \code{nestimate_compare_bad_input}. For the \code{plot()} method: passed to
+\code{cograph::splot()} in the \code{"networks"} and \code{"difference"} views (such as
+\code{layout}, \code{node_size} or \code{minimum}) and ignored by the other views; the
+\code{print()} method ignores it.}
 
-\item{reference}{\code{NULL} (default) compares all pairs. A single network name
-or index compares every other network against that one; the reference is
-always \code{network_a}, so \code{diff = reference - other}.}
+\item{reference}{The network every other one is compared against, by name
+or index; it is always \code{network_a} of its pairs, so
+\code{diff = reference - other}. Default \code{NULL}, which compares all pairs. A
+name or index that matches no network raises an error of class
+\code{nestimate_compare_reference_unknown}.}
 
-\item{scaling}{Scaling applied to every network before comparison; one of
-\code{"none"} (default), \code{"minmax"}, \code{"max"}, \code{"rank"}, \code{"zscore"}, \code{"robust"},
-\code{"log"}, \code{"log1p"}, \code{"softmax"}, \code{"quantile"}, \code{"frobenius"}, \code{"row"}.
-Inference (\code{test != "none"}) requires \code{"none"}: the tests are defined on
-the networks as estimated.}
+\item{scaling}{A rescaling applied to every weight matrix before the
+comparison. \code{"none"} (default) keeps the weights as estimated;
+\code{"minmax"}, \code{"max"}, \code{"rank"}, \code{"zscore"}, \code{"robust"} (median and MAD),
+\code{"log"}, \code{"log1p"}, \code{"softmax"} and \code{"quantile"} (empirical percentile)
+transform all cells of a matrix together; \code{"frobenius"} divides by the
+Frobenius norm and \code{"row"} makes each row's absolute weights sum to 1.
+\code{"log"} needs strictly positive weights and \code{"log1p"} weights of at least
+-1, otherwise an error of class \code{nestimate_compare_scaling_domain} is
+raised. The tests are defined on the networks as estimated, so any other
+value than \code{"none"} with \code{test} raises an error of class
+\code{nestimate_compare_scaling_inference}.}
 
-\item{measures}{Centrality measures for the node table. Any of
-\code{OutStrength}, \code{InStrength}, \code{ClosenessIn}, \code{ClosenessOut}, \code{Closeness},
-\code{Betweenness}, \code{BetweennessRSP}, \code{Diffusion}, \code{Clustering}; \code{"all"}
-selects those nine. \code{NULL} or \code{character(0)} skips the node table.
-Unknown names are dropped with a warning.}
+\item{measures}{The centrality measures compared in the node table.
+Default \code{c("InStrength", "OutStrength", "Betweenness")}. Any of
+\code{"OutStrength"}, \code{"InStrength"}, \code{"ClosenessIn"}, \code{"ClosenessOut"},
+\code{"Closeness"}, \code{"Betweenness"}, \code{"BetweennessRSP"}, \code{"Diffusion"} and
+\code{"Clustering"}, or \code{"all"} for these nine (see \code{\link[=net_centrality]{net_centrality()}}).
+\code{NULL} or \code{character(0)} skips the node table. Unknown names are dropped
+with a warning of class \code{nestimate_compare_unknown_measure}.}
 
-\item{labels}{For \code{compare_networks()}: optional character vector naming
-the networks (one per network after flattening groups); overrides
-argument names. For \code{plot()}: logical; print the signed difference on
-the edge and node views, default \code{TRUE} (the heatmap always shows its
-values).}
+\item{labels}{Names for the networks, one per network after groups are
+expanded; they replace the argument names. Default \code{NULL}. A vector of
+the wrong length raises an error of class
+\code{nestimate_compare_labels_length}. For the \code{plot()} method: whether to
+print the signed difference on the edge and node views and the p-values
+on the inference view. Default \code{TRUE}; the heatmap always prints its
+values.}
 
-\item{test}{Character vector of inference backends, any of \code{"none"}
-(default), \code{"permutation"}, \code{"bayes"}, \code{"bootstrap"}. Several may be
-combined; each fills the columns it supports (see Details).}
+\item{test}{The inference to add, one or more of \code{"none"} (default),
+\code{"permutation"}, \code{"bayes"} and \code{"bootstrap"}. Each fills the columns it
+supports (see \emph{Details}). The permutation and Bayesian tests need
+networks that carry their data and share one estimation method, and the
+Bayesian test needs \code{"relative"} or \code{"frequency"} networks; otherwise an
+error of class \code{nestimate_compare_test_unsupported} is raised.}
 
-\item{iter}{Number of permutations / posterior draws / bootstrap
-replicates per pair. Default \code{1000}.}
+\item{iter}{The number of permutations, posterior draws or bootstrap
+replicates per pair, at least 2. Default \code{1000}.}
 
-\item{alpha}{Significance level (permutation, bootstrap) and \code{1 - ci}
-(Bayesian credible interval). Default \code{0.05}.}
+\item{alpha}{The significance level of the permutation and bootstrap
+tests, a number between 0 and 1; the Bayesian credible interval covers
+\code{1 - alpha}. Default \code{0.05}.}
 
-\item{adjust}{Multiplicity adjustment for permutation p-values, passed to
-\code{\link[stats:p.adjust]{stats::p.adjust()}} within each pair and table. Default \code{"none"}.}
+\item{adjust}{The multiplicity correction for the permutation p-values, a
+method of \code{\link[stats:p.adjust]{stats::p.adjust()}}, applied within each pair and separately
+to the edge and node tables, as \code{\link[=permutation]{permutation()}} does. Default
+\code{"none"}.}
 
-\item{paired}{Logical; paired permutation (equal observation counts).}
+\item{paired}{Whether the networks hold paired observations, so the
+permutation test swaps the two members of each pair instead of
+shuffling all labels; the networks then need the same number of
+sequences. It cannot be combined with \code{actor} (an error of class
+\code{nestimate_bad_actor}). Default \code{FALSE}.}
 
-\item{rope}{Optional half-width of a region of practical equivalence on the
-difference scale (Bayesian backend only). Adds \code{bayes_p_rope} and a
-\code{bayes_decision} of \code{"different"}, \code{"equivalent"} or \code{"undecided"}.}
+\item{rope}{The half-width of a region of practical equivalence on the
+difference scale, for the Bayesian test. It adds \code{bayes_p_rope} and a
+\code{bayes_decision} of \code{"different"}, \code{"equivalent"} or \code{"undecided"} to
+the edge table. Default \code{NULL} (none).}
 
-\item{seed}{Optional integer seed. Each pair uses \verb{seed + pair index}, so
-results are reproducible and independent of pair order.}
+\item{seed}{An integer that makes the tests reproducible. Pair \code{i} uses
+\code{seed + i}, so each pair's result does not depend on the others.
+Default \code{NULL}.}
 
-\item{actor}{Optional column name identifying the actor each sequence
-belongs to (e.g. \code{"student_id"} when sessions are nested in students,
-\code{"Group"} for students nested in teams). Passed to \code{\link[=permutation]{permutation()}}, which
-then reassigns whole actors; see its sections \emph{Nested data and actor}
-and \emph{ICC and design effect}. Requires \code{test = "permutation"}. The ICC
-and design effects are added to \code{global} under the category
-\code{"Nesting"}. Default \code{NULL}.}
+\item{actor}{The column identifying the actor each sequence belongs to
+(such as \code{"student_id"} when sessions are nested in students, or
+\code{"Group"} for students nested in teams). It is passed to \code{\link[=permutation]{permutation()}},
+which then shuffles whole actors; see its sections \emph{Nested data and
+actor} and \emph{ICC and design effect}. The ICC and design effects are added
+to the global table under the category \code{"Nesting"}. It needs
+\code{test = "permutation"}, otherwise an error of class
+\code{nestimate_compare_actor_needs_permutation} is raised. Default \code{NULL}.}
 
-\item{x}{For the \code{print()} and \code{plot()} methods: an object of class \code{net_network_comparison}.}
+\item{x}{For the \code{print()} and \code{plot()} methods: a
+\code{net_network_comparison} object.}
 
-\item{digits}{In \code{plot.net_network_comparison()}: Decimals in printed values. Default \code{2}. In \code{print.net_network_comparison()}: Decimals shown. Default \code{2}.}
+\item{digits}{For the \code{print()} and \code{plot()} methods: the decimals shown
+in printed values. Default \code{2}.}
 
-\item{type}{For \code{plot()}: one view per call. \code{"networks"} (default) draws each network once with \code{cograph::splot()}; \code{"difference"} draws the signed difference network of each pair; \code{"edges"} is a ranked dumbbell of the largest edge differences; \code{"nodes"} the same for centralities; \code{"global"} the 22 comparison metrics; \code{"heatmap"} the signed difference matrix; \code{"scatter"} weight against weight; \code{"inference"} is a forest of the edge differences on the difference scale, with credible intervals when the Bayesian backend ran and the p-value printed per edge. It needs \code{test != "none"} and raises \code{nestimate_compare_no_test} otherwise.}
+\item{type}{For the \code{plot()} method: the view to draw, one per call.
+\code{"networks"} (default) draws each network once with \code{cograph::splot()};
+\code{"difference"} draws the signed difference network of each pair;
+\code{"edges"} is a ranked dumbbell of the largest edge differences, and
+\code{"nodes"} the same for the centralities; \code{"global"} shows the 22
+comparison metrics as points, plus the inference rows with their
+p-values (and bootstrap intervals) when \code{test} was run; \code{"heatmap"} the
+signed difference matrix;
+\code{"scatter"} the weights of one network against the other's; and
+\code{"inference"} a forest of the edge differences on the difference scale,
+with the credible intervals when the Bayesian test ran and the p-value
+printed per edge. \code{"inference"} needs \code{test}, otherwise an error of class
+\code{nestimate_compare_no_test} is raised.}
 
-\item{pair}{Optional selection of comparisons to draw; default all. Any of: the pair name(s) as printed (\code{"A vs B"}); the two network names (\code{c("A", "B")}, either order); one network name (\code{"A"}, every pair it takes part in); or index/indices into the pair table (\code{1}, \code{c(1, 3)}). For \code{type = "networks"} this selects the networks taking part in the chosen pairs.}
+\item{pair}{For the \code{plot()} method: the comparisons to draw. Default
+\code{NULL}, all of them. Give the pair names as printed (\code{"A vs B"}), the
+two network names in either order (\code{c("A", "B")}), one network name
+(\code{"A"}, every pair it takes part in), or indices into the pair table
+(\code{1}, \code{c(1, 3)}). For \code{type = "networks"}, it selects the networks
+taking part in the chosen pairs. A selection that matches no comparison
+raises an error of class \code{nestimate_compare_unknown_pair}.}
 
-\item{combined}{When \code{TRUE} (default), a multi-pair view is one figure (facets for the \code{ggplot} views, one base-graphics page for \code{"networks"} and \code{"difference"}). When \code{FALSE}, the view is split: the \code{ggplot} views return a named list of single-pair plots, one per pair, and the base-graphics views draw one panel per page.}
+\item{combined}{For the \code{plot()} method: whether a view of several pairs
+is one figure. With \code{TRUE} (default), the \code{ggplot} views facet by pair
+and the \code{"networks"} and \code{"difference"} views draw all panels on one
+base-graphics page. With \code{FALSE}, the \code{ggplot} views return a named list
+of single-pair plots, for iterating over or saving, and the
+base-graphics views draw one panel per page.}
 
-\item{top_n}{Number of edges shown in the edge view (largest absolute differences first). Default \code{20}.}
+\item{top_n}{For the \code{plot()} method: the number of edges shown per pair
+in the \code{"edges"} and \code{"inference"} views, largest absolute difference
+first. Default \code{20}.}
 
-\item{measure}{Optional centrality measure(s) to restrict the node view.}
+\item{measure}{For the \code{plot()} method: the centrality measures shown in
+the \code{"nodes"} view. Default \code{NULL}, all measures of the comparison; a
+measure the object does not carry raises an error of class
+\code{nestimate_compare_unknown_measure}.}
 
-\item{what}{Deprecated alias for \code{type}, kept so existing calls keep working.}
+\item{what}{Deprecated alias for \code{type}, kept so existing calls keep
+working.}
 }
 \value{
-An object of class \code{net_network_comparison}: a list with
+A \code{net_network_comparison} object. \code{print()} shows one line per
+pair (Pearson correlation, mean and largest absolute difference, the
+largest change) and returns \code{x} invisibly; \code{\link[=summary]{summary()}} returns one row
+per pair; \code{\link[=edge_differences]{edge_differences()}}, \code{\link[=node_differences]{node_differences()}},
+\code{\link[=global_differences]{global_differences()}} and \code{\link[=network_metrics]{network_metrics()}} return the full tables
+(see \link{comparison_tables}); \code{plot()} draws one view per call. The
+object's fields:
 \itemize{
-\item \code{networks}: named list of the input networks as \code{netobject}s (scaled
-weights);
-\item \code{matrices}: named list of scaled weight matrices;
-\item \code{pairs}: data.frame, one row per comparison: \code{pair}, \code{network_a},
+\item \code{networks}: the input networks as \code{netobject}s, with scaled weights;
+\item \code{matrices}: the scaled weight matrices;
+\item \code{pairs}: one row per comparison, with \code{pair}, \code{network_a} and
 \code{network_b};
-\item \code{edges}: data.frame, one row per pair x cell: \code{pair}, \code{network_a},
-\code{network_b}, \code{from}, \code{to}, \code{weight_a}, \code{weight_b}, \code{diff}, \code{abs_diff},
-\code{rel_diff}, \code{ratio}, \code{log_ratio}, \code{rank_a}, \code{rank_b}, \code{rank_diff},
-\code{percentile_diff}, \code{status} (\code{both}/\code{only_a}/\code{only_b}/\code{neither}),
-\code{higher} (\code{network_a}, \code{network_b} or \code{equal}), plus inference columns;
-\item \code{nodes}: data.frame (or \code{NULL}), one row per pair x node x measure:
-\code{pair}, \code{network_a}, \code{network_b}, \code{node}, \code{measure}, \code{value_a},
-\code{value_b}, \code{diff}, \code{abs_diff}, \code{rank_a}, \code{rank_b}, \code{higher}, plus
+\item \code{edges}: one row per pair and cell: \code{pair}, \code{network_a}, \code{network_b},
+\code{from}, \code{to}, \code{weight_a}, \code{weight_b}, \code{diff}, \code{abs_diff}, \code{rel_diff},
+\code{ratio}, \code{log_ratio}, \code{rank_a}, \code{rank_b}, \code{rank_diff},
+\code{percentile_diff}, \code{status} (\code{both}, \code{only_a}, \code{only_b} or \code{neither}),
+\code{higher} (the name of the higher network, or \code{equal}), and the
 inference columns;
-\item \code{global}: data.frame, one row per pair x metric (22 descriptive metrics
-in five categories, plus inference rows): \code{pair}, \code{network_a},
-\code{network_b}, \code{category}, \code{metric}, \code{key}, \code{value}, plus inference
-columns;
-\item \code{network_metrics}: data.frame, one row per network x structural metric:
+\item \code{nodes}: one row per pair, node and measure: \code{pair}, \code{network_a},
+\code{network_b}, \code{node}, \code{measure}, \code{value_a}, \code{value_b}, \code{diff},
+\code{abs_diff}, \code{rank_a}, \code{rank_b}, \code{higher}, and the inference columns;
+\code{NULL} without \code{measures};
+\item \code{global}: one row per pair and metric (22 descriptive metrics in five
+categories, and the inference rows): \code{pair}, \code{network_a}, \code{network_b},
+\code{category}, \code{metric}, \code{key}, \code{value}, and the inference columns;
+\item \code{network_metrics}: one row per network and structural metric:
 \code{network}, \code{metric}, \code{value};
-\item \code{differences}: named list of \code{netdifference} objects (one per pair);
-\item \code{scaling}, \code{reference}, \code{measures}, \code{test}, \code{iter}, \code{alpha}, \code{adjust},
-\code{paired}, \code{rope}, \code{directed} (named logical), \code{n_networks}, \code{n_pairs}.
+\item \code{differences}: one \code{netdifference} object per pair (from
+\code{\link[=subtract_networks]{subtract_networks()}});
+\item the settings \code{scaling}, \code{reference}, \code{measures}, \code{test}, \code{iter},
+\code{alpha}, \code{adjust}, \code{paired}, \code{rope} and \code{actor}, with \code{directed} (one
+logical per network), \code{n_networks} and \code{n_pairs}.
 }
 
-\code{summary()} returns the one-row-per-pair overview table; the full tables
-come from the named verbs \code{\link[=edge_differences]{edge_differences()}}, \code{\link[=node_differences]{node_differences()}},
-\code{\link[=global_differences]{global_differences()}} and \code{\link[=network_metrics]{network_metrics()}}. \code{plot()} draws one view
-per call.
-
-In \code{plot.net_network_comparison()}: \code{plot()} returns a \code{ggplot} for \code{type = "edges"}, \code{"nodes"}, \code{"global"}, \code{"heatmap"}, \code{"scatter"} and \code{"inference"}, or a named list of such plots (one per pair) when \code{combined = FALSE}. \code{type = "networks"} and \code{type = "difference"} draw in base graphics -- with \code{cograph::splot()} when cograph is installed, otherwise with a built-in circular drawer -- and return \code{NULL} invisibly.
-
-In \code{print.net_network_comparison()}: \code{print()} returns \code{x} invisibly.
+For the \code{plot()} method: a \code{ggplot} for the \code{"edges"}, \code{"nodes"},
+\code{"global"}, \code{"heatmap"}, \code{"scatter"} and \code{"inference"} views, or, with
+\code{combined = FALSE}, a named list of them, one per pair, returned
+invisibly. The \code{"networks"} and \code{"difference"} views draw in base
+graphics (with \code{cograph::splot()} when cograph is installed, otherwise
+with a built-in circular drawer that ignores \code{...}) and return \code{NULL}
+invisibly.
 }
 \description{
-Compares any number of networks pairwise (all pairs, or every network
-against one \code{reference}) and returns one tidy object: an edge table, a
-node (centrality) table, a global-metric table and per-network structural
-metrics, each returned by a named verb and carrying a \code{pair} column so
-nothing ever needs list indexing.
-Descriptive by default; \verb{test =} adds permutation, Bayesian and bootstrap
-evidence to the same tables. \code{plot()} draws one view per call.
+\code{compare_networks()} compares two or more networks cell by cell, node by
+node and on global metrics, and returns one \code{net_network_comparison}
+object. It compares every pair of networks, or every network against one
+\code{reference}, and takes any mix of \code{netobject}s, groups of them, \code{tna}
+models and square weight matrices, as long as they share the same nodes in
+the same order. Each table carries a \code{pair} column, so one call to a named
+verb returns it for every pair. The comparison is descriptive by default;
+\code{test} adds permutation, Bayesian and bootstrap evidence to the same
+tables.
+
+Every difference is \code{diff = a - b}, network \code{a} minus network \code{b} of a
+pair, between two sets of point estimates. The similarity metrics
+(Pearson, cosine, Jaccard and the others in the global table) describe
+how alike the two weight matrices are; neither they nor a large \code{diff}
+say whether a difference is larger than sampling variation would produce.
+For that, rerun with \code{test = "permutation"} (or \code{"bayes"} for relative or
+frequency networks) and read the \code{sig} column, and use \code{adjust} when many
+edges are read at once. \code{plot()} draws one view of the comparison per call.
 }
 \details{
-\strong{Guarding.} Ratios are never \code{Inf}/\code{NaN}: \code{ratio} is \code{NA} when
-\code{weight_b == 0}, \code{rel_diff} is \code{NA} when both weights are 0, and
+\strong{Cells.} Every cell of the weight matrix is a row of the edge table,
+the diagonal and the edges absent from one network (weight 0) included;
+when both networks are undirected only the cells with \code{from <= to} are
+kept. A difference smaller than \code{sqrt(.Machine$double.eps)} counts as no
+difference (\code{higher = "equal"}).
+
+\strong{Guarding.} Ratios are never \code{Inf} or \code{NaN}, and no pseudo-counts are
+added: \code{ratio} is \code{NA} when \code{weight_b} is 0, \code{rel_diff}
+(\code{abs(diff) / (abs(a) + abs(b))}) is \code{NA} when both weights are 0, and
 \code{log_ratio = log1p(a) - log1p(b)} is \code{NA} when either weight is negative.
-No pseudo-counts are added.
 
-\strong{Cells.} Every cell of the weight matrix is a row, including the
-diagonal and edges absent from one network (weight 0); when both networks
-are undirected only \code{from <= to} cells are kept.
-
-\strong{Inference.} \code{"permutation"} (via \code{\link[=permutation]{permutation()}}) adds
-\code{perm_effect}, \code{perm_p}, \code{perm_sig} to \code{edges} and \code{nodes}, and two rows
-\code{M} (sum of absolute edge differences) and \code{S} (largest absolute edge
-difference) to \code{global} with permutation p-values; with \code{actor}, the
-reassignment moves whole actors and \code{global} also gains the rows \code{ICC},
-\verb{Design effect (edges)} and \verb{Design effect (M)}. \code{"bayes"} (via
-\code{\link[=bayes_compare]{bayes_compare()}}) adds \code{bayes_diff} (posterior mean difference),
-\code{bayes_ci_lower}, \code{bayes_ci_upper}, \code{bayes_pd} (probability of direction),
-\code{bayes_p}, \code{bayes_sig} to \code{edges}; with \code{rope}, \code{bayes_p_rope} (normal
-approximation from the posterior mean and SD) and \code{bayes_decision}.
-\code{"bootstrap"} (via \code{\link[=vertex_compare]{vertex_compare()}}) appends structural rows
-(density, mean weight, centralization, reciprocity) to \code{global} with
-\code{boot_se}, \code{boot_ci_lower}, \code{boot_ci_upper}, \code{boot_z}, \code{boot_p},
-\code{boot_sig}. Unified \code{sig} and \code{evidence} columns take the permutation
-result when run (on both \code{edges} and \code{nodes}), else the Bayesian one (on
-\code{edges} only -- the Bayesian backend is edge-level).
-Permutation and Bayesian tests need networks that carry their data
-(\code{build_network()} output, or \code{tna} objects, which are rebuilt); plain
-matrices support \code{"bootstrap"} only.
+\strong{Inference.} \code{"permutation"} runs \code{\link[=permutation]{permutation()}} per pair and adds
+\code{perm_effect}, \code{perm_p} and \code{perm_sig} to the edge and node tables, and
+two rows to the global table with permutation p-values: \code{M}, the sum of
+the absolute differences over all cells, and \code{S}, the largest absolute
+difference. With \code{actor}, whole actors are shuffled and the global table
+also gains the rows \code{"ICC"}, \code{"Design effect (edges)"} and
+\code{"Design effect (M)"}. \code{"bayes"} runs \code{\link[=bayes_compare]{bayes_compare()}} per pair (prior
+\code{0.5}, \code{iter} draws) and adds to the edge table \code{bayes_diff} (posterior
+mean difference), \code{bayes_ci_lower}, \code{bayes_ci_upper}, \code{bayes_pd}
+(probability of direction), \code{bayes_p} (\code{2 * (1 - pd)}) and \code{bayes_sig};
+with \code{rope}, also \code{bayes_p_rope} (a normal approximation from the
+posterior mean and SD) and \code{bayes_decision}. \code{"bootstrap"} runs the
+vertex bootstrap of \code{\link[=vertex_compare]{vertex_compare()}} per pair and adds structural rows
+(density, mean weight, centralization and, for directed networks,
+reciprocity) to the global table,
+with \code{boot_observed_a}, \code{boot_observed_b}, \code{boot_se}, \code{boot_ci_lower},
+\code{boot_ci_upper}, \code{boot_z}, \code{boot_p} and \code{boot_sig}. It reads only the
+weights, so plain matrices support it; the other two tests need
+\code{\link[=build_network]{build_network()}} output with data, or \code{tna} models, which are rebuilt
+from their sequences when these reproduce the weights. The \code{sig} and
+\code{evidence} columns take the permutation result when it was run (edge and
+node tables), and otherwise the Bayesian one (edge table only).
 }
 \section{Errors}{
 
-Classed conditions (\verb{nestimate_compare_*}): \code{too_few}, \code{bad_input},
-\code{dim_mismatch}, \code{node_mismatch}, \code{na_weights}, \code{reference_unknown},
-\code{labels_length}, \code{scaling_domain}, \code{scaling_inference},
-\code{test_unsupported}, \code{unknown_pair}, \code{no_nodes}, \code{no_test}
-(\code{plot(type = "inference")} under \code{test = "none"}), \code{unknown_measure}
-(selecting a measure the object does not carry); warning
-\code{unknown_measure} (an unknown name in \code{measures}).
+The errors that \code{compare_networks()} and its verbs raise themselves have
+the class \code{nestimate_compare_error} and one of these:
+\itemize{
+\item \code{nestimate_compare_too_few}: fewer than two networks;
+\item \code{nestimate_compare_bad_input}: an input of an unsupported class, a
+non-square matrix or a nested list;
+\item \code{nestimate_compare_dim_mismatch}: different numbers of nodes;
+\item \code{nestimate_compare_node_mismatch}: node labels that differ in set or
+order;
+\item \code{nestimate_compare_na_weights}: missing weights;
+\item \code{nestimate_compare_reference_unknown}, \code{nestimate_compare_labels_length},
+\code{nestimate_compare_scaling_domain}, \code{nestimate_compare_scaling_inference},
+\code{nestimate_compare_test_unsupported} and
+\code{nestimate_compare_actor_needs_permutation}: see the arguments;
+\item \code{nestimate_compare_unknown_pair}: a \code{pair} that matches no comparison;
+\item \code{nestimate_compare_no_nodes}: the node view or table of a comparison
+without \code{measures};
+\item \code{nestimate_compare_no_test}: \code{plot(type = "inference")} without \code{test};
+\item \code{nestimate_compare_unknown_measure}: selecting a measure the object
+does not carry.
+}
+
+Plain argument-type checks raise unclassed errors, and errors from
+\code{\link[=permutation]{permutation()}}, \code{\link[=bayes_compare]{bayes_compare()}} and \code{\link[=vertex_compare]{vertex_compare()}} keep their own
+classes (for example \code{nestimate_bad_actor} for \code{paired = TRUE} with
+\code{actor}).
+
+An unknown name in \code{measures} gives a warning of class
+\code{nestimate_compare_warning} and \code{nestimate_compare_unknown_measure}.
 }
 
 \section{Reading the figures}{
 
-One colour contract in every view and every backend: \code{"#4A6FE3"} marks
-\code{network_a} (the reference, when one is set) as the higher of the two,
-\code{"#D33F6A"} marks \code{network_b}, and grey marks no difference; the plotted
-quantity is always \code{diff = a - b}. Colour never carries the sign alone --
-a solid line and a circular marker repeat "\code{a} higher", a dashed line and
-a square marker repeat "\code{b} higher", and the printed value carries its
-sign. When \code{test} was run, evidence is shown by opacity and a starred
-(edge and node views) or annotated (inference view) label: a
+One colour contract holds in every view and every backend: \code{"#4A6FE3"}
+marks \code{network_a} (the reference, when one is set) as the higher of the
+two, \code{"#D33F6A"} marks \code{network_b}, and grey marks no difference; the
+plotted quantity is always \code{diff = a - b}. Colour never carries the sign
+alone: a solid line and a circular marker repeat "\code{a} higher", a dashed
+line and a square marker repeat "\code{b} higher", and the printed value
+carries its sign. When \code{test} was run, evidence is shown by opacity and a
+starred (edge and node views) or annotated (inference view) label: a
 non-significant difference is faded, never deleted.
 }
 

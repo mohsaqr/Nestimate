@@ -7,34 +7,49 @@
 actor_endpoints(data, cols = NULL)
 }
 \arguments{
-\item{data}{A wide-format matrix or data.frame where rows are
-actors and columns are time steps. Cells are state labels;
-\code{NA} represents missing observations. If \code{data} is a
-\code{data.frame}, non-character/-factor columns (e.g. an \code{id}
-column) are dropped via the \code{cols} argument.}
+\item{data}{The sequences: a matrix or data frame with one row per actor
+and one column per position, holding state labels, with \code{NA} for a
+missing observation. Without \code{cols}, every column is read as a
+position, so the frame must be one column or a numbered run of
+positions (\code{T1}, \code{T2}, ...); a frame with other columns beside them,
+such as an id, raises an error of class \code{nestimate_bad_input}. A table
+from \code{\link[=mark_terminal_state]{mark_terminal_state()}} or \code{\link[=mark_first_state]{mark_first_state()}} is read as it is,
+because those functions mark their columns as positions.}
 
-\item{cols}{Optional character vector of state-column names. If
-\code{NULL} (default) every column is treated as a state column.}
+\item{cols}{The columns holding the positions, in order; the other
+columns are ignored. A name not in \code{data} raises an error of class
+\code{nestimate_bad_input}. Default \code{NULL} (every column).}
 }
 \value{
-A tidy \code{data.frame} with one row per actor and columns:
+A data frame with one row per actor and the columns:
 \describe{
-\item{\code{actor}}{Row number (or row name if present).}
-\item{\code{first_state}}{First non-NA state.}
-\item{\code{last_state}}{Last non-NA state.}
-\item{\code{first_step}}{Column index of the first observed state.}
-\item{\code{last_step}}{Column index of the last observed state.}
-\item{\code{n_observed}}{Number of non-NA cells.}
-\item{\code{dropped_out}}{\code{TRUE} iff every cell after \code{last_step}
-is \code{NA} and \code{last_step < ncol(data)}.}
+\item{\code{actor}}{The row name when \code{data} has row names other than
+\code{1}, \code{2}, ...; otherwise the row number.}
+\item{\code{first_state}, \code{last_state}}{The first and the last observed
+state.}
+\item{\code{first_step}, \code{last_step}}{The positions (column numbers among
+the position columns) of the first and the last observed state.}
+\item{\code{n_observed}}{The number of observed cells.}
+\item{\code{dropped_out}}{\code{TRUE} when \code{last_step} is before the last
+column, so the row ends in missing cells.}
 }
+A row with no observed state has \code{NA} states and steps, \code{n_observed}
+0 and \code{dropped_out} \code{FALSE}.
 }
 \description{
-For each actor (row), reports the first and last observed states,
-the time indices at which they appear, the number of observed
-steps, and a \code{dropped_out} flag that is \code{TRUE} when the actor
-has a \emph{terminal-NA} pattern (after the final observed step,
-every remaining cell is \code{NA}).
+\code{actor_endpoints()} returns one row per sequence (actor) of a
+wide-format sequence table, with its first and last observed states, the
+positions where they occur, the number of observed cells and whether the
+sequence ends early. A sequence ends early (\code{dropped_out}) when its last
+observed state comes before the last column, so every cell after it is
+missing: the \emph{terminal-NA} pattern of drop-out, course end or censoring.
+Internal gaps do not count.
+
+The flag records only where the observations stop; it cannot say why.
+A sequence recorded over fewer positions than the others looks the same
+as one that left. \code{\link[=mark_terminal_state]{mark_terminal_state()}} turns the terminal-NA cells
+into an explicit end state, and \code{\link[=chain_structure]{chain_structure()}} then describes the
+chain with that state.
 }
 \examples{
 actor_endpoints(trajectories) |> head()

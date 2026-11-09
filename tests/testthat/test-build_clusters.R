@@ -1362,3 +1362,42 @@ test_that("set-aside columns reach a cluster that has metadata of its own", {
   expect_identical(nets[[1L]]$metadata$id, d$id[fit$assignments == 1L])
   expect_identical(nets[[2L]]$metadata$id, d$id[fit$assignments == 2L])
 })
+
+# ---- cluster_network() applies build_network()'s shaping arguments ----
+# (threshold/scaling/start/end/params were accepted and silently dropped)
+
+test_that("cluster_network applies threshold, start and a network's params", {
+  seqs <- data.frame(V1 = c("A", "A", "D", "D"), V2 = c("B", "B", "E", "E"),
+                     V3 = c("A", "A", "D", "D"), V4 = c("C", "B", "E", "D"))
+  # Cluster with A (rows 1-2): A->B 3, A->C 1, B->A 2 -> P(A->B) = 3/4,
+  # P(A->C) = 1/4.
+  find_a <- function(grp) {
+    Filter(function(n) "A" %in% rownames(n$weights), grp)[[1L]]
+  }
+  plain <- find_a(cluster_network(seqs, k = 2))
+  expect_equal(plain$weights["A", "C"], 1 / 4)
+  thr <- find_a(cluster_network(seqs, k = 2, threshold = 0.5))
+  expect_equal(thr$weights["A", "C"], 0)
+  expect_equal(thr$weights["A", "B"], 3 / 4)
+  expect_equal(thr$threshold, 0.5)
+  st <- find_a(cluster_network(seqs, k = 2, start = TRUE))
+  expect_true("Start" %in% rownames(st$weights))
+  expect_equal(st$weights["Start", "A"], 1)
+
+  att <- build_network(seqs, method = "attention", params = list(lambda = 5))
+  grp <- cluster_network(att, k = 2)
+  expect_true(all(vapply(grp, function(n) identical(n$params$lambda, 5),
+                         logical(1))))
+})
+
+test_that("relative MMM networks take scaling/threshold, refuse start", {
+  skip_on_cran()
+  grp <- cluster_network(trajectories, k = 2, cluster_by = "mmm",
+                         threshold = 0.2, seed = 1, n_starts = 1)
+  w <- unlist(lapply(grp, function(n) n$weights))
+  expect_true(all(w == 0 | w >= 0.2))
+  expect_true(all(vapply(grp, function(n) n$threshold == 0.2, logical(1))))
+  expect_error(cluster_network(trajectories, k = 2, cluster_by = "mmm",
+                               start = TRUE, seed = 1, n_starts = 1),
+               class = "nestimate_bad_input")
+})

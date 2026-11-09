@@ -7,33 +7,38 @@
 net_aggregate_weights(w, method = "sum", n_possible = NULL)
 }
 \arguments{
-\item{w}{Numeric vector of finite edge weights. \code{NA} and zero weights
-are excluded before aggregation, so every method (including
-\code{"density"}, \code{"min"}, \code{"max"}, \code{"prod"},
-\code{"geomean"}) operates on the non-zero, non-\code{NA} subset.}
+\item{w}{The edge weights, a numeric vector. \code{NA} is allowed and removed
+with the zeros; an infinite value raises an error.}
 
-\item{method}{Single aggregation method: "sum", "mean", "median", "max",
-"min", "prod", "density", or "geomean". Because zeros are stripped first,
-\code{"density"} (\code{sum(w) / n_possible}) and \code{"mean"}
-(\code{sum(w) / number of non-zero edges}) return the \emph{same} value
-whenever the block is fully dense -- i.e. when the count of non-zero
-edges equals \code{n_possible}. They diverge only when zero/\code{NA}
-edges are present (then \code{"density"} divides by the larger
-\code{n_possible}, \code{"mean"} by the smaller non-zero count).}
+\item{method}{How to combine the weights: \code{"sum"} (default), \code{"mean"},
+\code{"median"}, \code{"max"}, \code{"min"}, \code{"prod"}, \code{"density"} or \code{"geomean"}. A
+single value; any other raises an error. \code{"density"} divides the sum by
+\code{n_possible}, and \code{"mean"} by the number of non-zero weights, so the two
+agree when every possible edge is present, and \code{"density"} is the
+smaller when some are zero or missing. \code{"geomean"} is the geometric mean of the
+positive weights; negative weights are left out, and the result is \code{0}
+when none is positive.}
 
-\item{n_possible}{Optional single finite numeric number of possible edges
-for density calculation. When omitted, \code{"density"} falls back to
-\code{sum(w) / length(w)} on the non-zero subset (equivalent to
-\code{"mean"}); supply \code{n_possible} (e.g. the block size
-\code{n_i * n_j}) for a true edge density.}
+\item{n_possible}{For \code{method = "density"}: the number of possible edges,
+such as the block size \code{n_i * n_j} of two clusters, a single finite
+number. Default \code{NULL}, under which (as with a value of 0 or less)
+\code{"density"} returns the mean of the non-zero weights. Other methods
+ignore it.}
 }
 \value{
-A single numeric value: the chosen aggregation of the non-zero,
-non-\code{NA} weights, or \code{0} when none remain.
+A single number: the chosen aggregate of the non-zero, non-missing
+weights, or \code{0} when none remain.
 }
 \description{
-Aggregates a vector of edge weights using various methods.
-Compatible with igraph's edge.attr.comb parameter.
+\code{net_aggregate_weights()} reduces a vector of edge weights to one number:
+their sum, mean, median, maximum, minimum, product, density or geometric
+mean. Missing and zero weights are removed first, so every method works on
+the edges that are present. \code{\link[=cluster_summary]{cluster_summary()}} and \code{\link[=build_mcml]{build_mcml()}} use it to
+combine the edges between two clusters into one cluster-level weight.
+}
+\details{
+\code{"sum"}, \code{"prod"}, \code{"min"}, \code{"max"}, \code{"mean"} and \code{"median"} mean what
+they mean in igraph's \code{edge.attr.comb} argument.
 }
 \examples{
 w <- c(0.5, 0.8, 0.3, 0.9)

@@ -25,103 +25,115 @@ pathways(x, ...)
 \method{pathways}{net_mogen}(x, order = NULL, min_count = 1L, min_prob = 0, top = NULL, ...)
 }
 \arguments{
-\item{x}{A higher-order network object (\code{net_hon}, \code{net_hypa},
-\code{net_mogen}), a \code{netobject}, a \code{net_association_rules}
-or a \code{net_link_prediction}.}
+\item{x}{The object to read: a \code{net_hon}, \code{net_hypa} or \code{net_mogen} (from
+\code{\link[=build_hon]{build_hon()}}, \code{\link[=build_hypa]{build_hypa()}} or \code{\link[=build_mogen]{build_mogen()}}), a \code{netobject} built
+from sequences, a \code{net_association_rules} (from \code{\link[=association_rules]{association_rules()}})
+or a \code{net_link_prediction} (from \code{\link[=predict_links]{predict_links()}}). A \code{netobject} of an
+association method (whose rows are variables) or a one-hot \code{netobject}
+raises an error of class \code{nestimate_bad_input}; a network without its
+sequences stops \code{pathways()}.}
 
-\item{...}{Additional arguments passed on to the method.}
+\item{...}{For the \code{netobject} method: passed to the \code{pathways()} method of
+the HON or HYPA built from it, so \code{min_count}, \code{min_prob}, \code{top} and
+\code{order} apply to a HON and \code{type} to a HYPA. Ignored by the other
+methods.}
 
-\item{min_count}{Integer. Minimum transition count to include
-(default: 1). Filters noise from rare observations. Used by the
-\code{net_hon} and \code{net_mogen} methods.}
+\item{min_count}{For a HON or a MOGen: the smallest transition count
+kept, which filters out rare observations. Default \code{1} (all).}
 
-\item{min_prob}{Numeric. Minimum transition probability to include
-(default: 0). Useful for filtering weak transitions. Used by the
-\code{net_hon} and \code{net_mogen} methods.}
+\item{min_prob}{For a HON or a MOGen: the smallest transition probability
+kept. Default \code{0} (all).}
 
-\item{top}{Integer or NULL. Keep only the top N pathways: ranked by count
-for \code{net_hon} and \code{net_mogen}, by lift then confidence for
-\code{net_association_rules}, and by score for
-\code{net_link_prediction}. Default \code{NULL} (all) everywhere except
-\code{net_link_prediction}, whose default is \code{10}.}
+\item{top}{How many pathways to keep after ranking: by count for a HON or
+a MOGen, by lift then confidence for association rules (after the item
+sets are de-duplicated), and by score for link predictions. Default
+\code{NULL} (all), except for link predictions, whose default is \code{10}. Not
+used for a HYPA.}
 
-\item{order}{Integer or NULL. For \code{net_hon}, keep only pathways whose
-source is of this order; default \code{NULL} = every order above 1. For
-\code{net_mogen}, the Markov order to extract; default \code{NULL} = the
-optimal order from model selection.}
+\item{order}{For a HON: keep only pathways whose source has this order.
+Default \code{NULL}, every order above 1; order 1 returns nothing. For a
+MOGen: the Markov order to extract. Default \code{NULL}, the optimal order
+from model selection; an order below 1 returns \code{character(0)}.}
 
-\item{type}{Character. Which anomalies to include: \code{"all"}
-(default), \code{"over"}, or \code{"under"}.}
+\item{type}{For a HYPA: which anomalies to include, \code{"all"} (default),
+\code{"over"} (over-represented paths) or \code{"under"} (under-represented ones).}
 
-\item{ho_method}{Character. Higher-order method: \code{"hon"} (default) or
-\code{"hypa"}.}
+\item{ho_method}{For a \code{netobject}: the higher-order model built from its
+sequences, \code{"hon"} (default, \code{\link[=build_hon]{build_hon()}}) or \code{"hypa"}
+(\code{\link[=build_hypa]{build_hypa()}}), each with its default settings. The network must carry
+the sequences it was built from.}
 
-\item{min_lift}{Numeric or NULL. Additional lift filter applied on top of
-the object's original threshold (default: NULL).}
+\item{min_lift}{For association rules: the smallest lift kept, on top of
+the threshold the rules were mined with. Default \code{NULL} (no further
+filter).}
 
-\item{min_confidence}{Numeric or NULL. Additional confidence filter
-(default: NULL).}
+\item{min_confidence}{For association rules: the smallest confidence
+kept, on top of the mining threshold. Default \code{NULL} (no further
+filter).}
 
-\item{method}{Character or NULL. Which prediction method to use.
-Default: first method in the object.}
+\item{method}{For link predictions: the prediction method whose links are
+returned. Default \code{NULL}, the first method in the object. A method the
+object does not hold returns \code{character(0)}.}
 
-\item{evidence}{Logical. If TRUE, include common neighbor evidence
-nodes in each pathway. Default: TRUE.}
+\item{evidence}{For link predictions: whether to extend each predicted
+link \code{A -> B} with its common neighbours, the nodes with an edge from
+\code{A} and an edge to \code{B}, giving \code{"A cn1 cn2 -> B"}. Default \code{TRUE}.
+Without a stored adjacency matrix the links are returned as \code{"A -> B"}.}
 
-\item{max_evidence}{Integer. Maximum number of evidence nodes per
-pathway (default: 3).}
+\item{max_evidence}{For link predictions with \code{evidence = TRUE}: the most
+common neighbours added to one link; when there are more, those with
+the largest summed weight of the edges from \code{A} and to \code{B} are kept.
+Default \code{3}.}
 }
 \value{
-A character vector of pathway strings in arrow notation
-(e.g. \code{"A B -> C"}), suitable for
-\code{cograph::plot_simplicial()}. Every method returns this shape, and
-\code{character(0)} when nothing survives its filters.
+A character vector of pathway strings in arrow notation (e.g.
+\code{"A B -> C"}), one per pathway and in the ranking order described above,
+ready for \code{cograph::plot_simplicial()}. Every method returns this shape,
+and \code{character(0)} when nothing passes its filters.
 }
 \description{
-Extracts higher-order pathway strings suitable for
-\code{cograph::plot_simplicial()}. Each pathway represents a
-multi-step dependency: source states lead to a target state.
+\code{pathways()} turns a higher-order result into pathway strings in arrow
+notation, \code{"A B -> C"}: the states before the arrow lead, together, to the
+state after it. The strings are what \code{cograph::plot_simplicial()} draws,
+one simplex per pathway. Which pathways are returned depends on the input:
+\itemize{
+\item a \code{net_hon} gives its higher-order edges, those whose source node
+has order above 1, i.e. the transitions that differ from a first-order
+Markov chain, ranked by count;
+\item a \code{net_hypa} gives its anomalous paths, over- or under-represented
+relative to the hypergeometric null model, the over-represented ones
+first;
+\item a \code{net_mogen} gives every transition at the optimal order (or the
+order given), ranked by count;
+\item a \code{netobject} built from sequences is first turned into a HON or a
+HYPA, and that result's pathways are returned;
+\item a \code{net_association_rules} gives its rules \verb{\{A, B\} => \{C\}} as
+\code{"A B -> C"}: antecedent items become the sources, consequent items the
+target. Rules whose antecedent and consequent together hold the same
+items describe the same simplex, so only the highest-lift rule per item
+set is kept; the rules are ranked by lift, then confidence;
+\item a \code{net_link_prediction} gives its predicted links, ranked by score;
+with \code{evidence = TRUE} each predicted edge \code{A -> B} is extended with the
+common neighbours that support it, \code{"A cn1 cn2 -> B"}.
+}
 
-For \code{net_hon}: extracts edges where the source node is
-higher-order (order > 1), i.e., the transitions that differ from
-first-order Markov.
-
-For \code{net_hypa}: extracts anomalous paths (over- or
-under-represented relative to the hypergeometric null model).
-
-For \code{net_mogen}: extracts all transitions at the optimal order
-(or a specified order).
+The strings keep only which pathways passed the filters, not the counts,
+probabilities, scores or tests behind them; those stay in the source
+object (for a MOGen, \code{\link[=mogen_transitions]{mogen_transitions()}} gives them per order).
 }
 \section{Methods (by class)}{
 \itemize{
-\item \code{pathways(net_hon)}: Extract higher-order pathways from HON
+\item \code{pathways(net_hon)}: Higher-order edges of a HON.
 
-\item \code{pathways(net_hypa)}: Extract anomalous pathways from HYPA
+\item \code{pathways(net_hypa)}: Anomalous paths of a HYPA.
 
-\item \code{pathways(netobject)}: Extract pathways from a netobject
+\item \code{pathways(netobject)}: Higher-order pathways of a network's sequences.
 
-Builds a Higher-Order Network (HON) from the netobject's sequence data
-and returns the higher-order pathways. Requires that the netobject was
-built from sequence data (has \code{$data}).
+\item \code{pathways(net_association_rules)}: Association rules as pathways.
 
-\item \code{pathways(net_association_rules)}: Extract pathways from association rules
+\item \code{pathways(net_link_prediction)}: Predicted links as pathways.
 
-Converts association rules \code{{A, B} => {C}} into pathway strings
-\code{"A B -> C"} suitable for \code{cograph::plot_simplicial()}.
-Antecedent items become source nodes; consequent items become the target.
-Rules whose antecedent and consequent share the same item set describe the
-same simplex, so only the highest-lift rule per item set is returned;
-\code{top} is applied after that de-duplication.
-
-\item \code{pathways(net_link_prediction)}: Extract pathways from link predictions
-
-Converts predicted links into pathway strings for
-\code{cograph::plot_simplicial()}. When \code{evidence = TRUE}
-(default), each predicted edge \code{A -> B} is enriched with common
-neighbors that structurally support the prediction, producing
-\code{"A cn1 cn2 -> B"}.
-
-\item \code{pathways(net_mogen)}: Extract transition pathways from MOGen
+\item \code{pathways(net_mogen)}: Transitions of a MOGen at one order.
 
 }}
 \examples{

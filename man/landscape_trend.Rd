@@ -5,7 +5,7 @@
 \alias{summary.net_landscape_trend}
 \alias{print.net_landscape_trend}
 \alias{plot.net_landscape_trend}
-\title{Stability Landscape Along the Program or a Covariate}
+\title{Stability Landscape Along the Programme or a Covariate}
 \usage{
 landscape_trend(
   x,
@@ -28,116 +28,160 @@ landscape_trend(
 \method{plot}{net_landscape_trend}(x, type = c("lines", "surface"), theta = 10, phi = 30, ...)
 }
 \arguments{
-\item{x}{A transition network from \code{build_network()} (method
-\code{"relative"} or \code{"frequency"}), a grouped one, or a wide
-sequence data frame. A covariate is read from the network's metadata,
-which \code{build_network()} fills with the numeric columns of a wide
-data frame. For the \code{print()} and \code{plot()} methods: an object
-of class \code{net_landscape_trend}.}
+\item{x}{The network or sequences: a transition network from
+\code{\link[=build_network]{build_network()}} with method \code{"relative"} or \code{"frequency"} (or a bare
+\code{cograph_network} of one), a grouped one (\code{netobject_group}), a \code{tna}
+model, or a wide sequence data frame. A covariate is read from the
+network's metadata, which \code{\link[=build_network]{build_network()}} fills with the numeric
+columns of a wide data frame, or from a data frame's columns beside the
+positions. A network must carry its sequences; a network of another
+method (for example \code{"glasso"}) raises an error of class
+\code{nestimate_not_markov}. For the \code{print()} and \code{plot()} methods: a
+\code{net_landscape_trend} object.}
 
-\item{along}{\code{"phase"} (default), or the name of a numeric
-per-sequence covariate.}
+\item{along}{The axis: \code{"phase"} (default), or the name of a numeric
+per-sequence covariate. A name that is not a numeric covariate of the
+sequences, a covariate that is the same for every sequence, or one that
+varies within a concatenated sequence raises an error of class
+\code{nestimate_bad_input}.}
 
-\item{depth}{\code{"stay"} (default) or \code{"occupancy"}, see above.}
+\item{depth}{The height: \code{"stay"} (default) or \code{"occupancy"}, as described
+above.}
 
-\item{states}{Character vector naming every state once, in drawing order.
-Default: alphabetical.}
+\item{states}{Every state, each named once, in drawing order; with
+\code{depth = "occupancy"} it also sets which states share a ridge. Default
+\code{NULL}, the alphabetical order. A vector that leaves out, adds or
+repeats a state raises an error of class \code{nestimate_bad_input}.}
 
-\item{window}{Integer. With \code{along = "phase"}: time steps per window.
-Default 5.}
+\item{window}{With \code{along = "phase"}: the time steps per window, at least
+2. Default \code{5}. A window longer than the sequences raises an error of
+class \code{nestimate_bad_input}. Not used with a covariate, but still
+checked.}
 
-\item{k}{Integer. With a covariate: nearest sequences per slice. Default
-30 (capped at the number of sequences).}
+\item{k}{With a covariate: the number of nearest sequences each slice is
+weighted over, at least 5. Default \code{30}, capped at the number of usable
+sequences. Not used with \code{along = "phase"}, but still checked.}
 
-\item{n_grid}{Integer. With a covariate: slices between its 5th and 95th
-percentile, with the full range used if these coincide. Default 20.}
+\item{n_grid}{With a covariate: the number of slices, at least 2, between
+its 5th and 95th percentile, with the full range used if these coincide.
+Default \code{20}. Not used with \code{along = "phase"}, but still checked.}
 
-\item{iter}{Integer. Bootstrap resamples of sequences. Default 500.}
+\item{iter}{The number of bootstrap resamples of sequences, a non-negative
+whole number. Default \code{500}; \code{0} leaves the intervals \code{NA}.}
 
-\item{ci_level}{Numeric in (0, 1). Interval level. Default 0.95.}
+\item{ci_level}{The interval level, a number between 0 and 1. Default
+\code{0.95}.}
 
-\item{seed}{Integer or \code{NULL}. Seed for the resampling, scoped to the
-call.}
+\item{seed}{A seed for the resampling. It applies to this call only: the
+session's random state is restored afterwards. Default \code{NULL}.}
 
-\item{cols}{Character vector or \code{NULL}. For a wide data frame: the columns
-holding the positions. Needed when they are not a numbered run (\code{T1},
-\code{T2}, ...) or one of them is called \code{action}.}
+\item{cols}{For a wide data frame: the columns holding the positions.
+Needed when they are not a numbered run (\code{T1}, \code{T2}, ...) or one of them
+is called \code{action}; such a frame without \code{cols} raises an error of class
+\code{nestimate_bad_input}. Default \code{NULL}.}
 
-\item{object}{A \code{net_landscape_trend} object (for \code{summary()}).}
+\item{object}{For the \code{summary()} method: a \code{net_landscape_trend} object.}
 
 \item{...}{Ignored.}
 
-\item{digits}{Integer. Decimal places in \code{print()}. Default 2.}
+\item{digits}{For the \code{print()} method: decimal places. Default \code{2}.}
 
-\item{type}{In \code{plot()}: \code{"lines"} (default), one line per state
-with its interval band; or \code{"surface"}, a 3D \code{persp()}
-landscape with the states across and the second axis in depth, one
-panel per network on a shared height scale.}
+\item{type}{For the \code{plot()} method: \code{"lines"} (default) draws one line
+per state with its interval band, the states told apart by colour,
+point shape, line type and a label at the end of each line;
+\code{"surface"} draws a 3D \code{\link[graphics:persp]{graphics::persp()}} landscape with the states
+across and the second axis in depth, one panel per network on a shared
+height scale, ridges included with \code{depth = "occupancy"}.}
 
-\item{theta, phi}{Numeric. In \code{plot(type = "surface")}: viewing
-angles.}
+\item{theta, phi}{For \code{plot(type = "surface")}: the viewing angles.
+Defaults \code{10} and \code{30}.}
 }
 \value{
-An object of class \code{"net_landscape_trend"}.
+A \code{net_landscape_trend} object. \code{print()} shows each state's
+height at the first and the last window or slice and its range, and
+counts the points that could not be estimated; \code{summary()} returns the
+table below; \code{plot()} returns a \code{ggplot} with \code{type = "lines"}, and
+with \code{type = "surface"} draws the landscape and returns its input
+invisibly. \code{print()} returns its input invisibly.
 
-In \code{summary()}: a data frame with one row per network,
-position and feature: \code{group}, \code{along}, \code{value} (window
-centre or covariate value), \code{label} (window steps or value),
-\code{feature} (\code{"well"}, or \code{"ridge"} with
-\code{depth = "occupancy"}), \code{state} (a state, or two for a
-ridge), the height (\code{depth} for \code{"stay"}, \code{potential}
-for \code{"occupancy"}), \code{ci_lower}, \code{ci_upper}, \code{dwell}
-(\code{"stay"} only) and \code{n_from} (transitions out of the state in
-the window, or their weighted sum in the slice; wells only).
+\code{summary()} returns a data frame with one row per network, position and
+feature: \code{group}, \code{along}, \code{value} (window centre or covariate value),
+\code{label} (window steps or value), \code{feature} (\code{"well"}, or \code{"ridge"} with
+\code{depth = "occupancy"}), \code{state} (a state, or two for a ridge), the height
+(\code{depth} for \code{"stay"}, \code{potential} for \code{"occupancy"}), \code{ci_lower},
+\code{ci_upper}, \code{n_from} (transitions out of the state in the window, or
+their weighted sum in the slice; wells only) and \code{dwell} (\code{"stay"}
+only).
 
-In \code{print()}: \code{x}, invisibly.
-
-In \code{plot()}: with \code{type = "lines"} a \code{ggplot}
-object; with \code{type = "surface"} \code{x}, invisibly, after drawing.
+The object's fields:
+\describe{
+\item{table}{The table \code{summary()} returns.}
+\item{states, groups}{The states in drawing order and the network
+names (\code{"network"} for a single one).}
+\item{along, depth, window, k, iter, ci_level}{The settings used.}
+}
 }
 \description{
-The landscape of \code{\link{stability_landscape}()} traced along a second
-axis. The axis is either the program phase, \code{along = "phase"}: the
-landscape is estimated from the transitions inside a sliding window of
-\code{window} time steps; or a numeric per-sequence covariate such as a
-grade, \code{along = "grade"}: at each value of the covariate it comes
-from the \code{k} nearest sequences, weighted by a tricube kernel
-(Cleveland 1979). Intervals come from resampling whole sequences.
+\code{landscape_trend()} traces the landscape of \code{\link[=stability_landscape]{stability_landscape()}} along
+a second axis and returns the height of every state, with a bootstrap
+interval, at each point of that axis. The axis is either the programme
+phase, \code{along = "phase"}: the landscape is estimated from the transitions
+inside a window of \code{window} time steps that slides one step at a time; or
+a numeric per-sequence covariate such as a grade, \code{along = "grade"}: at
+each value of the covariate it comes from the \code{k} nearest sequences,
+weighted by a tricube kernel (Cleveland 1979). Intervals come from
+resampling whole sequences, and the same resamples serve every window or
+slice. A grouped network gives one trend per group.
 
-Two heights are available. \code{depth = "stay"} (default) is the depth
-of \code{stability_landscape()}, the log of each state's expected stay,
-\eqn{-\log(1 - P_{ii})}. \code{depth = "occupancy"} is the quasi-potential
+Two heights are available. \code{depth = "stay"} (default) is the depth of
+\code{\link[=stability_landscape]{stability_landscape()}}, the log of each state's expected stay,
+\eqn{-\log(1 - P_{ii})}; a window as long as the sequences gives that
+function's values. \code{depth = "occupancy"} is the quasi-potential
 \eqn{-\log \pi_i} of the stationary distribution, with ridges at
 \eqn{-\log} of the symmetrised probability flux
 \eqn{(\pi_i P_{ij} + \pi_j P_{ji}) / 2} between neighbouring states
 (Wang et al. 2008): a low cup is a state the process spends much of its
 time in, a high ridge a switch it rarely makes.
+
+Consecutive windows share all but one step and neighbouring slices most
+of their sequences, so neighbouring points are not independent. Along a
+covariate, each point describes the sequences with values near it; the
+trend is an association with the covariate, not its effect.
 }
 \details{
-Network input replays per-sequence weighting, concatenation and boundary
-markers. Concatenated sequences are the resampling units. With a covariate,
-its value must be constant within each concatenated unit. Scaled,
-thresholded or otherwise modified networks whose weights do not match
-their stored sequences are refused; pass the original sequences to
-estimate a new landscape. Observed shares count prepared positions without
-sequence weighting. Phase windows retain the full sequence's weight.
+Network input replays the network's per-sequence weighting, concatenation
+and boundary markers, and the concatenated sequences are the resampling
+units. With a covariate, its value must be constant within each
+concatenated unit. Scaled, thresholded or otherwise modified networks
+whose weights do not match their stored sequences are refused; pass the
+original sequences to estimate a new landscape. In a network built with
+\code{params = list(weighted = TRUE)}, the transitions of a phase window keep
+the weight of their whole sequence.
 
-With \code{depth = "stay"}, a window or slice in which a state is never
-left gives an infinite depth, and one in which it does not occur gives
-\code{NA}. With \code{depth = "occupancy"}, a window whose chain has no
-unique stationary distribution is \code{NA} throughout. Such points are
-kept in \code{summary()}, left out of the lines and the surface, and
-counted in the plot caption. Interval bands are clipped at the panel
-edge, which is set by the estimates. Consecutive windows share all but
-one step and neighbouring slices most of their sequences, so neighbouring
-points are not independent.
+With \code{depth = "stay"}, a window or slice in which a state is never left
+gives an infinite depth, and one in which it does not occur gives \code{NA}.
+With \code{depth = "occupancy"}, ridges join the states next to each other in
+\code{states} order and the last state to the first (one ridge with two
+states); a window whose chain has no unique stationary distribution is
+\code{NA} throughout, and a ridge never crossed is \code{NA}. Such points are kept
+in \code{summary()}, left out of the lines and the surface, and counted in the
+plot caption. Interval bands are clipped at the panel edge, which is set
+by the estimates.
+
+Along a covariate, sequences without its value or with fewer than two
+observed positions are left out, and the kernel's half-width is the distance
+to the \code{k}-th nearest sequence, but at least 1/50 of the covariate's
+range.
 }
 \section{Errors}{
 
-\code{nestimate_not_markov}; \code{nestimate_bad_input} for an unknown,
-non-numeric or constant covariate, bad \code{states}, or a \code{window} longer than
-the sequences; \code{nestimate_landscape_unestimable} for fewer than five
-usable sequences.
+\code{nestimate_not_markov} for a network that is not a transition network;
+\code{nestimate_bad_input} for an unknown, non-numeric or constant covariate,
+a covariate that varies within a concatenated sequence, bad \code{states}, a
+\code{window} longer than the sequences, input without sequences, or a network
+whose weights cannot be rebuilt from its sequences (a scaled or
+thresholded one included); \code{nestimate_landscape_unestimable} for fewer
+than five usable sequences along a covariate.
 }
 
 \examples{

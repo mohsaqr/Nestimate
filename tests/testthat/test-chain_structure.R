@@ -109,3 +109,34 @@ test_that("plot returns a ggplot for regular, absorbing, and multi-class chains"
   P2["b1","b2"] <- 1; P2["b2","b1"] <- 1
   expect_s3_class(suppressWarnings(plot(chain_structure(P2))), "ggplot")
 })
+
+test_that("absorption runs into every closed class and rows sum to 1", {
+  # A absorbing; B <-> C a closed class that is not absorbing; D transient
+  # with P(D -> A) = P(D -> B) = 0.25, P(D -> D) = 0.5.
+  # Kemeny & Snell with closed classes lumped: N = 1 / (1 - 0.5) = 2,
+  # B = N R = 2 * (0.25, 0.25) = (0.5, 0.5), t = N 1 = 2.
+  # The former absorbing-only columns gave A = 0.5 and a row sum of 0.5.
+  P <- matrix(0, 4, 4, dimnames = list(LETTERS[1:4], LETTERS[1:4]))
+  P["A", "A"] <- 1
+  P["B", "C"] <- 1; P["C", "B"] <- 1
+  P["D", "A"] <- 0.25; P["D", "B"] <- 0.25; P["D", "D"] <- 0.5
+  cs <- chain_structure(P)
+  ap <- cs$absorption_probabilities
+  expect_identical(colnames(ap), c("A", "B+C"))
+  expect_equal(unname(ap["D", ]), c(0.5, 0.5))
+  expect_equal(unname(rowSums(ap)), 1)
+  expect_equal(unname(cs$mean_absorption_time), 2)
+  s <- summary(cs)
+  expect_equal(s$`absorbed_in_B+C`[s$state == "D"], 0.5)
+
+  # No absorbing state at all: transient E feeds two 2-cycles equally;
+  # it still has an absorption analysis over the closed classes.
+  P2 <- matrix(0, 5, 5, dimnames = list(c("a1", "a2", "b1", "b2", "E"),
+                                         c("a1", "a2", "b1", "b2", "E")))
+  P2["a1", "a2"] <- 1; P2["a2", "a1"] <- 1
+  P2["b1", "b2"] <- 1; P2["b2", "b1"] <- 1
+  P2["E", "a1"] <- 0.3; P2["E", "b2"] <- 0.3; P2["E", "E"] <- 0.4
+  cs2 <- chain_structure(P2)
+  expect_equal(unname(cs2$absorption_probabilities["E", ]), c(0.5, 0.5))
+  expect_equal(unname(cs2$mean_absorption_time), 1 / 0.6)
+})

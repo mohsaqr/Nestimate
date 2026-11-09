@@ -20,84 +20,94 @@ cluster_mmm(
 )
 }
 \arguments{
-\item{data}{A data.frame (wide format), \code{netobject},
-\code{cograph_network}, or \code{tna} model. For tna and
-cograph_network objects the stored (integer-encoded) data is
-extracted and decoded to state labels. Columns of a data.frame take the
-same roles as in \code{\link{build_network}}: an id or a covariate is not
-a sequence position. Those set aside are named in a message and kept in
-\code{$metadata}.}
+\item{data}{The sequences: a data frame with one row per sequence and one
+column per position, a \code{netobject} or bare \code{cograph_network} built from
+sequences, or a \code{tna} model (whose stored states are decoded to their
+labels). Columns take the same roles as in \code{\link[=build_network]{build_network()}}: an id or a
+covariate is not a position, and the columns set aside are named in a
+message and kept as metadata. Association networks (\code{cor}, \code{pcor},
+\code{glasso}, \code{ising}, \code{mgm}) hold variables, not sequences, and raise an
+error of class \code{nestimate_bad_input}.}
 
-\item{k}{Integer. Whole finite number of mixture components, >= 2.
-Default: 2.}
+\item{k}{The number of subgroups (mixture components), a whole number of
+at least 2. Default \code{2}.}
 
-\item{n_starts}{Integer. Positive whole finite number of random restarts.
-Default: 50.}
+\item{n_starts}{How many starting configurations to try, a positive whole
+number. More starts make it likelier that the best local maximum is
+found. Default \code{50}.}
 
-\item{max_iter}{Integer. Positive whole finite maximum EM iterations per
-start. Default: 200.}
+\item{max_iter}{The most EM iterations a start may run, a positive whole
+number. Default \code{200}.}
 
-\item{tol}{Numeric. Finite positive convergence tolerance. Default: 1e-6.}
+\item{tol}{The convergence tolerance: EM stops when the log-likelihood
+changes by less than this between iterations (with \code{covariate_effect = "em"}, also when its relative change does). A finite positive number;
+default \code{1e-6}.}
 
-\item{smooth}{Numeric. Finite non-negative Laplace smoothing constant.
-Default: 0.01.}
+\item{smooth}{A pseudo-count added to every transition count before the
+matrices are estimated, so a transition unseen in a subgroup gets a small
+probability instead of zero. A finite non-negative number; default
+\code{0.01}.}
 
-\item{seed}{Integer or NULL. Random seed.}
+\item{seed}{An integer that makes the random starts reproducible.
+Default \code{NULL}. The session's own random stream is left as it was.}
 
-\item{covariates}{Optional. Covariates integrated into the EM algorithm
-to model covariate-dependent mixing proportions. Accepts a string,
-character vector, formula, or data.frame (same forms as
-\code{\link{build_clusters}}). For \code{netobject} or
-\code{cograph_network} input, names are resolved against
-\code{$metadata} first, so a typical call is
-\code{build_mmm(net, k = 3, covariates = "session_label")}.
-Unlike the post-hoc analysis in \code{build_clusters()}, these
-covariates directly influence cluster membership during EM
-estimation (see \code{covariate_effect}).}
+\item{covariates}{Variables describing each sequence (such as a course or
+a grade), given as a column name, a character vector of names, a
+one-sided formula or a data frame, as in \code{\link[=build_clusters]{build_clusters()}}. For a
+\code{netobject}, names are looked up in its metadata first, so a typical call
+is \code{build_mmm(net, k = 3, covariates = "session_label")}. How they enter
+the model is set by \code{covariate_effect}. Default \code{NULL}.}
 
-\item{covariate_effect}{How \code{covariates} enter the model.
-\code{"em"} (default) folds them into the EM as covariate-dependent
-mixing proportions, so they shape the cluster fit itself (and rows
-with missing covariates are dropped before fitting). \code{"posthoc"}
-fits a plain mixture on every sequence and uses the covariates only
-for the after-fit multinomial logit, so covariate values --- and
-their missingness --- never change which clusters are found. Ignored
-when \code{covariates} is \code{NULL}.}
+\item{covariate_effect}{How \code{covariates} enter the model. \code{"em"}
+(default) makes the mixing proportions depend on them during EM, so they
+shape the subgroups found and add \code{(k - 1) * p} parameters for \code{p}
+covariate columns; rows with a missing covariate are dropped first, with
+a warning. \code{"posthoc"} fits a plain mixture on every sequence and relates
+the covariates to the subgroups only afterwards, with a multinomial logit,
+so neither their values nor their missingness change the subgroups.
+Ignored without \code{covariates}.}
 
-\item{estimator}{Multinomial fitter for the post-hoc covariate
-analysis (does not affect EM): \code{"auto"} (default) inspects the
-cluster x covariate cross-tab and falls back to \code{"firth"} only
-when any cell has fewer than 5 observations (separation risk),
-otherwise the much faster \code{"multinom"}; \code{"firth"} forces
-Firth's penalised likelihood via \code{brglm2::brmultinom} (finite
-under separation); \code{"multinom"} forces \code{nnet::multinom}
-(warns about separation risk); \code{"chisq"} runs descriptive
-tests (no logit). See \code{\link{build_clusters}} for full details.}
+\item{estimator}{How the after-fit multinomial logit is estimated; it never
+affects the EM. \code{"auto"} (default) uses Firth's penalised likelihood
+(\code{brglm2::brmultinom()}, finite under separation) when a cell of the
+subgroup-by-covariate table has fewer than 5 sequences, and
+\code{nnet::multinom()} otherwise. \code{"firth"} and \code{"multinom"} force one of
+them (\code{"multinom"} warns about separation risk), and \code{"chisq"} runs
+descriptive tests instead of a logit. \code{\link[=build_clusters]{build_clusters()}} has the details.
+Ignored without \code{covariates}.}
 
-\item{cluster_by}{Character. Accepted only as \code{"mmm"} (the
-default). Present so \code{cluster_mmm()} and \code{cluster_network()}
-share the same call shape; any other value raises an error pointing
-at \code{\link{cluster_network}}.}
+\item{cluster_by}{The clustering family. Only \code{"mmm"} (the default) is
+accepted; it is there so \code{cluster_mmm()} and \code{\link[=cluster_network]{cluster_network()}} share
+one call shape. Any other value raises an error that points to
+\code{\link[=cluster_network]{cluster_network()}}.}
 
-\item{...}{Unsupported. Supplying unused arguments raises an error.}
+\item{...}{Not used; any extra argument raises an error.}
 }
 \value{
-A fitted \code{net_mmm} clustering object. This is the same object
-contract returned by \code{\link{build_mmm}}. For HTNA input, its
-preserved actor partition is restored when the fit is materialized with
-\code{\link{build_network}} or \code{Nestimate::as_htna()}.
+A \code{net_mmm} object, exactly as \code{\link[=build_mmm]{build_mmm()}} returns it: \code{print()},
+\code{\link[=summary]{summary()}} and \code{plot()} read it, \code{\link[=build_network]{build_network()}} turns it into a
+\code{netobject_group} with one network per subgroup, and
+\code{\link[=cluster_diagnostics]{cluster_diagnostics()}} gives the classification and, for sequences
+built from long data with \code{actor}/\code{session}, \code{\link[=session_ids]{session_ids()}} gives each
+sequence's subgroup. \code{\link[=build_mmm]{build_mmm()}} lists its fields. For HTNA input,
+the actor partition is kept and restored when the fit is turned into
+networks with \code{\link[=build_network]{build_network()}} or \code{\link[=as_htna]{as_htna()}}.
 }
 \description{
-Fits a mixture of Markov chains to sequence data and returns the fitted
-\code{net_mmm} clustering object. The fit retains assignments, posterior
-probabilities, mixing proportions, information criteria, and the fitted
-component models.
+\code{cluster_mmm()} clusters sequences by fitting a mixture of first-order
+Markov chains and returns the fitted \code{net_mmm} object: the same fit, with
+the same arguments, as \code{\link[=build_mmm]{build_mmm()}}. The fit holds each sequence's
+subgroup and posterior probabilities, the mixing proportions, the
+information criteria and the subgroups' transition matrices.
+
+Pass the fit to \code{\link[=build_network]{build_network()}} to get one network per subgroup, or use
+\code{cluster_network(..., cluster_by = "mmm")} to fit and build the networks
+in one call. \code{\link[=build_mmm]{build_mmm()}} explains how to read the fit and what to check
+before trusting it.
 }
 \details{
-To materialize one network per fitted cluster, pass the result to
-\code{\link{build_network}} or use
-\code{cluster_network(..., cluster_by = "mmm")} for fitting and network
-construction in one call.
+\code{cluster_mmm()} takes the arguments of \code{\link[=build_mmm]{build_mmm()}} plus \code{cluster_by}, so
+its call has the same shape as \code{\link[=cluster_network]{cluster_network()}}.
 }
 \examples{
 seqs <- data.frame(V1 = sample(c("A","B","C"), 30, TRUE),
@@ -117,7 +127,6 @@ sequence_plot(fit, type = "index")
 }
 }
 \seealso{
-\code{\link{build_mmm}}, \code{\link{build_network}}, and
-\code{\link{cluster_network}} for fitting and immediately materializing
-per-cluster networks
+\code{\link[=build_mmm]{build_mmm()}}, \code{\link[=build_network]{build_network()}}, and \code{\link[=cluster_network]{cluster_network()}} for
+fitting and building the per-cluster networks in one call.
 }

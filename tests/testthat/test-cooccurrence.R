@@ -386,3 +386,27 @@ test_that("min_occur filters before co-occurrence computation", {
   expect_false("D" %in% colnames(net$weights))
   expect_equal(net$weights["A", "B"], 2)
 })
+
+test_that("relative co-occurrence is directed and every cell is an edge", {
+  # Transactions {A,B}, {B,C}, {A,B,C}, {A,D}: C with diagonal =
+  # A: A3 B2 C1 D1 (sum 7); C: A1 B2 C2 (sum 5), so A->C = 1/7, C->A = 1/5.
+  net <- cooccurrence(list(c("A", "B"), c("B", "C"), c("A", "B", "C"),
+                           c("A", "D")), similarity = "relative")
+  expect_true(net$directed)
+  e <- net$edges
+  expect_equal(e$weight[e$from == 1 & e$to == 3], 1 / 7)
+  expect_equal(e$weight[e$from == 3 & e$to == 1], 1 / 5)
+  expect_identical(nrow(e), sum(net$weights != 0))
+})
+
+test_that("top_n on relative co-occurrence keeps the top directed cells", {
+  # Off-diagonal relative weights (diagonal = FALSE): d->a 1, c->b 2/3,
+  # a->b, b->a, b->c 1/2. top_n = 2 keeps d->a and c->b only.
+  df <- data.frame(id = c(1, 1, 2, 2, 2, 3, 3, 4, 5, 5),
+                   kw = c("a", "b", "a", "c", "b", "b", "c", "a", "a", "d"))
+  W <- cooccurrence(df, field = "kw", by = "id", similarity = "relative",
+                    diagonal = FALSE, top_n = 2)$weights
+  expect_identical(sum(W != 0), 2L)
+  expect_equal(W["d", "a"], 1)
+  expect_equal(W["c", "b"], 2 / 3)
+})

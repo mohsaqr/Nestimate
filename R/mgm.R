@@ -43,9 +43,11 @@
   ruleReg <- match.arg(ruleReg, c("AND", "OR"))
   threshold <- match.arg(threshold, c("LW", "none"))
   if (!isTRUE(scale)) {
-    stop(errorCondition(paste0("`scale = FALSE` is not supported by the mgm estimator: ",
-                               "continuous columns are always standardized."),
-                        class = "nestimate_mgm_unscaled", call = NULL))
+    stop(errorCondition(
+      paste0(
+        "`scale = FALSE` is not supported by the mgm estimator: ",
+        "continuous columns are always standardized."),
+      class = "nestimate_mgm_unscaled", call = NULL))
   }
   data <- as.data.frame(data)
   p <- ncol(data)
@@ -76,7 +78,7 @@
       )
     }
   }
-  stopifnot(
+  .assert(
     "`type` must have one \"g\" or \"c\" per column" =
       is.character(type) && length(type) == p && all(type %in% c("g", "c"))
   )
@@ -85,7 +87,7 @@
       if (type[i] == "c") length(unique(data[[i]])) else 1L
     }, integer(1))
   }
-  stopifnot("`level` must be numeric with one value per column" =
+  .assert("`level` must be numeric with one value per column" =
               is.numeric(level) && length(level) == p)
 
   # Categorical columns go to the fit as factors, as mgm::mgm() treats them.

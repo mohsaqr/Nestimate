@@ -201,3 +201,17 @@ test_that("randomized missing identifiers always fail fast", {
                  info = sprintf("dataset %d, column %s", i, target))
   }
 })
+
+test_that("labels of several actor columns never merge distinct actors", {
+  # "1-a" + "b" and "1" + "a-b" both paste to "1-a-b" with "-".
+  d <- data.frame(a = c("1-a", "1"), g = c("b", "a-b"), code = c("x", "y"))
+  p <- prepare(d, actor = c("a", "g"), action = "code")
+  expect_equal(p$statistics$unique_actors, 2L)
+  expect_equal(length(unique(p$meta_data$.actor)), 2L)
+  expect_equal(length(unique(p$meta_data$.session_label)), 2L)
+  # Without a collision the "-" join is kept.
+  plain <- prepare(data.frame(a = c("1", "2"), g = c("b", "c"),
+                              code = c("x", "y")),
+                   actor = c("a", "g"), action = "code")
+  expect_equal(sort(plain$meta_data$.actor), c("1-b", "2-c"))
+})

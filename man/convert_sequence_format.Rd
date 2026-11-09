@@ -14,48 +14,63 @@ convert_sequence_format(
 )
 }
 \arguments{
-\item{data}{Data frame containing sequence data.}
+\item{data}{A data frame of sequences: an event log or a wide table.}
 
-\item{seq_cols}{Character vector. Names of columns containing sequential
-states (for wide format input). If NULL, all columns except \code{id_col}
-are used. Default: NULL.}
+\item{seq_cols}{The state columns of a wide table; setting them declares
+a wide table. Default \code{NULL}: every column except \code{id_col} and \code{time}.
+With neither \code{action} nor \code{seq_cols}, the frame must be one column or
+hold position columns named as a numbered run (\code{T1}, \code{T2}, ..., or \code{1},
+\code{2}, ...), with nothing beside them but the \code{id_col} (and \code{time})
+columns; anything else raises an error of class \code{nestimate_bad_input},
+as does a column listed both here and in \code{id_col} or \code{time}.}
 
-\item{id_col}{Character vector. Name(s) of the ID column(s). For long
-format, required. For wide format, optional: if NULL, the first column
-is used as the id only when it is a genuine identifier (its values are
-disjoint from the states in the remaining columns); for canonical wide
-sequence data with no id column (e.g. \code{V1..Vn} / \code{T1..Tn}), a
-row-index id is synthesized and every column is treated as a sequence
-column. Default: NULL.}
+\item{id_col}{The identifier column(s), copied to every output row. In an
+event log, each unique combination of their values is one sequence,
+and it is required: an event log without \code{id_col} raises an error of
+class \code{nestimate_bad_input} (no column is taken by position). In a wide
+table, each row is one sequence and no id is inferred from the data:
+without \code{id_col}, a row-index column \code{.rid} is added. Default \code{NULL}.}
 
-\item{action}{Character or NULL. Name of the column containing actions/states
-(for long format input). If provided, data is treated as long format.
-Default: NULL.}
+\item{action}{The column holding each event's state; setting it declares
+an event log. Default \code{NULL}.}
 
-\item{time}{Character or NULL. Name of the time column for ordering actions
-within sequences (for long format). Default: NULL.}
+\item{time}{The column that orders the events within each sequence of an
+event log; without it, events keep their row order. A wide table leaves
+it out of the state columns. Default \code{NULL}.}
 
-\item{format}{Character. Output format:
-\describe{
-\item{"frequency"}{Count of each action per sequence (wide, one column per
-state).}
-\item{"onehot"}{Binary presence/absence of each action per sequence.}
-\item{"edgelist"}{Consecutive transition pairs (from, to) per sequence.}
-\item{"follows"}{Each action paired with the action that preceded it.}
-}}
+\item{format}{The output format: \code{"frequency"} (default), the count of
+each state per sequence; \code{"onehot"}, whether each state occurs in the
+sequence (0/1); \code{"edgelist"}, each pair of consecutive states (\code{from},
+\code{to}); \code{"follows"}, each event (\code{act}) paired with the event before it
+(\code{follows}).}
 }
 \value{
-A data frame in the requested format:
-\describe{
-\item{frequency}{ID columns + one integer column per state with counts.}
-\item{onehot}{ID columns + one binary column per state (0/1).}
-\item{edgelist}{ID columns + \code{from} and \code{to} columns.}
-\item{follows}{ID columns + \code{act} and \code{follows} columns.}
-}
+A data frame with the id column(s) first. For \code{"frequency"} and
+\code{"onehot"}: one row per sequence, a \code{rid} column identifying the
+sequence, and one integer column per state, holding counts or 0/1. For
+\code{"edgelist"}: one row per transition, with columns \code{from} and \code{to}. For
+\code{"follows"}: one row per event after the first of its sequence, with
+columns \code{act} and \code{follows}. An event log's rows come out sorted by
+\code{id_col}.
 }
 \description{
-Convert wide or long sequence data into frequency counts, one-hot encoding,
-edge lists, or follows format.
+\code{convert_sequence_format()} turns wide or long sequence data into one of
+four data frames: per-sequence state counts, per-sequence state presence
+(one-hot), the list of consecutive transitions, or each event paired with
+the one before it. It reads an event log (\code{action} set) or a wide table
+(one row per sequence, one column per position). The counts can serve as
+per-sequence behaviour profiles for the association estimators of
+\code{\link[=build_network]{build_network()}} and for \code{\link[=build_mcml_pc]{build_mcml_pc()}}. The id columns (those that
+\code{id_col} names, and \code{.rid} for a wide table without \code{id_col}) are not
+variables and must be set aside there (\code{id_col} in \code{\link[=build_mcml_pc]{build_mcml_pc()}},
+\code{actor} in \code{\link[=build_network]{build_network()}}); the \code{rid} column is
+dropped automatically.
+}
+\details{
+A missing state (\code{NA} or an empty string) is dropped and the states on
+either side are joined, so a sequence \verb{A, NA, B} gives the transition
+\code{A -> B}. \code{\link[=frequencies]{frequencies()}} counts no transition across a missing state
+instead.
 }
 \examples{
 # Wide format input

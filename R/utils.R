@@ -19,8 +19,8 @@ NULL
   if (is.null(labels)) return(NULL)
   if (is.data.frame(labels)) {
     if (ncol(labels) < 2L) {
-      stop("`labels` data.frame must have at least two columns.",
-           call. = FALSE)
+      stop(errorCondition("`labels` data.frame must have at least two columns.",
+                          class = "nestimate_bad_input", call = NULL))
     }
     map <- setNames(as.character(labels[[2]]), as.character(labels[[1]]))
     return(.validate_label_map(map))
@@ -31,8 +31,9 @@ NULL
   if (is.character(labels) && !is.null(names(labels))) {
     return(.validate_label_map(labels))
   }
-  stop("`labels` must be a named character vector, named list, or 2-column ",
-       "data.frame (name, label).", call. = FALSE)
+  stop(errorCondition(paste0(
+    "`labels` must be a named character vector, named list, or 2-column ",
+    "data.frame (name, label)."), class = "nestimate_bad_input", call = NULL))
 }
 
 .validate_label_map <- function(map) {
@@ -40,17 +41,20 @@ NULL
   map <- as.character(map)
   names(map) <- key
   if (is.null(key) || any(is.na(key)) || any(!nzchar(key))) {
-    stop("`labels` must have non-empty source names.", call. = FALSE)
+    stop(errorCondition("`labels` must have non-empty source names.",
+                        class = "nestimate_bad_input", call = NULL))
   }
   if (anyDuplicated(key)) {
-    stop("`labels` source names must be unique.", call. = FALSE)
+    stop(errorCondition("`labels` source names must be unique.",
+                        class = "nestimate_bad_input", call = NULL))
   }
   if (any(is.na(map)) || any(!nzchar(map))) {
-    stop("`labels` values must be non-missing and non-empty.",
-         call. = FALSE)
+    stop(errorCondition("`labels` values must be non-missing and non-empty.",
+                        class = "nestimate_bad_input", call = NULL))
   }
   if (anyDuplicated(map)) {
-    stop("`labels` values must be unique.", call. = FALSE)
+    stop(errorCondition("`labels` values must be unique.",
+                        class = "nestimate_bad_input", call = NULL))
   }
   map
 }
@@ -73,7 +77,8 @@ NULL
   }
   check_unique <- function(v) {
     if (anyDuplicated(v)) {
-      stop("`labels` must map nodes to unique labels.", call. = FALSE)
+      stop(errorCondition("`labels` must map nodes to unique labels.",
+                          class = "nestimate_bad_input", call = NULL))
     }
     v
   }
@@ -390,9 +395,10 @@ safe_sd <- function(x) {
   }
   if (inherits(data, "tna")) {
     if (is.null(data$data)) { # nocov start
-      stop("tna object has no sequence data ($data). ",
-           "Build the tna from sequence data, not a raw matrix.",
-           call. = FALSE)
+      stop(errorCondition(paste0(
+        "tna object has no sequence data ($data). ",
+        "Build the tna from sequence data, not a raw matrix."),
+        class = "nestimate_bad_input", call = NULL))
     } # nocov end
     df <- as.data.frame(data$data, stringsAsFactors = FALSE) # nocov start
     lbl <- attr(data$data, "labels") %||% data$labels
@@ -415,9 +421,10 @@ safe_sd <- function(x) {
   }
   if (inherits(data, "netobject")) {
     if (is.null(data$data)) { # nocov start
-      stop("netobject has no sequence data ($data). ",
-           "Build the network from sequence data.",
-           call. = FALSE) # nocov end
+      stop(errorCondition(paste0(
+        "netobject has no sequence data ($data). ",
+        "Build the network from sequence data."),
+        class = "nestimate_bad_input", call = NULL)) # nocov end
     }
     return(as.data.frame(data$data, stringsAsFactors = FALSE))
   }
@@ -461,7 +468,8 @@ safe_sd <- function(x) {
 
   mat <- x$weights
   if (is.null(mat)) {
-    stop("cograph_network has no $weights matrix.", call. = FALSE)
+    stop(errorCondition("cograph_network has no $weights matrix.",
+                        class = "nestimate_bad_input", call = NULL))
   }
   if (!is.matrix(mat)) mat <- as.matrix(mat)
   if (!is.numeric(mat)) storage.mode(mat) <- "double"
@@ -588,3 +596,37 @@ safe_sd <- function(x) {
   invisible(n_failed)
 }
 
+
+# Set `seed` for the rest of the calling function and put the session's random
+# state back when that function exits, so a `seed =` argument gives
+# reproducible draws without moving the caller's own random stream (as
+# withr::local_seed()). A session with no random state yet is left with none.
+.local_seed <- function(seed, envir = parent.frame()) {
+  had_state <- exists(".Random.seed", envir = globalenv(), inherits = FALSE)
+  old_state <- if (had_state) {
+    get(".Random.seed", envir = globalenv(), inherits = FALSE)
+  }
+  restore <- function() {
+    if (had_state) {
+      assign(".Random.seed", old_state, envir = globalenv())
+    } else if (exists(".Random.seed", envir = globalenv(), inherits = FALSE)) {
+      rm(".Random.seed", envir = globalenv())
+    }
+  }
+  do.call(on.exit, list(as.call(list(restore)), add = TRUE, after = FALSE),
+          envir = envir)
+  set.seed(seed)
+  invisible(NULL)
+}
+
+# stopifnot() whose error carries a condition class (default
+# `nestimate_bad_input`) so callers and tests can catch it by class. The
+# message is stopifnot()'s own: the deparsed condition, or the name given to it.
+.assert <- function(..., class = "nestimate_bad_input") {
+  withCallingHandlers(
+    eval.parent(substitute(stopifnot(...))),
+    error = function(e) {
+      stop(errorCondition(conditionMessage(e), class = class, call = NULL))
+    }
+  )
+}

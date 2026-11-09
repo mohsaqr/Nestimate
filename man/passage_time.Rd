@@ -41,70 +41,121 @@ passage_time(x, states = NULL, normalize = TRUE)
 )
 }
 \arguments{
-\item{x}{A \code{netobject}, \code{cograph_network}, \code{tna} object,
-row-stochastic numeric transition matrix, or a wide sequence data.frame
-(rows = actors, columns = time-steps; a relative transition network is
-built automatically). For the \code{print()} and \code{plot()} methods: an object of class \code{net_mpt} or \code{net_mpt_group} (or its \code{summary()}).}
+\item{x}{The chain: a \code{netobject}, bare \code{cograph_network} or \code{tna} model
+with non-negative transition weights, typically method \code{"relative"} or
+\code{"frequency"} (a co-occurrence network is read as its random walk), a
+non-negative numeric transition matrix (states are named \code{S1}, \code{S2},
+... when it has no names), or a wide sequence data frame or character
+matrix, from which a \code{"relative"} network is estimated. A data frame
+needs its position columns named as a numbered run, as in
+\code{\link[=build_network]{build_network()}}; build the network first for any other layout. A
+\code{netobject_group} gives one result per group. An association network
+(\code{cor}, \code{pcor}, \code{glasso}, \code{ising}, \code{mgm}) or negative weights raise an
+error of class \code{nestimate_not_markov}. For the \code{print()} methods: a
+\code{net_mpt}, a \code{net_mpt_group}, or the result of \code{summary()}; for the
+\code{plot()} methods: a \code{net_mpt} or \code{net_mpt_group}.}
 
-\item{states}{Character vector. Restrict output to these states.
-\code{NULL} (default) keeps all states.}
+\item{states}{The states to keep in the result. The times are computed
+on the whole chain and then subset, so they still count paths through
+the states left out. A name that is not a state raises an error.
+Default \code{NULL} (all states).}
 
-\item{normalize}{Logical. If \code{TRUE} (default), rows that do not sum
-to 1 are normalized automatically (with a warning).}
+\item{normalize}{Whether to rescale rows that do not sum to 1 so that
+they do, with a warning, as for a \code{"frequency"} network. With \code{FALSE},
+such rows raise an error. A state with no outgoing transitions (a zero
+row) raises an error either way. Default \code{TRUE}.}
 
-\item{digits}{Integer. Decimal places displayed in cells. Default \code{1}.}
+\item{digits}{Decimal places of the printed matrix (\code{print()}) and of
+the tile labels (\code{plot()}). The stationary distribution is always
+printed with 4. Default \code{1}.}
 
-\item{...}{Ignored.
-In \code{plot.net_mpt()}, \code{print.net_mpt()}, \code{print.summary.net_mpt()} and \code{summary.net_mpt()}: Ignored. In \code{print.net_mpt_group()}: Forwarded to \code{print.net_mpt} for each element.}
+\item{...}{For \code{print()} of a \code{net_mpt_group}: passed to \code{print()} of
+each group's result (for example \code{digits}). Otherwise not used.}
 
-\item{object}{A \code{net_mpt} object (for \code{summary}).}
+\item{object}{For the \code{summary()} method: a \code{net_mpt}.}
 
-\item{log_scale}{Logical. Apply log transform to the fill scale for better contrast? Default \code{TRUE}.}
+\item{log_scale}{For the \code{plot()} methods: whether to colour the tiles by
+the logarithm of the passage time, so that short and long times can
+both be told apart; the legend and the tile labels still show steps.
+Default \code{TRUE}.}
 
-\item{title}{Character. Plot title.}
+\item{title}{For the \code{plot()} methods: the plot title. Default
+\code{"Mean First Passage Times"}.}
 
-\item{low}{Character. Hex colour for the low end (short passage time). Default dark green \code{"#004d00"}.}
-
-\item{high}{Character. Hex colour for the high end (long passage time). Default pale green \code{"#ccffcc"}.}
+\item{low, high}{For the \code{plot()} methods: the fill colours for the
+shortest and the longest passage times. Default \code{"#004d00"} (dark
+green) and \code{"#ccffcc"} (pale green).}
 }
 \value{
-An object of class \code{"net_mpt"} with:
+A \code{net_mpt} object; for a \code{netobject_group}, a \code{net_mpt_group},
+a named list holding one \code{net_mpt} per group. \code{print()} shows the
+passage-time matrix and the stationary distribution. \code{summary()}
+returns a \code{summary.net_mpt} object, a list holding the per-state table
+(\code{table}) and the summarised \code{net_mpt} (\code{object}); its \code{print()} shows
+the table, one row per state: \code{state}, \code{return_time} (mean recurrence time),
+\code{stationary} (\eqn{\pi_i}), \code{mean_out} (the mean number of steps from
+the state to the others) and
+\code{mean_in} (the mean number of steps from the others to the state),
+rounded to 2 decimals (\code{stationary} to 4). \code{plot()} returns a \code{ggplot}
+heatmap of the matrix, rows the starting state and columns the target;
+for a \code{net_mpt_group}, one panel per group on a shared colour scale.
+The \code{print()} methods return their input invisibly. A \code{net_mpt} holds:
 \describe{
-\item{matrix}{Full \eqn{n \times n} MFPT matrix. Row \eqn{i}, column
-\eqn{j} = expected steps from state \eqn{i} to state \eqn{j}.
-Diagonal = mean recurrence time \eqn{1/\pi_i}.}
-\item{stationary}{Named numeric vector: stationary distribution \eqn{\pi}.}
-\item{return_times}{Named numeric vector: \eqn{1/\pi_i} per state.}
-\item{states}{Character vector of state names.}
+\item{matrix}{The \eqn{n \times n} matrix of mean first passage times:
+row \eqn{i}, column \eqn{j} is the expected number of steps from
+state \eqn{i} to state \eqn{j}; the diagonal is the mean recurrence
+time, equal to \eqn{1/\pi_i} on an irreducible chain.}
+\item{stationary}{The stationary distribution \eqn{\pi}, a named
+numeric vector; zero outside the closed class of a chain with one
+closed class, and \code{NA} for a chain with several, whose stationary
+distribution is not unique.}
+\item{return_times}{The mean recurrence time of each state (the
+diagonal of \code{matrix}), a named numeric vector: \eqn{1/\pi_i} in an
+irreducible chain, \code{Inf} for a transient state.}
+\item{states}{The state names.}
 }
-For a \code{netobject_group} the result is a \code{"net_mpt_group"}: a
-named list holding one \code{net_mpt} per group.
-
-In \code{print.net_mpt()}: \code{x}, invisibly.
-
-In \code{print.net_mpt_group()}: \code{x} invisibly.
-
-In \code{summary.net_mpt()}: \code{summary.net_mpt} returns an object of class \code{"summary.net_mpt"}: a list whose \code{table} is a data frame with one row per state and columns \code{state}, \code{return_time}, \code{stationary}, \code{mean_out} (mean steps to other states) and \code{mean_in} (mean steps from other states), and whose \code{object} is the \code{net_mpt} it summarises. Its print method shows the table.
-
-In \code{plot.net_mpt()}: \code{plot.net_mpt} returns a ggplot object: a from-by-to heatmap of the mean first passage time matrix.
-
-In \code{print.summary.net_mpt()}: \code{x}, invisibly.
-
-In \code{plot.net_mpt_group()}: a \code{ggplot} object, one
-heatmap panel per group on a shared colour scale.
 }
 \description{
-Computes the full matrix of mean first passage times (MFPT) for a Markov
-chain. Element \eqn{M_{ij}} is the expected number of steps to travel from
-state \eqn{i} to state \eqn{j} for the first time. The diagonal equals
-the mean recurrence time \eqn{1/\pi_i}.
+\code{passage_time()} computes the mean first passage times of a Markov chain:
+the entry in row \eqn{i} and column \eqn{j} is the expected number of
+steps a chain started in state \eqn{i} takes to reach state \eqn{j} for
+the first time, and the diagonal entry is the mean recurrence time,
+the expected number of steps to return to state \eqn{i}. On an
+irreducible chain it equals \eqn{1/\pi_i}.
+The stationary distribution \eqn{\pi} is returned with them. It reads a
+transition network, a \code{tna} model, a transition matrix or wide sequences,
+and analyses a grouped network one network at a time.
+
+The times describe the estimated chain, in which a transition never seen
+in the data counts as impossible. In an irreducible chain every state can
+be reached from every other and every time is finite; in any other chain
+a time into a state that is not reached with certainty is \code{Inf} (see
+\emph{Details}), so check the structure with \code{\link[=chain_structure]{chain_structure()}} first. \code{\link[=markov_stability]{markov_stability()}} condenses the matrix into
+per-state summaries beside each state's persistence and sojourn time.
 }
 \details{
-Uses the Kemeny-Snell fundamental matrix formula:
+The times follow the Kemeny-Snell fundamental matrix formula:
 \deqn{M_{ij} = \frac{Z_{jj} - Z_{ij}}{\pi_j}, \quad
       Z = (I - P + \Pi)^{-1}}
-where \eqn{\Pi_{ij} = \pi_j}. Requires an ergodic (irreducible,
-aperiodic) chain.
+where \eqn{\Pi_{ij} = \pi_j}, and \eqn{\pi} is the left eigenvector
+of \eqn{P} for eigenvalue 1, scaled to sum to 1. The fundamental matrix
+exists for every irreducible chain (an ergodic chain in Kemeny and
+Snell's terms), periodic ones included.
+
+A chain that is not irreducible (for example one with an absorbing state,
+or with several closed classes) has no fundamental matrix. Its times are
+the expected hitting times: the time from \eqn{i} to \eqn{j} is \code{Inf}
+when the chain started in \eqn{i} may never reach \eqn{j}, and
+otherwise the minimal non-negative solution of
+\eqn{m_i = 1 + \sum_{k \ne j} P_{ik} m_k} (Norris, 1997). Times into
+the states outside a closed class are therefore \code{Inf} from inside it, and
+times into the closed class are finite from every state that cannot
+avoid it. The diagonal is the mean return time, \code{Inf} for a transient
+state. On an irreducible chain both routes give the same matrix.
+Nestimate 1.0.9 and earlier raised the zero stationary probabilities to
+machine precision instead, giving times near \eqn{10^{15}} with a
+warning, and stopped with an error for a chain with several closed
+classes.
 }
 \examples{
 net <- build_network(as.data.frame(trajectories), method = "relative")
@@ -118,6 +169,8 @@ plot(pt)
 \references{
 Kemeny, J.G. and Snell, J.L. (1976). \emph{Finite Markov Chains}.
 Springer-Verlag.
+
+Norris, J. R. (1997). \emph{Markov Chains}. Cambridge University Press.
 }
 \seealso{
 \code{\link{markov_stability}}, \code{\link{build_network}}

@@ -4,44 +4,81 @@
 \alias{build_atna}
 \title{Build an Attention-Weighted Transition Network (ATNA)}
 \usage{
-build_atna(data, start = FALSE, end = FALSE, ...)
+build_atna(
+  data,
+  start = FALSE,
+  end = FALSE,
+  actor = NULL,
+  action = NULL,
+  time = NULL,
+  session = NULL,
+  ...
+)
 }
 \arguments{
-\item{data}{Data frame (sequences or per-observation frequencies) or a
-square symmetric matrix (correlation or covariance). A fitted
-\code{net_clustering} or \code{net_mmm} object is also accepted: the
-per-cluster networks are (re)built and a \code{netobject_group} is
-returned.}
+\item{data}{The sequences: a data frame with one row per sequence and one
+column per position, or an event log (one row per event, with \code{action}
+set). Column roles are declared as in \code{\link[=build_network]{build_network()}}.
+One-hot data and matrices are refused.}
 
-\item{start}{Boundary marker prepended to every sequence as an explicit
-start state (a pure source: no incoming edges, every sequence's first
-transition is \code{start -> first_observed}). \code{FALSE} (default)
-adds nothing; \code{TRUE} uses the label \code{"Start"}; a single string
-uses that string as the label. Only valid for the transition methods
-(\code{relative}, \code{frequency}, \code{co_occurrence},
-\code{attention}, \code{ngram}, \code{gap}, \code{reverse}); errors
-otherwise (\code{wtna} included).}
+\item{start}{A start state put before every sequence, so the network
+shows where sequences begin. \code{FALSE} (default) adds none, \code{TRUE} adds
+one labelled \code{"Start"}, a single string adds one with that label.}
 
-\item{end}{Boundary marker placed in the single cell after each sequence's
-last observed (non-\code{NA}) state, as an explicit terminal state (a
-pure sink: no outgoing edges, no self-loop -- distinct from
-\code{\link{mark_terminal_state}}, which fills all trailing NAs into an
-absorbing state). \code{FALSE} (default) adds nothing; \code{TRUE} uses
-the label \code{"End"}; a single string uses that string as the label.
-Same method restriction as \code{start}.}
+\item{end}{An end state put after each sequence's last observed state,
+so the network shows where sequences stop; it has no outgoing edges.
+\code{FALSE} (default), \code{TRUE} (\code{"End"}) or a single string, as \code{start}.}
 
-\item{...}{Additional arguments passed to \code{\link{build_network}}.}
+\item{actor}{The column naming who each row belongs to (a person, a
+team). In an event log, each actor's events form a sequence, split
+further by \code{session} or \code{time_threshold}. Default \code{NULL}.}
+
+\item{action}{The column holding each event's state; setting it declares
+the data an event log. Column names give no role: \code{action}, \code{actor},
+\code{time} and \code{session} are read only when set. A column called \code{Action}
+with nothing declared raises an error of class \code{nestimate_bad_input},
+and an undeclared time or session column beside \code{action} is named in a
+message of class \code{nestimate_column_role}. Default \code{NULL}.}
+
+\item{time}{The timestamp column of an event log. Events are ordered by
+it, and a gap longer than \code{time_threshold} starts a new sequence.
+Default \code{NULL}.}
+
+\item{session}{The column identifying sessions in an event log; each
+session is its own sequence, also without \code{actor}. Default \code{NULL}.}
+
+\item{...}{Further arguments for \code{\link[=build_network]{build_network()}}, such as \code{group},
+\code{params}, \code{scaling}, \code{threshold} or \code{state_cols}. \code{method} cannot be
+given: it is always \code{"attention"} (error of class \code{nestimate_bad_input}).}
 }
 \value{
-A \code{netobject} (see \code{\link{build_network}}).
+A \code{netobject} (a \code{netobject_group} with \code{group}), exactly as
+\code{\link[=build_network]{build_network()}} returns it: print it for an overview, read the edges
+with \code{\link[=extract_edges]{extract_edges()}} and the weights with
+\code{\link[=extract_transition_matrix]{extract_transition_matrix()}}, and draw it with \code{cograph::splot()}.
 }
 \description{
-Convenience wrapper for \code{build_network(method = "attention")}.
-Computes decay-weighted transitions from sequence data.
+\code{build_atna()} estimates an attention-weighted transition network (ATNA):
+every later state in a sequence, not only the next one, adds to the edge
+from an earlier state, with a weight that decays with the number of
+positions between them, \code{exp(-distance / lambda)}. It is
+\code{\link[=build_network]{build_network()}} with \code{method = "attention"}. The decay is set in
+\code{params}: \code{lambda} (default \code{1}; larger values decay more slowly) and
+\code{direction} (\code{"forward"}, the default, \code{"backward"} or \code{"both"}).
+\code{duration} (one value per position, accumulated into times) or
+\code{time_matrix} (one row per sequence, one column per position) measure
+the distance in time instead of positions, and \code{decay}, a function of
+\verb{(ti, tj, lambda)} returning one weight per pair, replaces the decay
+function.
+
+The weights are summed decay weights, not counts or probabilities, so they
+compare within one network; add \code{scaling = "normalize"} for rows that sum
+to 1. Check how far they move under resampling with
+\code{\link[=bootstrap_network]{bootstrap_network()}}.
 }
 \examples{
-seqs <- data.frame(V1 = c("A","B","C"), V2 = c("B","C","A"))
-net <- build_atna(seqs)
+net <- build_atna(trajectories)
+net
 }
 \seealso{
 \code{\link{build_network}}

@@ -7,36 +7,53 @@
 extract_edges(model, threshold = 0, include_self = FALSE, sort_by = "weight")
 }
 \arguments{
-\item{model}{A \code{netobject}, TNA model object, \code{mcml} object, or
-a matrix of weights.}
+\item{model}{The network: a \code{netobject}, a \code{tna}-family model, an \code{mcml}
+or a weight matrix, as for \code{\link[=extract_transition_matrix]{extract_transition_matrix()}}.}
 
-\item{threshold}{Numeric. Minimum weight to include an edge. Default: 0.}
+\item{threshold}{Cells whose absolute weight is at most \code{threshold} are
+dropped. A single finite number of at least 0, otherwise an error is
+raised (class \code{nestimate_bad_input} for a negative value); default \code{0}.}
 
-\item{include_self}{Logical. Whether to include self-loops. Default: FALSE.}
+\item{include_self}{Whether to keep self-loops (a state followed by
+itself), \code{TRUE} or \code{FALSE}. Default \code{FALSE}.}
 
-\item{sort_by}{Character. Column to sort by: "weight" (descending),
-"from", "to", or NULL for no sorting. Default: "weight".}
+\item{sort_by}{The row order: \code{"weight"} (default) by decreasing weight,
+\code{"from"} by source then target state, \code{"to"} by target then source
+state, or \code{NULL} for the order of the weight matrix (column by column).
+Any other value raises an error.}
 }
 \value{
-For a single network: a data frame with one row per retained edge
-and columns:
+For a single network: a data frame with one row per edge and
+the columns:
 \describe{
-\item{from}{Source state name.}
-\item{to}{Target state name.}
-\item{weight}{Edge weight (transition probability).}
+\item{from}{The source state.}
+\item{to}{The target state.}
+\item{weight}{The edge weight (for a \code{"relative"} network, the
+transition probability).}
 }
 
-For an \code{mcml} object: a named list of such data frames, with
-\code{macro} first and then one element per cluster.
+For an \code{mcml}: a named list of such data frames, \code{macro} first and then
+one per cluster.
 }
 \description{
-Extract an edge list from a TNA model, representing the network as a
-data frame of from-to-weight tuples.
+\code{extract_edges()} returns the edges of a network as a data frame, one row
+per edge with its weight, read from the weight matrix (rows are the
+\code{from} states, columns the \code{to} states). It reads every input
+\code{\link[=extract_transition_matrix]{extract_transition_matrix()}} reads; an \code{mcml} gives one edge list per
+layer.
+
+An edge is a cell whose absolute weight is above \code{threshold}, so with
+the default \code{threshold = 0} every non-zero cell is an edge, negative
+weights (in correlation, partial-correlation and mlVAR networks)
+included, and zero cells are not. A directed network lists every
+ordered pair; an undirected one lists each edge once, with \code{from} the
+earlier state in the matrix order. A network's own \code{directed} field
+decides which; a \code{tna} model is directed unless it is a co-occurrence
+model, and a bare matrix is undirected when it is symmetric.
 }
 \details{
-This function converts the transition matrix into an edge list format,
-which is useful for visualization, analysis with igraph, or export to
-other network tools.
+An edge list is the form most other network tools (igraph, export to
+Gephi or a spreadsheet) take.
 }
 \examples{
 seqs <- data.frame(V1 = c("A","B","A"), V2 = c("B","A","C"), V3 = c("A","C","B"))

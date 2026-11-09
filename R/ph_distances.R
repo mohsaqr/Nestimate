@@ -11,31 +11,51 @@
 #' Bottleneck Distance Between Persistence Diagrams
 #'
 #' @description
-#' Computes the bottleneck distance between two persistence diagrams. For
-#' finite pairs, the bottleneck distance is
+#' `bottleneck_distance()` returns the bottleneck distance between two
+#' persistence diagrams, one value per homology dimension. It takes two
+#' [persistent_homology()] results, or two data frames of persistence
+#' pairs. For the finite pairs, the distance is
 #' \deqn{W_\infty(D_1, D_2) = \inf_{\gamma} \sup_{p \in D_1} \|p - \gamma(p)\|_\infty,}
 #' where \eqn{\gamma} ranges over bijections \eqn{D_1 \cup \Delta \to
 #' D_2 \cup \Delta} and \eqn{\Delta = \{(x,x)\}} is the diagonal. Each
-#' point may match a point in the other diagram or its projection onto
-#' the diagonal at cost \eqn{|d - b|/2}. Computed via binary search on
-#' \eqn{\varepsilon} plus a Kuhn bipartite-matching feasibility check.
+#' point is matched to a point of the other diagram or to its projection
+#' onto the diagonal, at cost \eqn{|d - b|/2}.
 #'
-#' Essential classes (death = Inf in VR mode, or death = 0 in clique mode)
-#' are matched one-to-one within each dimension. If the diagrams have
-#' different numbers of essential classes in some dimension, the
-#' bottleneck distance for that dimension is \code{Inf}.
+#' The distance is the largest shift needed to match the two diagrams'
+#' features: a small value means every feature of either diagram has a close
+#' counterpart in the other or is short-lived enough to sit near the
+#' diagonal. It is a distance between two observed diagrams and carries no
+#' sampling uncertainty of its own; to compare diagrams on a common grid,
+#' or to average several, use [persistence_landscape()].
 #'
-#' @param d1,d2 \code{persistent_homology} objects, or data.frames with
-#'   columns \code{dimension}, \code{birth}, \code{death}.
-#' @param dimension Integer vector of dimensions to compare. \code{NULL}
-#'   (default) compares all dimensions appearing in either diagram and
-#'   returns a named numeric vector.
-#' @param tol Numerical tolerance for binary search (default
-#'   \code{.Machine$double.eps ^ 0.5}).
+#' @details
+#' The smallest feasible \eqn{\varepsilon} is found by binary search over
+#' the candidate costs (every pairwise \eqn{L_\infty} distance and every
+#' diagonal projection), checking each with a Kuhn bipartite matching.
 #'
-#' @return Named numeric vector. Names are \code{"dim_<k>"}. \code{Inf}
-#'   indicates a structural mismatch (different essential counts in that
-#'   dimension); a self-distance is always 0.
+#' Essential classes (`death = Inf` in VR mode, `death = 0` with
+#' `birth > 0` in clique mode, as [persistence_landscape()] reads them; a
+#' `(0, 0)` pair is a zero-length finite point) are matched one-to-one within
+#' each
+#' dimension by their sorted births. When the two diagrams have different
+#' numbers of essential classes in a dimension, the distance for that
+#' dimension is `Inf`.
+#'
+#' @param d1,d2 The two diagrams: [persistent_homology()] results, or data
+#'   frames with the columns `dimension`, `birth` and `death` (other
+#'   columns are ignored). Any other input, or a data frame missing one of
+#'   those columns, raises an error.
+#' @param dimension The homology dimensions to compare, as whole numbers.
+#'   Default `NULL`: every dimension that appears in either diagram. A
+#'   dimension absent from both gives 0.
+#' @param tol The tolerance added to each candidate cost when checking
+#'   whether a matching exists, so that floating-point error does not miss
+#'   an exact match. Default `.Machine$double.eps ^ 0.5`.
+#'
+#' @return A named numeric vector with one distance per dimension, named
+#'   `"dim_<k>"` (empty when there is no dimension to compare). `Inf` marks
+#'   a structural mismatch: different numbers of essential classes in that
+#'   dimension. The distance of a diagram to itself is 0.
 #'
 #' @references
 #' Edelsbrunner, H. & Harer, J. (2010). \emph{Computational Topology: An
@@ -55,7 +75,7 @@ bottleneck_distance <- function(d1, d2, dimension = NULL,
   dims <- if (is.null(dimension)) {
     sort(unique(c(df1$dimension, df2$dimension)))
   } else {
-    stopifnot(is.numeric(dimension), all(dimension == as.integer(dimension)))
+    .assert(is.numeric(dimension), all(dimension == as.integer(dimension)))
     as.integer(dimension)
   }
   if (length(dims) == 0L) {
@@ -76,12 +96,14 @@ bottleneck_distance <- function(d1, d2, dimension = NULL,
   if (is.data.frame(x)) {
     need <- c("dimension", "birth", "death")
     if (!all(need %in% names(x))) {
-      stop("data.frame must have columns: ",
-           paste(need, collapse = ", "), call. = FALSE)
+      stop(errorCondition(paste0("data.frame must have columns: ",
+           paste(need, collapse = ", ")),
+           class = "nestimate_bad_input", call = NULL))
     }
     return(x[, c("dimension", "birth", "death")])
   }
-  stop("d1/d2 must be persistent_homology or data.frame.", call. = FALSE)
+  stop(errorCondition("d1/d2 must be persistent_homology or data.frame.",
+                      class = "nestimate_bad_input", call = NULL))
 }
 
 #' @noRd
@@ -117,7 +139,10 @@ bottleneck_distance <- function(d1, d2, dimension = NULL,
 
 #' @noRd
 .is_essential <- function(p) {
-  is.infinite(p$death) | p$death == 0
+  # death 0 marks an essential class in the clique encoding only when the
+  # class was born (birth > 0); a (0, 0) pair is a zero-length finite point,
+  # as persistence_landscape() reads it
+  is.infinite(p$death) | (p$death == 0 & p$birth > 0)
 }
 
 #' @noRd
@@ -225,36 +250,57 @@ bottleneck_distance <- function(d1, d2, dimension = NULL,
 #' Persistence Landscape
 #'
 #' @description
-#' Computes the persistence landscape (Bubenik 2015) from a persistence
-#' diagram. Each (birth, death) pair contributes a tent function
-#' \deqn{\Lambda_{(b,d)}(t) = \max(0, \min(t - b, d - t)).}
-#' The \eqn{k}-th landscape function \eqn{\lambda^{(k)}(t)} is the
+#' `persistence_landscape()` computes the persistence landscape (Bubenik
+#' 2015) of one homology dimension of a persistence diagram, evaluated on a
+#' grid. Each (birth, death) pair contributes a tent function
+#' \deqn{\Lambda_{(b,d)}(t) = \max(0, \min(t - b, d - t)),}
+#' and the \eqn{k}-th landscape function \eqn{\lambda^{(k)}(t)} is the
 #' \eqn{k}-th largest of \eqn{\{\Lambda_{(b_i,d_i)}(t)\}_i} at each
-#' \eqn{t}. Landscapes are stable under bottleneck distance and form a
-#' Banach-space embedding of persistence diagrams.
+#' \eqn{t}. It takes a [persistent_homology()] result or a data frame of
+#' persistence pairs.
 #'
-#' Essential classes are excluded: a tent function is undefined for an
-#' infinitely-lived class on a finite grid, so pairs with
-#' \code{death = Inf} (VR mode) and pairs with \code{death = 0} but
-#' \code{birth > 0} (the clique-mode encoding of an essential class) are
-#' dropped before the landscape is built. When no finite pair remains in
-#' the requested dimension, every landscape function is zero on the grid.
+#' At each filtration value \eqn{t}, a tent is the distance from \eqn{t}
+#' to the nearer end of a feature's interval (0 outside it), so the first
+#' landscape function follows the feature that \eqn{t} lies deepest
+#' inside, the second the feature with the second largest tent, and so
+#' on. This need not be the most persistent feature alive: a long-lived
+#' feature near its birth or death can sit below a shorter one near its
+#' midpoint. Landscapes
+#' are stable: the sup-norm distance between two landscapes is at most the
+#' [bottleneck_distance()] between their diagrams. They also live in a
+#' Banach space, where they can be averaged (Bubenik 2015).
 #'
-#' @param ph A \code{persistent_homology} object or a data.frame with
-#'   columns \code{dimension}, \code{birth}, \code{death}.
-#' @param k_max Maximum landscape index to compute (default 5). Must be a
-#'   single positive integer.
-#' @param dimension Integer scalar -- which homology dimension to compute
-#'   the landscape for. Default 1.
-#' @param t_grid Numeric vector of evaluation points. \code{NULL} (default)
-#'   uses an even grid of 200 points covering the union of pair intervals.
+#' Essential classes are left out, because the tent of an infinitely lived
+#' class is undefined on a finite grid: pairs with `death = Inf` (VR mode)
+#' and pairs with `death = 0` but `birth > 0` (the clique-mode encoding of
+#' an essential class) are dropped before the landscape is built. When no
+#' finite pair remains in the requested dimension, every landscape
+#' function is zero on the grid.
 #'
-#' @return A \code{persistence_landscape} object with:
+#' @param ph The diagram: a [persistent_homology()] result, or a data frame
+#'   with the columns `dimension`, `birth` and `death`.
+#' @param k_max The number of landscape functions to compute, a positive
+#'   whole number. Functions beyond the number of pairs are zero. Default
+#'   `5`.
+#' @param dimension The homology dimension, a single non-negative whole
+#'   number. Default `1`.
+#' @param t_grid The filtration values to evaluate the landscape at.
+#'   Default `NULL`: 200 evenly spaced points from the smallest birth to the
+#'   largest death of the remaining pairs (each pair is ordered so that
+#'   birth comes first, since clique filtrations descend), or from 0 to 1
+#'   when no pair remains. Pass the same grid to landscapes you want to
+#'   compare.
+#'
+#' @return A `persistence_landscape` object. Printing it shows the
+#'   dimension, `k_max`, the grid range and the sup norm (largest value) of
+#'   each landscape function; `plot()` draws the functions as lines over
+#'   the grid. The object holds:
 #' \describe{
-#'   \item{landscape}{Data frame: \code{k}, \code{t}, \code{value}.}
-#'   \item{dimension}{Integer scalar.}
-#'   \item{k_max}{Integer scalar.}
-#'   \item{t_grid}{Numeric vector.}
+#'   \item{landscape}{A data frame with one row per landscape function and
+#'     grid point, and the columns `k`, `t` and `value`.}
+#'   \item{dimension}{The homology dimension.}
+#'   \item{k_max}{The number of landscape functions.}
+#'   \item{t_grid}{The evaluation grid.}
 #' }
 #'
 #' @references
@@ -271,7 +317,7 @@ bottleneck_distance <- function(d1, d2, dimension = NULL,
 #' @export
 persistence_landscape <- function(ph, k_max = 5L, dimension = 1L,
                                    t_grid = NULL) {
-  stopifnot(
+  .assert(
     is.numeric(k_max), length(k_max) == 1L,
     !is.na(k_max), k_max >= 1L, k_max == as.integer(k_max),
     is.numeric(dimension), length(dimension) == 1L,
@@ -340,10 +386,11 @@ persistence_landscape <- function(ph, k_max = 5L, dimension = 1L,
 }
 
 #' @rdname persistence_landscape
-#' @param x For the \code{print()} and \code{plot()} methods: an object of class \code{persistence_landscape}.
-#' @param ... In \code{plot.persistence_landscape()} and \code{print.persistence_landscape()}: Ignored.
-#' @return In \code{print.persistence_landscape()}: The input, invisibly.
-#' @return In \code{plot.persistence_landscape()}: A ggplot.
+#' @param x For the `print()` and `plot()` methods: a
+#'   `persistence_landscape` object.
+#' @param ... Not used.
+#' @return The `print()` method returns its input invisibly, and `plot()` a
+#'   `ggplot` object with one line per landscape function.
 #' @export
 print.persistence_landscape <- function(x, ...) {
   cat(sprintf("Persistence Landscape (dimension %d, k_max = %d)\n",

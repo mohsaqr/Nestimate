@@ -13,42 +13,60 @@ simplicial_features(
 )
 }
 \arguments{
-\item{x}{A \code{netobject}, \code{netobject_group}, \code{mcml}, a square
-weight matrix, or a named list of any of these. A group or list yields
-one row per member, an \code{mcml} one row per cluster, and a single
-network one row.}
+\item{x}{The networks: a \code{netobject}, \code{cograph_network}, \code{tna} model or
+square weight matrix (one row); a \code{netobject_group}, or a list of
+single networks or matrices (one row per member, named by the list, or
+\code{network_1}, \code{network_2}, ... when unnamed); or an \code{mcml} object (one row per
+cluster, from its within-cluster networks; one built without them
+raises an error).}
 
-\item{threshold}{Minimum absolute edge weight for an edge to exist
-(passed to \code{\link{build_simplicial}}). Topology is a step function
-of this value, so a single threshold is a choice, not a result -- pass a
-vector to sweep it and get one row per network per threshold.}
+\item{threshold}{The smallest absolute edge weight that makes an edge,
+passed to \code{\link[=build_simplicial]{build_simplicial()}}. Default \code{0} (every non-zero edge). A
+vector sweeps it, giving one row per network per threshold. Values must
+be finite and not negative. \code{type = "vr"} and \code{type = "pathway"} ignore
+it, although the \code{threshold} column still records it.}
 
-\item{max_dim}{Maximum simplex dimension retained. Default \code{4}.}
+\item{max_dim}{The highest simplex dimension built, a whole number of at
+least 1 (a fractional value is truncated). Default \code{4}. When a network holds a larger clique, the complex
+is truncated and \code{\link[=betti_numbers]{betti_numbers()}} warns with class
+\code{nestimate_truncated_complex}; the warning concerns the Betti number of
+dimension \code{max_dim}, so it affects \code{b1} only when \code{max_dim = 1}.}
 
-\item{normalize}{Divide simplex counts by the number of nodes, so networks
-of different size are comparable. Default \code{FALSE}.}
+\item{normalize}{Whether to divide the simplex counts (\code{d1} onwards and
+\code{higher_order}) by the number of nodes, so networks of different size
+are comparable; \code{n_edges} stays a count. Default \code{FALSE}.}
 
-\item{type}{Complex type passed to \code{\link{build_simplicial}}.
-Default \code{"clique"}.}
+\item{type}{The complex construction passed to \code{\link[=build_simplicial]{build_simplicial()}}:
+\code{"clique"} (default), \code{"pathway"}, \code{"vr"} or its alias \code{"rips"}.
+\code{"pathway"} needs networks of class \code{netobject} or \code{tna}, from which a
+higher-order network is built; a matrix, a bare \code{cograph_network} or an
+\code{mcml} (whose cluster layers are matrices) raises an error.}
 }
 \value{
-A \code{data.frame} with one row per network (per threshold), and
-columns \code{network}, \code{threshold}, \code{n_nodes}, \code{n_edges},
-\code{b0}, \code{b1} (Betti numbers), \code{euler}, \code{max_q},
-\code{d1} ... \code{d<max_dim>} (simplex counts by dimension), and
-\code{higher_order} (the total of \code{d2} upward).
+A data frame with one row per network and threshold, ordered by
+network name and then threshold, and columns \code{network}, \code{threshold},
+\code{n_nodes}, \code{n_edges}, \code{b0} and \code{b1} (the Betti numbers: connected
+components and independent cycles, 0 when the complex has no such
+dimension), \code{euler} (the Euler characteristic of the complex as
+built), \code{max_q} (the top q-level of \code{\link[=q_analysis]{q_analysis()}}, the dimension of the
+largest maximal simplex), \code{d1}, \code{d2}, ... up to dimension \code{max_dim}
+(simplex counts by dimension) and \code{higher_order} (the total from \code{d2} upward).
 }
 \description{
-Builds a simplicial complex per network and returns its topological
-summaries as a tidy \code{data.frame} -- one row per network, one column
-per feature -- ready to use as regression predictors or to join onto
-unit-level outcomes.
-}
-\details{
-Higher-order structure is reported as \code{d2}, \code{d3}, ... : the
-number of simplices of that dimension. A 2-simplex is a triangle of three
-mutually connected states, a 3-simplex a tetrahedron of four. These count
-\emph{co-participation in a dense region}, not statistical interaction.
+\code{simplicial_features()} builds a simplicial complex for each network with
+\code{\link[=build_simplicial]{build_simplicial()}} and returns its topological summaries as a tidy data
+frame, one row per network and one column per feature, ready to use as
+regression predictors or to join onto unit-level outcomes. It takes one
+network, a group of networks, the within-cluster networks of an \code{mcml},
+or a list of networks, at one threshold or a sweep of them.
+
+Higher-order structure is reported as \code{d2}, \code{d3}, ...: the number of
+simplices of that dimension. A 2-simplex is a triangle of three mutually
+connected states, a 3-simplex a tetrahedron of four. These count
+co-participation in a dense region, not statistical interaction. The
+counts are a step function of \code{threshold}, so one threshold is a choice,
+not a result: sweep several and check that a conclusion holds across
+them.
 }
 \examples{
 m1 <- matrix(c(0, .6, .5, .6, 0, .4, .5, .4, 0), 3, 3,

@@ -6,9 +6,49 @@
 \alias{Nestimate-package}
 \title{Nestimate: Dynamic, Probabilistic, and Higher-Order Network Analysis}
 \description{
-\if{html}{\figure{logo.png}{options: style='float: right' alt='logo' width='120'}}
+Nestimate estimates networks from sequences, event logs, one-hot codes and
+panel data, compares them, and tests how far they can be trusted. One
+entry point, \code{\link[=build_network]{build_network()}}, estimates transition networks
+(transition probabilities, frequencies, co-occurrence and
+attention-weighted transitions; Saqr et al. 2025, \doi{10.1145/3706468.3706513}) and
+psychological networks (correlation, partial correlation, graphical lasso
+and Ising models, Saqr, Beck and L\enc{ó}{o}pez-Pernas 2024,
+\doi{10.1007/978-3-031-54464-4_19}; and mixed graphical models), and
+returns a \code{netobject}. The other verbs, by the question they answer (most
+read a \code{netobject}; the panel-data ones read the data directly):
+\itemize{
+\item inference on a network: \code{\link[=bootstrap_network]{bootstrap_network()}}, \code{\link[=boot_glasso]{boot_glasso()}},
+split-half reliability with \code{\link[=network_reliability]{network_reliability()}} and centrality
+stability with \code{\link[=centrality_stability]{centrality_stability()}};
+\item comparison of networks: \code{\link[=compare_networks]{compare_networks()}}, and the
+permutation tests \code{\link[=permutation]{permutation()}} and \code{\link[=nct]{nct()}};
+\item the structure of a network: \code{\link[=net_centrality]{net_centrality()}},
+\code{\link[=chain_structure]{chain_structure()}}, \code{\link[=passage_time]{passage_time()}}, \code{\link[=markov_stability]{markov_stability()}},
+\code{\link[=stability_landscape]{stability_landscape()}} and \code{\link[=transition_entropy]{transition_entropy()}};
+\item subgroups: clustering with \code{\link[=build_clusters]{build_clusters()}}, mixed Markov models
+with \code{\link[=build_mmm]{build_mmm()}} and multi-cluster multi-layer networks with
+\code{\link[=build_mcml]{build_mcml()}};
+\item higher-order networks: \code{\link[=build_hon]{build_hon()}}, higher-order network
+embedding with \code{\link[=build_honem]{build_honem()}}, hyper-path anomalies with
+\code{\link[=build_hypa]{build_hypa()}}, the multi-order generative model \code{\link[=build_mogen]{build_mogen()}}, and
+\code{\link[=markov_order_test]{markov_order_test()}};
+\item panel data: multilevel vector autoregression with \code{\link[=build_mlvar]{build_mlvar()}}
+and person-specific networks with \code{\link[=build_gimme]{build_gimme()}}.
+}
+}
+\references{
+Saqr, M., L\enc{ó}{o}pez-Pernas, S., T\enc{ö}{o}rm\enc{ä}{a}nen, T.,
+Kaliisa, R., Misiejuk, K., & Tikka, S. (2025). Transition network
+analysis: A novel framework for modeling, visualizing, and identifying the
+temporal patterns of learners and learning processes. In
+\emph{Proceedings of the 15th International Learning Analytics and
+Knowledge Conference (LAK25)}. ACM. \doi{10.1145/3706468.3706513}
 
-Estimate, compare, and analyze dynamic and psychological networks using a unified interface. Provides transition network analysis estimation (transition, frequency, co-occurrence, attention-weighted) Saqr et al. (2025) \doi{10.1145/3706468.3706513}, psychological network methods (correlation, partial correlation, graphical lasso, Ising model) Saqr, Beck, and Lopez-Pernas (2024) \doi{10.1007/978-3-031-54464-4_19}, and higher-order network methods including higher-order networks, higher-order network embedding, hyper-path anomaly, and multi-order generative model. Supports bootstrap inference, permutation testing, split-half reliability, centrality stability analysis, mixed Markov models, multi-cluster multi-layer networks and clustering.
+Saqr, M., Beck, E., & L\enc{ó}{o}pez-Pernas, S. (2024). Psychological
+networks: A modern approach to analysis of learning and complex learning
+processes. In M. Saqr & S. L\enc{ó}{o}pez-Pernas (Eds.), \emph{Learning
+Analytics Methods and Tutorials: A Practical Guide Using R}. Springer.
+\doi{10.1007/978-3-031-54464-4_19}
 }
 \seealso{
 Useful links:

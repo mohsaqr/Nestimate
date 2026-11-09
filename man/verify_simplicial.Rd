@@ -7,22 +7,34 @@
 verify_simplicial(mat, threshold = 0)
 }
 \arguments{
-\item{mat}{A square adjacency matrix, or a network object that
-\code{\link[=build_simplicial]{build_simplicial()}} accepts (\code{netobject}, \code{tna},
-\code{cograph_network}, \code{net_hon}); its weight matrix is used.}
+\item{mat}{A square weight matrix, or a network object whose weight
+matrix \code{\link[=build_simplicial]{build_simplicial()}} reads (a \code{netobject}, \code{tna} model,
+\code{cograph_network} or \code{net_hon}).}
 
-\item{threshold}{Edge weight threshold.}
+\item{threshold}{The smallest absolute edge weight an edge needs to
+enter, as in \code{\link[=build_simplicial]{build_simplicial()}}. Default \code{0}.}
 }
 \value{
-Invisibly, a list with \code{cliques_match} (logical: do the
-simplices match \code{igraph::cliques()} exactly),
-\code{n_simplices_ours}, \code{n_simplices_igraph}, \code{betti},
-\code{euler}, and \code{f_vector}. The comparison is also printed to
-the console.
+A list, invisibly: \code{cliques_match} (whether the simplices equal
+the cliques from \code{igraph::cliques()} exactly), \code{n_simplices_ours},
+\code{n_simplices_igraph}, \code{betti}, \code{euler} and \code{f_vector}. The two checks
+are printed as a side effect.
 }
 \description{
-Cross-validates clique finding and Betti numbers against igraph
-and known topological invariants. Useful for testing.
+\code{verify_simplicial()} builds the clique complex of \code{mat} with
+\code{\link[=build_simplicial]{build_simplicial()}} and checks it against two independent references:
+its simplices
+against the cliques \code{igraph::cliques()} finds in the same thresholded
+graph, and its Euler characteristic against the alternating sum of its
+Betti numbers (the Euler-Poincare theorem). It prints the result of each
+check and the Betti numbers, and is meant for testing. It needs
+\pkg{igraph}, and raises an error without it.
+}
+\details{
+The complex is built with the default \code{max_dim = 10}, while
+\code{igraph::cliques()} has no size limit, so a graph with a clique of more
+than 11 nodes reports a mismatch, with a warning of class
+\code{nestimate_truncated_complex} from \code{\link[=betti_numbers]{betti_numbers()}}.
 }
 \examples{
 \dontshow{if (requireNamespace("igraph", quietly = TRUE)) withAutoprint(\{ # examplesIf}

@@ -95,17 +95,33 @@
 
 #' Build HONEM Embeddings for Higher-Order Networks
 #'
-#' Constructs low-dimensional embeddings of the nodes of a Higher-Order
-#' Network (HON), after the HONEM approach of Saebi et al. (2020): no random
-#' walks or skip-gram, a decayed multi-step proximity matrix and its
-#' truncated SVD.
+#' @description
+#' `build_honem()` places the nodes of a higher-order network (HON) in a
+#' low-dimensional space, after the HONEM approach of Saebi et al. (2020):
+#' nodes whose multi-step transition profiles are alike (where they lead in
+#' one, two or more steps) get nearby coordinates. It reads a `net_hon` from
+#' [build_hon()], whose higher-order nodes (such as `"A -> B"`) are embedded
+#' beside the first-order ones, or any square weighted adjacency matrix. The
+#' coordinates come from a decayed multi-step proximity matrix (see
+#' *Details*).
 #'
-#' What is computed: with \eqn{D} the row-normalised HON transition matrix
-#' over \emph{all HON nodes} (higher-order nodes such as \code{"A -> B"}
-#' included), \eqn{S = Z^{-1} \sum_{k=0}^{L} e^{-k} D^{k+1}} with
-#' \eqn{Z = \sum_{k=0}^{L} e^{-k}} and \eqn{L} = \code{max_power}, where
-#' \eqn{D^{k+1}} is a matrix power. Each HON node gets one embedding row,
-#' \eqn{U_d \sqrt{\Sigma_d}}.
+#' The coordinates have no units and the sign of each dimension is
+#' arbitrary; what carries meaning is how close nodes lie to each other.
+#' The variance explained says how much of the proximity matrix the `dim`
+#' kept dimensions reproduce; a plot of two of them shows less than that.
+#'
+#' @details
+#' No random walks or skip-gram are used: the coordinates come from the
+#' truncated singular value decomposition of the proximity matrix. With
+#' \eqn{D} the row-normalised transition matrix over all HON nodes (rows
+#' without outgoing edges stay zero), the proximity matrix is
+#' \eqn{S = Z^{-1} \sum_{k=0}^{L} e^{-k} D^{k+1}} with
+#' \eqn{Z = \sum_{k=0}^{L} e^{-k}} and \eqn{L} = `max_power`, where
+#' \eqn{D^{k+1}} is a matrix power. Each node's embedding is its row of
+#' \eqn{U_d \sqrt{\Sigma_d}}, from the first \eqn{d} = `dim` singular
+#' vectors and values of \eqn{S}. `explained_variance` is the share of the
+#' sum of squared singular values held by the first \eqn{d}; \eqn{S} is not
+#' centred, so this is not a principal-component variance.
 #'
 #' \strong{How this differs from the paper.} Saebi et al. write the same
 #' sum, but there \eqn{D^v} is a \emph{v-th-order neighbourhood matrix
@@ -117,24 +133,29 @@
 #' is internally inconsistent; no reference code is public. This function
 #' therefore does not claim to reproduce the paper's embeddings.
 #'
-#' @param hon A \code{net_hon} object from \code{\link{build_hon}}, or a
-#'   square weighted adjacency matrix.
-#' @param dim Integer. Embedding dimension (default 32). Silently capped at
-#'   \code{n_nodes - 1}; the dimension actually used is reported in the
-#'   returned \code{dim} component.
-#' @param max_power Integer. \eqn{L}, the highest matrix power in the
-#'   decayed sum (default 10). Higher values capture longer-range
-#'   structure.
-#' @return An object of class \code{net_honem} with components:
+#' @param hon The network to embed: a `net_hon` object from [build_hon()],
+#'   or a square weighted adjacency matrix with at least 2 rows. Anything
+#'   else raises an error.
+#' @param dim The number of embedding dimensions. Default `32`. It is capped
+#'   at the number of nodes minus 1 without a warning; `print()` reports the
+#'   dimension used.
+#' @param max_power \eqn{L}, the highest matrix power in the decayed sum, at
+#'   least 1. Default `10`. Higher values let longer paths shape the
+#'   proximities.
+#' @return A `net_honem` object. `print()` shows the number of nodes, the
+#'   dimensions, `max_power` and the variance explained; `summary()` prints
+#'   the leading singular values and the range of the coordinates, and
+#'   returns one row per node; `plot()` draws the nodes on two dimensions.
+#'   The object's fields:
 #'   \describe{
-#'     \item{embeddings}{Numeric matrix (n_nodes x dim) of node embeddings,
-#'       row names = node names, column names \code{dim_1}, \code{dim_2},
-#'       ...}
+#'     \item{embeddings}{Numeric matrix (nodes x `dim`) of coordinates, with
+#'       the node names as row names and columns `dim_1`, `dim_2`, ...}
 #'     \item{nodes}{Character vector of node names.}
-#'     \item{singular_values}{Numeric vector of top singular values.}
-#'     \item{explained_variance}{Proportion of variance explained.}
+#'     \item{singular_values}{The `dim` leading singular values.}
+#'     \item{explained_variance}{Share of the squared singular values held
+#'       by the kept dimensions.}
 #'     \item{dim}{Embedding dimension used.}
-#'     \item{max_power}{Maximum power used.}
+#'     \item{max_power}{Highest matrix power used.}
 #'     \item{n_nodes}{Number of nodes embedded.}
 #'   }
 #'
@@ -160,7 +181,7 @@
 build_honem <- function(hon, dim = 32L, max_power = 10L) {
   dim <- as.integer(dim)
   max_power <- as.integer(max_power)
-  stopifnot(
+  .assert(
     "'dim' must be >= 1" = dim >= 1L,
     "'max_power' must be >= 1" = max_power >= 1L
   )
@@ -171,11 +192,13 @@ build_honem <- function(hon, dim = 32L, max_power = 10L) {
   } else if (is.matrix(hon) && nrow(hon) == ncol(hon)) {
     mat <- hon
   } else {
-    stop("'hon' must be a net_hon object or a square matrix")
+    stop(errorCondition("'hon' must be a net_hon object or a square matrix",
+                        class = "nestimate_bad_input", call = NULL))
   }
 
   n <- nrow(mat)
-  if (n < 2L) stop("Need at least 2 nodes for embedding")
+  if (n < 2L) stop(errorCondition("Need at least 2 nodes for embedding",
+                                  class = "nestimate_bad_input", call = NULL))
 
   dim <- min(dim, n - 1L)
 
@@ -209,12 +232,17 @@ build_honem <- function(hon, dim = 32L, max_power = 10L) {
 # ---------------------------------------------------------------------------
 
 #' @rdname build_honem
-#' @param x For the \code{print()} and \code{plot()} methods: an object of class \code{net_honem}.
-#' @param ... In \code{plot.net_honem()}: Additional arguments passed to \code{\link[graphics]{plot}}. In \code{print.net_honem()} and \code{summary.net_honem()}: Additional arguments (ignored).
-#' @param object For the \code{summary()} method: an object of class \code{net_honem}.
-#' @param dims Integer vector of length 2. Dimensions to plot (default: \code{c(1, 2)}).
-#' @return In \code{print.net_honem()} and \code{plot.net_honem()}: The input object, invisibly.
-#' @return In \code{summary.net_honem()}: A data.frame with one row per node: column \code{node} (node label) followed by \code{dim1}, \code{dim2}, ..., \code{dim}\emph{d} embedding coordinates, returned visibly; the summary text is printed as a side effect.
+#' @param x For the `print()` and `plot()` methods: a `net_honem` object.
+#' @param ... For the `plot()` method: further arguments passed to
+#'   [graphics::plot()]. For the `print()` and `summary()` methods: ignored.
+#' @param object For the `summary()` method: a `net_honem` object.
+#' @param dims For the `plot()` method: the two dimensions to draw. Default
+#'   `c(1, 2)`. Nodes are labelled when there are at most 50; an embedding
+#'   with a single dimension draws nothing and says so in a message.
+#' @return The `print()` and `plot()` methods return the input invisibly.
+#'   `summary()` returns a data frame with one row per node: `node` (the node
+#'   name), then `dim1`, `dim2`, ... with the coordinates; the summary text is
+#'   printed as a side effect.
 #' @export
 print.net_honem <- function(x, ...) {
   cat("HONEM: Higher-Order Network Embedding\n")

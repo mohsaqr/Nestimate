@@ -26,83 +26,113 @@ mosaic_analysis(
 \method{summary}{mosaic_analysis}(object, ...)
 }
 \arguments{
-\item{data}{A data.frame containing the two variables.}
+\item{data}{A data frame holding the two variables. Rows missing either
+of them are left out; a \code{var1} or \code{var2} that is not a column of \code{data},
+or no complete rows, raises an error.}
 
-\item{var1}{Character. Name of the first variable (mosaic columns).}
+\item{var1}{The name of the first variable, drawn as the mosaic's columns
+(column width is its marginal share).}
 
-\item{var2}{Character. Name of the second variable (stacked within columns).}
+\item{var2}{The name of the second variable, stacked within each column.}
 
-\item{min_count}{Integer. Minimum marginal count for a category to be kept.
-Categories of either variable below this are dropped before testing.
-Default 10.}
+\item{min_count}{The smallest number of rows a category must have to be
+kept. Categories of either variable with fewer rows in the full table
+are dropped, in one pass, before the test. Default \code{10}. If fewer than
+two categories of either variable remain, an error is raised.}
 
-\item{test}{Character. \code{"chisq"} (default) Pearson chi-square, or
-\code{"fisher"} Fisher's exact test (simulated p-value). Cramer's V and
-the residual fill are always derived from the chi-square statistic.}
+\item{test}{The test reported: \code{"chisq"} (default) for Pearson's
+chi-square test, or \code{"fisher"} for Fisher's exact test: exact for a
+2 x 2 table, and otherwise with a p-value simulated from 10,000 tables
+(so it changes with the random seed and cannot fall below 1/10,001).
+Cramer's V and the residuals always come
+from the chi-square statistic.}
 
-\item{percentage_base}{Character. Base for the \code{"percent"} tile label
-and the \code{pct} column: \code{"total"} (default), \code{"row"}
-(within \code{var1}), or \code{"column"} (within \code{var2}).}
+\item{percentage_base}{What the \code{pct} column and the \code{"percent"} tile
+label are a percentage of: \code{"total"} (default) the whole table, \code{"row"}
+each level of \code{var1}, \code{"column"} each level of \code{var2}.}
 
-\item{tile_label}{Character. What to print inside each tile: \code{"count"}
-(default), \code{"percent"}, \code{"residual"}, \code{"category"}
-(\code{var2} level), or \code{"none"}.}
+\item{tile_label}{What to print inside each tile: \code{"count"} (default),
+\code{"percent"}, \code{"residual"}, \code{"category"} (the \code{var2} level) or \code{"none"}.}
 
-\item{title}{Character. Plot title. Default \code{""}.}
+\item{title}{The plot title. Default \code{""} (none).}
 
-\item{...}{Further flat-mosaic styling arguments passed to the renderer
-(e.g. \code{col_label_side}, \code{row_label_side}, \code{legend_position},
-\code{legend_size}, \code{label_size}, \code{palette}). Tile fill uses the
-ColorBrewer RdBu ramp by default (override with \code{palette}). Column
-labels auto-rotate to vertical when there are more than 6 columns; pass
-\code{col_label_angle} to force an angle.
-In \code{plot.mosaic_analysis()}: Styling overrides forwarded to the flat renderer. In \code{print.mosaic_analysis()} and \code{summary.mosaic_analysis()}: Ignored.}
+\item{...}{Further styling for the flat mosaic: \code{col_label_side},
+\code{row_label_side}, \code{col_label_angle}, \code{row_label_angle}, \code{show_legend},
+\code{legend_position}, \code{legend_size}, \code{legend_title}, \code{label_size},
+\code{range}, \code{palette}, \code{min_label_h} and \code{min_label_w} (and \code{pct_base},
+which overrides \code{percentage_base} in the plot only; the \code{pct} column
+always follows \code{percentage_base}). The fill is the
+ColorBrewer RdBu ramp unless \code{palette} is given. Column labels turn
+vertical when there are more than 6 columns; \code{col_label_angle} sets an
+angle. Any other name raises an error. For the \code{plot()} method: the
+same styling and \code{title}, overriding what the fit stored; for the
+\code{print()} and \code{summary()} methods: ignored.}
 
-\item{x}{For the \code{plot()} and \code{print()} methods: an object of class \code{mosaic_analysis}.}
+\item{x}{For the \code{plot()} and \code{print()} methods: a \code{mosaic_analysis}.}
 
-\item{object}{For the \code{summary()} method: an object of class \code{mosaic_analysis}.}
+\item{object}{For the \code{summary()} method: a \code{mosaic_analysis}.}
 }
 \value{
-An object of class \code{"mosaic_analysis"}: a list with
+A \code{mosaic_analysis} object. \code{print()} shows the sample size, the
+test, Cramer's V with its label and the dropped categories, and returns
+the object invisibly; \code{summary()} returns the per-cell data frame (the
+\code{counts} table below) with the one-row test summary attached as the
+attribute \code{"stats"}; \code{plot()} draws the mosaic on the active device,
+with new styling if given, and returns the \code{ggplot} invisibly. The
+object is a list with:
 \describe{
-\item{plot}{The flat mosaic \code{ggplot} object.}
-\item{counts}{Tidy data.frame, one row per (var1, var2) cell, with
-\code{observed}, \code{expected}, \code{residual} (standardized), and
-\code{pct} (on \code{percentage_base}).}
-\item{stats}{One-row data.frame: \code{test}, \code{statistic},
-\code{df}, \code{p_value}, \code{cramers_v}, \code{effect_size},
-\code{n}.}
-\item{test}{The raw \code{htest} object.}
-\item{cramers_v, effect_size}{Effect size value and label.}
-\item{table}{The filtered contingency \code{table}.}
-\item{removed}{List of dropped \code{var1} / \code{var2} categories.}
-\item{n_original, n_filtered}{Row counts before/after filtering.}
-\item{vars}{Named character vector \code{c(var1 = , var2 = )}.}
-\item{plot_parts, plot_args}{The residual matrix, table, and styling
-arguments retained so \code{plot()} can re-render without re-testing.}
+\item{plot}{The flat mosaic, a \code{ggplot}. Building the object does not
+draw it.}
+\item{counts}{A data frame with one row per (\code{var1}, \code{var2}) cell: the
+two variables (named after them), \code{observed}, \code{expected}, \code{residual}
+(the standardised residual) and \code{pct} (on \code{percentage_base});
+\code{expected} and \code{residual} are rounded to 3 decimals, \code{pct} to 2.}
+\item{stats}{A one-row data frame: \code{test}, \code{statistic}, \code{df},
+\code{p_value}, \code{cramers_v}, \code{effect_size} and \code{n}, rounded (\code{statistic}
+and \code{cramers_v} to 3 decimals, \code{p_value} to 4 significant digits).
+\code{statistic} and \code{df} are \code{NA} for Fisher's test.}
+\item{test}{The \code{htest} object of the test reported.}
+\item{cramers_v, effect_size}{Cramer's V, unrounded, and its label.}
+\item{table}{The filtered contingency table.}
+\item{removed}{The dropped categories, as a list with \code{var1} and
+\code{var2}.}
+\item{n_original, n_filtered}{The number of complete rows before and
+after the sparse categories are dropped.}
+\item{vars}{The two variable names, as \code{c(var1 = , var2 = )}.}
+\item{plot_parts, plot_args}{The residual matrix, the table and the
+styling, kept so \code{plot()} can redraw without testing again.}
 }
-Use \code{print()} for the test summary and \code{summary()} for the tidy
-per-cell table.
-
-In \code{plot.mosaic_analysis()}: The re-rendered flat mosaic \code{ggplot} object, invisibly; the plot is drawn on the active device as a side effect.
-
-In \code{print.mosaic_analysis()}: \code{x}, invisibly.
-
-In \code{summary.mosaic_analysis()}: The tidy per-cell \code{data.frame}: one row per (var1, var2) cell, with the two variable columns (named after \code{var1} / \code{var2}) plus \code{observed}, \code{expected}, \code{residual} and \code{pct}. The one-row test summary is attached as the \code{"stats"} attribute.
 }
 \description{
-Analyses the association between two categorical columns of a data.frame.
-Builds the contingency table, drops sparse categories below
-\code{min_count}, runs a Pearson chi-square test (or Fisher's exact test),
-computes Cramer's V with a df-adjusted effect-size label, and draws a flat
-ggplot2 mosaic whose tile area encodes counts and whose fill encodes the
-standardized Pearson residual (Nestimate diverging palette). All tabular
-output is a tidy one-row-per-cell \code{data.frame}.
+\code{mosaic_analysis()} tests the association between two categorical columns
+of a data frame and draws it as a mosaic. It builds their contingency
+table, drops sparse categories (fewer than \code{min_count} rows), runs a
+Pearson chi-square test (or Fisher's exact test), computes Cramer's V
+with an effect-size label, and draws a flat ggplot2 mosaic in which tile
+area is the cell count and the fill is the cell's standardised
+residual. The per-cell results come as a data frame, one row per cell.
+
+The p-value tests the null hypothesis that the two variables are
+independent; with large samples almost any departure is significant, so
+read Cramer's V for the size of the association. The label follows
+Cohen's (1988) thresholds for the table's degrees of freedom,
+\code{min(rows, columns) - 1}: 0.10 / 0.30 / 0.50 for small /
+medium / large at 1, 0.07 / 0.21 / 0.35 at 2, 0.06 / 0.17 / 0.29 at 3,
+and 0.05 / 0.15 / 0.25 above (Cohen's w divided by the square root of the
+degrees of freedom); a V below the small threshold is labelled
+\code{"negligible"}. The residuals are \code{chisq.test()}'s standardised
+residuals, roughly standard normal under independence, so one beyond
+about +-2 marks a cell that holds more (or fewer) rows than independence
+predicts; with many cells, some pass that line by chance.
 }
 \section{Methods}{
 
 \itemize{
-\item \code{plot.mosaic_analysis()}: Re-renders the flat mosaic from the stored contingency table and residuals, so styling can be changed without re-running the test. Any flat-mosaic styling argument (\code{tile_label}, \code{pct_base}, \code{col_label_side}, \code{legend_size}, ...) may be overridden via \code{...}.
+\item \code{plot.mosaic_analysis()} redraws the flat mosaic from the stored
+contingency table and residuals, so the styling can change without the
+test being run again. Any flat-mosaic styling argument (\code{tile_label},
+\code{pct_base}, \code{col_label_side}, \code{legend_size}, ...) can be overridden
+through \code{...}.
 }
 }
 
@@ -115,6 +145,10 @@ head(summary(res))
 \donttest{
 plot(res, tile_label = "percent")
 }
+}
+\references{
+Cohen, J. (1988). \emph{Statistical power analysis for the behavioral
+sciences} (2nd ed.). Lawrence Erlbaum.
 }
 \seealso{
 \code{\link{mosaic_plot}} for the network/table mosaic (which also

@@ -25,122 +25,169 @@ chain_structure(x, normalize = TRUE, tol = 1e-10)
 \method{print}{summary_chain_structure}(x, ...)
 }
 \arguments{
-\item{x}{A \code{netobject}, \code{cograph_network}, \code{tna} model, transition
-matrix, or sequence data.frame (passed through \code{build_network()} with
-\code{method = "relative"}). A \code{netobject_group} is also accepted and
-analysed constituent by constituent. For the \code{print()} and \code{plot()} methods: an object of class \code{chain_structure}, \code{chain_structure_group} or \code{summary_chain_structure}.}
+\item{x}{The chain: a \code{netobject}, bare \code{cograph_network} or \code{tna} model
+with transition weights, a numeric transition matrix, or a wide
+sequence data frame or character matrix (estimated with
+\code{build_network(method = "relative")}). A \code{netobject_group} is analysed
+network by network. An association network (\code{cor}, \code{pcor}, \code{glasso},
+\code{ising}, \code{mgm}) or a matrix with negative entries raises an error of
+class \code{nestimate_not_markov}. For the \code{print()} and \code{plot()} methods: a
+\code{chain_structure} object (\code{print()} also takes a
+\code{chain_structure_group} or a \code{summary_chain_structure}).}
 
-\item{normalize}{Logical. If \code{TRUE} (default), rows of the transition
-matrix are renormalized to sum to 1 before analysis (see
-\code{\link[=passage_time]{passage_time()}} for the same convention).}
+\item{normalize}{Whether to rescale rows that do not sum to 1 so that
+they do, with a warning, as \code{\link[=passage_time]{passage_time()}} does. Default \code{TRUE}. With
+\code{FALSE}, such a matrix raises an error. A state with no outgoing
+transitions (a row of zeros) raises an error either way.}
 
-\item{tol}{Numerical tolerance for the reversibility check (detailed
-balance) and for treating near-zero entries as zero when building the
-support graph (which drives \code{classification}, \code{communicating_classes},
-\code{period}, and \code{hitting_probabilities}). It does \strong{not} govern the
-absorbing-state test: a state is absorbing only when \code{P[i, i]} equals
-1 to an internal fixed tolerance of \code{.Machine$double.eps^0.5},
-independent of \code{tol} (so raising \code{tol} to ignore tiny transition
+\item{tol}{The tolerance below which a transition probability counts as
+zero when the support graph is built (it drives \code{classification},
+\code{communicating_classes}, \code{period} and \code{hitting_probabilities}), and the
+tolerance of the reversibility check (detailed balance). Default
+\code{1e-10}. It does \strong{not} govern the absorbing-state test: a state is
+absorbing only when \code{P[i, i]} equals 1 to a fixed internal tolerance of
+\code{.Machine$double.eps^0.5}, so raising \code{tol} to ignore tiny transition
 probabilities never reclassifies a near-deterministic state as
-absorbing). Default \code{1e-10}.}
+absorbing.}
 
-\item{...}{In \code{plot.chain_structure()}, \code{print.chain_structure()}, \code{summary.chain_structure()} and \code{summary.chain_structure_group()}: Ignored. In \code{print.chain_structure_group()}: Forwarded to \code{print.chain_structure}. In \code{print.summary_chain_structure()}: Forwarded to \code{print.data.frame}.}
+\item{...}{Ignored, except by the \code{print()} methods of a
+\code{chain_structure_group}, which pass it to each network's \code{print()}, and
+of a \code{summary_chain_structure}, which pass it to \code{print.data.frame()}.}
 
-\item{show_values}{Logical. If \code{TRUE} (default), prints the numeric probability inside each cell. Set \code{FALSE} for large state spaces (n > 10) where labels overlap.}
+\item{show_values}{For the \code{plot()} method: whether to print each cell's
+probability inside it. Default \code{TRUE}. Values are never printed for more
+than 20 states; set \code{FALSE} earlier when the labels overlap (from about
+10 states).}
 
-\item{digits}{Integer. Decimal places for in-cell labels.}
+\item{digits}{For the \code{plot()} method: decimal places of the cell values.
+Default \code{2}.}
 
-\item{object}{For the \code{summary()} method: an object of class \code{chain_structure} or \code{chain_structure_group}.}
+\item{object}{For the \code{summary()} methods: a \code{chain_structure} or
+\code{chain_structure_group} object.}
 }
 \value{
-For a \code{netobject_group}, a \code{c("chain_structure_group", "list")}:
-a named list holding one \code{chain_structure} per constituent network,
-with its own \code{print()} and \code{summary()} methods.
+A \code{chain_structure} object, or for a \code{netobject_group} a
+\code{chain_structure_group} (class \code{c("chain_structure_group", "list")}), a
+named list holding one \code{chain_structure} per network. \code{print()} shows
+the chain-level properties (for a group, one block per network);
+\code{summary()} returns a data frame (see \emph{Summary columns}): for a
+\code{chain_structure}, one row per state, of class
+\code{c("summary_chain_structure", "data.frame")}, carrying the chain-level
+flags \code{is_regular}, \code{is_irreducible}, \code{is_aperiodic}, \code{is_reversible},
+\code{n_classes} and \code{absorbing_states} as attributes that its \code{print()}
+method shows as a header above the table; for a
+\code{chain_structure_group}, a plain data frame with one row per group and
+state. \code{plot()} returns a \code{ggplot} heatmap of the hitting probabilities
+(see \emph{Plot colours}). The \code{print()} methods return their input
+invisibly.
 
-Otherwise a \code{chain_structure} object: a list with elements
+The fields of a \code{chain_structure}:
 \describe{
 \item{\code{states}}{Character vector of state names.}
-\item{\code{classification}}{Named character vector. One of \code{"absorbing"},
-\code{"recurrent"}, \code{"transient"} per state.}
-\item{\code{communicating_classes}}{List of state-name vectors. Each
-sublist is a strongly connected component of the support graph.}
-\item{\code{recurrent_classes}}{Subset of \code{communicating_classes} that are
-closed (no transitions leaving the class).}
-\item{\code{transient_classes}}{Subset that are not closed.}
-\item{\code{absorbing_states}}{Character vector of states with \code{P[i, i] = 1}
-(tested exactly, to within \code{.Machine$double.eps^0.5}; the
-user-facing \code{tol} does not relax this).}
-\item{\code{period}}{Named integer vector. Period of each recurrent state;
-\code{NA} for transient states.}
-\item{\code{is_irreducible}}{Logical. \code{TRUE} iff there is exactly one
+\item{\code{classification}}{Named character vector, one of
+\code{"absorbing"}, \code{"recurrent"} or \code{"transient"} per state.}
+\item{\code{communicating_classes}}{List of state-name vectors, one per
+strongly connected component of the support graph.}
+\item{\code{recurrent_classes}}{The communicating classes that are closed
+(no transition leaves the class).}
+\item{\code{transient_classes}}{The communicating classes that are not
+closed.}
+\item{\code{absorbing_states}}{Character vector of states with
+\code{P[i, i] = 1}, tested to within \code{.Machine$double.eps^0.5}; \code{tol}
+does not relax this.}
+\item{\code{period}}{Named integer vector: the period of each recurrent
+state, \code{NA} for transient states.}
+\item{\code{is_irreducible}}{\code{TRUE} when there is exactly one
 communicating class.}
-\item{\code{is_aperiodic}}{Logical. \code{TRUE} iff every recurrent state has
-period 1.}
-\item{\code{is_regular}}{Logical. \code{is_irreducible && is_aperiodic}.}
-\item{\code{is_reversible}}{Logical or \code{NA}. \code{TRUE} iff the chain
-satisfies detailed balance against its stationary distribution.
-\code{NA} for non-irreducible chains (no unique stationary).}
-\item{\code{hitting_probabilities}}{\verb{n x n} matrix. \verb{[i, j] = P(ever reach j starting from i)}, computed over the same \code{tol}-thresholded support
-graph that drives \code{classification} so the two are mutually
-consistent (a state classified \code{"absorbing"}/closed never shows
-hitting probability to states outside its class).}
-\item{\code{absorption_probabilities}}{\verb{n_transient x n_absorbing} matrix
-or \code{NULL} if no transient -> absorbing pathway exists. \verb{[i, j] = P(eventual absorption in j | start in i)}.}
-\item{\code{mean_absorption_time}}{Named numeric vector or \code{NULL}. Expected
-number of steps until absorption from each transient state.}
-\item{\code{P}}{The (possibly normalized) transition matrix used.}
+\item{\code{is_aperiodic}}{\code{TRUE} when every recurrent state has period
+1.}
+\item{\code{is_regular}}{\code{is_irreducible && is_aperiodic}.}
+\item{\code{is_reversible}}{\code{TRUE} when the chain satisfies detailed
+balance against its stationary distribution; \code{NA} for a chain that
+is not irreducible (no unique stationary distribution).}
+\item{\code{hitting_probabilities}}{\verb{n x n} matrix whose \verb{[i, j]} entry is
+the probability of ever reaching \code{j} from \code{i}, computed over the
+same \code{tol}-thresholded support graph as \code{classification}, so the
+two agree: a state in a closed class has hitting probability 0 to
+every state outside it.}
+\item{\code{absorption_probabilities}}{\verb{n_transient x n_closed} matrix
+whose \verb{[i, j]} entry is the probability that the chain started in
+transient state \code{i} ends in closed class \code{j}; each row sums to 1.
+An absorbing state is a column named after it; a closed class of
+several states is one column named by its states joined with \code{+}
+(for example \code{B+C}). \code{NULL} when the chain has no transient state.}
+\item{\code{mean_absorption_time}}{Named numeric vector of the expected
+number of steps each transient state takes to enter a closed class,
+whichever it is. \code{NULL} when \code{absorption_probabilities} is.}
+\item{\code{P}}{The transition matrix analysed (after any row
+normalisation).}
 }
-
-In \code{print.chain_structure()}, \code{print.chain_structure_group()} and \code{print.summary_chain_structure()}: \code{x} invisibly.
-
-In \code{plot.chain_structure()}: A \code{ggplot} object.
-
-In \code{summary.chain_structure()}: A \code{data.frame} with one row per state, of class \code{c("summary_chain_structure", "data.frame")}, carrying the chain-level flags (\code{is_regular}, \code{is_irreducible}, \code{is_aperiodic}, \code{is_reversible}, \code{n_classes}, \code{absorbing_states}) as attributes, which its \code{print()} method shows as a header. Columns as described above.
-
-In \code{summary.chain_structure_group()}: A \code{data.frame} with columns \code{group}, \code{state}, \code{classification}, \code{period}, \code{persistence}, \code{return_probability}, \code{sojourn_steps}, plus \code{stationary_probability} if all groups are irreducible and \code{mean_absorption_time} if any group has absorbing states.
 }
 \description{
-Computes properties that depend only on the transition matrix support,
-not on any starting distribution: state classification, communicating
-classes, periods, irreducibility / aperiodicity / regularity /
-reversibility, hitting probabilities, and absorption analysis when
-absorbing states exist.
+\code{chain_structure()} describes the qualitative structure of a
+discrete-time Markov chain: the properties that depend only on which
+transitions are possible (the support of the transition matrix), not on
+any starting distribution. It classifies every state as absorbing,
+recurrent or transient, finds the communicating classes and the period of
+each recurrent state, says whether the chain is irreducible, aperiodic,
+regular and reversible, and computes the hitting probabilities and, when
+transient states exist, the probability that each ends in each closed
+class (an absorbing state or a closed class of several states) and the
+expected number of steps it takes to enter one. It reads a transition network, a \code{tna} model, a transition
+matrix or sequences, and analyses a grouped network one network at a
+time.
+
+It is a diagnostic to run before trusting \code{\link[=passage_time]{passage_time()}} or
+\code{\link[=markov_stability]{markov_stability()}}. Both assume a regular chain (irreducible and
+aperiodic), whose stationary distribution is unique; \code{is_regular} says
+whether that holds. The structure follows the estimated matrix: a
+transition never observed in the data counts as impossible, so a chain
+estimated from few sequences can look reducible because a rare move was
+not seen.
 }
 \details{
-Built specifically as a diagnostic to run \emph{before} trusting the output
-of \code{\link[=passage_time]{passage_time()}} or \code{\link[=markov_stability]{markov_stability()}}. Both implicitly assume a
-regular chain (irreducible + aperiodic) so that the stationary
-distribution is unique and meaningful. Use \code{is_regular} to check.
-
-The fundamental-matrix absorption math follows Kemeny & Snell (1976);
-the hitting-probability linear system follows Norris (1997).
+The fundamental-matrix absorption analysis follows Kemeny & Snell (1976),
+with every closed class lumped into one absorbing state, so each
+transient state's absorption probabilities sum to 1;
+the hitting probabilities are the minimal non-negative solution of the
+linear system in Norris (1997), solved over the states that can reach the
+target. The diagonal of the hitting matrix uses the return-time
+convention, the probability of returning to the state in one or more
+steps, as \code{markovchain::hittingProbabilities()} does.
 }
-\section{Methods}{
-
-\itemize{
-\item \code{plot.chain_structure()}: Renders the hitting-probability matrix as a heatmap, with rows and columns ordered by communicating class so the block structure is visible at a glance. State labels along both axes are coloured by classification (absorbing / recurrent / transient). The subtitle summarises the chain-level properties (regular, reversible).
-\item \code{print.chain_structure()}: Prints a compact chain-level header. For the full per-state table, call \code{summary()} on the same object.
-\item \code{print.chain_structure_group()}: One header line per group, followed by each group's per-state table (via \code{summary.chain_structure}).
-\item \code{print.summary_chain_structure()}: Prints a one-line chain header followed by the tidy per-state table.
-\item \code{summary.chain_structure()}: Returns a single data.frame with one row per state, combining every per-state metric \code{chain_structure()} computes. Always includes \code{state}, \code{classification}, \code{period}, \code{persistence} (the diagonal of the transition matrix), \code{return_probability} (the diagonal of the hitting matrix) and \code{sojourn_steps} (\code{1 / (1 - persistence)}, which is \code{Inf} for an absorbing state). Adds the chain's \code{stationary_probability} when the chain is irreducible, and absorption columns when it has any absorbing states: \code{absorption_probability} for a single absorbing state or one \verb{absorbed_in_<state>} column per state when there are several, plus \code{mean_absorption_time}.
-\item \code{summary.chain_structure_group()}: Produces a single tidy data.frame with one row per (group, state) combination, combining classification, persistence, sojourn, and -- when applicable -- stationary or mean-absorption-time columns. Useful for side-by-side reporting of \code{chain_structure()} across the members of a \code{netobject_group}.
-}
-}
-
 \section{Plot colours}{
 
-Cell colour encodes \verb{P(ever reach j | start at i)}. The diagonal
-uses the return-time convention (\verb{P(return to j in >= 1 steps)}),
-matching \code{markovchain::hittingProbabilities}. A non-irreducible chain
-shows zero off-block entries -- visual evidence of one-way doors
-between behavioural phases. An absorbing chain shows a column of 1's
-for the absorbing state.
+The \code{plot()} method draws the hitting-probability matrix as a heatmap,
+with rows and columns ordered by communicating class (closed classes
+first, larger classes before smaller ones) so the block structure is
+visible. Cell colour runs from white (0) to dark blue (1) and encodes
+\verb{P(ever reach j | start at i)}; the diagonal uses the return-time
+convention, \verb{P(return to j in >= 1 steps)}. The state labels on both axes
+name each state's class, as in \code{Active (recurrent)}, and the subtitle
+lists the chain-level properties. A
+chain that is not irreducible shows zero entries between classes that
+cannot reach each other; when every state ends in one absorbing state,
+that state's column is all 1s.
 }
 
 \section{Summary columns}{
 
+\code{summary()} of a \code{chain_structure} returns one row per state, combining
+every per-state result: \code{state}, \code{classification}, \code{period},
+\code{persistence} (the diagonal of the transition matrix),
+\code{return_probability} (the diagonal of the hitting matrix) and
+\code{sojourn_steps} (\code{1 / (1 - persistence)}, \code{Inf} for an absorbing state).
+An irreducible chain adds \code{stationary_probability}. A chain with transient
+states adds \code{absorption_probability} (one closed class) or one
+\verb{absorbed_in_<class>} column per closed class (named as the columns of
+\code{absorption_probabilities}), and \code{mean_absorption_time} (steps to enter a
+closed class); these are \code{NA} for states that are not transient. Probabilities are rounded to 4 decimals and step counts to 2.
 Columns are ordered for readability: identifiers first, classification
-second, dynamic per-state metrics last.
+second, per-state results last.
+
+\code{summary()} of a \code{chain_structure_group} stacks these tables into one
+data frame with a \code{group} column first, one row per group and state; a
+column that only some groups have is \code{NA} for the others.
 }
 
 \examples{

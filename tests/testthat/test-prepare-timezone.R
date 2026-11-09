@@ -102,3 +102,37 @@ test_that("build_network() forwards timezone to prepare()", {
   # Two sessions of two events: exactly two transitions.
   expect_equal(sum(net$weights), 2)
 })
+
+test_that("time_data is expressed in `timezone`, not the machine's zone", {
+  # 10:00 UTC must show as 10:00 UTC in time_data whatever TZ is set to
+  old_tz <- Sys.getenv("TZ", unset = NA)
+  Sys.setenv(TZ = "America/New_York")
+  on.exit(if (is.na(old_tz)) Sys.unsetenv("TZ") else Sys.setenv(TZ = old_tz),
+          add = TRUE)
+  df <- data.frame(a = c("x", "y"),
+                   t = c("2024-01-01 10:00:00", "2024-01-01 10:01:00"))
+  p <- prepare(df, action = "a", time = "t", timezone = "UTC")
+  expect_identical(attr(p$time_data$time_T1, "tzone"), "UTC")
+  expect_identical(format(p$time_data$time_T1), "2024-01-01 10:00:00")
+  p2 <- prepare(df, action = "a", time = "t", timezone = "Asia/Tokyo")
+  expect_identical(attr(p2$time_data$time_T1, "tzone"), "Asia/Tokyo")
+  expect_identical(format(p2$time_data$time_T1), "2024-01-01 10:00:00")
+})
+
+test_that("is_unix_time = TRUE reads text as Unix seconds, never as a layout", {
+  # "202401011030" matches the compact YYYYMMDDHHMM layout; declared Unix
+  # time reads it as 202401011030 seconds instead.
+  d <- data.frame(a = c("x", "y"), t = c("1700000000", "1700000060"))
+  p <- prepare(d, action = "a", time = "t", is_unix_time = TRUE)
+  expect_equal(as.numeric(p$time_data$time_T1), 1700000000)
+  d2 <- data.frame(a = c("x", "y"), t = c("202401011030", "202401011031"))
+  as_date <- prepare(d2, action = "a", time = "t")
+  expect_equal(format(as_date$time_data$time_T1, tz = "UTC"),
+               "2024-01-01 10:30:00")
+  as_unix <- suppressWarnings(
+    prepare(d2, action = "a", time = "t", is_unix_time = TRUE))
+  expect_equal(as.numeric(as_unix$time_data$time_T1), 202401011030)
+  expect_error(prepare(data.frame(a = "x", t = "2024-01-01"), action = "a",
+                       time = "t", is_unix_time = TRUE),
+               class = "nestimate_bad_input")
+})

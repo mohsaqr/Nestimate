@@ -26,139 +26,180 @@ build_hypa(
 )
 }
 \arguments{
-\item{data}{A data.frame (rows = trajectories), list of character vectors,
-\code{tna} object, or \code{netobject} with sequence data. For
-\code{tna}/\code{netobject}, numeric state IDs are automatically
-converted to label names.}
+\item{data}{The sequences: a wide data frame (one row per trajectory,
+position columns only, named as a numbered run), a character matrix
+with the same layout, a list of character vectors, a \code{tna} model, or a
+\code{netobject} built from sequences. For a
+\code{tna} model or a \code{netobject}, numeric state codes are converted to
+their labels. A frame with other columns beside the positions, a frame
+or matrix of only 0 and 1, a \code{netobject_group}, and a one-hot or
+association network raise an error of class \code{nestimate_bad_input}.}
 
-\item{order}{Integer scalar or integer vector. Order(s) of the De Bruijn
-graph (default \code{2L}). An order of \code{k} tests paths of
-\code{k + 1} states (\code{k} transitions), each conditioned on the
-\code{k}-state context that precedes its last state. Orders must be
-unique. When a vector is supplied, one De Bruijn layer
-is built per order and the per-order results are stored in
-\code{$by_order} (named by order). The orders are sorted ascending
-internally, so the \code{cograph_network} slots
-(\code{$weights}, \code{$edges}, \code{$adjacency}, \code{$xi},
-\code{$nodes}, \code{$meta}) always describe the network of the
-\emph{lowest order that produced a layer} (a requested order with no
-edges is dropped from \code{$by_order}, \code{$order} and \code{$k}),
-regardless of the order in which the vector is given; \code{$scores}
-aggregates every built order.}
+\item{order}{The order or orders of the De Bruijn graph, whole numbers of
+at least 1 without duplicates. Default \code{2}. Order \code{k} tests paths of
+\code{k + 1} states (\code{k} transitions), each conditioned on the \code{k}-state
+context before its last state. With several orders, one layer is built
+per order, in ascending order whatever the order given; an order with
+no paths (longer than the sequences allow) is dropped without a
+message, and an error is raised when none is left. The network fields
+(\code{weights}, \code{edges}, \code{adjacency}, \code{xi}, \code{nodes}, \code{meta}) describe the
+lowest order built, while \code{scores} holds every order.}
 
-\item{alpha}{Numeric in \verb{(0, 0.5)}. Significance threshold for anomaly
-classification (default 0.05). A path is labelled \code{"under"} when its
-adjusted lower-tail p-value \code{p_adjusted_under} is below
-\code{alpha}, \code{"over"} when its adjusted upper-tail p-value
-\code{p_adjusted_over} is below \code{alpha}, and \code{"normal"}
-otherwise (the under-representation test is applied first).}
+\item{alpha}{The significance threshold for the labels, a number in
+(0, 0.5). Default \code{0.05}. A path is under-represented when its adjusted
+lower-tail p-value (\code{p_adjusted_under}) is below \code{alpha}, otherwise
+over-represented when its adjusted upper-tail p-value
+(\code{p_adjusted_over}) is at most \code{alpha}, and normal otherwise.}
 
-\item{min_count}{Integer. Minimum count for a path to be classified as
-anomalous (default 5). An over-represented path must be observed at
-least \code{min_count} times; an under-represented path must be
-expected at least \code{min_count} times under the null, so a path
-that never occurs in the data can still be flagged as
-under-represented. Other paths are classified as \code{"normal"}.}
+\item{min_count}{The smallest count a path needs to be labelled, a whole
+number of at least 1. Default \code{5}. An over-represented path must be
+observed at least \code{min_count} times, an under-represented path expected
+at least \code{min_count} times under the null model, so a path that never
+occurs can still be under-represented. Paths below it are normal.}
 
-\item{p_adjust}{Character. Optional multiple testing correction of
-p-values. Default \code{"none"}: paths are classified against the
-threshold \code{alpha} directly, as in LaRock et al. (2020), which
-applies no correction. Accepts any method from
-\code{\link[stats]{p.adjust.methods}}, e.g. \code{"BH"} for
-Benjamini-Hochberg FDR control. Under- and over-representation
-p-values are adjusted separately, within each order, over every
-possible path. With small counts the paper's upper-tail score
-\code{P(X > f)} rejects more often than \code{alpha} under the null, so
-neither the uncorrected nor the corrected classification carries an
-exact type-I or FDR guarantee; \code{min_count} limits the problem.}
+\item{p_adjust}{The correction of the p-values for multiple testing: any
+of \link[stats:p.adjust]{stats::p.adjust.methods}, such as \code{"BH"} for Benjamini-Hochberg
+false discovery rate control. Default \code{"none"}, which compares the raw
+p-values with \code{alpha}, as LaRock et al. (2020) do. Under- and
+over-representation p-values are adjusted separately, within each
+order, over every possible path. With small counts the paper's
+upper-tail score \code{P(X > f)} rejects more often than \code{alpha} under the
+null, so neither the raw nor the corrected labels carry an exact type-I
+error or false discovery rate guarantee; \code{min_count} limits the
+problem.}
 
-\item{k}{Deprecated. Former name of \code{order}; if supplied it overrides
-\code{order} and emits a deprecation message. Use \code{order} instead.}
+\item{k}{The former name of \code{order}, deprecated: when given, it replaces
+\code{order}, with a warning of class \code{deprecatedWarning}. Default \code{NULL}.}
 
-\item{x}{For the \code{print()} method: an object of class \code{net_hypa}.}
+\item{x}{For the \code{print()} method: a \code{net_hypa}.}
 
-\item{...}{In \code{print.net_hypa()} and \code{summary.net_hypa()}: Additional arguments (ignored).}
+\item{...}{For the \code{print()} and \code{summary()} methods: ignored.}
 
-\item{object}{For the \code{summary()} method: an object of class \code{net_hypa}.}
+\item{object}{For the \code{summary()} method: a \code{net_hypa}.}
 
-\item{n}{Integer. Maximum number of paths to display per category (default: 10).}
+\item{n}{For the \code{summary()} method: the most paths to show and return
+per direction. Default \code{10}.}
 
-\item{type}{Character. Which anomalies to show: \code{"all"} (default), \code{"over"}, or \code{"under"}.}
+\item{type}{For the \code{summary()} method: which anomalies to show, \code{"all"}
+(default), \code{"over"} or \code{"under"}.}
 
-\item{order_by}{Character. Ranking used within each anomaly direction: \code{"sig"} (default) ranks by the active tail probability, \code{"freq"} (or its alias \code{"frequency"}) by observed count, \code{"ratio"} by observed/expected ratio, and \code{"path"} alphabetically.}
+\item{order_by}{For the \code{summary()} method: how the paths are ranked
+within each direction before the top \code{n} are kept. \code{"sig"} (default)
+ranks by the tail probability of that direction, \code{"freq"} (or
+\code{"frequency"}) by observed count, \code{"ratio"} by observed / expected
+(highest first for over-represented paths, lowest first for
+under-represented ones), and \code{"path"} alphabetically. With \code{type = "all"} the returned rows of both directions are ranked together the
+same way, by how far the ratio is from 1 on the log scale
+(\code{abs(log(ratio))}) for \code{"ratio"}.}
 }
 \value{
-An object of class \code{c("net_hypa", "cograph_network")} with
-components:
+A \code{net_hypa} object (class \code{c("net_hypa", "cograph_network")}).
+\code{print()} reports the orders, the number of paths tested and how many
+are over- and under-represented (per order when there are several);
+\code{\link[=summary]{summary()}} prints and returns the strongest anomalies; \code{\link[=pathways]{pathways()}}
+gives the anomalous paths as pathway strings for
+\code{cograph::plot_simplicial()}. The object's fields:
 \describe{
-\item{scores}{Data frame with path, from, to, observed, expected,
-ratio, p_value, p_under, p_over, p_adjusted_under,
-p_adjusted_over, anomaly, order
-columns (one block of rows per requested order). One row per
-possible path of the De Bruijn graph: every observed path plus every
-unobserved path that the lower-order transitions permit
-(\code{observed = 0}). \code{expected} comes from a propensity
-matrix fitted so that the expected counts preserve the observed in-
-and out-strength of every De Bruijn node (LaRock et al. 2020); at
-order 2 this equals the first-order Markov expectation
-\eqn{n(a b \cdot) n(\cdot b c) / n(\cdot b \cdot)}. The \code{path}
-column shows the full state sequence
-(e.g., "A -> B -> C"); \code{from} is the context (conditioning
-states); \code{to} is the next state; \code{ratio} is
-observed / expected; \code{p_value} is retained as an alias for
-\code{p_under}, the raw lower-tail hypergeometric CDF value;
-\code{p_over} is the strict upper-tail probability
-\code{P(X > observed) = 1 - p_under}, so that a path is
-over-represented when its HYPA score is at least
-\code{1 - alpha}, i.e. \code{p_over <= alpha} (LaRock et al.,
-2020); under-represented when \code{p_under < alpha}; \code{p_adjusted_under} and
-\code{p_adjusted_over} are the corrected p-values for under- and
-over-representation tests respectively.}
-\item{ho_edges}{Alias for \code{scores} (all orders, arrow notation).}
-\item{over}{Subset of \code{scores} classified as over-represented.}
-\item{under}{Subset of \code{scores} classified as under-represented.}
-\item{adjacency}{Weighted adjacency matrix of the lowest-order De
-Bruijn graph.}
-\item{weights}{cograph weight matrix of the lowest-order graph.}
-\item{xi}{Fitted propensity matrix of the lowest-order graph.}
-\item{edges}{cograph edge data.frame of the lowest-order graph.}
-\item{by_order}{Named list of per-order result lists.}
-\item{order}{Integer vector of orders actually built (sorted ascending).}
-\item{k}{Back-compatibility alias for \code{order}.}
-\item{alpha}{Significance threshold used.}
-\item{p_adjust}{Multiple testing correction method used.}
-\item{n_anomalous}{Number of anomalous paths detected (all orders).}
-\item{n_over}{Number of over-represented paths (all orders).}
-\item{n_under}{Number of under-represented paths (all orders).}
-\item{n_edges}{Total number of tested (possible) paths, all orders.}
-\item{nodes}{data.frame (\code{id}, \code{label}, \code{name}) of the
-lowest-order De Bruijn graph nodes (arrow notation).}
-\item{directed}{Logical. Always \code{TRUE}.}
-\item{meta}{cograph meta list of the lowest-order graph.}
+\item{scores}{A data frame with one row per possible path of each
+order: every observed path and every unobserved one the observed
+transitions permit (\code{observed = 0}). Within each order the
+over-represented paths come first (by decreasing ratio), then the
+under-represented (by increasing ratio), then the rest. Columns:
+\code{path}, the full state sequence (\code{"A -> B -> C"}); \code{from}, the
+context (the conditioning states); \code{to}, the next state;
+\code{observed}; \code{expected}, the count under the null model, whose
+propensity matrix keeps the observed in- and out-strength of every
+De Bruijn node (at order 2 this equals the first-order Markov
+expectation \eqn{n(a b \cdot) n(\cdot b c) /
+      n(\cdot b \cdot)}{n(a,b,.) n(.,b,c) / n(.,b,.)});
+\code{ratio}, observed / expected; \code{p_under}, the hypergeometric
+lower-tail probability \code{P(X <= observed)}, and \code{p_value}, the same
+value under its older name; \code{p_over}, the strict upper tail
+\code{P(X > observed) = 1 - p_under}, so that \code{p_over <= alpha} is the
+paper's HYPA score of at least \code{1 - alpha}; \code{p_adjusted_under} and
+\code{p_adjusted_over}, the same after \code{p_adjust}; \code{anomaly} (\code{"over"},
+\code{"under"} or \code{"normal"}); and \code{order}.}
+\item{ho_edges}{The same table as \code{scores}, under the name the other
+higher-order builders use.}
+\item{over, under}{The rows of \code{scores} labelled over- or
+under-represented.}
+\item{adjacency}{The weighted adjacency matrix (path counts) of the
+lowest-order De Bruijn graph.}
+\item{weights}{The cograph weight matrix of the lowest-order graph.}
+\item{xi}{The fitted propensity matrix of the lowest-order graph.}
+\item{edges}{The cograph edge data frame of the lowest-order graph.}
+\item{by_order}{A list with the results of each order built, named
+by order.}
+\item{order}{The orders built, ascending.}
+\item{k}{The same as \code{order}, kept for backward compatibility.}
+\item{alpha}{The significance threshold used.}
+\item{p_adjust}{The correction used.}
+\item{n_anomalous, n_over, n_under}{The number of anomalous, over- and
+under-represented paths, over all orders.}
+\item{n_edges}{The number of possible paths tested, over all orders.}
+\item{nodes}{A data frame (\code{id}, \code{label}, \code{name}) of the nodes of the
+lowest-order De Bruijn graph; \code{label} and \code{name} are the node's \code{k}
+states joined by the internal separator \code{"\\x01"}, as are the
+dimnames of \code{adjacency}, \code{weights} and \code{xi}.}
+\item{directed}{Always \code{TRUE}.}
+\item{meta}{The cograph meta list of the lowest-order graph.}
 \item{node_groups}{Always \code{NULL}.}
 }
 
-In \code{print.net_hypa()}: The input object, invisibly.
-
-In \code{summary.net_hypa()}: A data frame of the reported anomalies, at most \code{n} rows per direction, with columns \code{order} (the De Bruijn order the path was found at), \code{path}, \code{observed}, \code{expected}, \code{ratio}, \code{p_tail} (the raw tail probability in the reported direction: \code{p_over} for over-represented paths, \code{p_under} for under-represented ones) and \code{direction} (\code{"over"}/\code{"under"}). Returned invisibly; the summary text and the top-\code{n} tables are printed as a side effect. When no anomalies were detected, a zero-row data frame with the same columns except \code{order} is returned.
+\code{print()} returns its input invisibly. \code{summary()} prints the
+settings, the anomaly counts and the top \code{n} paths of each direction,
+and returns invisibly a data frame of those paths, one row per path:
+\code{order} (the De Bruijn order the path was tested at), \code{path},
+\code{observed}, \code{expected}, \code{ratio}, \code{p_tail} (the raw tail probability of
+its direction, \code{p_over} for over-represented paths and \code{p_under} for
+under-represented ones) and \code{direction} (\code{"over"} or \code{"under"}). When
+nothing is anomalous it is a zero-row data frame with the same columns
+except \code{order}.
 }
 \description{
-Constructs a k-th order De Bruijn graph from sequential trajectory data and
-uses a hypergeometric null model to detect paths with anomalous frequencies.
-Paths occurring more or less often than expected under the null model are
-flagged as over- or under-represented.
+\code{build_hypa()} tests which paths in a set of sequences occur more or less
+often than expected, with HYPA (LaRock et al., 2020). For an order \code{k} it
+builds the order-\code{k} De Bruijn graph, whose nodes are runs of \code{k} states
+and whose edges are paths of \code{k + 1} states, and compares each path's
+count with a hypergeometric null model that keeps every node's observed
+in- and out-strength. Paths that are rarer than the null model allows are
+labelled under-represented, paths that are more common over-represented,
+and the rest normal. Unobserved paths that the observed transitions make
+possible are tested too, so a path that never occurs can be
+under-represented. Several orders can be tested in one call.
+
+A path is over-represented when its last state follows its \code{k}-state
+context more often than the null model predicts from the strengths of the
+De Bruijn nodes alone (at order 2, from the first-order transitions).
+Each path is tested on its own at \code{alpha}, so with many possible paths
+some are flagged by chance: \code{p_adjust} corrects for that, and with small
+counts the upper-tail test rejects more often than \code{alpha} (see
+\code{p_adjust}). Whether the sequences need a higher order overall is a
+separate question, tested by \code{\link[=markov_order_test]{markov_order_test()}}; \code{\link[=build_mogen]{build_mogen()}}
+selects an order and \code{\link[=build_hon]{build_hon()}} builds a network of variable order.
 }
 \details{
-Internal missing states split a trajectory, so no path spans a gap;
+Internal missing states split a trajectory, so no path spans a gap, and
 pieces shorter than two states are dropped. State labels must not
-contain the control characters \code{"\\x01"} or \code{"\\x02"}, which
-are used internally as separators (error class
-\code{nestimate_hypa_bad_label}). The propensity matrix is fitted by
-continuous iterative proportional fitting; when the fit does not reach
-its tolerance a warning of class \code{nestimate_hypa_no_converge} is
-raised. The original Python implementation rounds the propensities
-inside every sweep, so its expected counts can differ from these by a few
-thousandths.
+contain the control characters \code{"\\x01"} or \code{"\\x02"}, which are used
+internally as separators; such labels raise an error of class
+\code{nestimate_hypa_bad_label}.
+
+The possible paths of order \code{k} link each node with an observed outgoing
+path to every node with an observed incoming path that continues it (its
+last \code{k - 1} states are the other's first) through an observed
+first-order transition; at order 1 they are the observed transitions.
+The propensity matrix of the null model is fitted
+on them by continuous iterative proportional fitting; when the fit does
+not reach its tolerance, a warning of class \code{nestimate_hypa_no_converge}
+is raised. The original Python implementation rounds the propensities
+inside every sweep, so its expected counts can differ from these by a
+few thousandths.
+
+As in the original implementation, when an order has only one possible
+path, that path's upper-tail p-value is 0, so it is labelled
+over-represented once it is observed \code{min_count} times, even when its
+count equals the expected one.
 }
 \examples{
 seqs <- list(c("A","B","C"), c("B","C","A"), c("A","C","B"), c("A","B","C"))

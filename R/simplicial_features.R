@@ -11,35 +11,55 @@ utils::globalVariables(c("network", "feature", "value"))
 
 #' Tidy Topological Features for One or Many Networks
 #'
-#' Builds a simplicial complex per network and returns its topological
-#' summaries as a tidy \code{data.frame} -- one row per network, one column
-#' per feature -- ready to use as regression predictors or to join onto
-#' unit-level outcomes.
+#' @description
+#' `simplicial_features()` builds a simplicial complex for each network with
+#' [build_simplicial()] and returns its topological summaries as a tidy data
+#' frame, one row per network and one column per feature, ready to use as
+#' regression predictors or to join onto unit-level outcomes. It takes one
+#' network, a group of networks, the within-cluster networks of an `mcml`,
+#' or a list of networks, at one threshold or a sweep of them.
 #'
-#' Higher-order structure is reported as \code{d2}, \code{d3}, ... : the
-#' number of simplices of that dimension. A 2-simplex is a triangle of three
-#' mutually connected states, a 3-simplex a tetrahedron of four. These count
-#' \emph{co-participation in a dense region}, not statistical interaction.
+#' Higher-order structure is reported as `d2`, `d3`, ...: the number of
+#' simplices of that dimension. A 2-simplex is a triangle of three mutually
+#' connected states, a 3-simplex a tetrahedron of four. These count
+#' co-participation in a dense region, not statistical interaction. The
+#' counts are a step function of `threshold`, so one threshold is a choice,
+#' not a result: sweep several and check that a conclusion holds across
+#' them.
 #'
-#' @param x A \code{netobject}, \code{netobject_group}, \code{mcml}, a square
-#'   weight matrix, or a named list of any of these. A group or list yields
-#'   one row per member, an \code{mcml} one row per cluster, and a single
-#'   network one row.
-#' @param threshold Minimum absolute edge weight for an edge to exist
-#'   (passed to \code{\link{build_simplicial}}). Topology is a step function
-#'   of this value, so a single threshold is a choice, not a result -- pass a
-#'   vector to sweep it and get one row per network per threshold.
-#' @param max_dim Maximum simplex dimension retained. Default \code{4}.
-#' @param normalize Divide simplex counts by the number of nodes, so networks
-#'   of different size are comparable. Default \code{FALSE}.
-#' @param type Complex type passed to \code{\link{build_simplicial}}.
-#'   Default \code{"clique"}.
+#' @param x The networks: a `netobject`, `cograph_network`, `tna` model or
+#'   square weight matrix (one row); a `netobject_group`, or a list of
+#'   single networks or matrices (one row per member, named by the list, or
+#'   `network_1`, `network_2`, ... when unnamed); or an `mcml` object (one row per
+#'   cluster, from its within-cluster networks; one built without them
+#'   raises an error).
+#' @param threshold The smallest absolute edge weight that makes an edge,
+#'   passed to [build_simplicial()]. Default `0` (every non-zero edge). A
+#'   vector sweeps it, giving one row per network per threshold. Values must
+#'   be finite and not negative. `type = "vr"` and `type = "pathway"` ignore
+#'   it, although the `threshold` column still records it.
+#' @param max_dim The highest simplex dimension built, a whole number of at
+#'   least 1 (a fractional value is truncated). Default `4`. When a network holds a larger clique, the complex
+#'   is truncated and [betti_numbers()] warns with class
+#'   `nestimate_truncated_complex`; the warning concerns the Betti number of
+#'   dimension `max_dim`, so it affects `b1` only when `max_dim = 1`.
+#' @param normalize Whether to divide the simplex counts (`d1` onwards and
+#'   `higher_order`) by the number of nodes, so networks of different size
+#'   are comparable; `n_edges` stays a count. Default `FALSE`.
+#' @param type The complex construction passed to [build_simplicial()]:
+#'   `"clique"` (default), `"pathway"`, `"vr"` or its alias `"rips"`.
+#'   `"pathway"` needs networks of class `netobject` or `tna`, from which a
+#'   higher-order network is built; a matrix, a bare `cograph_network` or an
+#'   `mcml` (whose cluster layers are matrices) raises an error.
 #'
-#' @return A \code{data.frame} with one row per network (per threshold), and
-#'   columns \code{network}, \code{threshold}, \code{n_nodes}, \code{n_edges},
-#'   \code{b0}, \code{b1} (Betti numbers), \code{euler}, \code{max_q},
-#'   \code{d1} ... \code{d<max_dim>} (simplex counts by dimension), and
-#'   \code{higher_order} (the total of \code{d2} upward).
+#' @return A data frame with one row per network and threshold, ordered by
+#'   network name and then threshold, and columns `network`, `threshold`,
+#'   `n_nodes`, `n_edges`, `b0` and `b1` (the Betti numbers: connected
+#'   components and independent cycles, 0 when the complex has no such
+#'   dimension), `euler` (the Euler characteristic of the complex as
+#'   built), `max_q` (the top q-level of [q_analysis()], the dimension of the
+#'   largest maximal simplex), `d1`, `d2`, ... up to dimension `max_dim`
+#'   (simplex counts by dimension) and `higher_order` (the total from `d2` upward).
 #' @seealso \code{\link{build_simplicial}}, \code{\link{betti_numbers}},
 #'   \code{\link{q_analysis}}, \code{\link{outcome_model}}
 #' @examples
@@ -54,7 +74,7 @@ utils::globalVariables(c("network", "feature", "value"))
 #' @export
 simplicial_features <- function(x, threshold = 0, max_dim = 4L,
                                 normalize = FALSE, type = "clique") {
-  stopifnot(
+  .assert(
     "`threshold` must be a finite numeric vector" =
       is.numeric(threshold) && length(threshold) >= 1L && all(is.finite(threshold)),
     "`max_dim` must be a single non-negative integer" =
@@ -78,7 +98,8 @@ simplicial_features <- function(x, threshold = 0, max_dim = 4L,
   if (inherits(x, "mcml")) {
     layers <- x$clusters
     if (is.null(layers) || !length(layers)) {
-      stop("mcml has no cluster layers to summarise.", call. = FALSE)
+      stop(errorCondition("mcml has no cluster layers to summarise.",
+                          class = "nestimate_bad_input", call = NULL))
     }
     return(lapply(layers, function(z) z$weights))
   }
@@ -94,9 +115,13 @@ simplicial_features <- function(x, threshold = 0, max_dim = 4L,
     nms <- names(x) %||% paste0("network_", seq_along(x))
     return(stats::setNames(x, nms))
   }
-  stop("Cannot extract networks from '", class(x)[1L], "'. Supply a ",
-       "netobject, netobject_group, mcml, matrix, or a named list of these.",
-       call. = FALSE)
+  stop(errorCondition(
+    paste0(
+      "Cannot extract networks from '",
+      class(x)[1L],
+      "'. Supply a ",
+      "netobject, netobject_group, mcml, matrix, or a named list of these."),
+    class = "nestimate_bad_input", call = NULL))
 }
 
 # Features for a single network at a single threshold.

@@ -10,64 +10,138 @@
 
 #' Compare two networks descriptively
 #'
-#' Computes a battery of descriptive comparison metrics between two networks
-#' or two weight matrices: weight deviations (mean / median / RMS / max
-#' absolute difference, relative mean absolute difference, coefficient-of-
-#' variation ratio), four correlation measures (Pearson, Spearman, Kendall,
-#' distance correlation), five dissimilarity measures (Euclidean, Manhattan,
-#' Canberra, Bray-Curtis, Frobenius), five similarity measures (Cosine,
-#' Jaccard, Dice, Overlap, RV), pattern agreements, and side-by-side network
-#' metrics. Optionally adds centrality differences and centrality
-#' correlations.
+#' @description
+#' `compare_model()` compares two networks, or two weight matrices, edge by
+#' edge and returns a battery of descriptive agreement measures: weight
+#' deviations (mean, median, root-mean-square and maximum absolute
+#' difference, relative mean absolute difference, coefficient-of-variation
+#' ratio), four correlations (Pearson, Spearman, Kendall, distance
+#' correlation), five dissimilarities (Euclidean, Manhattan, Canberra,
+#' Bray-Curtis, Frobenius), five similarities (cosine, Jaccard, Dice,
+#' overlap, RV coefficient) and two pattern agreements (rank and sign
+#' agreement), with the two networks' metrics side by side and, on request,
+#' their centrality differences. It takes two `netobject`s,
+#' `cograph_network`s or square numeric matrices, or two members of a
+#' `netobject_group`. Both weight matrices are scaled with the same
+#' `scaling` before comparison, which decides how weights from different
+#' estimators are put on a common footing.
 #'
-#' Mirrors `tna::compare()` numerically. Inputs are converted to weight
-#' matrices and scaled before comparison; the choice of scaling determines
-#' how weights from different estimators are placed on a common footing.
-#' Named inputs are aligned by node names; different node sets or duplicate
-#' names raise an error. A fully unnamed matrix is matched by position.
+#' The measures describe how alike the two estimated networks are; they say
+#' nothing about whether a difference is larger than sampling variation
+#' would produce. For that, test the difference with [permutation()] (two
+#' transition networks) or with [nct()] on the two groups' observations
+#' (psychological networks).
+#' [compare_networks()] compares any number of networks with tidy tables
+#' and a `plot()` that draws one view per call.
 #'
-#' @param x A `netobject`, `cograph_network`, or numeric square matrix, or a
-#'   `netobject_group` whose members `i` and `j` are compared. For the
-#'   \code{print()} and \code{plot()} methods: an object of class
-#'   \code{net_comparison}.
-#' @param y A `netobject`, `cograph_network`, or numeric square matrix.
-#' @param scaling Scaling applied to both weight matrices before comparison.
-#'   One of:
+#' @param x The first network: a `netobject`, a `cograph_network` or a
+#'   numeric square matrix, or a `netobject_group` whose members `i` and `j`
+#'   are compared. For the `print()` and `plot()` methods: a
+#'   `net_comparison` object.
+#' @param y The second network, in the same forms (not used for a
+#'   `netobject_group`). The two must hold the same nodes and have no missing
+#'   weights. Named inputs are aligned by node name, so the node order may
+#'   differ; different node sets, or missing, empty or duplicated names,
+#'   raise an error. A matrix without names is matched to the other input by
+#'   position and takes its node names; when neither input has names the
+#'   nodes are labelled `V1`, `V2`, ....
+#' @param scaling The scaling applied to each weight matrix before
+#'   comparison. Default `"none"`. One of:
 #'   \describe{
-#'     \item{`"none"`}{Identity (default).}
-#'     \item{`"minmax"`}{\eqn{(w - \min) / (\max - \min)}; maps to \eqn{[0, 1]}.}
-#'     \item{`"max"`}{\eqn{w / \max(|w|)}; preserves sign.}
-#'     \item{`"rank"`}{Min-max of average ranks; ordinal scaling.}
-#'     \item{`"zscore"`}{\eqn{(w - \bar w) / s_w}; standard score.}
-#'     \item{`"robust"`}{\eqn{(w - \mathrm{med}(w)) / \mathrm{mad}(w)};
-#'       Huber-style robust z-score, resists outliers.}
-#'     \item{`"log"`}{\eqn{\log(w)}; requires \eqn{w > 0}.}
-#'     \item{`"log1p"`}{\eqn{\log(1 + w)}; admits \eqn{w \ge 0}.}
-#'     \item{`"softmax"`}{Numerically stable softmax over the flattened
-#'       vector.}
-#'     \item{`"quantile"`}{Empirical CDF of the flattened vector.}
-#'     \item{`"frobenius"`}{Divide the matrix by its Frobenius norm
-#'       \eqn{\|W\|_F = \sqrt{\sum w_{ij}^2}}; matrix-level normalisation.}
-#'     \item{`"row"`}{Row-stochastic normalisation (each row's absolute
-#'       values sum to 1). Only meaningful for non-negative matrices; rows
-#'       summing to zero are left unchanged.}
+#'     \item{`"none"`}{The weights as they are.}
+#'     \item{`"minmax"`}{\eqn{(w - \min) / (\max - \min)}{(w - min) / (max - min)},
+#'       which maps them to \eqn{[0, 1]}{[0, 1]}; a constant matrix is left as it is.}
+#'     \item{`"max"`}{\eqn{w / \max|w|}{w / max(|w|)}, dividing by the
+#'       largest absolute weight, so signs are kept; a matrix of zeros is
+#'       left as it is.}
+#'     \item{`"rank"`}{Average ranks, mapped to \eqn{[0, 1]}{[0, 1]} by min-max; an
+#'       ordinal scaling. A constant matrix keeps its (equal) ranks.}
+#'     \item{`"zscore"`}{\eqn{(w - \bar w) / s_w}{(w - mean(w)) / sd(w)}, the
+#'       standard score; a
+#'       constant matrix is only centred.}
+#'     \item{`"robust"`}{\eqn{(w - \mathrm{med}(w)) / \mathrm{mad}(w)}{(w - median(w)) / mad(w)},
+#'       a standard score from the median and the median absolute deviation,
+#'       less affected by outliers; with a MAD of 0 the weights are only
+#'       centred.}
+#'     \item{`"log"`}{\eqn{\log(w)}{log(w)}; needs \eqn{w > 0}{w > 0}: a
+#'       weight at or below 0 raises an error of class
+#'       `nestimate_bad_input` (use `"log1p"` for networks with zeros).}
+#'     \item{`"log1p"`}{\eqn{\log(1 + w)}{log(1 + w)}; defined for
+#'       \eqn{w > -1}{w > -1}. A weight of -1 or below makes the comparison
+#'       fail with an error.}
+#'     \item{`"softmax"`}{A numerically stable softmax over all the cells.}
+#'     \item{`"quantile"`}{The empirical cumulative distribution of the
+#'       cells.}
+#'     \item{`"frobenius"`}{The matrix divided by its Frobenius norm
+#'       \eqn{\|W\|_F = \sqrt{\sum w_{ij}^2}}{||W||_F = sqrt(sum w_ij^2)}, a
+#'       matrix-level
+#'       normalisation.}
+#'     \item{`"row"`}{Each row divided by the sum of its absolute values, so
+#'       the rows sum to 1 for non-negative weights; rows summing to zero
+#'       are left unchanged.}
 #'   }
-#'   Scalings that produce negative weights (`zscore`, `robust`) are
-#'   compatible with `network = TRUE` because the side-by-side metrics use
-#'   Nestimate's base-R Floyd-Warshall, which handles negative weights.
-#' @param measures Character vector of centrality measures to compare. Empty
-#'   by default (no centrality block). Any built-in measure is valid:
-#'   \code{"OutStrength"}, \code{"InStrength"}, \code{"ClosenessIn"},
-#'   \code{"ClosenessOut"}, \code{"Closeness"}, \code{"Betweenness"},
-#'   \code{"BetweennessRSP"}, \code{"Diffusion"}, \code{"Clustering"},
-#'   \code{"InCloseness"}, \code{"OutCloseness"}. Unknown names are ignored
-#'   with a warning.
-#' @param network Logical. Include side-by-side network metrics from
-#'   `summary()`? Default `TRUE`.
-#' @param ... Ignored. In \code{plot.net_comparison()} and \code{print.net_comparison()}: Ignored.
-#' @return A `net_comparison` object: a named list with `matrices`,
-#'   `difference_matrix`, `edge_metrics`, `summary_metrics`, optionally
-#'   `network_metrics`, `centrality_differences`, `centrality_correlations`.
+#'   Scalings that produce negative weights (`"zscore"`, `"robust"`) work
+#'   with `network = TRUE`: the side-by-side distances are computed on the
+#'   absolute weights.
+#' @param measures Centrality measures to compare. Default `character(0)`
+#'   (none). Any built-in measure of [net_centrality()] can be named:
+#'   `"OutStrength"`, `"InStrength"`, `"ClosenessIn"`, `"ClosenessOut"`,
+#'   `"Closeness"`, `"Betweenness"`, `"BetweennessRSP"`, `"Diffusion"` and
+#'   `"Clustering"` (`"InCloseness"` and `"OutCloseness"` are accepted for
+#'   `"ClosenessIn"` and `"ClosenessOut"`). Unknown names are
+#'   dropped with a warning. The centralities are computed on the scaled
+#'   matrices as directed networks, without self-loops.
+#' @param network Whether to add the two networks' metrics side by side (the
+#'   metrics [summary()] reports for a `netobject`). Default `TRUE`.
+#' @param ... Not used.
+#' @return A `net_comparison` object. Print it for the agreement measures,
+#'   the side-by-side network metrics and the centrality correlations;
+#'   `plot()` draws the edge-weight scatter or another view (see `type`).
+#'   The object is a list with:
+#'   \describe{
+#'     \item{matrices}{The two scaled weight matrices, `x` and `y`, aligned
+#'       by node.}
+#'     \item{difference_matrix}{The scaled `x` minus the scaled `y`.}
+#'     \item{edge_metrics}{A data frame with one row per cell (`source`,
+#'       `target`, self-loops included): the two weights and their raw,
+#'       absolute, squared, relative and rank differences, percentile
+#'       difference, ratio (`similarity_strength_index`), relative change
+#'       (`difference_index`), log ratio of 1 + weight
+#'       (`logarithmic_ratio`, `NA` where a weight is -1 or below),
+#'       standardised weights and their ratio. A ratio is `NA` where its
+#'       denominator is zero, and the standardised weights are `NA` when a
+#'       matrix is constant.}
+#'     \item{summary_metrics}{A data frame of the 22 agreement measures, with
+#'       columns `category`, `metric` and `value`.}
+#'     \item{network_metrics}{When `network = TRUE`: a data frame with
+#'       columns `metric`, `x` and `y`, one row per network metric.}
+#'     \item{centrality_differences, centrality_correlations}{When
+#'       `measures` is not empty (empty data frames when none of its names
+#'       is valid): one row per node and measure
+#'       (`state`, `centrality`, `x`, `y`, `difference`), and one row per
+#'       measure with the correlation of the two networks' values.}
+#'   }
+#'   `print()` returns its input invisibly.
+#'   `plot()` returns a ggplot; with `type = "all"`, it draws the 2 x 2
+#'   grid and returns it invisibly as a gtable, or with `combined = FALSE`
+#'   returns the four ggplots invisibly as a named list.
+#' @details
+#' The measures, scalings and edge metrics mirror `tna::compare()` (tna
+#' 1.5.4 and later) numerically. The distance correlation is that of
+#' Szekely, Rizzo and Bakirov (2007), `NA` when one network is constant, and
+#' the RV coefficient that of Robert and Escoufier (1976). A network's own
+#' `directed` flag decides how its network metrics are computed; a plain
+#' matrix has none, so an asymmetric matrix is read as directed and a
+#' symmetric one as undirected.
+#' @references
+#' Szekely, G. J., Rizzo, M. L., & Bakirov, N. K. (2007). Measuring and
+#' testing dependence by correlation of distances. \emph{The Annals of
+#' Statistics}, 35(6), 2769--2794. \doi{10.1214/009053607000000505}
+#'
+#' Robert, P., & Escoufier, Y. (1976). A unifying tool for linear
+#' multivariate statistical methods: The RV-coefficient. \emph{Journal of
+#' the Royal Statistical Society, Series C (Applied Statistics)}, 25(3),
+#' 257--265. \doi{10.2307/2347233}
 #' @examples
 #' nets <- build_network(group_regulation_long, method = "relative",
 #'                       actor = "Actor", action = "Action", time = "Time",
@@ -105,11 +179,9 @@ compare_model.matrix <- function(x, y, scaling = "none", measures = character(0)
 }
 
 #' @rdname compare_model
-#' @section Methods:
-#' * \code{compare_model.netobject_group()}: Selects two members of a `netobject_group` (by index or name) and dispatches to `compare_model.netobject()`. See also \code{\link{compare_networks}}, the N-way successor with tidy tables and a \code{plot()} that draws one view per call.
-#' * \code{plot.net_comparison()}: Visualises a `net_comparison` object. Currently supports the edge-weight scatterplot (default), with the diagonal reference (perfect agreement) and the OLS regression line annotated by Pearson, Spearman, and Kendall correlations.
-#' @param i,j For a `netobject_group`: index or name of the two member
-#'   networks to compare. Defaults `1L` and `2L`.
+#' @param i,j For a `netobject_group`: the two members to compare, by index
+#'   or name. Defaults `1` and `2`; the two must differ, and a member that
+#'   does not exist raises an error.
 #' @export
 compare_model.netobject_group <- function(x, i = 1L, j = 2L, scaling = "none",
                                     measures = character(0), network = TRUE,
@@ -117,7 +189,7 @@ compare_model.netobject_group <- function(x, i = 1L, j = 2L, scaling = "none",
   stopifnot(inherits(x, "netobject_group"))
   if (is.character(i)) i <- match(i, names(x))
   if (is.character(j)) j <- match(j, names(x))
-  stopifnot(!is.na(i), !is.na(j), i >= 1L, i <= length(x),
+  .assert(!is.na(i), !is.na(j), i >= 1L, i <= length(x),
             j >= 1L, j <= length(x), i != j)
   compare_model(x[[i]], x[[j]], scaling = scaling, measures = measures,
           network = network, ...)
@@ -128,7 +200,7 @@ compare_model.netobject_group <- function(x, i = 1L, j = 2L, scaling = "none",
 
 .weights_of <- function(z, label_unnamed = TRUE) {
   if (is.matrix(z)) {
-    stopifnot(nrow(z) == ncol(z), is.numeric(z))
+    .assert(nrow(z) == ncol(z), is.numeric(z))
     if (label_unnamed && (is.null(rownames(z)) || is.null(colnames(z)))) {
       labs <- paste0("V", seq_len(nrow(z)))
       rownames(z) <- colnames(z) <- labs
@@ -138,8 +210,9 @@ compare_model.netobject_group <- function(x, i = 1L, j = 2L, scaling = "none",
   if (inherits(z, "netobject") || inherits(z, "cograph_network")) {
     return(z$weights)
   }
-  stop("`compare_model()` expects a netobject, cograph_network, or numeric matrix.",
-       call. = FALSE)
+  stop(errorCondition(
+    "`compare_model()` expects a netobject, cograph_network, or numeric matrix.",
+    class = "nestimate_bad_input", call = NULL))
 }
 
 
@@ -166,14 +239,16 @@ compare_model.netobject_group <- function(x, i = 1L, j = 2L, scaling = "none",
       !is.null(nms) && (anyNA(nms) || any(!nzchar(nms)) || anyDuplicated(nms) > 0L)
     }, logical(1L))
     if (any(invalid)) {
-      stop("Network node names must be non-missing, non-empty and unique.",
-           call. = FALSE)
+      stop(errorCondition(
+        "Network node names must be non-missing, non-empty and unique.",
+        class = "nestimate_bad_input", call = NULL))
     }
     rn <- rn %||% cn
     cn <- cn %||% rn
     if (!setequal(rn, cn)) {
-      stop("Each network's rows and columns must name the same nodes.",
-           call. = FALSE)
+      stop(errorCondition(
+        "Each network's rows and columns must name the same nodes.",
+        class = "nestimate_bad_input", call = NULL))
     }
     dimnames(mat) <- list(rn, cn)
     mat[, rn, drop = FALSE]
@@ -184,7 +259,9 @@ compare_model.netobject_group <- function(x, i = 1L, j = 2L, scaling = "none",
   yn <- rownames(y)
   if (!is.null(xn) && !is.null(yn)) {
     if (!setequal(xn, yn)) {
-      stop("Compared networks must contain the same nodes.", call. = FALSE)
+      stop(errorCondition(
+        "Compared networks must contain the same nodes.",
+        class = "nestimate_bad_input", call = NULL))
     }
     y <- y[xn, xn, drop = FALSE]
   } else {
@@ -198,8 +275,8 @@ compare_model.netobject_group <- function(x, i = 1L, j = 2L, scaling = "none",
 # ---- Internal: the comparison machinery ----
 
 .compare_impl <- function(x, y, scaling, measures, network, directed) {
-  stopifnot(identical(dim(x), dim(y)))
-  stopifnot(!anyNA(x), !anyNA(y))
+  .assert(identical(dim(x), dim(y)))
+  .assert(!anyNA(x), !anyNA(y))
   aligned <- .compare_align_nodes(x, y)
   x <- aligned$x
   y <- aligned$y
@@ -225,18 +302,25 @@ compare_model.netobject_group <- function(x, i = 1L, j = 2L, scaling = "none",
   edges$raw_difference <- as.vector(d)
   edges$absolute_difference <- abs_diff
   edges$squared_difference <- abs_diff^2
-  edges$relative_difference <- abs_diff / (x_vec + y_vec)
-  edges$similarity_strength_index <- x_vec / y_vec
-  edges$difference_index <- (x_vec - y_vec) / y_vec
+  edges$relative_difference <- .cm_ratio(abs_diff, x_vec + y_vec)
+  edges$similarity_strength_index <- .cm_ratio(x_vec, y_vec)
+  edges$difference_index <- .cm_ratio(x_vec - y_vec, y_vec)
   edges$rank_difference <- abs(rank(x_vec, na.last = "keep") -
                                rank(y_vec, na.last = "keep"))
   edges$percentile_difference <- abs(stats::ecdf(x_vec)(x_vec) -
                                      stats::ecdf(y_vec)(y_vec))
-  edges$logarithmic_ratio <- log1p(x_vec) - log1p(y_vec)
-  edges$standardized_weight_x <- (x_vec - mean(x_scaled)) / stats::sd(x_scaled)
-  edges$standardized_weight_y <- (y_vec - mean(y_scaled)) / stats::sd(y_scaled)
+  # log1p() is undefined at or below -1 (possible after zscore/robust
+  # scaling or with negative weights): NA there, not NaN and a warning
+  in_domain <- x_vec > -1 & y_vec > -1
+  edges$logarithmic_ratio <- NA_real_
+  edges$logarithmic_ratio[in_domain] <- log1p(x_vec[in_domain]) -
+    log1p(y_vec[in_domain])
+  edges$standardized_weight_x <- .cm_ratio(x_vec - mean(x_scaled),
+                                           stats::sd(x_scaled))
+  edges$standardized_weight_y <- .cm_ratio(y_vec - mean(y_scaled),
+                                           stats::sd(y_scaled))
   edges$standardized_score_inflation <-
-    edges$standardized_weight_x / edges$standardized_weight_y
+    .cm_ratio(edges$standardized_weight_x, edges$standardized_weight_y)
 
   # Single source of truth: the worker computes all 22 metrics; this block
   # just adds category labels and pretty names for the data.frame view.
@@ -318,14 +402,25 @@ compare_model.netobject_group <- function(x, i = 1L, j = 2L, scaling = "none",
     fro <- sqrt(sum(W^2))
     return(if (fro == 0) W else W / fro)
   }
+  if (scaling == "log" && any(W <= 0)) {
+    stop(errorCondition(
+      sprintf(paste0("`scaling = \"log\"` needs every weight above 0; ",
+                     "this matrix has %d weight(s) at or below 0. ",
+                     "Use `scaling = \"log1p\"` for networks with zero ",
+                     "weights."), sum(W <= 0)),
+      class = "nestimate_bad_input", call = NULL))
+  }
   vec_fn <- switch(scaling,
     none     = identity,
     minmax   = function(w) {
       rng <- range(w)
       if (diff(rng) == 0) w else (w - rng[1L]) / diff(rng)
     },
+    # Divide by the largest absolute weight so signs are kept. Equals
+    # tna::compare()'s w / max(w) for non-negative weights (tna's domain);
+    # w / max(w) flips every sign of an all-negative matrix.
     max      = function(w) {
-      m <- max(w, na.rm = TRUE)
+      m <- max(abs(w))
       if (m == 0) w else w / m
     },
     rank     = function(w) {
@@ -548,10 +643,20 @@ compare_model.netobject_group <- function(x, i = 1L, j = 2L, scaling = "none",
 # ---- print method ----
 
 #' @rdname compare_model
-#' @return In \code{print.net_comparison()}: \code{x}, invisibly.
-#' @param type Character. One of `"scatter"` (default - edge-weight scatter with OLS fit and correlation overlay), `"heatmap"` (n by n grid of x - y differences using the diverging palette), `"diff_hist"` (histogram of |x - y| absolute differences with rug + density), `"weight_dist"` (overlaid distributions of |x| and |y| edge weights), or `"all"` (2 by 2 grid of all four panels; requires the gridExtra package).
-#' @param combined When `type = "all"` and `combined = TRUE` (default), the four panels are stitched into a 2x2 gtable. When `FALSE`, returns a named list of the four ggplots so each can be printed, saved, or re-laid-out independently. Ignored for other `type` values.
-#' @return In \code{plot.net_comparison()}: A `ggplot` object; for `type = "all"` with `combined = TRUE` a `gtable` arranged 2 by 2; for `type = "all"` with `combined = FALSE` a named list of four ggplots.
+#' @param type For `plot()`: the view. `"scatter"` (default) plots each
+#'   cell's weight in `y` against its weight in `x`, with the line of
+#'   perfect agreement (dashed), an OLS fit with its 95% band and the
+#'   Pearson, Spearman and Kendall correlations. `"heatmap"` draws the
+#'   difference matrix `x - y` on the diverging palette: blue where `x` is
+#'   larger, red where `y` is larger, white where they agree. `"diff_hist"`
+#'   is a histogram of the absolute differences `|x - y|`, with a density
+#'   curve, a rug of the cells and lines at the mean and median.
+#'   `"weight_dist"` overlays the distributions of `|x|` and `|y|`. `"all"`
+#'   draws these four views in a 2 x 2 grid.
+#' @param combined For `plot()` with `type = "all"`: `TRUE` (default)
+#'   arranges the four views into one 2 x 2 gtable, which needs the
+#'   gridExtra package; `FALSE` returns them as a named list of ggplots, to
+#'   print, save or lay out separately. Ignored for the other views.
 #' @export
 print.net_comparison <- function(x, ...) {
   cat("Network comparison\n")
@@ -592,7 +697,7 @@ plot.net_comparison <- function(x,
                                 combined = TRUE,
                                 ...) {
   type <- match.arg(type)
-  stopifnot(is.logical(combined), length(combined) == 1L)
+  .assert(is.logical(combined), length(combined) == 1L, !is.na(combined))
   if (!requireNamespace("ggplot2", quietly = TRUE)) {
     stop("ggplot2 is required for plot.net_comparison().", call. = FALSE)
   }
@@ -703,7 +808,7 @@ plot.net_comparison <- function(x,
                                   name = "x - y") +
     ggplot2::labs(x = "to", y = "from",
                   title = "Difference matrix (x - y)",
-                  subtitle = "Red: x > y. Blue: y > x. White: agreement.") +
+                  subtitle = "Blue: x > y. Red: y > x. White: agreement.") +
     ggplot2::theme_minimal(base_size = 12) +
     ggplot2::theme(panel.grid = ggplot2::element_blank(),
                    axis.text.x = ggplot2::element_text(angle = 45,
@@ -793,4 +898,14 @@ plot.net_comparison <- function(x,
     ggplot2::labs(x = x_lab, y = "density",
                   title = title, subtitle = subtitle) +
     ggplot2::theme_minimal(base_size = 12)
+}
+
+# num / den, NA where the denominator is zero or either side is missing:
+# an undefined ratio is reported as missing, never as NaN or Inf.
+.cm_ratio <- function(num, den) {
+  den <- rep_len(den, length(num))
+  out <- rep(NA_real_, length(num))
+  ok <- !is.na(num) & !is.na(den) & den != 0
+  out[ok] <- num[ok] / den[ok]
+  out
 }

@@ -678,3 +678,64 @@ test_that("range normalization does not stretch rounding error", {
   expect_true(all(is.nan(.range01_tna(nearly_constant))))
   expect_equal(.range01_tna(c(1, 2, 3)), c(0, 0.5, 1))
 })
+
+# ---- glasso null uses the observed networks' estimator ----
+
+test_that("glasso shuffles are estimated like the observed networks", {
+  # The estimator a shuffle applies, run on a network's own rows, must give
+  # that network's weights: the observed difference and its null then come
+  # from one procedure. The former pooled 50-value path differed by ~1e-2.
+  net0 <- build_network(srl_strategies[1:120, ], method = "glasso")
+  expect_true(sum(net0$weights != 0) > 0)
+  est <- .perm_row_estimator("glasso", net0$params, net0$nodes$label)
+  expect_equal(unname(est(net0$data)), unname(net0$weights), tolerance = 1e-12)
+
+  net1 <- build_network(.make_freq_data(n = 80, p = 4, seed = 1),
+                        method = "glasso")
+
+  net2 <- build_network(.make_freq_data(n = 80, p = 4, seed = 2),
+                        method = "glasso", params = list(gamma = 0.25))
+  expect_error(permutation(net1, net2, iter = 2L),
+               class = "nestimate_bad_input")
+  net3 <- build_network(.make_freq_data(n = 80, p = 4, seed = 2),
+                        method = "glasso")
+  expect_warning(permutation(net1, net3, iter = 2L, seed = 1, nlambda = 50L),
+                 class = "nestimate_ignored_argument")
+})
+
+# ---- adjust is validated upfront ----
+
+test_that("an unknown adjust is refused before anything runs", {
+  expect_error(permutation("a", "b", adjust = "zzz"),
+               class = "nestimate_bad_input")
+})
+
+# ---- adjust corrects over the tested edges only (owner, 2026-11-08; tna) ----
+
+test_that("adjust corrects only the tested edges, each undirected pair once", {
+  x_seq <- as.data.frame(matrix(rep(c("A", "B", "A", "B", "C"), 20), 20, 5,
+                                byrow = TRUE))
+  y_seq <- as.data.frame(matrix(rep(c("A", "A", "A", "C", "B"), 20), 20, 5,
+                                byrow = TRUE))
+  check_family <- function(method, undirected) {
+    nx <- build_network(x_seq, method = method)
+    ny <- build_network(y_seq, method = method)
+    raw <- permutation(nx, ny, iter = 200, seed = 7)$p_values
+    bon <- permutation(nx, ny, iter = 200, adjust = "bonferroni",
+                       seed = 7)$p_values
+    tested <- nx$weights != 0 | ny$weights != 0
+    family <- if (undirected) tested & upper.tri(tested, diag = TRUE) else
+      tested
+    m <- sum(family)
+    expect_equal(bon[family], pmin(1, raw[family] * m))
+    expect_true(all(bon[!tested] == 1))
+    if (undirected) expect_equal(bon, t(bon))
+    m
+  }
+  # Directed: A->A, A->B, A->C, B->A, B->C, C->B -> 6 tested cells of 9
+  expect_equal(check_family("relative", undirected = FALSE), 6L)
+  # Undirected co-occurrence: pairs counted once on the upper triangle with
+  # the diagonal; non-zero in either: A-A, A-B, A-C, B-B, B-C (C-C is 0 in
+  # both) -> 5
+  expect_equal(check_family("co_occurrence", undirected = TRUE), 5L)
+})

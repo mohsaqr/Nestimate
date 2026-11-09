@@ -14,44 +14,50 @@ wide_to_long(
 )
 }
 \arguments{
-\item{data}{Data frame in wide format with sequences in rows.}
+\item{data}{A data frame in wide format, one row per sequence.}
 
-\item{id_col}{Character. Name of the ID column, or NULL to auto-generate IDs.
-Default: NULL.}
+\item{id_col}{The column identifying each sequence. Default \code{NULL}, which
+adds a column \code{id} holding the row number of the wide input (replacing
+any existing column of that name). A name that is not a column raises
+an error.}
 
-\item{time_prefix}{Character. Prefix for time point columns (e.g., "V" for V1,
-V2, ...). Default: "V".}
+\item{time_prefix}{The prefix of the time point columns: with \code{"V"}
+(default), the columns \code{V1}, \code{V2}, ... are read. No column matching it
+raises an error.}
 
-\item{action_col}{Character. Name of the action column in output.
-Default: "Action".}
+\item{action_col}{The name of the state column in the output. Default
+\code{"Action"}.}
 
-\item{time_col}{Character. Name of the time column in output.
-Default: "Time".}
+\item{time_col}{The name of the time column in the output. Default
+\code{"Time"}.}
 
-\item{drop_na}{Logical. Whether to drop NA values. Default: TRUE.}
+\item{drop_na}{Whether to drop the rows whose state is missing, such as
+the padding after a shorter sequence ends. Default \code{TRUE}.}
 }
 \value{
-A data frame in long format, one row per (sequence, time point),
-sorted by identifier then time, with columns:
+A data frame in long format, one row per sequence and time point,
+sorted by identifier and then time. Its columns are the identifier, the
+other kept columns, the time and the state:
 \describe{
-\item{id}{Sequence identifier. Named by \code{id_col}; when that is
-\code{NULL} the column is called \code{id} and holds the row number
-of the wide input (integer).}
-\item{Time}{Time point within the sequence (integer), taken from the
-numeric suffix of the wide column name. Named by \code{time_col}.}
-\item{Action}{The action/state at that time point. Named by
-\code{action_col}.}
+\item{id}{The sequence identifier, named by \code{id_col}; with
+\code{id_col = NULL} it is called \code{id} and holds the row number of the wide
+input (integer).}
+\item{Time}{The time point within the sequence (integer), taken from
+the number in the wide column name; named by \code{time_col}.}
+\item{Action}{The state at that time point; named by \code{action_col}.}
 }
-Any additional non-time columns from the original data are preserved and
-repeated on every row of their sequence.
 }
 \description{
-Convert sequence data from wide format (one row per sequence, columns as
-time points) to long format (one row per action).
+\code{wide_to_long()} turns sequences in wide format (one row per sequence,
+one column per time point) into long format, with one row per sequence
+and time point. The time point columns are those named \code{time_prefix}
+followed by a number (\code{V1}, \code{V2}, ...); every other column is kept and
+repeated on each row of its sequence.
 }
 \details{
-Converts wide sequence data (one row per sequence, one column per time
-point) to the long format used by many TNA functions and analyses.
+The long format is the event-log layout read by \code{\link[=build_network]{build_network()}} with
+\code{action} (and \code{\link[=prepare]{prepare()}}): give \code{action = "Action"}, \code{actor = "id"} and
+\code{time = "Time"} (or the names chosen here).
 }
 \examples{
 wide_data <- data.frame(

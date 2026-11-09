@@ -317,42 +317,66 @@ centrality <- function(x, ...) {
 
 #' Compute Centrality Measures for a Network
 #'
-#' Computes centrality measures from a \code{netobject},
-#' \code{netobject_group}, \code{mcml}, or \code{cograph_network}. The built-in
-#' measures match \code{tna::centralities()} without importing \code{tna} or
-#' \code{igraph}: strength is taken from the weight matrix directly, and the
-#' path-based measures (betweenness, closeness) come from all-pairs shortest
-#' paths computed in-package by Floyd-Warshall. The only intentional default
-#' difference from \code{tna} is that \code{Diffusion} is range-normalized by
-#' default.
+#' @description
+#' `net_centrality()` scores how central each node is in a network, for one
+#' or more measures, and returns one row per node. Strength sums a node's
+#' edge weights (incoming or outgoing); closeness and betweenness read the
+#' shortest paths between nodes, where a heavier edge is a shorter step;
+#' diffusion counts the weighted walks that start at a node; and clustering
+#' measures how strongly a node's neighbours are tied to each other. It
+#' takes a single network or a group of them (a `netobject_group`, the
+#' clusters of an `mcml`), scoring each separately.
 #'
-#' @param x A \code{netobject}, \code{netobject_group}, \code{mcml}, or
-#'   \code{cograph_network}. For the \code{plot()} method: an object of class \code{net_centrality} or \code{net_centrality_group}.
-#' @param measures Character vector. Centrality measures to compute.
-#'   Defaults to \code{c("InStrength", "Betweenness", "Diffusion")}. Pass
-#'   \code{"all"} for every built-in measure: \code{"OutStrength"},
-#'   \code{"InStrength"}, \code{"ClosenessIn"}, \code{"ClosenessOut"},
-#'   \code{"Closeness"}, \code{"Betweenness"}, \code{"BetweennessRSP"},
-#'   \code{"Diffusion"}, and \code{"Clustering"}. The legacy aliases
-#'   \code{"InCloseness"} and \code{"OutCloseness"} are also accepted.
-#' @param loops Logical. Include self-loops (diagonal) in computation?
-#'   Default: \code{FALSE}.
-#' @param normalize Logical. Range-normalize all requested measures using the
-#'   same transformation as \code{tna::centralities(normalize = TRUE)}.
-#'   Default: \code{FALSE}.
-#' @param invert Logical. Invert weights for shortest-path measures?
-#'   Default: \code{TRUE}, matching \code{tna}.
-#' @param normalize_diffusion Logical. Range-normalize \code{Diffusion} even
-#'   when \code{normalize = FALSE}. Default: \code{TRUE}.
-#' @param centrality_fn Optional function. Custom centrality function that
-#'   takes a weight matrix and returns a named list of centrality vectors.
-#' @param ... Additional arguments (ignored).
-#' In \code{plot.net_centrality()} and \code{plot.net_centrality_group()}: Additional arguments ignored.
-#' @return For a \code{netobject} or \code{cograph_network}: a
-#'   \code{net_centrality} data frame, one row per node, with a \code{state}
-#'   column and one further column per requested measure (node names are also
-#'   the row names). For a \code{netobject_group} or an \code{mcml}: a
-#'   \code{net_centrality_group} list of such data frames, one per group.
+#' Centralities describe the estimated network, not the population it was
+#' estimated from. Rankings built on a few weak edges change from sample to
+#' sample: check them with [centrality_stability()] before reporting which
+#' node is most central.
+#'
+#' @details
+#' Strength is read from the weight matrix directly, and closeness and
+#' betweenness from all-pairs shortest paths (Floyd-Warshall), without
+#' igraph; the values agree with `tna::centralities()`. Diffusion is
+#' range-normalised by default, which `tna` does not do.
+#'
+#' Range normalisation of a measure that is the same for every node is
+#' undefined and gives `NaN`, with a warning of class
+#' `nestimate_constant_measure`. Diffusion on a `"relative"` network with
+#' `loops = TRUE` is such a case: each row sums to 1, so every node has the
+#' same diffusion; use `normalize_diffusion = FALSE` there.
+#'
+#' @param x The network: a `netobject`, `netobject_group`, `mcml` or
+#'   `cograph_network`. For the `plot()` methods: the result of
+#'   `net_centrality()`.
+#' @param measures The measures to compute. The default is `"InStrength"`,
+#'   `"Betweenness"` and `"Diffusion"`; `"all"` computes every built-in one:
+#'   `"OutStrength"` and `"InStrength"` (sum of outgoing or incoming weights),
+#'   `"ClosenessOut"`, `"ClosenessIn"` and `"Closeness"` (inverse of the
+#'   summed shortest-path distances from, to, or ignoring the direction of
+#'   edges), `"Betweenness"` (how many shortest paths pass through the node),
+#'   `"BetweennessRSP"` (betweenness over randomised shortest paths, which
+#'   also counts near-shortest routes), `"Diffusion"` (the summed weights of
+#'   walks of length 1 to n from the node) and `"Clustering"` (weighted
+#'   clustering coefficient). `"InCloseness"` and `"OutCloseness"` are
+#'   accepted for `"ClosenessIn"` and `"ClosenessOut"`. With `centrality_fn`,
+#'   name its measures here to have them returned.
+#' @param loops Whether self-loops (staying in a state) count. With `FALSE`
+#'   (default) they are left out of every measure, and a message says so.
+#' @param normalize Whether to range-normalise every measure to 0--1, as
+#'   `tna::centralities(normalize = TRUE)` does. Default `FALSE`.
+#' @param invert Whether a heavier edge is a shorter step in the
+#'   shortest-path measures (distance = 1 / weight), as in `tna`. With
+#'   `FALSE`, the weight itself is the distance. Default `TRUE`.
+#' @param normalize_diffusion Whether to range-normalise `Diffusion` even
+#'   when `normalize = FALSE`. Default `TRUE`.
+#' @param centrality_fn A function of your own that takes the weight matrix
+#'   and returns a named list of centrality vectors, one per measure; list
+#'   their names in `measures`. Default `NULL`.
+#' @param ... Not used.
+#' @return For a `netobject` or `cograph_network`: a `net_centrality` data
+#'   frame with one row per node, a `state` column and one column per
+#'   requested measure (the node names are also the row names). For a
+#'   `netobject_group` or an `mcml`: a `net_centrality_group`, a list of such
+#'   data frames, one per network. `plot()` draws the measures per node.
 #'
 #' @references
 #' Freeman, L. C. (1978). Centrality in social networks: conceptual
@@ -414,6 +438,20 @@ centrality.netobject <- function(x, measures = NULL, loops = FALSE,
                                 invert = invert,
                                 normalize_diffusion = normalize_diffusion,
                                 centrality_fn = centrality_fn)
+  # a measure equal for every node has no range to normalise: tna's NaN is
+  # kept, and said
+  normalised <- if (isTRUE(normalize)) names(res) else
+    if (isTRUE(normalize_diffusion)) intersect(names(res), "Diffusion")
+  undefined <- Filter(function(m) all(is.nan(res[[m]])), normalised)
+  if (length(undefined)) {
+    warning(warningCondition(sprintf(paste0(
+      "%s is the same for every node, so it cannot be range-normalised and ",
+      "is NaN. %s"), paste(undefined, collapse = ", "),
+      if (identical(undefined, "Diffusion") && !isTRUE(normalize)) {
+        "Use `normalize_diffusion = FALSE` for the raw values."
+      } else "Use `normalize = FALSE` for the raw values."),
+      class = "nestimate_constant_measure", call = NULL))
+  }
   .as_net_centrality_frame(res, states, measures,
                            normalized = normalize, invert = invert,
                            normalize_diffusion = normalize_diffusion)
@@ -462,15 +500,34 @@ centrality.mcml <- function(x, measures = NULL, loops = FALSE,
 }
 
 #' @rdname net_centrality
-#' @param reorder In \code{plot.net_centrality()}: Logical. Reorder states within each centrality panel by centrality value. Default: \code{TRUE}. In \code{plot.net_centrality_group()}: Logical. Reorder states by their mean value within each centrality panel. Default: \code{TRUE}.
-#' @param type In \code{plot.net_centrality()}: Plot type. \code{"bar"} shows one faceted horizontal bar chart per measure; \code{"line"} shows state profiles as lines across measures (the value \code{"profile"} is still accepted as an alias); \code{"heatmap"} shows a states-by-measures tile grid, each measure scaled to 0--1 for cross-measure comparability with the raw value printed in the tile. Default: \code{"bar"}. In \code{plot.net_centrality_group()}: Plot type. \code{"bar"} shows grouped bars within each measure; \code{"line"} facets by state and draws one line per group across centrality measures (\code{"profile"} is accepted as an alias); \code{"delta"} draws a diverging bar of group differences. With two groups it is the per-state difference (second group minus first); with three or more groups it is each group's deviation from the per-state group mean, so the largest gaps stand out either way. Default: \code{"bar"}.
-#' @param ncol Integer. Number of facet columns. Default: \code{3}.
-#' @param scales Facet scale mode. \code{"free_x"} (default) uses free centrality axes; \code{"fixed"} keeps a common centrality axis.
-#' @param profile_scale Scaling used by \code{type = "line"}. \code{"measure"} (default) rescales each centrality measure to 0--1 before drawing cross-measure profiles; \code{"none"} uses raw values.
-#' @param labels In \code{plot.net_centrality()}: Logical. Add compact value labels. Default: \code{TRUE}. In \code{plot.net_centrality_group()}: Logical. Add compact value labels. Default: \code{FALSE}.
-#' @param drop_zero In \code{plot.net_centrality()}: Logical. Drop measures whose values are all (near) zero so empty panels do not waste space. Default: \code{FALSE} (every requested measure is shown). In \code{plot.net_centrality_group()}: Logical. Drop measures whose values are all (near) zero so empty panels do not waste space. Default: \code{FALSE}.
-#' @param palette Brewer palette for groups. Default: \code{"Set2"}.
-#' @return In \code{plot.net_centrality()} and \code{plot.net_centrality_group()}: A \code{ggplot} object.
+#' @param reorder For the `plot()` methods: whether to sort the nodes in each
+#'   measure's panel by their value (for a group, by their mean value across
+#'   networks). Default `TRUE`.
+#' @param type For the `plot()` methods: the kind of plot. `"bar"` (default)
+#'   draws one panel of bars per measure, grouped bars for several networks.
+#'   `"line"` draws each node's profile across the measures (for several
+#'   networks, one panel per node and one line per network); `"profile"` is
+#'   accepted for it. A single network also takes `"heatmap"`, a
+#'   nodes-by-measures grid with each measure scaled to 0--1 for the colour
+#'   and its raw value printed in the tile. Several networks also take
+#'   `"delta"`, bars of the differences between networks: the second minus
+#'   the first with two, each network's deviation from the per-node mean with
+#'   more.
+#' @param ncol For the `plot()` methods: the number of panel columns.
+#'   Default `3`.
+#' @param scales For the `plot()` methods: `"free_x"` (default) gives each
+#'   measure its own value axis, `"fixed"` one shared axis.
+#' @param profile_scale For `type = "line"`: `"measure"` (default) rescales
+#'   each measure to 0--1 so the profiles compare across measures; `"none"`
+#'   draws raw values.
+#' @param labels For the `plot()` methods: whether to print the values on the
+#'   plot. Default `TRUE` for one network, `FALSE` for several.
+#' @param drop_zero For the `plot()` methods: whether to leave out measures
+#'   that are zero for every node. Default `FALSE`.
+#' @param palette For `plot()` of several networks: the ColorBrewer palette
+#'   for the networks. Default `"Set2"`. Ignored by `type = "delta"` with two
+#'   networks, whose bars are coloured by which network is higher.
+#' @return For the `plot()` methods: a `ggplot` object.
 #' @export
 plot.net_centrality <- function(x, reorder = TRUE, ncol = 3L,
                                 type = c("bar", "line", "heatmap"),
@@ -769,8 +826,12 @@ plot.net_centrality_group <- function(x, reorder = TRUE, ncol = 3L,
                                        labels = FALSE, palette = "Set2") {
   groups <- unique(d$group)
   if (length(groups) < 2L) {
-    stop("type = \"delta\" needs at least two groups; got ", length(groups),
-         ".", call. = FALSE)
+    stop(errorCondition(
+      paste0(
+        "type = \"delta\" needs at least two groups; got ",
+        length(groups),
+        "."),
+      class = "nestimate_bad_input", call = NULL))
   }
   if (length(groups) > 2L) {
     return(.plot_net_centrality_delta_multi(d, ncol = ncol, reorder = reorder,
@@ -892,39 +953,63 @@ plot.net_centrality_group <- function(x, reorder = TRUE, ncol = 3L,
 
 #' Edge Betweenness Network
 #'
-#' Builds a network in which each edge's weight is replaced by its
-#' betweenness: the number of shortest paths between all node pairs that
-#' traverse that edge (fractional when shortest paths tie). This is the
-#' Nestimate counterpart of \code{tna::betweenness_network()} and produces
-#' identical values for transition networks; the name differs to avoid a
-#' clash with \code{tna::betweenness_network()} and
-#' \code{igraph::edge_betweenness()}.
+#' @description
+#' `net_edge_betweenness()` returns a copy of a network in which each edge's
+#' weight is replaced by its betweenness: the number of shortest paths
+#' between ordered pairs of distinct nodes that pass through that edge, with
+#' a fractional share when several shortest paths tie (Girvan & Newman
+#' 2002). It
+#' takes a single network or a `netobject_group`, which is scored one
+#' network at a time.
 #'
-#' For a probability/transition network the edge weights are transition
-#' probabilities, so they are inverted to distances (\code{invert = TRUE})
-#' before path-finding: the geodesic between two states is then the most
-#' probable route rather than the one with the fewest hops. Pass
-#' \code{invert = FALSE} when the weights already represent distances.
+#' With `invert = TRUE` (the default) a heavier edge is a shorter step, so
+#' the shortest path between two states of a transition network is the most
+#' probable route, not the one with the fewest hops.
+#' Only positive weights count as edges, and a self-loop never lies on a
+#' shortest path, so its betweenness is 0. A directed network gives an
+#' asymmetric betweenness matrix; an undirected one a symmetric matrix,
+#' each cell holding the betweenness of that edge. The result keeps the
+#' source network's directedness (directed when it records none).
 #'
-#' Directedness is taken from the network itself. A directed network yields
-#' an asymmetric betweenness matrix; an undirected (symmetric) network
-#' yields a symmetric one.
+#' An edge with high betweenness carries many of the shortest routes
+#' between states; Girvan & Newman (2002) read such edges as the bridges
+#' between groups of states. To compare the edge betweenness of
+#' two groups, pass two results to [permutation()] or [bayes_compare()],
+#' which resample the source networks behind them; both need two results
+#' with the same source method and `invert`, and [bayes_compare()] needs
+#' `"relative"` source networks.
 #'
-#' @param x A \code{netobject} or \code{netobject_group}. For the \code{plot()} method: an object of class \code{net_edge_betweenness}.
-#' @param invert Logical. Invert weights to distances by \code{1/w} before
-#'   computing shortest paths? Default \code{TRUE} (correct for probability
-#'   and frequency networks).
-#' @param ... Additional arguments (ignored).
-#' In \code{plot.net_edge_betweenness()}: Additional arguments (ignored).
-#' @return For a \code{netobject}: a new network of class
-#'   \code{c("net_edge_betweenness", "netobject", "cograph_network")} whose
-#'   \code{$weights} are the edge-betweenness scores, with
-#'   \code{method = "edge_betweenness"}. Call
-#'   \code{extract_edges()} on it for a tidy per-edge table, or \code{plot()}
-#'   to render it. The object preserves source-network metadata so
-#'   \code{\link{permutation}} can test edge-betweenness differences by
-#'   permuting the source networks. For a \code{netobject_group}: a
-#'   \code{netobject_group} of such networks, one per group.
+#' @details
+#' Shortest paths come from all-pairs Floyd-Warshall on the distance
+#' matrix (1 / weight, or the weight with `invert = FALSE`), counting tied
+#' paths with a relative tolerance so that floating-point rounding does not
+#' break a tie. The values agree with `tna::betweenness_network()` for
+#' transition networks, and on an undirected network each cell equals
+#' `igraph::edge_betweenness()` for that edge; the function is named
+#' differently to avoid masking either.
+#'
+#' @param x A `netobject` or `netobject_group`; any other input raises an
+#'   error. For the `plot()` method: a `net_edge_betweenness` network.
+#' @param invert Whether to turn weights into distances by `1 / weight`
+#'   before finding shortest paths, which suits probability and frequency
+#'   networks. With `FALSE`, the weight itself is the distance; use it when
+#'   the weights already are distances. Default `TRUE`.
+#' @param ... Not used.
+#' @return For a `netobject`: a network of class
+#'   `c("net_edge_betweenness", "netobject", "cograph_network")` with method
+#'   `"edge_betweenness"`, whose weights are the edge betweenness scores.
+#'   It prints like any network; [extract_edges()] gives one row per edge,
+#'   `plot()` ranks the edges and `cograph::splot()` draws the network. The
+#'   source network's data, metadata, parameters, weights and initial
+#'   probabilities are kept on it, which is what lets [permutation()] and
+#'   [bayes_compare()] test differences in edge betweenness between two
+#'   such networks. For a `netobject_group`: a `netobject_group` of these
+#'   networks, one per group.
+#'
+#' @references
+#' Girvan, M. & Newman, M. E. J. (2002). Community structure in social and
+#' biological networks. \emph{Proceedings of the National Academy of
+#' Sciences}, 99(12), 7821--7826. \doi{10.1073/pnas.122653799}
 #'
 #' @examples
 #' seqs <- data.frame(
@@ -979,17 +1064,31 @@ net_edge_betweenness.netobject_group <- function(x, invert = TRUE, ...) {
 #' @rdname net_edge_betweenness
 #' @export
 net_edge_betweenness.default <- function(x, invert = TRUE, ...) {
-  stop("net_edge_betweenness() requires a 'netobject' or 'netobject_group'; ",
-       "got '", class(x)[1L], "'.", call. = FALSE)
+  stop(errorCondition(
+    paste0(
+      "net_edge_betweenness() requires a 'netobject' or 'netobject_group'; ",
+      "got '",
+      class(x)[1L],
+      "'."),
+    class = "nestimate_bad_input", call = NULL))
 }
 
 #' @rdname net_edge_betweenness
 #' @section Methods:
-#' * \code{plot.net_edge_betweenness()}: Draws the edges of a \code{\link{net_edge_betweenness}} network ranked by their betweenness, as a horizontal bar chart. This is the tidy, cograph-free companion to the node-link diagram: render the diagram with \code{cograph::splot(eb)} and the ranking with \code{plot(eb)}.
-#' @param style Plot style. \code{"bar"} (default) draws one horizontal bar per edge; \code{"forest"} draws a forest/lollipop chart (a stem from zero to a point) with a dashed reference line at the mean betweenness; \code{"delta"} draws each edge's deviation from the mean edge betweenness as a diverging bar (above the mean in blue, below in red).
-#' @param top_n Integer or \code{NULL}. Keep only the \code{top_n} highest edges. Default \code{NULL} (all edges with non-zero betweenness).
-#' @param labels Logical. Print the betweenness value beside each edge. Default \code{TRUE}.
-#' @return In \code{plot.net_edge_betweenness()}: A \code{ggplot} object.
+#' `plot()` ranks the edges with non-zero betweenness, highest first, one
+#' row per edge (`from -> to`). It needs no cograph; `cograph::splot()`
+#' draws the same object as a node-link diagram. A network whose edges all
+#' have zero betweenness raises an error.
+#' @param style For the `plot()` method: the kind of chart. `"bar"`
+#'   (default) draws one horizontal bar per edge; `"forest"` a stem from
+#'   zero to a point, with a dashed line at the mean betweenness of the
+#'   edges shown; `"delta"` each edge's deviation from that mean as a bar
+#'   pointing right (above the mean, blue) or left (below, red).
+#' @param top_n For the `plot()` method: the number of highest edges to
+#'   keep. Default `NULL` (every edge with non-zero betweenness).
+#' @param labels For the `plot()` method: whether to print each edge's
+#'   value (its deviation, for `"delta"`) beside it. Default `TRUE`.
+#' @return For the `plot()` method: a `ggplot` object.
 #' @export
 plot.net_edge_betweenness <- function(x, style = c("bar", "forest", "delta"),
                                       top_n = NULL, labels = TRUE, ...) {
@@ -997,7 +1096,8 @@ plot.net_edge_betweenness <- function(x, style = c("bar", "forest", "delta"),
   e <- extract_edges(x)
   e <- e[is.finite(e$weight) & e$weight > 0, , drop = FALSE]
   if (!nrow(e)) {
-    stop("No edges with non-zero betweenness to plot.", call. = FALSE)
+    stop(errorCondition("No edges with non-zero betweenness to plot.",
+                        class = "nestimate_bad_input", call = NULL))
   }
   e <- e[order(e$weight, decreasing = TRUE), , drop = FALSE]
   if (!is.null(top_n)) e <- utils::head(e, top_n)

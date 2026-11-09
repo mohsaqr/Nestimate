@@ -232,3 +232,25 @@ test_that("bayes_compare edge-betweenness validates its inputs", {
   expect_error(bayes_compare(eb_rel, eb_noinv, draws = 50),
                "same edge-betweenness `invert` setting")
 })
+
+test_that("bayes_compare recounts bare cograph_networks and refuses mcml", {
+  # x: every off-diagonal transition once, so prob_x[A, B] = 1.5 / 3.5.
+  s1 <- data.frame(V1 = c("A", "A", "B", "B", "C", "C"),
+                   V2 = c("B", "C", "A", "C", "A", "B"))
+  s2 <- data.frame(V1 = c("A", "A", "A", "B", "C", "C"),
+                   V2 = c("B", "B", "C", "C", "A", "B"))
+  n1 <- build_network(s1, method = "relative")
+  n2 <- build_network(s2, method = "relative")
+  b1 <- n1; class(b1) <- "cograph_network"
+  b2 <- n2; class(b2) <- "cograph_network"
+  res <- bayes_compare(b1, b2, draws = 100, seed = 1)
+  expect_equal(res$prob_x["A", "B"], 3 / 7)
+  expect_equal(res$diff, bayes_compare(n1, n2, draws = 100, seed = 1)$diff)
+
+  seqs <- data.frame(T1 = c("A", "B", "A", "C"), T2 = c("B", "C", "C", "D"),
+                     T3 = c("C", "D", "D", "A"))
+  mc <- build_mcml(seqs, list(Z = c("A", "B"), G = c("C", "D")))
+  expect_error(bayes_compare(mc, draws = 50), class = "nestimate_bad_input")
+  expect_error(bayes_compare(mc, mc, draws = 50),
+               class = "nestimate_bad_input")
+})

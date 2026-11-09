@@ -7,17 +7,16 @@
 cluster_data(...)
 }
 \arguments{
-\item{...}{Passed verbatim to \code{\link{build_clusters}}.}
+\item{...}{Arguments passed unchanged to \code{\link[=build_clusters]{build_clusters()}}.}
 }
 \value{
-The \code{net_clustering} object returned by
-\code{\link{build_clusters}}.
+The \code{net_clustering} object that \code{\link[=build_clusters]{build_clusters()}} returns.
 }
 \description{
-Renamed to \code{\link{build_clusters}} in Nestimate 0.4.3. This thin
-wrapper is preserved so the function name in older tutorials and the
-historical pkgdown reference continues to work; it issues a one-shot
-deprecation warning and forwards every argument unchanged.
+\code{cluster_data()} is the old name of \code{\link[=build_clusters]{build_clusters()}}, renamed in
+Nestimate 0.4.3. It is kept so older tutorials and the historical pkgdown
+reference still run: every call raises a deprecation warning and passes
+its arguments to \code{\link[=build_clusters]{build_clusters()}} unchanged.
 }
 \seealso{
 \code{\link{build_clusters}}, \code{\link{cluster_network}},

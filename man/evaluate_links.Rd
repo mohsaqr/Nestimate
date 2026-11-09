@@ -7,21 +7,43 @@
 evaluate_links(pred, true_edges, k = c(5L, 10L, 20L))
 }
 \arguments{
-\item{pred}{A \code{net_link_prediction} object.}
+\item{pred}{A \code{\link[=predict_links]{predict_links()}} result.}
 
-\item{true_edges}{A data frame with columns \code{from} and \code{to},
-or a binary matrix where 1 indicates a true edge.}
+\item{true_edges}{The known edges: a data frame with columns \code{from} and
+\code{to} (every row is an edge, whatever its other columns, such as a
+weight, hold), or a matrix whose non-zero cells are edges. Its row
+names name both its rows and its columns (column names are not read),
+so its columns must be in the same order as its rows; without row
+names, the nodes of \code{pred} are used. For a directed prediction, pairs
+are matched by \code{from} and \code{to}, direction included; for an undirected
+one, in either order, so \verb{(C, A)} matches the listed pair \verb{(A, C)}.}
 
-\item{k}{Integer vector. Values of k for precision\eqn{@}k.
-Default: \code{c(5, 10, 20)}.}
+\item{k}{The cut-offs for precision\eqn{@}k. Default \code{c(5, 10, 20)}. A
+\code{k} larger than an index's number of predictions gives \code{NA}.}
 }
 \value{
-A data frame with columns: method, auc, average_precision,
-and one precision_at_k column per k value.
+A data frame with one row per index: \code{method}, \code{auc},
+\code{average_precision} (\code{0} when no evaluated pair is a known edge), and
+one \verb{precision_at_<k>} column per value of \code{k}. A prediction with no
+listed pairs (every possible link already exists) gives \code{NULL}.
 }
 \description{
-Computes AUC-ROC, precision\eqn{@}k, and average precision for link
-predictions against a set of known true edges.
+\code{evaluate_links()} measures how well each index of a \code{\link[=predict_links]{predict_links()}}
+result recovers a set of known edges. For each index it returns the area
+under the ROC curve (AUC), the average precision, and the precision among
+the top \code{k} predictions.
+
+The AUC is the probability that a known edge scores higher than a pair
+that is not one (ties count half), so 0.5 is chance level. Average
+precision is the mean of the precisions at the rank of each known edge,
+and precision\eqn{@}k the share of known edges among the \code{k}
+highest-scoring pairs. Only the pairs listed in the predictions are
+evaluated: with \code{exclude_existing = TRUE}, the default of
+\code{\link[=predict_links]{predict_links()}}, the network's current edges are not scored, so the
+known edges should be ones held out of the network (a later period, a
+removed subset), and \code{top_n} limits the evaluation to the pairs it kept.
+The AUC is \code{NA} when the evaluated pairs include no known edge, or
+nothing but known edges.
 }
 \examples{
 seqs <- data.frame(

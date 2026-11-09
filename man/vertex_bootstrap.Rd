@@ -25,105 +25,126 @@ vertex_bootstrap(
 \method{plot}{net_vertex_bootstrap}(x, bins = 30, ...)
 }
 \arguments{
-\item{x}{A \code{netobject} (from \code{\link{build_network}} or any
-builder), a \code{cograph_network}, or a square numeric weight matrix. For the \code{print()} and \code{plot()} methods: an object of class \code{net_vertex_bootstrap}.}
+\item{x}{The network: a \code{netobject} (from \code{\link[=build_network]{build_network()}} or any
+builder), a \code{cograph_network}, or a square numeric weight matrix, with
+at least 3 nodes. Other input raises an error. For the \code{print()} and
+\code{plot()} methods: a \code{net_vertex_bootstrap} result.}
 
-\item{iter}{Integer. Number of bootstrap replicates (default 1000).}
+\item{iter}{The number of bootstrap replicates, at least 2. Default
+\code{1000}.}
 
-\item{ci_level}{Numeric. Significance level for the confidence
-intervals (default 0.05 for 95\% CIs).}
+\item{ci_level}{The significance level of the confidence intervals, not
+their coverage: \code{0.05} (default) gives 95\% intervals. Must lie strictly
+between 0 and 1.}
 
-\item{ci_method}{Character. \code{"percentile"} (default) for empirical
-quantile intervals, or \code{"basic"} for intervals reflected around
-the observed value (Davison & Hinkley 1997, eq. 5.6).}
+\item{ci_method}{How the intervals are formed. \code{"percentile"} (default)
+takes the \code{ci_level / 2} and \code{1 - ci_level / 2} quantiles of the
+replicates; \code{"basic"} reflects them around the observed value,
+\code{2 * observed - upper} and \code{2 * observed - lower} (Davison & Hinkley
+1997, eq. 5.6).}
 
-\item{statistics}{Character vector selecting built-in statistics
-(see Details). Default: all applicable to the network's directedness.}
+\item{statistics}{The built-in statistics to compute (see \emph{Details}).
+Default \code{NULL}: all of them, with \code{reciprocity} only for a directed
+network. A name that is not available for the network, such as
+\code{reciprocity} on an undirected one, raises an error.}
 
-\item{statistic_fn}{Optional named list of functions, each taking the
-weight matrix and returning a single numeric value. Computed alongside
-the built-ins.}
+\item{statistic_fn}{Statistics of your own, as a named list of functions,
+each taking the weight matrix and returning a single number. They are
+computed beside the built-ins on the whole matrix, diagonal included.
+Default \code{NULL}.}
 
-\item{directed}{Logical or NULL. Directedness of the network. NULL
-(default) reads \code{x$directed} when available, otherwise falls
-back to matrix symmetry.}
+\item{directed}{Whether the network is directed, which decides how
+collisions are filled and whether \code{reciprocity} is available. Default
+\code{NULL} reads the network's own directedness, and for a matrix (or a
+network that records none) treats an asymmetric matrix as directed.}
 
-\item{seed}{Integer or NULL. RNG seed for reproducibility.}
+\item{seed}{A seed passed to \code{\link[=set.seed]{set.seed()}} before resampling, so the run
+can be repeated; the session's random-number stream then continues from
+it. Default \code{NULL} uses the current stream.}
 
-\item{digits}{Number of digits to display (default 3).}
+\item{digits}{For the \code{print()} method: the number of decimals shown.
+Default \code{3}.}
 
-\item{...}{In \code{plot.net_vertex_bootstrap()}, \code{print.net_vertex_bootstrap()} and \code{summary.net_vertex_bootstrap()}: Additional arguments (ignored).}
+\item{...}{Not used.}
 
-\item{object}{For the \code{summary()} method: an object of class \code{net_vertex_bootstrap}.}
+\item{object}{For the \code{summary()} method: a \code{net_vertex_bootstrap}
+result.}
 
-\item{bins}{Number of histogram bins (default 30).}
+\item{bins}{For the \code{plot()} method: the number of histogram bins.
+Default \code{30}.}
 }
 \value{
-An object of class \code{"net_vertex_bootstrap"} containing:
+A \code{net_vertex_bootstrap} object. Printing it shows the number of
+nodes, the directedness, the number of replicates and the interval
+level and method, then the summary table; \code{summary()} returns that
+table as a data frame with one row per statistic and the columns
+\code{statistic}, \code{observed}, \code{boot_mean}, \code{boot_sd}, \code{bias}
+(\code{boot_mean - observed}), \code{ci_lower} and \code{ci_upper}; \code{plot()} draws the
+bootstrap distributions. The object holds:
 \describe{
-\item{summary}{Tidy data frame, one row per statistic: \code{statistic},
-\code{observed}, \code{boot_mean}, \code{boot_sd}, \code{bias},
-\code{ci_lower}, \code{ci_upper}.}
-\item{boot_stats}{\code{iter} x n_statistics matrix of replicate values.}
-\item{observed}{Named vector of observed statistics.}
-\item{iter, ci_level, ci_method, directed, n_nodes}{Configuration.}
+\item{summary}{The summary table described above.}
+\item{boot_stats}{A matrix of the replicate values, \code{iter} rows by one
+column per statistic.}
+\item{observed}{The observed statistics, as a named numeric vector.}
+\item{iter, ci_level, ci_method, directed, n_nodes}{The settings used
+and the number of nodes.}
 }
 
-In \code{print.net_vertex_bootstrap()}: \code{x}, invisibly.
-
-In \code{summary.net_vertex_bootstrap()}: The tidy summary data frame (one row per statistic).
-
-In \code{plot.net_vertex_bootstrap()}: A ggplot object.
+The \code{print()} method returns its input invisibly, \code{summary()} the
+summary data frame and \code{plot()} a \code{ggplot} object.
 }
 \description{
-Non-parametric vertex bootstrap of a single observed network
-(Snijders & Borgatti 1999). Vertices are resampled with replacement and
-the weight matrix is rebuilt from the original entries of the resampled
-vertex pairs; network-level statistics computed on each replicate give
-bootstrap distributions, standard errors, and confidence intervals.
+\code{vertex_bootstrap()} resamples the nodes of one observed network and
+returns bootstrap standard errors, bias and confidence intervals for
+network-level statistics: density, mean weight, strength centralisation
+and, for a directed network, reciprocity, plus any statistic of your own
+(Snijders & Borgatti 1999). It needs only the weight matrix, so it works
+on any \code{netobject} or \code{cograph_network}, including those that carry no
+data, such as the constituents of \code{\link[=build_mlvar]{build_mlvar()}} or the networks
+\code{\link[=as_tna]{as_tna()}} returns for an \code{mcml} object built from a weight matrix, and
+on a plain square weight matrix.
 
-Unlike \code{\link{bootstrap_network}}, which resamples the underlying
-cases (sequences or rows) and therefore requires the raw data stored in
-the netobject, the vertex bootstrap needs \strong{only the weight
-matrix}. It works on any \code{netobject} - including data-less ones
-such as \code{\link{build_mlvar}} constituents or \code{as_tna(mcml)}
-elements - and on plain weight matrices. The two procedures answer
-different questions: the case bootstrap quantifies sampling-of-subjects
-uncertainty in the edge weights; the vertex bootstrap quantifies
-structural uncertainty of whole-network descriptives given the one
-network you observed.
+The intervals describe how much a whole-network statistic depends on
+which nodes happen to make up the network, with the edge weights taken
+as given. They say nothing about how the weights themselves vary from
+sample to sample; when the sequences or rows behind a network are
+available, \code{\link[=bootstrap_network]{bootstrap_network()}} resamples those instead. Two networks
+are compared on these statistics with \code{\link[=vertex_compare]{vertex_compare()}}.
 }
 \details{
-Each replicate draws \code{n} vertex indices with replacement and sets
-\code{W_b[i, j] = W[idx_i, idx_j]}. When the same original vertex is
-drawn for two different positions, the off-diagonal cell would be a
-structural self-pair; following Snijders & Borgatti, such cells are
-filled with the weight of a randomly chosen pair of distinct original
-vertices. Diagonal entries carry the original self-weight of the
-resampled vertex (\code{W[idx_i, idx_i]}) - self-loops are meaningful
-in transition networks and are never altered. For undirected networks
-the substitution is applied symmetrically so replicates stay symmetric.
+Each replicate draws \code{n} node indices with replacement and sets
+\code{W_b[i, j] = W[idx_i, idx_j]}. When the same original node is drawn for
+two different positions, the off-diagonal cell between them would be a
+self-pair; following Snijders & Borgatti, it is filled with the weight of
+a randomly chosen pair of distinct original nodes. Diagonal cells keep the
+original self-weight of the resampled node (\code{W[idx_i, idx_i]}), since
+self-loops are meaningful in transition networks. For an undirected
+network the substitution is made in the upper triangle and mirrored, so
+every replicate stays symmetric.
 
-Built-in statistics (all computed on the off-diagonal part of the
-weight matrix):
+The built-in statistics are computed on the off-diagonal cells:
 \describe{
-\item{\code{density}}{Proportion of non-zero off-diagonal cells.}
-\item{\code{mean_weight}}{Mean of the non-zero off-diagonal weights.}
-\item{\code{centralization}}{Freeman-type strength centralization:
-\code{sum(max(s) - s) / ((n - 1) * max(s))} where \code{s} is total
-node strength on absolute weights. 0 when all nodes have equal
-strength, approaching 1 for a star.}
-\item{\code{reciprocity}}{Directed networks only. Weighted
-reciprocity \code{sum(pmin(|W|, |t(W)|)) / sum(|W|)} over
-off-diagonal cells: the proportion of total weight that is
-reciprocated.}
+\item{\code{density}}{The share of non-zero off-diagonal cells.}
+\item{\code{mean_weight}}{The mean of the non-zero off-diagonal
+weights.}
+\item{\code{centralization}}{Freeman-type strength centralisation,
+\code{sum(max(s) - s) / ((n - 1) * max(s))}, where \code{s} is each
+node's total (in plus out) absolute strength without its self-loop:
+0 when every node has the same strength, approaching 1 for a star.}
+\item{\code{reciprocity}}{Directed networks only. Weighted reciprocity,
+\code{sum(pmin(|W|, |t(W)|)) / sum(|W|)} over the off-diagonal cells:
+the share of the total weight that is reciprocated.}
 }
+A statistic is \code{NA} when it is undefined: \code{mean_weight} with no non-zero
+cell, \code{centralization} when every strength is 0, \code{reciprocity} when the
+total weight is 0. \code{NA} replicates are left out of the bootstrap mean,
+standard deviation and quantiles.
 }
 \section{Methods}{
 
-\itemize{
-\item \code{plot.net_vertex_bootstrap()}: Histogram of the bootstrap distribution per statistic, with the observed value (solid line) and confidence bounds (dashed lines).
-}
+\code{plot()} draws a histogram of the replicate values for each statistic,
+one panel per statistic with its own scales, a solid line at the observed
+value and dashed lines at the interval bounds.
 }
 
 \examples{

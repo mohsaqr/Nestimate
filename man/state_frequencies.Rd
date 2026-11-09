@@ -7,17 +7,22 @@
 state_frequencies(data)
 }
 \arguments{
-\item{data}{A list of character vectors (trajectories) or a data.frame.}
+\item{data}{The trajectories: a list of state vectors, a data frame or
+character matrix with one row per trajectory and one column per time
+point, a \code{tna} model or a \code{netobject} built from sequences. A data
+frame needs position columns named as a numbered run (\code{T1}, \code{T2}, ...);
+any other frame, a one-hot or association network and a 0/1 matrix
+raise an error of class \code{nestimate_bad_input}.}
 }
 \value{
-A data frame with one row per distinct state, sorted by
-\code{count} (descending), with columns \code{state}, \code{count} and
-\code{proportion} (share of all observations, rounded to 4 decimal
-places).
+A data frame with one row per distinct state, sorted by \code{count}
+(descending), with columns \code{state}, \code{count} and \code{proportion} (the
+state's share of all observed states, rounded to 4 decimal places).
 }
 \description{
-Counts how often each state appears across all trajectories. Returns a
-data frame sorted by frequency (descending).
+\code{state_frequencies()} counts how often each state occurs across all
+trajectories, and returns one row per state, most frequent first.
+Missing values are not counted.
 }
 \examples{
 trajs <- list(c("A","B","C"), c("A","B","A"))

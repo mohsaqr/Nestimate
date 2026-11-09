@@ -106,160 +106,152 @@ plot_state_frequencies(x, ...)
 \method{as.data.frame}{state_freq}(x, ...)
 }
 \arguments{
-\item{x}{A \code{netobject}, \code{netobject_group}, \code{mcml}, or
-\code{htna} object. For the \code{print()}, \code{plot()} and
-\code{as.data.frame()} methods: the \code{state_freq} object returned by
-\code{plot_state_frequencies()}; for the \code{print()} methods of the
-per-facet figure, an object of class \code{nestimate_facet_plot} or
-\code{nestimate_facet_list}.}
+\item{x}{The object to count: a \code{netobject}, \code{netobject_group}, \code{mcml}
+or \code{htna} network built from sequences. A network without sequence
+data raises an error; in a \code{netobject_group} or \code{mcml}, groups without
+it are left out. For the \code{print()}, \code{plot()} and
+\code{as.data.frame()} methods of the result: the \code{state_freq} object;
+for the \code{print()} methods of a per-panel figure: an object of class
+\code{nestimate_facet_plot} or \code{nestimate_facet_list}.}
 
-\item{...}{Reserved for future use. In \code{as.data.frame.state_freq()},
-\code{plot.state_freq()}, \code{print.state_freq()},
-\code{print.nestimate_facet_list()} and \code{print.nestimate_facet_plot()}:
-ignored.}
+\item{...}{Not used by the \code{netobject}, \code{netobject_group} and \code{htna}
+methods; the \code{mcml} method raises an error for any argument it does
+not take. For the \code{print()}, \code{plot()} and \code{as.data.frame()} methods
+of the result: ignored.}
 
-\item{style}{One of:
-\itemize{
-\item \code{"marimekko"} (default) -- per-group treemap panels with
-cumulative-width geometry; tile area = within-group state share.
-\item \code{"bars"} -- horizontal bars sorted by frequency, faceted
-per group.
-}
-For chi-square mosaics of a (group x state) contingency table, use
-\code{\link{mosaic_plot}} directly -- it is kept as a separate
-function with its own dispatch surface.}
+\item{style}{The chart. \code{"marimekko"} (default) draws treemaps, or the
+cluster marimekko for an \code{mcml} (see Description); \code{"bars"} draws
+horizontal bars, the most frequent state on top when \code{sort_states = "frequency"}, with one panel per group.}
 
-\item{metric}{For \code{style = "bars"}: which value the bar length
-encodes -- \code{"prop"} (default) or \code{"freq"}. Treemap and
-hierarchical-marimekko areas always encode proportion within group.}
+\item{metric}{For \code{style = "bars"}: what the bar length shows,
+\code{"prop"} (default), the share within the group, or \code{"freq"}, the
+count. Treemap and marimekko areas always show the share within the
+group.}
 
-\item{label}{Inline tile / bar annotation. All formats render on a
-single line.
-\itemize{
-\item \code{"prop"} (default) -- proportion only, e.g. \code{"66\%"}
-\item \code{"freq"} -- count only, e.g. \code{"1,234"}
-\item \code{"both"} -- count + proportion, e.g. \code{"1,234 (66\%)"}
-\item \code{"state"} -- state name only, e.g. \code{"Average"}
-\item \code{"all"} -- state + proportion, e.g. \code{"Average (66\%)"}
-\item \code{"none"} -- no inline labels
-}}
+\item{label}{The text printed on each tile or bar, on one line:
+\code{"prop"} (default) the share, as in \code{"66.0\%"}; \code{"freq"} the count, as
+in \code{"1,234"}; \code{"both"} the two, \code{"1,234 (66.0\%)"}; \code{"state"} the state
+name; \code{"all"} the name and share, \code{"Average (66.0\%)"}; \code{"none"} no
+text.}
 
-\item{legend}{Legend position. \code{"auto"} (default) resolves per
-style: \code{"none"} for \code{style = "bars"} (the y-axis already
-names every state, so a colour legend is redundant);
-\code{"per_facet"} for \code{htna}/\code{mcml} treemaps (state
-vocabularies differ per panel, so each gets its own legend);
-\code{"bottom"} for single-network and \code{netobject_group}
-treemaps (shared state vocabulary, one shared legend).
-Override with any of \code{"bottom"}, \code{"top"}, \code{"right"},
-\code{"left"}, \code{"none"}, or \code{"per_facet"}. \code{"per_facet"}
-is silently demoted to \code{"bottom"} when every group shares the same
-state vocabulary (repeating one legend per panel would be redundant);
-when it does take effect it returns a \code{gtable} (requiring the
-\pkg{gridExtra} package) or a list of ggplots, per \code{combine}.}
+\item{legend}{Where the colour legend goes: \code{"bottom"}, \code{"top"},
+\code{"right"}, \code{"left"}, \code{"none"} or \code{"per_facet"}. \code{"auto"} (default)
+resolves to \code{"none"} for bars, whose axis names the states, to
+\code{"per_facet"} for \code{htna} and \code{mcml} treemaps, and to \code{"bottom"}
+otherwise. \code{"per_facet"} draws each group as its own treemap with its
+own legend (on the right with up to two panels, at the bottom with
+more), and its colours restart in every panel; it falls back to
+\code{"bottom"} when every group has the same states, and to a legend on
+the right for bars. It returns a combined figure or a list of plots,
+as \code{combine} sets.}
 
-\item{legend_dir}{Legend internal layout: \code{"auto"} (default --
-horizontal for top/bottom, vertical for left/right), or force
-\code{"horizontal"} or \code{"vertical"} regardless of position.}
+\item{legend_dir}{The direction of the legend's keys: \code{"auto"}
+(default) lays them out horizontally for a legend on top or bottom and
+vertically on the left or right; \code{"horizontal"} and \code{"vertical"}
+force one.}
 
-\item{legend_frame}{\code{"none"} (default) for an unframed legend, or
-\code{"border"} to draw a thin grey rectangle around the legend
-("legend enclosed in a square").}
+\item{legend_frame}{\code{"none"} (default) draws the legend unframed;
+\code{"border"} draws a thin grey rectangle around it.}
 
-\item{sort_states}{One of \code{"frequency"} (default -- most frequent
-first), \code{"alpha"}, or \code{"none"}.}
+\item{sort_states}{The order of the states in the legend, the tiles and
+the bars: \code{"frequency"} (default), the most frequent first;
+\code{"alpha"}, alphabetical; or \code{"none"}, the order of the table.}
 
-\item{colors}{Optional colors overriding the default Okabe-Ito state
-palette. Either an unnamed vector applied in state order (length at
-least the number of unique states), or a named lookup
-(\code{c(plan = "#0072B2")}) overriding only the states you name.}
+\item{colors}{Fill colours for the states, overriding the palette
+attached to \code{x} with \code{\link[=set_state_colors]{set_state_colors()}} for this chart: an unnamed
+vector in state order (at least one per state) or a named lookup such
+as \code{c(plan = "#0072B2")} that overrides only the states named. Default
+\code{NULL}: the attached palette, or else the Okabe-Ito palette, recycled.}
 
-\item{label_size}{Numeric size of inline labels (max size when
-\pkg{ggfittext} is installed -- text auto-shrinks per tile).}
+\item{label_size}{The size of the tile and bar labels; with
+\pkg{ggfittext} installed, the largest size, as labels shrink to fit
+their tiles. Default \code{3.5}.}
 
-\item{abbreviate}{Abbreviate state names. \code{FALSE} (default) shows
-full names; \code{TRUE} truncates to the first 3 characters via
-\code{base::abbreviate()} (which extends the truncation as needed to
-keep names unique after collision); a positive integer sets the
-target minimum length explicitly (e.g. \code{abbreviate = 4}).
-Affects tile labels, the legend, and the tidy table returned by
-\code{as.data.frame()}.}
+\item{abbreviate}{Whether to shorten the state names with
+\code{\link[base:abbreviate]{base::abbreviate()}}, which drops lower-case vowels and then letters
+from the end until a name fits, keeping the names distinct. \code{FALSE}
+(default) keeps the full names; \code{TRUE} shortens them to at least three
+characters; a positive whole number sets that minimum length. It
+applies to the labels, the legend and the returned table.}
 
-\item{include_macro}{For \code{mcml} only: prepend a \code{"macro"}
-reference column showing aggregate state frequencies across all
-clusters. Default \code{FALSE}.}
+\item{include_macro}{For an \code{mcml}: whether to add a \code{"macro"} group in
+front, holding the state counts over all clusters. Default \code{FALSE}.
+Ignored for the other classes.}
 
-\item{combine}{For \code{legend = "per_facet"} only. \code{"auto"}
-(default) returns a single combined gtable for 1-3 panels and a
-list of ggplots (one per panel) for 4+ panels -- many-cluster
-\code{mcml} layouts read better as separate figures than as a tile
-grid. \code{TRUE} forces a combined gtable via \pkg{gridExtra};
-\code{FALSE} forces a list (knitr renders each at the chunk's full
-\code{fig.width} / \code{fig.height}).}
+\item{combine}{With per-panel legends: \code{"auto"} (default) combines up
+to three panels into one figure and returns a list of plots, one per
+panel, for four or more, which knitr draws as separate figures at the
+chunk's size. \code{TRUE} always combines them; \code{FALSE} always returns the
+list. A combined figure, whether from \code{TRUE} or from \code{"auto"} with up
+to three panels, needs \pkg{gridExtra} and raises an error without
+it; \code{FALSE} does not.}
 
-\item{ncol}{For \code{legend = "per_facet"} with \code{combine = TRUE}:
-number of columns in the grid arrangement. \code{NULL} (default)
-picks 1, 2, or 3 columns based on the number of panels.}
+\item{ncol}{For a combined figure with per-panel legends: the number of
+columns. Default \code{NULL}: one column per panel with up to two panels,
+two columns with more.}
 
-\item{node_groups}{Optional named character vector mapping node labels to
-semantic groups. When supplied, panels (or bars) are coloured / annotated
-by group rather than by individual state, so state-level palettes can
-collapse onto a smaller categorical legend.}
+\item{node_groups}{A named character vector that maps states to broader
+groups, such as \code{c(plan = "Regulation", monitor = "Regulation")}. The
+chart is then drawn and coloured by these groups, states not named
+keeping their own name; the returned table keeps one row per state.
+Default \code{NULL}.}
 
-\item{digits}{Number of decimal places for proportion / share columns.
-Default 1.}
+\item{digits}{For \code{print()} of the result: decimal places of the
+percentages. Default \code{1}.}
 
-\item{max_states}{Cap on rows shown per group in the per-state table
-(default 20); the surplus is folded into a single \code{"(+k more)"}
-row. The full, uncapped table is returned by
-\code{as.data.frame(x)}.}
+\item{max_states}{For \code{print()} of the result: the most states shown
+per group (default \code{20}); the rest are folded into one \code{"(+k more)"}
+row. \code{\link[=state_distribution]{state_distribution()}} gives the full table.}
 }
 \value{
-A \code{state_freq} object: a list with the rendered \code{$plot}
-(a \code{ggplot}; a \code{gtable} or a list of ggplots under
-\code{legend = "per_facet"}, per \code{combine}), the tidy \code{$table} (a
-\code{data.frame} with columns \code{group}, \code{state}, \code{count},
-\code{proportion}, one row per (group, state) cell), and the call's
-\code{$style}, \code{$metric}, \code{$source_class}. The class supports
-\code{print()} (prints the tidy table and draws the chart),
-\code{plot()} (draws the chart alone), and \code{as.data.frame()}
-(returns the tidy table) -- see the section below.
-
-\code{print()} returns \code{x} invisibly (after printing the
-table and drawing the chart); \code{plot()} returns \code{invisible(NULL)}
-after drawing; \code{as.data.frame()} returns the tidy
-\code{data.frame}, one row per (group, state) cell with columns
-\code{group}, \code{state}, \code{count}, \code{proportion}.
+A \code{state_freq} object. Printing it shows the event totals per
+group and the share of each state within its group, then draws the
+chart; \code{plot()} draws the chart alone. \code{\link[=state_distribution]{state_distribution()}} gives
+the same counts from the network, with the full state names and, for
+an \code{mcml}, without the macro group unless \code{include_macro = TRUE}.
+The object holds the chart (a
+\code{ggplot}; with per-panel legends either a combined figure, a \code{gtable}
+of class \code{nestimate_facet_plot}, or a list of \code{ggplot}s of class
+\code{nestimate_facet_list}), the table (one row per group and state, with columns \code{group},
+\code{state}, \code{count} and \code{proportion}, the share within the group), and
+the \code{style}, \code{metric} and source class of the call. The \code{print()}
+methods return their input invisibly, \code{plot()} returns \code{NULL}
+invisibly. Any other class raises an error, a tna model included;
+draw a tna model with \code{tna::plot_frequencies()}.
 }
 \description{
-Visualise state (node) frequency distributions across groups for any
-Nestimate object that carries sequence data: a single \code{netobject},
-a \code{netobject_group}, an \code{mcml} model, or an \code{htna} network.
-}
-\details{
-The marimekko layout is dispatched per class:
-\itemize{
-\item For \code{mcml}, where states partition cleanly into clusters,
-the chart is a hierarchical 2D marimekko: cluster columns of width
-proportional to cluster total, segments stacked vertically with
-heights proportional to within-cluster state proportions.
-\item For all other classes (\code{netobject}, \code{netobject_group},
-\code{htna}), each group is rendered as its own panel containing a
-squarified treemap: each state becomes a rectangular tile whose
-AREA is exactly proportional to the state's share within that group.
-Single-panel when no groups exist; faceted when groups are present.
-}
+\code{plot_state_frequencies()} counts how often each state occurs in the
+sequences behind a network and draws the shares, per group, as treemaps
+or bars; it returns the chart together with the table of counts. It
+takes a \code{netobject}, a \code{netobject_group} (one group per network), an
+\code{mcml} (one group per cluster) or an \code{htna} network (one group per
+actor). A single \code{netobject} is one group, \code{"all"}, unless it carries
+node groups, which then form the groups. Missing and empty cells are not
+counted.
 
-The bar style produces horizontal bars (state on the y-axis), faceted by
-group when groups exist. All variants use the Okabe-Ito palette.
+With \code{style = "marimekko"} (default), each group is a treemap whose
+tiles have areas proportional to the states' shares within that group.
+The groups of a \code{netobject} or \code{netobject_group} are panels of one plot,
+with the states in the same order and colours in every panel. The actors
+of an \code{htna} network and the clusters of an \code{mcml} usually have states
+of their own, so each is drawn as a separate treemap with its own legend
+(\code{legend = "per_facet"}). An \code{mcml} drawn with any other legend is a
+single marimekko instead: one column per cluster, as wide as the
+cluster's share of all events, with its states stacked by their share
+within the cluster. With \code{style = "bars"}, each group is a panel of
+horizontal bars, one per state.
+
+The shares describe how often states occur, not how they follow each
+other. Two groups can have the same state mix and different
+transitions; compare the networks for that, with \code{\link[=permutation]{permutation()}}.
+\code{\link[=mosaic_plot]{mosaic_plot()}} shows which cells of a \code{netobject_group}'s
+group-by-state table depart from independence.
 }
 \section{The state_freq object}{
 
-\code{plot_state_frequencies()} returns a \code{state_freq} object holding
-both the rendered chart and the tidy frequency table. \code{print()} shows
-the table in the console \emph{and} draws the chart on the active graphics
-device, \code{plot()} draws the chart alone, and \code{as.data.frame()}
-returns the tidy table for downstream piping.
+In a knitr document, printing the object puts the table in the text and
+the chart in a figure of the chunk's size; a list of per-panel plots
+gives one figure per panel.
 }
 
 \examples{

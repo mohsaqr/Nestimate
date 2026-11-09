@@ -23,56 +23,71 @@ network_metrics(x, digits = 2L)
 \method{print}{net_table}(x, digits = attr(x, "digits") \%||\% 2L, ...)
 }
 \arguments{
-\item{pair}{Optional selection of comparisons. Any of: the pair name(s) as
-printed (\code{"A vs B"}); the two network names (\code{c("A", "B")}, either
-order); one network name (\code{"A"}, every pair it takes part in); or
-index/indices into the pair table (\code{1}, \code{c(1, 3)}). \code{NULL} keeps all.}
+\item{pair}{The comparisons to keep. Default \code{NULL}, all of them. Give
+the pair names as printed (\code{"A vs B"}), the two network names in either
+order (\code{c("A", "B")}), one network name (\code{"A"}, every pair it takes part
+in), or indices into the pair table (\code{1}, \code{c(1, 3)}). A selection that
+matches no comparison raises an error of class
+\code{nestimate_compare_unknown_pair}.}
 
-\item{digits}{Decimals kept in numeric columns. Default \code{2}.}
+\item{digits}{The decimals kept in the numeric columns. Default \code{2}. For
+the \code{print()} method: the decimals shown, by default those the table
+was made with.}
 
 \item{...}{Ignored.}
 
-\item{x, object}{A \code{net_network_comparison} object (for \code{print.net_table()},
-a table returned by one of these verbs).}
+\item{x, object}{A \code{net_network_comparison} object from
+\code{\link[=compare_networks]{compare_networks()}}. For the \code{print()} method: a table returned by one
+of these verbs.}
 
-\item{measure}{Optional centrality measure name(s) to keep.}
+\item{measure}{The centrality measures to keep in \code{node_differences()}.
+Default \code{NULL}, all measures of the comparison; a measure the object
+does not carry raises an error of class
+\code{nestimate_compare_unknown_measure}.}
 }
 \value{
+Each verb returns a data frame of class \code{net_table}. Its \code{print()}
+shows whole numbers without decimals, exact zeros as \code{0}, other values
+with \code{digits} decimals and p-values and probabilities of direction with
+three decimals, and returns the table invisibly. The tables:
 \itemize{
-\item \code{summary()}: one row per pair -- \code{pair}, \code{network_a}, \code{network_b},
-\code{n_cells}, \code{n_differing}, \code{share_higher_a}, \code{share_higher_b},
-\code{mean_abs_diff}, \code{max_abs_diff}, \code{pearson}, \code{spearman}, \code{cosine},
-\code{jaccard}, \code{top_edge}, \code{top_edge_higher}, and with inference
-\code{n_sig_edges}, \code{n_sig_nodes}, \code{m_stat}, \code{m_p}, \code{s_stat}, \code{s_p}. The
-per-edge, per-node, per-metric and per-network tables are the four
-verbs below.
-\item \code{edge_differences()}: one row per pair x transition: \code{pair},
+\item \code{summary()}: one row per pair, with \code{pair}, \code{network_a}, \code{network_b},
+\code{n_cells} (cells compared), \code{n_differing} (cells whose weights differ),
+\code{share_higher_a}, \code{share_higher_b}, \code{mean_abs_diff}, \code{max_abs_diff},
+\code{pearson}, \code{spearman}, \code{cosine}, \code{jaccard}, \code{top_edge} (the cell with
+the largest absolute difference) and \code{top_edge_higher}; with the
+permutation or Bayesian test, also \code{n_sig_edges}, and with the
+permutation test \code{n_sig_nodes} (when there is a node table), \code{m_stat},
+\code{m_p}, \code{s_stat} and \code{s_p}.
+\item \code{edge_differences()}: one row per pair and cell, with \code{pair},
 \code{network_a}, \code{network_b}, \code{from}, \code{to}, \code{weight_a}, \code{weight_b}, \code{diff},
 \code{abs_diff}, \code{rel_diff}, \code{ratio}, \code{log_ratio}, \code{rank_a}, \code{rank_b},
 \code{rank_diff}, \code{percentile_diff}, \code{status}, \code{higher}, and the inference
 columns when \code{test} was used.
-\item \code{node_differences()}: one row per pair x state x measure: \code{pair},
+\item \code{node_differences()}: one row per pair, node and measure, with \code{pair},
 \code{network_a}, \code{network_b}, \code{node}, \code{measure}, \code{value_a}, \code{value_b},
-\code{diff}, \code{abs_diff}, \code{rank_a}, \code{rank_b}, \code{higher}, plus inference columns.
-Errors (class \code{nestimate_compare_no_nodes}) when \code{compare_networks()}
-was called with no \code{measures}.
-\item \code{global_differences()}: one row per pair x metric: \code{pair}, \code{network_a},
-\code{network_b}, \code{category}, \code{metric}, \code{key}, \code{value}, plus inference rows
-and columns.
-\item \code{network_metrics()}: one row per network x structural metric:
-\code{network}, \code{metric}, \code{value}.
+\code{diff}, \code{abs_diff}, \code{rank_a}, \code{rank_b}, \code{higher}, and the inference
+columns. It raises an error of class \code{nestimate_compare_no_nodes} when
+\code{\link[=compare_networks]{compare_networks()}} was called without \code{measures}.
+\item \code{global_differences()}: one row per pair and metric, with \code{pair},
+\code{network_a}, \code{network_b}, \code{category}, \code{metric}, \code{key}, \code{value}, and the
+inference rows and columns.
+\item \code{network_metrics()}: one row per network and structural metric, with
+\code{network}, \code{metric} and \code{value}.
 }
 
-Every table is a data frame of class \code{net_table} whose \code{print()} shows
-whole numbers without decimals, exact zeros as \code{0}, other values with
-\code{digits} decimals, and p-values with three decimals; \code{print()} itself
-returns the table invisibly.
+\code{\link[=compare_networks]{compare_networks()}} describes every column under \emph{Details} and \emph{Value}.
 }
 \description{
-Named accessors for the tables inside a \code{net_network_comparison} object
-(from \code{\link[=compare_networks]{compare_networks()}}). Each returns a plain data frame with one row
-per unit and no row names. Numeric columns are rounded to \code{digits}
-decimals; p-value columns are never rounded.
+\code{summary()}, \code{edge_differences()}, \code{node_differences()},
+\code{global_differences()} and \code{network_metrics()} return the tables of a
+comparison made with \code{\link[=compare_networks]{compare_networks()}}: one row per pair, per pair and
+cell, per pair, node and measure, per pair and metric, and per network
+and structural metric. Each is a data frame with no row names, numeric
+columns rounded to \code{digits} decimals and p-value and
+probability-of-direction columns left unrounded.
+All but \code{network_metrics()} select pairs with the same \code{pair} argument as
+the \code{plot()} method.
 }
 \examples{
 achievers <- build_network(group_regulation_long, method = "relative",

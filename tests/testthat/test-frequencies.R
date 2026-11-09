@@ -496,3 +496,39 @@ test_that("frequency and onehot agree on which ids they return", {
   expect_equal(oh[oh$id == "s9", "B"], 1L)
   expect_equal(fq[fq$id == "s10", "A"], 1L)
 })
+
+test_that("a declared time or id column of a wide table is not a position", {
+  # T1 -> T2 per row: B -> A and A -> C; the time column (9, 8) used to be
+  # read as a third position, adding A -> 9 and C -> 8.
+  w <- data.frame(T1 = c("B", "A"), T2 = c("A", "C"), when = c("9", "8"))
+  f <- frequencies(w, time = "when")
+  expect_equal(rownames(f), c("A", "B", "C"))
+  expect_equal(sum(f), 2)
+  expect_equal(f["B", "A"], 1)
+  expect_equal(f["A", "C"], 1)
+  expect_error(frequencies(w, time = "when", cols = c("T1", "when")),
+               class = "nestimate_bad_input")
+
+  cs <- convert_sequence_format(
+    data.frame(time = c(1, 2), T1 = c("A", "B"), T2 = c("B", "A")),
+    time = "time")
+  expect_equal(setdiff(names(cs), c(".rid", "rid")), c("A", "B"))
+  expect_equal(cs$A, c(1L, 1L))
+  expect_error(convert_sequence_format(
+    data.frame(id = 1:2, T1 = c("A", "B"), T2 = c("B", "A")),
+    id_col = "id", seq_cols = c("id", "T1")),
+    class = "nestimate_bad_input")
+})
+
+test_that("convert_sequence_format refuses an event log without id_col", {
+  # The id column used to be taken by position (first column that is
+  # neither action nor time), against the declared-roles rule.
+  lg <- data.frame(user = c(2, 2, 1, 1), a = c("A", "B", "C", "A"),
+                   t = c(1, 2, 2, 1))
+  expect_error(convert_sequence_format(lg, action = "a", time = "t",
+                                       format = "edgelist"),
+               class = "nestimate_bad_input")
+  el <- convert_sequence_format(lg, action = "a", time = "t", id_col = "user",
+                                format = "edgelist")
+  expect_equal(paste(el$from, el$to), c("A C", "A B"))
+})

@@ -17,59 +17,81 @@ extract_pathways(
 )
 }
 \arguments{
-\item{data}{A long-format \code{data.frame}, one row per event, already in
-chronological order within each group (or with \code{order} supplied).}
+\item{data}{A long data frame with one row per event, in time order
+within each unit unless \code{order} is given. A unit's rows need not be
+contiguous: rows of other units in between are not part of its
+pathways.}
 
-\item{action}{Name of the column holding the state / event label.}
+\item{action}{The name of the column holding each event's state.}
 
-\item{group}{Character vector of column names defining the unit a pathway
-may not cross -- typically the actor, or actor and session.}
+\item{group}{The names of the columns defining the unit a pathway may not
+cross, typically the actor, or the actor and the session.}
 
-\item{order}{Optional column giving the within-group event order. When
-\code{NULL} (default) the existing row order is used.}
+\item{order}{The name of a column giving the order of events within a
+unit; the rows are sorted by \code{group} and then by it. Default \code{NULL},
+which keeps the row order.}
 
 \item{type}{The cut to make:
 \describe{
-\item{\code{"unit"}}{(default) one pathway per group. With
-\code{terminal}, the group is truncated at its last terminal state
-so the pathway ends on an outcome rather than on whatever followed.}
-\item{\code{"segments"}}{consecutive, non-overlapping pathways: the
-group is cut after every terminal state, so each pathway ends on one.
-Every event belongs to exactly one pathway.}
-\item{\code{"anchored"}}{one pathway per occurrence of \code{anchor},
-closing at the next terminal state. Pathways may overlap and events
-between a terminal and the next anchor belong to none.}
+\item{\code{"unit"}}{(default) one pathway per unit. With \code{terminal}, each
+unit is cut after its last terminal state, so the pathway ends on an
+outcome rather than on whatever followed; units without a terminal
+state are left out.}
+\item{\code{"segments"}}{consecutive, non-overlapping pathways: each unit
+is cut after every terminal state, so each pathway ends on one.
+Events after a unit's last terminal state belong to no pathway.}
+\item{\code{"anchored"}}{one pathway per occurrence of \code{anchor}, closing at
+the first terminal state after it. Pathways may overlap, and events
+between a terminal state and the next anchor belong to none.}
 }}
 
-\item{anchor}{State that opens a pathway when \code{type = "anchored"}.
-Ignored by the other cuts. Default \code{NULL}.}
+\item{anchor}{The single state that opens a pathway when \code{type = "anchored"}, where it is required; the other cuts ignore it. It may
+also be one of the \code{terminal} states: a pathway then closes at the next
+terminal state after the anchor, not at the anchor itself. Default
+\code{NULL}.}
 
-\item{terminal}{States that close a pathway, the closing state included.
-Required for \code{"segments"} and \code{"anchored"}; optional for
-\code{"unit"}, where it truncates.}
+\item{terminal}{The states that close a pathway, the closing state
+included. Required for \code{"segments"} and \code{"anchored"}; optional for
+\code{"unit"}, where it cuts each unit after its last terminal state.
+Default \code{NULL}.}
 
-\item{resolve}{Optional named list giving a resolution label to append as
-the pathway's final state. Each element is a character vector of states;
-a pathway takes the label of the \strong{first} element whose states all
-occur in it, so order the list from most specific to least. Pathways
-matching nothing are labelled \code{"Unresolved"}. The label becomes the
-last element of \code{path} and the value of \code{closes}, and the raw
-final state is kept in \code{ends}.}
+\item{resolve}{A named list that appends a resolution label as each
+pathway's final state. Each element is a character vector of states; a
+pathway takes the name of the first element whose states all occur in
+it, so order the list from most to least specific, and pathways
+matching none are labelled \code{"Unresolved"}. The label becomes the last
+state of \code{path}, counts in \code{length}, and is the value of \code{closes}; the
+observed last state is kept in \code{ends}. Default \code{NULL} (no label).}
 
-\item{sep}{Separator used when pasting the path. Default \code{" -> "}.}
+\item{sep}{The separator placed between states in \code{path}. Default
+\code{" -> "}.}
 }
 \value{
-A \code{data.frame} with one row per pathway: the \code{group}
-columns, \code{pathway} (an integer id within group), \code{path} (the
-states pasted with \code{sep}), \code{length}, \code{opens} (first state)
-and \code{closes} (last state). With \code{resolve}, \code{closes} holds
-the resolution label instead and a further \code{ends} column carries the
-raw final state. Pathways are returned in the order they occur.
+A data frame with one row per pathway, in the order the pathways
+occur within each unit. Units appear in the order they first occur in
+\code{data}, or sorted by \code{group} when \code{order} is given and when \code{type = "unit"} is combined with \code{terminal}. Columns: the \code{group} columns,
+\code{pathway} (the pathway's number within its unit, from 1), \code{path} (the
+states joined with \code{sep}), \code{length} (the number of states), \code{opens}
+(the first state) and \code{closes} (the last state). With \code{resolve},
+\code{closes} holds the resolution label and an \code{ends} column the observed
+last state. When no pathway is found
+(for example, the anchor or the terminal states never occur), an error
+of class \code{nestimate_no_pathway} is raised.
 }
 \description{
-Splits a long event log into pathways and returns them as a tidy
-\code{data.frame}, one row per pathway, ready to tabulate against an
-outcome or to feed to a sequence model.
+\code{extract_pathways()} cuts a long event log into pathways, runs of
+consecutive events within one unit (an actor, or an actor's session), and
+returns them as a data frame with one row per pathway, ready to tabulate
+against an outcome or to pass to a sequence model. Three cuts are
+available through \code{type}: each unit as one pathway, consecutive segments
+that each end on a terminal state, or one pathway from every occurrence of
+an \code{anchor} state to the next terminal state.
+
+With \code{terminal}, the cuts keep only what reaches a terminal state: a
+unit without one, events after a unit's last terminal state, and anchors
+with no later terminal state are left out without a message, so count
+the units and events kept before comparing pathway frequencies across
+groups.
 }
 \examples{
 log <- data.frame(

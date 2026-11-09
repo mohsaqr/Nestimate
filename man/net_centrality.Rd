@@ -43,70 +43,112 @@ net_centrality(
 )
 }
 \arguments{
-\item{x}{A \code{netobject}, \code{netobject_group}, \code{mcml}, or
-\code{cograph_network}. For the \code{plot()} method: an object of class \code{net_centrality} or \code{net_centrality_group}.}
+\item{x}{The network: a \code{netobject}, \code{netobject_group}, \code{mcml} or
+\code{cograph_network}. For the \code{plot()} methods: the result of
+\code{net_centrality()}.}
 
-\item{measures}{Character vector. Centrality measures to compute.
-Defaults to \code{c("InStrength", "Betweenness", "Diffusion")}. Pass
-\code{"all"} for every built-in measure: \code{"OutStrength"},
-\code{"InStrength"}, \code{"ClosenessIn"}, \code{"ClosenessOut"},
-\code{"Closeness"}, \code{"Betweenness"}, \code{"BetweennessRSP"},
-\code{"Diffusion"}, and \code{"Clustering"}. The legacy aliases
-\code{"InCloseness"} and \code{"OutCloseness"} are also accepted.}
+\item{measures}{The measures to compute. The default is \code{"InStrength"},
+\code{"Betweenness"} and \code{"Diffusion"}; \code{"all"} computes every built-in one:
+\code{"OutStrength"} and \code{"InStrength"} (sum of outgoing or incoming weights),
+\code{"ClosenessOut"}, \code{"ClosenessIn"} and \code{"Closeness"} (inverse of the
+summed shortest-path distances from, to, or ignoring the direction of
+edges), \code{"Betweenness"} (how many shortest paths pass through the node),
+\code{"BetweennessRSP"} (betweenness over randomised shortest paths, which
+also counts near-shortest routes), \code{"Diffusion"} (the summed weights of
+walks of length 1 to n from the node) and \code{"Clustering"} (weighted
+clustering coefficient). \code{"InCloseness"} and \code{"OutCloseness"} are
+accepted for \code{"ClosenessIn"} and \code{"ClosenessOut"}. With \code{centrality_fn},
+name its measures here to have them returned.}
 
-\item{loops}{Logical. Include self-loops (diagonal) in computation?
-Default: \code{FALSE}.}
+\item{loops}{Whether self-loops (staying in a state) count. With \code{FALSE}
+(default) they are left out of every measure, and a message says so.}
 
-\item{normalize}{Logical. Range-normalize all requested measures using the
-same transformation as \code{tna::centralities(normalize = TRUE)}.
-Default: \code{FALSE}.}
+\item{normalize}{Whether to range-normalise every measure to 0--1, as
+\code{tna::centralities(normalize = TRUE)} does. Default \code{FALSE}.}
 
-\item{invert}{Logical. Invert weights for shortest-path measures?
-Default: \code{TRUE}, matching \code{tna}.}
+\item{invert}{Whether a heavier edge is a shorter step in the
+shortest-path measures (distance = 1 / weight), as in \code{tna}. With
+\code{FALSE}, the weight itself is the distance. Default \code{TRUE}.}
 
-\item{normalize_diffusion}{Logical. Range-normalize \code{Diffusion} even
-when \code{normalize = FALSE}. Default: \code{TRUE}.}
+\item{normalize_diffusion}{Whether to range-normalise \code{Diffusion} even
+when \code{normalize = FALSE}. Default \code{TRUE}.}
 
-\item{centrality_fn}{Optional function. Custom centrality function that
-takes a weight matrix and returns a named list of centrality vectors.}
+\item{centrality_fn}{A function of your own that takes the weight matrix
+and returns a named list of centrality vectors, one per measure; list
+their names in \code{measures}. Default \code{NULL}.}
 
-\item{...}{Additional arguments (ignored).
-In \code{plot.net_centrality()} and \code{plot.net_centrality_group()}: Additional arguments ignored.}
+\item{...}{Not used.}
 
-\item{reorder}{In \code{plot.net_centrality()}: Logical. Reorder states within each centrality panel by centrality value. Default: \code{TRUE}. In \code{plot.net_centrality_group()}: Logical. Reorder states by their mean value within each centrality panel. Default: \code{TRUE}.}
+\item{reorder}{For the \code{plot()} methods: whether to sort the nodes in each
+measure's panel by their value (for a group, by their mean value across
+networks). Default \code{TRUE}.}
 
-\item{ncol}{Integer. Number of facet columns. Default: \code{3}.}
+\item{ncol}{For the \code{plot()} methods: the number of panel columns.
+Default \code{3}.}
 
-\item{type}{In \code{plot.net_centrality()}: Plot type. \code{"bar"} shows one faceted horizontal bar chart per measure; \code{"line"} shows state profiles as lines across measures (the value \code{"profile"} is still accepted as an alias); \code{"heatmap"} shows a states-by-measures tile grid, each measure scaled to 0--1 for cross-measure comparability with the raw value printed in the tile. Default: \code{"bar"}. In \code{plot.net_centrality_group()}: Plot type. \code{"bar"} shows grouped bars within each measure; \code{"line"} facets by state and draws one line per group across centrality measures (\code{"profile"} is accepted as an alias); \code{"delta"} draws a diverging bar of group differences. With two groups it is the per-state difference (second group minus first); with three or more groups it is each group's deviation from the per-state group mean, so the largest gaps stand out either way. Default: \code{"bar"}.}
+\item{type}{For the \code{plot()} methods: the kind of plot. \code{"bar"} (default)
+draws one panel of bars per measure, grouped bars for several networks.
+\code{"line"} draws each node's profile across the measures (for several
+networks, one panel per node and one line per network); \code{"profile"} is
+accepted for it. A single network also takes \code{"heatmap"}, a
+nodes-by-measures grid with each measure scaled to 0--1 for the colour
+and its raw value printed in the tile. Several networks also take
+\code{"delta"}, bars of the differences between networks: the second minus
+the first with two, each network's deviation from the per-node mean with
+more.}
 
-\item{scales}{Facet scale mode. \code{"free_x"} (default) uses free centrality axes; \code{"fixed"} keeps a common centrality axis.}
+\item{scales}{For the \code{plot()} methods: \code{"free_x"} (default) gives each
+measure its own value axis, \code{"fixed"} one shared axis.}
 
-\item{profile_scale}{Scaling used by \code{type = "line"}. \code{"measure"} (default) rescales each centrality measure to 0--1 before drawing cross-measure profiles; \code{"none"} uses raw values.}
+\item{profile_scale}{For \code{type = "line"}: \code{"measure"} (default) rescales
+each measure to 0--1 so the profiles compare across measures; \code{"none"}
+draws raw values.}
 
-\item{labels}{In \code{plot.net_centrality()}: Logical. Add compact value labels. Default: \code{TRUE}. In \code{plot.net_centrality_group()}: Logical. Add compact value labels. Default: \code{FALSE}.}
+\item{labels}{For the \code{plot()} methods: whether to print the values on the
+plot. Default \code{TRUE} for one network, \code{FALSE} for several.}
 
-\item{drop_zero}{In \code{plot.net_centrality()}: Logical. Drop measures whose values are all (near) zero so empty panels do not waste space. Default: \code{FALSE} (every requested measure is shown). In \code{plot.net_centrality_group()}: Logical. Drop measures whose values are all (near) zero so empty panels do not waste space. Default: \code{FALSE}.}
+\item{drop_zero}{For the \code{plot()} methods: whether to leave out measures
+that are zero for every node. Default \code{FALSE}.}
 
-\item{palette}{Brewer palette for groups. Default: \code{"Set2"}.}
+\item{palette}{For \code{plot()} of several networks: the ColorBrewer palette
+for the networks. Default \code{"Set2"}. Ignored by \code{type = "delta"} with two
+networks, whose bars are coloured by which network is higher.}
 }
 \value{
-For a \code{netobject} or \code{cograph_network}: a
-\code{net_centrality} data frame, one row per node, with a \code{state}
-column and one further column per requested measure (node names are also
-the row names). For a \code{netobject_group} or an \code{mcml}: a
-\code{net_centrality_group} list of such data frames, one per group.
+For a \code{netobject} or \code{cograph_network}: a \code{net_centrality} data
+frame with one row per node, a \code{state} column and one column per
+requested measure (the node names are also the row names). For a
+\code{netobject_group} or an \code{mcml}: a \code{net_centrality_group}, a list of such
+data frames, one per network. \code{plot()} draws the measures per node.
 
-In \code{plot.net_centrality()} and \code{plot.net_centrality_group()}: A \code{ggplot} object.
+For the \code{plot()} methods: a \code{ggplot} object.
 }
 \description{
-Computes centrality measures from a \code{netobject},
-\code{netobject_group}, \code{mcml}, or \code{cograph_network}. The built-in
-measures match \code{tna::centralities()} without importing \code{tna} or
-\code{igraph}: strength is taken from the weight matrix directly, and the
-path-based measures (betweenness, closeness) come from all-pairs shortest
-paths computed in-package by Floyd-Warshall. The only intentional default
-difference from \code{tna} is that \code{Diffusion} is range-normalized by
-default.
+\code{net_centrality()} scores how central each node is in a network, for one
+or more measures, and returns one row per node. Strength sums a node's
+edge weights (incoming or outgoing); closeness and betweenness read the
+shortest paths between nodes, where a heavier edge is a shorter step;
+diffusion counts the weighted walks that start at a node; and clustering
+measures how strongly a node's neighbours are tied to each other. It
+takes a single network or a group of them (a \code{netobject_group}, the
+clusters of an \code{mcml}), scoring each separately.
+
+Centralities describe the estimated network, not the population it was
+estimated from. Rankings built on a few weak edges change from sample to
+sample: check them with \code{\link[=centrality_stability]{centrality_stability()}} before reporting which
+node is most central.
+}
+\details{
+Strength is read from the weight matrix directly, and closeness and
+betweenness from all-pairs shortest paths (Floyd-Warshall), without
+igraph; the values agree with \code{tna::centralities()}. Diffusion is
+range-normalised by default, which \code{tna} does not do.
+
+Range normalisation of a measure that is the same for every node is
+undefined and gives \code{NaN}, with a warning of class
+\code{nestimate_constant_measure}. Diffusion on a \code{"relative"} network with
+\code{loops = TRUE} is such a case: each row sums to 1, so every node has the
+same diffusion; use \code{normalize_diffusion = FALSE} there.
 }
 \examples{
 seqs <- data.frame(

@@ -10,41 +10,44 @@ extract_transition_matrix(model, type = c("raw", "scaled"))
 \method{summary}{nest_transition_matrix}(object, ...)
 }
 \arguments{
-\item{model}{A \code{netobject}, TNA model object, \code{mcml} object, a
-list containing a \code{weights} element, or a bare weight matrix.}
+\item{model}{The network: a \code{netobject}, a \code{tna}-family model, an \code{mcml},
+a list holding the matrix as \code{weights} (or, failing that,
+\code{transition_matrix} or \code{transition}), or a weight matrix. Anything else
+raises an error.}
 
-\item{type}{Character. Type of matrix to return:
-\describe{
-\item{"raw"}{The raw weight matrix as stored in the model.}
-\item{"scaled"}{Row-normalized to ensure rows sum to 1.}
-}
-Default: "raw".}
+\item{type}{Which matrix to return. \code{"raw"} (default) returns the weights
+as stored. \code{"scaled"} divides each row by its sum, so the rows of a
+count matrix become transition probabilities; a row that sums to zero
+is left as it is.}
 
-\item{object}{For the \code{summary()} method: an object of class \code{nest_transition_matrix}.}
+\item{object}{For the \code{summary()} method: a \code{nest_transition_matrix}.}
 
-\item{...}{In \code{summary.nest_transition_matrix()}: Additional arguments (ignored).}
+\item{...}{For the \code{summary()} method: ignored.}
 }
 \value{
-For a single network: a square numeric matrix with row and column
-names as state names, of class
+For a single network: a square numeric matrix with the model's
+state names (if any) as row and column names, of class
 \code{c("nest_transition_matrix", "matrix", "array")}. It behaves as an
-ordinary matrix; the class stamp only adds a \code{summary()} method
-returning a tidy \code{from}/\code{to}/\code{weight} data frame.
+ordinary matrix in arithmetic and indexing; \code{summary()}
+returns a data frame with one row per non-zero entry (self-transitions
+included) and the columns \code{from}, \code{to} and \code{weight}, sorted by
+decreasing absolute weight.
 
-For an \code{mcml} object: a named list of such matrices, with
-\code{macro} first and then one element per cluster.
-
-In \code{summary.nest_transition_matrix()}: A tidy data frame with columns \code{from}, \code{to}, \code{weight}, with one row per non-zero entry.
+For an \code{mcml}: a named list of such matrices, \code{macro} first and then
+one per cluster.
 }
 \description{
-Extract the transition probability matrix from a TNA model object.
+\code{extract_transition_matrix()} returns the weight matrix of a network: for
+a transition network, the transition probabilities or counts between
+states, with rows as the states moved from and columns as the states
+moved to. It reads a \code{netobject} (or any list with a \code{weights} element), a
+\code{tna}, \code{ftna}, \code{ctna} or \code{atna} model, an \code{mcml} (one matrix per layer) or
+a bare matrix, and can rescale the rows to sum to 1.
 }
 \details{
-TNA models store transition weights in different locations depending on the
-model type. This function handles the extraction automatically.
-
-For "scaled" type, each row is divided by its sum to create valid transition
-probabilities. This is useful when the original weights don't sum to 1.
+Models store their weights in different places; the function looks in
+each in turn. \code{"scaled"} is useful when the stored weights are counts or
+otherwise do not sum to 1 per row.
 }
 \examples{
 seqs <- data.frame(V1 = c("A","B","A"), V2 = c("B","A","C"), V3 = c("A","C","B"))

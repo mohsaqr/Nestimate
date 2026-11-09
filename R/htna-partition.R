@@ -39,10 +39,10 @@
 
   missing <- node_names[is.na(node_actor)]
   if (length(missing)) {
-    stop(
-      "Cannot preserve the HTNA actor partition; these clustered-network ",
-      "nodes have no actor assignment: ", paste(unique(missing), collapse = ", "),
-      call. = FALSE
+    stop(errorCondition(
+      paste0("Cannot preserve the HTNA actor partition; these clustered-network ",
+      "nodes have no actor assignment: ", paste(unique(missing), collapse = ", ")),
+      class = "nestimate_bad_input", call = NULL)
     )
   }
 
@@ -50,10 +50,10 @@
   # factor() without any signal, so reject them the same way missing nodes are.
   unknown <- setdiff(node_actor, actor_levels)
   if (length(unknown)) {
-    stop(
-      "Cannot preserve the HTNA actor partition; these actors are absent from ",
-      "'actor_levels': ", paste(unique(unknown), collapse = ", "),
-      call. = FALSE
+    stop(errorCondition(
+      paste0("Cannot preserve the HTNA actor partition; these actors are absent from ",
+      "'actor_levels': ", paste(unique(unknown), collapse = ", ")),
+      class = "nestimate_bad_input", call = NULL)
     )
   }
 

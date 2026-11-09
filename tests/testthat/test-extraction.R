@@ -231,3 +231,53 @@ test_that("sort_by='to' sorts by to column then from", {
   # to column should be non-decreasing
   expect_true(!is.unsorted(edges$to))
 })
+
+# == Review fixes 2026-11-08 ================================================
+
+test_that("extract_initial_probs reads a tna model's $inits", {
+  # tna models store initial probabilities as $inits; they used to be
+  # ignored in favour of a uniform placeholder with a warning.
+  obj <- structure(list(weights = make_mat(),
+                        inits = c(A = 0.75, B = 0.25, C = 0)),
+                   class = "tna")
+  expect_silent(result <- extract_initial_probs(obj))
+  expect_equal(as.numeric(result), c(0.75, 0.25, 0))
+  expect_equal(names(result), c("A", "B", "C"))
+  # The same field on a plain list
+  expect_equal(as.numeric(extract_initial_probs(list(inits = c(X = 1, Y = 3)))),
+               c(0.25, 0.75))
+})
+
+test_that("extract_edges keeps negative edges, drops zeros, lists undirected once", {
+  # Symmetric signed matrix: A-B 0.4, A-C -0.3, B-C 0 (no edge).
+  m <- matrix(c(0, 0.4, -0.3,
+                0.4, 0, 0,
+                -0.3, 0, 0), 3, byrow = TRUE,
+              dimnames = list(c("A", "B", "C"), c("A", "B", "C")))
+  e <- extract_edges(m, sort_by = "from")
+  expect_equal(e$from, c("A", "A"))
+  expect_equal(e$to, c("B", "C"))
+  expect_equal(e$weight, c(0.4, -0.3))
+  # threshold is on |weight|
+  expect_equal(nrow(extract_edges(m, threshold = 0.35)), 1L)
+  expect_error(extract_edges(m, threshold = -1), class = "nestimate_bad_input")
+})
+
+test_that("extract_edges follows the network's directed flag", {
+  m <- matrix(c(0, 2, 2, 0), 2, dimnames = list(c("A", "B"), c("A", "B")))
+  directed <- list(weights = m, directed = TRUE)
+  undirected <- list(weights = m, directed = FALSE)
+  expect_equal(nrow(extract_edges(directed)), 2L)
+  expect_equal(nrow(extract_edges(undirected)), 1L)
+  # An asymmetric bare matrix is directed: every ordered non-zero pair.
+  expect_equal(nrow(extract_edges(make_mat())), 6L)
+})
+
+test_that("extract_edges on an undirected pcor network: one row per non-zero pair", {
+  net <- build_network(srl_strategies, method = "pcor")
+  w <- net$weights
+  e <- extract_edges(net)
+  expect_equal(nrow(e), sum(w[upper.tri(w)] != 0))
+  expect_true(any(e$weight < 0))
+  expect_equal(sum(e$weight), sum(w[upper.tri(w)]))
+})

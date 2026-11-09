@@ -30,297 +30,331 @@ build_mcml_pc(
 \method{plot}{mcml_pc}(x, digits = 2, ...)
 }
 \arguments{
-\item{x}{A \code{netobject} estimated with an undirected association
-method (\code{cor}, \code{pcor}, \code{glasso}; aliases accepted) -
-its \code{$data} and \code{$method} are reused - or a numeric
-data.frame of raw observations (then \code{method} decides the
-estimator). For the \code{print()} and \code{plot()} methods: an object of class \code{mcml_pc}.}
+\item{x}{The network or the data. A \code{netobject} (or a \code{cograph_network})
+estimated with an undirected association method (\code{cor}, \code{pcor}, \code{glasso}, or their
+aliases), whose weights, stored data and method are reused; a directed
+network raises an error and points to \code{\link[=build_mcml]{build_mcml()}}. Or a numeric data
+frame of observations (one row per observation, one column per item),
+from which the node-level network is estimated with \code{method} and
+\code{cor_method}; a non-numeric column raises an error. Any other input, a
+matrix included, raises an error. For the \code{print()} and \code{plot()}
+methods: an \code{mcml_pc} object.}
 
-\item{clusters}{Cluster membership in any of three forms: a named list of
-node-label vectors (names = cluster labels); a two-column
-\code{data.frame} read by position (first column = node names, second =
-group labels); or a vector of cluster labels named by node. Every node
-must be assigned to exactly one cluster.}
+\item{clusters}{The cluster membership, in one of three forms: a named
+list of node-label vectors (the names are the cluster labels), a data
+frame whose first column holds the node names and second column the
+cluster labels (read by position, column names are not used), or a
+vector of cluster labels named by node. Every node must belong to
+exactly one cluster, every member must be a node, and at least two
+clusters are needed; anything else raises an error.}
 
-\item{aggregation}{Character. How clusters are collapsed to the macro
-network. Default \code{"scaled"}.
+\item{aggregation}{How the clusters are collapsed into the macro network.
+Default \code{"scaled"}. The score paths re-estimate the network on one score
+per cluster and observation:
 \describe{
-\item{\code{"scaled"}}{Re-estimate the network on per-cluster scores
-formed as the mean of \emph{standardized} member items (the
-default; was \code{"composite"}).}
-\item{\code{"composite"}}{Backward-compatible alias for
-\code{"scaled"}.}
-\item{\code{"mean"}}{As \code{"scaled"} but on raw (unstandardized)
-item means.}
-\item{\code{"median"}}{As \code{"mean"} but the per-cluster score is
-the row-wise median of the items (unweighted).}
-\item{\code{"loadings"}}{The scaled score path with member items
-weighted by their within-cluster network strength.}
-\item{\code{"average"}}{Average the item-pair edges in each
-between-cluster submatrix - no scores, no re-estimation.}
-\item{\code{"escoufier"}}{Escoufier RV coefficient (descriptive
-multivariate similarity between blocks).}
-\item{\code{"cancor"}}{First canonical correlation - an upper bound
-on how related two blocks can be.}
-}}
+\item{\code{"scaled"}}{The weighted mean of the \emph{standardised} member
+items.}
+\item{\code{"composite"}}{The former name of \code{"scaled"}, kept as an
+alias.}
+\item{\code{"mean"}}{As \code{"scaled"}, on the raw (unstandardised) items.}
+\item{\code{"median"}}{The row-wise median of the raw, sign-corrected
+items. The median is unweighted, so the weight magnitudes from
+\code{weighting} are not used, but a sign-carrying weighting still sets
+the item signs.}
+\item{\code{"loadings"}}{As \code{"scaled"}, with the items weighted by their
+within-cluster network strength (\code{weighting = "strength"}) unless
+\code{weighting} is given.}
+}
+The descriptive ones relate the blocks without forming scores:
+\code{"average"} (the mean item-pair edge of each between-cluster block),
+\code{"escoufier"} (Escoufier's RV coefficient) and \code{"cancor"} (the first
+canonical correlation); the Description says how each can be read.
+Every path except \code{"average"} needs raw data; without it, an error
+suggests \code{"average"}.}
 
-\item{method}{Character. Network estimator for the re-estimation
-paths and for data.frame input: \code{"pcor"} (default),
-\code{"glasso"}, or \code{"cor"} - the same vocabulary as
-\code{\link{build_network}}. Ignored (with the netobject's own
-method used instead) when \code{x} is a netobject and
-\code{method} is not given.}
+\item{method}{The network estimator for the node-level network of a data
+frame, the macro network of the score paths and the re-estimated
+within-cluster networks: \code{"pcor"} (default), \code{"glasso"} or \code{"cor"}, as
+in \code{\link[=build_network]{build_network()}}. When \code{x} is a \code{cor}, \code{pcor} or \code{glasso} netobject
+and \code{method} is not given, the netobject's own method is used; any other
+undirected netobject (an \code{ising} one, say) uses the default \code{"pcor"}.}
 
-\item{within}{Character. \code{"reestimate"} (default) or
-\code{"subnetwork"} (see Details).}
+\item{within}{How the within-cluster networks are formed: \code{"reestimate"}
+(default) re-fits the estimator on each cluster's items, \code{"subnetwork"}
+slices the node-level weight matrix (see Details). Input without raw data
+uses \code{"subnetwork"} whatever is set.}
 
-\item{weighting}{Character. How items are weighted inside their
-cluster score (the score paths \code{"scaled"} / \code{"mean"} /
-\code{"loadings"}; not \code{"median"}, which is unweighted):
+\item{weighting}{How the items are weighted inside their cluster score on
+the score paths; on \code{"median"} only the signs of a sign-carrying scheme
+are used. Default \code{"equal"} (\code{"strength"} under
+\code{aggregation = "loadings"}); the descriptive aggregations ignore it, and
+their item table keeps the \code{"strength"} weights. The weights are
+absolute values normalised to sum to 1 within each cluster.
 \describe{
-\item{\code{"equal"}}{(default) 1/m per item - the scale as
-scored.}
-\item{\code{"strength"}}{Mean absolute connection to the other
-own-cluster members in the node-level network (what
-\code{aggregation = "loadings"} selects).}
-\item{\code{"eigen"}}{Leading-eigenvector weights of the
-within-cluster block of the node-level network - like strength
-but giving extra weight to items connected to other
-well-connected items.}
-\item{\code{"pca"}}{First principal component of the member
-items' correlation matrix - a data-statistical weighting,
-blind to the estimated network.}
-\item{\code{"factor"}}{Standardized loadings of a one-factor
-model per cluster - the classical latent-variable weighting.
-The extraction method is chosen by \code{fa_method} and the
-correlation input respects \code{cor_method} (so polychoric
-factor analysis of ordinal items is one call). Clusters with
-fewer than 3 items (or non-converging fits) fall back to
+\item{\code{"equal"}}{1/m per item: the scale as scored.}
+\item{\code{"strength"}}{The item's mean absolute connection to the other
+members of its cluster in the node-level network (what
+\code{aggregation = "loadings"} selects), so items that anchor their
+cluster count more in its score. This is Nestimate's own weighting,
+related in spirit to network loadings (Christensen & Golino 2021)
+but not a reimplementation of any EGA-family estimator. A cluster
+whose within-cluster connections are all zero gets equal weights,
+with a warning.}
+\item{\code{"eigen"}}{The leading eigenvector of the cluster's block of the
+node-level network: like strength, with extra weight for items
+connected to other well-connected items.}
+\item{\code{"pca"}}{The first principal component of the member items'
+correlation matrix: a weighting from the data, blind to the
+estimated network. A correlation block with non-finite entries gives
+equal weights, with a warning.}
+\item{\code{"factor"}}{The standardised loadings of a one-factor model per
+cluster, the classical latent-variable weighting. \code{fa_method} sets
+the extraction and the correlations follow \code{cor_method}, so
+polychoric factor analysis of ordinal items is one call. A cluster
+with fewer than 3 items, or whose factor fit fails, falls back to
 \code{"pca"} with a warning.}
-\item{\code{"closeness"}, \code{"betweenness"}}{Within-cluster
-closeness / betweenness centrality of the item in the node-level
-network block (absolute weights). Betweenness can be all-zero in
-densely connected clusters; equal weights are used then, with a
-warning.}
-\item{\code{"expected_influence"}}{Mean \emph{signed} connection
-to the other own-cluster members (Robinaugh et al. 2016) - like
-strength, but opposite-sign connections subtract, and negative
-expected influence marks reverse-keyed items.}
-\item{\code{"specificity"}}{The misfit margin: own-cluster
-strength minus the strongest cross-cluster strength, floored at
-0. Items that belong as much to another cluster contribute
-nothing to their composite - the weighting twin of the
-\code{misfit} diagnostic.}
-\item{\code{"item_total"}}{Corrected item-total correlation:
-each item against the mean of the other (standardized) members -
-the classical scale-construction weighting.}
+\item{\code{"closeness"}, \code{"betweenness"}}{The item's closeness or
+betweenness centrality within its cluster's block of the node-level
+network (absolute weights). Betweenness can be zero for every item of
+a densely connected cluster; equal weights are then used, with a
+warning, and the same holds for all-zero closeness.}
+\item{\code{"expected_influence"}}{The item's mean \emph{signed} connection
+to the other members of its cluster (Robinaugh et al. 2016): like
+strength, but opposite-sign connections subtract, and a negative
+value marks a reverse-keyed item.}
+\item{\code{"specificity"}}{The misfit margin: own-cluster strength minus
+the strongest cross-cluster strength, floored at 0, so an item that
+belongs as much to another cluster adds nothing to its score; the
+weighting twin of the \code{misfit} flag. When no item of a cluster has a
+positive margin, equal weights are used, with a warning.}
+\item{\code{"item_total"}}{The corrected item-total correlation of each
+item with the mean of the other (standardised, sign-corrected)
+members: the classical scale-construction weighting.}
 }
-\strong{Custom weightings:} \code{weighting} also accepts a
-\emph{named numeric vector} (one entry per item; absolute values
-are normalized within each cluster, signs flip items when
-\code{signed = TRUE}) or a \emph{function}
-\code{function(W_block, data_block, nodes)} returning one numeric
-weight per item, evaluated per cluster.
+\code{weighting} also takes a \emph{named numeric vector} with one entry per
+item (its absolute values are normalised within each cluster and, when
+\code{signed = TRUE}, its signs set the item signs after the orientation
+described below), or a \emph{function}
+\verb{function(W_block, data_block, nodes)} that returns one finite weight per
+item, evaluated per cluster; a vector missing an item, or a function
+returning anything else, raises an error.
 
-Network-based and data-based weightings answer different questions;
-comparing them is informative - divergence means the network's view
-of the cluster differs from its latent-variable view. Schemes with
-inherently non-negative weights (equal, closeness, betweenness,
-specificity) keep the eigenvector-based item signs; sign-carrying
-schemes (eigen, pca, factor, expected_influence, item_total, custom)
-use their own.}
+Network-based and data-based weightings answer different questions, and
+comparing them is informative: when they diverge, the network's view of
+the cluster differs from its latent-variable view. The schemes whose
+weights cannot be negative (\code{"equal"}, \code{"strength"}, \code{"closeness"},
+\code{"betweenness"}, \code{"specificity"}) keep the eigenvector-based item
+signs; the sign-carrying ones (\code{"eigen"}, \code{"pca"}, \code{"factor"},
+\code{"expected_influence"}, \code{"item_total"}, a custom vector or function)
+set the signs from their own values. Within each cluster those values
+are oriented first, negated when they sum to a negative number, so the
+sign carrying the larger total counts as positive and only the items of
+the other sign are flipped: marking the reverse-keyed items of a
+cluster negative works only when they do not outweigh the rest in
+total.}
 
-\item{cor_method}{Character. Correlation type for estimation from raw
-data: \code{"pearson"} (default), \code{"spearman"}, or
-\code{"polychoric"} (needs \pkg{lavaan}; see Details).}
+\item{cor_method}{The correlation used when estimating from raw data:
+\code{"pearson"} (default), \code{"spearman"} or \code{"polychoric"} (needs
+\pkg{lavaan}; see Details).}
 
-\item{signed}{Logical. Flip reverse-keyed items in composites
-(default \code{TRUE}; see Details).}
+\item{signed}{Whether reverse-keyed items are flipped in the cluster
+scores (see Details). Default \code{TRUE}.}
 
-\item{id_col}{Character vector or NULL. Identifier column(s) to drop
-from data.frame input before analysis (e.g., the \code{rid}/actor
-columns produced by
-\code{\link{convert_sequence_format}(format = "frequency")}, whose
-output otherwise feeds this function directly as per-actor behavior
-profiles). Same convention as the association estimators.}
+\item{id_col}{Identifier columns to drop from data-frame input before the
+analysis. Default \code{NULL}. Use it for the id columns that
+\code{\link[=convert_sequence_format]{convert_sequence_format()}} adds with \code{format = "frequency"}, whose
+per-sequence counts otherwise feed this function directly as behaviour
+profiles. A \code{rid} column is left out of the node-level network without
+being listed, as in the association estimators of \code{\link[=build_network]{build_network()}},
+except with \code{cor_method = "polychoric"}, where it must be listed too;
+any other id column, including the \code{.rid} a wide table gets, is read
+as an item unless listed. A column not in the data raises an error; a
+netobject ignores the argument.}
 
-\item{fa_method}{Character. Extraction method for
-\code{weighting = "factor"}:
+\item{fa_method}{The extraction method for \code{weighting = "factor"}; ignored
+otherwise.
 \describe{
-\item{\code{"ml"}}{(default) Maximum likelihood
-(\code{stats::factanal} on the \code{cor_method}-consistent
-correlation matrix).}
-\item{\code{"paf"}}{Iterated principal axis factoring (SMC
-start, communalities iterated on the reduced correlation
-matrix).}
-\item{\code{"minres"}}{Minimum residual / unweighted least
-squares (uniquenesses optimized to minimize squared
-off-diagonal residuals).}
-\item{\code{"cfa"}}{One-factor confirmatory model in
-\pkg{lavaan} (standardized loadings); with
-\code{cor_method = "polychoric"} the items are declared
-ordered, giving the categorical (DWLS) factor model.}
+\item{\code{"ml"}}{(default) Maximum likelihood, \code{stats::factanal()} on the
+correlation matrix that \code{cor_method} gives.}
+\item{\code{"paf"}}{Iterated principal axis factoring, starting from the
+squared multiple correlations and iterating the communalities on the
+reduced correlation matrix.}
+\item{\code{"minres"}}{Minimum residual (unweighted least squares): the
+uniquenesses are chosen to minimise the squared off-diagonal
+residuals.}
+\item{\code{"cfa"}}{A one-factor confirmatory model fitted with
+\code{lavaan::cfa()} (standardised loadings); with
+\code{cor_method = "polychoric"} the items are declared ordered, which
+gives the categorical (DWLS) factor model.}
 }
-On well-behaved unidimensional clusters the four agree closely;
-divergence indicates Heywood-prone or non-unidimensional clusters.}
+On well-behaved unidimensional clusters the four agree closely; a
+divergence points to a cluster prone to Heywood cases or not
+unidimensional.}
 
-\item{...}{Further arguments forwarded directly to the
-\code{fa_method} backend, exactly as that backend spells them
-(requires \code{weighting = "factor"}): lavaan arguments for
-\code{"cfa"} (\code{estimator = "WLSMV"}, \code{missing = "fiml"},
-\code{se = "robust"}, ...), \code{stats::factanal()} arguments for
-\code{"ml"}, and
-\code{max_iter} / \code{tol} for \code{"paf"}. Arguments managed
-internally (\code{model}, \code{data}, \code{covmat},
-\code{n.obs}, \code{factors}) are ignored with a warning - the
-model is always the one-factor model per cluster, because the
-composite needs exactly one weight per item. In \code{plot.mcml_pc()}, \code{print.mcml_pc()} and \code{summary.mcml_pc()}: Additional arguments (ignored).}
+\item{...}{Further arguments passed to the \code{fa_method} backend, spelled as
+that backend spells them, and allowed only with \code{weighting = "factor"}
+(otherwise they raise an error, as does an unnamed one): \code{lavaan::cfa()}
+arguments for \code{"cfa"} (\code{estimator = "WLSMV"}, \code{missing = "fiml"},
+\code{se = "robust"}, ...), \code{stats::factanal()} arguments for \code{"ml"}, and
+\code{max_iter} / \code{tol} for \code{"paf"} (other names are not used there);
+\code{"minres"} uses none. \code{estimator} is lavaan's and raises an error for
+any other \code{fa_method}, since the network estimator is set by \code{method}.
+Arguments the backend call sets itself (\code{model} and \code{data} for \code{"cfa"};
+\code{covmat}, \code{n.obs}, \code{factors}, \code{x} and \code{data} for \code{"ml"}; \code{R} for
+\code{"paf"} and \code{"minres"}) are dropped with a warning: the model is always
+the one-factor model per cluster, because the score needs exactly one
+weight per item. For the \code{print()}, \code{summary()} and \code{plot()} methods:
+ignored.}
 
-\item{digits}{In \code{print.mcml_pc()}: Number of digits to display (default 3). In \code{plot.mcml_pc()}: Number of digits for tile labels (default 2).}
+\item{digits}{For the \code{print()} and \code{plot()} methods: the decimal places
+of the printed macro weights (default \code{3}) or of the tile labels
+(default \code{2}).}
 
-\item{object}{For the \code{summary()} method: an object of class \code{mcml_pc}.}
+\item{object}{For the \code{summary()} method: an \code{mcml_pc} object.}
 }
 \value{
-An object of class \code{"mcml_pc"} containing:
+An \code{mcml_pc} object. \code{print()} shows the aggregation, estimator,
+cluster sizes, the misfit and flipped-item counts (when there are any)
+and the macro weights;
+\code{summary()} returns one row per macro edge; \code{plot()} draws the macro
+weights as a heatmap. \code{\link[=item_loadings]{item_loadings()}} gives the item table,
+\code{\link[=composites]{composites()}} the cluster scores of a score path, \code{\link[=macro_network]{macro_network()}} the
+macro network, \code{\link[=as_networks]{as_networks()}} the macro and within-cluster networks as
+a \code{netobject_group}, \code{\link[=loading_stability]{loading_stability()}} the stability of the
+composite weights, and \code{cograph::plot_mcml()} draws the two-layer
+network. The object's fields:
 \describe{
-\item{macro}{Cluster-level netobject (k x k, undirected).}
-\item{clusters}{Named list of within-cluster netobjects
-(\code{NULL} for singleton clusters).}
-\item{cluster_members}{Named list of member node labels.}
-\item{loadings}{Tidy item-diagnostic data frame (one row per node):
-\code{node}, \code{cluster}, \code{loading} (signed own-cluster),
-\code{weight}, \code{sign}, \code{max_cross},
-\code{cross_cluster}, \code{misfit}. \code{NULL} only when no
-node-level network is available.}
-\item{node_network}{The node-level netobject the aggregation was
-based on (kept for diagnostics and \code{loading_stability}).}
-\item{data}{The raw data (data.frame) when available, else
-\code{NULL}.}
-\item{meta}{List: \code{aggregation} (the name as the caller spelled
-it), \code{method}, \code{within}, \code{weighting},
-\code{weighting_spec} (the actual scheme, custom vector or function),
-\code{fa_method}, \code{fa_args}, \code{scale}, \code{cor_method},
-\code{signed}, \code{n_nodes}, \code{n_clusters},
-\code{cluster_sizes}, \code{n_misfit}, \code{n_flipped},
-\code{directed = FALSE}, \code{source = "pc"},
-\code{experimental = TRUE}. \code{method} and \code{weighting} are
-\code{NA} on the descriptive paths that re-estimate nothing, and
-\code{fa_method}/\code{fa_args} are set only for
+\item{macro}{The cluster-level netobject (k x k, undirected).}
+\item{clusters}{Named list of within-cluster netobjects (\code{NULL} for a
+singleton cluster).}
+\item{cluster_members}{Named list of each cluster's node labels.}
+\item{loadings}{The item table that \code{\link[=item_loadings]{item_loadings()}} returns, one row
+per node.}
+\item{node_network}{The node-level netobject the aggregation was based
+on, kept for the diagnostics and \code{\link[=loading_stability]{loading_stability()}}.}
+\item{data}{The raw data as a data frame when available, else \code{NULL}.}
+\item{composites}{The cluster scores of a score path, else \code{NULL}.}
+\item{meta}{List: \code{aggregation} (the name as the caller spelled it),
+\code{method}, \code{within}, \code{weighting}, \code{weighting_spec} (the scheme itself,
+a custom vector or function included), \code{fa_method}, \code{fa_args},
+\code{scale}, \code{cor_method}, \code{signed}, \code{n_nodes}, \code{n_clusters},
+\code{cluster_sizes}, \code{n_misfit}, \code{n_flipped}, \code{directed = FALSE},
+\code{source = "pc"} and \code{experimental = TRUE}. \code{method} and \code{weighting}
+are \code{NA} on the descriptive paths, which re-estimate no macro
+network, and \code{fa_method} / \code{fa_args} are set only for
 \code{weighting = "factor"}.}
 }
 
-In \code{print.mcml_pc()}: \code{x}, invisibly.
-
-In \code{summary.mcml_pc()}: Tidy data frame with one row per macro edge (upper triangle), columns \code{from}, \code{to}, \code{weight}.
-
-In \code{plot.mcml_pc()}: A ggplot object.
+For the methods: \code{print()} returns \code{x} invisibly; \code{summary()}
+returns a data frame with one row per macro edge (the upper triangle)
+and columns \code{from}, \code{to} and \code{weight}; \code{plot()} returns a \code{ggplot}.
 }
 \description{
-\strong{Experimental.} Aggregates a node-level psychometric network
-(correlation, partial correlation, or EBICglasso) into a cluster-level
-macro network plus per-cluster within networks - the MCML view that
-\code{\link{build_mcml}} provides for transition networks, adapted to
-the statistics of undirected association networks. The API and the
-exact aggregation formulas may change between releases.
+\code{build_mcml_pc()} collapses a psychometric network whose nodes are assigned
+to clusters into a cluster-level (macro) network and one within-cluster
+network per cluster, and returns an \code{mcml_pc} object. It is the counterpart
+of \code{\link[=build_mcml]{build_mcml()}} for undirected association networks: it reads a
+\code{netobject} estimated with \code{cor}, \code{pcor} or \code{glasso}, or a numeric data
+frame of observations, from which it estimates the node-level network
+first. \strong{Experimental}: the API and the aggregation formulas may
+change between releases.
 
-Unlike transition counts, partial correlations do not aggregate by
-arithmetic: the submatrix of a pcor matrix is \emph{not} the pcor
-network of the subsystem (the conditioning set changes), and averaging
-pcor entries across blocks is descriptive only. The
-\code{aggregation} methods therefore have explicitly different
-statuses (the full list of accepted values is under
-\code{aggregation} below):
+Partial correlations do not aggregate by arithmetic. The submatrix of a
+partial-correlation matrix is \emph{not} the partial-correlation network of
+that subsystem, because the conditioning set changes, and averaging entries
+across blocks is descriptive only. The aggregations (see \code{aggregation})
+therefore differ in status:
 
 \describe{
-\item{\code{"average"} (descriptive)}{Macro edge A--B = mean of the
-signed node-level weights between members of A and members of B;
-macro diagonal = mean within-block off-diagonal weight. Needs only
-the weight matrix (works on data-less netobjects). Caveat: signed
-averaging can cancel opposite-sign edges; interpret as net average
-association, not connectivity strength.}
-\item{\code{"composite"} (re-estimated)}{Per-observation cluster
-scores = (optionally standardized) mean of member variables; the
-chosen \code{method} is then re-fit on the k composite columns,
-so the macro network is a genuine correlation / pcor / EBICglasso
-network among clusters. Requires raw data.}
-\item{\code{"loadings"} (re-estimated, connectivity-weighted)}{As
-\code{"composite"}, but member variables are weighted by their
-within-cluster connection strength in the node-level network (the
-absolute summed weight to the other members of their own cluster,
-normalized to sum to 1 per cluster). Nodes that anchor their
-cluster contribute more to its composite. This is Nestimate's own
-weighting - related in spirit to network loadings
-(Christensen & Golino 2021) but not a reimplementation of any
-EGA-family estimator. Requires raw data.}
-\item{\code{"escoufier"} (descriptive, multivariate)}{Macro edge A--B =
-Escoufier's RV coefficient between the member blocks - a matrix
-correlation in \verb{[0, 1]} computed from the block covariance
-structure. No composites are formed and no estimator is re-fit,
-so nothing is lost to averaging; signs are not represented.
-Requires raw data.}
-\item{\code{"cancor"} (descriptive, multivariate)}{Macro edge
-A--B = the first canonical correlation between the member blocks:
-the strongest linear relationship any weighting of A's items can
-have with any weighting of B's items - an upper bound on what
-composite methods can recover. Requires raw data.}
+\item{Score paths, re-estimated (\code{"scaled"}, \code{"composite"}, \code{"mean"},
+\code{"median"}, \code{"loadings"})}{Each observation gets one score per
+cluster, formed from the cluster's member items (see \code{weighting}), and
+the estimator in \code{method} is re-fitted on these scores, so the macro
+network is a genuine correlation, partial-correlation or EBICglasso
+network among clusters. Needs raw data.}
+\item{\code{"average"} (descriptive)}{The macro edge between clusters A and B
+is the mean of the signed node-level weights between members of A and
+members of B; the macro diagonal is the mean within-block
+off-diagonal weight. Needs only the weight matrix, so it works on a
+netobject without data. Signed averaging can cancel opposite-sign
+edges: read it as a net average association, not a connection
+strength.}
+\item{\code{"escoufier"} (descriptive, multivariate)}{The macro edge is
+Escoufier's RV coefficient between the member blocks, a matrix
+correlation in \verb{[0, 1]} computed from the block covariance structure.
+No scores are formed and nothing is re-estimated, so nothing is lost to
+averaging; signs are not represented. Needs raw data.}
+\item{\code{"cancor"} (descriptive, multivariate)}{The macro edge is the first
+canonical correlation between the member blocks: the strongest linear
+relationship any weighting of A's items can have with any weighting of
+B's items, an upper bound on what the score paths can recover. Needs
+raw data.}
 }
+
+Every aggregation inherits the cluster assignment. Before reading the macro
+network, check the item table with \code{\link[=item_loadings]{item_loadings()}}: an item more strongly
+connected to another cluster than to its own is flagged as misfit and
+named in a warning. A flagged item means every aggregation carries a
+doubtful membership, so fix the assignment rather than ignore the flag.
+How far the composite weights move under case resampling is checked with
+\code{\link[=loading_stability]{loading_stability()}}. The macro network of a score path carries its
+scores as data, so \code{\link[=bootstrap_network]{bootstrap_network()}} (edge-weight intervals) and,
+with at least three clusters, \code{\link[=vertex_bootstrap]{vertex_bootstrap()}} (network-level
+intervals) work on it directly, as in
+\code{bootstrap_network(macro_network(fit))}, and \code{\link[=vertex_compare]{vertex_compare()}} (also with
+at least three clusters) compares the macro networks of two fits;
+\code{\link[=macro_network]{macro_network()}} extracts it.
 }
 \details{
-\strong{Item diagnostics.} Whenever raw data or a node-level network
-is available, every item's connection strength to \emph{every} cluster
-is computed. The \code{\link{item_loadings}()} table reports, per item: its signed
-own-cluster loading, its composite weight, its strongest cross-cluster
-loading, and a \code{misfit} flag set when the cross-cluster loading
-exceeds the own-cluster loading - evidence the item is assigned to the
-wrong cluster. Misfit items trigger a warning; every aggregation
-silently inherits a bad membership, so fix the assignment rather than
-ignoring the flag.
+\strong{Item diagnostics.} Every item's mean absolute connection to the
+other members of \emph{every} cluster is computed from the node-level
+network. \code{\link[=item_loadings]{item_loadings()}} reports, per item, its own-cluster loading
+(signed by the eigenvector orientation; a sign-carrying weighting is
+recorded in the \code{sign} column instead), its composite weight, its strongest cross-cluster loading and the
+cluster that loading points to, and a \code{misfit} flag set when the cross-cluster
+loading exceeds the own-cluster loading. A singleton cluster has no
+within-cluster connections, so its item is never flagged.
 
-\strong{Reverse-keyed items.} With \code{signed = TRUE} (default),
-items whose summed within-cluster association is negative are flipped
-(their standardized values enter composites with weight sign -1), so a
-reverse-keyed item reinforces its cluster composite instead of
-cancelling it. Flips are reported in the \code{sign} column and via a
-warning.
+\strong{Reverse-keyed items.} With \code{signed = TRUE} (default), the item
+signs come from the leading eigenvector of the within-cluster block of the
+node-level network, oriented so most items are positive. An item with a
+negative sign enters its cluster score with sign -1, so a reverse-keyed
+item reinforces its cluster score instead of cancelling it. Flips are
+reported in the \code{sign} column of \code{\link[=item_loadings]{item_loadings()}} and, on the score
+paths, in a warning. On the score paths a sign-carrying weighting sets the
+signs from its own values instead (see \code{weighting}).
 
-\strong{Missing data.} Composites are per-row weighted means over the
-\emph{observed} members (weights renormalized per row); rows with no
-observed member yield \code{NA} and are dropped by the estimator with
-a message. Node-level estimation applies the estimators' own
-complete-case handling.
+\strong{Missing data.} Cluster scores are row-wise weighted means over the
+\emph{observed} members, with the weights renormalised per row; a row with
+no observed member is \code{NA} and the estimator drops it with a message.
+Node-level estimation applies the estimators' own complete-case handling,
+and \code{"escoufier"} and \code{"cancor"} use the rows complete on every item.
 
-\strong{Ordinal items.} \code{cor_method = "polychoric"} (requires the
-\pkg{lavaan} package) estimates the node-level and within-cluster
-networks from polychoric correlations - appropriate for Likert items.
-Composites are continuous sums, so the macro re-estimation uses
-Pearson correlations of the composites regardless.
+\strong{Ordinal items.} \code{cor_method = "polychoric"} (needs the
+\pkg{lavaan} package) estimates the node-level and within-cluster networks
+from polychoric correlations, which suits Likert items. Cluster scores are
+continuous, so the macro network is always re-estimated from their Pearson
+correlations.
 
-\strong{Within-cluster networks} follow \code{within}:
-\code{"reestimate"} (default) re-fits the estimator on the member
-columns alone - the honest conditional structure of the subsystem;
-\code{"subnetwork"} slices the node-level weight matrix and is
-descriptive (for pcor/glasso it retains conditioning on
-out-of-cluster nodes). Modes without raw data force
-\code{"subnetwork"}. Singleton clusters get no within network
+\strong{Within-cluster networks} follow \code{within}. \code{"reestimate"} re-fits
+the estimator on the member columns alone, giving the conditional
+structure of the subsystem; \code{"subnetwork"} slices the node-level weight
+matrix and is descriptive (for \code{pcor} and \code{glasso} it keeps the
+conditioning on items outside the cluster). Input without raw data always
+uses \code{"subnetwork"}. A singleton cluster gets no within-cluster network
 (\code{NULL}).
 
-\strong{Uncertainty.} The composite/loadings macro network is a full
-netobject carrying its composite data, so
-\code{\link{bootstrap_network}(macro_network(fit))} (edge-weight CIs) and
-\code{\link{vertex_bootstrap}(macro_network(fit))} (network-level CIs) work
-directly; \code{\link{vertex_compare}(macro_network(fit1), macro_network(fit2))}
-compares two groups. \code{\link{loading_stability}} quantifies how
-stable the composite weights themselves are under case resampling.
-
-All constituent networks are undirected
-(\code{meta$directed = FALSE}), so renderers that auto-detect
-directedness (e.g. \code{cograph::plot_mcml()}) draw the result
-without arrowheads.
+All constituent networks are undirected (\code{meta$directed = FALSE}), so
+renderers that detect directedness, such as \code{cograph::plot_mcml()}, draw
+them without arrowheads.
 }
 \section{Methods}{
 
 \itemize{
-\item \code{plot.mcml_pc()}: Heatmap of the macro (cluster-level) weights with the package's diverging palette. For the two-layer network rendering use \code{cograph::plot_mcml()}, which accepts \code{mcml_pc} objects and draws them undirected.
+\item \code{plot()} draws the macro (cluster-level) weights as a heatmap in the
+package's diverging palette, with each weight printed in its tile. For
+the two-layer network drawing use \code{cograph::plot_mcml()}, which accepts
+\code{mcml_pc} objects and draws them undirected.
 }
 }
 

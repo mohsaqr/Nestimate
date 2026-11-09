@@ -79,3 +79,21 @@ test_that("a model built from a matrix has no sequences: classed error", {
   expect_error(extract_sequences(tna::tna(P)), class = "nestimate_bad_input")
   expect_error(sequence_metrics(tna::tna(P)), class = "nestimate_bad_input")
 })
+
+test_that("a declared actor or time column is never read as a state", {
+  # No numbered run: `who` declared as actor, `tt` as time -> only `s` is a
+  # position (both used to be read as states).
+  df <- data.frame(who = c("p", "q"), s = c("A", "B"), tt = c("x", "y"))
+  out <- extract_sequences(df, actor = "who", time = "tt")
+  expect_equal(names(out), "s")
+  expect_equal(out$s, c("A", "B"))
+  # Inside a numbered run: V1 declared as actor is a covariate.
+  run <- data.frame(V1 = c("u", "v"), V2 = c("A", "B"), V3 = c("B", "A"))
+  states <- extract_sequences(run, actor = "V1")
+  expect_equal(names(states), c("V2", "V3"))
+  with_meta <- extract_sequences(run, actor = "V1", meta = TRUE)
+  expect_equal(with_meta$V1, c("u", "v"))
+  # Listed both as a position and as actor: refused.
+  expect_error(extract_sequences(run, cols = c("V1", "V2"), actor = "V1"),
+               class = "nestimate_bad_input")
+})

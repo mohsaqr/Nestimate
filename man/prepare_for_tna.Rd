@@ -15,49 +15,46 @@ prepare_for_tna(
 )
 }
 \arguments{
-\item{data}{Data frame containing sequence data.}
+\item{data}{A data frame of sequences: wide, with position columns named
+\code{V1}, \code{V2}, ..., or long, with one row per action.}
 
-\item{type}{Character. Type of input data:
-\describe{
-\item{"sequences"}{Wide format with one row per sequence (default).}
-\item{"long"}{Long format with one row per action.}
-\item{"auto"}{Automatically detect format based on column names.}
-}}
+\item{type}{How to read \code{data}. \code{"sequences"} (default) reads wide
+position columns; \code{"long"} converts a long table with \code{\link[=long_to_wide]{long_to_wide()}},
+which needs \code{id_col} and \code{action_col}; \code{"auto"} reads long data when
+\code{action_col} is a column and no \verb{V<number>} column exists, wide data in
+the opposite case, and, when both exist, long data only if \code{id_col} is a
+column and there are more than twice as many rows as ids. Data with
+neither raises an error. Whatever the type, the result needs \verb{V<number>}
+columns; others, such as \code{T1}, \code{T2}, are not renamed and raise an error.}
 
-\item{state_names}{Character vector. Expected state names, or NULL to
-extract from data. Default: NULL.}
+\item{state_names}{The expected states, used with \code{validate}. Default
+\code{NULL}, which accepts the states found in the data.}
 
-\item{id_col}{Character. Name of ID column for long format data.
-Default: "Actor".}
+\item{id_col}{The column identifying sequences in long data. Default
+\code{"Actor"}.}
 
-\item{time_col}{Character. Name of time column for long format data.
-Default: "Time".}
+\item{time_col}{The column ordering the actions in long data. Default
+\code{"Time"}.}
 
-\item{action_col}{Character. Name of action column for long format data.
-Default: "Action".}
+\item{action_col}{The column holding the actions in long data. Default
+\code{"Action"}.}
 
-\item{validate}{Logical. Whether to validate that all actions are in
-state_names. Default: TRUE.}
+\item{validate}{Whether to check the states against \code{state_names}; states
+not listed are named in a warning. Ignored when \code{state_names} is \code{NULL}.
+Default \code{TRUE}.}
 }
 \value{
-A data frame ready for use with TNA functions. For "sequences" type,
-returns a data frame where each row is a sequence and columns are time
-points (V1, V2, ...). For "long" type, converts to wide format first.
+A data frame with one row per sequence and only the position
+columns \code{V1}, \code{V2}, ..., in numeric order, holding character states (or
+the original type for non-factor columns), with no row names.
 }
 \description{
-Prepare simulated or real data for use with \code{tna::tna()} and related
-functions. Handles various input formats and ensures the output is
-compatible with TNA models.
-}
-\details{
-This function performs several preparations:
-\enumerate{
-\item Converts long format to wide format if needed.
-\item Validates that all actions/states are recognized.
-\item Removes any non-sequence columns (e.g., id, metadata).
-\item Converts factors to characters.
-\item Ensures consistent column naming (V1, V2, ...).
-}
+\code{prepare_for_tna()} returns the sequence columns of a data set as a wide
+data frame for \code{tna::tna()} and related functions: one row per sequence
+and the position columns \code{V1}, \code{V2}, ... in numeric order, with factors
+turned into character. Long input is converted with \code{\link[=long_to_wide]{long_to_wide()}}
+first, padding shorter sequences with \code{NA}. Every other column (an id,
+metadata) is dropped.
 }
 \examples{
 # From wide format sequences

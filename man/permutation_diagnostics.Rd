@@ -15,75 +15,95 @@ permutation_diagnostics(
 )
 }
 \arguments{
-\item{x}{A \code{netobject_group} (every pair of groups is diagnosed) or
-a \code{netobject} (then \code{y} is required). Transition methods only
-(\code{"relative"}, \code{"frequency"}, \code{"co_occurrence"}).}
+\item{x}{The networks to compare: a \code{netobject_group}, whose every pair
+of groups is diagnosed, or a \code{netobject}, compared with \code{y}. An \code{mcml},
+whose layers hold different states, raises an error of class
+\code{nestimate_bad_input}. Only
+the transition methods
+\code{"relative"}, \code{"frequency"} and \code{"co_occurrence"} are supported; any
+other method, association networks and \code{wtna} among them, raises an
+error of class \code{nestimate_actor_unsupported}.}
 
-\item{y}{A \code{netobject} to compare with \code{x}, or \code{NULL}.}
+\item{y}{The \code{netobject} to compare with when \code{x} is a \code{netobject}.
+Default \code{NULL}, as it must stay when \code{x} is a group.}
 
-\item{actor}{Character. Column identifying the actor each sequence
-belongs to, as in \code{\link{permutation}}.}
+\item{actor}{The column identifying the actor each sequence belongs to,
+as in \code{\link[=permutation]{permutation()}}, looked up in the networks' metadata or sequence
+data. A column not found, or one with missing values, raises an error
+of class \code{nestimate_actor_missing}. Required.}
 
-\item{iter}{Integer. Permutation iterations for each of the two tests.
-Default 1000.}
+\item{iter}{The number of permutations for each of the two tests, at
+least 2. Default \code{1000}.}
 
-\item{alpha}{Numeric. Significance level. Default 0.05.}
+\item{alpha}{The significance level that counts an edge as significant,
+between 0 and 1. The p-values are not adjusted for multiplicity.
+Default \code{0.05}.}
 
-\item{level}{Character. \code{"overall"} (default): one row per group
-pair. \code{"edges"}: one row per edge per pair.}
+\item{level}{\code{"overall"} (default) returns one row per compared pair;
+\code{"edges"} one row per edge per pair.}
 
-\item{seed}{Integer or NULL. RNG seed; both tests use the same seed.}
+\item{seed}{A seed for the shuffles, used by both tests, so the result
+repeats exactly. Default \code{NULL}.}
 }
 \value{
-A \code{data.frame}.
-
-With \code{level = "overall"}, one row per compared pair:
+A data frame. With \code{level = "overall"}, one row per compared
+pair:
 \describe{
-\item{pair}{\code{"<x> vs <y>"}.}
-\item{n_sequences, n_actors}{Sequences and distinct actors in the pair.}
-\item{design}{\code{"between"} (every actor in one group),
-\code{"within"} (every actor in both groups) or \code{"mixed"}.}
+\item{pair}{\code{"<x> vs <y>"}, the names of the two groups (\code{"x vs y"}
+for two networks).}
+\item{n_sequences, n_actors}{The sequences and distinct actors in the
+pair.}
+\item{design}{\code{"between"} (every actor in one group), \code{"within"}
+(every actor in both groups) or \code{"mixed"}.}
 \item{icc, icc_ci_lower, icc_ci_upper}{How alike the sequences of one
-actor are, with a 95\% interval; as printed by
-\code{\link{permutation}}. \code{NA} interval with fewer than 3
-actors.}
-\item{deff_edges}{Median over edges of the design effect, the ratio of
-the actor-level to the sequence-level null variance of the edge
-difference (Kish, 1965).}
+actor are: the jackknife bias-corrected ICC, as printed by
+\code{\link[=permutation]{permutation()}}, with a 95\% interval; with fewer than 3 actors the
+ICC is the uncorrected estimate and the interval is \code{NA}; the ICC is
+\code{NA} when no transition share varies.}
+\item{deff_edges}{The median over edges of the design effect, the
+ratio of the actor-level to the sequence-level null variance of the
+edge difference (Kish, 1965).}
 \item{deff_global}{The same ratio for the global \code{M} statistic.}
-\item{p_global_sequence, p_global_actor}{Permutation p-values of
+\item{p_global_sequence, p_global_actor}{The permutation p-values of
 \code{M} when sequences or whole actors are reassigned.}
-\item{sig_edges_sequence, sig_edges_actor}{Edges with
+\item{sig_edges_sequence, sig_edges_actor}{The number of edges with
 \code{p < alpha} under each test.}
-\item{edges_changed}{Edges significant under one test but not the
-other.}
-\item{min_p_actor}{Smallest p-value an exact actor-level test can
-produce, \code{max(1 / arrangements, 1 / (iter + 1))}.}
+\item{edges_changed}{The number of edges significant under one test
+but not the other.}
+\item{min_p_actor}{The smallest p-value the actor-level test can
+reach: one over the number of distinct arrangements of the actors,
+or \code{1 / (iter + 1)}, whichever is larger.}
 }
-With \code{level = "edges"}, one row per edge present in either network:
-\code{pair}, \code{from}, \code{to}, \code{diff}, \code{icc} (per-edge
-ANOVA ICC, not bias-corrected; \code{NA} where the share does not vary),
-\code{null_sd_sequence}, \code{null_sd_actor}, \code{deff} (\code{NaN}
-where the edge difference never varies under either null),
-\code{p_sequence}, \code{p_actor}, \code{changed}.
+With \code{level = "edges"}, one row per edge present in either network, with
+the columns \code{pair}, \code{from}, \code{to}, \code{diff} (the observed difference,
+\code{x - y}), \code{icc} (the edge's ANOVA ICC, not bias-corrected; \code{NA} where
+the share does not vary), \code{null_sd_sequence} and \code{null_sd_actor} (the
+SD of the shuffled differences under each test), \code{deff} (\code{NaN} where
+the edge difference never varies under either null), \code{p_sequence},
+\code{p_actor} and \code{changed} (whether the edge is significant under one test
+only).
 
-The ICC and design effects are those of the actor-level run (see the
-\code{clustering} element of \code{\link{permutation}}); the p-values
-and significance counts compare it with a separate ordinary run.
-Errors with class \code{nestimate_actor_unsupported} for association
-networks and \code{nestimate_actor_missing} when \code{actor} is not a
-column of the networks' metadata or sequence data.
+The ICC and design effects are those of the actor-level run, as
+\code{\link[=permutation]{permutation()}} prints them when given \code{actor}; the p-values and
+significance counts compare it with a separate ordinary run.
 }
 \description{
-Shows what treating nested sequences as independent would cost. The
-comparison is run twice on the same data: once with the ordinary
-\code{\link{permutation}} test, which shuffles single sequences, and once
-with \code{actor}, which shuffles whole actors (the persons whose
-sessions they are, or the teams of students). The result places the two
-side by side, with the ICC and design effect that explain any difference
-between them. See the sections \emph{Nested data and actor} and
-\emph{ICC and design effect} of \code{\link{permutation}} for what these
-quantities mean.
+\code{permutation_diagnostics()} shows what treating nested sequences as
+independent costs a network comparison. It runs \code{\link[=permutation]{permutation()}} twice on
+the same networks and seed: once shuffling single sequences, once with
+\code{actor}, shuffling whole actors (the persons whose sessions the
+sequences are, or the teams of students). It returns the two results
+side by side, one row per compared pair or per edge, with the
+intraclass correlation (ICC) and design effect that explain any
+difference between them. It takes two transition networks, or every
+pair of groups of a \code{netobject_group}.
+
+A design effect near 1 and few changed edges say that the nesting
+changes the comparison little. Where the two tests differ, the
+actor-level one is the test that follows the nesting, as \code{\link[=permutation]{permutation()}}
+sets out for nested data. The sections \emph{Nested data and actor} and \emph{ICC
+and design effect} of \code{\link[=permutation]{permutation()}} define these quantities, and \emph{How
+to read the result} below says what each column shows.
 }
 \section{How to read the result}{
 

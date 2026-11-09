@@ -610,6 +610,25 @@ test_that(".detect_mcml_input returns sequence for non-square numeric matrix (L6
   expect_equal(result, "sequence")
 })
 
+test_that("rectangular numeric sequence matrices accept sequence shaping", {
+  seqs <- matrix(c(2, 3, 2, 3, 2, 3), nrow = 2,
+                 dimnames = list(NULL, paste0("T", 1:3)))
+  clusters <- list(X = "2", Y = "3")
+  trimmed <- build_mcml(seqs, clusters, type = "raw", trim = 2)
+  expect_identical(trimmed, build_mcml(as.data.frame(seqs), clusters,
+                                      type = "raw", trim = 2))
+  expect_equal(unname(trimmed$macro$weights), diag(2))
+  invisible(lapply(list(list(end = "2")), function(args) {
+    from_matrix <- do.call(build_mcml, c(list(seqs, clusters, type = "raw"), args))
+    from_frame <- do.call(build_mcml,
+                          c(list(as.data.frame(seqs), clusters, type = "raw"), args))
+    expect_identical(from_matrix, from_frame)
+  }))
+  expect_identical(build_mcml(seqs, list(X = "2"), type = "raw", exclude = "3"),
+                   build_mcml(as.data.frame(seqs), list(X = "2"),
+                              type = "raw", exclude = "3"))
+})
+
 test_that(".detect_mcml_input returns unknown for unrecognized class (L644)", {
   result <- Nestimate:::.detect_mcml_input(42L)
   expect_equal(result, "unknown")
@@ -2119,4 +2138,18 @@ test_that("a fractional build_mcml trim only ever cuts the end of the data", {
                   T3 = c("B", "B", "B", "A"), T4 = c("A", "A", "A", NA))
   expect_identical(names(.mcml_trim_sequences(d, 0.5)), c("T1", "T2", "T3", "T4"))
   expect_identical(names(.mcml_trim_sequences(d, 2)), c("T1", "T2"))
+})
+
+test_that("as_tna.mcml labels a cooccurrence mcml co_occurrence, not relative", {
+  # Macro transitions G->G 3, Z->G 2, G->Z 2, Z->Z 1 (counts), symmetrised:
+  # rows sum to 5 and 3, so they are counts, not probabilities.
+  seqs <- data.frame(T1 = c("A", "B", "A", "C"), T2 = c("B", "C", "C", "D"),
+                     T3 = c("C", "D", "D", "A"))
+  mc <- build_mcml(seqs, list(Z = c("A", "B"), G = c("C", "D")),
+                   type = "cooccurrence")
+  g <- as_tna(mc)
+  expect_equal(unname(rowSums(g$macro$weights)), c(5, 3))
+  expect_identical(unname(vapply(g, function(z) z$method, "")),
+                   rep("co_occurrence", 3L))
+  expect_false(g$macro$directed)
 })

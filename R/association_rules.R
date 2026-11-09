@@ -3,75 +3,115 @@
 #' Discover Association Rules from Sequential or Transaction Data
 #'
 #' @description
-#' Discovers association rules using the Apriori algorithm with proper
-#' candidate pruning. Accepts \code{netobject} (extracts sequences as
-#' transactions), data frames, lists, or binary matrices.
+#' `association_rules()` finds association rules of the form
+#' \{A\} -> \{B\} with the Apriori algorithm (Agrawal & Srikant, 1994): sets
+#' of items that occur together in at least `min_support` of the
+#' transactions, and the rules among them that pass `min_confidence` and
+#' `min_lift`. It reads a list of transactions, a wide data frame or matrix of
+#' states, a 0/1 incidence table, or a network: the sequences behind a
+#' `netobject` or `tna` model become transactions of their distinct states,
+#' and a one-hot network's windows become transactions of their active codes.
 #'
-#' Support counting is vectorized via \code{crossprod()} for 2-itemsets
-#' and logical matrix indexing for k-itemsets.
+#' Support is how common the whole rule is, confidence how often B occurs
+#' when A does, and lift how much more often A and B occur together than they
+#' would if they were independent (see *Metrics*). A sequence read as a
+#' transaction loses its order, so a rule says that states occur in the same
+#' sequence, not that one follows the other; [build_network()] models order.
+#' The rules are not tested for significance, and lowering the thresholds
+#' quickly multiplies them, so check whether a rule of interest stays when
+#' `min_support` changes.
 #'
-#' @param x Input data. Accepts:
+#' @param x The transactions, in one of these forms:
 #'   \describe{
-#'     \item{netobject}{Uses \code{$data} sequences - each sequence becomes
-#'       a transaction of its unique states. In a one-hot network the codes
-#'       are the items and each window is one transaction.}
-#'     \item{list}{Each element is a character vector of items (one transaction).}
-#'     \item{data.frame}{Wide format: each row is a transaction, character
-#'       columns are item occurrences. Or binary (0/1 or logical) columns,
-#'       one per item.}
-#'     \item{matrix}{A character matrix is read as wide sequences, like a
-#'       character data frame (each row is the set of its distinct
-#'       non-missing states). A numeric or logical matrix is a binary
-#'       transaction matrix (rows = transactions, columns = items).}
-#'   } Binary input must hold only 0/1 or \code{TRUE}/\code{FALSE}: a
-#'   missing cell or any other value raises \code{nestimate_bad_input}.
-#'   For the \code{print()} and \code{plot()} methods: an object of class \code{net_association_rules}.
-#' @param min_support Numeric. Minimum support threshold. Default: 0.1.
-#' @param min_confidence Numeric. Minimum confidence threshold. Default: 0.5.
-#' @param min_lift Numeric. Minimum lift threshold. Default: 1.0.
-#' @param max_length Integer. Maximum itemset size. Default: 5.
-#' @param format \code{"auto"} (default) or \code{"binary"}. Columns of only 0 and 1
-#'   could be items or recoded positions, so \code{"auto"} raises an error of class
-#'   \code{nestimate_bad_input} on them. \code{"binary"} declares them items, one row
-#'   per transaction.
+#'     \item{`netobject`}{Each sequence in its data becomes a transaction of
+#'       its distinct states. In a one-hot network the codes are the items
+#'       and each window is one transaction. A network without data, and an
+#'       association network (`cor`, `pcor`, `glasso`, `ising`, `mgm`),
+#'       whose rows are variables, raise an error; a `netobject_group` raises
+#'       one of class `nestimate_bad_input` (pass one group's network). A
+#'       bare `cograph_network` is read as a `netobject`, a `tna` model by
+#'       its sequence data, and an `mcml` by its between-cluster network, so
+#'       its items are the clusters.}
+#'     \item{list}{A plain list holding one character vector of items per
+#'       transaction.}
+#'     \item{data frame}{Each row is a transaction of its distinct
+#'       non-missing states. The frame must be a single column or a numbered
+#'       run of position columns (`T1`, `T2`, ...) with nothing beside it;
+#'       otherwise it raises an error of class `nestimate_bad_input`;
+#'       declare the columns with `build_network(state_cols = )` and pass the
+#'       network instead. A column called `action` and repeated column names
+#'       are refused the same way. A frame of 0/1 or logical columns is a
+#'       binary table, one column per item, read with `format = "binary"`.}
+#'     \item{matrix}{A character matrix is read like a character data frame.
+#'       A numeric or logical matrix is a binary transaction table (rows are
+#'       transactions, columns are items, named `I1`, `I2`, ... when the
+#'       matrix has no column names).}
+#'   }
+#'   Binary input must hold only 0/1 or `TRUE`/`FALSE`: a missing cell or any
+#'   other value raises an error of class `nestimate_bad_input`. For the
+#'   `print()` and `plot()` methods: a `net_association_rules` object.
+#' @param min_support The smallest share of transactions an itemset must
+#'   occur in to be frequent, above 0 and at most 1. Default `0.1`. It is
+#'   applied as a count, `ceiling(min_support * n_transactions)`.
+#' @param min_confidence The smallest confidence a rule must have, between
+#'   0 and 1. Default `0.5`.
+#' @param min_lift The smallest lift a rule must have, at least 0. Default
+#'   `1`, which keeps rules whose items occur together at least as often as
+#'   independence predicts.
+#' @param max_length The largest itemset size searched, at least 2. Default
+#'   `5`.
+#' @param format How 0/1 columns are read. Columns of only 0 and 1 could be
+#'   items or recoded positions, so with `"auto"` (default) they raise an
+#'   error of class `nestimate_bad_input`. `"binary"` declares them items,
+#'   one row per transaction; it raises the same error on a data frame with
+#'   any other value.
 #'
-#' @return An object of class \code{"net_association_rules"} containing:
+#' @return A `net_association_rules` object. `print()` shows the counts, the
+#'   thresholds and the ten rules with the highest lift; `summary()` returns
+#'   the rules table, one row per rule; `plot()` draws the rules by support
+#'   and confidence. The object's fields:
 #' \describe{
-#'   \item{rules}{Tidy data frame, one row per rule, ordered by descending
-#'     lift then confidence, with columns \code{antecedent} and
-#'     \code{consequent} (the itemsets as comma-separated character strings),
-#'     \code{support}, \code{confidence}, \code{lift}, \code{conviction},
-#'     \code{count} and \code{n_transactions}.}
-#'   \item{frequent}{Tidy data frame, one row per frequent itemset, with
-#'     columns \code{itemset}, \code{size}, \code{support} and \code{count}.}
-#'   \item{frequent_itemsets}{List of frequent itemsets per level k, each
-#'     entry a list of \code{items} / \code{count} / \code{support}.}
-#'   \item{items}{Character vector of the frequent 1-itemsets the mining ran
-#'     on (all items when no item clears \code{min_support}).}
-#'   \item{n_transactions}{Integer.}
-#'   \item{n_rules}{Integer.}
-#'   \item{params}{List of min_support, min_confidence, min_lift, max_length.}
+#'   \item{rules}{Data frame, one row per rule, ordered by decreasing lift
+#'     and then confidence, with columns `antecedent` and `consequent` (the
+#'     itemsets as comma-separated strings), `support`, `confidence`, `lift`,
+#'     `conviction`, `count` (transactions holding the whole rule) and
+#'     `n_transactions`.}
+#'   \item{frequent}{Data frame, one row per frequent itemset, with columns
+#'     `itemset`, `size`, `support` and `count`.}
+#'   \item{frequent_itemsets}{List of the frequent itemsets per size k, each
+#'     entry a list of `items`, `count` and `support`.}
+#'   \item{items}{Character vector of the frequent single items the mining
+#'     ran on (all items when none reaches `min_support`).}
+#'   \item{n_transactions}{Number of transactions.}
+#'   \item{n_rules}{Number of rules.}
+#'   \item{params}{List of `min_support`, `min_confidence`, `min_lift` and
+#'     `max_length`.}
 #' }
 #'
 #' @details
 #' ## Algorithm
 #'
-#' Uses level-wise Apriori (Agrawal & Srikant, 1994) with the full pruning
-#' step: after the join step generates k-candidates, all (k-1)-subsets are
-#' verified as frequent before support counting. This is critical for
-#' efficiency at k >= 4.
+#' Level-wise Apriori (Agrawal & Srikant, 1994) with the full pruning step:
+#' after the join step generates the candidates of size k, every subset of
+#' size k - 1 is checked to be frequent before support is counted, which
+#' keeps the search fast at k >= 4. Support of pairs is counted with
+#' `crossprod()`, of larger itemsets by logical indexing. Every split of a
+#' frequent itemset into a non-empty antecedent and consequent is a
+#' candidate rule.
 #'
 #' ## Metrics
 #'
 #' \describe{
-#'   \item{support}{P(A and B). Fraction of transactions containing both
-#'     antecedent and consequent.}
-#'   \item{confidence}{P(B | A). Fraction of antecedent transactions that
-#'     also contain the consequent.}
-#'   \item{lift}{P(A and B) / (P(A) * P(B)). Values > 1 indicate positive
-#'     association; < 1 indicate negative association.}
-#'   \item{conviction}{(1 - P(B)) / (1 - confidence). Measures departure
-#'     from independence. Higher = stronger implication.}
+#'   \item{support}{P(A and B): the share of transactions holding both the
+#'     antecedent and the consequent.}
+#'   \item{confidence}{P(B | A): the share of transactions holding the
+#'     antecedent that also hold the consequent.}
+#'   \item{lift}{P(A and B) / (P(A) P(B)). Values above 1 indicate positive
+#'     association, below 1 negative association.}
+#'   \item{conviction}{(1 - P(B)) / (1 - confidence), the departure from
+#'     independence in the direction of the rule (Brin et al., 1997); higher
+#'     means a stronger implication, and a rule with confidence 1 has
+#'     conviction `Inf`.}
 #' }
 #'
 #' @references
@@ -115,7 +155,7 @@ association_rules <- function(x,
   format <- match.arg(format)
 
   # ---- Input validation ----
-  stopifnot(
+  .assert(
     is.numeric(min_support), length(min_support) == 1,
     min_support > 0, min_support <= 1,
     is.numeric(min_confidence), length(min_confidence) == 1,
@@ -319,13 +359,15 @@ association_rules <- function(x,
       })
       return(.ar_transactions_to_matrix(transactions))
     }
-    stop("tna object has no $data. Build from sequence data.", call. = FALSE)
+    stop(errorCondition("tna object has no $data. Build from sequence data.",
+                        class = "nestimate_bad_input", call = NULL))
   }
 
   # netobject: sequences -> transactions (unique states per row)
   if (inherits(x, "netobject")) {
     if (is.null(x$data)) {
-      stop("netobject has no $data. Build from sequence data.", call. = FALSE)
+      stop(errorCondition("netobject has no $data. Build from sequence data.",
+                          class = "nestimate_bad_input", call = NULL))
     }
     if (.is_onehot_params(x$params)) return(.ar_onehot_input(x))
     if (isTRUE(x$method %in% .association_methods)) {
@@ -394,7 +436,8 @@ association_rules <- function(x,
     return(.ar_transactions_to_matrix(transactions))
   }
 
-  stop("x must be a netobject, list, data.frame, or matrix.", call. = FALSE)
+  stop(errorCondition("x must be a netobject, list, data.frame, or matrix.",
+                      class = "nestimate_bad_input", call = NULL))
 }
 
 
@@ -635,11 +678,14 @@ association_rules <- function(x,
 # ---- S3 Methods ----
 
 #' @rdname association_rules
-#' @param ... In \code{plot.net_association_rules()}: Additional arguments passed to \code{ggplot2} functions. In \code{print.net_association_rules()} and \code{summary.net_association_rules()}: Additional arguments (ignored).
-#' @param object For the \code{summary()} method: an object of class \code{net_association_rules}.
-#' @return In \code{print.net_association_rules()}: The input object, invisibly.
-#' @return In \code{summary.net_association_rules()}: The tidy rules data frame: one row per rule, with columns \code{antecedent}, \code{consequent}, \code{support}, \code{confidence}, \code{lift}, \code{conviction}, \code{count} and \code{n_transactions}.
-#' @return In \code{plot.net_association_rules()}: The drawn \code{ggplot} object, invisibly (the plot is also printed). \code{NULL}, invisibly, when no rule was found.
+#' @param ... For the `print()`, `summary()` and `plot()` methods: ignored.
+#' @param object For the `summary()` method: a `net_association_rules`
+#'   object.
+#' @return The `print()` method returns its input invisibly. `summary()`
+#'   returns the rules data frame described above. `plot()` prints a scatter
+#'   plot of support against confidence, with point size and colour showing
+#'   lift, and returns the `ggplot` object invisibly; with no rules it says so
+#'   in a message and returns `NULL` invisibly.
 #' @export
 print.net_association_rules <- function(x, ...) {
   cat(sprintf("Association Rules  [%d rules | %d items | %d transactions]\n",
@@ -673,8 +719,6 @@ summary.net_association_rules <- function(object, ...) {
 
 
 #' @rdname association_rules
-#' @section Methods:
-#' * \code{plot.net_association_rules()}: Scatter plot of association rules: support vs confidence, with point size proportional to lift.
 #' @import ggplot2
 #' @export
 plot.net_association_rules <- function(x, ...) {

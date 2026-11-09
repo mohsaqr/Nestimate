@@ -19,59 +19,83 @@ net_edge_betweenness(x, invert = TRUE, ...)
 \method{plot}{net_edge_betweenness}(x, style = c("bar", "forest", "delta"), top_n = NULL, labels = TRUE, ...)
 }
 \arguments{
-\item{x}{A \code{netobject} or \code{netobject_group}. For the \code{plot()} method: an object of class \code{net_edge_betweenness}.}
+\item{x}{A \code{netobject} or \code{netobject_group}; any other input raises an
+error. For the \code{plot()} method: a \code{net_edge_betweenness} network.}
 
-\item{invert}{Logical. Invert weights to distances by \code{1/w} before
-computing shortest paths? Default \code{TRUE} (correct for probability
-and frequency networks).}
+\item{invert}{Whether to turn weights into distances by \code{1 / weight}
+before finding shortest paths, which suits probability and frequency
+networks. With \code{FALSE}, the weight itself is the distance; use it when
+the weights already are distances. Default \code{TRUE}.}
 
-\item{...}{Additional arguments (ignored).
-In \code{plot.net_edge_betweenness()}: Additional arguments (ignored).}
+\item{...}{Not used.}
 
-\item{style}{Plot style. \code{"bar"} (default) draws one horizontal bar per edge; \code{"forest"} draws a forest/lollipop chart (a stem from zero to a point) with a dashed reference line at the mean betweenness; \code{"delta"} draws each edge's deviation from the mean edge betweenness as a diverging bar (above the mean in blue, below in red).}
+\item{style}{For the \code{plot()} method: the kind of chart. \code{"bar"}
+(default) draws one horizontal bar per edge; \code{"forest"} a stem from
+zero to a point, with a dashed line at the mean betweenness of the
+edges shown; \code{"delta"} each edge's deviation from that mean as a bar
+pointing right (above the mean, blue) or left (below, red).}
 
-\item{top_n}{Integer or \code{NULL}. Keep only the \code{top_n} highest edges. Default \code{NULL} (all edges with non-zero betweenness).}
+\item{top_n}{For the \code{plot()} method: the number of highest edges to
+keep. Default \code{NULL} (every edge with non-zero betweenness).}
 
-\item{labels}{Logical. Print the betweenness value beside each edge. Default \code{TRUE}.}
+\item{labels}{For the \code{plot()} method: whether to print each edge's
+value (its deviation, for \code{"delta"}) beside it. Default \code{TRUE}.}
 }
 \value{
-For a \code{netobject}: a new network of class
-\code{c("net_edge_betweenness", "netobject", "cograph_network")} whose
-\code{$weights} are the edge-betweenness scores, with
-\code{method = "edge_betweenness"}. Call
-\code{extract_edges()} on it for a tidy per-edge table, or \code{plot()}
-to render it. The object preserves source-network metadata so
-\code{\link{permutation}} can test edge-betweenness differences by
-permuting the source networks. For a \code{netobject_group}: a
-\code{netobject_group} of such networks, one per group.
+For a \code{netobject}: a network of class
+\code{c("net_edge_betweenness", "netobject", "cograph_network")} with method
+\code{"edge_betweenness"}, whose weights are the edge betweenness scores.
+It prints like any network; \code{\link[=extract_edges]{extract_edges()}} gives one row per edge,
+\code{plot()} ranks the edges and \code{cograph::splot()} draws the network. The
+source network's data, metadata, parameters, weights and initial
+probabilities are kept on it, which is what lets \code{\link[=permutation]{permutation()}} and
+\code{\link[=bayes_compare]{bayes_compare()}} test differences in edge betweenness between two
+such networks. For a \code{netobject_group}: a \code{netobject_group} of these
+networks, one per group.
 
-In \code{plot.net_edge_betweenness()}: A \code{ggplot} object.
+For the \code{plot()} method: a \code{ggplot} object.
 }
 \description{
-Builds a network in which each edge's weight is replaced by its
-betweenness: the number of shortest paths between all node pairs that
-traverse that edge (fractional when shortest paths tie). This is the
-Nestimate counterpart of \code{tna::betweenness_network()} and produces
-identical values for transition networks; the name differs to avoid a
-clash with \code{tna::betweenness_network()} and
-\code{igraph::edge_betweenness()}.
+\code{net_edge_betweenness()} returns a copy of a network in which each edge's
+weight is replaced by its betweenness: the number of shortest paths
+between ordered pairs of distinct nodes that pass through that edge, with
+a fractional share when several shortest paths tie (Girvan & Newman
+2002). It
+takes a single network or a \code{netobject_group}, which is scored one
+network at a time.
+
+With \code{invert = TRUE} (the default) a heavier edge is a shorter step, so
+the shortest path between two states of a transition network is the most
+probable route, not the one with the fewest hops.
+Only positive weights count as edges, and a self-loop never lies on a
+shortest path, so its betweenness is 0. A directed network gives an
+asymmetric betweenness matrix; an undirected one a symmetric matrix,
+each cell holding the betweenness of that edge. The result keeps the
+source network's directedness (directed when it records none).
+
+An edge with high betweenness carries many of the shortest routes
+between states; Girvan & Newman (2002) read such edges as the bridges
+between groups of states. To compare the edge betweenness of
+two groups, pass two results to \code{\link[=permutation]{permutation()}} or \code{\link[=bayes_compare]{bayes_compare()}},
+which resample the source networks behind them; both need two results
+with the same source method and \code{invert}, and \code{\link[=bayes_compare]{bayes_compare()}} needs
+\code{"relative"} source networks.
 }
 \details{
-For a probability/transition network the edge weights are transition
-probabilities, so they are inverted to distances (\code{invert = TRUE})
-before path-finding: the geodesic between two states is then the most
-probable route rather than the one with the fewest hops. Pass
-\code{invert = FALSE} when the weights already represent distances.
-
-Directedness is taken from the network itself. A directed network yields
-an asymmetric betweenness matrix; an undirected (symmetric) network
-yields a symmetric one.
+Shortest paths come from all-pairs Floyd-Warshall on the distance
+matrix (1 / weight, or the weight with \code{invert = FALSE}), counting tied
+paths with a relative tolerance so that floating-point rounding does not
+break a tie. The values agree with \code{tna::betweenness_network()} for
+transition networks, and on an undirected network each cell equals
+\code{igraph::edge_betweenness()} for that edge; the function is named
+differently to avoid masking either.
 }
 \section{Methods}{
 
-\itemize{
-\item \code{plot.net_edge_betweenness()}: Draws the edges of a \code{\link{net_edge_betweenness}} network ranked by their betweenness, as a horizontal bar chart. This is the tidy, cograph-free companion to the node-link diagram: render the diagram with \code{cograph::splot(eb)} and the ranking with \code{plot(eb)}.
-}
+\code{plot()} ranks the edges with non-zero betweenness, highest first, one
+row per edge (\code{from -> to}). It needs no cograph; \code{cograph::splot()}
+draws the same object as a node-link diagram. A network whose edges all
+have zero betweenness raises an error.
 }
 
 \examples{
@@ -82,4 +106,9 @@ net <- build_network(seqs, method = "relative")
 eb  <- net_edge_betweenness(net)
 extract_edges(eb)
 
+}
+\references{
+Girvan, M. & Newman, M. E. J. (2002). Community structure in social and
+biological networks. \emph{Proceedings of the National Academy of
+Sciences}, 99(12), 7821--7826. \doi{10.1073/pnas.122653799}
 }

@@ -72,38 +72,66 @@ utils::globalVariables(c(
 
 #' Magnitude difference between the frequency and probability views
 #'
-#' Quantifies, per edge, how much row-normalization moves a transition
-#' network between its two natural summaries: raw transition counts
-#' (frequency / FTNA, `build_network(method = "frequency")`) and
+#' @description
+#' `magnitude_difference()` measures, edge by edge, how far the two usual
+#' summaries of one set of sequences disagree: the raw transition counts
+#' (frequency network, FTNA, `build_network(method = "frequency")`) and the
 #' row-conditional probabilities (TNA, `build_network(method = "relative")`).
-#' The two matrices rank edges differently - an edge that is large in counts
-#' can be modest in probability, and a rare-source edge can dominate its row
-#' in probability. The per-edge discrepancy on a common scale is the
-#' *magnitude difference*.
+#' It builds both networks from the same event log or wide sequences, puts
+#' the two weight matrices on a common scale and returns the per-edge
+#' discrepancy, the *magnitude difference*, under one of five metrics.
 #'
-#' @param data Long- or wide-format event log (`data.frame`).
-#' @param actor,action,time Column names in `data` (long format). Column names
-#'   are not read: without `action` the data is taken as wide. Default: `NULL`.
-#' @param metric Discrepancy metric. One of `"abs_diff"` (default; absolute
-#'   difference, simplest and most robust), `"chord_dist"` (chord distance on
-#'   the unit sphere), `"atanh_diff"` (Fisher z-style on a bounded scale),
-#'   `"geom_norm_diff"` (geometric-mean normalized; amplifies small edges),
-#'   `"cv_inflation"` (per-vector SD-standardized then absolute difference).
-#' @param scale How the two weight matrices are placed on a common scale
-#'   before differencing. `"tna_range"` (default) rescales FTNA linearly into
-#'   TNA's `[min, max]` range and leaves TNA untouched, so the difference is
-#'   in TNA probability units. `"rank_minmax"` converts each matrix's values
-#'   to ranks scaled to `[0, 1]` (ordinal). `"minmax"` scales each matrix's
-#'   raw values to `[0, 1]` separately (asymmetric - TNA's max and FTNA's max
-#'   map to the same value despite differing native ranges). `"none"` uses
-#'   raw weights.
-#' @param format Input format passed through to [build_network()];
-#'   `"auto"` (default) treats the data as wide when `action` is not a column.
+#' The two matrices rank edges differently because row normalisation
+#' divides each count by its source state's total: an edge that is large in
+#' counts can be modest in probability when its source state is frequent,
+#' and an edge from a rare source state can dominate its row in
+#' probability. A large magnitude difference marks an edge whose importance
+#' depends on which view is reported; it says nothing about sampling
+#' uncertainty, which [bootstrap_network()] estimates for each view.
 #'
-#' @return An object of class `"magnitude_difference"`: a list with
-#'   `$edges` (per-edge `data.frame` with columns `from`, `to`, `ftna`,
-#'   `tna`, `signed` = `tna - ftna`, and `value` = the chosen metric),
-#'   `$metric`, `$scale`, `$weights_ftna`, `$weights_tna`, and `$states`.
+#' @param data The event log (long format, with `action` set) or wide
+#'   sequences, as a data frame.
+#' @param actor,action,time The columns of a long event log, as in
+#'   [build_network()]. Column names are not read: without `action` the
+#'   data is read as wide sequences, and a frame whose roles cannot be told
+#'   raises an error of class `nestimate_bad_input`, as does a name that is
+#'   not a column of `data`. Default `NULL`.
+#' @param metric The discrepancy metric, computed on the two scaled weight
+#'   vectors. `"abs_diff"` (default) is the absolute difference;
+#'   `"chord_dist"` the absolute difference after each vector is scaled to
+#'   unit length (chord distance on the unit sphere); `"atanh_diff"` the
+#'   absolute difference of the Fisher z (`atanh()`) transforms, with values
+#'   capped at `1 - 1e-6`, so it needs weights in \[0, 1) and is not
+#'   meaningful with `scale = "none"`; `"geom_norm_diff"` the absolute
+#'   difference after each vector is divided by its geometric mean (of the
+#'   weights plus 0.001, so zeros are allowed), which enlarges small edges;
+#'   and `"cv_inflation"` the absolute difference after each vector is
+#'   divided by its standard deviation (at least 0.001).
+#' @param scale How the two weight matrices are put on a common scale before
+#'   differencing. `"tna_range"` (default) rescales the counts linearly into
+#'   the `[min, max]` range of the probabilities and leaves the probabilities
+#'   as they are, so the difference is in probability units. `"rank_minmax"`
+#'   replaces each matrix's values by their ranks scaled to \[0, 1\]
+#'   (ordinal). `"minmax"` scales each matrix to \[0, 1\] separately, so the
+#'   two maxima map to the same value although their native ranges differ.
+#'   `"none"` uses the raw weights.
+#' @param format The input format passed to [build_network()]. `"auto"`
+#'   (default) reads wide sequences when `action` is `NULL` and an event log
+#'   otherwise; `"long"` and `"wide"` force a reading.
+#'
+#' @return A `magnitude_difference` object. `print()` reports the metric,
+#'   the scale, the states, the number of edges and the minimum, quartiles,
+#'   mean and maximum of the magnitude differences; `plot()` draws them.
+#'   The object's fields:
+#' \describe{
+#'   \item{edges}{One row per ordered pair of states (the self-transitions
+#'     and absent edges included), with the columns `from`, `to`, `ftna` and
+#'     `tna` (the scaled weights), `signed` (`tna - ftna`) and `value` (the
+#'     chosen metric).}
+#'   \item{metric, scale}{The metric and scale used.}
+#'   \item{weights_ftna, weights_tna}{The two scaled weight matrices.}
+#'   \item{states}{The state names.}
+#' }
 #'
 #' @examples
 #' data(group_regulation_long, package = "Nestimate")
@@ -129,7 +157,7 @@ magnitude_difference <- function(data, actor = NULL, action = NULL,
   metric <- match.arg(metric)
   scale  <- match.arg(scale)
   format <- match.arg(format)
-  stopifnot(is.data.frame(data))
+  .assert(is.data.frame(data))
   .check_declared_columns(data, "magnitude_difference()", actor = actor,
                           action = action, time = time)
   if (is.null(action) && identical(format, "auto")) {
@@ -194,13 +222,27 @@ magnitude_difference <- function(data, actor = NULL, action = NULL,
 }
 
 #' @rdname magnitude_difference
-#' @param x For the \code{print()} and \code{plot()} methods: an object of class \code{magnitude_difference}.
-#' @param ... In \code{plot.magnitude_difference()}: Ignored. In \code{print.magnitude_difference()}: Passed to plotting helpers (ignored by `print`).
-#' @param type Plot style, `"stacked"` (default) or `"circular"`.
-#' @param min_show For `type = "circular"`, drop edges whose magnitude is below this fraction of the maximum.
-#' @param title Plot title. `NULL` generates one from the metric and scale.
-#' @return In \code{print.magnitude_difference()}: `print` invisibly returns `x`.
-#' @return In \code{plot.magnitude_difference()}: `plot` returns a `ggplot` object.
+#' @param x For the `print()` and `plot()` methods: a `magnitude_difference`
+#'   object.
+#' @param ... For the `plot()` method: further settings of the drawing.
+#'   `"stacked"` takes `threshold` (the magnitude marked "small" in the
+#'   colour key, default 10% of the largest), `r_inner`,
+#'   `r_outer`, `gap_rad`, `label_offset`, `label_size` and
+#'   `src_label_size`; `"circular"` takes `self_loops` (default `TRUE`),
+#'   `label_offset` and `edge_curve`. The `print()` method ignores it.
+#' @param type For the `plot()` method: the kind of plot. `"stacked"`
+#'   (default) is a polar portrait with one sector per source state and one
+#'   wedge per edge, grey up to the smaller of the two scaled weights and
+#'   coloured by the magnitude difference from there to the larger; edges
+#'   absent from both views are left out. `"circular"` is a chord-style
+#'   diagram of the signed difference (`tna - ftna`), its colour giving the
+#'   sign and its width and opacity the magnitude.
+#' @param min_show For `type = "circular"`: edges whose magnitude difference
+#'   is below this fraction of the largest are left out. Default `0.01`.
+#' @param title For the `plot()` method: the plot title. Default `NULL`,
+#'   which names the metric and the scale.
+#' @return For the `plot()` method: a `ggplot` object. The `print()` method
+#'   returns `x` invisibly.
 #' @export
 print.magnitude_difference <- function(x, ...) {
   cat("magnitude_difference object\n")

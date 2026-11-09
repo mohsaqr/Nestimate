@@ -7,24 +7,28 @@
 \format{
 A data frame with 6,000 rows and 7 columns:
 \describe{
-\item{student}{Integer. Student identifier (1--200).}
-\item{Reading}{Integer (0/1). Reading activity indicator.}
-\item{Video}{Integer (0/1). Video watching indicator.}
-\item{Forum}{Integer (0/1). Discussion forum indicator.}
-\item{Quiz}{Integer (0/1). Quiz/assessment indicator.}
-\item{Coding}{Integer (0/1). Coding practice indicator.}
-\item{Review}{Integer (0/1). Review/revision indicator.}
+\item{student}{Integer student identifier, 1 to 200, with 30 rows
+each.}
+\item{Reading}{Integer reading indicator (0/1).}
+\item{Video}{Integer video-watching indicator (0/1).}
+\item{Forum}{Integer discussion-forum indicator (0/1).}
+\item{Quiz}{Integer quiz or assessment indicator (0/1).}
+\item{Coding}{Integer coding-practice indicator (0/1).}
+\item{Review}{Integer review or revision indicator (0/1).}
 }
 }
 \usage{
 learning_activities
 }
 \description{
-Simulated binary time-series data for 200 students across 30 time points.
-At each time point, one or more learning activities may be active (1) or
-inactive (0). Activities: Reading, Video, Forum, Quiz, Coding, Review.
-Includes temporal persistence (activities tend to continue across
-adjacent time points).
+Simulated binary (one-hot) indicator time series of six online learning
+activities (Reading, Video, Forum, Quiz, Coding, Review) for 200
+students over 30 time points. Each row is one time point of one student
+and marks every activity active then (1) or not (0); at least one
+activity is active in every row, and several often are. Activities tend
+to continue from one time point to the next. The rows of each student
+are consecutive and in time order, so the data are ready for \code{\link[=wtna]{wtna()}}
+with \code{actor = "student"}.
 }
 \examples{
 head(learning_activities)

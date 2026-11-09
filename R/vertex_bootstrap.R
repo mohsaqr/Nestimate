@@ -3,75 +3,96 @@
 #' Vertex Bootstrap for Network-Level Statistics
 #'
 #' @description
-#' Non-parametric vertex bootstrap of a single observed network
-#' (Snijders & Borgatti 1999). Vertices are resampled with replacement and
-#' the weight matrix is rebuilt from the original entries of the resampled
-#' vertex pairs; network-level statistics computed on each replicate give
-#' bootstrap distributions, standard errors, and confidence intervals.
+#' `vertex_bootstrap()` resamples the nodes of one observed network and
+#' returns bootstrap standard errors, bias and confidence intervals for
+#' network-level statistics: density, mean weight, strength centralisation
+#' and, for a directed network, reciprocity, plus any statistic of your own
+#' (Snijders & Borgatti 1999). It needs only the weight matrix, so it works
+#' on any `netobject` or `cograph_network`, including those that carry no
+#' data, such as the constituents of [build_mlvar()] or the networks
+#' [as_tna()] returns for an `mcml` object built from a weight matrix, and
+#' on a plain square weight matrix.
 #'
-#' Unlike \code{\link{bootstrap_network}}, which resamples the underlying
-#' cases (sequences or rows) and therefore requires the raw data stored in
-#' the netobject, the vertex bootstrap needs \strong{only the weight
-#' matrix}. It works on any \code{netobject} - including data-less ones
-#' such as \code{\link{build_mlvar}} constituents or \code{as_tna(mcml)}
-#' elements - and on plain weight matrices. The two procedures answer
-#' different questions: the case bootstrap quantifies sampling-of-subjects
-#' uncertainty in the edge weights; the vertex bootstrap quantifies
-#' structural uncertainty of whole-network descriptives given the one
-#' network you observed.
+#' The intervals describe how much a whole-network statistic depends on
+#' which nodes happen to make up the network, with the edge weights taken
+#' as given. They say nothing about how the weights themselves vary from
+#' sample to sample; when the sequences or rows behind a network are
+#' available, [bootstrap_network()] resamples those instead. Two networks
+#' are compared on these statistics with [vertex_compare()].
 #'
 #' @details
-#' Each replicate draws \code{n} vertex indices with replacement and sets
-#' \code{W_b[i, j] = W[idx_i, idx_j]}. When the same original vertex is
-#' drawn for two different positions, the off-diagonal cell would be a
-#' structural self-pair; following Snijders & Borgatti, such cells are
-#' filled with the weight of a randomly chosen pair of distinct original
-#' vertices. Diagonal entries carry the original self-weight of the
-#' resampled vertex (\code{W[idx_i, idx_i]}) - self-loops are meaningful
-#' in transition networks and are never altered. For undirected networks
-#' the substitution is applied symmetrically so replicates stay symmetric.
+#' Each replicate draws `n` node indices with replacement and sets
+#' `W_b[i, j] = W[idx_i, idx_j]`. When the same original node is drawn for
+#' two different positions, the off-diagonal cell between them would be a
+#' self-pair; following Snijders & Borgatti, it is filled with the weight of
+#' a randomly chosen pair of distinct original nodes. Diagonal cells keep the
+#' original self-weight of the resampled node (`W[idx_i, idx_i]`), since
+#' self-loops are meaningful in transition networks. For an undirected
+#' network the substitution is made in the upper triangle and mirrored, so
+#' every replicate stays symmetric.
 #'
-#' Built-in statistics (all computed on the off-diagonal part of the
-#' weight matrix):
+#' The built-in statistics are computed on the off-diagonal cells:
 #' \describe{
-#'   \item{\code{density}}{Proportion of non-zero off-diagonal cells.}
-#'   \item{\code{mean_weight}}{Mean of the non-zero off-diagonal weights.}
-#'   \item{\code{centralization}}{Freeman-type strength centralization:
-#'     \code{sum(max(s) - s) / ((n - 1) * max(s))} where \code{s} is total
-#'     node strength on absolute weights. 0 when all nodes have equal
-#'     strength, approaching 1 for a star.}
-#'   \item{\code{reciprocity}}{Directed networks only. Weighted
-#'     reciprocity \code{sum(pmin(|W|, |t(W)|)) / sum(|W|)} over
-#'     off-diagonal cells: the proportion of total weight that is
-#'     reciprocated.}
+#'   \item{\code{density}}{The share of non-zero off-diagonal cells.}
+#'   \item{\code{mean_weight}}{The mean of the non-zero off-diagonal
+#'     weights.}
+#'   \item{\code{centralization}}{Freeman-type strength centralisation,
+#'     \code{sum(max(s) - s) / ((n - 1) * max(s))}, where \code{s} is each
+#'     node's total (in plus out) absolute strength without its self-loop:
+#'     0 when every node has the same strength, approaching 1 for a star.}
+#'   \item{\code{reciprocity}}{Directed networks only. Weighted reciprocity,
+#'     \code{sum(pmin(|W|, |t(W)|)) / sum(|W|)} over the off-diagonal cells:
+#'     the share of the total weight that is reciprocated.}
 #' }
+#' A statistic is `NA` when it is undefined: `mean_weight` with no non-zero
+#' cell, `centralization` when every strength is 0, `reciprocity` when the
+#' total weight is 0. `NA` replicates are left out of the bootstrap mean,
+#' standard deviation and quantiles.
 #'
-#' @param x A \code{netobject} (from \code{\link{build_network}} or any
-#'   builder), a \code{cograph_network}, or a square numeric weight matrix. For the \code{print()} and \code{plot()} methods: an object of class \code{net_vertex_bootstrap}.
-#' @param iter Integer. Number of bootstrap replicates (default 1000).
-#' @param ci_level Numeric. Significance level for the confidence
-#'   intervals (default 0.05 for 95% CIs).
-#' @param ci_method Character. \code{"percentile"} (default) for empirical
-#'   quantile intervals, or \code{"basic"} for intervals reflected around
-#'   the observed value (Davison & Hinkley 1997, eq. 5.6).
-#' @param statistics Character vector selecting built-in statistics
-#'   (see Details). Default: all applicable to the network's directedness.
-#' @param statistic_fn Optional named list of functions, each taking the
-#'   weight matrix and returning a single numeric value. Computed alongside
-#'   the built-ins.
-#' @param directed Logical or NULL. Directedness of the network. NULL
-#'   (default) reads \code{x$directed} when available, otherwise falls
-#'   back to matrix symmetry.
-#' @param seed Integer or NULL. RNG seed for reproducibility.
+#' @param x The network: a `netobject` (from [build_network()] or any
+#'   builder), a `cograph_network`, or a square numeric weight matrix, with
+#'   at least 3 nodes. Other input raises an error. For the `print()` and
+#'   `plot()` methods: a `net_vertex_bootstrap` result.
+#' @param iter The number of bootstrap replicates, at least 2. Default
+#'   `1000`.
+#' @param ci_level The significance level of the confidence intervals, not
+#'   their coverage: `0.05` (default) gives 95% intervals. Must lie strictly
+#'   between 0 and 1.
+#' @param ci_method How the intervals are formed. `"percentile"` (default)
+#'   takes the `ci_level / 2` and `1 - ci_level / 2` quantiles of the
+#'   replicates; `"basic"` reflects them around the observed value,
+#'   `2 * observed - upper` and `2 * observed - lower` (Davison & Hinkley
+#'   1997, eq. 5.6).
+#' @param statistics The built-in statistics to compute (see *Details*).
+#'   Default `NULL`: all of them, with `reciprocity` only for a directed
+#'   network. A name that is not available for the network, such as
+#'   `reciprocity` on an undirected one, raises an error.
+#' @param statistic_fn Statistics of your own, as a named list of functions,
+#'   each taking the weight matrix and returning a single number. They are
+#'   computed beside the built-ins on the whole matrix, diagonal included.
+#'   Default `NULL`.
+#' @param directed Whether the network is directed, which decides how
+#'   collisions are filled and whether `reciprocity` is available. Default
+#'   `NULL` reads the network's own directedness, and for a matrix (or a
+#'   network that records none) treats an asymmetric matrix as directed.
+#' @param seed A seed passed to [set.seed()] before resampling, so the run
+#'   can be repeated; the session's random-number stream then continues from
+#'   it. Default `NULL` uses the current stream.
 #'
-#' @return An object of class \code{"net_vertex_bootstrap"} containing:
+#' @return A `net_vertex_bootstrap` object. Printing it shows the number of
+#'   nodes, the directedness, the number of replicates and the interval
+#'   level and method, then the summary table; `summary()` returns that
+#'   table as a data frame with one row per statistic and the columns
+#'   `statistic`, `observed`, `boot_mean`, `boot_sd`, `bias`
+#'   (`boot_mean - observed`), `ci_lower` and `ci_upper`; `plot()` draws the
+#'   bootstrap distributions. The object holds:
 #' \describe{
-#'   \item{summary}{Tidy data frame, one row per statistic: \code{statistic},
-#'     \code{observed}, \code{boot_mean}, \code{boot_sd}, \code{bias},
-#'     \code{ci_lower}, \code{ci_upper}.}
-#'   \item{boot_stats}{\code{iter} x n_statistics matrix of replicate values.}
-#'   \item{observed}{Named vector of observed statistics.}
-#'   \item{iter, ci_level, ci_method, directed, n_nodes}{Configuration.}
+#'   \item{summary}{The summary table described above.}
+#'   \item{boot_stats}{A matrix of the replicate values, `iter` rows by one
+#'     column per statistic.}
+#'   \item{observed}{The observed statistics, as a named numeric vector.}
+#'   \item{iter, ci_level, ci_method, directed, n_nodes}{The settings used
+#'     and the number of nodes.}
 #' }
 #'
 #' @references
@@ -110,7 +131,7 @@ vertex_bootstrap <- function(x,
                              directed = NULL,
                              seed = NULL) {
   ci_method <- match.arg(ci_method)
-  stopifnot(
+  .assert(
     is.numeric(iter), length(iter) == 1, iter >= 2,
     is.numeric(ci_level), length(ci_level) == 1, ci_level > 0, ci_level < 1,
     is.null(directed) ||
@@ -133,15 +154,20 @@ vertex_bootstrap <- function(x,
       }
     }
   } else {
-    stop("'x' must be a netobject, cograph_network, or square numeric ",
-         "weight matrix.", call. = FALSE)
+    stop(errorCondition(
+      paste0(
+        "'x' must be a netobject, cograph_network, or square numeric ",
+        "weight matrix."),
+      class = "nestimate_bad_input", call = NULL))
   }
   if (!is.matrix(W) || !is.numeric(W) || nrow(W) != ncol(W)) {
-    stop("Weight matrix must be square and numeric.", call. = FALSE)
+    stop(errorCondition("Weight matrix must be square and numeric.",
+      class = "nestimate_bad_input", call = NULL))
   }
   n <- nrow(W)
   if (n < 3) {
-    stop("Vertex bootstrap requires at least 3 nodes.", call. = FALSE)
+    stop(errorCondition("Vertex bootstrap requires at least 3 nodes.",
+      class = "nestimate_bad_input", call = NULL))
   }
 
   # ---- Resolve statistics ----
@@ -149,17 +175,21 @@ vertex_bootstrap <- function(x,
   if (is.null(statistics)) {
     statistics <- names(builtin)
   } else {
-    stopifnot(is.character(statistics), length(statistics) >= 1)
+    .assert(is.character(statistics), length(statistics) >= 1)
     bad <- setdiff(statistics, names(builtin))
     if (length(bad) > 0) {
-      stop("Unknown statistics: ", paste(bad, collapse = ", "),
-           ". Available: ", paste(names(builtin), collapse = ", "),
-           call. = FALSE)
+      stop(errorCondition(
+        paste0(
+          "Unknown statistics: ",
+          paste(bad, collapse = ", "),
+          ". Available: ",
+          paste(names(builtin), collapse = ", ")),
+        class = "nestimate_bad_input", call = NULL))
     }
   }
   stat_fns <- builtin[statistics]
   if (!is.null(statistic_fn)) {
-    stopifnot(
+    .assert(
       is.list(statistic_fn), length(statistic_fn) >= 1,
       !is.null(names(statistic_fn)), all(nzchar(names(statistic_fn))),
       all(vapply(statistic_fn, is.function, logical(1)))
@@ -170,8 +200,8 @@ vertex_bootstrap <- function(x,
   n_stats <- length(stat_fns)
 
   if (!is.null(seed)) {
-    stopifnot(is.numeric(seed), length(seed) == 1)
-    set.seed(seed)
+    .assert(is.numeric(seed), length(seed) == 1)
+    .local_seed(seed)
   }
 
   # ---- Observed values ----
@@ -314,13 +344,15 @@ vertex_bootstrap <- function(x,
 
 
 #' @rdname vertex_bootstrap
-#' @param digits Number of digits to display (default 3).
-#' @param ... In \code{plot.net_vertex_bootstrap()}, \code{print.net_vertex_bootstrap()} and \code{summary.net_vertex_bootstrap()}: Additional arguments (ignored).
-#' @param object For the \code{summary()} method: an object of class \code{net_vertex_bootstrap}.
-#' @param bins Number of histogram bins (default 30).
-#' @return In \code{print.net_vertex_bootstrap()}: \code{x}, invisibly.
-#' @return In \code{summary.net_vertex_bootstrap()}: The tidy summary data frame (one row per statistic).
-#' @return In \code{plot.net_vertex_bootstrap()}: A ggplot object.
+#' @param digits For the `print()` method: the number of decimals shown.
+#'   Default `3`.
+#' @param ... Not used.
+#' @param object For the `summary()` method: a `net_vertex_bootstrap`
+#'   result.
+#' @param bins For the `plot()` method: the number of histogram bins.
+#'   Default `30`.
+#' @return The `print()` method returns its input invisibly, `summary()` the
+#'   summary data frame and `plot()` a `ggplot` object.
 #' @export
 print.net_vertex_bootstrap <- function(x, digits = 3, ...) {
   cat("Vertex Bootstrap (Snijders & Borgatti)\n")
@@ -345,7 +377,9 @@ summary.net_vertex_bootstrap <- function(object, ...) {
 
 #' @rdname vertex_bootstrap
 #' @section Methods:
-#' * \code{plot.net_vertex_bootstrap()}: Histogram of the bootstrap distribution per statistic, with the observed value (solid line) and confidence bounds (dashed lines).
+#' `plot()` draws a histogram of the replicate values for each statistic,
+#' one panel per statistic with its own scales, a solid line at the observed
+#' value and dashed lines at the interval bounds.
 #' @export
 plot.net_vertex_bootstrap <- function(x, bins = 30, ...) {
   long <- data.frame(
@@ -386,40 +420,69 @@ plot.net_vertex_bootstrap <- function(x, bins = 30, ...) {
 #' Compare Network-Level Statistics of Two Networks
 #'
 #' @description
-#' Snijders & Borgatti (1999) two-network test: each network's statistics
-#' get vertex-bootstrap standard errors, and each difference is tested with
+#' `vertex_compare()` tests whether two observed networks differ in their
+#' network-level statistics, the two-network test Snijders & Borgatti
+#' (1999) proposed the vertex bootstrap for. Each network's statistics get
+#' vertex-bootstrap standard errors from [vertex_bootstrap()], and each
+#' difference is tested with
 #' \deqn{z = (\hat{\theta}_x - \hat{\theta}_y) /
 #'   \sqrt{SE_x^2 + SE_y^2}}
-#' against a standard normal reference. This is the comparison the vertex
-#' bootstrap was originally proposed for: deciding whether two observed
-#' networks differ in density, centralization, reciprocity, or any other
-#' whole-network descriptive.
+#' against a standard normal distribution, with a normal-approximation
+#' confidence interval for the difference. It covers density, mean weight,
+#' centralisation, reciprocity and any statistic of your own.
 #'
-#' @param x,y The two networks: \code{netobject}s, \code{cograph_network}s,
-#'   square weight matrices, or precomputed \code{net_vertex_bootstrap}
-#'   objects (then \code{iter}, \code{statistics}, \code{statistic_fn},
-#'   \code{directed}, and \code{seed} are ignored for that argument). For the
-#'   \code{print()} and \code{plot()} methods, \code{x} is an object of class
-#'   \code{net_vertex_comparison}.
-#'   The two sides must cover exactly the same statistics; a mismatch
-#'   (e.g., a directed network's \code{reciprocity} against an undirected
-#'   one, or precomputed objects built with different \code{statistics}
-#'   selections) is an error, never a silent subset.
-#' @param labels Character vector of length 2 naming the networks in the
-#'   output (default \code{c("x", "y")}).
+#' The test is about whole-network descriptives, and its standard errors
+#' reflect the resampling of nodes, not of the cases behind the weights.
+#' The p-values are not adjusted for the number of statistics tested; pass
+#' them to [stats::p.adjust()] when several are read together. When the raw
+#' data of both networks are available, [permutation()] and [nct()] compare
+#' them edge by edge.
+#'
+#' @param x,y The two networks: `netobject`s, `cograph_network`s, square
+#'   weight matrices, or `net_vertex_bootstrap` results computed beforehand.
+#'   A precomputed result is used as it is, so `iter`, `statistics`,
+#'   `statistic_fn` and `directed` do not apply to it. The two must cover
+#'   the same statistics: a mismatch, such as a directed network's
+#'   `reciprocity` against an undirected network, or two precomputed results
+#'   with different `statistics`, raises an error rather than comparing a
+#'   subset. For the `print()` and `plot()` methods, `x` is a
+#'   `net_vertex_comparison` result.
+#' @param ci_level The significance level of the normal-approximation
+#'   intervals for the differences: `0.05` (default) gives 95% intervals. It
+#'   is also passed to the bootstraps run here; with a precomputed result,
+#'   the differences still use this level.
+#' @param statistics The built-in statistics to compare, as named for
+#'   [vertex_bootstrap()]: `density`, `mean_weight`, `centralization` and,
+#'   for directed networks, `reciprocity`. Default `NULL`: all that apply.
+#'   A name not available for a network raises an error.
+#' @param seed A seed passed to [set.seed()] once, before both bootstraps
+#'   run, so the comparison can be repeated; the session's random-number
+#'   stream then continues from it. Default `NULL` uses the current stream.
+#' @param labels Two names for the networks, used in the print header, the
+#'   plot axis and the column names `observed_<label>` (made syntactic with
+#'   [make.names()]). Default `c("x", "y")`.
+#' @param directed Whether the networks are directed, which decides how
+#'   collisions are filled and whether `reciprocity` is available; one value
+#'   applies to both networks, not to a precomputed result. Default `NULL`
+#'   reads each network's own directedness, and for a matrix (or a network
+#'   that records none) treats an asymmetric matrix as directed.
 #' @inheritParams vertex_bootstrap
 #'
-#' @return An object of class \code{"net_vertex_comparison"} containing:
+#' @return A `net_vertex_comparison` object. Printing it shows the two
+#'   networks' sizes and the first network's number of replicates, then the
+#'   summary table
+#'   with significance stars; `summary()` returns that table as a data frame
+#'   with one row per statistic and the columns `statistic`, the two
+#'   observed values (`observed_<label>`), `diff` (first minus second),
+#'   `se_diff`, `z`, `p_value` (two-sided), `ci_lower` and `ci_upper`;
+#'   `plot()` draws the differences with their intervals. When a statistic
+#'   has no bootstrap variation in either network (both standard errors 0),
+#'   its `z` and `p_value` are `NA`. The object holds:
 #' \describe{
-#'   \item{summary}{Tidy data frame, one row per statistic:
-#'     \code{statistic}, the two observed values, \code{diff},
-#'     \code{se_diff}, \code{z}, \code{p_value}, and a normal-approximation
-#'     confidence interval for the difference.}
-#'   \item{x, y}{The two \code{net_vertex_bootstrap} results.}
-#'   \item{labels, ci_level}{Configuration.}
+#'   \item{summary}{The summary table described above.}
+#'   \item{x, y}{The two `net_vertex_bootstrap` results.}
+#'   \item{labels, ci_level}{The settings used.}
 #' }
-#' When both bootstrap SEs are zero (a statistic with no resampling
-#' variation in either network) \code{z} and \code{p_value} are \code{NA}.
 #'
 #' @references
 #' Snijders, T. A. B., & Borgatti, S. P. (1999). Non-parametric standard
@@ -454,11 +517,11 @@ vertex_compare <- function(x, y,
                            directed = NULL,
                            seed = NULL,
                            labels = c("x", "y")) {
-  stopifnot(is.character(labels), length(labels) == 2, all(nzchar(labels)))
+  .assert(is.character(labels), length(labels) == 2, all(nzchar(labels)))
 
   if (!is.null(seed)) {
-    stopifnot(is.numeric(seed), length(seed) == 1)
-    set.seed(seed)
+    .assert(is.numeric(seed), length(seed) == 1)
+    .local_seed(seed)
   }
 
   as_vb <- function(obj) {
@@ -481,9 +544,10 @@ vertex_compare <- function(x, y,
     } else {
       " The two cover no common statistics at all."
     }
-    stop("The two networks cover different statistics (",
+    stop(errorCondition(paste0("The two networks cover different statistics (",
          paste(only_one_side, collapse = ", "),
-         " present on only one side).", hint, call. = FALSE)
+         " present on only one side).", hint),
+      class = "nestimate_bad_input", call = NULL))
   }
   common <- stats_x
   sx <- vb_x$summary
@@ -523,12 +587,13 @@ vertex_compare <- function(x, y,
 
 
 #' @rdname vertex_compare
-#' @param digits Number of digits to display (default 3).
-#' @param ... In \code{plot.net_vertex_comparison()}, \code{print.net_vertex_comparison()} and \code{summary.net_vertex_comparison()}: Additional arguments (ignored).
-#' @param object For the \code{summary()} method: an object of class \code{net_vertex_comparison}.
-#' @return In \code{print.net_vertex_comparison()}: \code{x}, invisibly.
-#' @return In \code{summary.net_vertex_comparison()}: The tidy summary data frame (one row per statistic).
-#' @return In \code{plot.net_vertex_comparison()}: A ggplot object.
+#' @param digits For the `print()` method: the number of decimals shown.
+#'   Default `3`.
+#' @param ... Not used.
+#' @param object For the `summary()` method: a `net_vertex_comparison`
+#'   result.
+#' @return The `print()` method returns its input invisibly, `summary()` the
+#'   summary data frame and `plot()` a `ggplot` object.
 #' @export
 print.net_vertex_comparison <- function(x, digits = 3, ...) {
   cat("Two-Network Vertex Bootstrap Comparison (Snijders & Borgatti)\n")
@@ -557,7 +622,9 @@ summary.net_vertex_comparison <- function(object, ...) {
 
 #' @rdname vertex_compare
 #' @section Methods:
-#' * \code{plot.net_vertex_comparison()}: Forest plot of the statistic differences with normal-approximation confidence intervals; differences whose interval excludes zero are the statistically distinguishable ones.
+#' `plot()` draws each statistic's difference as a point with its
+#' normal-approximation interval, beside a dashed line at zero; intervals
+#' that exclude zero are drawn in red, the others in blue.
 #' @export
 plot.net_vertex_comparison <- function(x, ...) {
   df <- x$summary

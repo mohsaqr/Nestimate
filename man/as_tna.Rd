@@ -13,43 +13,54 @@ as_tna(x, ...)
 \method{as_tna}{default}(x, ...)
 }
 \arguments{
-\item{x}{An \code{mcml} object created by \code{\link{cluster_summary}} or
-\code{\link{build_mcml}}.}
+\item{x}{An \code{mcml} object from \code{\link[=cluster_summary]{cluster_summary()}} or \code{\link[=build_mcml]{build_mcml()}}. The
+default method also takes a \code{tna} model.}
 
-\item{...}{Passed to methods.}
+\item{...}{Not used.}
 
-\item{expand}{For the \code{mcml} method, names of clusters whose member
-states replace the collapsed cluster node in the \code{macro} layer (see
-\code{\link{macro_network}}). \code{NULL} (default) keeps the macro
-fully collapsed. The per-cluster layers are unaffected.}
+\item{expand}{For the \code{mcml} method: clusters whose member states replace
+the collapsed cluster node in the macro network, as in
+\code{\link[=macro_network]{macro_network()}}. Default \code{NULL} (the macro network stays fully
+collapsed). The within-cluster networks are not affected. It needs an
+\code{mcml} that \code{\link[=build_mcml]{build_mcml()}} built from a wide sequence frame, a sequence
+matrix or an event log; one from \code{\link[=cluster_summary]{cluster_summary()}}, an edge list, a
+\code{netobject} or a \code{tna} model raises an error of class
+\code{nestimate_no_expand_source}.}
 }
 \value{
-A \code{netobject_group}: a named list whose first element is
-\code{macro} (the k x k cluster-level network) followed by one element
-per cluster, each a \code{netobject}/\code{cograph_network} carrying
-\code{$weights}, \code{$inits}, \code{$nodes}, \code{$edges} and the
-recorded \code{$method} (\code{"relative"} for an mcml whose weights are
-already row-normalised, \code{"frequency"} otherwise).
-
-The \code{mcml} method returns that \code{netobject_group}, each
-layer keeping the data the corresponding \code{mcml} layer carried. With
-\code{expand}, its \code{macro} element is the mixed-resolution network
-of \code{\link{macro_network}} rather than the fully collapsed one.
-
-The default method returns the input unchanged when it already
-inherits from \code{tna}, and otherwise raises an error.
+A \code{netobject_group}: a named list whose first element, \code{macro}, is
+the k x k cluster-level network, followed by one network per cluster.
+Print it for one row per layer (nodes, edges, weight range), call
+\code{\link[=summary]{summary()}} for the network metrics of each layer, and draw a layer
+with \code{cograph::splot()}. Each
+element is a \code{netobject} (class \code{c("netobject", "cograph_network")})
+with the layer's weights, initial probabilities, node and edge tables
+and data, and records \code{method = "relative"} when the \code{mcml} holds
+row-normalised weights (\code{type = "tna"}), \code{method = "co_occurrence"}
+for symmetrised counts (\code{type = "cooccurrence"}), and
+\code{method = "frequency"} for counts (\code{type} \code{"raw"} or \code{"frequency"}) and
+for the aggregates of \code{\link[=cluster_summary]{cluster_summary()}}. With
+\code{expand}, the \code{macro} element is the mixed-resolution network of
+\code{\link[=macro_network]{macro_network()}} instead of the fully collapsed one. The default
+method returns a \code{tna} model unchanged and raises an error for any
+other class.
 }
 \description{
-Converts an \code{mcml} object into a \code{netobject_group}: one
-netobject for the cluster-level (macro) layer, and one per cluster for the
+\code{as_tna()} turns an \code{mcml} object into a \code{netobject_group}: one network
+for the cluster-level (macro) layer, followed by one per cluster for the
 within-cluster layers. The stored weights are carried over as they are --
-nothing is re-normalised here, so the aggregation chosen when the
-\code{mcml} was built is what the networks hold.
+nothing is re-normalised -- so the networks hold the aggregation and
+\code{type} chosen when the \code{mcml} was built. Despite its name it returns
+Nestimate networks, not \code{tna} models; a \code{tna} model passed to it is
+returned unchanged.
+
+This is the step that lets an MCML result reach the verbs that take a
+group of networks: printing, the network metrics of \code{\link[=summary]{summary()}},
+\code{\link[=bootstrap_network]{bootstrap_network()}} (for an \code{mcml} built from sequences, whose layers
+keep them; the layers of a \code{\link[=cluster_summary]{cluster_summary()}} result carry none) and
+drawing with cograph.
 }
 \details{
-This is the step that lets an MCML result flow into the verbs that take a
-group of networks (printing, network-metric summaries, rendering with
-cograph).
 \subsection{Workflow}{
 
 \preformatted{
@@ -64,14 +75,13 @@ summary(nets)    # network metrics per layer
 }
 }
 
-\subsection{Zero-out-degree (sink) nodes}{
+\subsection{Sink nodes}{
 
-Every cluster is returned, regardless of its row sums. A node with zero
-outgoing weight is a legitimate sink (a terminal state); its row in the
-wrapped network is left all-zero. This holds for both
-\code{net_method = "relative"} and \code{"frequency"} -- the stored
-weights are never re-normalised, so a sink row needs no special handling.
-Inspect \code{rowSums(x$clusters[[cl]]$weights)} to find sink nodes.
+Every cluster is returned, whatever its row sums. A node with no outgoing
+weight is a legitimate sink (a terminal state), and its row stays all
+zero in the network, for \code{method = "relative"} and \code{"frequency"} alike:
+the stored weights are never re-normalised, so a sink row needs no
+special handling.
 }
 }
 \examples{

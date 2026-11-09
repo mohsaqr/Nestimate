@@ -3,29 +3,51 @@
 #' Extract Pathways from Higher-Order Network Objects
 #'
 #' @description
-#' Extracts higher-order pathway strings suitable for
-#' \code{cograph::plot_simplicial()}. Each pathway represents a
-#' multi-step dependency: source states lead to a target state.
+#' `pathways()` turns a higher-order result into pathway strings in arrow
+#' notation, `"A B -> C"`: the states before the arrow lead, together, to the
+#' state after it. The strings are what `cograph::plot_simplicial()` draws,
+#' one simplex per pathway. Which pathways are returned depends on the input:
+#' \itemize{
+#'   \item a `net_hon` gives its higher-order edges, those whose source node
+#'     has order above 1, i.e. the transitions that differ from a first-order
+#'     Markov chain, ranked by count;
+#'   \item a `net_hypa` gives its anomalous paths, over- or under-represented
+#'     relative to the hypergeometric null model, the over-represented ones
+#'     first;
+#'   \item a `net_mogen` gives every transition at the optimal order (or the
+#'     order given), ranked by count;
+#'   \item a `netobject` built from sequences is first turned into a HON or a
+#'     HYPA, and that result's pathways are returned;
+#'   \item a `net_association_rules` gives its rules `{A, B} => {C}` as
+#'     `"A B -> C"`: antecedent items become the sources, consequent items the
+#'     target. Rules whose antecedent and consequent together hold the same
+#'     items describe the same simplex, so only the highest-lift rule per item
+#'     set is kept; the rules are ranked by lift, then confidence;
+#'   \item a `net_link_prediction` gives its predicted links, ranked by score;
+#'     with `evidence = TRUE` each predicted edge `A -> B` is extended with the
+#'     common neighbours that support it, `"A cn1 cn2 -> B"`.
+#' }
 #'
-#' For \code{net_hon}: extracts edges where the source node is
-#' higher-order (order > 1), i.e., the transitions that differ from
-#' first-order Markov.
+#' The strings keep only which pathways passed the filters, not the counts,
+#' probabilities, scores or tests behind them; those stay in the source
+#' object (for a MOGen, [mogen_transitions()] gives them per order).
 #'
-#' For \code{net_hypa}: extracts anomalous paths (over- or
-#' under-represented relative to the hypergeometric null model).
+#' @param x The object to read: a `net_hon`, `net_hypa` or `net_mogen` (from
+#'   [build_hon()], [build_hypa()] or [build_mogen()]), a `netobject` built
+#'   from sequences, a `net_association_rules` (from [association_rules()])
+#'   or a `net_link_prediction` (from [predict_links()]). A `netobject` of an
+#'   association method (whose rows are variables) or a one-hot `netobject`
+#'   raises an error of class `nestimate_bad_input`; a network without its
+#'   sequences stops `pathways()`.
+#' @param ... For the `netobject` method: passed to the `pathways()` method of
+#'   the HON or HYPA built from it, so `min_count`, `min_prob`, `top` and
+#'   `order` apply to a HON and `type` to a HYPA. Ignored by the other
+#'   methods.
 #'
-#' For \code{net_mogen}: extracts all transitions at the optimal order
-#' (or a specified order).
-#'
-#' @param x A higher-order network object (\code{net_hon}, \code{net_hypa},
-#'   \code{net_mogen}), a \code{netobject}, a \code{net_association_rules}
-#'   or a \code{net_link_prediction}.
-#' @param ... Additional arguments passed on to the method.
-#'
-#' @return A character vector of pathway strings in arrow notation
-#'   (e.g. \code{"A B -> C"}), suitable for
-#'   \code{cograph::plot_simplicial()}. Every method returns this shape, and
-#'   \code{character(0)} when nothing survives its filters.
+#' @return A character vector of pathway strings in arrow notation (e.g.
+#'   `"A B -> C"`), one per pathway and in the ranking order described above,
+#'   ready for `cograph::plot_simplicial()`. Every method returns this shape,
+#'   and `character(0)` when nothing passes its filters.
 #'
 #' @examples
 #' \donttest{
@@ -40,23 +62,21 @@ pathways <- function(x, ...) {
 }
 
 
-#' @describeIn pathways Extract higher-order pathways from HON
+#' @describeIn pathways Higher-order edges of a HON.
 #'
-#' @param min_count Integer. Minimum transition count to include
-#'   (default: 1). Filters noise from rare observations. Used by the
-#'   \code{net_hon} and \code{net_mogen} methods.
-#' @param min_prob Numeric. Minimum transition probability to include
-#'   (default: 0). Useful for filtering weak transitions. Used by the
-#'   \code{net_hon} and \code{net_mogen} methods.
-#' @param top Integer or NULL. Keep only the top N pathways: ranked by count
-#'   for \code{net_hon} and \code{net_mogen}, by lift then confidence for
-#'   \code{net_association_rules}, and by score for
-#'   \code{net_link_prediction}. Default \code{NULL} (all) everywhere except
-#'   \code{net_link_prediction}, whose default is \code{10}.
-#' @param order Integer or NULL. For \code{net_hon}, keep only pathways whose
-#'   source is of this order; default \code{NULL} = every order above 1. For
-#'   \code{net_mogen}, the Markov order to extract; default \code{NULL} = the
-#'   optimal order from model selection.
+#' @param min_count For a HON or a MOGen: the smallest transition count
+#'   kept, which filters out rare observations. Default `1` (all).
+#' @param min_prob For a HON or a MOGen: the smallest transition probability
+#'   kept. Default `0` (all).
+#' @param top How many pathways to keep after ranking: by count for a HON or
+#'   a MOGen, by lift then confidence for association rules (after the item
+#'   sets are de-duplicated), and by score for link predictions. Default
+#'   `NULL` (all), except for link predictions, whose default is `10`. Not
+#'   used for a HYPA.
+#' @param order For a HON: keep only pathways whose source has this order.
+#'   Default `NULL`, every order above 1; order 1 returns nothing. For a
+#'   MOGen: the Markov order to extract. Default `NULL`, the optimal order
+#'   from model selection; an order below 1 returns `character(0)`.
 #'
 #' @export
 pathways.net_hon <- function(x, min_count = 1L, min_prob = 0,
@@ -93,10 +113,10 @@ pathways.net_hon <- function(x, min_count = 1L, min_prob = 0,
 }
 
 
-#' @describeIn pathways Extract anomalous pathways from HYPA
+#' @describeIn pathways Anomalous paths of a HYPA.
 #'
-#' @param type Character. Which anomalies to include: \code{"all"}
-#'   (default), \code{"over"}, or \code{"under"}.
+#' @param type For a HYPA: which anomalies to include, `"all"` (default),
+#'   `"over"` (over-represented paths) or `"under"` (under-represented ones).
 #'
 #' @export
 pathways.net_hypa <- function(x, type = "all", ...) {
@@ -122,14 +142,12 @@ pathways.net_hypa <- function(x, type = "all", ...) {
 }
 
 
-#' @describeIn pathways Extract pathways from a netobject
+#' @describeIn pathways Higher-order pathways of a network's sequences.
 #'
-#' Builds a Higher-Order Network (HON) from the netobject's sequence data
-#' and returns the higher-order pathways. Requires that the netobject was
-#' built from sequence data (has \code{$data}).
-#'
-#' @param ho_method Character. Higher-order method: \code{"hon"} (default) or
-#'   \code{"hypa"}.
+#' @param ho_method For a `netobject`: the higher-order model built from its
+#'   sequences, `"hon"` (default, [build_hon()]) or `"hypa"`
+#'   ([build_hypa()]), each with its default settings. The network must carry
+#'   the sequences it was built from.
 #'
 #' @export
 pathways.netobject <- function(x, ho_method = c("hon", "hypa"), ...) {
@@ -142,19 +160,14 @@ pathways.netobject <- function(x, ho_method = c("hon", "hypa"), ...) {
 }
 
 
-#' @describeIn pathways Extract pathways from association rules
+#' @describeIn pathways Association rules as pathways.
 #'
-#' Converts association rules \code{{A, B} => {C}} into pathway strings
-#' \code{"A B -> C"} suitable for \code{cograph::plot_simplicial()}.
-#' Antecedent items become source nodes; consequent items become the target.
-#' Rules whose antecedent and consequent share the same item set describe the
-#' same simplex, so only the highest-lift rule per item set is returned;
-#' \code{top} is applied after that de-duplication.
-#'
-#' @param min_lift Numeric or NULL. Additional lift filter applied on top of
-#'   the object's original threshold (default: NULL).
-#' @param min_confidence Numeric or NULL. Additional confidence filter
-#'   (default: NULL).
+#' @param min_lift For association rules: the smallest lift kept, on top of
+#'   the threshold the rules were mined with. Default `NULL` (no further
+#'   filter).
+#' @param min_confidence For association rules: the smallest confidence
+#'   kept, on top of the mining threshold. Default `NULL` (no further
+#'   filter).
 #'
 #' @examples
 #' trans <- list(c("A","B","C"), c("A","B"), c("B","C","D"), c("A","C","D"))
@@ -203,20 +216,19 @@ pathways.net_association_rules <- function(x, top = NULL, min_lift = NULL,
 }
 
 
-#' @describeIn pathways Extract pathways from link predictions
+#' @describeIn pathways Predicted links as pathways.
 #'
-#' Converts predicted links into pathway strings for
-#' \code{cograph::plot_simplicial()}. When \code{evidence = TRUE}
-#' (default), each predicted edge \code{A -> B} is enriched with common
-#' neighbors that structurally support the prediction, producing
-#' \code{"A cn1 cn2 -> B"}.
-#'
-#' @param method Character or NULL. Which prediction method to use.
-#'   Default: first method in the object.
-#' @param evidence Logical. If TRUE, include common neighbor evidence
-#'   nodes in each pathway. Default: TRUE.
-#' @param max_evidence Integer. Maximum number of evidence nodes per
-#'   pathway (default: 3).
+#' @param method For link predictions: the prediction method whose links are
+#'   returned. Default `NULL`, the first method in the object. A method the
+#'   object does not hold returns `character(0)`.
+#' @param evidence For link predictions: whether to extend each predicted
+#'   link `A -> B` with its common neighbours, the nodes with an edge from
+#'   `A` and an edge to `B`, giving `"A cn1 cn2 -> B"`. Default `TRUE`.
+#'   Without a stored adjacency matrix the links are returned as `"A -> B"`.
+#' @param max_evidence For link predictions with `evidence = TRUE`: the most
+#'   common neighbours added to one link; when there are more, those with
+#'   the largest summed weight of the edges from `A` and to `B` are kept.
+#'   Default `3`.
 #'
 #' @examples
 #' seqs <- data.frame(
@@ -275,7 +287,7 @@ pathways.net_link_prediction <- function(x, method = NULL, top = 10L,
 }
 
 
-#' @describeIn pathways Extract transition pathways from MOGen
+#' @describeIn pathways Transitions of a MOGen at one order.
 #'
 #' @export
 pathways.net_mogen <- function(x, order = NULL, min_count = 1L,

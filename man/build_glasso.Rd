@@ -4,27 +4,68 @@
 \alias{build_glasso}
 \title{Build a Graphical Lasso Network (EBICglasso)}
 \usage{
-build_glasso(data, ...)
+build_glasso(data, actor = NULL, level = NULL, ...)
 }
 \arguments{
-\item{data}{Data frame (sequences or per-observation frequencies) or a
-square symmetric matrix (correlation or covariance). A fitted
-\code{net_clustering} or \code{net_mmm} object is also accepted: the
-per-cluster networks are (re)built and a \code{netobject_group} is
-returned.}
+\item{data}{The variables: a data frame with one row per observation and
+one column per variable, or a square symmetric correlation or
+covariance matrix, which needs the sample size in \code{params} (as in
+\code{params = list(n = 250)}). Non-numeric columns are set aside; a frame of
+two or more character or factor columns and fewer than two numeric ones
+is read as sequences and turned into per-row state counts first. A
+column named \code{rid} is set aside; columns with non-syntactic names,
+all-missing and constant columns, and rows with a missing value are
+dropped, each with a message; fewer than 2 variables or 3 complete rows
+raise an error.}
 
-\item{...}{Additional arguments passed to \code{\link{build_network}}.}
+\item{actor}{The id column naming whose observation each row is (a
+person). With \code{level}, the decomposition groups by it; without, it is
+set aside, not modelled. Default \code{NULL}.}
+
+\item{level}{Multilevel decomposition, with \code{actor}: \code{"between"}
+estimates the network of person means, \code{"within"} the network of
+deviations from them, and \code{"both"} returns the two as a
+\code{netobject_ml}. Default \code{NULL} (no decomposition).}
+
+\item{...}{Further arguments for \code{\link[=build_network]{build_network()}}, such as \code{params}
+(\code{gamma}, \code{nlambda}, \code{refit}, \code{n} and the others above), \code{threshold},
+\code{scaling} or \code{group}. \code{method} cannot be given: it is always
+\code{"glasso"} (error of class \code{nestimate_bad_input}).}
 }
 \value{
-A \code{netobject} (see \code{\link{build_network}}).
+A \code{netobject} (a \code{netobject_group} with \code{group}, a \code{netobject_ml}
+with \code{level = "both"}), exactly as \code{\link[=build_network]{build_network()}} returns it: print
+it for an overview, read the edges with \code{\link[=extract_edges]{extract_edges()}}, and draw it
+with \code{cograph::splot()}.
 }
 \description{
-Convenience wrapper for \code{build_network(method = "glasso")}.
-Computes L1-regularized partial correlations with EBIC model selection.
+\code{build_glasso()} estimates a regularised partial correlation network with
+the graphical lasso: an L1 penalty shrinks small partial correlations to
+exactly zero, and the penalty is chosen along a path of \code{nlambda} values
+by the extended Bayesian information criterion (EBIC; Foygel & Drton,
+2010). It is \code{\link[=build_network]{build_network()}} with \code{method = "glasso"}. The settings go
+in \code{params}: \code{gamma} (the EBIC hyperparameter, default \code{0.5}; larger
+values give sparser networks), \code{nlambda} (default \code{100}),
+\code{lambda.min.ratio} (default \code{0.01}), \code{penalize.diagonal} (default
+\code{FALSE}), \code{refit} (default \code{FALSE}; \code{TRUE} re-estimates the selected
+edges without the penalty) and \code{cor_method}.
+
+An absent edge means the penalty set it to zero at the selected lambda,
+not that the two variables are shown to be independent. Check the
+stability of the edges and centralities with \code{\link[=boot_glasso]{boot_glasso()}}.
 }
 \examples{
 data(srl_strategies)
 net <- build_glasso(srl_strategies)
+}
+\references{
+Friedman, J., Hastie, T., & Tibshirani, R. (2008). Sparse inverse
+covariance estimation with the graphical lasso. \emph{Biostatistics},
+9(3), 432--441. \doi{10.1093/biostatistics/kxm045}
+
+Foygel, R., & Drton, M. (2010). Extended Bayesian information criteria
+for Gaussian graphical models. \emph{Advances in Neural Information
+Processing Systems}, 23, 604--612.
 }
 \seealso{
 \code{\link{build_network}}

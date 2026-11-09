@@ -7,44 +7,55 @@
 mark_terminal_state(data, state = "End", cols = NULL)
 }
 \arguments{
-\item{data}{A wide-format matrix or data.frame (rows = actors,
-cols = time steps) of state labels with \code{NA} for missing
-observations.}
+\item{data}{The sequences: a matrix or data frame with one row per actor
+and one column per position, holding state labels, with \code{NA} for a
+missing observation. Without \code{cols}, the frame must be one column or a
+numbered run of positions (\code{T1}, \code{T2}, ...); other columns beside them
+raise an error of class \code{nestimate_bad_input}.}
 
-\item{state}{Character. Label to insert in terminal-NA cells.
-Default \code{"End"}. If the label already occurs somewhere in \code{data}, the
-function warns and appends \verb{_1}, \verb{_2}, ... until it is unique, so the
-absorbing marker is never confused with an observed state.}
+\item{state}{The label written into the trailing missing cells, a single
+non-empty string. Default \code{"End"}. If the label already occurs in
+\code{data}, a warning is given and \verb{_1}, \verb{_2}, ... is appended until it is
+unique, so the absorbing marker is never confused with an observed
+state.}
 
-\item{cols}{Optional state-column names; otherwise all columns.}
+\item{cols}{The columns holding the positions, in order; only they are
+returned. A name not in \code{data} raises an error of class
+\code{nestimate_bad_input}. Default \code{NULL} (every column).}
 }
 \value{
-A character \code{data.frame} of the same shape as \code{data} (or of
-\code{data[cols]} when \code{cols} is given) with terminal NAs filled by
-\code{state}. The label actually used is attached as the
-\code{"terminal_state"} attribute, which matters when it had to be made
-unique.
+A data frame of character columns with the shape of \code{data} (or of
+its \code{cols}), the trailing missing cells filled with the marker. The
+label used is kept in the \code{"terminal_state"} attribute, which differs
+from \code{state} when it had to be made unique. The columns are marked as
+positions, so \code{\link[=build_network]{build_network()}} reads them without \code{state_cols}.
 }
 \description{
-Replaces every cell after each row's last observed state with the
-label given by \code{state}, leaving non-terminal NAs untouched. The
-result, passed to \code{\link[=build_network]{build_network()}}, yields a Markov chain in
-which the marked state is \strong{absorbing} by construction
-(\code{P[state, state] = 1}).
+\code{mark_terminal_state()} fills every missing cell after each sequence's
+last observed state with an explicit state, \code{"End"} by default, and
+returns the wide table. This turns right-censored sequences (drop-out,
+course end) into data for an absorbing-chain model: in a transition
+network built from the result with \code{\link[=build_network]{build_network()}}, the marked state
+is entered once a sequence stops and never left. Internal and leading
+missing cells are left as they are, and so are rows observed to the last
+position or not at all.
+
+\code{\link[=chain_structure]{chain_structure()}} on that network gives the mean time to absorption,
+the absorption probabilities and each state's classification.
+\code{\link[=markov_stability]{markov_stability()}} is not the right summary for an absorbing chain:
+its stationary distribution collapses onto the absorbing state.
 }
 \details{
-This is the small piece of pre-processing required to turn
-right-censored sequence data into an absorbing-chain model. The
-chain on the resulting matrix has one extra state (\code{state})
-which is structurally absorbing because every cell after the
-actor's last observed step has been set to \code{state} - the chain
-stays there forever once entered.
+The marked state is absorbing because each sequence that reaches it
+stays there to the last column, so its only observed move is to itself
+(\code{P[state, state] = 1} in a \code{"relative"} network). That needs at least
+one sequence with two or more trailing missing cells: when every
+sequence stops at most one cell early, the state has no outgoing
+transitions and its row in the network is zero.
 
-Use \code{\link[=chain_structure]{chain_structure()}} on the result to compute mean absorption
-time, absorption probabilities, and per-state classification.
-Note that \code{markov_stability()} is \emph{not} the right summary for
-absorbing chains; its stationary distribution will collapse to
-the absorbing state.
+Unlike \code{build_network(end = )}, which adds an end state only in the cell
+after each sequence's last observed state, with no outgoing edges and no
+self-loop, this function fills all the trailing cells.
 }
 \examples{
 M <- mark_terminal_state(trajectories, state = "Dropout")

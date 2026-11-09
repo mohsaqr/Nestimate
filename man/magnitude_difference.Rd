@@ -21,58 +21,98 @@ magnitude_difference(
 \method{plot}{magnitude_difference}(x, type = c("stacked", "circular"), min_show = 0.01, title = NULL, ...)
 }
 \arguments{
-\item{data}{Long- or wide-format event log (\code{data.frame}).}
+\item{data}{The event log (long format, with \code{action} set) or wide
+sequences, as a data frame.}
 
-\item{actor, action, time}{Column names in \code{data} (long format). Column names
-are not read: without \code{action} the data is taken as wide. Default: \code{NULL}.}
+\item{actor, action, time}{The columns of a long event log, as in
+\code{\link[=build_network]{build_network()}}. Column names are not read: without \code{action} the
+data is read as wide sequences, and a frame whose roles cannot be told
+raises an error of class \code{nestimate_bad_input}, as does a name that is
+not a column of \code{data}. Default \code{NULL}.}
 
-\item{metric}{Discrepancy metric. One of \code{"abs_diff"} (default; absolute
-difference, simplest and most robust), \code{"chord_dist"} (chord distance on
-the unit sphere), \code{"atanh_diff"} (Fisher z-style on a bounded scale),
-\code{"geom_norm_diff"} (geometric-mean normalized; amplifies small edges),
-\code{"cv_inflation"} (per-vector SD-standardized then absolute difference).}
+\item{metric}{The discrepancy metric, computed on the two scaled weight
+vectors. \code{"abs_diff"} (default) is the absolute difference;
+\code{"chord_dist"} the absolute difference after each vector is scaled to
+unit length (chord distance on the unit sphere); \code{"atanh_diff"} the
+absolute difference of the Fisher z (\code{atanh()}) transforms, with values
+capped at \code{1 - 1e-6}, so it needs weights in [0, 1) and is not
+meaningful with \code{scale = "none"}; \code{"geom_norm_diff"} the absolute
+difference after each vector is divided by its geometric mean (of the
+weights plus 0.001, so zeros are allowed), which enlarges small edges;
+and \code{"cv_inflation"} the absolute difference after each vector is
+divided by its standard deviation (at least 0.001).}
 
-\item{scale}{How the two weight matrices are placed on a common scale
-before differencing. \code{"tna_range"} (default) rescales FTNA linearly into
-TNA's \verb{[min, max]} range and leaves TNA untouched, so the difference is
-in TNA probability units. \code{"rank_minmax"} converts each matrix's values
-to ranks scaled to \verb{[0, 1]} (ordinal). \code{"minmax"} scales each matrix's
-raw values to \verb{[0, 1]} separately (asymmetric - TNA's max and FTNA's max
-map to the same value despite differing native ranges). \code{"none"} uses
-raw weights.}
+\item{scale}{How the two weight matrices are put on a common scale before
+differencing. \code{"tna_range"} (default) rescales the counts linearly into
+the \verb{[min, max]} range of the probabilities and leaves the probabilities
+as they are, so the difference is in probability units. \code{"rank_minmax"}
+replaces each matrix's values by their ranks scaled to [0, 1]
+(ordinal). \code{"minmax"} scales each matrix to [0, 1] separately, so the
+two maxima map to the same value although their native ranges differ.
+\code{"none"} uses the raw weights.}
 
-\item{format}{Input format passed through to \code{\link[=build_network]{build_network()}};
-\code{"auto"} (default) treats the data as wide when \code{action} is not a column.}
+\item{format}{The input format passed to \code{\link[=build_network]{build_network()}}. \code{"auto"}
+(default) reads wide sequences when \code{action} is \code{NULL} and an event log
+otherwise; \code{"long"} and \code{"wide"} force a reading.}
 
-\item{x}{For the \code{print()} and \code{plot()} methods: an object of class \code{magnitude_difference}.}
+\item{x}{For the \code{print()} and \code{plot()} methods: a \code{magnitude_difference}
+object.}
 
-\item{...}{In \code{plot.magnitude_difference()}: Ignored. In \code{print.magnitude_difference()}: Passed to plotting helpers (ignored by \code{print}).}
+\item{...}{For the \code{plot()} method: further settings of the drawing.
+\code{"stacked"} takes \code{threshold} (the magnitude marked "small" in the
+colour key, default 10\% of the largest), \code{r_inner},
+\code{r_outer}, \code{gap_rad}, \code{label_offset}, \code{label_size} and
+\code{src_label_size}; \code{"circular"} takes \code{self_loops} (default \code{TRUE}),
+\code{label_offset} and \code{edge_curve}. The \code{print()} method ignores it.}
 
-\item{type}{Plot style, \code{"stacked"} (default) or \code{"circular"}.}
+\item{type}{For the \code{plot()} method: the kind of plot. \code{"stacked"}
+(default) is a polar portrait with one sector per source state and one
+wedge per edge, grey up to the smaller of the two scaled weights and
+coloured by the magnitude difference from there to the larger; edges
+absent from both views are left out. \code{"circular"} is a chord-style
+diagram of the signed difference (\code{tna - ftna}), its colour giving the
+sign and its width and opacity the magnitude.}
 
-\item{min_show}{For \code{type = "circular"}, drop edges whose magnitude is below this fraction of the maximum.}
+\item{min_show}{For \code{type = "circular"}: edges whose magnitude difference
+is below this fraction of the largest are left out. Default \code{0.01}.}
 
-\item{title}{Plot title. \code{NULL} generates one from the metric and scale.}
+\item{title}{For the \code{plot()} method: the plot title. Default \code{NULL},
+which names the metric and the scale.}
 }
 \value{
-An object of class \code{"magnitude_difference"}: a list with
-\verb{$edges} (per-edge \code{data.frame} with columns \code{from}, \code{to}, \code{ftna},
-\code{tna}, \code{signed} = \code{tna - ftna}, and \code{value} = the chosen metric),
-\verb{$metric}, \verb{$scale}, \verb{$weights_ftna}, \verb{$weights_tna}, and \verb{$states}.
+A \code{magnitude_difference} object. \code{print()} reports the metric,
+the scale, the states, the number of edges and the minimum, quartiles,
+mean and maximum of the magnitude differences; \code{plot()} draws them.
+The object's fields:
+\describe{
+\item{edges}{One row per ordered pair of states (the self-transitions
+and absent edges included), with the columns \code{from}, \code{to}, \code{ftna} and
+\code{tna} (the scaled weights), \code{signed} (\code{tna - ftna}) and \code{value} (the
+chosen metric).}
+\item{metric, scale}{The metric and scale used.}
+\item{weights_ftna, weights_tna}{The two scaled weight matrices.}
+\item{states}{The state names.}
+}
 
-In \code{print.magnitude_difference()}: \code{print} invisibly returns \code{x}.
-
-In \code{plot.magnitude_difference()}: \code{plot} returns a \code{ggplot} object.
+For the \code{plot()} method: a \code{ggplot} object. The \code{print()} method
+returns \code{x} invisibly.
 }
 \description{
-Quantifies, per edge, how much row-normalization moves a transition
-network between its two natural summaries: raw transition counts
-(frequency / FTNA, \code{build_network(method = "frequency")}) and
+\code{magnitude_difference()} measures, edge by edge, how far the two usual
+summaries of one set of sequences disagree: the raw transition counts
+(frequency network, FTNA, \code{build_network(method = "frequency")}) and the
 row-conditional probabilities (TNA, \code{build_network(method = "relative")}).
-The two matrices rank edges differently - an edge that is large in counts
-can be modest in probability, and a rare-source edge can dominate its row
-in probability. The per-edge discrepancy on a common scale is the
-\emph{magnitude difference}.
+It builds both networks from the same event log or wide sequences, puts
+the two weight matrices on a common scale and returns the per-edge
+discrepancy, the \emph{magnitude difference}, under one of five metrics.
+
+The two matrices rank edges differently because row normalisation
+divides each count by its source state's total: an edge that is large in
+counts can be modest in probability when its source state is frequent,
+and an edge from a rare source state can dominate its row in
+probability. A large magnitude difference marks an edge whose importance
+depends on which view is reported; it says nothing about sampling
+uncertainty, which \code{\link[=bootstrap_network]{bootstrap_network()}} estimates for each view.
 }
 \examples{
 data(group_regulation_long, package = "Nestimate")

@@ -22,101 +22,140 @@ build_mogen(
 \method{plot}{net_mogen}(x, type = c("ic", "likelihood"), ...)
 }
 \arguments{
-\item{data}{A data.frame (rows = trajectories, columns = time points), a
-list of character/numeric vectors (one per trajectory), a \code{tna}
-object, or a \code{netobject} with sequence data. For
-\code{tna}/\code{netobject}, numeric state IDs are automatically
-converted to label names.}
+\item{data}{The sequences: a data frame with one row per trajectory and
+one column per time point, a character matrix laid out the same way, a
+list of state vectors (one per trajectory), a \code{tna} model (its integer
+states are decoded to their labels) or a \code{netobject} built from
+sequences (its states are read as stored). A data frame needs position
+columns named as a numbered run (\code{T1}, \code{T2}, ...); any other frame
+raises an error of class \code{nestimate_bad_input} that says to declare the
+roles in \code{\link[=build_network]{build_network()}} and pass the network. A missing value ends a
+run of observed states, so each run is its own trajectory, and
+trajectories with fewer than two states are dropped; with none left,
+\code{build_mogen()} stops. A one-hot network, an association network
+(\code{cor}, \code{pcor}, \code{glasso}, \code{ising}, \code{mgm}), a \code{netobject_group} and a
+0/1 matrix raise an error of class \code{nestimate_bad_input}.}
 
-\item{max_order}{Integer. Maximum Markov order to test (default 5).
-Must be a whole number; a non-integer value (e.g. \code{2.7}) is an
-error rather than being silently truncated. A \code{max_order} at or
-above the longest trajectory is capped at (longest path - 1) with a
-message.}
+\item{max_order}{The highest order fitted, a whole number of at least 1;
+a value such as \code{2.7} is an error, not truncated. Default \code{5}. A value
+at or above the length of the longest trajectory is lowered to that
+length minus 1, with a message.}
 
-\item{criterion}{Character. Model selection criterion: \code{"aic"}
-(default), \code{"bic"}, or \code{"lrt"} (likelihood ratio test).}
+\item{criterion}{How the order is selected: \code{"aic"} (default) or
+\code{"bic"} takes the order with the smallest criterion, and \code{"lrt"} uses
+the sequential likelihood-ratio tests described in \emph{Details}.}
 
-\item{lrt_alpha}{Numeric. Significance threshold for LRT (default 0.01).}
+\item{lrt_alpha}{The significance level of the likelihood-ratio tests,
+strictly between 0 and 1. Default \code{0.01}. It only affects the selection
+with \code{criterion = "lrt"}; the p-values are computed under every
+criterion.}
 
-\item{dof}{Character. How the parameters of each layer are counted.
-\code{"paths"} (default) counts every transition of the paths of
-length \eqn{k} that the observed first-order topology allows, as
-Scholtes (2017, Eq. 7) and pathpy do. \code{"observed"} counts only the
-transitions seen in the data (the rule before Nestimate 0.9.28); it
-can fall as the order rises and under-penalises high orders on sparse
-data.}
+\item{dof}{How the parameters of each layer are counted. \code{"paths"}
+(default) counts every transition of the paths of length k that the
+observed first-order topology allows, as Scholtes (2017, Eq. 7) and
+pathpy do. \code{"observed"} counts only the transitions seen in the data
+(the rule before Nestimate 0.9.28); that count can fall as the order
+rises, and it under-penalises high orders on sparse data.}
 
-\item{x}{For the \code{print()} and \code{plot()} methods: an object of class \code{net_mogen}.}
+\item{x}{For the \code{print()} and \code{plot()} methods: a \code{net_mogen} object.}
 
-\item{...}{In \code{plot.net_mogen()}: Additional arguments passed to \code{\link[graphics]{plot}}. In \code{print.net_mogen()} and \code{summary.net_mogen()}: Additional arguments (ignored).}
+\item{...}{For the \code{plot()} method: further arguments passed to
+\code{\link[graphics:plot.default]{graphics::plot()}}. For the \code{print()} and \code{summary()} methods: ignored.}
 
-\item{object}{For the \code{summary()} method: an object of class \code{net_mogen}.}
+\item{object}{For the \code{summary()} method: a \code{net_mogen} object.}
 
-\item{type}{Character. Plot type: \code{"ic"} (default) or \code{"likelihood"}.}
+\item{type}{For the \code{plot()} method: \code{"ic"} (default) draws AIC and BIC
+against the order; \code{"likelihood"} draws the log-likelihood against the
+order. Both mark the selected order with a dashed line.}
 }
 \value{
-An object of class \code{c("net_mogen", "cograph_network")} with
-components:
+A \code{net_mogen} object (class \code{c("net_mogen", "cograph_network")}).
+\code{print()} shows the selected order and the AIC and BIC of every order,
+with each minimum starred. \code{summary()} prints the states and the
+selection, then returns, visibly, one row per order as a data frame
+(\code{order}, \code{layer_dof}, \code{cum_dof}, \code{loglik}, \code{aic}, \code{bic}, \code{best}
+(\code{"AIC"}, \code{"BIC"} or \code{"AIC+BIC"} on the order each criterion picks,
+empty elsewhere) and \code{selected} (\code{"<--"} on the chosen order)).
+\code{plot()} draws the criteria or the log-likelihood against the order and
+returns its input invisibly; \code{print()} also returns its input
+invisibly. \code{\link[=mogen_transitions]{mogen_transitions()}} gives the transitions of one
+order, one row per path, and \code{\link[=pathways]{pathways()}} the same as character
+strings. The object's fields:
 \describe{
-\item{optimal_order}{Selected optimal Markov order.}
-\item{criterion}{Which criterion was used for selection.}
-\item{orders}{Integer vector of tested orders (0 to max_order, after
-any capping).}
-\item{aic}{Named numeric vector of AIC values per order.}
-\item{bic}{Named numeric vector of BIC values per order.}
-\item{log_likelihood}{Named numeric vector of log-likelihoods.}
-\item{dof}{Named numeric vector of cumulative DOF per model.}
-\item{layer_dof}{Named numeric vector of per-layer DOF.}
+\item{optimal_order}{The selected order.}
+\item{criterion}{The criterion used for the selection.}
+\item{orders}{The orders fitted, 0 to \code{max_order} after any capping.}
+\item{aic, bic, log_likelihood}{Named numeric vectors, one value per
+order.}
+\item{dof}{Named numeric vector of the cumulative degrees of freedom
+of each model.}
+\item{layer_dof}{Named numeric vector of the degrees of freedom of
+each layer.}
 \item{dof_method}{\code{"paths"} or \code{"observed"}.}
 \item{lrt_p}{Named numeric vector: the likelihood-ratio p-value of
-order \eqn{k} against order \eqn{k-1} (\code{NA} for order 0 and
-where the test is undefined).}
-\item{transition_matrices}{List of row-stochastic transition matrices
-(index 1 = order 0, held as the marginal named numeric vector).}
-\item{count_matrices}{List of the matching raw count matrices, same
-indexing; read by \code{\link{mogen_transitions}()}.}
-\item{states}{Unique first-order states.}
-\item{n_paths}{Number of trajectories.}
+order k against order k - 1.}
+\item{transition_matrices}{List of row-stochastic transition
+matrices (a context never followed by another state keeps a zero
+row), the first (order 0) held as the named vector of marginal
+probabilities.}
+\item{count_matrices}{List of the matching counts, in the same
+order, the first (order 0) as a named vector of state counts;
+\code{\link[=mogen_transitions]{mogen_transitions()}} reads them.}
+\item{states}{The distinct first-order states.}
+\item{n_paths}{Number of trajectories fitted.}
 \item{n_observations}{Total number of state observations.}
-\item{weights}{\code{cograph_network} weight matrix: the transition
-matrix of the selected optimal order (a 1 x n matrix named
-\code{"marginal"} when the optimal order is 0). Its dimnames are the
-internal k-gram keys (states joined by a non-printing separator),
-not arrow notation.}
-\item{nodes}{data.frame (\code{id}, \code{label}, \code{name}) of the
-optimal-order De Bruijn nodes.}
-\item{edges}{\code{cograph_network} edge data.frame with integer
-\code{from}/\code{to} node indices and a numeric \code{weight}. The
-readable arrow-notation table is
-\code{\link{mogen_transitions}()}.}
-\item{directed}{Logical. Always \code{TRUE}.}
-\item{n_nodes, n_edges}{Counts for the optimal-order graph.}
-\item{meta}{\code{cograph_network} metadata list.}
+\item{weights}{The transition matrix of the selected order, as the
+\code{cograph_network} weight matrix (a 1 x n matrix named \code{"marginal"}
+when the selected order is 0). Its dimnames are internal k-tuple
+keys (states joined by a non-printing separator), not arrow
+notation.}
+\item{nodes}{Data frame (\code{id}, \code{label}, \code{name}) of the nodes of the
+selected order.}
+\item{edges}{The \code{cograph_network} edge data frame, with integer
+\code{from} and \code{to} node indices and a numeric \code{weight};
+\code{\link[=mogen_transitions]{mogen_transitions()}} gives the readable table.}
+\item{directed}{Always \code{TRUE}.}
+\item{n_nodes, n_edges}{Counts for the graph of the selected order.}
+\item{meta}{The \code{cograph_network} metadata list.}
 \item{node_groups}{Always \code{NULL}.}
 }
-
-In \code{print.net_mogen()} and \code{plot.net_mogen()}: The input object, invisibly.
-
-In \code{summary.net_mogen()}: A per-order model-selection data.frame with columns \code{order}, \code{layer_dof}, \code{cum_dof}, \code{loglik}, \code{aic}, \code{bic}, \code{best} (\code{"AIC"}/\code{"BIC"}/\code{"AIC+BIC"} marker) and \code{selected} (\code{"<--"} on the chosen order), returned visibly; the summary text is printed as a side effect.
 }
 \description{
-Constructs higher-order De Bruijn graphs from sequential trajectory data and
-selects the optimal Markov order using AIC, BIC, or likelihood ratio tests.
-This is the multi-order model of Scholtes (2017), the model pathpy 2 calls
-\code{MultiOrderModel}. It is not the multi-order generative model of
-Gote et al. (2023), which adds start and end states and selects by AIC
-only; the function name is kept for compatibility.
+\code{build_mogen()} fits Markov chains of every order from 0 to \code{max_order}
+to a set of sequences and selects the order that best balances fit
+against the number of parameters, by AIC, BIC or likelihood-ratio tests.
+At order k the chain is a De Bruijn graph: its nodes are the k-tuples of
+consecutive states seen in the data, and an edge joins two tuples that
+overlap in k - 1 states, so each edge is an observed path of k + 1
+states. Order 0 is the marginal distribution of the states. It is the
+multi-order model of Scholtes (2017), and takes wide sequence data, a
+list of state vectors, a \code{tna} model or a network built from sequences.
+
+The selected order is the number of earlier states the next state
+depends on, as far as the sample can show. The number of parameters
+grows quickly with the order (\code{summary()} lists them per order), so few
+or short sequences favour low orders, and AIC and BIC can disagree:
+\code{print()} shows both. Before reading a higher-order transition, check how
+often its context was observed with \code{\link[=mogen_transitions]{mogen_transitions()}};
+\code{\link[=markov_order_test]{markov_order_test()}} tests the order against a permutation null, and
+\code{\link[=path_dependence]{path_dependence()}} shows which contexts carry the extra information.
 }
 \details{
-With \code{criterion = "lrt"} the selected order is the largest
-\eqn{k} whose test against order \eqn{k-1} rejects at
-\code{lrt_alpha} (Scholtes 2017), or 0 when none does; all p-values are
-returned in \code{lrt_p}, so a non-monotone sequence is visible.
+The log-likelihood of the order-k model scores the first state of each
+trajectory by the marginal distribution, the j-th state by the order
+j - 1 transitions while j <= k, and every later state by the order-k
+transitions. The likelihood-ratio test of order k against order k - 1
+refers twice the gain in log-likelihood to a chi-square distribution with
+the order-k layer's degrees of freedom; its p-value is \code{NA} for order 0
+and where the statistic or the degrees of freedom are not positive. With
+\code{criterion = "lrt"} the selected order is the largest k whose test
+rejects at \code{lrt_alpha} (Scholtes 2017), or 0 when none does. Every
+p-value is kept in the result, so a non-monotone run of tests is visible.
 
-At order k, nodes are k-tuples of states and edges represent transitions
-between overlapping k-tuples. The model tests increasingly complex Markov
-orders and selects the one that best balances fit and parsimony.
+The model is the one pathpy 2 calls \code{MultiOrderModel}. It is not the
+multi-order generative model of Gote et al. (2023), which adds start and
+end states and selects by AIC only; the function name is kept for
+compatibility.
 }
 \examples{
 seqs <- list(c("A","B","C","D"), c("A","B","C","A"), c("B","C","D","A"))

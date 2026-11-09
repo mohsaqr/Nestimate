@@ -4,6 +4,8 @@
 \alias{entropy_bayes}
 \alias{print.net_entropy_bayes}
 \alias{print.net_entropy_bayes_group}
+\alias{summary.net_entropy_bayes_group}
+\alias{plot.net_entropy_bayes_group}
 \alias{summary.net_entropy_bayes}
 \alias{plot.net_entropy_bayes}
 \title{Bayesian Transition Entropy}
@@ -22,115 +24,150 @@ entropy_bayes(
 
 \method{print}{net_entropy_bayes_group}(x, ...)
 
+\method{summary}{net_entropy_bayes_group}(object, ...)
+
+\method{plot}{net_entropy_bayes_group}(x, top = 25, title = paste("Bayesian edge entropy", "contributions"), ...)
+
 \method{summary}{net_entropy_bayes}(object, ...)
 
 \method{plot}{net_entropy_bayes}(x, top = 25, title = "Bayesian edge entropy contributions", ...)
 }
 \arguments{
-\item{x}{A frequency \code{netobject}
-(\code{build_network(method = "frequency")}), a relative or frequency
-\code{netobject} that carries its \code{$data} (counts are recounted with
-the network's own start/end states, concatenation, windows and one-hot
-units), a \code{tna} model, a count matrix, or a wide sequence
-data.frame. Counts are read from the declared method, never from the
-values: a scaled or relative network is recounted from its data, and an
-association network or any other network without counts raises
-\code{nestimate_bad_input}. Group dispatch on
-\code{netobject_group}. For the \code{print()} and \code{plot()} methods: an object of class \code{net_entropy_bayes} or \code{net_entropy_bayes_group}.}
+\item{x}{The transition counts: a frequency \code{netobject}
+(\code{build_network(method = "frequency")}); a relative, frequency or
+co-occurrence \code{netobject} that carries its data, recounted with the
+network's own start and end states, concatenation, windows and one-hot
+units; a one-hot network built with \code{build_network(method = "wtna")} or
+\code{"wtna_cooccurrence"}, with its data, recounted the same way (a \code{\link[=wtna]{wtna()}}
+result, whose method is \code{"wtna_transition"}, currently raises
+\code{nestimate_bad_input}); an unscaled frequency, co-occurrence or reverse
+network without data, whose weights are the counts; a network without a
+declared method whose weights are non-negative whole numbers, read as
+counts; a \code{tna} model; a count matrix (non-negative whole numbers); or
+wide sequence data (a data frame or a character matrix) that holds a
+numbered run of positions (T1, T2, ...), from which a frequency network
+is built, other columns set aside with a message. For a frame without
+such a run, pass a network built with \code{\link[=build_network]{build_network()}}. When a
+network declares its method, counts are read from that method, never
+from the values: a scaled or relative network is recounted from its
+data. An association network, or any other network
+whose counts cannot be recovered, raises an error of class
+\code{nestimate_bad_input}; a matrix of probabilities raises an error. A
+\code{netobject_group} gives one result per group. For the \code{print()} and
+\code{plot()} methods: an \code{entropy_bayes()} result; \code{print()} also takes a
+group result.}
 
-\item{prior}{Numeric. Dirichlet prior concentration added to every cell
-of the count matrix (default \code{0.5}, Jeffreys).}
+\item{prior}{The Dirichlet concentration added to every cell of the count
+matrix, a positive number. Default \code{0.5} (Jeffreys).}
 
-\item{draws}{Integer. Number of Monte Carlo posterior draws
-(default \code{4000}).}
+\item{draws}{The number of Monte Carlo posterior draws, at least 100.
+Default \code{4000}.}
 
-\item{ci}{Numeric in (0, 1). Credible interval mass (default \code{0.95}).}
+\item{ci}{The mass of the credible intervals, between 0 and 1. Default
+\code{0.95}.}
 
-\item{min_share}{Numeric in [0, 1). An edge is credible when the lower
-bound of the credible interval of its \emph{share} of the entropy rate
-exceeds this value (default \code{0.01}: the edge credibly accounts for
-at least 1\% of process entropy).}
+\item{min_share}{The credibility threshold, a proportion in \eqn{[0, 1)}:
+an edge is credible when the lower limit of the credible interval of its
+\emph{share} of the entropy rate exceeds it. Default \code{0.01}: the edge
+credibly accounts for at least 1\% of the entropy rate.}
 
-\item{base}{Numeric. Logarithm base (default \code{2}, bits).}
+\item{base}{The logarithm base, which sets the unit: \code{2} (default) for
+bits. Any positive number other than 1.}
 
-\item{seed}{Integer or NULL. RNG seed for reproducibility.}
+\item{seed}{An integer that makes the draws reproducible. Default \code{NULL}.
+The session's own random stream is left as it was; a group uses the
+same seed for every
+group.}
 
-\item{digits}{Integer. Digits to round numeric output. Default \code{3}.}
+\item{digits}{For \code{print()} of a result: decimal places of the
+chain-level estimates. Default \code{3}. A group result prints with three.}
 
-\item{...}{In \code{plot.net_entropy_bayes()}, \code{print.net_entropy_bayes()}, \code{print.net_entropy_bayes_group()} and \code{summary.net_entropy_bayes()}: Ignored.}
+\item{...}{For the \code{print()}, \code{summary()} and \code{plot()} methods: not used.}
 
-\item{object}{For the \code{summary()} method: an object of class \code{net_entropy_bayes}.}
+\item{object}{For \code{summary()}: an \code{entropy_bayes()} result.}
 
-\item{top}{Integer. Show at most this many edges, by posterior mean contribution (default \code{25}).}
+\item{top}{For \code{plot()}: the most edges to show, those with the largest
+posterior mean contribution. Default \code{25}.}
 
-\item{title}{Character. Plot title.}
+\item{title}{For \code{plot()}: the plot title. Default
+\code{"Bayesian edge entropy contributions"}.}
 }
 \value{
-An object of class \code{"net_entropy_bayes"} with:
+A \code{net_entropy_bayes} object, or for a \code{netobject_group} a
+\code{net_entropy_bayes_group}: a named list of them, one per group.
+\code{print()} shows the posterior mean and credible interval of the entropy
+rate, stationary entropy and redundancy, and how many edges are
+credible; for a group, each group's entropy rate. For a group,
+\code{summary()} returns the chain-level table of every group stacked, with a
+\code{group} column, and \code{plot()} draws the forest plot below in one panel
+per group. For one network, \code{summary()} prints the
+chain-level table and the per-edge table and returns the per-edge data
+frame invisibly. \code{plot()} returns a \code{ggplot} forest plot of the edges
+with the largest posterior mean contributions: the mean and credible
+interval of each, credible edges in Okabe-Ito blue and unstable ones in
+grey, with a dashed line at \code{min_share} of the posterior mean entropy
+rate, the stability criterion. The \code{print()} methods return their input
+invisibly. The object's fields:
 \describe{
-\item{summary}{Tidy data.frame - one row per chain-level quantity
-(\code{entropy_rate}, \code{stationary_entropy}, \code{redundancy}),
-with posterior \code{mean}, \code{sd}, \code{ci_lower},
-\code{ci_upper}.}
-\item{states}{Tidy data.frame - one row per state: posterior mean/CI of
-the row entropy and of the stationary probability.}
-\item{edges}{Tidy data.frame - one row per observed transition:
-posterior mean/sd/CI of the contribution (bits), posterior mean/CI of
-its share of the entropy rate, and the \code{credible} flag.}
-\item{network}{\code{netobject} - posterior-mean entropy network
-(all edges), carrying the entropy house style.}
-\item{model}{\code{netobject} - the pruned entropy network: posterior
-means where \code{credible}, \code{0} elsewhere.}
-\item{draws_entropy_rate}{Numeric vector of posterior entropy-rate
-draws (for further analysis or plotting).}
-\item{prior, draws, ci, min_share, base, states_names}{Call metadata.}
+\item{summary}{Data frame, one row per chain-level quantity
+(\code{entropy_rate}, \code{stationary_entropy}, \code{redundancy}), with the
+posterior \code{mean}, \code{sd}, \code{ci_lower} and \code{ci_upper}.}
+\item{states}{Data frame, one row per state: the posterior mean, sd and
+credible interval of its branching entropy, and the posterior mean and
+credible interval of its stationary probability.}
+\item{edges}{Data frame, one row per observed transition (\code{from}, \code{to},
+\code{count}), sorted by contribution, largest first: the posterior mean,
+sd and credible interval of its contribution (in \code{base} units), the
+posterior mean and credible interval of its share of the entropy rate
+(a proportion), and the \code{credible} flag.}
+\item{network}{A \code{netobject}: the posterior-mean entropy network, every
+observed edge included, with the entropy edge style (vermilion edges,
+2-digit labels, no minimum-weight pruning, node rings showing the
+posterior mean stationary distribution).}
+\item{model}{A \code{netobject}: the pruned entropy network, posterior means
+where \code{credible} and \code{0} elsewhere, styled the same way.}
+\item{draws_entropy_rate}{The posterior draws of the entropy rate, for
+further analysis or plotting.}
+\item{prior, draws, ci, min_share, base}{The settings used.}
+\item{states_names}{Character vector of state names.}
 }
-For a \code{netobject_group} the result is a
-\code{"net_entropy_bayes_group"}: a named list holding one such object
-per group.
-
-In \code{print.net_entropy_bayes()} and \code{print.net_entropy_bayes_group()}: \code{x} invisibly.
-
-In \code{summary.net_entropy_bayes()}: The tidy edge table (data.frame), one row per observed transition, sorted by posterior mean contribution, returned invisibly. The chain-level and per-edge tables are printed as a side effect.
-
-In \code{plot.net_entropy_bayes()}: A ggplot object.
 }
 \description{
-Bayesian estimation of the transition entropy quantities of
-\code{\link{transition_entropy}} and the edge-level decomposition of
-\code{\link{entropy_network}}. Each row of the transition matrix gets an
-independent Dirichlet posterior (counts + \code{prior}); Monte Carlo
-draws propagate count uncertainty into the entropy rate, the per-state
-branching entropies, and every edge's entropy contribution, yielding
-posterior means and credible intervals.
+\code{entropy_bayes()} puts credible intervals on the entropy quantities of
+\code{\link[=transition_entropy]{transition_entropy()}} and on the edge-level decomposition of
+\code{\link[=entropy_network]{entropy_network()}}. Each row of the transition count matrix gets an
+independent Dirichlet posterior (counts + \code{prior}), and Monte Carlo draws
+from it carry the uncertainty of the counts into the entropy rate, the
+stationary entropy, the redundancy, each state's branching entropy and
+stationary probability, and every edge's entropy contribution. Each is
+reported as a posterior mean with an equal-tailed credible interval. The
+counts are recovered from a network, a \code{tna} model, a count matrix or
+sequence data (see \code{x}); a \code{netobject_group} gives one result per group.
 
 The practical purpose is to \strong{exclude unstable estimates}: an edge
 whose contribution rests on a handful of observations has a wide
-posterior, and is flagged non-credible unless it credibly accounts for at
-least \code{min_share} of the process entropy. \code{$model} is the
-entropy network with non-credible edges zeroed - the stable entropy
-skeleton.
+posterior, and it is flagged as not credible unless it credibly accounts
+for at least \code{min_share} of the entropy rate. The pruned network keeps the
+credible edges only, the stable entropy skeleton. The posterior treats
+every transition as an independent draw from its row of a first-order
+chain; whether a first-order chain describes the sequences is a separate
+question, which \code{\link[=markov_order_test]{markov_order_test()}} tests.
 }
 \details{
-With \code{prior > 0} the posterior puts mass on every transition, so
-contribution draws are strictly positive and a naive "CI excludes zero"
-rule would flag every edge as credible. The share criterion is used
-instead: an edge is stable when it credibly carries at least
-\code{min_share} of \eqn{h(P)}. Unobserved transitions (count 0) get
-only prior mass and are never credible under any sensible
-\code{min_share}.
+With \code{prior > 0} the posterior puts mass on every transition, so the
+contribution draws are strictly positive and a rule such as "the interval
+excludes zero" would flag every edge as credible. The share criterion is
+used instead: an edge is stable when it credibly carries at least
+\code{min_share} of \eqn{h(P)}. An unobserved transition (count 0) gets prior
+mass only; it is left out of the edge table and of both networks.
 
-The posterior mean entropy rate is typically slightly below the plug-in
-estimate on sparse data (Dirichlet smoothing pulls rows toward uniform
-but averages over uncertainty); the difference vanishes as counts grow.
+The posterior mean entropy rate differs from the plug-in estimate of
+\code{\link[=transition_entropy]{transition_entropy()}} in two opposite ways: the prior pulls every row
+toward uniform, which raises the entropy, and averaging over the posterior
+lowers it. Which effect wins depends on the data (on the first 200 events of
+\code{group_regulation_long} the posterior mean is above the plug-in value); the
+difference is largest on sparse counts and vanishes as the counts grow.
 }
-\section{Methods}{
-
-\itemize{
-\item \code{plot.net_entropy_bayes()}: Forest plot of the per-edge entropy contributions: posterior mean and credible interval, credible edges in Okabe-Ito blue, unstable (non-credible) edges in grey. The dashed line marks \code{min_share} of the posterior-mean entropy rate - the stability criterion.
-}
-}
-
 \examples{
 net <- build_network(group_regulation_long, method = "relative",
                      actor = "Actor", action = "Action", time = "Time")

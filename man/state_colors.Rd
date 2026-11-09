@@ -22,22 +22,22 @@ state_colors(x, ...)
 \method{state_colors}{netobject_group}(x, ...)
 }
 \arguments{
-\item{x}{A \code{netobject}, \code{netobject_group}, \code{mcml} or
-\code{htna}.}
+\item{x}{A \code{netobject}, \code{netobject_group}, \code{mcml} or \code{htna}; any other
+object raises an error.}
 
-\item{...}{Ignored, for method consistency.}
+\item{...}{Not used.}
 }
 \value{
-A \code{data.frame}, one row per colour key the object carries, with
-columns \code{state} (the key), \code{color} (the hex colour it draws
-with) and \code{source} (\code{"set"} when the palette named it,
-\code{"default"} when it fell back to Okabe-Ito). For an \code{mcml} the
-cluster names appear after the states.
+A data frame with one row per colour key the object carries
+(for a \code{netobject_group}, the states of all its networks): \code{state} (the
+key), \code{color} (the colour it draws with) and \code{source} (\code{"set"} when the
+palette named it, \code{"default"} when it fell back to Okabe-Ito). For an
+\code{mcml}, the cluster names follow the states.
 }
 \description{
-Reads back the palette an object resolves to: the colours set with
-\code{\link{set_state_colors}} plus the defaults filled in for everything
-else, so the table is what the figures actually use.
+\code{state_colors()} returns the palette an object draws with: the colours set
+with \code{\link[=set_state_colors]{set_state_colors()}} plus the defaults filled in for every other
+state, so the table shows what the figures use.
 }
 \examples{
 net <- build_network(group_regulation_long, method = "relative",

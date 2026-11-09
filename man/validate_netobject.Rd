@@ -7,25 +7,28 @@
 validate_netobject(x)
 }
 \arguments{
-\item{x}{An object expected to satisfy the \code{cograph_network} contract.}
+\item{x}{The object to check, expected to be a \code{cograph_network}.}
 }
 \value{
-Invisibly \code{TRUE} if \code{x} conforms; otherwise stops with the
-full list of violations.
+\code{TRUE}, invisibly, when \code{x} passes every check. Otherwise an error
+that lists every check it failed.
 }
 \description{
-Enforces the structural contract that both Nestimate netobjects and
-\pkg{psychnets} objects must satisfy to be interchangeable across the package
-boundary. This is the single place that says what "a network object" means,
-so a drift on either side (a renamed field, a mistyped edge column) fails
-loudly here rather than mis-rendering three layers downstream.
-}
-\details{
-The contract is deliberately the \emph{shared} subset: the \code{$nodes}
-\code{x}/\code{y} layout columns and the Nestimate pipeline fields
-(\code{$data}, \code{$level}, ...) are not required, and \code{$edges}
-endpoints may be either integer node indices (Nestimate) or character labels
-(psychnet).
+\code{validate_netobject()} checks that an object meets the structure Nestimate
+\code{netobject}s and \pkg{psychnets} objects share, so either can be passed
+across the package boundary. It is the one place that says what a network
+object is, so a change on either side (a renamed field, a mistyped edge
+column) fails here instead of further down, for instance when the network
+is drawn.
+
+The checks are the shared part only: the object inherits
+\code{cograph_network}; \code{weights} is a square numeric matrix with node names as
+dimnames; \code{nodes} is a data frame with columns \code{id}, \code{label} and \code{name},
+one row per node; \code{edges} is a data frame with columns \code{from}, \code{to} and a
+numeric \code{weight}, whose endpoints are integer node indices (Nestimate) or
+node labels (\pkg{psychnets}); \code{directed} is a single logical value; and
+\code{method} is a single string. The \code{x}/\code{y} layout columns of \code{nodes} and
+Nestimate's own fields (\code{data}, \code{level}, ...) are not required.
 }
 \examples{
 net <- build_cor(data.frame(a = rnorm(50), b = rnorm(50), c = rnorm(50)))

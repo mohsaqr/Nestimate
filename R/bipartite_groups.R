@@ -3,28 +3,60 @@
 # becomes a net_hypergraph where each group is a hyperedge spanning all
 # players that appeared in it.
 
-#' Hypergraph from bipartite group / event data
+#' Build a Hypergraph from Group Memberships
 #'
-#' Constructs a [net_hypergraph][build_hypergraph] from long-format event
-#' data in which each row records a `player` participating in a `group`
-#' (a session, team, project, transaction, or any group context). Each
-#' unique group becomes one hyperedge spanning the players that appeared in
-#' it. Optional `weight` column produces a weighted incidence matrix.
+#' @description
+#' `bipartite_groups()` builds a hypergraph from long-format membership
+#' data, in which each row records that a `player` took part in a `group`
+#' (a session, team, project, transaction or any other group context), and
+#' returns a `net_hypergraph`. Each distinct group becomes one hyperedge
+#' spanning the players that appeared in it. The incidence matrix of
+#' players by groups is 0/1, or holds summed weights when `weight` is
+#' given.
 #'
-#' @param data Data frame in long format. Must contain `player` and `group`
-#'   columns; optionally a `weight` column.
-#' @param player Character. Name of the column whose values become the
-#'   hypergraph's nodes (players, participants, actors).
-#' @param group Character. Name of the column whose values become the
-#'   hypergraph's hyperedges (groups, sessions, teams).
-#' @param weight Character or `NULL`. If supplied, the column is summed per
-#'   `(player, group)` pair to produce a weighted incidence matrix. Default
-#'   `NULL` produces a 0/1 binary incidence matrix.
+#' @param data A data frame with one row per membership (a player in a
+#'   group), holding the `player`, `group` and, when used, `weight`
+#'   columns. Rows with a missing value in any of these columns are dropped
+#'   without a message; when no row is left, an error is raised.
+#' @param player The name of the column whose values become the nodes
+#'   (players, participants, actors). Values are read as character and the
+#'   nodes are sorted. A name that is not a single column of `data` raises
+#'   an error, as for `group` and `weight`.
+#' @param group The name of the column whose values become the hyperedges
+#'   (groups, sessions, teams). Values are read as character, and the
+#'   hyperedges follow their sorted order (as text, so `"10"` comes before
+#'   `"2"`).
+#' @param weight The name of a numeric column summed per player and group
+#'   to give a weighted incidence matrix. With the default `NULL`, the
+#'   matrix is 0/1, and a player listed more than once in a group counts
+#'   once. With weights, a player belongs to a group when the summed weight
+#'   is positive; a group with no such member is dropped, and a player left
+#'   without a group stays a node.
 #'
-#' @return A `net_hypergraph` object with the same structure produced by
-#'   [build_hypergraph()] (`hyperedges`, `incidence`, `nodes`, `n_nodes`,
-#'   `n_hyperedges`, `size_distribution`, `params`). The `params` list
-#'   records `source = "bipartite_groups"` and the original column names.
+#' @return A `net_hypergraph`, the class [build_hypergraph()] returns. Print
+#'   it for the numbers of nodes and hyperedges and the hyperedge sizes;
+#'   `summary()` prints the counts with the mean and largest hyperedge size,
+#'   and returns a data frame of node degrees (`node`, and `degree`, the
+#'   number of hyperedges a player belongs to). [hypergraph_measures()],
+#'   [hypergraph_centrality()], [hypergraph_laplacian()] and
+#'   [hypergraph_cluster()] read it. The fields:
+#' \describe{
+#'   \item{hyperedges}{An unnamed list with one vector per hyperedge, in
+#'     the sorted order of the groups: the indices of its players in
+#'     `nodes`, sorted and named by player.}
+#'   \item{incidence}{The players-by-groups matrix, one column per
+#'     hyperedge, with player and group names as dimnames: integer 0/1, or
+#'     the summed weights (a player whose sum is zero or negative keeps
+#'     that sum here but is not a member of the hyperedge).}
+#'   \item{nodes}{The player names, sorted.}
+#'   \item{n_nodes, n_hyperedges}{The numbers of players and of hyperedges
+#'     (after dropping empty groups).}
+#'   \item{size_distribution}{A named integer vector with the number of
+#'     hyperedges of each size (`size_1`, `size_2`, ...).}
+#'   \item{params}{A list with `source = "bipartite_groups"`, the column
+#'     names given as `player`, `group` and `weight`, and
+#'     `n_observations`, the number of rows used.}
+#' }
 #'
 #' @details
 #' The bipartite representation preserves the full group structure without
@@ -40,11 +72,9 @@
 #'   \item `bipartite_groups()` - when group membership is observed
 #'     (sessions, transactions, co-authorships).
 #'   \item `build_hypergraph()` - when only pairwise interactions are
-#'     observed and triadic structure must be inferred from triangles.
+#'     observed and group structure must be inferred from cliques
+#'     (triangles by default).
 #' }
-#'
-#' Rows with `NA` in either the `player` or `group` column (or, when
-#' supplied, the `weight` column) are dropped silently.
 #'
 #' @seealso [build_hypergraph()] for the clique-based constructor.
 #'
@@ -73,7 +103,7 @@
 #'
 #' @export
 bipartite_groups <- function(data, player, group, weight = NULL) {
-  stopifnot(
+  .assert(
     is.data.frame(data),
     is.character(player), length(player) == 1L,
     is.character(group),  length(group)  == 1L,
@@ -87,7 +117,8 @@ bipartite_groups <- function(data, player, group, weight = NULL) {
   d <- data[, cols, drop = FALSE]
   d <- d[stats::complete.cases(d), , drop = FALSE]
   if (nrow(d) == 0L) {
-    stop("No complete observations after dropping NAs.", call. = FALSE)
+    stop(errorCondition("No complete observations after dropping NAs.",
+                        class = "nestimate_bad_input", call = NULL))
   }
 
   d[[player]] <- as.character(d[[player]])

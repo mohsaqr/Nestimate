@@ -13,73 +13,108 @@
 #' Build a Simplicial Complex
 #'
 #' @description
-#' Constructs a simplicial complex from a network or higher-order pathway
-#' object. Two construction methods are available:
+#' `build_simplicial()` builds a simplicial complex, the higher-order
+#' structure of a network: besides nodes (0-simplices) and edges
+#' (1-simplices) it holds filled triangles (2-simplices), tetrahedra and
+#' larger groups of nodes. Three constructions are available through `type`:
 #'
 #' \itemize{
-#'   \item \strong{Clique complex} (\code{"clique"}): every clique in the
-#'     thresholded non-zero graph becomes a simplex. Edges with absolute
-#'     weight \eqn{\geq} \code{threshold} are retained. The standard bridge
-#'     from graph theory to algebraic topology.
-#'   \item \strong{Pathway complex} (\code{"pathway"}): each higher-order
-#'     pathway from a \code{net_hon} or \code{net_hypa} becomes a simplex.
+#'   \item \strong{Clique complex} (`"clique"`): every clique of the network
+#'     whose edges reach `threshold` becomes a simplex, the standard bridge
+#'     from a graph to algebraic topology.
+#'   \item \strong{Pathway complex} (`"pathway"`): the states on each
+#'     higher-order pathway of a `net_hon`, `net_hypa` or `net_mogen` (or of
+#'     one built from a `tna` model or `netobject`) become a simplex.
+#'   \item \strong{Vietoris-Rips complex} (`"vr"`, alias `"rips"`): the input
+#'     is a non-negative distance matrix, every group of nodes whose pairwise
+#'     distances are all at most `max_scale` becomes a simplex, and each
+#'     simplex records the scale at which it enters (its largest pairwise
+#'     distance), so [persistent_homology()] can read the filtration.
 #' }
 #'
-#' For \code{type = "vr"} (or alias \code{"rips"}), the input is treated as
-#' a non-negative distance / dissimilarity matrix and a Vietoris-Rips
-#' filtration is constructed: each k-simplex \eqn{\sigma} enters at
-#' \eqn{\max_{(i,j) \in \sigma} d(i,j)}. Use \code{max_scale} to cap the
-#' filtration diameter; edges with \code{d(i,j) > max_scale} are excluded.
-#' Filtration values are attached as \code{$filtration} on the returned
-#' object so \code{persistent_homology()} can read them directly.
+#' A clique complex is fixed by the thresholded graph, since every clique is
+#' filled in; its Betti numbers count the holes that remain, such as cycles
+#' of edges that no triangles fill. Its shape depends on `threshold`, so
+#' read [betti_numbers()] at more than one threshold, or follow the features
+#' across all of them with [persistent_homology()]. A pathway complex is
+#' built from paths observed in the sequences, so its simplices say which
+#' states occur together on a path.
+#' [simplicial_degree()] and [q_analysis()] describe how the nodes take part
+#' in the complex.
 #'
-#' @param x A square matrix, \code{tna}, \code{netobject},
-#'   \code{net_hon}, \code{net_hypa}, or \code{net_mogen}. For the \code{print()} and \code{plot()} methods: an object of class \code{simplicial_complex}.
-#' @param type Construction type: \code{"clique"} (default), \code{"pathway"},
-#'   or \code{"vr"} (alias \code{"rips"}).
-#' @param threshold For \code{type = "clique"}: minimum non-zero absolute
-#'   edge weight to include an edge (default 0). Edges below this are
-#'   ignored; zero-weight non-edges are never included. Ignored for
-#'   \code{type = "vr"} (use \code{max_scale} instead) and for
-#'   \code{type = "pathway"}.
-#' @param max_dim Maximum simplex dimension (default 10). Must be a single
-#'   non-negative integer. A k-simplex has k+1 nodes.
-#' @param max_pathways For \code{type = "pathway"}: maximum number of
-#'   pathways to include, ranked by count (HON) or ratio (HYPA).
-#'   \code{NULL} includes all. Default \code{NULL}.
-#' @param anomaly For HYPA pathway complexes, which anomaly direction to
-#'   include: \code{"all"} (default), \code{"over"}, or \code{"under"}.
-#'   Under-represented HYPA paths are ranked by smallest observed/expected
-#'   ratio; over-represented paths are ranked by largest ratio. Possible
-#'   paths that never occur are left out: a pathway simplex is a set of
-#'   states observed together on a path.
-#' @param max_scale For \code{type = "vr"}: maximum edge length to include
-#'   in the filtration. \code{NULL} (default) uses \code{max(d)}.
-#' @param ... Additional arguments passed to \code{build_hon()} when
-#'   \code{x} is a \code{tna}/\code{netobject} with \code{type = "pathway"}.
-#' In \code{plot.simplicial_complex()}: Ignored. In \code{print.simplicial_complex()}: Additional arguments (unused).
-#' @return A \code{simplicial_complex} object - a list with:
+#' @details
+#' For the clique and Vietoris-Rips complexes the weight matrix is made
+#' symmetric first (the larger absolute weight of the two directions for a
+#' clique complex, the larger distance for a Vietoris-Rips complex) and its
+#' diagonal is not read. Cliques are found with `igraph::cliques()` when
+#' \pkg{igraph} is installed, and by Bron-Kerbosch otherwise.
+#'
+#' @param x The network: a square weight matrix, a `tna` model, a
+#'   `netobject` or `cograph_network`, or a `net_hon`, `net_hypa` or
+#'   `net_mogen`. With `type = "vr"`, the matrix holds non-negative
+#'   distances. The clique and Vietoris-Rips constructions read the weight
+#'   matrix of any of these networks; with `type = "pathway"`, a bare
+#'   `cograph_network` or a matrix raises an error. For the `print()` and
+#'   `plot()` methods: a `simplicial_complex` object.
+#' @param type The construction: `"clique"` (default), `"pathway"` or
+#'   `"vr"` (alias `"rips"`, stored as `"vr"`).
+#' @param threshold For `type = "clique"`: the smallest absolute edge weight
+#'   an edge needs to enter (edges at exactly `threshold` are included). Zero
+#'   weights are never edges. Default `0`. Ignored for `"vr"`, which uses
+#'   `max_scale`, and for `"pathway"`.
+#' @param max_dim The highest simplex dimension built (a k-simplex has k + 1
+#'   nodes), a non-negative whole number. Default `10`. When a larger clique
+#'   is cut at this dimension, the clique or Vietoris-Rips complex is marked
+#'   truncated; [betti_numbers()] then warns with class
+#'   `nestimate_truncated_complex`, as does [persistent_homology()] on a
+#'   Vietoris-Rips complex. A pathway with more than `max_dim + 1` distinct
+#'   states is cut to its faces of that size, without the truncated mark.
+#' @param max_pathways For `type = "pathway"`, how many pathways to keep:
+#'   the most frequent higher-order paths for a `net_hon`, the most frequent
+#'   transitions of [mogen_transitions()] at the optimal order for a
+#'   `net_mogen` (the highest order fitted when the optimal one is 0), and
+#'   for a `net_hypa` the anomalous paths ranked by their observed /
+#'   expected ratio (see `anomaly`). Default `NULL` (all).
+#' @param anomaly For `type = "pathway"` on a `net_hypa`: which anomalous
+#'   paths become simplices: `"all"` (default), `"over"` or `"under"`.
+#'   Over-represented and `"all"` paths are ranked by the largest ratio,
+#'   under-represented ones by the smallest. Possible paths that never occur
+#'   are left out, since a pathway simplex is a set of states observed
+#'   together on a path.
+#' @param max_scale For `type = "vr"`: the largest distance at which an edge
+#'   enters; longer edges are left out. Default `NULL`, the largest finite
+#'   distance.
+#' @param ... For `type = "pathway"` on a `tna` model or `netobject`: `method`
+#'   (`"hon"`, the default, `"hypa"` or `"mogen"`) chooses the higher-order
+#'   model built from it, and the other arguments go to [build_hon()],
+#'   [build_hypa()] or [build_mogen()]. For the `print()` and `plot()`
+#'   methods: ignored.
+#' @return A `simplicial_complex` object. `print()` shows the counts, the
+#'   density, the f-vector (simplices per dimension), the Euler
+#'   characteristic and the non-zero Betti numbers; `plot()` draws the
+#'   f-vector, the Betti numbers and the simplicial degree of each node;
+#'   [betti_numbers()], [euler_characteristic()], [simplicial_degree()],
+#'   [q_analysis()] and [persistent_homology()] read it. The object's
+#'   fields:
 #' \describe{
 #'   \item{simplices}{List of integer vectors, one per simplex, each holding
-#'     the (sorted) node indices it spans. Every face of every simplex is
-#'     present, including all 0-simplices (isolated vertices included).}
-#'   \item{nodes}{Character vector of node labels; \code{simplices} index
-#'     into it.}
-#'   \item{n_nodes, n_simplices}{Integer counts.}
-#'   \item{dimension}{Integer. Highest simplex dimension present
-#'     (a k-simplex has k+1 nodes).}
-#'   \item{f_vector}{Named integer vector \code{dim_0}, \code{dim_1}, ... -
-#'     the number of simplices of each dimension.}
-#'   \item{density}{Numeric. \code{n_simplices} divided by the number of
-#'     simplices a complete complex on \code{n_nodes} would have up to
-#'     \code{dimension}.}
-#'   \item{mean_dim}{Numeric. Mean simplex dimension.}
-#'   \item{type}{\code{"clique"}, \code{"pathway"}, or \code{"vr"}.}
+#'     the sorted indices of the nodes it spans. Every face of every simplex
+#'     is present, as are all 0-simplices (isolated nodes included).}
+#'   \item{nodes}{Character vector of node labels, which `simplices` index.}
+#'   \item{n_nodes, n_simplices}{Counts of nodes and simplices.}
+#'   \item{dimension}{Highest simplex dimension present.}
+#'   \item{f_vector}{Named integer vector `dim_0`, `dim_1`, ...: the number
+#'     of simplices of each dimension.}
+#'   \item{density}{`n_simplices` divided by the number of simplices a
+#'     complete complex on `n_nodes` nodes would have up to `dimension`.}
+#'   \item{mean_dim}{Mean simplex dimension.}
+#'   \item{type}{`"clique"`, `"pathway"` or `"vr"`.}
+#'   \item{truncated}{For the clique and Vietoris-Rips complexes: whether
+#'     `max_dim` cut a larger clique.}
 #' }
-#'   For \code{type = "vr"} two further elements are attached:
-#'   \code{$filtration} (numeric, parallel to \code{$simplices}: the value at
-#'   which each simplex enters) and \code{$max_scale} (the cap actually
-#'   used). \code{persistent_homology()} consumes them directly.
+#'   A Vietoris-Rips complex also holds `filtration` (the scale at which each
+#'   simplex enters, in the order of `simplices`) and `max_scale` (the cap
+#'   used), which [persistent_homology()] reads.
 #'
 #' @examples
 #' mat <- matrix(c(0,.6,.5,.6,0,.4,.5,.4,0), 3, 3)
@@ -103,7 +138,7 @@ build_simplicial <- function(x, type = "clique", threshold = 0,
                               max_scale = NULL, ...) {
   type <- match.arg(type, c("clique", "pathway", "vr", "rips"))
   anomaly <- match.arg(anomaly)
-  stopifnot(
+  .assert(
     is.numeric(threshold), length(threshold) == 1L,
     !is.na(threshold), threshold >= 0,
     is.numeric(max_dim), length(max_dim) == 1L,
@@ -152,7 +187,7 @@ build_simplicial <- function(x, type = "clique", threshold = 0,
 #' @noRd
 .build_simplicial_clique <- function(mat, threshold = 0, max_dim = 10L,
                                      inclusive = TRUE) {
-  stopifnot(is.matrix(mat), nrow(mat) == ncol(mat))
+  .assert(is.matrix(mat), nrow(mat) == ncol(mat))
   nodes <- rownames(mat) %||% paste0("V", seq_len(nrow(mat)))
   n <- nrow(mat)
 
@@ -292,8 +327,9 @@ build_simplicial <- function(x, type = "clique", threshold = 0,
     order_used <- x$optimal_order
     if (order_used < 1L) order_used <- max(x$orders[x$orders >= 1L], 0L)
     if (order_used < 1L) {
-      stop("MOGen model has no higher-order transitions (optimal_order = 0)",
-           call. = FALSE)
+      stop(errorCondition(
+        "MOGen model has no higher-order transitions (optimal_order = 0)",
+        class = "nestimate_bad_input", call = NULL))
     }
     trans <- mogen_transitions(x, order = order_used)
     if (nrow(trans) == 0L) {
@@ -316,8 +352,11 @@ build_simplicial <- function(x, type = "clique", threshold = 0,
     return(.build_simplicial_pathway(ho_obj, max_dim, max_pathways,
                                      anomaly = anomaly))
   } else {
-    stop("For type='pathway', x must be a net_hon, net_hypa, net_mogen, ",
-         "tna, or netobject.", call. = FALSE)
+    stop(errorCondition(
+      paste0(
+        "For type='pathway', x must be a net_hon, net_hypa, net_mogen, ",
+        "tna, or netobject."),
+      class = "nestimate_bad_input", call = NULL))
   }
 
   if (length(raw_paths) == 0L) {
@@ -352,8 +391,9 @@ build_simplicial <- function(x, type = "clique", threshold = 0,
     return(x$weights)
   }
   if (inherits(x, "net_hon")) return(x$matrix)
-  stop("Cannot extract adjacency matrix from '", class(x)[1], "'.",
-       call. = FALSE)
+  stop(errorCondition(
+    paste0("Cannot extract adjacency matrix from '", class(x)[1], "'."),
+    class = "nestimate_bad_input", call = NULL))
 }
 
 # =========================================================================
@@ -463,11 +503,30 @@ build_simplicial <- function(x, type = "clique", threshold = 0,
 
 #' Betti Numbers
 #'
-#' Computes Betti numbers: \eqn{\beta_0} (components), \eqn{\beta_1}
-#' (loops), \eqn{\beta_2} (voids), etc.
+#' @description
+#' `betti_numbers()` counts the holes of a simplicial complex in each
+#' dimension: \eqn{\beta_0} is the number of connected components,
+#' \eqn{\beta_1} the number of independent loops (cycles not filled in by
+#' triangles), \eqn{\beta_2} the number of enclosed voids, and so on up to
+#' the dimension of the complex.
 #'
-#' @param sc A \code{simplicial_complex} object.
-#' @return Named integer vector \code{c(b0 = ..., b1 = ..., ...)}.
+#' Betti numbers describe the complex as it was built; a clique complex
+#' built at a different threshold can give different numbers.
+#' [persistent_homology()] follows each hole across all thresholds and shows
+#' how long it lasts.
+#'
+#' @details
+#' \eqn{\beta_k} is the dimension of the k-th homology group, the number of
+#' k-simplices minus the rank of the k-th boundary matrix, minus the rank of
+#' the (k + 1)-th. The ranks are computed with `qr()` on the signed boundary
+#' matrices.
+#'
+#' @param sc A `simplicial_complex` from [build_simplicial()]. When it was
+#'   built with a `max_dim` below its largest clique, the top Betti number
+#'   counts cycles whose filling simplices were not built, so it is an upper
+#'   bound, and a warning of class `nestimate_truncated_complex` says so.
+#' @return A named integer vector `c(b0 = , b1 = , ...)`, one entry per
+#'   dimension from 0 to the dimension of the complex.
 #' @examples
 #' mat <- matrix(c(0,.6,.5,.6,0,.4,.5,.4,0), 3, 3)
 #' colnames(mat) <- rownames(mat) <- c("A","B","C")
@@ -476,7 +535,7 @@ build_simplicial <- function(x, type = "clique", threshold = 0,
 #'
 #' @export
 betti_numbers <- function(sc) {
-  stopifnot(inherits(sc, "simplicial_complex"))
+  .assert(inherits(sc, "simplicial_complex"))
   if (isTRUE(sc$truncated)) {
     warning(warningCondition(
       sprintf(paste0(
@@ -544,12 +603,14 @@ betti_numbers <- function(sc) {
 #' Euler Characteristic
 #'
 #' @description
-#' Computes \eqn{\chi = \sum_{k=0}^{d} (-1)^k f_k} where \eqn{f_k} is the
-#' number of k-simplices. By the Euler-Poincare theorem,
-#' \eqn{\chi = \sum_{k} (-1)^k \beta_k}.
+#' `euler_characteristic()` returns the Euler characteristic of a simplicial
+#' complex, \eqn{\chi = \sum_{k=0}^{d} (-1)^k f_k}, where \eqn{f_k} is the
+#' number of k-simplices and \eqn{d} the dimension of the complex. By the
+#' Euler-Poincare theorem it also equals \eqn{\sum_{k} (-1)^k \beta_k}, the
+#' alternating sum of the [betti_numbers()].
 #'
-#' @param sc A \code{simplicial_complex} object.
-#' @return Integer.
+#' @param sc A `simplicial_complex` from [build_simplicial()].
+#' @return A single integer.
 #' @examples
 #' mat <- matrix(c(0,.6,.5,.6,0,.4,.5,.4,0), 3, 3)
 #' colnames(mat) <- rownames(mat) <- c("A","B","C")
@@ -558,7 +619,7 @@ betti_numbers <- function(sc) {
 #'
 #' @export
 euler_characteristic <- function(sc) {
-  stopifnot(inherits(sc, "simplicial_complex"))
+  .assert(inherits(sc, "simplicial_complex"))
   signs <- (-1L)^(seq_along(sc$f_vector) - 1L)
   as.integer(sum(signs * sc$f_vector))
 }
@@ -624,21 +685,22 @@ euler_characteristic <- function(sc) {
                                detect_truncation = FALSE) {
   # Vietoris-Rips filtration on a non-negative distance matrix.
   # filt(sigma) = max pairwise distance in sigma; vertex = 0.
-  stopifnot(is.matrix(d), nrow(d) == ncol(d))
+  .assert(is.matrix(d), nrow(d) == ncol(d))
   n <- nrow(d)
   nodes <- rownames(d) %||% paste0("V", seq_len(n))
   d <- pmax(d, t(d))
   diag(d) <- 0
   if (any(d < 0, na.rm = TRUE)) {
-    stop("VR filtration requires a non-negative distance matrix.",
-         call. = FALSE)
+    stop(errorCondition(
+      "VR filtration requires a non-negative distance matrix.",
+      class = "nestimate_bad_input", call = NULL))
   }
   finite_d <- d
   finite_d[!is.finite(finite_d)] <- NA_real_
   cap <- if (is.null(max_scale)) {
     if (all(is.na(finite_d))) 0 else max(finite_d, na.rm = TRUE)
   } else {
-    stopifnot(is.numeric(max_scale), length(max_scale) == 1L,
+    .assert(is.numeric(max_scale), length(max_scale) == 1L,
               !is.na(max_scale), max_scale >= 0)
     max_scale
   }
@@ -696,7 +758,7 @@ euler_characteristic <- function(sc) {
   # Apply max_scale cap if requested (and the complex is a VR build)
   mode <- if (identical(sc$type, "vr")) "vr" else "clique"
   if (!is.null(max_scale)) {
-    stopifnot(is.numeric(max_scale), length(max_scale) == 1L,
+    .assert(is.numeric(max_scale), length(max_scale) == 1L,
               !is.na(max_scale), max_scale >= 0)
     keep <- filt <= max_scale
     simplices <- simplices[keep]
@@ -842,58 +904,98 @@ euler_characteristic <- function(sc) {
 #' Persistent Homology
 #'
 #' @description
-#' Computes persistent homology via full boundary-matrix reduction over
-#' \eqn{\mathbb{Z}/2} (Edelsbrunner, Letscher & Zomorodian 2000). The
-#' returned persistence diagram pairs each k-dimensional homology class
-#' to the simplex whose addition creates it (birth) and the simplex whose
-#' addition destroys it (death). Essential classes - those never killed -
-#' are reported with \code{death = 0} in clique mode (similarity scale,
-#' descending) and \code{death = Inf} in VR mode (distance scale, ascending).
-#'
-#' Two filtration modes are supported:
+#' `persistent_homology()` follows the holes of a network's simplicial
+#' complex as the complex is grown edge by edge: each component, loop or
+#' void is born when it first appears and dies when it is filled in, and the
+#' result lists every such feature with its birth, death and persistence (how
+#' long it lasts). Two filtrations are available:
 #' \describe{
-#'   \item{\code{type = "clique"}}{Weighted clique filtration. Input is
-#'     treated as a similarity matrix; high-weight simplices appear early.
-#'     For each k-simplex \eqn{\sigma}, the filtration value is
-#'     \eqn{\min_{(i,j) \in \sigma}\,|w(i,j)|}. Thresholds run high to low.}
-#'   \item{\code{type = "vr"}}{Vietoris-Rips filtration on a non-negative
-#'     distance matrix. For each k-simplex \eqn{\sigma}, the filtration
-#'     value is \eqn{\max_{(i,j) \in \sigma}\,d(i,j)}. Thresholds run low
-#'     to high. Use \code{max_scale} to cap the filtration diameter.}
+#'   \item{`type = "clique"`}{A weighted clique filtration on similarities:
+#'     edges enter from the strongest to the weakest, and a simplex enters
+#'     at the smallest absolute weight among its edges, so the thresholds run
+#'     from high to low.}
+#'   \item{`type = "vr"`}{A Vietoris-Rips filtration on a non-negative
+#'     distance matrix: a simplex enters at the largest distance among its
+#'     nodes, so the thresholds run from low to high. `max_scale` caps the
+#'     distances considered.}
 #' }
+#' A `simplicial_complex` from `build_simplicial(type = "vr")`, which stores
+#' the scale at which each simplex enters, is also read directly.
 #'
-#' @param x A square matrix, \code{tna}, or \code{netobject}. For
-#'   \code{type = "vr"}, must be a non-negative distance matrix.
-#'   A \code{simplicial_complex} carrying a \code{$filtration} vector (as
-#'   returned by \code{build_simplicial(type = "vr")}) is also accepted and
-#'   is used directly: its stored filtration values are reduced as they are,
-#'   so \code{type} is taken from the complex rather than this argument. For the \code{print()} and \code{plot()} methods: an object of class \code{persistent_homology}.
-#' @param n_steps Number of grid points for the reported Betti curve
-#'   (default 20). The persistence diagram itself is exact - it does not
-#'   depend on \code{n_steps}.
-#' @param max_dim Highest homology dimension reported (default 3). The
-#'   filtration holds simplices one dimension higher, so a class of
-#'   dimension \code{max_dim} can die (the Ripser convention). A
-#'   \code{simplicial_complex} input supplies only the simplices it holds.
-#' @param type Filtration: \code{"clique"} (default, similarity-weighted)
-#'   or \code{"vr"} (Vietoris-Rips on distances).
-#' @param max_scale For \code{type = "vr"} only: cap on edge length. Edges
-#'   with \code{d(i,j) > max_scale} are excluded. \code{NULL} (default)
-#'   uses \code{max(d)}.
+#' Features with long persistence last over a wide range of thresholds;
+#' features that die soon after they are born are commonly read as noise.
+#' Essential features never die: the component that remains at the end, and
+#' any hole that no simplex in the filtration fills. [bottleneck_distance()]
+#' compares the diagrams of two networks, and [persistence_landscape()]
+#' turns a diagram into functions that can be averaged.
 #'
-#' @return A \code{persistent_homology} object with:
+#' @details
+#' The persistence pairs come from the full reduction of the boundary
+#' matrix over \eqn{\mathbb{Z}/2} (Edelsbrunner, Letscher & Zomorodian,
+#' 2000): each feature is paired with the simplex whose entry creates it
+#' (birth) and the simplex whose entry destroys it (death). Pairs born and
+#' killed at the same value are dropped. The diagram is exact; `n_steps`
+#' only sets the grid on which the Betti curve is reported.
+#'
+#' In the clique filtration the weight matrix is made symmetric with the
+#' larger absolute weight of the two directions, its diagonal is not read,
+#' and every node enters at the largest weight. An essential feature has
+#' `death = 0` and `persistence = birth`; the Betti curve is read on
+#' `n_steps` thresholds from the largest weight down to 1% of it. In the
+#' Vietoris-Rips filtration the matrix is made symmetric with the larger
+#' distance, every node enters at 0, and an essential feature has
+#' `death = Inf` and `persistence = Inf`; the curve runs from 0 to the
+#' largest entry value. The filtration holds simplices one dimension above
+#' `max_dim`, so a feature of dimension `max_dim` can die (the Ripser
+#' convention).
+#'
+#' @param x The network: a square weight matrix (similarities for
+#'   `type = "clique"`, non-negative distances for `type = "vr"`), a `tna`
+#'   model, a `netobject` or `cograph_network` (a `net_hon` among them), or
+#'   a `simplicial_complex` from `build_simplicial(type = "vr")`. The
+#'   complex's stored entry values are reduced as they are, so its own type
+#'   is used and `type` is ignored;
+#'   a complex without them (a clique or pathway complex) raises an error.
+#'   A complex built with a `max_dim` below its largest clique warns with
+#'   class `nestimate_truncated_complex`, since its top-dimension features
+#'   cannot die, when the complex's dimension is at most `max_dim` and the
+#'   truncated part lies within `max_scale`. All-zero weights raise an error
+#'   in the clique filtration, and negative distances in the Vietoris-Rips
+#'   one. So does a Vietoris-Rips input in which no edge can enter: every
+#'   off-diagonal distance missing or infinite, or `max_scale = 0` with all
+#'   distances positive. An all-zero distance matrix gives a single
+#'   component, and distances that all exceed `max_scale` give one essential
+#'   component per node. For the `print()` and `plot()` methods: a
+#'   `persistent_homology` object.
+#' @param n_steps The number of thresholds on which the Betti curve is
+#'   reported, a positive whole number. Default `20`. The persistence
+#'   diagram does not depend on it.
+#' @param max_dim The highest feature dimension reported, a non-negative
+#'   whole number. Default `3`. A `simplicial_complex` input supplies only
+#'   the simplices it holds.
+#' @param type The filtration: `"clique"` (default), on similarity weights,
+#'   or `"vr"` (Vietoris-Rips), on distances.
+#' @param max_scale For `type = "vr"`, and for a Vietoris-Rips
+#'   `simplicial_complex`: the largest distance at which an edge enters;
+#'   longer edges and the simplices that hold them are left out. Default
+#'   `NULL`, the largest finite distance (for a complex, every simplex it
+#'   holds).
+#'
+#' @return A `persistent_homology` object. `print()` shows the threshold
+#'   range, the number of features per dimension and the three
+#'   longest-lived; `plot()` draws the Betti curve and the persistence
+#'   diagram; [bottleneck_distance()] and [persistence_landscape()] read it.
+#'   The object's fields:
 #' \describe{
-#'   \item{betti_curve}{Data frame: \code{threshold}, \code{dimension},
-#'     \code{betti}.}
-#'   \item{persistence}{Data frame of birth-death pairs, one row per
-#'     homology class: \code{dimension}, \code{birth}, \code{death},
-#'     \code{persistence}. Sorted by descending persistence. Essential
-#'     classes are included, with \code{death = 0} and
-#'     \code{persistence = birth} in clique mode, and \code{death = Inf},
-#'     \code{persistence = Inf} in VR mode (the plot method caps those for
-#'     display only).}
-#'   \item{thresholds}{Numeric vector of grid thresholds.}
-#'   \item{mode}{Either \code{"clique"} or \code{"vr"}.}
+#'   \item{betti_curve}{Data frame with one row per threshold and dimension:
+#'     `threshold`, `dimension` and `betti`, the number of features alive at
+#'     that threshold.}
+#'   \item{persistence}{Data frame with one row per feature, sorted by
+#'     decreasing persistence: `dimension`, `birth`, `death` and
+#'     `persistence`. Essential features are included, with `death = 0` in
+#'     the clique filtration and `death = Inf` in the Vietoris-Rips one.}
+#'   \item{thresholds}{The thresholds of the Betti curve.}
+#'   \item{mode}{`"clique"` or `"vr"`.}
 #' }
 #'
 #' @references
@@ -911,7 +1013,7 @@ euler_characteristic <- function(sc) {
 #' @export
 persistent_homology <- function(x, n_steps = 20L, max_dim = 3L,
                                 type = "clique", max_scale = NULL) {
-  stopifnot(
+  .assert(
     is.numeric(n_steps), length(n_steps) == 1L,
     !is.na(n_steps), n_steps >= 1L, n_steps == as.integer(n_steps),
     is.numeric(max_dim), length(max_dim) == 1L,
@@ -941,8 +1043,10 @@ persistent_homology <- function(x, n_steps = 20L, max_dim = 3L,
     fc <- .filter_vr_complex(d, max_dim = max_dim + 1L, max_scale = max_scale)
     if (fc$max_w == 0 && fc$max_filt == 0 &&
         all(fc$dim == 0L)) {
-      stop("All distances are zero or excluded; cannot build filtration.",
-           call. = FALSE)
+      stop(errorCondition(paste0(
+        "No edge enters the Vietoris-Rips filtration: every off-diagonal ",
+        "distance is missing, infinite or larger than `max_scale`."),
+        class = "nestimate_bad_input", call = NULL))
     }
   } else {
     mat <- .sc_extract_matrix(x)
@@ -950,7 +1054,8 @@ persistent_homology <- function(x, n_steps = 20L, max_dim = 3L,
     mat <- pmax(mat, t(mat))
     diag(mat) <- 0
     if (max(mat) == 0) {
-      stop("All weights are zero; cannot build filtration.", call. = FALSE)
+      stop(errorCondition("All weights are zero; cannot build filtration.",
+                        class = "nestimate_bad_input", call = NULL))
     }
     fc <- .filter_clique_complex(mat, max_dim = max_dim + 1L)
   }
@@ -1015,13 +1120,29 @@ persistent_homology <- function(x, n_steps = 20L, max_dim = 3L,
 
 #' Simplicial Degree
 #'
-#' Counts how many simplices of each dimension contain each node.
+#' @description
+#' `simplicial_degree()` counts, for each node of a simplicial complex, how
+#' many simplices of each dimension contain it: edges (dimension 1),
+#' triangles (dimension 2) and so on. It is the higher-order counterpart of
+#' a node's degree, and says which nodes take part in many group-level
+#' structures rather than only in pairs.
 #'
-#' @param sc A \code{simplicial_complex} object.
-#' @param normalized Divide by maximum possible count. Default \code{FALSE}.
+#' The counts describe the complex as built, so they move with the
+#' threshold or pathways [build_simplicial()] was given. A node in a clique
+#' of m nodes is in `choose(m - 1, k)` of its k-simplices, so one large
+#' clique raises the node's counts in every dimension up to the clique's
+#' own;
+#' compare nodes within a dimension.
 #'
-#' @return Data frame with \code{node}, columns \code{d0} through
-#'   \code{d_k}, and \code{total} (sum of d1+). Sorted by total descending.
+#' @param sc A `simplicial_complex` from [build_simplicial()].
+#' @param normalized Whether to divide each count of dimension k by the
+#'   largest possible one, `choose(n_nodes - 1, k)`, the number of
+#'   k-simplices a node can be in. Default `FALSE`.
+#'
+#' @return A data frame with one row per node, sorted by decreasing `total`:
+#'   `node`, then `d0`, `d1`, ... up to the dimension of the complex (the
+#'   number of simplices of that dimension containing the node; `d0` is
+#'   always 1), and `total`, the sum of `d1` onwards.
 #' @examples
 #' mat <- matrix(c(0,.6,.5,.6,0,.4,.5,.4,0), 3, 3)
 #' colnames(mat) <- rownames(mat) <- c("A","B","C")
@@ -1030,7 +1151,7 @@ persistent_homology <- function(x, n_steps = 20L, max_dim = 3L,
 #'
 #' @export
 simplicial_degree <- function(sc, normalized = FALSE) {
-  stopifnot(inherits(sc, "simplicial_complex"))
+  .assert(inherits(sc, "simplicial_complex"))
   n <- sc$n_nodes
   max_d <- sc$dimension
 
@@ -1065,23 +1186,42 @@ simplicial_degree <- function(sc, normalized = FALSE) {
 #' Q-Analysis
 #'
 #' @description
-#' Computes Q-connectivity structure (Atkin 1974). Two maximal simplices
-#' are q-near if they share a face of dimension \eqn{\geq q}; q-connectivity
-#' is the transitive closure of q-nearness. Reports:
+#' `q_analysis()` describes how the maximal simplices of a simplicial complex
+#' (those not contained in a larger one) hang together, after Atkin (1974).
+#' Two maximal simplices are q-near when they share a face of dimension at
+#' least q (q + 1 shared nodes), and q-connected when a chain of q-near
+#' simplices joins them. The result has two parts:
 #' \itemize{
 #'   \item \strong{Q-vector}: \eqn{Q_q}, the number of q-connected
-#'     components among the maximal simplices of dimension \eqn{\geq q}.
-#'     Lower-dimensional simplices do not exist at level q and are not
-#'     counted.
-#'   \item \strong{Structure vector}: here the highest simplex dimension of
-#'     each node. (Atkin uses "structure vector" for the Q-vector itself;
-#'     the name is kept for compatibility.)
+#'     components among the maximal simplices of dimension at least q, for
+#'     each q from the largest simplex dimension down to 0. Simplices of lower
+#'     dimension do not exist at level q and are not counted.
+#'   \item \strong{Structure vector}: here the dimension of the largest
+#'     simplex each node belongs to. (Atkin uses "structure vector" for the
+#'     Q-vector itself; the name is kept for compatibility.)
 #' }
 #'
-#' @param sc A \code{simplicial_complex} object.
+#' A Q-vector of 1 at every level means the maximal simplices stay in one
+#' piece however many shared nodes are required. Requiring more shared
+#' nodes splits the complex more, but fewer simplices take part at higher
+#' q, so the count can rise or fall with q; `print()` reports the lowest
+#' level at which there is more than one. Like
+#' the complex itself, the vectors depend on the threshold or pathways
+#' [build_simplicial()] was given.
 #'
-#' @return A \code{q_analysis} object with \code{$q_vector},
-#'   \code{$structure_vector}, and \code{$max_q}.
+#' @param sc A `simplicial_complex` from [build_simplicial()].
+#'
+#' @return A `q_analysis` object. `print()` shows the components at each
+#'   level, the level at which the complex first splits and the structure
+#'   vector; `plot()` draws the two vectors. The object's fields:
+#'   \describe{
+#'     \item{q_vector}{Named integer vector, one entry per level from the
+#'       highest down (`q_2`, `q_1`, `q_0` for a complex of dimension 2):
+#'       the number of q-connected components at that level.}
+#'     \item{max_q}{The largest simplex dimension, the highest level.}
+#'     \item{structure_vector}{Named integer vector, one entry per node: the
+#'       dimension of the largest simplex containing it.}
+#'   }
 #'
 #' @references
 #' Atkin, R. H. (1974). \emph{Mathematical Structure in Human Affairs}.
@@ -1093,7 +1233,7 @@ simplicial_degree <- function(sc, normalized = FALSE) {
 #'
 #' @export
 q_analysis <- function(sc) {
-  stopifnot(inherits(sc, "simplicial_complex"))
+  .assert(inherits(sc, "simplicial_complex"))
 
   simplices <- sc$simplices
   dims <- vapply(simplices, function(s) length(s) - 1L, integer(1))
@@ -1185,19 +1325,31 @@ q_analysis <- function(sc) {
 #' Verify Simplicial Complex Against igraph
 #'
 #' @description
-#' Cross-validates clique finding and Betti numbers against igraph
-#' and known topological invariants. Useful for testing.
+#' `verify_simplicial()` builds the clique complex of `mat` with
+#' [build_simplicial()] and checks it against two independent references:
+#' its simplices
+#' against the cliques `igraph::cliques()` finds in the same thresholded
+#' graph, and its Euler characteristic against the alternating sum of its
+#' Betti numbers (the Euler-Poincare theorem). It prints the result of each
+#' check and the Betti numbers, and is meant for testing. It needs
+#' \pkg{igraph}, and raises an error without it.
 #'
-#' @param mat A square adjacency matrix, or a network object that
-#'   [build_simplicial()] accepts (\code{netobject}, \code{tna},
-#'   \code{cograph_network}, \code{net_hon}); its weight matrix is used.
-#' @param threshold Edge weight threshold.
+#' @details
+#' The complex is built with the default `max_dim = 10`, while
+#' `igraph::cliques()` has no size limit, so a graph with a clique of more
+#' than 11 nodes reports a mismatch, with a warning of class
+#' `nestimate_truncated_complex` from [betti_numbers()].
 #'
-#' @return Invisibly, a list with \code{cliques_match} (logical: do the
-#'   simplices match \code{igraph::cliques()} exactly),
-#'   \code{n_simplices_ours}, \code{n_simplices_igraph}, \code{betti},
-#'   \code{euler}, and \code{f_vector}. The comparison is also printed to
-#'   the console.
+#' @param mat A square weight matrix, or a network object whose weight
+#'   matrix [build_simplicial()] reads (a `netobject`, `tna` model,
+#'   `cograph_network` or `net_hon`).
+#' @param threshold The smallest absolute edge weight an edge needs to
+#'   enter, as in [build_simplicial()]. Default `0`.
+#'
+#' @return A list, invisibly: `cliques_match` (whether the simplices equal
+#'   the cliques from `igraph::cliques()` exactly), `n_simplices_ours`,
+#'   `n_simplices_igraph`, `betti`, `euler` and `f_vector`. The two checks
+#'   are printed as a side effect.
 #' @examplesIf requireNamespace("igraph", quietly = TRUE)
 #' mat <- matrix(c(0,.6,.5,.6,0,.4,.5,.4,0), 3, 3)
 #' colnames(mat) <- rownames(mat) <- c("A","B","C")
@@ -1259,9 +1411,14 @@ verify_simplicial <- function(mat, threshold = 0) {
 # =========================================================================
 
 #' @rdname build_simplicial
-#' @param combined When `TRUE` (default), the four panels are stitched into a 2x2 gtable via `gridExtra::arrangeGrob` and drawn. When `FALSE`, returns a named list of the four ggplots (`f_vector`, `betti`, `degree`, `degree_heatmap`) so each can be printed, saved, or re-laid-out independently.
-#' @return In \code{print.simplicial_complex()}: The input object, invisibly.
-#' @return In \code{plot.simplicial_complex()}: A grid grob (invisibly) when `combined = TRUE`; a named list of four ggplots when `combined = FALSE`.
+#' @param combined For the `plot()` method: `TRUE` (default) draws the four
+#'   panels (f-vector, Betti numbers, simplicial degree per node and degree
+#'   by dimension) as one 2 x 2 figure, which needs \pkg{gridExtra};
+#'   `FALSE` returns the four ggplots in a named list (`f_vector`, `betti`,
+#'   `degree`, `degree_heatmap`) to print, save or arrange separately.
+#' @return The `print()` method returns its input invisibly. `plot()`
+#'   returns the drawn grid grob invisibly with `combined = TRUE`, and the
+#'   named list of four ggplots invisibly with `combined = FALSE`.
 #' @export
 print.simplicial_complex <- function(x, ...) {
   labels <- c("clique" = "Clique Complex",
@@ -1299,22 +1456,34 @@ print.simplicial_complex <- function(x, ...) {
 }
 
 #' @rdname persistent_homology
-#' @param ... In \code{plot.persistent_homology()}: Ignored. In \code{print.persistent_homology()}: Additional arguments (unused).
-#' @param combined When `TRUE` (default), the two panels are stitched side-by-side via `gridExtra::arrangeGrob`. When `FALSE`, returns a named list (`betti_curve`, `persistence`) of ggplots.
-#' @return In \code{print.persistent_homology()}: The input object, invisibly.
-#' @return In \code{plot.persistent_homology()}: A grid grob (invisibly) when `combined = TRUE`; a named list of two ggplots when `combined = FALSE`.
+#' @param ... For the `print()` and `plot()` methods: ignored.
+#' @param combined For the `plot()` method: `TRUE` (default) draws the Betti
+#'   curve and the persistence diagram side by side, which needs
+#'   \pkg{gridExtra}; `FALSE` returns them as a named list of ggplots
+#'   (`betti_curve`, `persistence`).
+#' @return The `print()` method returns its input invisibly. `plot()`
+#'   returns the drawn grid grob invisibly with `combined = TRUE`, and the
+#'   named list of two ggplots invisibly with `combined = FALSE`. The
+#'   diagram plots each feature's birth against its death; essential
+#'   features are drawn at the end of the filtration, at `death = 0` in the
+#'   clique filtration and, for the Vietoris-Rips one, at the largest finite
+#'   value in the diagram or on the threshold grid.
 #' @export
 print.persistent_homology <- function(x, ...) {
   cat("Persistent Homology\n")
+  # the clique filtration descends through weights, the Vietoris-Rips one
+  # ascends through distances; essential classes never die (death 0 in the
+  # clique convention, Inf in the Vietoris-Rips one)
+  vr <- identical(x$mode, "vr")
+  ends <- if (vr) range(x$thresholds) else rev(range(x$thresholds))
   cat(sprintf("  %d filtration steps [%.4f \u2192 %.4f]\n",
-              length(x$thresholds),
-              max(x$thresholds), min(x$thresholds)))
+              length(x$thresholds), ends[1L], ends[2L]))
 
   if (nrow(x$persistence) > 0L) {
     dims <- sort(unique(x$persistence$dimension))
     parts <- vapply(dims, function(d) {
       sub <- x$persistence[x$persistence$dimension == d, ]
-      n_p <- sum(sub$death == 0)
+      n_p <- if (vr) sum(is.infinite(sub$death)) else sum(sub$death == 0)
       sprintf("b%d: %d (%d persistent)", d, nrow(sub), n_p)
     }, character(1))
     cat("  Features:", paste(parts, collapse = "  |  "), "\n")
@@ -1334,11 +1503,15 @@ print.persistent_homology <- function(x, ...) {
 }
 
 #' @rdname q_analysis
-#' @param x For the \code{print()} and \code{plot()} methods: an object of class \code{q_analysis}.
-#' @param ... In \code{plot.q_analysis()}: Ignored. In \code{print.q_analysis()}: Additional arguments (unused).
-#' @param combined When `TRUE` (default), the two panels are stitched side-by-side via `gridExtra::arrangeGrob`. When `FALSE`, returns a named list (`q_vector`, `structure_vector`) of ggplots.
-#' @return In \code{print.q_analysis()}: The input object, invisibly.
-#' @return In \code{plot.q_analysis()}: A grid grob (invisibly) when `combined = TRUE`; a named list of two ggplots when `combined = FALSE`.
+#' @param x For the `print()` and `plot()` methods: a `q_analysis` object.
+#' @param ... For the `print()` and `plot()` methods: ignored.
+#' @param combined For the `plot()` method: `TRUE` (default) draws the
+#'   Q-vector and the structure vector side by side, which needs
+#'   \pkg{gridExtra}; `FALSE` returns them as a named list of ggplots
+#'   (`q_vector`, `structure_vector`).
+#' @return The `print()` method returns its input invisibly. `plot()`
+#'   returns the drawn grid grob invisibly with `combined = TRUE`, and the
+#'   named list of two ggplots invisibly with `combined = FALSE`.
 #' @export
 print.q_analysis <- function(x, ...) {
   cat(sprintf("Q-Analysis (max q = %d)\n", x$max_q))
@@ -1389,11 +1562,9 @@ print.q_analysis <- function(x, ...) {
 }
 
 #' @rdname build_simplicial
-#' @section Methods:
-#' * \code{plot.simplicial_complex()}: Produces a four-panel summary: f-vector, Betti numbers, simplicial degree ranking, and degree-by-dimension heatmap.
 #' @export
 plot.simplicial_complex <- function(x, combined = TRUE, ...) {
-  stopifnot(is.logical(combined), length(combined) == 1L)
+  .assert(is.logical(combined), length(combined) == 1L, !is.na(combined))
 
   deg <- simplicial_degree(x)
   betti <- .compute_betti(x)
@@ -1472,11 +1643,9 @@ plot.simplicial_complex <- function(x, combined = TRUE, ...) {
 }
 
 #' @rdname persistent_homology
-#' @section Methods:
-#' * \code{plot.persistent_homology()}: Two panels: Betti curve (threshold vs Betti number) and persistence diagram (birth vs death). Persistence pairs come from full boundary- matrix reduction; essential classes are shown at the filtration boundary (\code{death = 0} in clique mode; in VR mode their stored \code{death = Inf} is capped for display at the largest finite value in the diagram or on the threshold grid, so they still render).
 #' @export
 plot.persistent_homology <- function(x, combined = TRUE, ...) {
-  stopifnot(is.logical(combined), length(combined) == 1L)
+  .assert(is.logical(combined), length(combined) == 1L, !is.na(combined))
 
   filt <- x$betti_curve
   filt$dim_label <- factor(paste0("B", filt$dimension))
@@ -1548,11 +1717,9 @@ plot.persistent_homology <- function(x, combined = TRUE, ...) {
 }
 
 #' @rdname q_analysis
-#' @section Methods:
-#' * \code{plot.q_analysis()}: Two panels: Q-vector (components at each connectivity level) and structure vector (max simplex dimension per node).
 #' @export
 plot.q_analysis <- function(x, combined = TRUE, ...) {
-  stopifnot(is.logical(combined), length(combined) == 1L)
+  .assert(is.logical(combined), length(combined) == 1L, !is.na(combined))
 
   # --- Panel 1: Q-vector ---
   qdf <- data.frame(q = as.integer(sub("^q_", "", names(x$q_vector))),

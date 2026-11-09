@@ -7,52 +7,58 @@
 clique_expansion(hg, weighted = TRUE)
 }
 \arguments{
-\item{hg}{A \code{net_hypergraph} object as returned by \code{\link[=build_hypergraph]{build_hypergraph()}}
-or \code{\link[=bipartite_groups]{bipartite_groups()}}.}
+\item{hg}{The hypergraph: a \code{net_hypergraph} from \code{\link[=build_hypergraph]{build_hypergraph()}} or
+\code{\link[=bipartite_groups]{bipartite_groups()}}.}
 
-\item{weighted}{Logical. If \code{TRUE} (default), use the hypergraph's
-incidence values directly (so weighted hypergraphs from
-\code{\link[=bipartite_groups]{bipartite_groups()}} produce weighted projections). If \code{FALSE},
-binarise the incidence first so \code{W[i, j]} is just the count of
-shared hyperedges.}
+\item{weighted}{Whether to use the hypergraph's incidence values. With
+\code{TRUE} (default), a weighted hypergraph (from \code{\link[=bipartite_groups]{bipartite_groups()}} with
+\code{weight}) gives a weighted projection; with \code{FALSE}, the incidence is
+binarised first, so each weight counts the hyperedges the pair shares.
+For an unweighted hypergraph the two agree.}
 }
 \value{
-A \code{netobject} (also \code{cograph_network}) with \code{method = "clique_expansion"}, undirected, with weighted symmetric adjacency
-\code{W = incidence \%*\% t(incidence)} and zero diagonal. The standard
-\code{netobject} fields are present (\verb{$weights}, \verb{$nodes}, \verb{$edges} - one row
-per non-zero upper-triangle cell with integer \code{from}/\code{to} node indices
-and \code{weight} - \verb{$n_nodes}, \verb{$n_edges}, \verb{$meta}); \verb{$params} records
-\code{source}, \code{weighted}, \code{n_hyperedges} and
+A \code{netobject} (class \code{c("netobject", "cograph_network")}) with
+method \code{"clique_expansion"}, undirected. \code{print()}, \code{summary()},
+\code{\link[=extract_edges]{extract_edges()}}, \code{\link[=net_centrality]{net_centrality()}} and \code{cograph::splot()} read it as
+any network from \code{\link[=build_network]{build_network()}}. It carries no data, so the
+resampling verbs, such as \code{\link[=bootstrap_network]{bootstrap_network()}}, and sequence
+clustering refuse it. Its weight matrix is
+\code{W = incidence \%*\% t(incidence)} with a zero diagonal, and it holds the
+standard \code{netobject} fields (\code{weights}, \code{nodes}, \code{edges}, \code{n_nodes},
+\code{n_edges}, \code{meta}). \code{edges} has one row per non-zero upper-triangle
+cell, with integer \code{from}/\code{to} node indices and \code{weight}. \code{params}
+records \code{source}, \code{weighted}, \code{n_hyperedges} and
 \code{hypergraph_size_distribution}.
 }
 \description{
-Projects a \link[=build_hypergraph]{net_hypergraph} to a standard pairwise
-\link[=build_network]{netobject} (the \emph{clique expansion} - also called the
-"downgrade" of a hypergraph to a dyadic graph). Each hyperedge of size
-k contributes 1 (or its weight) to every pair of its members. The
-resulting edge weight \code{W[i, j]} equals the number of hyperedges
-containing both \code{i} and \code{j} (binary incidence) or the sum of incidence
-products (weighted incidence).
+\code{clique_expansion()} projects a hypergraph onto an ordinary pairwise
+network, its \emph{clique expansion} (also called the "downgrade" of a
+hypergraph to a dyadic graph): each hyperedge links every pair of its
+members, and the weight between two nodes sums these links over the
+hyperedges. It takes a \code{net_hypergraph} from \code{\link[=build_hypergraph]{build_hypergraph()}} or
+\code{\link[=bipartite_groups]{bipartite_groups()}} and returns an undirected
+\link[=build_network]{netobject}. With binary incidence, the weight \code{W[i, j]}
+is the number of hyperedges containing both \code{i} and \code{j}; with weighted
+incidence, it is the sum over hyperedges of the product of the two
+members' incidence values.
+
+The projection keeps which pairs co-occur and how often, and drops the
+groups themselves: three hyperedges \verb{\{A, B\}}, \verb{\{B, C\}} and \verb{\{A, C\}} give
+the same network as one hyperedge \verb{\{A, B, C\}}. Read its edges as
+pairwise co-occurrence; \code{\link[=hypergraph_measures]{hypergraph_measures()}} and
+\code{\link[=hypergraph_centrality]{hypergraph_centrality()}} work on the groups.
 }
 \details{
-The clique expansion is the standard "loss-y but lossless-on-pairwise"
-projection: it preserves \emph{which pairs co-occurred} and \emph{how often} but
-discards the higher-order grouping. Comparing \code{clique_expansion(hg)} to
-a directly-estimated pairwise network (e.g. via \code{\link[=cooccurrence]{cooccurrence()}} on
-the same data) quantifies how much information was carried by the
-hyperedge structure.
-
-Computed in one BLAS call via \code{tcrossprod(incidence)}; runs in
-\code{O(n_nodes^2 * n_hyperedges)} time, fast for typical sizes.
-
-Closes the I/O cycle: event data -> \code{\link[=bipartite_groups]{bipartite_groups()}} ->
-\code{clique_expansion()} -> any function that accepts a \code{netobject}
-(centrality, bootstrap, clustering, plotting via cograph).
+The weight matrix is computed in one BLAS call, \code{tcrossprod(incidence)},
+in \code{O(n_nodes^2 * n_hyperedges)} time. With binary incidence (an
+unweighted hypergraph, or \code{weighted = FALSE}), its off-diagonal counts
+are those of \code{\link[=cooccurrence]{cooccurrence()}} on the same groups, which also keeps the
+diagonal.
 }
 \note{
-(experimental) Validated against \code{tcrossprod(incidence)} with zero
+Experimental. Validated against \code{tcrossprod(incidence)} with a zero
 diagonal. No external R package exposes clique expansion as a primitive;
-the implementation is a direct one-line restatement of the definition.
+the implementation restates the definition in one line.
 }
 \examples{
 df <- data.frame(

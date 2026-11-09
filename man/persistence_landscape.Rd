@@ -13,50 +13,71 @@ persistence_landscape(ph, k_max = 5L, dimension = 1L, t_grid = NULL)
 \method{plot}{persistence_landscape}(x, ...)
 }
 \arguments{
-\item{ph}{A \code{persistent_homology} object or a data.frame with
-columns \code{dimension}, \code{birth}, \code{death}.}
+\item{ph}{The diagram: a \code{\link[=persistent_homology]{persistent_homology()}} result, or a data frame
+with the columns \code{dimension}, \code{birth} and \code{death}.}
 
-\item{k_max}{Maximum landscape index to compute (default 5). Must be a
-single positive integer.}
+\item{k_max}{The number of landscape functions to compute, a positive
+whole number. Functions beyond the number of pairs are zero. Default
+\code{5}.}
 
-\item{dimension}{Integer scalar -- which homology dimension to compute
-the landscape for. Default 1.}
+\item{dimension}{The homology dimension, a single non-negative whole
+number. Default \code{1}.}
 
-\item{t_grid}{Numeric vector of evaluation points. \code{NULL} (default)
-uses an even grid of 200 points covering the union of pair intervals.}
+\item{t_grid}{The filtration values to evaluate the landscape at.
+Default \code{NULL}: 200 evenly spaced points from the smallest birth to the
+largest death of the remaining pairs (each pair is ordered so that
+birth comes first, since clique filtrations descend), or from 0 to 1
+when no pair remains. Pass the same grid to landscapes you want to
+compare.}
 
-\item{x}{For the \code{print()} and \code{plot()} methods: an object of class \code{persistence_landscape}.}
+\item{x}{For the \code{print()} and \code{plot()} methods: a
+\code{persistence_landscape} object.}
 
-\item{...}{In \code{plot.persistence_landscape()} and \code{print.persistence_landscape()}: Ignored.}
+\item{...}{Not used.}
 }
 \value{
-A \code{persistence_landscape} object with:
+A \code{persistence_landscape} object. Printing it shows the
+dimension, \code{k_max}, the grid range and the sup norm (largest value) of
+each landscape function; \code{plot()} draws the functions as lines over
+the grid. The object holds:
 \describe{
-\item{landscape}{Data frame: \code{k}, \code{t}, \code{value}.}
-\item{dimension}{Integer scalar.}
-\item{k_max}{Integer scalar.}
-\item{t_grid}{Numeric vector.}
+\item{landscape}{A data frame with one row per landscape function and
+grid point, and the columns \code{k}, \code{t} and \code{value}.}
+\item{dimension}{The homology dimension.}
+\item{k_max}{The number of landscape functions.}
+\item{t_grid}{The evaluation grid.}
 }
 
-In \code{print.persistence_landscape()}: The input, invisibly.
-
-In \code{plot.persistence_landscape()}: A ggplot.
+The \code{print()} method returns its input invisibly, and \code{plot()} a
+\code{ggplot} object with one line per landscape function.
 }
 \description{
-Computes the persistence landscape (Bubenik 2015) from a persistence
-diagram. Each (birth, death) pair contributes a tent function
-\deqn{\Lambda_{(b,d)}(t) = \max(0, \min(t - b, d - t)).}
-The \eqn{k}-th landscape function \eqn{\lambda^{(k)}(t)} is the
+\code{persistence_landscape()} computes the persistence landscape (Bubenik
+2015) of one homology dimension of a persistence diagram, evaluated on a
+grid. Each (birth, death) pair contributes a tent function
+\deqn{\Lambda_{(b,d)}(t) = \max(0, \min(t - b, d - t)),}
+and the \eqn{k}-th landscape function \eqn{\lambda^{(k)}(t)} is the
 \eqn{k}-th largest of \eqn{\{\Lambda_{(b_i,d_i)}(t)\}_i} at each
-\eqn{t}. Landscapes are stable under bottleneck distance and form a
-Banach-space embedding of persistence diagrams.
+\eqn{t}. It takes a \code{\link[=persistent_homology]{persistent_homology()}} result or a data frame of
+persistence pairs.
 
-Essential classes are excluded: a tent function is undefined for an
-infinitely-lived class on a finite grid, so pairs with
-\code{death = Inf} (VR mode) and pairs with \code{death = 0} but
-\code{birth > 0} (the clique-mode encoding of an essential class) are
-dropped before the landscape is built. When no finite pair remains in
-the requested dimension, every landscape function is zero on the grid.
+At each filtration value \eqn{t}, a tent is the distance from \eqn{t}
+to the nearer end of a feature's interval (0 outside it), so the first
+landscape function follows the feature that \eqn{t} lies deepest
+inside, the second the feature with the second largest tent, and so
+on. This need not be the most persistent feature alive: a long-lived
+feature near its birth or death can sit below a shorter one near its
+midpoint. Landscapes
+are stable: the sup-norm distance between two landscapes is at most the
+\code{\link[=bottleneck_distance]{bottleneck_distance()}} between their diagrams. They also live in a
+Banach space, where they can be averaged (Bubenik 2015).
+
+Essential classes are left out, because the tent of an infinitely lived
+class is undefined on a finite grid: pairs with \code{death = Inf} (VR mode)
+and pairs with \code{death = 0} but \code{birth > 0} (the clique-mode encoding of
+an essential class) are dropped before the landscape is built. When no
+finite pair remains in the requested dimension, every landscape
+function is zero on the grid.
 }
 \examples{
 mat <- matrix(c(0, .6, .5, .6, 0, .4, .5, .4, 0), 3, 3)

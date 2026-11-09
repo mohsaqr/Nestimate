@@ -17,49 +17,74 @@ utils::globalVariables(c("..pid", "..pos"))
 
 #' Cut an Event Log into Pathways
 #'
-#' Splits a long event log into pathways and returns them as a tidy
-#' \code{data.frame}, one row per pathway, ready to tabulate against an
-#' outcome or to feed to a sequence model.
+#' @description
+#' `extract_pathways()` cuts a long event log into pathways, runs of
+#' consecutive events within one unit (an actor, or an actor's session), and
+#' returns them as a data frame with one row per pathway, ready to tabulate
+#' against an outcome or to pass to a sequence model. Three cuts are
+#' available through `type`: each unit as one pathway, consecutive segments
+#' that each end on a terminal state, or one pathway from every occurrence of
+#' an `anchor` state to the next terminal state.
 #'
-#' @param data A long-format \code{data.frame}, one row per event, already in
-#'   chronological order within each group (or with \code{order} supplied).
-#' @param action Name of the column holding the state / event label.
-#' @param group Character vector of column names defining the unit a pathway
-#'   may not cross -- typically the actor, or actor and session.
-#' @param order Optional column giving the within-group event order. When
-#'   \code{NULL} (default) the existing row order is used.
+#' With `terminal`, the cuts keep only what reaches a terminal state: a
+#' unit without one, events after a unit's last terminal state, and anchors
+#' with no later terminal state are left out without a message, so count
+#' the units and events kept before comparing pathway frequencies across
+#' groups.
+#'
+#' @param data A long data frame with one row per event, in time order
+#'   within each unit unless `order` is given. A unit's rows need not be
+#'   contiguous: rows of other units in between are not part of its
+#'   pathways.
+#' @param action The name of the column holding each event's state.
+#' @param group The names of the columns defining the unit a pathway may not
+#'   cross, typically the actor, or the actor and the session.
+#' @param order The name of a column giving the order of events within a
+#'   unit; the rows are sorted by `group` and then by it. Default `NULL`,
+#'   which keeps the row order.
 #' @param type The cut to make:
 #'   \describe{
-#'     \item{\code{"unit"}}{(default) one pathway per group. With
-#'       \code{terminal}, the group is truncated at its last terminal state
-#'       so the pathway ends on an outcome rather than on whatever followed.}
-#'     \item{\code{"segments"}}{consecutive, non-overlapping pathways: the
-#'       group is cut after every terminal state, so each pathway ends on one.
-#'       Every event belongs to exactly one pathway.}
-#'     \item{\code{"anchored"}}{one pathway per occurrence of \code{anchor},
-#'       closing at the next terminal state. Pathways may overlap and events
-#'       between a terminal and the next anchor belong to none.}
+#'     \item{`"unit"`}{(default) one pathway per unit. With `terminal`, each
+#'       unit is cut after its last terminal state, so the pathway ends on an
+#'       outcome rather than on whatever followed; units without a terminal
+#'       state are left out.}
+#'     \item{`"segments"`}{consecutive, non-overlapping pathways: each unit
+#'       is cut after every terminal state, so each pathway ends on one.
+#'       Events after a unit's last terminal state belong to no pathway.}
+#'     \item{`"anchored"`}{one pathway per occurrence of `anchor`, closing at
+#'       the first terminal state after it. Pathways may overlap, and events
+#'       between a terminal state and the next anchor belong to none.}
 #'   }
-#' @param anchor State that opens a pathway when \code{type = "anchored"}.
-#'   Ignored by the other cuts. Default \code{NULL}.
-#' @param terminal States that close a pathway, the closing state included.
-#'   Required for \code{"segments"} and \code{"anchored"}; optional for
-#'   \code{"unit"}, where it truncates.
-#' @param resolve Optional named list giving a resolution label to append as
-#'   the pathway's final state. Each element is a character vector of states;
-#'   a pathway takes the label of the \strong{first} element whose states all
-#'   occur in it, so order the list from most specific to least. Pathways
-#'   matching nothing are labelled \code{"Unresolved"}. The label becomes the
-#'   last element of \code{path} and the value of \code{closes}, and the raw
-#'   final state is kept in \code{ends}.
-#' @param sep Separator used when pasting the path. Default \code{" -> "}.
+#' @param anchor The single state that opens a pathway when `type =
+#'   "anchored"`, where it is required; the other cuts ignore it. It may
+#'   also be one of the `terminal` states: a pathway then closes at the next
+#'   terminal state after the anchor, not at the anchor itself. Default
+#'   `NULL`.
+#' @param terminal The states that close a pathway, the closing state
+#'   included. Required for `"segments"` and `"anchored"`; optional for
+#'   `"unit"`, where it cuts each unit after its last terminal state.
+#'   Default `NULL`.
+#' @param resolve A named list that appends a resolution label as each
+#'   pathway's final state. Each element is a character vector of states; a
+#'   pathway takes the name of the first element whose states all occur in
+#'   it, so order the list from most to least specific, and pathways
+#'   matching none are labelled `"Unresolved"`. The label becomes the last
+#'   state of `path`, counts in `length`, and is the value of `closes`; the
+#'   observed last state is kept in `ends`. Default `NULL` (no label).
+#' @param sep The separator placed between states in `path`. Default
+#'   `" -> "`.
 #'
-#' @return A \code{data.frame} with one row per pathway: the \code{group}
-#'   columns, \code{pathway} (an integer id within group), \code{path} (the
-#'   states pasted with \code{sep}), \code{length}, \code{opens} (first state)
-#'   and \code{closes} (last state). With \code{resolve}, \code{closes} holds
-#'   the resolution label instead and a further \code{ends} column carries the
-#'   raw final state. Pathways are returned in the order they occur.
+#' @return A data frame with one row per pathway, in the order the pathways
+#'   occur within each unit. Units appear in the order they first occur in
+#'   `data`, or sorted by `group` when `order` is given and when `type =
+#'   "unit"` is combined with `terminal`. Columns: the `group` columns,
+#'   `pathway` (the pathway's number within its unit, from 1), `path` (the
+#'   states joined with `sep`), `length` (the number of states), `opens`
+#'   (the first state) and `closes` (the last state). With `resolve`,
+#'   `closes` holds the resolution label and an `ends` column the observed
+#'   last state. When no pathway is found
+#'   (for example, the anchor or the terminal states never occur), an error
+#'   of class `nestimate_no_pathway` is raised.
 #' @seealso \code{\link{sequence_compare}}, \code{\link{outcome_model}}
 #' @examples
 #' log <- data.frame(
@@ -80,7 +105,7 @@ extract_pathways <- function(data, action, group, order = NULL,
                              anchor = NULL, terminal = NULL, resolve = NULL,
                              sep = " -> ") {
   type <- match.arg(type)
-  stopifnot(
+  .assert(
     "`data` must be a data.frame" = is.data.frame(data),
     "`action` must be a single column name" =
       is.character(action) && length(action) == 1L,
@@ -100,16 +125,21 @@ extract_pathways <- function(data, action, group, order = NULL,
   cols <- c(action, group, order)
   missing_cols <- setdiff(cols, names(data))
   if (length(missing_cols) > 0L) {
-    stop("Column(s) not found in `data`: ",
-         paste(utils::head(missing_cols, 5L), collapse = ", "), call. = FALSE)
+    stop(errorCondition(paste0("Column(s) not found in `data`: ",
+         paste(utils::head(missing_cols, 5L), collapse = ", ")),
+                        class = "nestimate_bad_input", call = NULL))
   }
   if (identical(type, "anchored") && (is.null(anchor) || is.null(terminal))) {
-    stop("type = \"anchored\" needs both `anchor` (what opens a pathway) and ",
-         "`terminal` (what closes it).", call. = FALSE)
+    stop(errorCondition(
+      paste0(
+        "type = \"anchored\" needs both `anchor` (what opens a pathway) and ",
+        "`terminal` (what closes it)."),
+      class = "nestimate_bad_input", call = NULL))
   }
   if (identical(type, "segments") && is.null(terminal)) {
-    stop("type = \"segments\" needs `terminal`: it is what each segment ends on.",
-         call. = FALSE)
+    stop(errorCondition(
+      "type = \"segments\" needs `terminal`: it is what each segment ends on.",
+      class = "nestimate_bad_input", call = NULL))
   }
 
   d <- data.table::as.data.table(data[, cols, drop = FALSE])

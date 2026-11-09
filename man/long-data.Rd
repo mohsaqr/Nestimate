@@ -7,21 +7,35 @@
 \alias{human_long}
 \title{Human-AI Vibe Coding Interaction Data (Long Format)}
 \format{
-Data frames in long format with 9 columns:
+Two data frames with the same 9 columns:
 \describe{
-\item{message_id}{Integer. Turn index.}
-\item{project}{Character. Project identifier (Project_1 .. Project_34).}
-\item{session_id}{Character. Unique session hash.}
-\item{timestamp}{Integer. Unix timestamp for ordering.}
-\item{session_date}{Character. Date of the session (YYYY-MM-DD).}
-\item{code}{Character. Interaction code. The two data frames use
-disjoint code sets -- 9 labels in \code{human_long}, 8 in
-\code{ai_long}, 17 in total.}
-\item{cluster}{Character. High-level cluster. \code{human_long} uses
-Directive, Evaluative and Metacognitive; \code{ai_long} uses Action,
+\item{message_id}{Integer identifier of the message (turn); the codes of
+one message share it, and no identifier occurs in both data frames.}
+\item{project}{Character project identifier, \code{Project_1} to
+\code{Project_34}.}
+\item{session_id}{Character session identifier, a 12-character hash.}
+\item{timestamp}{Integer Unix time (seconds) of midnight, UTC+2, on
+\code{session_date}. It has day resolution, so the rows of one day share
+it; \code{build_network(time = "timestamp")} keeps tied rows in row order,
+which follows \code{order_in_session}. With the default \code{time_threshold}
+(900 seconds), each change of day also starts a new sequence, so the
+84 sessions that run over more than one day are split (526 sequences
+instead of 429); to keep every session whole, use
+\code{time = "order_in_session"}.}
+\item{session_date}{Character date of the row (\code{YYYY-MM-DD}); 84
+sessions run over more than one day.}
+\item{code}{Character interaction code. The two data frames use
+disjoint code sets: 9 labels in \code{human_long} (Command, Correct,
+Frustrate, Inquire, Interrupt, Refine, Request, Specify, Verify) and
+8 in \code{ai_long} (Ask, Delegate, Execute, Explain, Investigate, Plan,
+Repair, Report), 17 in total.}
+\item{cluster}{Character high-level cluster of the code. \code{human_long}
+uses Directive, Evaluative and Metacognitive; \code{ai_long} uses Action,
 Communication and Repair.}
-\item{code_order}{Integer. Order of the code within the session.}
-\item{order_in_session}{Integer. Absolute turn order within the session.}
+\item{code_order}{Integer order of the code within its message,
+starting at 1.}
+\item{order_in_session}{Integer position of the row in its session,
+counting the rows of both data frames together.}
 }
 
 \tabular{ll}{
@@ -43,8 +57,12 @@ human_long
 ai_long
 }
 \description{
-Coded interaction sequences from 429 human-AI pair programming sessions
-across 34 projects, in long format.
+Coded turns from 429 human-AI pair-programming ("vibe coding") sessions
+across 34 projects, held between 5 February and 8 March 2026, in long
+format with one row per code. \code{human_long} holds the codes of the human
+turns and \code{ai_long} those of the AI turns (428 of the sessions have AI
+turns). The two data frames share their columns and their sessions, and
+interleave on \code{order_in_session}.
 }
 \examples{
 net <- build_network(human_long, method = "tna",

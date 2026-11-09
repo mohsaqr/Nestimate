@@ -16,69 +16,104 @@ cluster_diagnostics(x, ...)
 \method{as.data.frame}{net_cluster_diagnostics}(x, row.names = NULL, optional = FALSE, ...)
 }
 \arguments{
-\item{x}{A \code{net_clustering}, \code{net_mmm}, \code{netobject_group}
-(with \code{attr(, "clustering")} attached by \code{cluster_network()}
-or \code{build_network(net_mmm)}), or \code{net_mmm_clustering}. For the \code{print()}, \code{plot()} and \code{as.data.frame()} methods: an object of class \code{net_cluster_diagnostics}.}
+\item{x}{The clustering: a \code{net_clustering}, a \code{net_mmm}, a
+\code{netobject_group} carrying a clustering (built by \code{\link[=cluster_network]{cluster_network()}}
+or by \code{\link[=build_network]{build_network()}} from a \code{net_clustering} or \code{net_mmm}), or a
+\code{net_mmm_clustering}. A \code{netobject_group} without a clustering, and any
+other object, raise an error. For the \code{print()}, \code{plot()} and
+\code{as.data.frame()} methods: a \code{net_cluster_diagnostics}.}
 
-\item{...}{Unsupported. Supplying unused arguments raises an error. In \code{as.data.frame.net_cluster_diagnostics()} and \code{print.net_cluster_diagnostics()}: Unsupported. Supplying unused arguments raises an error. In \code{plot.net_cluster_diagnostics()}: Forwarded to the underlying plot method.}
+\item{...}{Not used: an extra argument raises an error, here and in the
+\code{print()} and \code{as.data.frame()} methods. For \code{plot()}: further
+arguments for the clustering's own \code{plot()} method, such as \code{combined}.}
 
-\item{digits}{Integer. Decimal places for floating-point statistics. Default \code{3L}.}
+\item{digits}{For \code{print()}: decimal places of the silhouette widths,
+distances, AvePP, entropy and information criteria, a non-negative
+whole number. Default \code{3}. Percentages are always shown to one
+decimal.}
 
-\item{type}{Character. Forwarded to the underlying plot method. Valid values for distance: \code{"silhouette"} (default), \code{"mds"}, \code{"heatmap"}, \code{"predictors"}. Valid values for mmm: \code{"posterior"} (default), \code{"covariates"} / \code{"predictors"}.}
+\item{type}{For \code{plot()}: the view, passed to the clustering's own
+\code{plot()} method. Default \code{NULL}, which draws \code{"silhouette"} for a
+distance clustering and \code{"posterior"} for a mixture. A distance
+clustering also takes \code{"mds"}, \code{"heatmap"} and \code{"predictors"} (see
+\code{\link[=build_clusters]{build_clusters()}}); a mixture takes \code{"covariates"}, with
+\code{"predictors"} accepted for it when the source is a
+\code{net_mmm_clustering} (see \code{\link[=build_mmm]{build_mmm()}}).}
 
-\item{row.names, optional}{Standard \code{as.data.frame} arguments (ignored).}
+\item{row.names, optional}{For \code{as.data.frame()}: accepted for the
+generic and ignored.}
 }
 \value{
-\code{cluster_diagnostics()} returns a
-\code{net_cluster_diagnostics} object: a list carrying
-\code{family}, \code{k}, \code{n}, \code{sizes}, the
-\code{per_cluster} data frame (one row per cluster), \code{overall},
-\code{ics}, \code{metadata} and \code{source}, as detailed above.
-\code{as.data.frame()} on that object returns the
-\code{per_cluster} data frame itself -- one row per cluster, with
-family-specific columns.
+A \code{net_cluster_diagnostics} object. \code{print()} shows the numbers
+of sequences and clusters (with the method and dissimilarity of a
+distance clustering, or the number of states of a mixture), the overall
+quality measures, the information criteria of a mixture, one row per
+cluster, and the covariates of the fit, if any; \code{plot()} draws the clustering's own views. The object's
+fields:
+\describe{
+\item{family}{\code{"distance"} or \code{"mmm"}.}
+\item{k, n, sizes}{Number of clusters, number of sequences, and the
+cluster sizes.}
+\item{per_cluster}{Data frame with one row per cluster; its columns
+depend on the family. Distance: \code{cluster}, \code{size},
+\code{pct}, \code{mean_within_dist}, \code{sil_mean}. Mixture:
+\code{cluster}, \code{size}, \code{pct}, \code{mix_pct},
+\code{avepp}, \code{class_err_pct}. \code{pct}, \code{mix_pct}
+and \code{class_err_pct} are in percent.}
+\item{overall}{List of the family's summary measures:
+\code{silhouette} for distance; \code{avepp_overall},
+\code{entropy} and \code{classification_error} (a proportion) for a
+mixture.}
+\item{ics}{For a mixture, a list with \code{BIC}, \code{AIC},
+\code{ICL} and \code{log_likelihood}; NULL for distance.}
+\item{metadata}{The settings of the fit. Distance: \code{method},
+\code{dissimilarity}, \code{weighted}, \code{lambda},
+\code{medoids}, \code{covariates}. Mixture: \code{states},
+\code{n_states}, \code{iterations}, \code{converged},
+\code{covariates}.}
+\item{source}{The clustering object itself, which \code{plot()} draws
+without recomputing anything.}
+}
 
-In \code{print.net_cluster_diagnostics()}: The input object, invisibly.
-
-In \code{plot.net_cluster_diagnostics()}: Whatever the underlying plot method returns: a \code{ggplot} object, invisibly; or, for the covariate forest views called with \code{combined = FALSE}, a list of \code{ggplot} objects named by cluster (invisibly).
+For \code{print()}: the input, invisibly. For \code{plot()}: what the
+clustering's own \code{plot()} method returns, a \code{ggplot} object (invisibly)
+or, for the covariate views with \code{combined = FALSE}, a list of
+\code{ggplot} objects named by cluster (invisibly). For \code{as.data.frame()}:
+the per-cluster table described under \code{per_cluster}.
 }
 \description{
-Unified entry point for clustering quality information. Returns a
-\code{net_cluster_diagnostics} object that normalises the diagnostic
-surface across distance-based and model-based clusterings -- you no
-longer have to know which fields live on \code{net_clustering} vs.
-\code{net_mmm} vs. the slim \code{net_mmm_clustering} attribute of a
-\code{netobject_group}.
-}
-\details{
-The returned object carries:
-\describe{
-\item{family}{Either \code{"distance"} or \code{"mmm"}.}
-\item{k, n, sizes}{Number of clusters, number of sequences, sizes
-vector.}
-\item{per_cluster}{A \code{data.frame} -- one row per cluster, columns
-differ by family. Distance: \code{cluster}, \code{size},
-\code{pct}, \code{mean_within_dist}, \code{sil_mean}. MMM:
-\code{cluster}, \code{size}, \code{pct}, \code{mix_pct},
-\code{avepp}, \code{class_err_pct}.}
-\item{overall}{A named list of family-specific summary metrics
-(\code{silhouette} for distance; \code{avepp_overall},
-\code{entropy}, \code{classification_error} for MMM).}
-\item{ics}{For MMM: a list with \code{BIC}, \code{AIC}, \code{ICL}.
-\code{NULL} for distance.}
-\item{metadata}{Method / dissimilarity / weighted / lambda etc.}
-\item{source}{The original clustering object, kept by reference so
-\code{plot()} can delegate without recomputing anything.}
-}
-}
-\section{Methods}{
+\code{cluster_diagnostics()} collects the quality measures of a clustering in
+one \code{net_cluster_diagnostics} object, laid out the same way whichever
+route produced the clusters: a distance clustering from
+\code{\link[=build_clusters]{build_clusters()}}, a mixed Markov model from \code{\link[=build_mmm]{build_mmm()}} or
+\code{\link[=cluster_mmm]{cluster_mmm()}}, the \code{netobject_group} that \code{\link[=cluster_network]{cluster_network()}} or
+\code{\link[=build_network]{build_network()}} builds from one of them, or the \code{net_mmm_clustering}
+attribute of such a group. It packages what the fit already computed and
+adds only the per-cluster summaries the fit does not store (silhouette
+means and mean within-cluster distances for a distance clustering, the
+classification error within each cluster for a mixture); it does not
+refit.
 
-\itemize{
-\item \code{plot.net_cluster_diagnostics()}: Delegates to the original clustering object's plot method (\code{\link{plot.net_clustering}} for distance-based diagnostics, \code{\link{plot.net_mmm_clustering}} or \code{\link{plot.net_mmm}} for model-based). The diagnostics object itself stores no plot geometry -- it just keeps a reference to the source so the existing visual layer is reused.
-\item \code{print.net_cluster_diagnostics()}: Prints a uniform header, family-specific quality / IC line, and a per-cluster table. Layout matches \code{\link{print.net_clustering}} and \code{\link{print.net_mmm}}.
-}
-}
+For a distance clustering it reports the average silhouette width,
+overall and per cluster, and each cluster's mean within-cluster
+distance. For a mixture it reports each cluster's average posterior
+probability (AvePP) and mixing proportion, the overall AvePP, the
+normalised entropy of the posterior probabilities (0 when every sequence
+is assigned with certainty, 1 when all assignments are equally likely;
+the reverse of the relative entropy often reported for latent class
+models), the classification error (the expected share of sequences
+misclassified when each is assigned to its most likely cluster: one minus
+the largest posterior, averaged over all sequences and over each
+cluster's members, so it equals one minus the AvePP; Vermunt & Magidson,
+2005), and the log-likelihood with BIC, AIC and ICL.
 
+These measures describe how cleanly one solution separates the
+sequences; none of them picks the number of clusters. Compare solutions
+with \code{\link[=cluster_choice]{cluster_choice()}} for distance clustering or \code{\link[=compare_mmm]{compare_mmm()}} for
+mixtures, and build the clusters' networks with \code{\link[=build_network]{build_network()}} on the
+clustering to see how they differ, with \code{\link[=bootstrap_network]{bootstrap_network()}} for how
+stable their edges are.
+}
 \examples{
 seqs <- data.frame(V1 = sample(c("A","B","C"), 30, TRUE),
                    V2 = sample(c("A","B","C"), 30, TRUE))
@@ -90,8 +125,12 @@ cluster_diagnostics(fit)
 as.data.frame(cluster_diagnostics(fit))
 }
 }
+\references{
+Vermunt, J. K., & Magidson, J. (2005). \emph{Latent GOLD 4.0 User's
+Guide}. Statistical Innovations.
+}
 \seealso{
-\code{\link{print.net_cluster_diagnostics}},
-\code{\link{plot.net_cluster_diagnostics}},
+\code{\link{build_clusters}}, \code{\link{build_mmm}},
+\code{\link{cluster_choice}},
 \code{\link{compare_mmm}} for k-sweep model selection (MMM only).
 }

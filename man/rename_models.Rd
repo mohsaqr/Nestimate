@@ -13,23 +13,30 @@ rename_models(x, new_names)
 \method{rename_models}{default}(x, new_names)
 }
 \arguments{
-\item{x}{A \code{netobject_group} (or any object inheriting from it, such
-as \code{net_mlvar}).}
+\item{x}{A \code{netobject_group}, or an object inheriting from it. Any other
+object raises an error. A \code{net_mlvar} is accepted too, but its
+\code{print()} and \code{summary()} find the three layers by their names
+(\code{temporal}, \code{contemporaneous}, \code{between}): after renaming, \code{print()}
+shows none of the model's dimensions and \code{summary()} fails.}
 
-\item{new_names}{A character vector of new names. Must have the same
-length as \code{x}, contain no \code{NA} or empty strings, and be unique.}
+\item{new_names}{The new names, a character vector in the order of the
+networks in \code{x}: one per network, none missing or empty, and no two the
+same. Anything else raises an error.}
 }
 \value{
-A \code{netobject_group} of the same class and length as \code{x}, with
-\code{names()} replaced by \code{new_names}. The constituent networks are
-returned unchanged.
+An object of the same class and length as \code{x}, its networks and
+attributes (such as \code{group_col}) unchanged and its names replaced by
+\code{new_names}.
 }
 \description{
-Replaces the names of the constituent networks in a \code{netobject_group}
-(or any object inheriting from it). Useful when \code{build_network()}
-produced generic labels (e.g. \code{"Cluster 1"}, \code{"Cluster 2"}) and you
-want to substitute meaningful ones (e.g. \code{"High engagement"},
-\code{"Low engagement"}).
+\code{rename_models()} replaces the names of the networks in a
+\code{netobject_group} and returns the group with nothing else changed. The
+names label every later report (print methods, plot panels, bootstrap
+and permutation output), so this is the step that turns the generic
+labels \code{\link[=build_network]{build_network()}} gives clusters (\code{"Cluster 1"}, \code{"Cluster 2"})
+into meaningful ones (\code{"High engagement"}, \code{"Low engagement"}) once it is
+known what each cluster represents. It is the Nestimate counterpart of
+\code{tna::rename_groups()}.
 }
 \examples{
 grp <- build_network(group_regulation_long, method = "tna",

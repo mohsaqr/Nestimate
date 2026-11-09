@@ -4,29 +4,57 @@
 \alias{build_ising}
 \title{Build an Ising Network}
 \usage{
-build_ising(data, ...)
+build_ising(data, actor = NULL, ...)
 }
 \arguments{
-\item{data}{Data frame (sequences or per-observation frequencies) or a
-square symmetric matrix (correlation or covariance). A fitted
-\code{net_clustering} or \code{net_mmm} object is also accepted: the
-per-cluster networks are (re)built and a \code{netobject_group} is
-returned.}
+\item{data}{The binary variables: a data frame with one row per
+observation and one column per variable, holding only 0 and 1.
+Non-numeric columns and a column named \code{rid} are set aside; columns
+with non-syntactic names, all-missing and constant columns, and rows
+with a missing value are dropped, each with a message; fewer than 2
+variables or 3 complete rows, or any value other than 0 and 1, raise an
+error.}
 
-\item{...}{Additional arguments passed to \code{\link{build_network}}.}
+\item{actor}{An id column naming whose observation each row is; it is
+set aside, not modelled. Default \code{NULL}.}
+
+\item{...}{Further arguments for \code{\link[=build_network]{build_network()}}, such as \code{params}
+(\code{gamma}, \code{nlambda}, \code{rule}), \code{threshold}, \code{scaling} or \code{group}.
+\code{method} cannot be given: it is always \code{"ising"} (error of class
+\code{nestimate_bad_input}).}
 }
 \value{
-A \code{netobject} (see \code{\link{build_network}}).
+A \code{netobject} (a \code{netobject_group} with \code{group}), exactly as
+\code{\link[=build_network]{build_network()}} returns it: print it for an overview, read the edges
+with \code{\link[=extract_edges]{extract_edges()}}, and draw it with \code{cograph::splot()}.
 }
 \description{
-Convenience wrapper for \code{build_network(method = "ising")}.
-Computes L1-regularized logistic regression network for binary data.
+\code{build_ising()} estimates an Ising network for binary (0/1) variables:
+each variable is regressed on all the others with L1-penalised logistic
+regression, the penalty is chosen by EBIC, and the two estimates of each
+edge are combined into one undirected weight (van Borkulo et al., 2014).
+It is \code{\link[=build_network]{build_network()}} with \code{method = "ising"}, and needs the glmnet
+package. The settings go in \code{params}: \code{gamma} (the EBIC hyperparameter,
+default \code{0.25}), \code{nlambda} (default \code{100}) and \code{rule}, \code{"AND"} (default:
+an edge only when both regressions select it) or \code{"OR"} (when either
+does).
+
+An edge is a conditional association between two variables given all
+the others; an absent edge means the penalty removed it. Check the
+stability of the edges with \code{\link[=bootstrap_network]{bootstrap_network()}}.
 }
 \examples{
 if (requireNamespace("glmnet", quietly = TRUE)) {
+  set.seed(1)
   bin_data <- data.frame(matrix(rbinom(200, 1, 0.5), ncol = 5))
   net <- build_ising(bin_data)
 }
+}
+\references{
+van Borkulo, C. D., Borsboom, D., Epskamp, S., Blanken, T. F., Boschloo,
+L., Schoevers, R. A., & Waldorp, L. J. (2014). A new method for
+constructing networks from binary data. \emph{Scientific Reports}, 4,
+5918. \doi{10.1038/srep05918}
 }
 \seealso{
 \code{\link{build_network}}

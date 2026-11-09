@@ -19,81 +19,121 @@ persistent_homology(
 \method{plot}{persistent_homology}(x, combined = TRUE, ...)
 }
 \arguments{
-\item{x}{A square matrix, \code{tna}, or \code{netobject}. For
-\code{type = "vr"}, must be a non-negative distance matrix.
-A \code{simplicial_complex} carrying a \code{$filtration} vector (as
-returned by \code{build_simplicial(type = "vr")}) is also accepted and
-is used directly: its stored filtration values are reduced as they are,
-so \code{type} is taken from the complex rather than this argument. For the \code{print()} and \code{plot()} methods: an object of class \code{persistent_homology}.}
+\item{x}{The network: a square weight matrix (similarities for
+\code{type = "clique"}, non-negative distances for \code{type = "vr"}), a \code{tna}
+model, a \code{netobject} or \code{cograph_network} (a \code{net_hon} among them), or
+a \code{simplicial_complex} from \code{build_simplicial(type = "vr")}. The
+complex's stored entry values are reduced as they are, so its own type
+is used and \code{type} is ignored;
+a complex without them (a clique or pathway complex) raises an error.
+A complex built with a \code{max_dim} below its largest clique warns with
+class \code{nestimate_truncated_complex}, since its top-dimension features
+cannot die, when the complex's dimension is at most \code{max_dim} and the
+truncated part lies within \code{max_scale}. All-zero weights raise an error
+in the clique filtration, and negative distances in the Vietoris-Rips
+one. So does a Vietoris-Rips input in which no edge can enter: every
+off-diagonal distance missing or infinite, or \code{max_scale = 0} with all
+distances positive. An all-zero distance matrix gives a single
+component, and distances that all exceed \code{max_scale} give one essential
+component per node. For the \code{print()} and \code{plot()} methods: a
+\code{persistent_homology} object.}
 
-\item{n_steps}{Number of grid points for the reported Betti curve
-(default 20). The persistence diagram itself is exact - it does not
-depend on \code{n_steps}.}
+\item{n_steps}{The number of thresholds on which the Betti curve is
+reported, a positive whole number. Default \code{20}. The persistence
+diagram does not depend on it.}
 
-\item{max_dim}{Highest homology dimension reported (default 3). The
-filtration holds simplices one dimension higher, so a class of
-dimension \code{max_dim} can die (the Ripser convention). A
-\code{simplicial_complex} input supplies only the simplices it holds.}
+\item{max_dim}{The highest feature dimension reported, a non-negative
+whole number. Default \code{3}. A \code{simplicial_complex} input supplies only
+the simplices it holds.}
 
-\item{type}{Filtration: \code{"clique"} (default, similarity-weighted)
-or \code{"vr"} (Vietoris-Rips on distances).}
+\item{type}{The filtration: \code{"clique"} (default), on similarity weights,
+or \code{"vr"} (Vietoris-Rips), on distances.}
 
-\item{max_scale}{For \code{type = "vr"} only: cap on edge length. Edges
-with \code{d(i,j) > max_scale} are excluded. \code{NULL} (default)
-uses \code{max(d)}.}
+\item{max_scale}{For \code{type = "vr"}, and for a Vietoris-Rips
+\code{simplicial_complex}: the largest distance at which an edge enters;
+longer edges and the simplices that hold them are left out. Default
+\code{NULL}, the largest finite distance (for a complex, every simplex it
+holds).}
 
-\item{...}{In \code{plot.persistent_homology()}: Ignored. In \code{print.persistent_homology()}: Additional arguments (unused).}
+\item{...}{For the \code{print()} and \code{plot()} methods: ignored.}
 
-\item{combined}{When \code{TRUE} (default), the two panels are stitched side-by-side via \code{gridExtra::arrangeGrob}. When \code{FALSE}, returns a named list (\code{betti_curve}, \code{persistence}) of ggplots.}
+\item{combined}{For the \code{plot()} method: \code{TRUE} (default) draws the Betti
+curve and the persistence diagram side by side, which needs
+\pkg{gridExtra}; \code{FALSE} returns them as a named list of ggplots
+(\code{betti_curve}, \code{persistence}).}
 }
 \value{
-A \code{persistent_homology} object with:
+A \code{persistent_homology} object. \code{print()} shows the threshold
+range, the number of features per dimension and the three
+longest-lived; \code{plot()} draws the Betti curve and the persistence
+diagram; \code{\link[=bottleneck_distance]{bottleneck_distance()}} and \code{\link[=persistence_landscape]{persistence_landscape()}} read it.
+The object's fields:
 \describe{
-\item{betti_curve}{Data frame: \code{threshold}, \code{dimension},
-\code{betti}.}
-\item{persistence}{Data frame of birth-death pairs, one row per
-homology class: \code{dimension}, \code{birth}, \code{death},
-\code{persistence}. Sorted by descending persistence. Essential
-classes are included, with \code{death = 0} and
-\code{persistence = birth} in clique mode, and \code{death = Inf},
-\code{persistence = Inf} in VR mode (the plot method caps those for
-display only).}
-\item{thresholds}{Numeric vector of grid thresholds.}
-\item{mode}{Either \code{"clique"} or \code{"vr"}.}
+\item{betti_curve}{Data frame with one row per threshold and dimension:
+\code{threshold}, \code{dimension} and \code{betti}, the number of features alive at
+that threshold.}
+\item{persistence}{Data frame with one row per feature, sorted by
+decreasing persistence: \code{dimension}, \code{birth}, \code{death} and
+\code{persistence}. Essential features are included, with \code{death = 0} in
+the clique filtration and \code{death = Inf} in the Vietoris-Rips one.}
+\item{thresholds}{The thresholds of the Betti curve.}
+\item{mode}{\code{"clique"} or \code{"vr"}.}
 }
 
-In \code{print.persistent_homology()}: The input object, invisibly.
-
-In \code{plot.persistent_homology()}: A grid grob (invisibly) when \code{combined = TRUE}; a named list of two ggplots when \code{combined = FALSE}.
+The \code{print()} method returns its input invisibly. \code{plot()}
+returns the drawn grid grob invisibly with \code{combined = TRUE}, and the
+named list of two ggplots invisibly with \code{combined = FALSE}. The
+diagram plots each feature's birth against its death; essential
+features are drawn at the end of the filtration, at \code{death = 0} in the
+clique filtration and, for the Vietoris-Rips one, at the largest finite
+value in the diagram or on the threshold grid.
 }
 \description{
-Computes persistent homology via full boundary-matrix reduction over
-\eqn{\mathbb{Z}/2} (Edelsbrunner, Letscher & Zomorodian 2000). The
-returned persistence diagram pairs each k-dimensional homology class
-to the simplex whose addition creates it (birth) and the simplex whose
-addition destroys it (death). Essential classes - those never killed -
-are reported with \code{death = 0} in clique mode (similarity scale,
-descending) and \code{death = Inf} in VR mode (distance scale, ascending).
-
-Two filtration modes are supported:
+\code{persistent_homology()} follows the holes of a network's simplicial
+complex as the complex is grown edge by edge: each component, loop or
+void is born when it first appears and dies when it is filled in, and the
+result lists every such feature with its birth, death and persistence (how
+long it lasts). Two filtrations are available:
 \describe{
-\item{\code{type = "clique"}}{Weighted clique filtration. Input is
-treated as a similarity matrix; high-weight simplices appear early.
-For each k-simplex \eqn{\sigma}, the filtration value is
-\eqn{\min_{(i,j) \in \sigma}\,|w(i,j)|}. Thresholds run high to low.}
-\item{\code{type = "vr"}}{Vietoris-Rips filtration on a non-negative
-distance matrix. For each k-simplex \eqn{\sigma}, the filtration
-value is \eqn{\max_{(i,j) \in \sigma}\,d(i,j)}. Thresholds run low
-to high. Use \code{max_scale} to cap the filtration diameter.}
+\item{\code{type = "clique"}}{A weighted clique filtration on similarities:
+edges enter from the strongest to the weakest, and a simplex enters
+at the smallest absolute weight among its edges, so the thresholds run
+from high to low.}
+\item{\code{type = "vr"}}{A Vietoris-Rips filtration on a non-negative
+distance matrix: a simplex enters at the largest distance among its
+nodes, so the thresholds run from low to high. \code{max_scale} caps the
+distances considered.}
 }
-}
-\section{Methods}{
+A \code{simplicial_complex} from \code{build_simplicial(type = "vr")}, which stores
+the scale at which each simplex enters, is also read directly.
 
-\itemize{
-\item \code{plot.persistent_homology()}: Two panels: Betti curve (threshold vs Betti number) and persistence diagram (birth vs death). Persistence pairs come from full boundary- matrix reduction; essential classes are shown at the filtration boundary (\code{death = 0} in clique mode; in VR mode their stored \code{death = Inf} is capped for display at the largest finite value in the diagram or on the threshold grid, so they still render).
+Features with long persistence last over a wide range of thresholds;
+features that die soon after they are born are commonly read as noise.
+Essential features never die: the component that remains at the end, and
+any hole that no simplex in the filtration fills. \code{\link[=bottleneck_distance]{bottleneck_distance()}}
+compares the diagrams of two networks, and \code{\link[=persistence_landscape]{persistence_landscape()}}
+turns a diagram into functions that can be averaged.
 }
-}
+\details{
+The persistence pairs come from the full reduction of the boundary
+matrix over \eqn{\mathbb{Z}/2} (Edelsbrunner, Letscher & Zomorodian,
+2000): each feature is paired with the simplex whose entry creates it
+(birth) and the simplex whose entry destroys it (death). Pairs born and
+killed at the same value are dropped. The diagram is exact; \code{n_steps}
+only sets the grid on which the Betti curve is reported.
 
+In the clique filtration the weight matrix is made symmetric with the
+larger absolute weight of the two directions, its diagonal is not read,
+and every node enters at the largest weight. An essential feature has
+\code{death = 0} and \code{persistence = birth}; the Betti curve is read on
+\code{n_steps} thresholds from the largest weight down to 1\% of it. In the
+Vietoris-Rips filtration the matrix is made symmetric with the larger
+distance, every node enters at 0, and an essential feature has
+\code{death = Inf} and \code{persistence = Inf}; the curve runs from 0 to the
+largest entry value. The filtration holds simplices one dimension above
+\code{max_dim}, so a feature of dimension \code{max_dim} can die (the Ripser
+convention).
+}
 \examples{
 mat <- matrix(c(0,.6,.5,.6,0,.4,.5,.4,0), 3, 3)
 colnames(mat) <- rownames(mat) <- c("A","B","C")

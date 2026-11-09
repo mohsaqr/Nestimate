@@ -2,36 +2,67 @@
 % Please edit documentation in R/bipartite_groups.R
 \name{bipartite_groups}
 \alias{bipartite_groups}
-\title{Hypergraph from bipartite group / event data}
+\title{Build a Hypergraph from Group Memberships}
 \usage{
 bipartite_groups(data, player, group, weight = NULL)
 }
 \arguments{
-\item{data}{Data frame in long format. Must contain \code{player} and \code{group}
-columns; optionally a \code{weight} column.}
+\item{data}{A data frame with one row per membership (a player in a
+group), holding the \code{player}, \code{group} and, when used, \code{weight}
+columns. Rows with a missing value in any of these columns are dropped
+without a message; when no row is left, an error is raised.}
 
-\item{player}{Character. Name of the column whose values become the
-hypergraph's nodes (players, participants, actors).}
+\item{player}{The name of the column whose values become the nodes
+(players, participants, actors). Values are read as character and the
+nodes are sorted. A name that is not a single column of \code{data} raises
+an error, as for \code{group} and \code{weight}.}
 
-\item{group}{Character. Name of the column whose values become the
-hypergraph's hyperedges (groups, sessions, teams).}
+\item{group}{The name of the column whose values become the hyperedges
+(groups, sessions, teams). Values are read as character, and the
+hyperedges follow their sorted order (as text, so \code{"10"} comes before
+\code{"2"}).}
 
-\item{weight}{Character or \code{NULL}. If supplied, the column is summed per
-\verb{(player, group)} pair to produce a weighted incidence matrix. Default
-\code{NULL} produces a 0/1 binary incidence matrix.}
+\item{weight}{The name of a numeric column summed per player and group
+to give a weighted incidence matrix. With the default \code{NULL}, the
+matrix is 0/1, and a player listed more than once in a group counts
+once. With weights, a player belongs to a group when the summed weight
+is positive; a group with no such member is dropped, and a player left
+without a group stays a node.}
 }
 \value{
-A \code{net_hypergraph} object with the same structure produced by
-\code{\link[=build_hypergraph]{build_hypergraph()}} (\code{hyperedges}, \code{incidence}, \code{nodes}, \code{n_nodes},
-\code{n_hyperedges}, \code{size_distribution}, \code{params}). The \code{params} list
-records \code{source = "bipartite_groups"} and the original column names.
+A \code{net_hypergraph}, the class \code{\link[=build_hypergraph]{build_hypergraph()}} returns. Print
+it for the numbers of nodes and hyperedges and the hyperedge sizes;
+\code{summary()} prints the counts with the mean and largest hyperedge size,
+and returns a data frame of node degrees (\code{node}, and \code{degree}, the
+number of hyperedges a player belongs to). \code{\link[=hypergraph_measures]{hypergraph_measures()}},
+\code{\link[=hypergraph_centrality]{hypergraph_centrality()}}, \code{\link[=hypergraph_laplacian]{hypergraph_laplacian()}} and
+\code{\link[=hypergraph_cluster]{hypergraph_cluster()}} read it. The fields:
+\describe{
+\item{hyperedges}{An unnamed list with one vector per hyperedge, in
+the sorted order of the groups: the indices of its players in
+\code{nodes}, sorted and named by player.}
+\item{incidence}{The players-by-groups matrix, one column per
+hyperedge, with player and group names as dimnames: integer 0/1, or
+the summed weights (a player whose sum is zero or negative keeps
+that sum here but is not a member of the hyperedge).}
+\item{nodes}{The player names, sorted.}
+\item{n_nodes, n_hyperedges}{The numbers of players and of hyperedges
+(after dropping empty groups).}
+\item{size_distribution}{A named integer vector with the number of
+hyperedges of each size (\code{size_1}, \code{size_2}, ...).}
+\item{params}{A list with \code{source = "bipartite_groups"}, the column
+names given as \code{player}, \code{group} and \code{weight}, and
+\code{n_observations}, the number of rows used.}
+}
 }
 \description{
-Constructs a \link[=build_hypergraph]{net_hypergraph} from long-format event
-data in which each row records a \code{player} participating in a \code{group}
-(a session, team, project, transaction, or any group context). Each
-unique group becomes one hyperedge spanning the players that appeared in
-it. Optional \code{weight} column produces a weighted incidence matrix.
+\code{bipartite_groups()} builds a hypergraph from long-format membership
+data, in which each row records that a \code{player} took part in a \code{group}
+(a session, team, project, transaction or any other group context), and
+returns a \code{net_hypergraph}. Each distinct group becomes one hyperedge
+spanning the players that appeared in it. The incidence matrix of
+players by groups is 0/1, or holds summed weights when \code{weight} is
+given.
 }
 \details{
 The bipartite representation preserves the full group structure without
@@ -47,11 +78,9 @@ directly. The two functions are complementary:
 \item \code{bipartite_groups()} - when group membership is observed
 (sessions, transactions, co-authorships).
 \item \code{build_hypergraph()} - when only pairwise interactions are
-observed and triadic structure must be inferred from triangles.
+observed and group structure must be inferred from cliques
+(triangles by default).
 }
-
-Rows with \code{NA} in either the \code{player} or \code{group} column (or, when
-supplied, the \code{weight} column) are dropped silently.
 }
 \note{
 (experimental) Validated against a hand-computed \code{table()} incidence

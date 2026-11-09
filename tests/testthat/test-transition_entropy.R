@@ -445,6 +445,25 @@ test_that("trajectory respects actor boundaries and group split", {
                     length(seq.int(1L, 1499 - 300 + 1, by = 300))))
 })
 
+test_that("trajectory plot draws more groups than palette colours", {
+  d <- .make_stream(.P3, 6000, seed = 5)
+  d$who <- rep(sprintf("a%02d", 1:10), each = 600)
+  d$grp <- rep(sprintf("G%02d", 1:10), each = 600)
+  tr <- entropy_trajectory(d, action = "act", actor = "who", time = "t",
+                           group = "grp", window = 100, step = 50)
+  built <- ggplot2::ggplot_build(plot(tr))
+  # one panel per group, every line in the one single-group colour
+  expect_equal(nrow(built$layout$layout), 10L)
+  expect_equal(unique(built$data[[1L]]$colour), .okabe_ito[1L])
+  # nine groups keep one panel with a colour per group
+  nine <- subset(d, grp != "G10")
+  tr9 <- entropy_trajectory(nine, action = "act", actor = "who", time = "t",
+                            group = "grp", window = 100, step = 50)
+  built9 <- ggplot2::ggplot_build(plot(tr9))
+  expect_equal(nrow(built9$layout$layout), 1L)
+  expect_length(unique(built9$data[[1L]]$colour), 9L)
+})
+
 test_that("trajectory falls back to one window on short streams", {
   d <- .make_stream(.P3, 120, seed = 6)
   expect_warning(

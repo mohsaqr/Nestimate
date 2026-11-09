@@ -7,13 +7,19 @@
 get_estimator(name)
 }
 \arguments{
-\item{name}{Character. Name of the estimator to retrieve.}
+\item{name}{The registered name of the estimator, a single string.}
 }
 \value{
-A list with elements \code{fn}, \code{description}, \code{directed}.
+A list with \code{fn} (the estimator function), \code{description} (a
+string) and \code{directed} (\code{TRUE} or \code{FALSE}).
 }
 \description{
-Retrieve a registered network estimator by name.
+\code{get_estimator()} returns the registry entry of one estimator: its
+function, description and directedness, as \code{\link[=build_network]{build_network()}} uses them. A
+name that is not registered raises an error that lists the registered
+names. Method aliases such as \code{"tna"} are not resolved here; give the
+registered name, as \code{\link[=list_estimators]{list_estimators()}}
+shows it.
 }
 \examples{
 est <- get_estimator("relative")

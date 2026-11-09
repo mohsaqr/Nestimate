@@ -20,139 +20,167 @@ sequence_patterns(
   adjust = "BH",
   top = NULL,
   cols = NULL,
+  actor = NULL,
+  action = NULL,
+  time = NULL,
   ...
 )
 }
 \arguments{
-\item{x}{Sequence data, in any form accepted by
-\code{\link{extract_sequences}()}: prepared data, a long event log
-(with \code{action}), a wide data frame or character matrix, a
-\code{netobject}, \code{netobject_group} or \code{tna} model.}
+\item{x}{The sequences, in any form \code{\link[=extract_sequences]{extract_sequences()}} accepts:
+prepared data, a long event log (with \code{action}), a wide data frame or
+character matrix, a \code{netobject}, \code{netobject_group} or \code{tna} model.}
 
-\item{type}{Pattern type: \code{"ngram"} (default), \code{"gapped"} or
-\code{"repeated"}.}
+\item{type}{The kind of pattern to find: \code{"ngram"} (default),
+\code{"gapped"} or \code{"repeated"}. Ignored when \code{pattern} is given.}
 
-\item{len}{Integer vector of pattern lengths for \code{"ngram"} and
-\code{"repeated"}. Default \code{2:5}.}
+\item{len}{The pattern lengths, in states, for \code{"ngram"} and
+\code{"repeated"}: positive whole numbers. Default \code{2:5}.}
 
-\item{gap}{Integer vector of gap sizes for \code{"gapped"}. Default
-\code{1:3}.}
+\item{gap}{The gap sizes, in positions, for \code{"gapped"}: positive whole
+numbers. Default \code{1:3}.}
 
-\item{min_freq}{Minimum number of occurrences. Default \code{2}.}
+\item{min_freq}{The fewest times a pattern must occur to be kept, at
+least 1. Default \code{2}.}
 
-\item{min_support}{Minimum share of sequences containing the pattern.
-Default \code{0.01}.}
+\item{min_support}{The smallest share of sequences that must contain a
+pattern for it to be kept, between 0 and 1. Default \code{0.01}.}
 
-\item{start, end}{Optional character vectors of states. Keep only patterns
-that begin (\code{start}) or end (\code{end}) with one of them.}
+\item{start, end}{States a pattern must begin (\code{start}) or end (\code{end})
+with, one of them at least; wildcards do not count. Default \code{NULL}
+(any).}
 
-\item{contain}{Optional character vector of states. Keep only patterns
-that include at least one of them.}
+\item{contain}{States a pattern must include, one of them at least.
+Default \code{NULL} (any).}
 
-\item{pattern}{Optional template to search for instead of discovering
-all patterns, e.g. \code{"discuss->*->consensus"}: each \code{*} is one
-position holding any state (\code{**} is two). Every concrete instance
-is returned as its own row (\code{"discuss->plan->consensus"}, ...).
-\code{type}, \code{len} and \code{gap} are then ignored.}
+\item{pattern}{A template to search for instead of discovering all
+patterns, such as \code{"discuss->*->consensus"}: each \code{*} is one position
+holding any state (\verb{**} is two). Every concrete instance is returned
+as its own row (\code{"discuss->plan->consensus"}, ...). States are joined
+by \code{"->"} (spaces around it are allowed), and a template may mix fixed
+states and wildcards or hold no wildcard at all. \code{type}, \code{len} and
+\code{gap} are then ignored. An empty template, or one with an empty step
+such as \code{"A->->B"} or a leading or trailing \code{"->"}, raises an error of
+class \code{nestimate_bad_input}. Default \code{NULL}.}
 
-\item{group}{Optional grouping of the sequences: the name of a column
-stored with them (a covariate of a wide data frame or long event log,
-or of a network's metadata), or a vector with one value per sequence.
-For a \code{netobject_group} its own grouping is used when \code{group}
-is \code{NULL}. Adds a test of pattern presence by group; see Details.
-\code{group = "last_obs"} uses each sequence's last observed state as
-its group and removes the states that end some sequence from all
-sequences (for data whose final state codes the outcome, e.g. an
-appended \code{"pass"}/\code{"fail"}; codyna's \code{last_obs}).}
+\item{group}{The grouping of the sequences for the group test: the name
+of a column stored with them (a covariate of a wide data frame or long
+event log, or of a network's metadata), or a vector with one value per
+sequence. A \code{netobject_group} is grouped by its own groups when
+\code{group} is \code{NULL}. \code{"last_obs"} takes each sequence's last observed
+state as its group and removes every state that ends some sequence
+from all sequences, for data whose final state codes the outcome
+(such as an appended \code{"pass"} or \code{"fail"}), as codyna's \code{last_obs}
+does. Sequences with a missing group are dropped with a warning of
+class \code{nestimate_missing_group}. A column not found, a vector of the
+wrong length or a single group raise an error of class
+\code{nestimate_bad_input}. Default \code{NULL} (no test).}
 
-\item{reference}{For two groups, the reference group; the odds ratio is
-for the other group. Default: the first group in sorted order.}
+\item{reference}{For two groups: the reference group, so the odds ratio
+is that of the other group. Default \code{NULL}, the first group in sorted
+order; a value that is not a group raises an error of class
+\code{nestimate_bad_input}.}
 
-\item{adjust}{Multiplicity correction for the group test, passed to
-\code{\link[stats]{p.adjust}}. Default \code{"BH"}.}
+\item{adjust}{The multiplicity correction of the group test's p-values,
+one of \code{p.adjust.methods} (see \code{\link[stats:p.adjust]{stats::p.adjust()}}). Default \code{"BH"}.}
 
-\item{top}{Optional number of rows to return (the first \code{top} in the
-output order). Default \code{NULL}, all rows.}
+\item{top}{The number of rows to return, a positive whole number: the
+first in the output order. Default \code{NULL} (all).}
 
-\item{cols}{State columns of a wide data frame; see
-\code{\link{extract_sequences}()}.}
+\item{cols}{The state columns of a wide data frame, as in
+\code{\link[=extract_sequences]{extract_sequences()}}. Default \code{NULL}.}
 
-\item{...}{Passed to \code{\link{extract_sequences}()}, e.g.
-\code{actor}, \code{action} and \code{time} for a long event log.}
+\item{actor, action, time}{The actor, action and timestamp columns of a
+long event log, as in \code{\link[=extract_sequences]{extract_sequences()}}: setting \code{action} declares
+\code{x} an event log. Default \code{NULL}.}
+
+\item{...}{Further arguments passed to \code{\link[=prepare]{prepare()}} for a long event log,
+such as \code{time_threshold} or \code{order}.}
 }
 \value{
-A \code{data.frame} with one row per pattern, ordered by
-\code{support} (then \code{occurrences}, then \code{pattern}):
+A data frame with one row per pattern, ordered by \code{support}
+(then \code{occurrences}, then \code{pattern}):
 \describe{
-\item{pattern}{States joined by \code{"->"}; \code{*} marks a
-wildcard position.}
-\item{length}{Number of positions the pattern spans.}
-\item{occurrences}{Total number of times it occurs.}
-\item{proportion}{\code{occurrences} as a share of all patterns of
-the same length.}
-\item{n_sequences}{Number of sequences that contain it.}
-\item{support}{\code{n_sequences} divided by the number of
-sequences.}
-\item{lift}{Support relative to independent presence of its states.}
+\item{pattern}{The states joined by \code{"->"}; \code{*} marks a wildcard
+position.}
+\item{length}{The number of positions the pattern spans, gaps
+included.}
+\item{occurrences}{The number of times it occurs.}
+\item{proportion}{\code{occurrences} as a share of all patterns of the
+same length.}
+\item{n_sequences}{The number of sequences that contain it.}
+\item{support}{\code{n_sequences} divided by the number of sequences.}
+\item{lift}{Support relative to the independent presence of its
+states.}
 }
-With \code{group}, also \code{support_<group>} (the support within each
-group); for two groups \code{odds_ratio}, \code{or_lower},
-\code{or_upper}; for more, \code{chisq} and \code{cramers_v}; then
-\code{p_value} and \code{p_adj}. Rows are ordered by \code{p_value}
-(then \code{support}).
+With \code{group}, the columns \verb{support_<group>} (the support within each
+group) follow; then \code{odds_ratio}, \code{or_lower} and \code{or_upper} for two
+groups, or \code{chisq} and \code{cramers_v} for more; then \code{p_value} and
+\code{p_adj}. The rows are then ordered by \code{p_value} (then \code{support}).
 
-Conditions: \code{nestimate_bad_input} for a state name containing
-\code{"->"} or consisting only of asterisks (reserved for wildcards),
-a missing group column, a group vector of the wrong length,
-or a group with fewer than two values; warning
-\code{nestimate_missing_group} when sequences with a missing group are
-dropped.
+A state name that contains \code{"->"} or consists only of asterisks
+(reserved for wildcards) raises an error of class
+\code{nestimate_bad_input}.
 }
 \description{
-Finds the ordered patterns that occur in a set of sequences and reports,
-for each one, how often it occurs, how many sequences contain it, and its
-lift. Three pattern types are supported:
+\code{sequence_patterns()} finds the ordered patterns of states that occur in
+a set of sequences and returns one row per pattern with how often it
+occurs, how many sequences contain it, and its lift. It reads sequences
+in every form \code{\link[=extract_sequences]{extract_sequences()}} accepts, and finds three kinds of
+pattern:
 \describe{
-\item{\code{"ngram"}}{Contiguous runs of \code{len} states,
-e.g. \code{A->B->C}.}
-\item{\code{"gapped"}}{Two states separated by \code{gap} positions of
-any state, e.g. \code{A->*->B} (gap 1) or \code{A->**->B} (gap 2).}
-\item{\code{"repeated"}}{Runs of \code{len} identical states,
-e.g. \code{A->A->A}.}
+\item{\code{"ngram"}}{Contiguous runs of \code{len} states, e.g. \code{A->B->C}.}
+\item{\code{"gapped"}}{Two states separated by \code{gap} positions of any
+state, e.g. \verb{A->*->B} (gap 1) or \verb{A->**->B} (gap 2).}
+\item{\code{"repeated"}}{Runs of \code{len} identical states, e.g. \code{A->A->A}.}
 }
-A window that contains a missing value is skipped, so a pattern never
-spans a gap or the end of a sequence.
+A \code{pattern} template searches for the instances of one pattern instead,
+and \code{group} adds a test of whether the share of sequences containing a
+pattern differs between groups (see \emph{Group test}).
+
+Support and lift describe the sequences at hand. A lift above 1 says the
+states of a pattern occur in this order in more sequences than their
+separate presence predicts; it does not account for the transition
+structure, so a pattern that the transition probabilities make likely
+can have a lift above 1. Many patterns are searched at once, so read
+the group test's \code{p_adj}, not \code{p_value}, and its effect sizes beside
+them. To relate patterns to an outcome, use \code{\link[=pattern_outcome]{pattern_outcome()}}; to
+compare how often each run of states occurs in each group,
+\code{\link[=sequence_compare]{sequence_compare()}}.
 }
 \details{
-\code{support} is the share of sequences that contain the pattern at
-least once. \code{lift} compares it with the support expected if the
-states in the pattern appeared in sequences independently:
+\code{support} is the share of sequences that contain the pattern at least
+once. \code{lift} compares it with the support expected if the states in the
+pattern appeared in sequences independently:
 \code{support / prod(state_support)}, where the support of a state is the
-share of sequences in which it occurs and wildcard positions are left out.
-A lift above 1 means the states co-occur in this order more often than
-independent presence predicts. It does not account for the transition
-structure: a pattern that the transition probabilities make likely can
-have a lift above 1.
+share of sequences in which it occurs and wildcard positions are left
+out.
+
+A window that contains a missing value, at a fixed or a wildcard
+position, is skipped, so a pattern never spans a gap or the end of a
+sequence.
 
 \code{proportion} is computed over all patterns of the same length before
-\code{min_freq}, \code{min_support}, \code{start}, \code{end} and
-\code{contain} are applied, so it does not change with the filters.
+\code{min_freq}, \code{min_support}, \code{start}, \code{end} and \code{contain} are applied, so
+it does not change with the filters. Counts, support and lift agree with
+\code{codyna::discover_patterns()}, which computes \code{proportion} after the
+filters instead.
 }
 \section{Group test}{
 
 With \code{group}, each pattern's presence (in a sequence or not) is
 cross-tabulated against the group. For two groups, Fisher's exact test
 gives the p-value, the conditional maximum-likelihood odds ratio of
-containing the pattern in the non-reference group, and its 95\\%
+containing the pattern in the non-reference group, and its 95\%
 confidence interval. A pattern that occurs in one group only has an
 infinite (or zero) odds ratio, with a finite lower (or upper) limit; a
 pattern present in every sequence has none (\code{NA}). For three or more
-groups, the Pearson chi-square of
-the presence-by-group table gives the p-value (G - 1 degrees of freedom),
-with Cram\enc{é}{e}r's V as the effect size. Unlike a comparison of counts against
-an equal split, both tests account for unequal group sizes. p-values are
-adjusted across the returned patterns' family (all patterns passing the
-filters) with \code{adjust}. The rows are then ordered by \code{p_value}.
+groups, the Pearson chi-square of the presence-by-group table gives the
+p-value (G - 1 degrees of freedom), with Cram\enc{é}{e}r's V as the
+effect size. Unlike a comparison of counts against an equal split, both
+tests account for unequal group sizes. The p-values are adjusted with
+\code{adjust} over all patterns that pass the filters, before \code{top} is
+applied, and the rows are ordered by \code{p_value}.
 }
 
 \examples{

@@ -84,6 +84,9 @@ test_that("cluster_diagnostics(net_mmm): structure + class_err_pct decomposition
   weighted_err <- sum(pc$class_err_pct * pc$size) / sum(pc$size)
   expect_equal(weighted_err / 100,
                diag$overall$classification_error, tolerance = 1e-9)
+  # Per cluster the expected misclassification is 1 - AvePP of its members
+  # (Vermunt & Magidson); the former "< 0.5" share was 0 for every k = 2 fit.
+  expect_equal(pc$class_err_pct, 100 * (1 - pc$avepp), tolerance = 1e-9)
 })
 
 test_that("netobject_group dispatch routes to attr(, 'clustering')", {

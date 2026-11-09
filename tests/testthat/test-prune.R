@@ -123,3 +123,88 @@ test_that("disparity filter keeps the absent edges of a sink or source state at 
   expect_false(anyNA(det$weight))
   expect_identical(attr(det, "num_removed"), nrow(det))
 })
+
+test_that("an undirected network is pruned by pairs and stays symmetric", {
+  # Co-occurrence counts: a-c (5) and b-d (2) are at most 10. Visited
+  # column by column over the pairs, a-c goes first (in both directions):
+  # b-d still joins {a, b} to {c, d}. b-d is then the only bridge and stays
+  # in both directions. Cell by cell, d->b went and b->d stayed.
+  W <- matrix(c(0,  90, 5,  0,
+                90, 0,  0,  2,
+                5,  0,  0,  80,
+                0,  2,  80, 0), 4, byrow = TRUE,
+              dimnames = list(letters[1:4], letters[1:4]))
+  net <- build_network(W, method = "co_occurrence")
+  expect_false(net$directed)
+  pr <- net_prune(net, threshold = 10)
+  expect_true(isSymmetric(unname(pr$weights)))
+  expect_equal(pr$weights["a", "c"], 0)
+  expect_equal(pr$weights["c", "a"], 0)
+  expect_equal(pr$weights["b", "d"], 2)
+  expect_equal(pr$weights["d", "b"], 2)
+  det <- net_pruning_details(pr)
+  expect_identical(nrow(det), 1L)          # the pair once
+  expect_identical(attr(det, "num_removed"), 1L)
+  expect_identical(attr(det, "num_retained"), 3L)   # a-b, b-d, c-d
+})
+
+test_that("signed networks: every zeroed edge is recorded and counted", {
+  # 3 nodes, undirected: A-B 0.6, A-C -0.3, B-C 0.4. Disparity at
+  # level 0.5 keeps A-B only: 2 pairs removed (one negative), 1 retained.
+  W <- matrix(c(1, 0.6, -0.3,
+                0.6, 1, 0.4,
+                -0.3, 0.4, 1), 3, byrow = TRUE,
+              dimnames = list(LETTERS[1:3], LETTERS[1:3]))
+  net <- build_network(W, method = "cor", params = list(n = 100))
+  expect_false(net$directed)
+  pd <- net_prune(net, method = "disparity", level = 0.5)
+  det <- net_pruning_details(pd)
+  kept <- sum(pd$weights[upper.tri(pd$weights)] != 0)
+  expect_identical(attr(det, "num_removed"), nrow(det))
+  expect_identical(attr(det, "num_retained"), kept)
+  expect_identical(attr(det, "num_removed"), 2L)
+  expect_identical(attr(det, "num_retained"), 1L)
+  expect_identical(sum(det$weight < 0), 1L)
+})
+
+test_that("bootstrap pruning records non-significant negative edges", {
+  cn <- build_network(srl_strategies, method = "cor")
+  b <- bootstrap_network(cn, iter = 20L, seed = 1)
+  pb <- net_prune(cn, method = "bootstrap", boot = b)
+  det <- net_pruning_details(pb)
+  up <- upper.tri(cn$weights)
+  zeroed <- sum(cn$weights[up] != 0 & pb$weights[up] == 0)
+  expect_identical(nrow(det), zeroed)
+  expect_identical(sum(det$weight < 0),
+                   sum(cn$weights[up] < 0 & pb$weights[up] == 0))
+  expect_identical(attr(det, "num_retained"),
+                   sum(pb$weights[up] != 0))
+})
+
+test_that("a group is pruned by its own bootstraps, matched by name", {
+  g <- build_network(group_regulation_long, method = "relative",
+                     action = "Action", actor = "Actor", time = "Time",
+                     group = "Achiever")
+  bg <- bootstrap_network(g, iter = 20L, seed = 1)
+  pg <- net_prune(g, method = "bootstrap", boot = bg)
+  invisible(lapply(names(g), function(nm) {
+    expected <- bg[[nm]]$significant
+    diag(expected) <- diag(g[[nm]]$weights)
+    expect_equal(unname(pg[[nm]]$weights), unname(expected))
+  }))
+  expect_error(net_prune(g, method = "bootstrap", boot = bg[[1]]),
+               class = "nestimate_bad_input")
+  expect_error(net_prune(g[[2]], method = "bootstrap", boot = bg[[1]]),
+               class = "nestimate_bad_input")
+})
+
+test_that("a depruned network can be pruned again with other settings", {
+  net <- make_net()
+  undone <- net_deprune(net_prune(net, threshold = 0.2))
+  again <- net_prune(undone, threshold = 0.3)
+  fresh <- net_prune(net, threshold = 0.3)
+  expect_equal(again$weights, fresh$weights)
+  expect_equal(net_pruning_details(again), net_pruning_details(fresh))
+  expect_error(net_prune(net_prune(net, threshold = 0.2)),
+               class = "nestimate_bad_input")
+})

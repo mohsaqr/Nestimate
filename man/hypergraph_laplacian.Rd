@@ -2,44 +2,70 @@
 % Please edit documentation in R/hypergraph_laplacian.R
 \name{hypergraph_laplacian}
 \alias{hypergraph_laplacian}
-\title{Normalized hypergraph Laplacian}
+\title{Normalised hypergraph Laplacian}
 \usage{
 hypergraph_laplacian(hg, type = c("zhou", "random_walk"), edge_weights = NULL)
 }
 \arguments{
-\item{hg}{A \code{net_hypergraph} from \code{\link[=build_hypergraph]{build_hypergraph()}} or
-\code{\link[=bipartite_groups]{bipartite_groups()}}. Must be connected and have at least one
-hyperedge.}
+\item{hg}{The hypergraph: a \code{net_hypergraph} from \code{\link[=build_hypergraph]{build_hypergraph()}} or
+\code{\link[=bipartite_groups]{bipartite_groups()}}, with at least two nodes and one hyperedge. A
+hypergraph that is not connected has no unique stationary distribution
+and raises an error of class \code{nestimate_hypergraph_disconnected};
+analyse its components separately.}
 
-\item{type}{Character. \code{"zhou"} (default) for the Zhou et al. (2006)
-normalized Laplacian on the binary incidence pattern, or
-\code{"random_walk"} for the Hayashi et al. (2020) EDVW random-walk
-Laplacian on the weighted incidence.}
+\item{type}{The Laplacian. \code{"zhou"} (default) is the Zhou et al. (2006)
+Laplacian on the binary incidence pattern; \code{"random_walk"} is the
+Hayashi et al. (2020) random-walk Laplacian on the weighted incidence.}
 
-\item{edge_weights}{Numeric vector of positive hyperedge weights
-(length \code{hg$n_hyperedges}), or \code{NULL} for the type-specific default:
-unit weights for \code{"zhou"}; for \code{"random_walk"} the Hayashi et al.
-heuristic - the population standard deviation of each hyperedge's
-(non-zero) vertex weights plus one - which reduces to unit weights on
-a binary incidence.}
+\item{edge_weights}{Positive hyperedge weights, one per hyperedge in the
+order of the incidence columns. Default \code{NULL}, which gives unit weights
+for \code{"zhou"} and, for \code{"random_walk"}, the heuristic of Hayashi et al.:
+the population standard deviation of each hyperedge's non-zero
+incidence cells plus one, which is 1 on a binary incidence. A vector of
+the wrong length, or with a value that is not finite and positive,
+raises an error.}
 }
 \value{
-A symmetric \code{n_nodes} x \code{n_nodes} numeric matrix (node names as
-dimnames) with attributes \code{type} (the Laplacian type),
-\code{pi} (named stationary distribution of the underlying random walk)
-and \code{edge_weights} (the hyperedge weights actually used).
+A symmetric numeric matrix with one row and one column per node
+(the node names as dimnames). Its attributes record the \code{type}, \code{pi}
+(the stationary distribution of the walk, named by node) and
+\code{edge_weights} (the hyperedge weights used).
 }
 \description{
-Computes the normalized Laplacian of a hypergraph, either the classic
-Zhou-Huang-Scholkopf form on the binary incidence pattern
-(\code{type = "zhou"}) or the random-walk form with edge-dependent vertex
-weights (\code{type = "random_walk"}), in which the weighted incidence cells
-(e.g. the summed weights produced by \code{\link[=bipartite_groups]{bipartite_groups()}}) determine
-where a random walker lands inside a hyperedge, and the resulting
-non-reversible walk is symmetrized through its stationary distribution
-(Chung 2005). Both Laplacians are symmetric positive semi-definite with
-eigenvalues in \verb{[0, 2]}; for a binary incidence with unit hyperedge
-weights they coincide.
+\code{hypergraph_laplacian()} computes the normalised Laplacian of a hypergraph
+and returns it as a symmetric node-by-node matrix, the operator that
+\code{\link[=hypergraph_cluster]{hypergraph_cluster()}} and \code{\link[=hypergraph_transduction]{hypergraph_transduction()}} are built on. It
+comes in two forms. \code{type = "zhou"} is the Laplacian of Zhou, Huang and
+Sch\enc{ö}{o}lkopf (2006), computed on the binary incidence pattern, so
+the values in the incidence cells play no part. \code{type = "random_walk"} is
+the Laplacian of Hayashi et al. (2020) for a random walk with
+edge-dependent vertex weights: the weighted incidence cells (for example
+the summed weights \code{\link[=bipartite_groups]{bipartite_groups()}} produces with \code{weight}) set where
+a walker that enters a hyperedge lands, and the walk, which is not
+reversible, is symmetrised through its stationary distribution (Chung
+2005).
+
+Both Laplacians are symmetric positive semi-definite with eigenvalues in
+[0, 2]. On a binary incidence with unit hyperedge weights the two forms
+coincide. The hypergraph must be connected, so the eigenvalue 0 occurs
+once; further eigenvalues close to 0 indicate groups of nodes that the
+walk seldom leaves, which is what \code{\link[=hypergraph_cluster]{hypergraph_cluster()}} partitions by.
+}
+\details{
+For \code{"zhou"}, with \eqn{H} the binary incidence, \eqn{W} the diagonal of
+hyperedge weights, \eqn{D_e} the hyperedge sizes and \eqn{D_v} the node
+degrees (the summed weights of the hyperedges a node belongs to),
+\deqn{L = I - D_v^{-1/2} H W D_e^{-1} H^T D_v^{-1/2},}
+and the stationary distribution is proportional to \eqn{D_v}. For
+\code{"random_walk"}, a walker at node \eqn{v} picks a hyperedge containing
+it with probability proportional to its weight, then a node \eqn{u} of
+that hyperedge with probability proportional to the incidence cell
+\eqn{\gamma_e(u)}. The stationary distribution \eqn{\pi} is the leading
+left eigenvector of this transition matrix \eqn{P}, and
+\eqn{L = I - (\Pi^{1/2} P \Pi^{-1/2} + \Pi^{-1/2} P^T \Pi^{1/2}) / 2}.
+The random-walk Laplacian, its stationary distribution and its default
+hyperedge weights follow the reference implementation in HyperNetX
+(\code{laplacians_clustering.py}).
 }
 \examples{
 events <- data.frame(
@@ -55,8 +81,9 @@ range(eigen(L, symmetric = TRUE, only.values = TRUE)$values)
 
 }
 \references{
-Zhou, D., Huang, J., & Scholkopf, B. (2006). Learning with hypergraphs:
-Clustering, classification, and embedding. \emph{NeurIPS 19}.
+Zhou, D., Huang, J., & Sch\enc{ö}{o}lkopf, B. (2006). Learning with
+hypergraphs: Clustering, classification, and embedding.
+\emph{NeurIPS 19}.
 
 Hayashi, K., Aksoy, S. G., Park, C. H., & Park, H. (2020). Hypergraph
 random walks, Laplacians, and clustering. \emph{CIKM 2020}, 495-504.

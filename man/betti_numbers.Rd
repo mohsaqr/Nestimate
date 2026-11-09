@@ -7,14 +7,32 @@
 betti_numbers(sc)
 }
 \arguments{
-\item{sc}{A \code{simplicial_complex} object.}
+\item{sc}{A \code{simplicial_complex} from \code{\link[=build_simplicial]{build_simplicial()}}. When it was
+built with a \code{max_dim} below its largest clique, the top Betti number
+counts cycles whose filling simplices were not built, so it is an upper
+bound, and a warning of class \code{nestimate_truncated_complex} says so.}
 }
 \value{
-Named integer vector \code{c(b0 = ..., b1 = ..., ...)}.
+A named integer vector \code{c(b0 = , b1 = , ...)}, one entry per
+dimension from 0 to the dimension of the complex.
 }
 \description{
-Computes Betti numbers: \eqn{\beta_0} (components), \eqn{\beta_1}
-(loops), \eqn{\beta_2} (voids), etc.
+\code{betti_numbers()} counts the holes of a simplicial complex in each
+dimension: \eqn{\beta_0} is the number of connected components,
+\eqn{\beta_1} the number of independent loops (cycles not filled in by
+triangles), \eqn{\beta_2} the number of enclosed voids, and so on up to
+the dimension of the complex.
+
+Betti numbers describe the complex as it was built; a clique complex
+built at a different threshold can give different numbers.
+\code{\link[=persistent_homology]{persistent_homology()}} follows each hole across all thresholds and shows
+how long it lasts.
+}
+\details{
+\eqn{\beta_k} is the dimension of the k-th homology group, the number of
+k-simplices minus the rank of the k-th boundary matrix, minus the rank of
+the (k + 1)-th. The ranks are computed with \code{qr()} on the signed boundary
+matrices.
 }
 \examples{
 mat <- matrix(c(0,.6,.5,.6,0,.4,.5,.4,0), 3, 3)

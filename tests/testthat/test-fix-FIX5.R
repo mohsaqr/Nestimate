@@ -194,8 +194,9 @@ test_that("A03-F04: build_hon $nodes is a data.frame and @return says so", {
                    collapse = "\n")
   expect_false(grepl("Character vector of HON node names", hon_src,
                       fixed = TRUE))
+  # Wording from the 2026-11-08 help-page rewrite; also pins the columns.
   expect_match(hon_src,
-               "\\\\item\\{nodes\\}\\{data\\.frame with columns")
+               "\\\\item\\{nodes\\}\\{A data frame with columns `id`, `label` and `name`")
 })
 
 # --- A03-F05: non-integer order/max_order/k is a clean error ----------------

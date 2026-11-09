@@ -42,131 +42,187 @@ casedrop_reliability(
 )
 }
 \arguments{
-\item{x}{A \code{netobject}, \code{cograph_network}, \code{netobject_group}, or \code{mcml}.
-For the group types this function iterates over each element and
-returns a named list. For the \code{print()} and \code{plot()} methods: an object of class \code{net_casedrop_reliability} or \code{net_casedrop_reliability_group} (or its \code{summary()}).}
+\item{x}{The network: a \code{netobject} or \code{cograph_network} that carries its
+data, or a \code{netobject_group} or \code{mcml}, whose networks (for an \code{mcml},
+the macro network and each cluster's) are assessed one by one. A
+network without data raises an error, and one that rests on a single
+sequence, or one-hot data with no actor or session, has no cases to
+drop and raises an error of class \code{nestimate_single_sequence}. For the
+\code{print()} and \code{plot()} methods: the result of
+\code{casedrop_reliability()} (for \code{print()}, also the \code{summary()} of a
+group result).}
 
-\item{iter}{Integer. Iterations per drop proportion. Default \code{1000}.}
+\item{iter}{The number of random subsets drawn for each drop proportion,
+at least 2. Default \code{1000}.}
 
-\item{drop_prop}{Numeric vector of proportions to evaluate. Each entry
-must lie strictly between 0 and 1. Default \code{seq(0.1, 0.9, by = 0.1)}. In \code{summary.net_casedrop_reliability_group()}: Drop proportion at which to report the four metrics (mean +/- sd per network). Must be one of the drop proportions the object was built with. Defaults to the object's median grid value (the stored grid is used, not an assumed \code{0.7}); pass an explicit value not in the grid to get an error listing the available proportions.}
+\item{drop_prop}{The proportions of cases to drop, each strictly between
+0 and 1, in any order. Default \code{seq(0.1, 0.9, by = 0.1)}.
+A proportion that drops no case of a small sample (\code{n * p < 1}) is
+not run (without a warning; its metrics are \code{NA}) and counts as not
+passing. For the \code{summary()} method of a group result: the one
+proportion to report, which must be one of those the result was built
+with; a value outside them raises an error listing the available ones.
+Default \code{NULL} there, the middle proportion of the grid (the lower of
+the two middle ones for an even number).}
 
-\item{threshold}{Numeric in \verb{[0, 1]}. Minimum edge-vector correlation
-for an iteration to count as stable. Default \code{0.7}.}
+\item{threshold}{The lowest correlation between the original and the
+re-estimated edge weights for an iteration to count as stable, between
+0 and 1. Default \code{0.7}.}
 
-\item{certainty}{Numeric in \verb{[0, 1]}. Required fraction of iterations
-whose correlation must exceed \code{threshold} for a drop proportion to
-qualify. Default \code{0.95}. It is the share of all iterations: one in which
-the correlation is undefined (the edge vector is constant in that subset)
-counts as not reaching \code{threshold}.}
+\item{certainty}{The share of iterations that must reach \code{threshold} for
+a drop proportion to pass, between 0 and 1. Default \code{0.95}. It is the
+share of all iterations: one in which the correlation is undefined (the
+edge vector is constant in that subset), or in which the network could
+not be re-estimated, counts as not reaching \code{threshold}.}
 
-\item{method}{Correlation method: \code{"pearson"} (weight magnitudes),
-\code{"spearman"} (ranks, robust to scale), or \code{"kendall"}. Default
-\code{"spearman"} because edge weights often span several orders of
-magnitude and rank stability is the typical target.}
+\item{method}{The correlation: \code{"spearman"} (default) compares ranks, so
+it is not affected by the scale of the weights, which often span
+several orders of magnitude; \code{"pearson"} compares the weight
+magnitudes; \code{"kendall"} is Kendall's tau.}
 
-\item{include_diag}{Logical. Include diagonal (self-loop) edges in the
-edge vector. Default \code{FALSE}.}
+\item{include_diag}{Whether self-loops are part of the edge vector.
+Default \code{FALSE}.}
 
-\item{seed}{Optional integer for reproducibility.}
+\item{seed}{A number that makes the subsets reproducible. The session's
+own random stream is left as it was. For a \code{netobject_group} or \code{mcml}, each network
+is assessed from the same seed. Default \code{NULL}.}
 
-\item{target}{Cells to assess: \code{"auto"} (default) uses \code{"existing"}
-for unscaled, unthresholded transition methods and \code{"all"} otherwise.
-\code{"existing"} assesses only nonzero original cells; \code{"all"} includes
-original zeros so edges appearing after case removal are assessed.
-\code{include_diag} applies to either target.}
+\item{target}{The cells compared. \code{"existing"} compares only the cells
+that are non-zero in the original network; \code{"all"} compares every cell,
+zeros included, so edges that appear once cases are dropped count.
+\code{"auto"} (default) uses \code{"existing"} for unscaled and unthresholded
+transition networks, where an absent transition cannot appear in a
+subset, and \code{"all"} otherwise. \code{include_diag} applies to either.}
 
-\item{digits}{Digits to display. Default \code{3}.}
+\item{digits}{For the \code{print()} method of a single result: the decimal
+places of the metric table. Default \code{3}.}
 
-\item{...}{In \code{plot.net_casedrop_reliability()}, \code{plot.net_casedrop_reliability_group()}, \code{print.net_casedrop_reliability()}, \code{print.summary.net_casedrop_reliability_group()}, \code{summary.net_casedrop_reliability()} and \code{summary.net_casedrop_reliability_group()}: Additional arguments (ignored). In \code{print.net_casedrop_reliability_group()}: Ignored.}
+\item{...}{For the \code{print()}, \code{summary()} and \code{plot()} methods: ignored.}
 
-\item{object}{For the \code{summary()} method: an object of class \code{net_casedrop_reliability} or \code{net_casedrop_reliability_group}.}
+\item{object}{For the \code{summary()} methods: the result of
+\code{casedrop_reliability()}.}
 
-\item{combined}{When \code{TRUE} (default), all four metrics are shown in one ggplot via \code{facet_wrap(~ metric)}. When \code{FALSE}, returns a named list of four single-panel ggplots, one per metric.}
+\item{combined}{For the \code{plot()} method of a single result: \code{TRUE}
+(default) draws the four metrics as panels of one plot; \code{FALSE} returns
+a named list of four single-panel plots, one per metric.}
 
-\item{metric}{Which metric to plot. One of \code{"correlation"} (default), \code{"mean_abs_dev"}, \code{"median_abs_dev"}, \code{"max_abs_dev"}.}
+\item{metric}{For the \code{plot()} method of a group result: the metric
+drawn, \code{"correlation"} (default), \code{"mean_abs_dev"}, \code{"median_abs_dev"}
+or \code{"max_abs_dev"}.}
 }
 \value{
-An object of class \code{net_casedrop_reliability} with:
+A \code{net_casedrop_reliability} object. \code{print()} shows the
+CS-coefficient and the mean and standard deviation of each metric at
+each drop proportion; \code{\link[=summary]{summary()}} returns that table in full, one row
+per metric and drop proportion; \code{plot()} draws the metrics across the
+drop proportions. A \code{netobject_group} or \code{mcml} gives a
+\code{net_casedrop_reliability_group}, a named list of one result per
+network: its \code{print()} gives each network's number of cases, number of
+edges and CS-coefficient, its \code{summary()} one row per network at one
+drop proportion, and its \code{plot()} one curve per network. The fields of
+a single result:
 \describe{
-\item{\code{cs}}{Scalar CS-coefficient - the maximum drop proportion for
-which the edge-vector correlation remains >= \code{threshold} in at
-least \code{certainty} of iterations. Zero if no proportion qualifies;
-\code{NA} when the original edge weights do not vary (CS undefined).}
-\item{\code{summary}}{Tidy data frame, one row per metric by drop
-proportion, with columns \code{metric} (\code{"mean_abs_dev"},
-\code{"median_abs_dev"}, \code{"correlation"}, \code{"max_abs_dev"}),
-\code{drop_prop}, \code{mean}, \code{sd}, \code{median}, \code{mad}, \code{q025}, \code{q975}.}
-\item{\code{metrics}}{Named list of four \code{iter} x \code{length(drop_prop)}
-matrices, one per metric, holding the raw per-iteration values.}
-\item{\code{correlations}}{\code{iter} x \code{length(drop_prop)} matrix of per-
-iteration correlations (the \code{correlation} entry of \code{metrics}).}
+\item{\code{cs}}{The CS-coefficient: the largest drop proportion at which
+the correlation reaches \code{threshold} in at least \code{certainty} of the
+iterations. \code{0} when no proportion passes; \code{NA} when the original
+edge weights do not vary (constant up to rounding error, relative to
+their size), so the correlation is undefined.}
+\item{\code{summary}}{A data frame with one row per metric and drop
+proportion: \code{metric} (\code{"mean_abs_dev"}, \code{"median_abs_dev"},
+\code{"correlation"}, \code{"max_abs_dev"}), \code{drop_prop}, and the \code{mean}, \code{sd},
+\code{median}, \code{mad}, \code{q025} and \code{q975} of the metric over the
+iterations.}
+\item{\code{metrics}}{The per-iteration values: a named list of four
+matrices, one per metric, with one row per iteration and one column
+per drop proportion.}
+\item{\code{correlations}}{The same matrix as the \code{correlation} entry of
+\code{metrics}.}
 \item{\code{drop_prop}, \code{threshold}, \code{certainty}, \code{iter}, \code{method},
-\code{include_diag}}{Inputs.}
-\item{\code{n_cases}}{Number of cases resampled from (sequences for
-transition methods, rows of \verb{$data} otherwise).}
-\item{\code{n_edges}}{Number of cells assessed, determined by \code{target}
-and \code{include_diag}.}
+\code{include_diag}}{The settings used.}
+\item{\code{n_cases}}{The number of cases resampled from: sequences for a
+transition network, rows of the data otherwise.}
+\item{\code{n_edges}}{The number of cells compared, set by \code{target} and
+\code{include_diag}.}
 }
-The resolved target is retained as \code{attr(result, "target")}, preserving
-the existing list fields for downstream consumers.
-A \code{netobject_group} or \code{mcml} input instead returns a
-\code{net_casedrop_reliability_group}: a named list of one result per
-constituent network.
+The resolved \code{target} is kept as the result's \code{target} attribute.
 
-When the original edge vector has zero variance a warning is issued and
-the object is returned with \code{cs = NA}, an empty \code{summary}, and all-\code{NA}
-metric matrices.
+When the original edge weights do not vary, a warning is given and the
+result has \code{cs = NA}, a \code{summary} whose statistics are \code{NA}, and metric
+matrices of \code{NA}.
 
-In \code{print.net_casedrop_reliability()}: The input \code{x} invisibly.
-
-In \code{summary.net_casedrop_reliability()}: A tidy data frame with columns \code{metric}, \code{drop_prop}, \code{mean}, \code{sd} summarising edge-weight stability across case-dropping iterations.
-
-In \code{summary.net_casedrop_reliability_group()}: A data frame with one row per network containing \code{cor}, \code{mean_abs_dev}, \code{median_abs_dev}, \code{max_abs_dev} formatted as "mean +/- sd".
-
-In \code{plot.net_casedrop_reliability()}: A \code{ggplot} object, or a named list of four ggplots when \code{combined = FALSE}.
-
-In \code{plot.net_casedrop_reliability_group()}: A \code{ggplot} object.
+The \code{print()} methods return their input invisibly. The
+\code{summary()} method of a single result returns its \code{summary} field,
+described above. The \code{summary()} method of
+a group result returns a \code{summary.net_casedrop_reliability_group} data
+frame with one row per network (named in the row names): \code{n_edges} and
+the four metrics (\code{cor}, \code{mean_abs_dev}, \code{median_abs_dev},
+\code{max_abs_dev}) at the chosen drop proportion, each written as
+\code{"mean +/- sd"}; its \code{print()} names that proportion. The \code{plot()}
+methods return a \code{ggplot}; with \code{combined = FALSE}, the named list of
+plots is returned invisibly. A single result is drawn as one panel per
+metric, the mean across iterations as a line with a band of plus and
+minus one standard deviation; a group result draws the chosen metric
+with one line and band per network. On the correlation, a dashed line
+marks \code{threshold}. A result whose CS-coefficient is undefined is drawn as a
+panel that says so, and in a group such networks are left out and
+named in the caption.
 }
 \description{
-Computes a \strong{CS-coefficient for the edge-weight vector} of a network:
-the maximum proportion of cases (rows of \code{x$data}) that can be dropped
-while the flattened edge-weight vector of the re-estimated network
-still correlates with the original above \code{threshold} in at least
-\code{certainty} of iterations.
+\code{casedrop_reliability()} measures how stable a network's edge weights are
+when cases are left out. It re-estimates the network on random subsets
+that drop each proportion in \code{drop_prop} of the cases, compares each
+re-estimated edge vector with the original, and reports a CS-coefficient
+for the edge weights: the largest proportion of cases that can be dropped
+while the correlation between the original and the re-estimated edge
+weights stays at or above \code{threshold} in at least \code{certainty} of the
+iterations (the case-dropping CS-coefficient of Epskamp, Borsboom & Fried,
+2018, applied to the edge weights). Beside the correlation it records the
+mean, median and largest absolute change of the edge weights. The cases
+are the sequences of a transition network and the rows of the data
+otherwise. It takes a single network, or a \code{netobject_group} or an \code{mcml},
+whose networks are assessed one by one.
+
+It complements \code{\link[=centrality_stability]{centrality_stability()}}: that asks whether centrality
+\emph{rankings} are stable, this asks whether the \emph{edge-weight structure
+itself} is. For an \code{mcml} built from an edge list, where each row of the
+data is one transition, this is case-dropping of \strong{edges}.
+
+The CS-coefficient is the largest proportion in \code{drop_prop} that passes,
+so it can only be one of the values tried. A smaller proportion need not
+have passed as well, so look at the correlation at every proportion, not
+only at the CS-coefficient: \code{\link[=summary]{summary()}} gives its mean, median and
+quantiles (\code{q025}, \code{q975}) per proportion, and \code{plot()} draws it. A correlation near 1 can hide a
+large change in a few edges, which the largest absolute change
+(\code{max_abs_dev}) shows. Stability under case-dropping says the estimate
+does not rest on a few cases; it gives no interval for a single edge,
+which \code{\link[=bootstrap_network]{bootstrap_network()}} does.
 }
 \details{
-Complements \code{\link[=centrality_stability]{centrality_stability()}}: that function asks whether
-centrality \emph{rankings} are stable; this one asks whether the \emph{edge-weight
-structure itself} is stable. For MCML-derived networks where each row
-of \verb{$data} is one transition, this is case-dropping of \strong{edges}.
+For each drop proportion \eqn{p} and each iteration, a subset of
+\eqn{n - \lfloor np \rfloor}{n - floor(np)} of the \eqn{n} cases is
+drawn \strong{without replacement}, the network is re-estimated with the
+input's method, scaling and threshold, and the compared cells of the new
+weight matrix are set against the same cells of the original. For
+transition networks the per-sequence transition counts are computed once
+and summed over each subset; other networks are re-estimated from the
+subset of rows. A re-estimation that fails, or that loses a node (a
+variable constant in the subset), leaves the iteration without values;
+such iterations are counted in a warning of class
+\code{nestimate_resample_failed} and count as below \code{threshold}.
 
-For each \code{drop_prop} p and each iteration, a size \code{n_cases * (1 - p)}
-subset of \verb{$data} rows is selected \strong{without replacement}, the network
-is re-estimated using the same method/scaling/threshold as the input,
-and the selected cells are compared with the same cells of the new
-weight matrix. With \code{target = "auto"}, unscaled and unthresholded
-transition methods assess only existing edges: absent transitions cannot
-appear in a subsample, and including these fixed zeros inflates the
-correlation. Association methods and scaled or thresholded networks assess
-all cells, because a zero original weight can become nonzero after case
-removal. Use \code{target = "existing"} explicitly to assess only the original
-edges in these networks. The correlation method defaults to Spearman.
+With \code{target = "auto"}, unscaled and unthresholded transition networks
+compare only the existing edges: an absent transition cannot appear in a
+subset, and the fixed zeros would inflate the correlation. Association
+networks and scaled or thresholded networks compare all cells, because a
+zero original weight can become non-zero once cases are dropped; set
+\code{target = "existing"} to compare only the original edges there.
 
-Case-dropping drops rows of \verb{$data} at random, so it treats the rows as
-independent units. When rows are nested in actors (several sessions per
-person), dropped rows of one actor are replaced by the remaining rows of
-the same actor, and the CS-coefficient overstates the stability; drop
-whole actors instead (for example with \code{tna::estimate_cs(actor = )}).
+Case-dropping drops cases at random, so it treats them as independent
+units. When the cases are nested in actors (several sessions per
+person), the remaining cases of an actor stand in for the dropped ones,
+and the CS-coefficient overstates the stability; drop whole actors
+instead (for example with \code{tna::estimate_cs(actor = )}).
 }
-\section{Methods}{
-
-\itemize{
-\item \code{plot.net_casedrop_reliability()}: Plots the four model-level reliability metrics across drop proportions: \code{correlation}, \code{mean_abs_dev}, \code{median_abs_dev}, \code{max_abs_dev}. Each panel shows the per-iteration mean with a ribbon at mean +/- sd. The \code{correlation} panel includes a dashed horizontal line at the user's \code{threshold} (default 0.7).
-\item \code{plot.net_casedrop_reliability_group()}: Overlay of per-cluster correlation curves across drop proportions. One colour per sub-network; ribbons show mean +/- sd across iterations. Dashed horizontal line marks the stability threshold (default 0.7).
-}
-}
-
 \examples{
 set.seed(1)
 seqs <- data.frame(

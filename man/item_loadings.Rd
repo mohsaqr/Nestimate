@@ -10,34 +10,43 @@ item_loadings(x, ...)
 \method{item_loadings}{mcml_pc}(x, misfit = NULL, ...)
 }
 \arguments{
-\item{x}{An \code{mcml_pc} object from \code{\link{build_mcml_pc}}.}
+\item{x}{An \code{mcml_pc} object from \code{\link[=build_mcml_pc]{build_mcml_pc()}}. A fit that carries no
+item table raises an error of class \code{nestimate_no_loadings}.}
 
 \item{...}{Ignored.}
 
-\item{misfit}{Logical or NULL. \code{NULL} (default) returns every
-item; \code{TRUE} returns only the items whose strongest
-cross-cluster connection exceeds their own-cluster loading;
-\code{FALSE} returns only the items that fit where they were
+\item{misfit}{Which items to return: \code{NULL} (default) returns every item,
+\code{TRUE} only those whose strongest cross-cluster connection exceeds their
+own-cluster loading, and \code{FALSE} only those that fit where they were
 assigned.}
 }
 \value{
-A data frame with one row per node (one row per misfitting or
-fitting node when \code{misfit} is set) and columns \code{node},
-\code{cluster}, \code{loading} (signed mean connection to its own
-cluster), \code{weight} (its composite weight), \code{sign} (+1, or
--1 for a reverse-keyed item), \code{max_cross} (strongest connection
-to any other cluster), \code{cross_cluster} (which cluster that is),
-and \code{misfit} (logical).
+A data frame with one row per item (only the misfitting or the
+fitting items when \code{misfit} is set) and columns \code{node}, \code{cluster},
+\code{loading} (the mean absolute connection to the other members of its own
+cluster, signed by the leading eigenvector of the cluster's block; under
+a sign-carrying weighting the \code{sign} column holds the sign actually
+used, which can differ), \code{weight} (its weight in the cluster
+score, or its strength weight for a descriptive aggregation; the weights
+of a cluster sum to 1), \code{sign} (+1, or -1 for a
+reverse-keyed item), \code{max_cross} (its strongest mean absolute
+connection to any other cluster), \code{cross_cluster} (which cluster that
+is) and \code{misfit} (logical). An item alone in its cluster has loading 0,
+weight 1 and is never flagged.
 }
 \description{
-The item table behind \code{\link{build_mcml_pc}}: one row per node,
-reporting how strongly the item connects to its own cluster, the
-weight it carries into that cluster's composite, and whether it
-connects more strongly to some other cluster.
+\code{item_loadings()} returns the item table behind a \code{\link[=build_mcml_pc]{build_mcml_pc()}} fit:
+one row per item, with how strongly the item connects to its own cluster,
+the weight it carries into that cluster's score, and whether it connects
+more strongly to some other cluster. The loadings are network loadings,
+read from the node-level network (an item's mean absolute connection to
+the members of a cluster), not factor loadings.
 
-Reading the table is \code{item_loadings(fit)} - never a reach into
-the fit's internals. The name says \emph{item}: these are network
-loadings of items on their own cluster, not factor loadings.
+An item flagged as \code{misfit} connects more strongly to another cluster than
+to its own, which is evidence that it is assigned to the wrong cluster;
+every aggregation of the fit inherits that membership. A \code{sign} of -1
+marks an item treated as reverse-keyed. How stable the weights are under
+resampling is checked with \code{\link[=loading_stability]{loading_stability()}}.
 }
 \examples{
 set.seed(1)

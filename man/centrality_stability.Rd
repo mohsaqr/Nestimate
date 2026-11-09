@@ -36,132 +36,155 @@ centrality_stability(
 \method{plot}{net_stability}(x, ...)
 }
 \arguments{
-\item{x}{A \code{netobject} from \code{\link{build_network}}, a
-\code{cograph_network}, or a \code{netobject_group} / \code{mcml}
-(each constituent network is assessed and a
-\code{net_stability_group} is returned). For the \code{print()} and \code{plot()} methods: an object of class \code{net_stability} or \code{net_stability_group}.}
+\item{x}{The network: a \code{netobject} from \code{\link[=build_network]{build_network()}}, a bare
+\code{cograph_network} (converted to one), or a \code{netobject_group} or \code{mcml},
+each of whose networks is assessed. Any other object, or a network
+built without its data, raises an error. For the \code{print()} methods: a
+\code{net_stability} or \code{net_stability_group}; for the \code{plot()} method: a
+\code{net_stability}.}
 
-\item{measures}{Character vector. Centrality measures to assess.
-Defaults to \code{c("InStrength", "OutStrength", "Betweenness")}. Pass
-\code{"all"} for every built-in measure: \code{"OutStrength"},
-\code{"InStrength"}, \code{"ClosenessIn"}, \code{"ClosenessOut"},
-\code{"Closeness"}, \code{"Betweenness"}, \code{"BetweennessRSP"},
-\code{"Diffusion"}, and \code{"Clustering"}. The legacy aliases
-\code{"InCloseness"} and \code{"OutCloseness"} are also accepted. Custom
-measures beyond these are valid only when a \code{centrality_fn} is
-supplied to resolve them.}
+\item{measures}{The centrality measures to assess. The default is
+\code{"InStrength"}, \code{"OutStrength"} and \code{"Betweenness"}; \code{NULL} takes
+\code{\link[=net_centrality]{net_centrality()}}'s default (\code{"InStrength"}, \code{"Betweenness"},
+\code{"Diffusion"}), and \code{"all"} every built-in measure: \code{"OutStrength"},
+\code{"InStrength"}, \code{"ClosenessIn"}, \code{"ClosenessOut"}, \code{"Closeness"},
+\code{"Betweenness"}, \code{"BetweennessRSP"}, \code{"Diffusion"} and \code{"Clustering"}
+(\code{\link[=net_centrality]{net_centrality()}} defines them). \code{"InCloseness"} and
+\code{"OutCloseness"} are accepted for \code{"ClosenessIn"} and \code{"ClosenessOut"}.
+Other names need \code{centrality_fn}; without it they raise an error.}
 
-\item{iter}{Integer. Number of bootstrap iterations per drop
-proportion (default: 1000).}
+\item{iter}{The number of random subsets drawn at each drop proportion,
+at least 2. Default \code{1000}.}
 
-\item{drop_prop}{Numeric vector. Proportions of cases to drop
-(default: \code{seq(0.1, 0.9, by = 0.1)}).}
+\item{drop_prop}{The proportions of cases to drop, each strictly between
+0 and 1. Default \code{seq(0.1, 0.9, by = 0.1)}. A proportion that would
+leave fewer than 2 cases is skipped and counts as not reaching
+\code{threshold}. The CS-coefficient is the largest proportion that meets
+\code{certainty}, in whatever order they are given.}
 
-\item{threshold}{Numeric. Minimum correlation to consider stable
-(default: 0.7).}
+\item{threshold}{The correlation with the full network's centralities
+that a draw must reach, between 0 and 1. Default \code{0.7}.}
 
-\item{certainty}{Numeric. Required proportion of iterations above
-threshold (default: 0.95). It is the share of all iterations: one in which
-the correlation is undefined (the measure is constant in that subset)
-counts as not reaching \code{threshold}.}
+\item{certainty}{The share of draws at a drop proportion that must reach
+\code{threshold}, between 0 and 1. Default \code{0.95}. It is a share of all
+draws: one with an undefined correlation counts as not reaching
+\code{threshold}.}
 
-\item{method}{Character. Correlation method: \code{"pearson"},
-\code{"spearman"}, or \code{"kendall"} (default: \code{"pearson"}).}
+\item{method}{The correlation between the full and the subset
+centralities: \code{"pearson"} (default), \code{"spearman"} or \code{"kendall"}.}
 
-\item{centrality_fn}{Optional function. A custom centrality function
-that takes a weight matrix and returns a named list of centrality
-vectors. When \code{NULL} (default), all built-in measures are
-computed internally: \code{"InStrength"}/\code{"OutStrength"} via
-\code{colSums}/\code{rowSums}, \code{"Betweenness"}/
-\code{"ClosenessIn"}/\code{"ClosenessOut"}/\code{"Closeness"} via an
-internal Floyd-Warshall shortest-path routine, and
-\code{"BetweennessRSP"}, \code{"Diffusion"} and \code{"Clustering"}
-from the weight matrix directly. When provided, the function is
-called as \code{centrality_fn(mat)} and is used only for requested
-measures that are not one of the built-ins; it should return a named
-list (e.g., \code{list(my_metric = ...)}).}
+\item{centrality_fn}{A function of your own that takes the weight matrix
+and returns a named list of centrality vectors, such as
+\code{list(my_metric = ...)}. It is called as \code{centrality_fn(mat)} and used
+only for the requested measures that are not built-in; list their
+names in \code{measures}. Default \code{NULL}.}
 
-\item{loops}{Logical. If \code{FALSE} (default), self-loops (diagonal)
-are excluded from centrality computation. This does not modify the
-stored matrix.}
+\item{loops}{Whether self-loops (staying in a state) count. With \code{FALSE}
+(default) they are left out of every measure; the stored matrix is not
+changed.}
 
-\item{normalize}{Logical. Range-normalize all requested measures using the
-same transformation as \code{tna::centralities(normalize = TRUE)}.
-Default: \code{FALSE}.}
+\item{normalize}{Whether to range-normalise every measure to 0--1, as
+\code{tna::centralities(normalize = TRUE)} does. Default \code{FALSE}.}
 
-\item{invert}{Logical. Invert weights for shortest-path measures?
-Default: \code{TRUE}, matching \code{tna}.}
+\item{invert}{Whether a heavier edge is a shorter step in the
+shortest-path measures (distance = 1 / weight), as in \code{tna}. Default
+\code{TRUE}; with \code{FALSE} the weight is the distance. It affects betweenness
+and closeness only, not \code{"BetweennessRSP"}.}
 
-\item{normalize_diffusion}{Logical. Range-normalize \code{Diffusion} even
-when \code{normalize = FALSE}. Default: \code{TRUE}.}
+\item{normalize_diffusion}{Whether to range-normalise \code{Diffusion} even
+when \code{normalize = FALSE}. Default \code{TRUE}.}
 
-\item{seed}{Integer or NULL. RNG seed for reproducibility.}
+\item{seed}{An integer that makes the random subsets reproducible.
+Default \code{NULL}. The session's own random stream is left as it was; a
+group's networks
+are each started from the same seed.}
 
-\item{...}{In \code{plot.net_stability()}, \code{print.net_stability()}, \code{print.net_stability_group()}, \code{summary.net_stability()} and \code{summary.net_stability_group()}: Additional arguments (ignored).}
+\item{...}{For the \code{print()}, \code{summary()} and \code{plot()} methods: not
+used.}
 
-\item{object}{For the \code{summary()} method: an object of class \code{net_stability_group} or \code{net_stability}.}
+\item{object}{For the \code{summary()} methods: a \code{net_stability} or
+\code{net_stability_group}.}
 }
 \value{
-An object of class \code{"net_stability"}: a list with
+A \code{net_stability} object. \code{print()} shows the CS-coefficient of
+each measure; \code{summary()} returns one row per measure and drop
+proportion, with the mean and SD of the correlations (over the draws
+where it is defined) and \code{prop_above}, the share of all draws that
+reach \code{threshold}; \code{plot()} draws the mean correlation against the
+proportion dropped, one line per measure with a band of one SD and a
+dashed line at \code{threshold}, and returns the ggplot invisibly. For a
+\code{netobject_group} or \code{mcml}, the result is a \code{net_stability_group}, a
+named list of \code{net_stability} objects, one per network, whose \code{print()}
+shows the CS-coefficients as a networks-by-measures table and whose
+\code{summary()} stacks the per-network summaries with a leading \code{group}
+column. The \code{print()} methods return their input invisibly. The
+\code{net_stability}'s fields:
 \describe{
-\item{cs}{Named numeric vector of CS-coefficients, one per retained
-measure.}
-\item{correlations}{Named list of \code{iter} x
-\code{length(drop_prop)} matrices of correlation values, one per
+\item{cs}{The CS-coefficients, a named numeric vector with one per
 retained measure.}
-\item{measures}{Character vector of the measures actually assessed
-(see the zero-variance rule below).}
-\item{drop_prop}{Drop proportions used.}
-\item{threshold}{Stability threshold.}
-\item{certainty}{Required certainty level.}
-\item{iter}{Number of iterations.}
-\item{method}{Correlation method.}
+\item{correlations}{A named list, one per retained measure, of
+\code{iter} x \code{length(drop_prop)} matrices of correlations.}
+\item{measures}{The measures assessed (see the rule for measures
+without variance under \emph{Details}).}
+\item{drop_prop, threshold, certainty, iter, method}{The settings
+used.}
 }
-A \code{netobject_group} or \code{mcml} input instead returns a
-\code{"net_stability_group"}: a named list of one \code{net_stability}
-per constituent network.
-
-Zero-variance measures are handled by two different rules, both
-long-standing behaviour. When \emph{some} requested measures have zero
-variance on the original network (for example \code{"OutStrength"} on a
-row-normalised transition network), those measures are \strong{dropped}:
-\code{$cs}, \code{$correlations} and \code{$measures} cover only the
-retained ones. When \emph{every} requested measure has zero variance a
-warning is issued and \strong{all} requested names are returned with
-\code{cs = 0} and all-\code{NA} correlation matrices.
-
-In \code{print.net_stability()}: The input object, invisibly.
-
-In \code{print.net_stability_group()}: The input \code{x} invisibly.
-
-In \code{summary.net_stability_group()}: A data frame with columns \code{group}, \code{measure}, \code{drop_prop}, \code{mean_cor}, \code{sd_cor}, \code{prop_above}.
-
-In \code{summary.net_stability()}: A data frame with columns \code{measure}, \code{drop_prop}, \code{mean_cor}, \code{sd_cor}, \code{prop_above}.
-
-In \code{plot.net_stability()}: A \code{ggplot} object (invisibly).
 }
 \description{
-Estimates the stability of centrality indices under case-dropping.
-For each drop proportion, sequences are randomly removed and the
-network is re-estimated. The correlation between the original and
-subset centrality values is computed. The CS-coefficient is the
-maximum proportion of cases that can be dropped while maintaining
-a correlation above \code{threshold} in at least \code{certainty}
-of bootstrap samples.
+\code{centrality_stability()} estimates how stable a network's centrality
+indices are under case-dropping (Epskamp, Borsboom & Fried, 2018). For
+each proportion in \code{drop_prop}, that share of the sequences (or, for
+association networks, of the rows) is removed at random \code{iter} times,
+the network is re-estimated on what is left, and its centralities are
+correlated with those of the full network. The CS-coefficient of a
+measure is the largest proportion that can be dropped while the
+correlation stays at or above \code{threshold} in at least a \code{certainty}
+share of the draws. It takes a \code{netobject} from \code{\link[=build_network]{build_network()}} of any
+method, a bare \code{cograph_network}, or a \code{netobject_group} or \code{mcml}, whose
+networks are assessed one by one.
 
-For transition methods, uses pre-computed per-sequence count matrices
-for fast resampling. Strength centralities (InStrength, OutStrength)
-are computed directly from the matrix without igraph.
+The CS-coefficient says how well the nodes' centralities (their values,
+or with \code{method = "spearman"} or \code{"kendall"} their ordering) survive the
+loss of cases; Epskamp et al. (2018) suggest that it should
+not be below 0.25, and preferably above 0.5, before centrality
+differences are interpreted. It does not say whether two nodes differ in
+centrality, nor how precise single edges are: check the edges with
+\code{\link[=bootstrap_network]{bootstrap_network()}}, and for \code{glasso} networks the centrality
+differences with \code{\link[=boot_glasso]{boot_glasso()}}.
 }
-\section{Methods}{
+\details{
+For transition methods, per-sequence count matrices are computed once
+and each draw only re-sums them; the network's \code{scaling} and \code{threshold}
+are applied to every re-estimated network as to the original. For the
+other methods the estimator is re-run on each subset with the network's
+\code{params} (after the multilevel decomposition, when the network was built
+with a \code{level} and an id column and its estimator is undirected).
+The built-in measures are computed from the weight matrix
+directly, without igraph, as in \code{\link[=net_centrality]{net_centrality()}}: strength from row
+and column sums, betweenness and closeness from Floyd-Warshall shortest
+paths. A network that rests on one sequence, or one-hot data with no
+actor or session, has nothing to drop and raises an error of class
+\code{nestimate_single_sequence}.
 
-\itemize{
-\item \code{plot.net_stability()}: Plots mean correlation vs drop proportion for each centrality measure. The CS-coefficient is marked where the curve crosses the threshold.
-\item \code{summary.net_stability()}: Returns the mean correlation at each drop proportion for each measure.
-\item \code{summary.net_stability_group()}: Per-network stability as a tidy data frame. Stacks \code{summary()} results for each network with a \code{group} column.
-}
-}
+Every draw counts towards \code{certainty}: a draw whose correlation is
+undefined (the measure is constant in it), and a draw whose network
+could not be estimated, count as not reaching \code{threshold}. Failed
+estimates are reported in a warning of class
+\code{nestimate_resample_failed}.
 
+Measures without variance are handled by two different rules, both
+long-standing behaviour. When \emph{some} requested measures do not vary
+across the nodes of the original network (or are undefined on it), they
+are dropped, and the result covers only the retained ones. When \emph{every}
+requested measure is so, a warning is issued and \emph{all} requested names
+are returned with a CS-coefficient of 0 and correlations that are all
+\code{NA}. A measure counts as constant when its values span no more than
+the square root of the machine epsilon relative to their size, so
+\code{"OutStrength"} of a \code{"relative"} network with \code{loops = TRUE}, which is
+1 for every node up to rounding error, is dropped rather than correlated
+on that error. The same rule makes a measure constant in a draw an
+undefined correlation.
+}
 \examples{
 seqs <- data.frame(
   T1 = c("plan", "code", "debug", "plan", "test", "code"),
@@ -191,5 +214,6 @@ psychological networks and their accuracy: A tutorial paper.
 \doi{10.3758/s13428-017-0862-1}
 }
 \seealso{
-\code{\link{build_network}}, \code{\link{network_reliability}}
+\code{\link[=net_centrality]{net_centrality()}}, \code{\link[=bootstrap_network]{bootstrap_network()}},
+\code{\link[=network_reliability]{network_reliability()}}, \code{\link[=build_network]{build_network()}}
 }

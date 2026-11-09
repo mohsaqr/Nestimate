@@ -36,127 +36,183 @@ bootstrap_network(
 \method{summary}{wtna_boot_mixed}(object, ...)
 }
 \arguments{
-\item{x}{A \code{netobject} from \code{\link{build_network}}.
-The data, method, params, scaling, threshold, and level are all
-extracted from this object. A \code{cograph_network} is coerced
-first; a \code{netobject_group} or \code{mcml} bootstraps every
-constituent network, and a \code{wtna_mixed} bootstraps both of its
-components (see \strong{Value}). For the \code{print()} method: an object of class \code{net_bootstrap}, \code{net_bootstrap_group} or \code{wtna_boot_mixed}.}
+\item{x}{The network: a \code{netobject} that carries its data (any network
+from \code{\link[=build_network]{build_network()}}), or a \code{cograph_network}, which is converted
+first. A \code{netobject_group} or \code{mcml} bootstraps every network it holds
+(for an \code{mcml}, the macro network and each cluster's), and a
+\code{wtna_mixed} bootstraps both of its components (see \emph{Value}). A
+network without its data raises an error, and one that rests on a
+single sequence, or one-hot data with no actor or session, has nothing
+to resample and raises an error of class \code{nestimate_single_sequence}.
+For the \code{print()} methods: the result of \code{bootstrap_network()}.}
 
-\item{iter}{Integer. Number of bootstrap iterations (default: 1000).}
+\item{iter}{The number of bootstrap replicates, at least 2. Default
+\code{1000}.}
 
-\item{ci_level}{Numeric. Significance level for CIs and p-values
-(default: 0.05).}
+\item{ci_level}{The significance level, between 0 and 1: the confidence
+intervals cover \code{1 - ci_level}, and an edge is significant when its
+p-value is below \code{ci_level}. Default \code{0.05}.}
 
-\item{inference}{Character. \code{"stability"} (default) tests whether
-bootstrap replicates fall within a multiplicative consistency range
-around the original weight. \code{"threshold"} tests whether
-replicates exceed a fixed edge threshold.}
+\item{inference}{The test behind the p-values. \code{"stability"} (default)
+counts the replicates outside the consistency range around the
+original weight; \code{"threshold"} counts the replicates whose absolute
+weight is below \code{edge_threshold}.}
 
-\item{consistency_range}{Numeric vector of length 2. Multiplicative
-bounds for stability inference (default: \code{c(0.75, 1.25)}).}
+\item{consistency_range}{For \code{inference = "stability"}: the two
+multipliers of the original weight that bound the consistency range.
+Default \code{c(0.75, 1.25)}. For a negative weight the bounds are swapped,
+so the range still runs from the lower to the upper value. Not used by
+\code{"threshold"}.}
 
-\item{edge_threshold}{Numeric or NULL. Fixed threshold for
-\code{inference = "threshold"}. If NULL, defaults to the 10th
-percentile of absolute original edge weights.}
+\item{edge_threshold}{For \code{inference = "threshold"}: the absolute weight
+a replicate must reach. Default \code{NULL}, the 10th percentile of the
+non-zero absolute original weights. Not used by \code{"stability"}.}
 
-\item{seed}{Integer or NULL. RNG seed for reproducibility.}
+\item{seed}{A number that makes the resamples reproducible. The session's
+own random stream is left as it was. For a \code{netobject_group} or \code{mcml}, each network
+is bootstrapped from the same seed; for a \code{wtna_mixed}, the seed is set
+once, before both components. Default \code{NULL}.}
 
-\item{boundary}{Character. Comparison rule when computing the consistency-range
-p-value. \code{"inclusive"} (default, tna-compatible) counts iterations
-that meet the bound (\eqn{\le} / \eqn{\ge}); \code{"strict"} counts only
-iterations strictly outside (\eqn{<} / \eqn{>}).}
+\item{boundary}{For \code{inference = "stability"}: how a replicate that lands
+exactly on a bound of the consistency range counts. \code{"inclusive"}
+(default, as in tna) counts it as outside (\eqn{\le} / \eqn{\ge});
+\code{"strict"} counts only replicates strictly outside (\eqn{<} /
+\eqn{>}).}
 
-\item{ci_method}{Character. Method for the edge-weight confidence
-intervals. \code{"percentile"} (default) uses the empirical bootstrap
-quantiles (Efron). \code{"basic"} reflects those quantiles around the
-observed weight, \eqn{(2\hat{\theta} - q_{1-\alpha/2},
-  2\hat{\theta} - q_{\alpha/2})} (Davison & Hinkley 1997, eq. 5.6),
-which corrects first-order bootstrap bias but can produce bounds
-outside the natural weight range near boundaries (e.g., below 0 for
-transition probabilities close to 0).}
+\item{ci_method}{The confidence interval for the edge weights.
+\code{"percentile"} (default) uses the empirical bootstrap quantiles
+(Efron). \code{"basic"} reflects those quantiles around the observed weight,
+\eqn{(2\hat{\theta} - q_{1-\alpha/2}, 2\hat{\theta} - q_{\alpha/2})}
+(Davison & Hinkley 1997, eq. 5.6), which corrects first-order bootstrap
+bias but can give bounds outside the natural weight range near its
+limits (for example below 0 for a transition probability close to 0).}
 
-\item{actor}{Character or NULL. Name of the column identifying the actor
-each sequence belongs to (e.g. \code{"student_id"} for sessions nested
-in students, \code{"Group"} for students nested in teams), looked up in
-the network's \code{$metadata} or wide sequence data. When supplied,
-whole actors are resampled; see the section \emph{Nested data and
-actor}. Default \code{NULL}: sequences are resampled individually.}
+\item{actor}{The column identifying the actor each sequence belongs to
+(for example \code{"student_id"} for sessions nested in students, \code{"Group"}
+for students nested in teams), looked up in the network's metadata or
+its wide sequence data. With it, whole actors are resampled; see
+\emph{Nested data and \code{actor}}. Default \code{NULL}: sequences are resampled one
+by one. It is available for sequence-based transition networks
+(\code{"relative"}, \code{"frequency"}, \code{"co_occurrence"}); a method outside the
+fast path (see \emph{Details}) raises an error of class
+\code{nestimate_actor_unsupported}. A value that is not a single column
+name, or that names fewer than two actors, raises an error of class
+\code{nestimate_bad_actor}; a column that is absent or has missing values,
+one of class \code{nestimate_actor_missing}; and ids that do not give one
+actor per sequence, one of class \code{nestimate_actor_misaligned}.}
 
-\item{...}{In \code{print.net_bootstrap()}, \code{print.wtna_boot_mixed()}, \code{summary.net_bootstrap()} and \code{summary.wtna_boot_mixed()}: Additional arguments (ignored). In \code{print.net_bootstrap_group()} and \code{summary.net_bootstrap_group()}: Ignored.}
+\item{...}{For the \code{print()} and \code{summary()} methods: ignored.}
 
-\item{object}{For the \code{summary()} method: an object of class \code{net_bootstrap}, \code{net_bootstrap_group} or \code{wtna_boot_mixed}.}
+\item{object}{For the \code{summary()} methods: the result of
+\code{bootstrap_network()}.}
 }
 \value{
-An object of class \code{"net_bootstrap"} containing:
+A \code{net_bootstrap} object. \code{print()} lists the five strongest
+significant edges (by absolute bootstrap mean, with their interval)
+and reports the iterations, the number of significant edges, the
+interval level and the test, and with \code{actor} the ICC and design
+effect; \code{\link[=summary]{summary()}} returns one row per edge of the original network;
+\code{cograph::splot()} draws the bootstrapped network; \code{\link[=net_prune]{net_prune()}} with
+\code{method = "bootstrap"} removes the non-significant edges from the
+original network. The fields:
 \describe{
 \item{original}{The original \code{netobject}.}
-\item{mean}{Bootstrap mean weight matrix.}
-\item{sd}{Bootstrap SD matrix.}
-\item{p_values}{P-value matrix.}
-\item{significant}{Original weights where p < ci_level, else 0.}
-\item{ci_lower}{Lower CI bound matrix.}
-\item{ci_upper}{Upper CI bound matrix.}
-\item{cr_lower}{Consistency range lower bound (stability only).}
-\item{cr_upper}{Consistency range upper bound (stability only).}
-\item{summary}{Long-format data frame, one row per non-zero original
-edge (undirected networks keep one row per unordered pair), with
-columns \code{from}, \code{to}, \code{weight}, \code{mean},
-\code{sd}, \code{p_value}, \code{sig}, \code{ci_lower},
-\code{ci_upper}, plus \code{cr_lower} and \code{cr_upper} when
+\item{mean, sd}{The bootstrap mean and standard deviation of each
+weight, as matrices.}
+\item{p_values}{The matrix of p-values.}
+\item{significant}{The original weights where the p-value is below
+\code{ci_level}, and 0 elsewhere, self-loops included.}
+\item{ci_lower, ci_upper}{The matrices of interval bounds.}
+\item{cr_lower, cr_upper}{The matrices of consistency-range bounds
+(used by \code{"stability"} only).}
+\item{summary}{A data frame with one row per non-zero original edge
+(one row per unordered pair in an undirected network) and the
+columns \code{from}, \code{to}, \code{weight}, \code{mean}, \code{sd}, \code{p_value}, \code{sig},
+\code{ci_lower} and \code{ci_upper}, plus \code{cr_lower} and \code{cr_upper} with
 \code{inference = "stability"}.}
-\item{model}{Pruned \code{netobject} (non-significant edges zeroed).}
-\item{method, params, iter, ci_level, inference, ci_method}{Bootstrap
-config.}
-\item{consistency_range, edge_threshold}{Inference parameters.}
-\item{actor, n_actors}{The \code{actor} column and its number of
-actors; \code{NULL} without \code{actor}.}
-\item{clustering}{Only with \code{actor}. One-row data frame:
-\code{n_sequences}, \code{n_actors}, \code{icc}, \code{icc_ci_lower},
-\code{icc_ci_upper}, \code{deff_edges}.}
-\item{clustering_edges}{Only with \code{actor}. One row per edge of
-\code{summary}: \code{from}, \code{to}, \code{icc},
-\code{sd_actor}, \code{sd_sequence}, \code{deff}.}
+\item{model}{The pruned \code{netobject}, whose weights are \code{significant}:
+its non-significant edges, self-loops included, are zero. (The
+network \code{\link[=net_prune]{net_prune()}} returns keeps every self-loop.)}
+\item{method, params, iter, ci_level, inference, ci_method}{The
+bootstrap settings.}
+\item{consistency_range, edge_threshold}{The test settings.}
+\item{actor, n_actors}{The \code{actor} column and its number of actors;
+\code{NULL} without \code{actor}.}
+\item{clustering}{Only with \code{actor}: a one-row data frame of
+\code{n_sequences}, \code{n_actors}, \code{icc}, \code{icc_ci_lower}, \code{icc_ci_upper} and
+\code{deff_edges}.}
+\item{clustering_edges}{Only with \code{actor}: one row per edge of
+\code{summary}, with \code{from}, \code{to}, \code{icc}, \code{sd_actor}, \code{sd_sequence} and
+\code{deff}.}
 }
-A \code{netobject_group} or \code{mcml} input returns a
-\code{"net_bootstrap_group"} (named list of \code{net_bootstrap}
-results); a \code{wtna_mixed} input returns a \code{"wtna_boot_mixed"}
-with \code{$transition} and \code{$cooccurrence} results.
+A \code{netobject_group} or \code{mcml} gives a \code{net_bootstrap_group}, a named list
+of \code{net_bootstrap} results: its \code{print()} reports each network's
+significant and total edges and the significant edges all networks
+share (when the networks have edges in common); its \code{summary()} is
+described with the methods below. A \code{wtna_mixed} gives a
+\code{wtna_boot_mixed} holding the \code{transition} and \code{cooccurrence} results.
 
-In \code{print.net_bootstrap()} and \code{print.wtna_boot_mixed()}: The input object, invisibly.
-
-In \code{summary.net_bootstrap()}: The \code{$summary} data frame: one row per non-zero original edge, with columns \code{from}, \code{to}, \code{weight}, \code{mean}, \code{sd}, \code{p_value}, \code{sig}, \code{ci_lower}, \code{ci_upper}, plus \code{cr_lower} and \code{cr_upper} when the bootstrap used \code{inference = "stability"}.
-
-In \code{print.net_bootstrap_group()}: \code{x} invisibly.
-
-In \code{summary.net_bootstrap_group()}: The per-group summaries stacked into one data frame: the columns of \code{\link{summary.net_bootstrap}} prefixed by a \code{group} column naming the network each row came from.
-
-In \code{summary.wtna_boot_mixed()}: A list with \code{$transition} and \code{$cooccurrence} summary data frames.
+The \code{print()} methods return their input invisibly. The
+\code{summary()} method of a \code{net_bootstrap} returns its per-edge table, the
+\code{summary} field described above. For a \code{net_bootstrap_group}
+it stacks those tables into one data frame, with a first column \code{group}
+naming the network each row comes from; for a \code{wtna_boot_mixed} it
+returns a list of the \code{transition} and \code{cooccurrence} tables.
 }
 \description{
-Non-parametric bootstrap for any network estimated by
-\code{\link{build_network}}. Works with all built-in methods
-(transition and association) as well as custom registered estimators.
+\code{bootstrap_network()} resamples the cases a network was estimated from,
+re-estimates the network on every resample with the same method and
+settings, and reports for each edge its bootstrap mean, standard
+deviation, confidence interval and a p-value, together with the network
+pruned to the edges that pass. It reads any network from
+\code{\link[=build_network]{build_network()}}, built-in method or registered estimator, as well as a
+\code{netobject_group} or \code{mcml} (every network is bootstrapped) and a
+\code{wtna_mixed} (both of its components). The cases are the sequences of a
+transition network (for one-hot data, its actors or sessions) and the
+rows of the data otherwise; with \code{actor}, whole actors are resampled (see
+\emph{Nested data and \code{actor}}).
 
-For transition methods (\code{"relative"}, \code{"frequency"},
-\code{"co_occurrence"}), uses a fast pre-computation strategy:
-per-sequence count matrices are computed once, and each bootstrap
-iteration only resamples sequences via \code{colSums} (C-level)
-plus lightweight post-processing. Data must be in wide format for
-transition bootstrap; use \code{\link{convert_sequence_format}} to
-convert long-format data first.
-With \code{params = list(concat = k)}, the consecutive groups of up to
-\code{k} rows merged by the estimator are the sequences resampled;
-joins inside each merged sequence are retained. With \code{actor}, a
-merged sequence must belong entirely to one actor.
+The p-value comes from one of two tests. With \code{inference = "stability"}
+it counts the replicates that fall outside a consistency range around
+the original weight (by default 75\% to 125\% of it), so a significant edge
+is one whose weight the resamples reproduce within that range. With
+\code{inference = "threshold"} it counts the replicates whose absolute weight
+falls below \code{edge_threshold}, so a significant edge stays above that
+threshold. In both, the p-value is that count plus one, divided by the
+number of replicates plus one, so it is never 0. Edges with a p-value
+below \code{ci_level} are kept in the pruned network.
 
-For association methods (\code{"cor"}, \code{"pcor"}, \code{"glasso"},
-and custom estimators), the full estimator is called on resampled rows
-each iteration.
+The p-value counts replicates, so it cannot fall below
+\code{1 / (iter + 1)}: with too few iterations no edge can pass a small
+\code{ci_level}. The stability test asks whether a weight is reproduced
+within a range, not whether it differs from zero, and because the range
+is a proportion of the weight, a weak edge has to be reproduced within a
+narrow band; read the interval beside the test. The bootstrap describes
+how the estimate varies over resamples of one sample; to compare groups,
+use \code{\link[=permutation]{permutation()}}.
+}
+\details{
+The two tests and the inclusive boundary rule follow \code{tna::bootstrap()}.
 
-A network that rests on one sequence, or one-hot data with no actor or
-session, has nothing to resample and raises an error of class
-\code{nestimate_single_sequence}.
+Transition networks (\code{"relative"}, \code{"frequency"}, \code{"co_occurrence"}, and
+\code{wtna} networks, which hold the same one-hot counts) take a fast path:
+the count matrix of every sequence is computed once, and each replicate
+sums the counts of the sequences drawn, then applies the network's
+normalisation, scaling and threshold. With \code{params = list(concat = k)},
+the consecutive groups of up to \code{k} rows merged by the estimator are the
+sequences resampled; joins inside each merged sequence are retained.
+With \code{actor}, a merged sequence must belong entirely to one actor. Every
+other method (the association methods, \code{"attention"}, \code{"ngram"}, \code{"gap"},
+\code{"reverse"} and registered estimators) is re-estimated in full on
+resampled rows. A replicate whose estimation fails, or that loses a
+node, is left out of the p-values without a warning, and the bootstrap
+statistics are computed over the remaining replicates; if every
+replicate fails, every p-value is 1.
+
+A network built from an edge list (for example an \code{mcml} from
+\code{\link[=build_mcml]{build_mcml()}} with \code{from} and \code{to}) has no sequences, so each
+transition is resampled as an independent case, with a warning that
+points to the alternatives.
 }
 \section{Nested data and \code{actor}}{
 
@@ -220,6 +276,5 @@ assessing rater reliability. \emph{Psychological Bulletin}, 86(2),
 \seealso{
 \code{\link{certainty}} for the closed-form Bayesian counterpart
 (same result layout, no resampling);
-\code{\link{build_network}}, \code{\link{print.net_bootstrap}},
-\code{\link{summary.net_bootstrap}}
+\code{\link{build_network}}
 }

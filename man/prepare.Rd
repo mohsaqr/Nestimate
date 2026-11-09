@@ -22,92 +22,124 @@ prepare(
 \method{print}{nestimate_data}(x, ...)
 }
 \arguments{
-\item{data}{Data frame with event log columns.}
+\item{data}{The event log: a data frame with one row per event.}
 
-\item{actor}{Character or character vector. Column name(s) identifying who
-performed the action (e.g. \code{"student"} or
-\code{c("student", "group")}). If missing, all data is treated as one
-actor.}
+\item{actor}{The column, or columns, identifying who performed each event
+(e.g. \code{"student"} or \code{c("student", "group")}); several columns are
+combined, each observed combination being one actor. Missing or \code{NULL}
+treats all events as one actor.}
 
-\item{action}{Character. Column name containing the action/state/code.}
+\item{action}{The column holding each event's action (state or code).}
 
-\item{time}{Character or NULL. Column name containing timestamps.
-Supports ISO8601, Unix timestamps (numeric), and 40+ date/time formats.
-A value must match a format completely, with a four-digit year, so a
-two-digit year raises an error instead of being misread. Day-first or
-month-first is decided once for the whole column: any first field above
-12 means day-first, any second field above 12 means month-first. When
-the column cannot decide, values are read day-first with a warning of
-class \code{nestimate_ambiguous_dates}; \code{custom_format} settles it.
-If NULL, row order defines the sequence. Default: NULL.}
+\item{time}{The timestamp column. Default \code{NULL}, in which case the row
+order (or \code{order}) gives the order of the events and no session is split
+by time. Numeric values are read as Unix timestamps, and POSIXct and
+POSIXlt values are used as they are, in their own time zone. Text may be
+ISO 8601 (with \code{Z} or an offset), \verb{YYYY-MM-DD HH:MM[:SS]} with \code{-}, \code{/}
+or \code{.}, day-first or month-first dates, dates with month names, or
+compact \code{YYYYMMDDHHMMSS}, more than 40 layouts in all; text that matches
+none but reads as a number is taken as a Unix timestamp. A value must
+match a layout completely, with a four-digit year, so a two-digit year
+raises an error of class \code{nestimate_bad_input} instead of being misread,
+as does any value no layout reads. Day-first or month-first is decided
+once for the whole column: any first field above 12 means day-first, any
+second field above 12 means month-first. When the column cannot decide,
+values are read day-first with a warning of class
+\code{nestimate_ambiguous_dates}; \code{custom_format} settles it. An empty or
+missing timestamp is not an error: that event is sorted after its
+session's timed events and starts a session of its own.}
 
-\item{order}{Character or NULL. Column name for tie-breaking when
-timestamps are identical. If NULL, original row order is used.
-Default: NULL.}
+\item{order}{The column that orders the events: with \code{time}, it breaks
+ties between events with the same timestamp; without \code{time}, it gives
+the order of each session's events. Default \code{NULL} (the row order).}
 
-\item{session}{Character, character vector, or NULL. Column name(s) for
-explicit session grouping (e.g. \code{"course"} or
-\code{c("course", "semester")}). When combined with \code{time},
-sessions are further split by time gaps. Default: NULL.}
+\item{session}{The column, or columns, identifying explicit sessions
+(e.g. \code{"course"} or \code{c("course", "semester")}). Each actor's events in
+one session form a sequence, further split by time gaps when \code{time} is
+set. Default \code{NULL}.}
 
-\item{time_threshold}{Numeric or FALSE. Maximum gap in seconds between
-consecutive events before a new session starts. Only used when
-\code{time} is provided. Set to \code{FALSE} to switch session-interval
-splitting off, so each actor (or actor-session) forms a single sequence
-however long the gaps are. Default: 900 (15 minutes).}
+\item{time_threshold}{The longest gap, in seconds, between consecutive
+events of one session; a longer gap starts a new session, numbered
+\code{s1}, \code{s2}, ... within its actor and session. Used only with \code{time}.
+\code{FALSE} turns the split off, so each actor (or actor-session) forms one
+sequence however long the gaps. Default \code{900} (15 minutes).}
 
-\item{custom_format}{Character or NULL. Custom \code{strptime} format
-string for parsing timestamps. Default: NULL (auto-detect).}
+\item{custom_format}{A \code{\link[=strptime]{strptime()}} format tried before the built-in
+layouts; values it does not match fall through to them. Default \code{NULL}.}
 
-\item{is_unix_time}{Logical. If TRUE, treat numeric time values as Unix
-timestamps. Default: FALSE (auto-detected for numeric columns).}
+\item{is_unix_time}{Whether \code{time} holds Unix timestamps. \code{TRUE} reads a
+text column as numbers and never as a date layout (a 12- or 14-digit
+value would otherwise match the compact \code{YYYYMMDDHHMM[SS]} layouts); a
+value that is not a number then raises an error of class
+\code{nestimate_bad_input}. With \code{FALSE} (default), text is matched to the
+date layouts first and read as a Unix timestamp only when it matches
+none. A numeric \code{time} column is always read as Unix timestamps.}
 
-\item{unix_time_unit}{Character. Unit for Unix timestamps:
-\code{"seconds"}, \code{"milliseconds"}, or \code{"microseconds"}.
-Default: \code{"seconds"}.}
+\item{unix_time_unit}{The unit of Unix timestamps: \code{"seconds"} (default),
+\code{"milliseconds"} or \code{"microseconds"}. A numeric \code{time} column that gives
+dates after the year 2500 raises a warning of class
+\code{nestimate_time_unit}, the usual sign of the wrong unit.}
 
-\item{timezone}{Character. An Olson time zone (see
-\code{\link[base]{OlsonNames}}) used to interpret timestamps that carry
-no zone information, and in which Unix timestamps are expressed.
-Timestamps that end in \code{Z}, \code{UTC}, \code{GMT} or a numeric
-offset such as \code{+02:00} are converted from that offset. Parsing is
-therefore independent of the machine's local time zone.
-Default: \code{"UTC"}.}
+\item{timezone}{The Olson time zone (see \code{\link[=OlsonNames]{OlsonNames()}}) in which
+timestamps without zone information are read and Unix timestamps are
+expressed. Timestamps that end in \code{Z}, \code{UTC}, \code{GMT} or a numeric offset
+such as \code{+02:00} are converted from that offset, so parsing does not
+depend on the machine's time zone. Default \code{"UTC"}.}
 
-\item{x}{For the \code{print()} method: an object of class \code{nestimate_data}.}
+\item{x}{For the \code{print()} method: a \code{nestimate_data} object.}
 
-\item{...}{In \code{print.nestimate_data()}: Additional arguments (ignored).}
+\item{...}{Not used.}
 }
 \value{
-A list with class \code{"nestimate_data"} containing:
+A \code{nestimate_data} object. \code{print()} gives the numbers of
+sessions and actions, the longest sequence, the number of actors when
+\code{actor} was given and whether times were parsed, and returns its input
+invisibly. \code{\link[=extract_sequences]{extract_sequences()}}, \code{\link[=sequence_patterns]{sequence_patterns()}} and
+\code{\link[=sequence_metrics]{sequence_metrics()}} read it directly. It holds:
 \describe{
-\item{sequence_data}{Data frame in wide format (one row per session,
-columns T1, T2, ...).}
-\item{long_data}{The processed long-format data with session IDs.}
-\item{meta_data}{Session-level metadata, one row per session in the row
-order of \code{sequence_data}: \code{.session_id}, \code{.session_label},
-the \code{actor} column, the \code{session} column(s) under their own
-names, and every other column aggregated per session.}
-\item{time_data}{Parsed time values in wide format (if time provided).}
-\item{statistics}{List with \code{total_sessions},
-\code{total_actions} and \code{max_sequence_length}, plus
-\code{unique_actors} only when \code{actor} was supplied (with no
-\code{actor} every row belongs to one synthetic actor, so the count
-would be meaningless).}
+\item{sequence_data}{The sequences as a data frame: one row per session,
+one column per position (\code{T1}, \code{T2}, ...), padded with \code{NA}.}
+\item{long_data}{The events in their sorted order, with the parsed time
+and the working columns that identify each event's session and
+position (\code{.session_id}, \code{.session_label}, \code{.sequence}, ...).}
+\item{meta_data}{One row per session, in the row order of
+\code{sequence_data}: \code{.session_id}, \code{.session_label}, the actor column
+(with several, their combined label \code{.actor}, joined by \code{"-"}, or by
+the first of \code{"|"}, \code{" | "}, \code{" / "}, \code{" :: "} that keeps distinct
+actors apart when values contain \code{"-"}), the session column(s)
+under their own names, and every other column aggregated per
+session.}
+\item{time_data}{The parsed times in the layout of \code{sequence_data}
+(columns \code{time_T1}, \code{time_T2}, ...), in \code{timezone} (or the zone of a
+date-time \code{time} column), or \code{NULL} without \code{time}.}
+\item{statistics}{A list with \code{total_sessions}, \code{total_actions} and
+\code{max_sequence_length}, plus \code{unique_actors} (distinct combinations of
+the \code{actor} columns) only when \code{actor} was given (without it, every
+event belongs to one actor).}
 }
-
-In \code{print.nestimate_data()}: The input object, invisibly.
 }
 \description{
-Converts event log data (actor, action, time) into wide sequence format
-suitable for \code{\link{build_network}}. Automatically parses timestamps,
-detects sessions from time gaps, and handles tie-breaking.
+\code{prepare()} turns an event log (one row per event: the action, and
+optionally who did it and when) into sequences, one row per session and
+one column per position (\code{T1}, \code{T2}, ...). It parses the timestamps,
+orders the events, splits each actor's events into sessions by explicit
+session columns and by time gaps, and keeps every other column as one
+row of metadata per session. \code{\link[=build_network]{build_network()}} runs the same preparation
+itself when given \code{action}, with the same arguments, so \code{prepare()} is
+for inspecting the sequences or passing them to the sequence verbs.
 }
 \details{
-Sessions are identified by the observed combinations of the \code{actor} and
-\code{session} columns, so identifiers containing separator characters stay
-distinct and high-cardinality identifiers cannot overflow. Missing values in
-any grouping column raise an error: drop or relabel those events first.
+Within each actor and session, events are sorted by time and then by
+\code{order}. Sessions are identified by the observed combinations of the
+\code{actor} and \code{session} values, so identifiers containing separator
+characters stay distinct and high-cardinality identifiers cannot
+overflow. A missing value in any of these columns raises an error of
+class \code{nestimate_bad_input}: drop or relabel those events first.
+
+Every other column is aggregated into the session metadata: numeric
+columns by their mean, other columns by their most frequent value. A tie
+goes to the tied value that occurs first in the session, and a message
+names the columns where that happened.
 }
 \examples{
 set.seed(1)

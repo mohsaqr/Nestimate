@@ -23,87 +23,117 @@ stability_landscape(
 \method{plot}{net_landscape}(x, ...)
 }
 \arguments{
-\item{x}{A transition network from \code{build_network()} (method
-\code{"relative"} or \code{"frequency"}), a grouped one
-(\code{netobject_group}, for example \code{build_network()} of a
-\code{build_clusters()} result) or a wide sequence data frame or matrix.
-The network must carry its sequences. For the \code{print()} and
-\code{plot()} methods: an object of class \code{net_landscape}.}
+\item{x}{The network or sequences: a transition network from
+\code{\link[=build_network]{build_network()}} with method \code{"relative"} or \code{"frequency"} (or a bare
+\code{cograph_network} of one), a grouped one (\code{netobject_group}, for example
+\code{\link[=build_network]{build_network()}} of a \code{\link[=build_clusters]{build_clusters()}} result), a \code{tna} model, or a
+wide sequence data frame or matrix. A network must carry its sequences;
+a network of another method (for example \code{"glasso"}) raises an error of
+class \code{nestimate_not_markov}. For the \code{print()} and \code{plot()} methods: a
+\code{net_landscape} object.}
 
-\item{states}{Character vector naming every state once, in the order to
-draw them (for example from least to most engaged). Default: the
-alphabetical order.}
+\item{states}{Every state, each named once, in the order to draw them (for
+example from least to most engaged). Default \code{NULL}, the alphabetical
+order. A vector that leaves out, adds or repeats a state raises an error
+of class \code{nestimate_bad_input}.}
 
-\item{iter}{Integer. Bootstrap resamples of sequences. Default 1000.}
+\item{iter}{The number of bootstrap resamples of sequences behind the
+intervals, a non-negative whole number. Default \code{1000}; \code{0} skips the
+resampling and leaves the intervals \code{NA}.}
 
-\item{ci_level}{Numeric in (0, 1). Interval level. Default 0.95.}
+\item{ci_level}{The interval level, a number between 0 and 1. Default
+\code{0.95}.}
 
-\item{seed}{Integer or \code{NULL}. Seed for the resampling, scoped to the
-call (the global random state is restored).}
+\item{seed}{A seed for the resampling. It applies to this call only: the
+session's random state is restored afterwards. Default \code{NULL}.}
 
-\item{cols}{Character vector or \code{NULL}. For a wide data frame: the columns
-holding the positions. Needed when they are not a numbered run (\code{T1},
-\code{T2}, ...) or one of them is called \code{action}.}
+\item{cols}{For a wide data frame: the columns holding the positions.
+Needed when they are not a numbered run (\code{T1}, \code{T2}, ...) or one of them
+is called \code{action}; such a frame without \code{cols} raises an error of class
+\code{nestimate_bad_input}. Default \code{NULL}.}
 
-\item{object}{A \code{net_landscape} object (for \code{summary()}).}
+\item{object}{For the \code{summary()} method: a \code{net_landscape} object.}
 
-\item{table}{One of \code{"cups"}, \code{"exits"}, \code{"circulation"}.
-In \code{summary()}: which table to return.}
+\item{table}{For the \code{summary()} method: which table to return, \code{"cups"}
+(default), \code{"exits"} or \code{"circulation"}. The circulation exists for
+three states only; asking for it otherwise raises an error of class
+\code{nestimate_bad_input}.}
 
 \item{...}{Ignored.}
 
-\item{digits}{Integer. Decimal places in \code{print()}. Default 2.}
+\item{digits}{For the \code{print()} method: decimal places (the circulation
+gets two more). Default \code{2}.}
 }
 \value{
-An object of class \code{"net_landscape"}: one fit per network
-(\code{"network"} for a single one, the group names for a grouped one),
-with \code{states}, \code{iter} and \code{ci_level}.
+A \code{net_landscape} object. \code{print()} shows each state's depth with
+its interval, expected stay, stay probability and share, and the net
+circulation for three states; \code{summary()} returns the tables below;
+\code{plot()} returns the landscape as a \code{ggplot}, one panel per network, with
+the intervals as bars and the expected stay, share and exit
+probabilities written under each cup, and with three states the net
+circulation and its interval at the top of the panel. \code{print()} returns its input
+invisibly.
 
-In \code{summary()}: a data frame. \code{table = "cups"} (default):
-one row per network and state, with \code{group}, \code{state},
-\code{depth}, \code{ci_lower}, \code{ci_upper}, \code{dwell} (expected
-consecutive steps in the state), \code{stay} (\eqn{P_{ii}}),
-\code{share} (share of observed time steps in the state), \code{n_from}
-(transitions out of the state, self-transitions included) and
-\code{resamples}. \code{table = "exits"}: one row per network and pair
-of distinct states, with \code{probability} and \code{count}.
-\code{table = "circulation"}: one row per network (three states only),
-with \code{cycle} (the direction of the net flow), \code{current},
-\code{ci_lower}, \code{ci_upper} and \code{resamples} (resamples with a
-stationary distribution).
+\code{summary()} returns a data frame. With \code{table = "cups"}: one row per
+network and state, with \code{group}, \code{state}, \code{depth}, \code{ci_lower},
+\code{ci_upper}, \code{dwell} (expected consecutive steps in the state), \code{stay}
+(\eqn{P_{ii}}), \code{share} (share of observed time steps in the state),
+\code{n_from} (transitions out of the state, self-transitions included) and
+\code{resamples}. With \code{table = "exits"}: one row per network and pair of
+distinct states, with \code{group}, \code{from}, \code{to}, \code{probability} and \code{count}.
+With \code{table = "circulation"}: one row per network, with \code{group},
+\code{cycle} (the direction of the net flow), \code{current}, \code{ci_lower},
+\code{ci_upper} and \code{resamples} (resamples with a unique stationary
+distribution).
 
-In \code{print()}: \code{x}, invisibly.
-
-In \code{plot()}: a \code{ggplot} object, one panel per network.
+The object's fields:
+\describe{
+\item{fits}{One fit per network, named \code{"network"} for a single one
+and by group for a grouped one; each holds the cups, exits and
+circulation tables and the numbers of sequences and transitions.}
+\item{states}{The states, in drawing order.}
+\item{iter, ci_level}{The resampling settings.}
+}
 }
 \description{
-Draws a transition network as a ball-in-cup landscape (Scheffer et al.
-2009) in which the depth of each cup is the stability of the state: how
-long the process stays once it is there. A state with stay probability
-\eqn{P_{ii}} is left after \eqn{1 / (1 - P_{ii})} steps on average (its
-dwell time), and its cup depth is the log of that time,
-\eqn{-\log(1 - P_{ii})}, so that dwell time = \eqn{e^{depth}}: the
-escape-time law of a particle in a potential well (Kramers 1940). A state
-that is left at once has depth 0, no cup at all. Intervals come from
+\code{stability_landscape()} estimates the ball-in-cup landscape (Scheffer et
+al. 2009) of a transition network, which \code{plot()} draws: one cup per
+state, whose depth is the stability of that state, how long the process
+stays once it is there. A
+state with stay probability \eqn{P_{ii}} is left after
+\eqn{1 / (1 - P_{ii})} steps on average (its expected stay, or dwell
+time), and its cup depth is the log of that time, \eqn{-\log(1 - P_{ii})},
+so that dwell time = \eqn{e^{depth}}: the escape-time law of a particle in
+a potential well (Kramers 1940). A state that is left at once has depth 0,
+no cup at all. It takes a \code{"relative"} or \code{"frequency"} network, a grouped
+network (one landscape per group, on one state order) or the wide
+sequences themselves, and gives every depth a percentile interval from
 resampling whole sequences.
+
+Depth is a property of the state alone. How often the process enters the
+state is its \code{share} of the observed time steps, reported beside the
+depth, and where the process goes when it leaves is in the exit
+probabilities (\code{summary(x, table = "exits")}), which the plot writes under
+each cup. With three states the result also reports the net circulation,
+the net probability flux \eqn{\pi_i P_{ij} - \pi_j P_{ji}} around the
+cycle, which stationarity makes equal on all three edges (Schnakenberg
+1976): zero for a chain whose every transition is as common as its
+reverse. The depths pool every sequence and every time step; whether they
+change over the programme or along a covariate is what \code{\link[=landscape_trend]{landscape_trend()}}
+shows, and how long the process takes to get from one state to another is
+given by \code{\link[=passage_time]{passage_time()}}.
 }
 \details{
-Network input replays per-sequence weighting, concatenation and boundary
-markers. Concatenated sequences are the resampling units. With a covariate,
-its value must be constant within each concatenated unit. Scaled,
-thresholded or otherwise modified networks whose weights do not match
-their stored sequences are refused; pass the original sequences to
-estimate a new landscape. Observed shares count prepared positions without
-sequence weighting. Phase windows retain the full sequence's weight.
-
-Depth is a property of the state alone; how often the process enters the
-state is its \code{share} of the observed time steps, reported beside the
-depth. Where the process goes when it leaves is in the exit probabilities
-(\code{summary(x, table = "exits")}), which the plot writes under each
-cup. With three states the plot also reports the net circulation, the net
-probability flux \eqn{\pi_i P_{ij} - \pi_j P_{ji}} around the cycle, which
-stationarity makes equal on all three edges (Schnakenberg 1976): zero for
-a chain whose every transition is as common as its reverse.
+Network input replays the network's per-sequence weighting, concatenation
+and boundary markers (a \code{start} or \code{end} state is a state of the
+landscape), and the concatenated sequences are the resampling units. An
+end state, or any state seen only at the last position of a sequence, has
+no outgoing transitions, so its depth, stay and dwell are \code{NA}, and the
+plot draws it flat at depth 0, without a cup.
+Scaled, thresholded or otherwise modified networks whose weights do not
+match their stored sequences are refused; pass the original sequences to
+estimate a new landscape. The \code{share} column counts prepared positions
+without sequence weighting.
 
 In a resample where a state is never left, its depth is infinite, so an
 upper interval limit can be \code{Inf}; a resample in which a state never
@@ -113,11 +143,12 @@ is a smooth join, and every rim is drawn at 0.
 }
 \section{Errors}{
 
-\code{nestimate_not_markov} for a network that is not a transition
-network; \code{nestimate_bad_input} for \code{states} that do not name
-every state once, or input without sequences;
-\code{nestimate_landscape_unestimable} for a state that is never left or
-input with no observed transition.
+\code{nestimate_not_markov} for a network that is not a transition network;
+\code{nestimate_bad_input} for \code{states} that do not name every state once,
+fewer than two states, input without sequences, or a network whose
+weights cannot be rebuilt from its sequences;
+\code{nestimate_landscape_unestimable} for a state that is never left or input
+with no observed transition.
 }
 
 \examples{

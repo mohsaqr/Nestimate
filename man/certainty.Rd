@@ -17,70 +17,89 @@ certainty(
 \method{print}{net_certainty}(x, ...)
 }
 \arguments{
-\item{x}{A \code{netobject} from \code{\link{build_network}} using a
-transition-probability method (\code{"relative"} / \code{"tna"}), or a
-\code{netobject_group}. For the \code{print()} method: an object of class \code{net_certainty}.}
+\item{x}{The network: a \code{netobject} built with \code{\link[=build_network]{build_network()}} using
+\code{method = "relative"} (or its aliases \code{"tna"}, \code{"transition"}), without
+\code{scaling}, or a \code{netobject_group} of such networks, each handled on its
+own. A bare \code{cograph_network} is recounted from the sequences it
+carries, and used only when they reproduce its weights; otherwise, and
+for an \code{mcml}, an error of class \code{nestimate_bad_input} is raised.
+Another method or a scaled network raises an error.
+For the \code{print()} method: a \code{net_certainty} object.}
 
-\item{prior}{Numeric. Dirichlet prior concentration added to every cell
-(default \code{0.5}, the Jeffreys prior).}
+\item{prior}{The Dirichlet concentration added to every cell of the count
+matrix, zero cells and self-loops included; a positive number. Default
+\code{0.5}, the Jeffreys prior.}
 
-\item{ci_level}{Numeric in (0,1). Tail level for credible intervals and the
-stability decision (default \code{0.05}, i.e. a 95\% interval). Named to
-match \code{bootstrap_network()}.}
+\item{ci_level}{The tail level, in (0, 1), of the equal-tailed credible
+intervals and of the decision: an edge is certain when its posterior
+mass (the \code{p_value} column) is below it. Default \code{0.05}, a 95\%
+interval. Named to match \code{\link[=bootstrap_network]{bootstrap_network()}}.}
 
-\item{inference}{Character. \code{"stability"} (default) tests whether the
-posterior keeps the edge within a multiplicative \code{consistency_range}
-of its weight; \code{"threshold"} tests whether the edge exceeds
-\code{edge_threshold}.}
+\item{inference}{The decision rule. \code{"stability"} (default) takes the
+posterior mass outside the band \code{consistency_range} times the edge's
+weight; \code{"threshold"} takes the posterior mass below \code{edge_threshold}.}
 
-\item{consistency_range}{Numeric vector of length 2. Multiplicative bounds
-for stability inference (default \code{c(0.75, 1.25)}).}
+\item{consistency_range}{For \code{inference = "stability"}: the two
+multiplicative bounds of the band around each weight, positive numbers
+in either order. Default \code{c(0.75, 1.25)}.}
 
-\item{edge_threshold}{Numeric or NULL. Fixed threshold for
-\code{inference = "threshold"}. If NULL, defaults to the 10th percentile of
-non-zero edge weights.}
+\item{edge_threshold}{For \code{inference = "threshold"}: the weight an edge
+must exceed. Default \code{NULL}: the 10th percentile of the non-zero
+weights. Ignored for \code{"stability"}.}
 
-\item{...}{In \code{print.net_certainty()}: Additional arguments (ignored).}
+\item{...}{For the \code{print()} method: ignored.}
 }
 \value{
-For a \code{netobject}: an object of class
-\code{c("net_certainty", "net_bootstrap")} with the same fields as
-\code{\link{bootstrap_network}}: \code{original}, \code{mean},
-\code{sd}, \code{p_values}, \code{significant}, \code{ci_lower},
-\code{ci_upper}, \code{cr_lower}, \code{cr_upper}, \code{summary},
-\code{model}, \code{method}, \code{params}, \code{ci_level},
-\code{inference}, \code{consistency_range}, \code{edge_threshold}, plus
-\code{prior}, \code{ci_method = "analytic"} and \code{iter = NA} (no
-iterations).
+For a \code{netobject}: a \code{net_certainty} object (class
+\code{c("net_certainty", "net_bootstrap")}), so the \code{net_bootstrap} methods
+work on it. \code{print()} lists up to five certain edges with the largest
+absolute posterior means (with their intervals), then the prior, the
+count of certain edges and the settings;
+\code{\link[=summary]{summary()}} returns one row per non-zero edge with columns \code{from},
+\code{to}, \code{weight}, \code{mean}, \code{sd}, \code{p_value}, \code{sig}, \code{ci_lower} and
+\code{ci_upper}, plus \code{cr_lower} and \code{cr_upper} (the band) for
+\code{inference = "stability"}; \code{cograph::splot()} draws it. The object has
+the fields of a \code{\link[=bootstrap_network]{bootstrap_network()}} result: \code{original} (the input
+network), \code{mean}, \code{sd}, \code{p_values}, \code{significant} (the weights of the
+certain edges, zero elsewhere), \code{ci_lower}, \code{ci_upper}, \code{cr_lower},
+\code{cr_upper} (matrices), \code{summary}, \code{model} (the network of certain edges
+only), \code{method}, \code{params}, \code{ci_level}, \code{inference},
+\code{consistency_range} and \code{edge_threshold}, plus \code{prior},
+\code{ci_method = "analytic"} and \code{iter = NA} (no iterations).
 
 For a \code{netobject_group}: a named list of those objects, one per
-constituent network, of class
-\code{c("net_certainty_group", "net_bootstrap_group", "list")}.
+network, of class \code{c("net_certainty_group", "net_bootstrap_group", "list")}, printed and summarised by the \code{net_bootstrap_group} methods
+(\code{\link[=summary]{summary()}} stacks the per-network tables with a \code{group} column).
 
-In \code{print.net_certainty()}: The input object, invisibly.
+The \code{print()} method returns its input invisibly.
 }
 \description{
-Closed-form alternative to \code{\link{bootstrap_network}} for transition
-networks. Models the outgoing transitions from each state as a
-Dirichlet-Multinomial process: with a Jeffreys prior the posterior for state
-\eqn{i} is \eqn{\mathrm{Dirichlet}(c_i + \mathrm{prior})}, so each edge is
-marginally Beta and its posterior mean, standard deviation, credible interval
-and stability decision are available analytically. No resampling, so it runs
-in microseconds.
+\code{certainty()} gives each edge of a transition-probability network a
+posterior mean, standard deviation, credible interval and a decision on
+whether the edge is certain, all in closed form, and returns them in the
+layout of \code{\link[=bootstrap_network]{bootstrap_network()}}. It models the outgoing transitions of
+each state as a Dirichlet-Multinomial process: with a Dirichlet prior of
+concentration \code{prior}, the posterior for state \eqn{i} is
+\eqn{\mathrm{Dirichlet}(c_i + \mathrm{prior})}, where \eqn{c_i} are its
+transition counts, so each edge probability is marginally Beta. It reads a
+\code{netobject} built with \code{method = "relative"}, or a \code{netobject_group} of
+them.
 
-The return value has the same structure as \code{\link{bootstrap_network}}
-(same slots and summary columns) and carries class \code{c("net_certainty",
-"net_bootstrap")}, so \code{summary()} and any code that consumes a
-\code{net_bootstrap} object work unchanged.
+With \code{inference = "stability"}, an edge is certain when the posterior
+mass outside a band around its weight (\code{consistency_range}) is below
+\code{ci_level}; with \code{"threshold"}, when the mass below \code{edge_threshold} is.
+Certainty says how precisely the observed counts pin an edge down, not
+whether the edge survives resampling the sequences (\code{\link[=bootstrap_network]{bootstrap_network()}})
+or holds across split halves (\code{\link[=network_reliability]{network_reliability()}}). Certainty and
+bootstrap stability agree on homogeneous data. Certainty treats every
+transition as independent, so it is over-confident when the sequences come
+from a mixture of latent classes, the more so the longer they are; use
+\code{\link[=bootstrap_network]{bootstrap_network()}} there.
 }
 \details{
-Certainty (this function), stability (\code{\link{bootstrap_network}}) and
-reliability (\code{\link[=network_reliability]{reliability}}) answer different questions about an
-edge: how precisely it is pinned down by the observed counts, whether it
-survives resampling the sequences, and whether it is consistent across
-split-halves. Certainty and stability agree on homogeneous data; certainty is
-over-confident when the data are a mixture of latent classes, because it
-treats transitions clustered within a sequence as independent.
+Nothing is resampled: the posterior quantities are Beta means, variances
+and quantiles (\code{stats::qbeta()}, \code{stats::pbeta()}), so a call takes
+milliseconds.
 }
 \examples{
 seqs <- data.frame(V1 = c("A","B","A","C","B"), V2 = c("B","C","B","A","C"),

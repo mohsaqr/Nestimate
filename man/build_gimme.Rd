@@ -25,108 +25,156 @@ build_gimme(
 )
 }
 \arguments{
-\item{data}{A \code{data.frame} in long format with columns for person ID,
-time-varying variables, and optionally a time/beep column.}
+\item{data}{A data frame in long format: one row per person and time
+point, with the person-ID column, the variables and, optionally, a time
+or beep column.}
 
-\item{vars}{Character vector of variable names to model.}
+\item{vars}{The names of the variables to model, at least two, all
+columns of \code{data}; a missing name raises an error.}
 
-\item{id}{Character string naming the person-ID column.}
+\item{id}{The name of the person-ID column. The data must hold at least
+two people; a person with fewer than three time points is left out of
+the analysis without a warning.}
 
-\item{time}{Character string naming the time/order column, or \code{NULL}.
-When provided, data is sorted by \code{id} then \code{time} before lagging.}
+\item{time}{The name of the time or order column. When given, the rows
+are sorted by \code{id} and then \code{time} before the lagged variables are
+formed; with \code{NULL} (default), the row order is used.}
 
-\item{ar}{Logical. If \code{TRUE} (default), autoregressive paths
-(each variable predicting itself at lag 1) are included as fixed paths.}
+\item{ar}{Whether each variable's autoregressive path (itself at lag 1)
+is fixed into every model. Default \code{TRUE}.}
 
-\item{standardize}{Logical. If \code{TRUE} (default \code{FALSE}),
-variables are standardized per person before estimation.}
+\item{standardize}{Whether the variables are standardised within each
+person before estimation. Default \code{FALSE}. The coefficients come from
+lavaan's standardised solution either way, so this changes only the
+scale-dependent fit statistics (the log-likelihood, AIC and BIC); the
+chi-square, RMSEA, SRMR, NNFI and CFI do not change.}
 
-\item{groupcutoff}{Numeric between 0 and 1. Proportion of individuals for
-whom a path must be significant to be added at group level.
-Default \code{0.75}.}
+\item{groupcutoff}{A path is added at the group level when it is
+significant for more than this share of the people whose models
+converged, a number in (0, 1]. No group path is added when half or fewer
+of the models converge. Default \code{0.75}.}
 
-\item{subcutoff}{Numeric. Not used (reserved for future subgrouping);
-accepted for API compatibility and \emph{not} forwarded to
-\code{\link[idiographic:fit_gimme]{idiographic::fit_gimme()}}, which does not implement subgrouping
-either. Default \code{0.50}.}
+\item{subcutoff}{Not used: reserved for subgrouping, which neither
+Nestimate nor \code{\link[idiographic:fit_gimme]{idiographic::fit_gimme()}} implements, and accepted for
+compatibility with \pkg{gimme}; it is not passed on. Default \code{0.50}.}
 
-\item{paths}{Character vector of lavaan-syntax paths to force into the model
-(e.g., \code{"V2~V1lag"}). Default \code{NULL}.}
+\item{paths}{Paths, in lavaan syntax, to fix into every model, such as
+\code{"V2~V1lag"}. Default \code{NULL}.}
 
-\item{exogenous}{Character vector of variable names to treat as exogenous.
-Default \code{NULL}.}
+\item{exogenous}{The variables treated as exogenous (predictors only),
+all among \code{vars}; at least one variable must remain endogenous, and
+either rule broken raises an error. Default \code{NULL}.}
 
-\item{hybrid}{Logical. If \code{TRUE}, also searches residual covariances.
-Default \code{FALSE}.}
+\item{hybrid}{Whether the search also considers residual covariances
+between the variables at the same time point. Default \code{FALSE}.}
 
-\item{rmsea_cutoff}{Numeric. RMSEA threshold for excellent fit (default 0.05).}
+\item{rmsea_cutoff}{The RMSEA at or below which a person's fit counts as
+excellent. Default \code{0.05}.}
 
-\item{srmr_cutoff}{Numeric. SRMR threshold for excellent fit (default 0.05).}
+\item{srmr_cutoff}{The SRMR at or below which a person's fit counts as
+excellent. Default \code{0.05}.}
 
-\item{nnfi_cutoff}{Numeric. NNFI/TLI threshold for excellent fit (default 0.95).}
+\item{nnfi_cutoff}{The NNFI (TLI) at or above which a person's fit counts
+as excellent. Default \code{0.95}.}
 
-\item{cfi_cutoff}{Numeric. CFI threshold for excellent fit (default 0.95).}
+\item{cfi_cutoff}{The CFI at or above which a person's fit counts as
+excellent. Default \code{0.95}.}
 
-\item{n_excellent}{Integer. Number of fit indices that must be excellent to
-stop individual search. Default \code{2}.}
+\item{n_excellent}{How many of the four fit indices must be excellent for
+a person's individual search to stop, a whole number from 1 to 4.
+Default \code{2}.}
 
-\item{seed}{Integer or \code{NULL}. Random seed for reproducibility.}
+\item{seed}{An integer that makes the estimation reproducible; the
+session's own random stream is left as it was. Default \code{NULL}.}
 }
 \value{
-The object returned by \code{\link[idiographic:fit_gimme]{idiographic::fit_gimme()}}: an S3 object of
-class \code{c("net_gimme", "cograph_network", "list")}. It is a
-\emph{superset} of the pre-0.9.0 in-package field contract -- every
-element below is present, alongside idiographic's own additions
-(\code{contemp_cov}, \code{contemp_cov_avg}, \code{contemp_is_cov}).
-Elements:
+The \code{net_gimme} object (class
+\code{c("net_gimme", "cograph_network", "list")}) that
+\code{\link[idiographic:fit_gimme]{idiographic::fit_gimme()}} returns; its \code{print()}, \code{summary()} and
+\code{plot()} methods are \pkg{idiographic}'s, not Nestimate's. \code{print()}
+shows the group-level paths, the number of individual paths and the
+share of people with each path; \code{\link[=summary]{summary()}} returns a data frame with
+one row per network layer (temporal, contemporaneous) and its size,
+density and weights; \code{plot()} draws the network. \code{\link[idiographic:edges]{idiographic::edges()}}
+gives one row per path with its level (group or individual), and
+\code{\link[idiographic:coefs]{idiographic::coefs()}} one row per person and path with its
+coefficient. The object is a \emph{superset} of the pre-0.9.0
+in-package field contract: every field below is present, alongside
+idiographic's additions (\code{contemp_cov}, \code{contemp_cov_avg},
+\code{contemp_is_cov}). Its fields:
 \describe{
-\item{\code{temporal}}{p x p matrix of group-level temporal (lagged)
-path counts -- entry \code{[i,j]} = number of individuals with path j(t-1)->i(t).}
-\item{\code{contemporaneous}}{p x p matrix of group-level contemporaneous
-path counts -- entry \code{[i,j]} = number of individuals with path j(t)->i(t).}
-\item{\code{temporal_avg}, \code{contemporaneous_avg}}{p x p group-average
-coefficient matrices.}
+\item{\code{temporal}}{p x p matrix of temporal (lagged) path counts:
+entry \code{[i, j]} is the number of people with the path
+j(t-1) -> i(t), group and individual paths alike.}
+\item{\code{contemporaneous}}{p x p matrix of contemporaneous path
+counts: entry \code{[i, j]} is the number of people with the path
+j(t) -> i(t).}
+\item{\code{temporal_avg}, \code{contemporaneous_avg}}{p x p
+group-average coefficient matrices.}
 \item{\code{coefs}}{List of per-person p x 2p coefficient matrices
-(rows = endogenous, cols = \code{[lagged, contemporaneous]}).}
+(rows the endogenous variables, columns the lagged and then the
+contemporaneous variables).}
 \item{\code{psi}}{List of per-person residual covariance matrices.}
-\item{\code{fit}}{Data frame of per-person fit indices (chisq, df, pvalue,
-rmsea, srmr, nnfi, cfi, bic, aic, logl, status).}
-\item{\code{path_counts}}{p x 2p matrix: how many individuals have each path.}
-\item{\code{paths}}{List of per-person character vectors of lavaan path syntax.}
-\item{\code{group_paths}}{Character vector of group-level paths found.}
+\item{\code{fit}}{Data frame of per-person fit indices (\code{file},
+the person, then chisq, df, pvalue, rmsea, srmr, nnfi, cfi, bic, aic,
+logl and status).}
+\item{\code{path_counts}}{p x 2p matrix: how many people have each
+path.}
+\item{\code{paths}}{List of per-person character vectors of lavaan path
+syntax.}
+\item{\code{group_paths}}{Character vector of the group-level paths
+found.}
 \item{\code{individual_paths}}{List of per-person character vectors of
-individual-level paths (beyond group).}
+the individual-level paths (beyond the group paths).}
 \item{\code{syntax}}{List of per-person full lavaan syntax strings.}
 \item{\code{labels}}{Character vector of variable names.}
-\item{\code{n_subjects}}{Integer. Number of individuals.}
-\item{\code{n_obs}}{Integer vector. Time points per individual.}
-\item{\code{config}}{List of configuration parameters.}
+\item{\code{n_subjects}}{Number of people.}
+\item{\code{n_obs}}{Integer vector of the lagged time points per
+person (its rows minus one).}
+\item{\code{config}}{List of the settings used, including the
+corrections and cutoffs that are not arguments here.}
 }
-The object additionally carries idiographic's netobject fields
-(\code{weights}, \code{nodes}, \code{edges}, \code{directed},
-\code{data}, \code{meta}, \code{node_groups}) so it renders directly with
-cograph. \code{print()}, \code{summary()} and \code{plot()} dispatch to
-\pkg{idiographic}'s methods, not to Nestimate's: in particular
-\code{summary()} returns a tidy \code{data.frame} rather than printing.
+The object also carries idiographic's network fields (\code{nodes},
+\code{edges}, \code{directed}, \code{data}, \code{meta},
+\code{node_groups}, and a \code{weights} entry that is NULL) for
+rendering with cograph.
 }
 \description{
-Estimates person-specific directed networks from intensive longitudinal data
-using the unified Structural Equation Modeling (uSEM) framework. Implements
-a data-driven search that identifies:
+\code{build_gimme()} estimates a directed network for each person from
+intensive longitudinal data with GIMME (group iterative multiple model
+estimation; Gates & Molenaar, 2012), in the unified structural equation
+model (uSEM): each variable at time \eqn{t} is regressed on the variables
+at \eqn{t - 1} (temporal, lagged paths) and on the other variables at
+\eqn{t} (contemporaneous paths). The search runs in two stages:
 \enumerate{
-\item \strong{Group-level paths}: Directed edges present for a majority
-(default 75\%) of individuals.
-\item \strong{Individual-level paths}: Additional edges specific to each
-person, found after group paths are established.
+\item \strong{Group-level paths}: directed paths added for everyone
+because they would improve the model for a large share of the people
+(more than the share \code{groupcutoff}, by default \code{0.75}, of the people
+whose models converged).
+\item \strong{Individual-level paths}: further paths specific to each
+person, added after the group paths until that person's model fits
+well (see \code{n_excellent}).
 }
+It takes one long data frame with a person-ID column, not a directory of
+CSV files.
 
+The temporal and contemporaneous count matrices say how many people have
+each path, which shows how common a path is in the sample, not how strong
+it is; the coefficients are estimated per person. Group paths are shared
+by construction, while individual paths are what the search adds for one
+person's series: before reading them, check each person's number of time
+points and fit statistics, which the result carries.
+}
+\details{
 Estimation is delegated to \code{\link[idiographic:fit_gimme]{idiographic::fit_gimme()}}, the clean-room home
 of the temporal idiographic estimators, whose search reproduces the
 upstream \pkg{gimme} package (>= 10.0) exactly (verified at tolerance 0 on
 path counts and per-person coefficient matrices in idiographic's own
-parity suite). Uses \code{lavaan} for SEM estimation and modification
-indices. Accepts a single data frame with an ID column (not CSV
-directories).
+parity suite). The models are fitted with \pkg{lavaan}, which also gives
+the modification indices the search uses; \code{build_gimme()} raises an error
+when \pkg{lavaan} is not installed. The settings \code{build_gimme()} does not
+expose (such as the multiple-comparison corrections and \code{alpha}) keep
+\code{\link[idiographic:fit_gimme]{idiographic::fit_gimme()}}'s defaults.
 }
 \section{Results changed in 0.9.0}{
 

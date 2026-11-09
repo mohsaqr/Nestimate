@@ -239,6 +239,7 @@ articles:
   - starts_with("articles/tutorial_model_assessment")
   - starts_with("articles/permutation-nested-data")
   - starts_with("articles/compare-networks")
+  - starts_with("articles/stability-complete")
 
 - title: Experimental
   desc: New methods whose interface may still change

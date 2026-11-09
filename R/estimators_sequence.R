@@ -14,7 +14,7 @@
                              id = NULL, time = NULL, cols = NULL,
                              alphabet = NULL, concat = 1L,
                              begin_state = NULL, end_state = NULL) {
-  stopifnot("`data` must be a data frame" = is.data.frame(data))
+  .assert("`data` must be a data frame" = is.data.frame(data))
   if (identical(format, "auto")) {
     format <- .format_from_action(action, data)
   }
@@ -108,7 +108,7 @@
                              alphabet = NULL, concat = 1L,
                              begin_state = NULL, end_state = NULL,
                              n_gram = 2L, ...) {
-  stopifnot(
+  .assert(
     "`n_gram` must be a single integer >= 2" =
       is.numeric(n_gram) && length(n_gram) == 1L && !is.na(n_gram) &&
         n_gram >= 2
@@ -146,7 +146,7 @@
                            alphabet = NULL, concat = 1L,
                            begin_state = NULL, end_state = NULL,
                            max_gap = 1L, ...) {
-  stopifnot(
+  .assert(
     "`max_gap` must be a single non-negative integer" =
       is.numeric(max_gap) && length(max_gap) == 1L && !is.na(max_gap) &&
         max_gap >= 0
@@ -177,7 +177,7 @@
                                alphabet = NULL, concat = 1L,
                                begin_state = NULL, end_state = NULL,
                                weighted = FALSE, ...) {
-  stopifnot("`weighted` must be TRUE or FALSE" = isTRUE(weighted) ||
+  .assert("`weighted` must be TRUE or FALSE" = isTRUE(weighted) ||
               isFALSE(weighted))
   prep <- .sequence_matrix(data, format, action, id, time, cols, alphabet,
                            concat, begin_state, end_state)

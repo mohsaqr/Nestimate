@@ -7,7 +7,19 @@
 \alias{plot.mmm_compare}
 \title{Compare MMM fits across different k}
 \usage{
-compare_mmm(data, k = 2:5, return_fits = FALSE, ...)
+compare_mmm(
+  data,
+  k = 2:5,
+  return_fits = FALSE,
+  n_starts = 50L,
+  max_iter = 200L,
+  tol = 1e-06,
+  smooth = 0.01,
+  seed = NULL,
+  covariates = NULL,
+  covariate_effect = c("em", "posthoc"),
+  estimator = c("auto", "firth", "multinom", "chisq")
+)
 
 \method{print}{mmm_compare}(x, ...)
 
@@ -16,40 +28,97 @@ compare_mmm(data, k = 2:5, return_fits = FALSE, ...)
 \method{plot}{mmm_compare}(x, ...)
 }
 \arguments{
-\item{data}{Data frame, netobject, or tna model.}
+\item{data}{The sequences, in any form \code{\link[=build_mmm]{build_mmm()}} accepts: a wide data
+frame, a \code{netobject} or \code{cograph_network} built from sequences, or a
+\code{tna} model.}
 
-\item{k}{Integer vector of component counts. Values must be whole finite
-numbers >= 2. Default: 2:5.}
+\item{k}{The numbers of subgroups to fit, a non-empty vector of whole
+numbers of at least 2; one model is fitted per value. Default \code{2:5}.}
 
-\item{return_fits}{Logical. When \code{TRUE} the fitted models are
-retained on the result via \code{attr(result, "fits")} (a list of
-\code{net_mmm} objects, named by \code{k}), so the user can pick
-the chosen model without re-running the EM. Default \code{FALSE}
-keeps the historical lightweight return shape -- only the comparison
-table is allocated.}
+\item{return_fits}{Whether to keep the fitted models. With \code{TRUE}, the
+\code{net_mmm} fits are attached to the result as its \code{"fits"} attribute, a
+list named by \code{k}, so the chosen model needs no second run of the EM.
+Default \code{FALSE}, which returns only the comparison table.}
 
-\item{...}{Arguments passed to \code{\link{build_mmm}}.
-In \code{plot.mmm_compare()}, \code{print.mmm_compare()} and \code{summary.mmm_compare()}: Unsupported. Supplying unused arguments raises an error.}
+\item{n_starts}{How many starting configurations to try, a positive whole
+number. More starts make it likelier that the best local maximum is
+found. Default \code{50}.}
 
-\item{x}{For the \code{print()} and \code{plot()} methods: an object of class \code{mmm_compare}.}
+\item{max_iter}{The most EM iterations a start may run, a positive whole
+number. Default \code{200}.}
 
-\item{object}{For the \code{summary()} method: an object of class \code{mmm_compare}.}
+\item{tol}{The convergence tolerance: EM stops when the log-likelihood
+changes by less than this between iterations (with \code{covariate_effect = "em"}, also when its relative change does). A finite positive number;
+default \code{1e-6}.}
+
+\item{smooth}{A pseudo-count added to every transition count before the
+matrices are estimated, so a transition unseen in a subgroup gets a small
+probability instead of zero. A finite non-negative number; default
+\code{0.01}.}
+
+\item{seed}{A seed for reproducible starts, applied afresh to each fit
+(every \code{k} starts from the same random state). Default \code{NULL}.}
+
+\item{covariates}{Variables describing each sequence (such as a course or
+a grade), given as a column name, a character vector of names, a
+one-sided formula or a data frame, as in \code{\link[=build_clusters]{build_clusters()}}. For a
+\code{netobject}, names are looked up in its metadata first, so a typical call
+is \code{build_mmm(net, k = 3, covariates = "session_label")}. How they enter
+the model is set by \code{covariate_effect}. Default \code{NULL}.}
+
+\item{covariate_effect}{How \code{covariates} enter the model. \code{"em"}
+(default) makes the mixing proportions depend on them during EM, so they
+shape the subgroups found and add \code{(k - 1) * p} parameters for \code{p}
+covariate columns; rows with a missing covariate are dropped first, with
+a warning. \code{"posthoc"} fits a plain mixture on every sequence and relates
+the covariates to the subgroups only afterwards, with a multinomial logit,
+so neither their values nor their missingness change the subgroups.
+Ignored without \code{covariates}.}
+
+\item{estimator}{How the after-fit multinomial logit is estimated; it never
+affects the EM. \code{"auto"} (default) uses Firth's penalised likelihood
+(\code{brglm2::brmultinom()}, finite under separation) when a cell of the
+subgroup-by-covariate table has fewer than 5 sequences, and
+\code{nnet::multinom()} otherwise. \code{"firth"} and \code{"multinom"} force one of
+them (\code{"multinom"} warns about separation risk), and \code{"chisq"} runs
+descriptive tests instead of a logit. \code{\link[=build_clusters]{build_clusters()}} has the details.
+Ignored without \code{covariates}.}
+
+\item{x}{For the \code{print()} and \code{plot()} methods: an \code{mmm_compare} table.}
+
+\item{...}{For the \code{print()}, \code{summary()} and \code{plot()} methods: not used;
+any extra argument raises an error.}
+
+\item{object}{For the \code{summary()} method: an \code{mmm_compare} table.}
 }
 \value{
-A \code{mmm_compare} data frame, one row per requested \code{k},
-with columns \code{k}, \code{log_likelihood}, \code{AIC}, \code{BIC},
-\code{ICL}, \code{AvePP}, \code{Entropy} and \code{converged}. When
-\code{return_fits = TRUE}, the fitted \code{net_mmm} models are
-attached as \code{attr(result, "fits")}.
-
-In \code{print.mmm_compare()}: The comparison table, invisibly, with the printed \code{best} marker column (\code{"<-- BIC"} / \code{"<-- ICL"}) added.
-
-In \code{summary.mmm_compare()}: A tidy data frame with one row per \code{k}, plus a \code{best} character column flagging the minimum-BIC and minimum-ICL solutions.
-
-In \code{plot.mmm_compare()}: A \code{ggplot} object, invisibly.
+An \code{mmm_compare} object, a data frame with one row per value of
+\code{k}. \code{print()} shows the table with a \code{best}
+column marking the lowest BIC (\code{"<-- BIC"}) and, when it falls on a
+different row, the lowest ICL (\code{"<-- ICL"}), and returns that marked
+table invisibly. \code{summary()} returns the same table as a plain data
+frame with a \code{best} column holding \code{"BIC"}, \code{"ICL"} or \code{""}; when one
+row has both minima it is marked \code{"BIC"} only. \code{plot()} draws BIC, AIC
+and ICL against \code{k}, and returns the \code{ggplot} invisibly after printing
+it. The table's columns are \code{k}, \code{log_likelihood}, \code{AIC}, \code{BIC},
+\code{ICL}, \code{AvePP}, \code{Entropy} and \code{converged}; \code{return_fits = TRUE} adds the
+\code{"fits"} attribute.
 }
 \description{
-Compare MMM fits across different k
+\code{compare_mmm()} fits a mixed Markov model with \code{\link[=build_mmm]{build_mmm()}} for each
+number of subgroups in \code{k} and returns one row per fit with its
+log-likelihood, information criteria (AIC, BIC, ICL), overall average
+posterior probability (AvePP), entropy and convergence. Every fit uses
+the same data and the same \code{\link[=build_mmm]{build_mmm()}} settings.
+
+Lower AIC, BIC and ICL indicate more support relative to the other fits.
+ICL adds a penalty for uncertain classification to BIC, so it favours
+subgroups that separate cleanly (Biernacki, Celeux & Govaert, 2000);
+AvePP and entropy describe that separation within each fit. The criteria
+do not settle \code{k} on their own: check that every fit converged, that the
+subgroups' transition matrices of the chosen fit differ in interpretable
+ways (\code{summary()} of that fit prints them), and, when the criteria keep
+falling at the largest \code{k}, extend the range.
 }
 \examples{
 seqs <- data.frame(V1 = sample(c("A","B","C"), 30, TRUE),
@@ -70,4 +139,13 @@ comp_with_fits <- compare_mmm(seqs, k = 2:3, seed = 42, return_fits = TRUE)
 summary(comp_with_fits)
 }
 
+}
+\references{
+Biernacki, C., Celeux, G., & Govaert, G. (2000). Assessing a mixture
+model for clustering with the integrated completed likelihood.
+\emph{IEEE Transactions on Pattern Analysis and Machine Intelligence},
+22(7), 719--725. \doi{10.1109/34.865189}
+}
+\seealso{
+\code{\link[=build_mmm]{build_mmm()}}, \code{\link[=cluster_mmm]{cluster_mmm()}}
 }

@@ -55,9 +55,10 @@
 # ------------------------------------------------------------------------------
 
 .freq_df_netobject <- function(x) {
+  .refuse_onehot_network(x, "state_distribution()")
   if (is.null(x$data)) {
-    stop("netobject has no `$data` to compute frequencies from.",
-         call. = FALSE)
+    stop(errorCondition("netobject has no `$data` to compute frequencies from.",
+                        class = "nestimate_bad_input", call = NULL))
   }
 
   # If $node_groups present, group states by node_groups$group; otherwise
@@ -90,7 +91,8 @@
 
 .freq_df_mcml <- function(x, include_macro = FALSE) {
   if (is.null(x$clusters)) {
-    stop("mcml object has no `$clusters` field.", call. = FALSE)
+    stop(errorCondition("mcml object has no `$clusters` field.",
+                        class = "nestimate_bad_input", call = NULL))
   }
   cluster_names <- names(x$clusters)
   parts <- lapply(cluster_names, function(cn) {
@@ -99,8 +101,9 @@
   })
   parts <- Filter(Negate(is.null), parts)
   if (length(parts) == 0L) {
-    stop("mcml clusters have no `$data` to compute frequencies from.",
-         call. = FALSE)
+    stop(errorCondition(
+      "mcml clusters have no `$data` to compute frequencies from.",
+      class = "nestimate_bad_input", call = NULL))
   }
   out <- do.call(rbind, parts)
 
@@ -127,6 +130,7 @@
 
 
 .freq_df_netobject_group <- function(x) {
+  .refuse_onehot_network(x, "state_distribution()")
   group_names <- names(x)
   if (is.null(group_names)) group_names <- paste0("Group ", seq_along(x))
   parts <- lapply(seq_along(x), function(i) {
@@ -134,8 +138,8 @@
   })
   parts <- Filter(Negate(is.null), parts)
   if (length(parts) == 0L) {
-    stop("netobject_group has no `$data` in any constituent.",
-         call. = FALSE)
+    stop(errorCondition("netobject_group has no `$data` in any constituent.",
+                        class = "nestimate_bad_input", call = NULL))
   }
   do.call(rbind, parts)
 }
@@ -171,15 +175,16 @@
                             label_size  = 3.5,
                             x_label     = NULL,
                             y_label     = NULL) {
-  stopifnot(is.data.frame(data),
+  .assert(is.data.frame(data),
             is.character(x), length(x) == 1L,
             is.character(y), length(y) == 1L,
             is.character(weight), length(weight) == 1L)
   needed <- c(x, y, weight)
   missing_cols <- setdiff(needed, names(data))
   if (length(missing_cols) > 0L) {
-    stop("mosaic_plot: missing columns: ",
-         paste(missing_cols, collapse = ", "), call. = FALSE)
+    stop(errorCondition(paste0("mosaic_plot: missing columns: ",
+         paste(missing_cols, collapse = ", ")),
+         class = "nestimate_bad_input", call = NULL))
   }
 
   # Build cross-tab. Column = x, row = y. Order respects existing factor
@@ -195,7 +200,8 @@
   col_totals <- rowSums(tab)
   total      <- sum(col_totals)
   if (total <= 0) {
-    stop("mosaic_plot: total weight is zero -- nothing to draw.", call. = FALSE)
+    stop(errorCondition("mosaic_plot: total weight is zero -- nothing to draw.",
+                        class = "nestimate_bad_input", call = NULL))
   }
   widths_cum <- c(0, cumsum(col_totals)) / total
 
@@ -296,109 +302,140 @@
 
 #' Mosaic Plot of a Network's Transition or Co-occurrence Counts
 #'
-#' Draws a Hartigan-Friendly mosaic (marimekko geometry, chi-square
-#' standardized-residual fill) for an integer-weighted network. Equivalent in
-#' algorithm and appearance to \code{tna::plot_mosaic()}; named differently to
-#' avoid an export clash when both packages are attached.
+#' @description
+#' `mosaic_plot()` draws a mosaic display of a contingency table and fills
+#' each tile with its standardised residual under independence: blue tiles
+#' hold more cases than independence predicts, red tiles fewer. It reads the
+#' transition or co-occurrence counts of a `netobject` or `htna` network, the
+#' state counts of each group of a `netobject_group`, the cluster-level or
+#' per-cluster counts of an `mcml`, or a `table` or count `matrix` given
+#' directly. A data frame in long form is drawn as a plain marimekko of
+#' shares instead, coloured by the stacked variable (or the `fill`
+#' column), without residuals.
 #'
-#' Column widths are proportional to row marginals of the weight matrix
-#' (incoming totals when the matrix is transposed, as for transitions). Within
-#' each column, segment heights are proportional to that row's conditional
-#' distribution. Cell fill is the standardized residual under the independence
-#' null -- a permutation z-score by default, or the closed-form
-#' \code{stats::chisq.test()} residual with \code{residuals = "asymptotic"}
-#' (see \code{residuals}) -- on a diverging palette whose limits auto-fit the
-#' observed residuals unless \code{range} is supplied.
-#' Mosaics need integer counts: when \code{$weights} is already integer
-#' (\code{method = "frequency"} / \code{"co_occurrence"}) it is used directly;
-#' for a single \code{netobject} / \code{htna} otherwise (relative, glasso,
-#' cor, ...) order-1 transition counts are recounted from the raw \code{$data}
-#' sequences. The function errors only when neither integer weights nor
-#' \code{$data} are available.
+#' In a network's mosaic each column is a target state, its width
+#' proportional to the transitions into it, and its segments are the source
+#' states, stacked in proportion to their share of those transitions. For a
+#' `netobject_group` the columns are the groups and the segments the states,
+#' counted from each group's sequences, so the mosaic shows how the state
+#' mix differs between groups. For a `table` or `matrix`, its rows are the
+#' columns of the mosaic and its columns the stacked segments. An `htna`
+#' network has its states ordered by actor, with each state's label set in
+#' bold in its actor's colour.
 #'
-#' @param x One of the four data-bearing Nestimate classes:
-#'   \code{netobject} (single mosaic of \code{$weights}),
-#'   \code{netobject_group} (one panel per group),
-#'   \code{mcml} (between-cluster mosaic by default; per-cluster panels with
-#'   \code{level = "within"}), or
-#'   \code{htna} (single mosaic of \code{$weights}; htna inherits netobject
-#'   so the geometry matches). Also accepts a contingency \code{table} or
-#'   plain numeric \code{matrix} for ad-hoc plotting, and a tidy
-#'   \code{data.frame} in long form (see \code{x_var}, \code{y_var},
-#'   \code{weight}).
-#' @param x_var,y_var,weight For a \code{data.frame}: the names of the
-#'   column variable (one mosaic column per level, width proportional to its
-#'   total \code{weight}), the segment variable (stacked within each column in
-#'   proportion to its share), and the cell weight (e.g. a count).
-#' @param fill For a \code{data.frame}: \code{"y"} (default) colours the
-#'   segments by \code{y_var}; the name of another column (e.g. a residual)
-#'   maps that column to the fill instead.
-#' @param colors For a \code{data.frame}: optional fill colours, either an
-#'   unnamed vector in level order or a named lookup
-#'   (\code{c(plan = "#0072B2")}) overriding only the levels named. Defaults
-#'   to recycled Okabe-Ito.
-#' @param show_labels,label_size For a \code{data.frame}: draw percentage
-#'   labels inside the segments, and their size.
-#' @param level For \code{mcml} only. \code{"macro"} (default) draws a
-#'   single mosaic of \code{x$macro$weights} (the cluster-by-cluster
-#'   aggregate); \code{"clusters"} draws one mosaic per cluster from
-#'   \code{x$clusters[[k]]$weights}, faceted into one combined ggplot.
-#' @param xlab,ylab Axis labels. \code{NULL} (default) draws no axis title
-#'   on the four data-bearing methods; the \code{table} / \code{matrix}
-#'   methods default to \code{"Row"} and \code{"Column"}. Pass any string to
-#'   set one.
-#' @param range Numeric of length 2 giving the lower and upper colour-scale
-#'   limits for the standardized residual. \code{NULL} (default) auto-fits
-#'   the limits to the symmetric range \code{c(-M, M)} where
-#'   \code{M = max(|stdres|)} floored at 1, so no signal is squished and the
-#'   legend stays readable on a near-independent table. Pass an explicit
-#'   range (e.g. \code{c(-4, 4)} for tna-style display, \code{c(-6, 6)} for
-#'   moderate clipping) to clamp the colour scale.
-#' @param top_angle,left_angle Rotation in degrees for the top (x) and left
-#'   (y) tick labels. \code{NULL} (default) uses the auto rule
-#'   \code{90 if n_levels > 3 else 0} on each axis. Pass any numeric to
-#'   override (e.g. \code{top_angle = 45, left_angle = 0}).
-#' @param residuals One of \code{"permutation"} (default) or
-#'   \code{"asymptotic"}. \code{"permutation"} computes empirical-null
-#'   z-scores by shuffling one variable's labels against the other for
-#'   \code{n_perm} draws and reporting
-#'   \code{(O - mean_perm) / sd_perm} per cell. Robust on sparse tables.
-#'   \code{"asymptotic"} returns \code{stats::chisq.test()$stdres} (the
-#'   closed-form \code{(O - E) / sqrt(E*(1 - p_row)*(1 - p_col))} that vcd
-#'   and tna use).
-#' @param n_perm Number of permutations when \code{residuals = "permutation"}.
-#'   Default 500; use \code{>= 1000} for stable tail estimates.
-#' @param seed Optional integer seed for the permutation RNG. Use for
-#'   reproducible plots; ignored when \code{residuals = "asymptotic"}.
-#' @param ncol Number of columns in the multi-panel layout. Default 2.
-#'   Effective only for \code{mcml} with \code{level = "clusters"}, the one
-#'   multi-panel case; \code{netobject_group} is drawn as a single
-#'   (group x state) mosaic, so \code{ncol} is accepted but has no effect
-#'   there.
-#' @param values Logical. When \code{TRUE}, overlay each cell's standardized
-#'   residual as a numeric label (one decimal). Text colour switches to
-#'   white on saturated cells (|stdres| > 1.5) and dark grey otherwise.
-#'   Default \code{FALSE} -- the colour bar legend already conveys the
-#'   sign and magnitude.
-#' @param style Character. \code{"classic"} (default) draws the
-#'   black-bordered \code{theme_minimal} mosaic with axis labels;
-#'   \code{"flat"} draws the flat \code{theme_void} mosaic with white
-#'   gutters, a soft background and a colour-bar legend. With
-#'   \code{style = "flat"}, \code{values = TRUE} prints the standardized
-#'   residual inside each tile, and extra flat styling arguments
-#'   (\code{tile_label}, \code{col_label_side}, \code{row_label_side},
-#'   \code{legend_position}, \code{legend_size}, \code{label_size}, ...;
-#'   see \code{\link{mosaic_analysis}}) may be passed via \code{...}.
-#'   Not supported for multi-panel \code{mcml} (level = "clusters"),
-#'   which falls back to the classic faceted style.
-#' @param ... Flat styling overrides forwarded to the flat renderer when
-#'   \code{style = "flat"} (otherwise ignored).
+#' The residuals describe where the counts depart from independence; they
+#' are not tests of single cells, and transitions taken from the same
+#' sequence are not independent draws. To test edges or group differences,
+#' use [permutation()]; for a chi-square or Fisher test with
+#' Cram\enc{é}{e}r's V on two variables of a data frame, use
+#' [mosaic_analysis()].
 #'
-#' @return A \code{ggplot} object: one \code{geom_rect} layer with one
-#'   rectangle per contingency-table cell, filled by the standardized
-#'   residual. \code{mcml} with \code{level = "clusters"} returns a single
-#'   \code{facet_wrap}-ed \code{ggplot} (one panel per cluster, shared fill
-#'   scale); every other input returns a single-panel \code{ggplot}.
+#' @details
+#' A mosaic needs counts. A network whose weights are whole numbers
+#' (`method = "frequency"` or `"co_occurrence"`) is drawn from its weights;
+#' otherwise from the transition counts stored with it at estimation, and
+#' failing that from first-order transitions recounted from its sequence
+#' data. A `netobject_group` is counted from each group's sequences, or
+#' from the column sums of its weights when they are counts. A single
+#' network with none of these, such as an association network (`cor`,
+#' `pcor`, `glasso`, `ising`, `mgm`), raises an error. A `netobject_group`
+#' must hold sequence networks: the group method counts whatever its
+#' networks' data hold, so a group of association networks is drawn
+#' without an error, each distinct numeric value counted as a state. An
+#' `mcml` is counted the same way as a network, layer by layer; a cluster
+#' with a single state has no table to draw: when it holds self-transitions
+#' it is left out of the per-cluster figure with a warning, and when it holds
+#' no transition at all the call stops with an error. When a row or
+#' column of the table is empty, the asymptotic residuals are undefined
+#' and every tile is drawn at 0. The geometry and the asymptotic
+#' residuals follow `tna::plot_mosaic()`; the function has its own name so
+#' the two packages can be attached together.
+#'
+#' @param x The object to draw: a `netobject`, `netobject_group`, `mcml` or
+#'   `htna` network, a contingency `table`, a numeric count `matrix`, or a
+#'   data frame in long form (see `x_var`, `y_var` and `weight`).
+#' @param x_var,y_var,weight For a data frame: the column whose levels form
+#'   the mosaic's columns (each as wide as its total `weight`), the column
+#'   whose levels are stacked within each column (in proportion to their
+#'   share), and the column holding each row's weight, such as a count.
+#'   Levels keep their factor order, or sort alphabetically. `x_var`,
+#'   `y_var`, `weight`, `fill`, `colors` and `show_labels` given with any
+#'   other input raise an error of class `nestimate_bad_input`, as does
+#'   `label_size` outside `style = "flat"`.
+#' @param fill For a data frame: `"y"` (default) colours the segments by
+#'   `y_var`; the name of another column maps that column to the fill
+#'   instead (the first value per cell).
+#' @param colors For a data frame with `fill = "y"`: fill colours, either an
+#'   unnamed vector in level order (at least one per level) or a named
+#'   lookup such as `c(plan = "#0072B2")` that overrides only the levels
+#'   named. Default `NULL`, the Okabe-Ito palette, recycled.
+#' @param show_labels,label_size For a data frame: whether to print each
+#'   segment's percentage inside it (default `TRUE`; segments under 4% stay
+#'   unlabelled), and the label size (default `3.5`). With
+#'   `style = "flat"`, `label_size` also sizes the flat mosaic's tile
+#'   labels.
+#' @param level For an `mcml`: `"macro"` (default) draws one mosaic of the
+#'   cluster-by-cluster counts; `"clusters"` draws one mosaic per cluster,
+#'   as panels of one plot that share the residual scale.
+#' @param xlab,ylab Axis titles. The network and `mcml` methods draw none
+#'   by default (`NULL`); the `table` and `matrix` methods default to
+#'   `"Row"` and `"Column"`; a data frame defaults to the `x_var` name and
+#'   `"Proportion"`. Not drawn with `style = "flat"`.
+#' @param range The lower and upper limits of the residual colour scale, two
+#'   increasing numbers; residuals beyond them take the end colours. Default
+#'   `NULL`, which fits the symmetric range `c(-M, M)`, with `M` the largest
+#'   absolute residual (at least 1), so no tile is clipped. `c(-4, 4)`
+#'   matches tna's display.
+#' @param top_angle,left_angle Rotation, in degrees, of the column labels on
+#'   top and the segment labels on the left. Default `NULL`: 90 when an axis
+#'   has more than three levels, 0 otherwise. Not used with `style = "flat"`
+#'   or for the per-cluster `mcml` panels.
+#' @param residuals How the standardised residuals are computed.
+#'   `"permutation"` (default) shuffles one variable's labels against the
+#'   other `n_perm` times, which keeps both margins, and gives each cell
+#'   `(observed - mean) / sd` over the shuffles; a cell that never varies
+#'   gets 0. It does not rely on large expected counts, so it suits sparse
+#'   tables. `"asymptotic"` gives the adjusted residuals of
+#'   [stats::chisq.test()], `(O - E) / sqrt(E (1 - p_row) (1 - p_col))`, as
+#'   vcd and tna do.
+#' @param n_perm The number of shuffles for `residuals = "permutation"`, at
+#'   least 2. Default `500`; use 1000 or more for stable values in the
+#'   tails.
+#' @param seed A seed for the shuffles, so the residuals repeat exactly. The
+#'   session's own random stream is left as it was. Default `NULL`. Ignored with
+#'   `residuals = "asymptotic"`.
+#' @param ncol For an `mcml` with `level = "clusters"`: the number of panel
+#'   columns. Default `2`. Accepted by the `netobject_group` method, whose
+#'   single mosaic does not use it.
+#' @param values Whether to print each tile's residual (one decimal) inside
+#'   it. Default `FALSE`. In the classic style the text is white on
+#'   strongly coloured tiles (absolute residual above 1.5) and dark grey
+#'   otherwise; with `style = "flat"` it is white on tiles whose absolute
+#'   residual exceeds 0.55 of the largest, and tiles too small for a label
+#'   stay blank.
+#' @param style `"classic"` (default) draws black-bordered tiles with axis
+#'   labels. `"flat"` draws the mosaic of [mosaic_analysis()]: white gutters
+#'   between tiles, labels beside them, no axes, and a ColorBrewer red-blue
+#'   residual ramp; `values = TRUE` then prints the residuals in the tiles,
+#'   and its styling arguments (`tile_label`, `col_label_side`,
+#'   `row_label_side`, `legend_position`, `legend_size`, `label_size`, ...)
+#'   go in `...`. An `mcml` with `level = "clusters"` and more than one
+#'   panel is drawn classic, with a message; an `htna` drawn flat loses its
+#'   actor-coloured labels, with a warning.
+#' @param ... With `style = "flat"`: styling arguments for the flat mosaic
+#'   of a network, table or matrix; an unknown name raises an error that
+#'   lists the valid ones. The data-frame method takes no `style` and
+#'   raises an error of class `nestimate_bad_input` for any argument it
+#'   does not take; the `mcml` method does the same with
+#'   `style = "classic"`; the other methods ignore it.
+#'
+#' @return A `ggplot` object, one rectangle per cell (empty cells are left
+#'   out of the flat and data-frame mosaics), filled by the standardised
+#'   residual (by category for a data frame). Print it to draw
+#'   it, or add ggplot2 layers and themes. An `mcml` with
+#'   `level = "clusters"` gives one faceted `ggplot` with a panel per
+#'   cluster and one shared fill scale. An object of an unsupported class
+#'   raises an error.
 #' @references
 #' Friendly, M. (1994). Mosaic displays for multi-way contingency tables.
 #' \emph{Journal of the American Statistical Association}, 89(425),
@@ -423,11 +460,11 @@ mosaic_plot <- function(x, ...) UseMethod("mosaic_plot")
 #' @export
 #' @rdname mosaic_plot
 mosaic_plot.default <- function(x, ...) {
-  stop("mosaic_plot: no method for class ",
+  stop(errorCondition(paste0("mosaic_plot: no method for class ",
        paste(class(x), collapse = "/"), ".\n",
        "Supported: netobject, netobject_group, mcml, htna, table, matrix, ",
-       "data.frame.",
-       call. = FALSE)
+       "data.frame."),
+       class = "nestimate_bad_input", call = NULL))
 }
 
 #' @export
@@ -793,6 +830,13 @@ mosaic_plot.data.frame <- function(x,
     # sequences so the mosaic works on any estimation method (relative,
     # glasso, cor, ...). Falls through to the strict integer guard only
     # when neither path is available.
+    if (isTRUE(x$method %in% .association_methods)) {
+      stop(errorCondition(sprintf(paste0(
+        "mosaic_plot(): this \"%s\" network holds variables, not ",
+        "transitions between states. Build it with a transition method or ",
+        "pass the sequences."), x$method),
+        class = "nestimate_bad_input", call = NULL))
+    }
     w <- .mosaic_count_or_stop(x)
     axis_groups <- NULL
     # htna carries actor membership in $node_groups (data.frame node, group).
@@ -825,6 +869,7 @@ mosaic_plot.data.frame <- function(x,
     # method (relative, glasso, cor, ...) -- the chi-square is on state
     # marginals and never needs integer $weights. Falls back to
     # colSums($weights) with the integer-only guard when $data is absent.
+    .refuse_onehot_network(x, "mosaic_plot()")
     group_names <- names(x) %||% paste0("Group ", seq_along(x))
     weight_states <- unlist(lapply(x, function(g) rownames(g$weights)))
     data_states   <- unlist(lapply(x, function(g) {
@@ -866,7 +911,8 @@ mosaic_plot.data.frame <- function(x,
     # works regardless of how the mcml was estimated.
     if (identical(level, "macro")) {
       if (is.null(x$macro) || is.null(x$macro$weights)) {
-        stop("mosaic_plot.mcml: x$macro$weights is missing.", call. = FALSE)
+        stop(errorCondition("mosaic_plot.mcml: x$macro$weights is missing.",
+                          class = "nestimate_bad_input", call = NULL))
       }
       w <- .mosaic_count_or_stop(
         list(weights = x$macro$weights, data = x$macro$data,
@@ -877,8 +923,9 @@ mosaic_plot.data.frame <- function(x,
                   ylab_default = NULL))
     }
     if (is.null(x$clusters) || length(x$clusters) == 0L) {
-      stop("mosaic_plot.mcml: x$clusters is empty (compute_within = FALSE?).",
-           call. = FALSE)
+      stop(errorCondition(
+        "mosaic_plot.mcml: x$clusters is empty (compute_within = FALSE?).",
+        class = "nestimate_bad_input", call = NULL))
     }
     titles <- names(x$clusters) %||%
       paste0("Cluster ", seq_along(x$clusters))
@@ -894,8 +941,9 @@ mosaic_plot.data.frame <- function(x,
     })
     keep <- !vapply(built, is.null, logical(1L))
     if (!any(keep)) {
-      stop("mosaic_plot.mcml: no cluster has >= 2 states to draw a mosaic.",
-           call. = FALSE)
+      stop(errorCondition(
+        "mosaic_plot.mcml: no cluster has >= 2 states to draw a mosaic.",
+        class = "nestimate_bad_input", call = NULL))
     }
     if (!all(keep)) {
       warning("mosaic_plot.mcml: skipping single-state cluster(s): ",
@@ -955,15 +1003,23 @@ mosaic_plot.data.frame <- function(x,
 .mosaic_weights_or_stop <- function(w, method, ctx = NULL) {
   pre <- if (is.null(ctx)) "mosaic_plot: " else paste0("mosaic_plot [", ctx, "]: ")
   if (!is.matrix(w) || !is.numeric(w) || !all(is.finite(w))) {
-    stop(pre, "$weights must be a finite numeric matrix.", call. = FALSE)
+    stop(errorCondition(
+      paste0(pre, "$weights must be a finite numeric matrix."),
+      class = "nestimate_bad_input", call = NULL))
   }
   if (any(w < 0) || any(abs(w - round(w)) > 1e-8)) {
-    stop(pre, "only defined for integer-valued weight matrices ",
-         "(method = 'frequency' or 'co_occurrence'). Got method = ",
-         method %||% "<unknown>", ".", call. = FALSE)
+    stop(errorCondition(
+      paste0(
+        pre,
+        "only defined for integer-valued weight matrices ",
+        "(method = 'frequency' or 'co_occurrence'). Got method = ",
+        method %||% "<unknown>",
+        "."),
+      class = "nestimate_bad_input", call = NULL))
   }
   if (sum(w) <= 0) {
-    stop(pre, "total weight is zero -- nothing to draw.", call. = FALSE)
+    stop(errorCondition(paste0(pre, "total weight is zero -- nothing to draw."),
+                        class = "nestimate_bad_input", call = NULL))
   }
   w
 }
@@ -973,7 +1029,7 @@ mosaic_plot.data.frame <- function(x,
 # +/-1 to keep the legend readable on near-independent tables.
 .mosaic_residual_limits <- function(stdres, range) {
   if (!is.null(range)) {
-    stopifnot(is.numeric(range), length(range) == 2L, range[1L] < range[2L])
+    .assert(is.numeric(range), length(range) == 2L, range[1L] < range[2L])
     return(range)
   }
   m <- max(abs(stdres), na.rm = TRUE)
@@ -1017,8 +1073,8 @@ mosaic_plot.data.frame <- function(x,
 # tabulate() over a column-major linear index, stacked into a (n*m) x B
 # matrix; row means and row sds in closed form.
 .mosaic_perm_stdres <- function(tab, n_perm = 500L, seed = NULL) {
-  stopifnot(n_perm >= 2L)
-  if (!is.null(seed)) set.seed(seed)
+  .assert(n_perm >= 2L)
+  if (!is.null(seed)) .local_seed(seed)
   n <- nrow(tab); m <- ncol(tab)
   cells <- expand.grid(row_i = seq_len(n), col_j = seq_len(m))
   freqs <- as.vector(tab)
@@ -1043,14 +1099,15 @@ mosaic_plot.data.frame <- function(x,
                               n_perm = 500L, seed = NULL) {
   n <- nrow(tab); m <- ncol(tab)
   if (n < 1L || m < 1L) {
-    stop("mosaic_plot: contingency table must have >= 1 row and column.",
-         call. = FALSE)
+    stop(errorCondition(
+      "mosaic_plot: contingency table must have >= 1 row and column.",
+      class = "nestimate_bad_input", call = NULL))
   }
   rs <- rowSums(tab)
   total <- sum(rs)
   if (total <= 0) {
-    stop("mosaic_plot: total weight is zero -- nothing to draw.",
-         call. = FALSE)
+    stop(errorCondition("mosaic_plot: total weight is zero -- nothing to draw.",
+         class = "nestimate_bad_input", call = NULL))
   }
   widths <- c(0, cumsum(rs)) / total
   heights <- vapply(seq_len(n), function(i) {
@@ -1071,9 +1128,12 @@ mosaic_plot.data.frame <- function(x,
   } else {
     suppressWarnings(stats::chisq.test(tab))$stdres
   }
-  if (is.null(stdres) || !all(is.finite(stdres))) {
+  if (is.null(stdres)) {
     stdres <- matrix(0, n, m)
   }
+  # A cell of an empty row or column has no expected count, so no residual:
+  # draw it as 0 and keep every other cell's residual.
+  stdres[!is.finite(stdres)] <- 0
 
   d <- data.frame(
     xmin   = widths[i_idx] + row_offset,
@@ -1220,11 +1280,16 @@ mosaic_plot.data.frame <- function(x,
   valid <- setdiff(names(formals(.mosaic_flat_draw)), c("res", "tab"))
   bad  <- setdiff(nms, valid)
   if (length(bad)) {
-    stop("mosaic flat style: unsupported styling argument",
-         if (length(bad) > 1L) "s" else "", ": ",
-         paste(bad, collapse = ", "),
-         ".\n  Valid styling arguments: ", paste(valid, collapse = ", "), ".",
-         call. = FALSE)
+    stop(errorCondition(
+      paste0(
+        "mosaic flat style: unsupported styling argument",
+        if (length(bad) > 1L) "s" else "",
+        ": ",
+        paste(bad, collapse = ", "),
+        ".\n  Valid styling arguments: ",
+        paste(valid, collapse = ", "),
+        "."),
+      class = "nestimate_bad_input", call = NULL))
   }
   invisible(TRUE)
 }
@@ -1891,120 +1956,124 @@ knit_print.nestimate_facet_list <- function(x, ...) {
 
 #' Plot State Frequency Distributions
 #'
-#' Visualise state (node) frequency distributions across groups for any
-#' Nestimate object that carries sequence data: a single \code{netobject},
-#' a \code{netobject_group}, an \code{mcml} model, or an \code{htna} network.
+#' @description
+#' `plot_state_frequencies()` counts how often each state occurs in the
+#' sequences behind a network and draws the shares, per group, as treemaps
+#' or bars; it returns the chart together with the table of counts. It
+#' takes a `netobject`, a `netobject_group` (one group per network), an
+#' `mcml` (one group per cluster) or an `htna` network (one group per
+#' actor). A single `netobject` is one group, `"all"`, unless it carries
+#' node groups, which then form the groups. Missing and empty cells are not
+#' counted.
 #'
-#' The marimekko layout is dispatched per class:
-#' \itemize{
-#'   \item For \code{mcml}, where states partition cleanly into clusters,
-#'     the chart is a hierarchical 2D marimekko: cluster columns of width
-#'     proportional to cluster total, segments stacked vertically with
-#'     heights proportional to within-cluster state proportions.
-#'   \item For all other classes (\code{netobject}, \code{netobject_group},
-#'     \code{htna}), each group is rendered as its own panel containing a
-#'     squarified treemap: each state becomes a rectangular tile whose
-#'     AREA is exactly proportional to the state's share within that group.
-#'     Single-panel when no groups exist; faceted when groups are present.
-#' }
+#' With `style = "marimekko"` (default), each group is a treemap whose
+#' tiles have areas proportional to the states' shares within that group.
+#' The groups of a `netobject` or `netobject_group` are panels of one plot,
+#' with the states in the same order and colours in every panel. The actors
+#' of an `htna` network and the clusters of an `mcml` usually have states
+#' of their own, so each is drawn as a separate treemap with its own legend
+#' (`legend = "per_facet"`). An `mcml` drawn with any other legend is a
+#' single marimekko instead: one column per cluster, as wide as the
+#' cluster's share of all events, with its states stacked by their share
+#' within the cluster. With `style = "bars"`, each group is a panel of
+#' horizontal bars, one per state.
 #'
-#' The bar style produces horizontal bars (state on the y-axis), faceted by
-#' group when groups exist. All variants use the Okabe-Ito palette.
+#' The shares describe how often states occur, not how they follow each
+#' other. Two groups can have the same state mix and different
+#' transitions; compare the networks for that, with [permutation()].
+#' [mosaic_plot()] shows which cells of a `netobject_group`'s
+#' group-by-state table depart from independence.
 #'
-#' @param x A \code{netobject}, \code{netobject_group}, \code{mcml}, or
-#'   \code{htna} object. For the \code{print()}, \code{plot()} and
-#'   \code{as.data.frame()} methods: the \code{state_freq} object returned by
-#'   \code{plot_state_frequencies()}; for the \code{print()} methods of the
-#'   per-facet figure, an object of class \code{nestimate_facet_plot} or
-#'   \code{nestimate_facet_list}.
-#' @param style One of:
-#'   \itemize{
-#'     \item \code{"marimekko"} (default) -- per-group treemap panels with
-#'       cumulative-width geometry; tile area = within-group state share.
-#'     \item \code{"bars"} -- horizontal bars sorted by frequency, faceted
-#'       per group.
-#'   }
-#'   For chi-square mosaics of a (group x state) contingency table, use
-#'   \code{\link{mosaic_plot}} directly -- it is kept as a separate
-#'   function with its own dispatch surface.
-#' @param metric For \code{style = "bars"}: which value the bar length
-#'   encodes -- \code{"prop"} (default) or \code{"freq"}. Treemap and
-#'   hierarchical-marimekko areas always encode proportion within group.
-#' @param label Inline tile / bar annotation. All formats render on a
-#'   single line.
-#'   \itemize{
-#'     \item \code{"prop"} (default) -- proportion only, e.g. \code{"66\%"}
-#'     \item \code{"freq"} -- count only, e.g. \code{"1,234"}
-#'     \item \code{"both"} -- count + proportion, e.g. \code{"1,234 (66\%)"}
-#'     \item \code{"state"} -- state name only, e.g. \code{"Average"}
-#'     \item \code{"all"} -- state + proportion, e.g. \code{"Average (66\%)"}
-#'     \item \code{"none"} -- no inline labels
-#'   }
-#' @param legend Legend position. \code{"auto"} (default) resolves per
-#'   style: \code{"none"} for \code{style = "bars"} (the y-axis already
-#'   names every state, so a colour legend is redundant);
-#'   \code{"per_facet"} for \code{htna}/\code{mcml} treemaps (state
-#'   vocabularies differ per panel, so each gets its own legend);
-#'   \code{"bottom"} for single-network and \code{netobject_group}
-#'   treemaps (shared state vocabulary, one shared legend).
-#'   Override with any of \code{"bottom"}, \code{"top"}, \code{"right"},
-#'   \code{"left"}, \code{"none"}, or \code{"per_facet"}. \code{"per_facet"}
-#'   is silently demoted to \code{"bottom"} when every group shares the same
-#'   state vocabulary (repeating one legend per panel would be redundant);
-#'   when it does take effect it returns a \code{gtable} (requiring the
-#'   \pkg{gridExtra} package) or a list of ggplots, per \code{combine}.
-#' @param legend_dir Legend internal layout: \code{"auto"} (default --
-#'   horizontal for top/bottom, vertical for left/right), or force
-#'   \code{"horizontal"} or \code{"vertical"} regardless of position.
-#' @param legend_frame \code{"none"} (default) for an unframed legend, or
-#'   \code{"border"} to draw a thin grey rectangle around the legend
-#'   ("legend enclosed in a square").
-#' @param sort_states One of \code{"frequency"} (default -- most frequent
-#'   first), \code{"alpha"}, or \code{"none"}.
-#' @param colors Optional colors overriding the default Okabe-Ito state
-#'   palette. Either an unnamed vector applied in state order (length at
-#'   least the number of unique states), or a named lookup
-#'   (\code{c(plan = "#0072B2")}) overriding only the states you name.
-#' @param label_size Numeric size of inline labels (max size when
-#'   \pkg{ggfittext} is installed -- text auto-shrinks per tile).
-#' @param abbreviate Abbreviate state names. \code{FALSE} (default) shows
-#'   full names; \code{TRUE} truncates to the first 3 characters via
-#'   \code{base::abbreviate()} (which extends the truncation as needed to
-#'   keep names unique after collision); a positive integer sets the
-#'   target minimum length explicitly (e.g. \code{abbreviate = 4}).
-#'   Affects tile labels, the legend, and the tidy table returned by
-#'   \code{as.data.frame()}.
-#' @param include_macro For \code{mcml} only: prepend a \code{"macro"}
-#'   reference column showing aggregate state frequencies across all
-#'   clusters. Default \code{FALSE}.
-#' @param combine For \code{legend = "per_facet"} only. \code{"auto"}
-#'   (default) returns a single combined gtable for 1-3 panels and a
-#'   list of ggplots (one per panel) for 4+ panels -- many-cluster
-#'   \code{mcml} layouts read better as separate figures than as a tile
-#'   grid. \code{TRUE} forces a combined gtable via \pkg{gridExtra};
-#'   \code{FALSE} forces a list (knitr renders each at the chunk's full
-#'   \code{fig.width} / \code{fig.height}).
-#' @param node_groups Optional named character vector mapping node labels to
-#'   semantic groups. When supplied, panels (or bars) are coloured / annotated
-#'   by group rather than by individual state, so state-level palettes can
-#'   collapse onto a smaller categorical legend.
-#' @param ncol For \code{legend = "per_facet"} with \code{combine = TRUE}:
-#'   number of columns in the grid arrangement. \code{NULL} (default)
-#'   picks 1, 2, or 3 columns based on the number of panels.
-#' @param ... Reserved for future use. In \code{as.data.frame.state_freq()},
-#'   \code{plot.state_freq()}, \code{print.state_freq()},
-#'   \code{print.nestimate_facet_list()} and \code{print.nestimate_facet_plot()}:
-#'   ignored.
+#' @param x The object to count: a `netobject`, `netobject_group`, `mcml`
+#'   or `htna` network built from sequences. A network without sequence
+#'   data raises an error; in a `netobject_group` or `mcml`, groups without
+#'   it are left out. For the `print()`, `plot()` and
+#'   `as.data.frame()` methods of the result: the `state_freq` object;
+#'   for the `print()` methods of a per-panel figure: an object of class
+#'   `nestimate_facet_plot` or `nestimate_facet_list`.
+#' @param style The chart. `"marimekko"` (default) draws treemaps, or the
+#'   cluster marimekko for an `mcml` (see Description); `"bars"` draws
+#'   horizontal bars, the most frequent state on top when `sort_states =
+#'   "frequency"`, with one panel per group.
+#' @param metric For `style = "bars"`: what the bar length shows,
+#'   `"prop"` (default), the share within the group, or `"freq"`, the
+#'   count. Treemap and marimekko areas always show the share within the
+#'   group.
+#' @param label The text printed on each tile or bar, on one line:
+#'   `"prop"` (default) the share, as in `"66.0%"`; `"freq"` the count, as
+#'   in `"1,234"`; `"both"` the two, `"1,234 (66.0%)"`; `"state"` the state
+#'   name; `"all"` the name and share, `"Average (66.0%)"`; `"none"` no
+#'   text.
+#' @param legend Where the colour legend goes: `"bottom"`, `"top"`,
+#'   `"right"`, `"left"`, `"none"` or `"per_facet"`. `"auto"` (default)
+#'   resolves to `"none"` for bars, whose axis names the states, to
+#'   `"per_facet"` for `htna` and `mcml` treemaps, and to `"bottom"`
+#'   otherwise. `"per_facet"` draws each group as its own treemap with its
+#'   own legend (on the right with up to two panels, at the bottom with
+#'   more), and its colours restart in every panel; it falls back to
+#'   `"bottom"` when every group has the same states, and to a legend on
+#'   the right for bars. It returns a combined figure or a list of plots,
+#'   as `combine` sets.
+#' @param legend_dir The direction of the legend's keys: `"auto"`
+#'   (default) lays them out horizontally for a legend on top or bottom and
+#'   vertically on the left or right; `"horizontal"` and `"vertical"`
+#'   force one.
+#' @param legend_frame `"none"` (default) draws the legend unframed;
+#'   `"border"` draws a thin grey rectangle around it.
+#' @param sort_states The order of the states in the legend, the tiles and
+#'   the bars: `"frequency"` (default), the most frequent first;
+#'   `"alpha"`, alphabetical; or `"none"`, the order of the table.
+#' @param colors Fill colours for the states, overriding the palette
+#'   attached to `x` with [set_state_colors()] for this chart: an unnamed
+#'   vector in state order (at least one per state) or a named lookup such
+#'   as `c(plan = "#0072B2")` that overrides only the states named. Default
+#'   `NULL`: the attached palette, or else the Okabe-Ito palette, recycled.
+#' @param label_size The size of the tile and bar labels; with
+#'   \pkg{ggfittext} installed, the largest size, as labels shrink to fit
+#'   their tiles. Default `3.5`.
+#' @param abbreviate Whether to shorten the state names with
+#'   [base::abbreviate()], which drops lower-case vowels and then letters
+#'   from the end until a name fits, keeping the names distinct. `FALSE`
+#'   (default) keeps the full names; `TRUE` shortens them to at least three
+#'   characters; a positive whole number sets that minimum length. It
+#'   applies to the labels, the legend and the returned table.
+#' @param include_macro For an `mcml`: whether to add a `"macro"` group in
+#'   front, holding the state counts over all clusters. Default `FALSE`.
+#'   Ignored for the other classes.
+#' @param combine With per-panel legends: `"auto"` (default) combines up
+#'   to three panels into one figure and returns a list of plots, one per
+#'   panel, for four or more, which knitr draws as separate figures at the
+#'   chunk's size. `TRUE` always combines them; `FALSE` always returns the
+#'   list. A combined figure, whether from `TRUE` or from `"auto"` with up
+#'   to three panels, needs \pkg{gridExtra} and raises an error without
+#'   it; `FALSE` does not.
+#' @param node_groups A named character vector that maps states to broader
+#'   groups, such as `c(plan = "Regulation", monitor = "Regulation")`. The
+#'   chart is then drawn and coloured by these groups, states not named
+#'   keeping their own name; the returned table keeps one row per state.
+#'   Default `NULL`.
+#' @param ncol For a combined figure with per-panel legends: the number of
+#'   columns. Default `NULL`: one column per panel with up to two panels,
+#'   two columns with more.
+#' @param ... Not used by the `netobject`, `netobject_group` and `htna`
+#'   methods; the `mcml` method raises an error for any argument it does
+#'   not take. For the `print()`, `plot()` and `as.data.frame()` methods
+#'   of the result: ignored.
 #'
-#' @return A \code{state_freq} object: a list with the rendered \code{$plot}
-#'   (a \code{ggplot}; a \code{gtable} or a list of ggplots under
-#'   \code{legend = "per_facet"}, per \code{combine}), the tidy \code{$table} (a
-#'   \code{data.frame} with columns \code{group}, \code{state}, \code{count},
-#'   \code{proportion}, one row per (group, state) cell), and the call's
-#'   \code{$style}, \code{$metric}, \code{$source_class}. The class supports
-#'   \code{print()} (prints the tidy table and draws the chart),
-#'   \code{plot()} (draws the chart alone), and \code{as.data.frame()}
-#'   (returns the tidy table) -- see the section below.
+#' @return A `state_freq` object. Printing it shows the event totals per
+#'   group and the share of each state within its group, then draws the
+#'   chart; `plot()` draws the chart alone. [state_distribution()] gives
+#'   the same counts from the network, with the full state names and, for
+#'   an `mcml`, without the macro group unless `include_macro = TRUE`.
+#'   The object holds the chart (a
+#'   `ggplot`; with per-panel legends either a combined figure, a `gtable`
+#'   of class `nestimate_facet_plot`, or a list of `ggplot`s of class
+#'   `nestimate_facet_list`), the table (one row per group and state, with columns `group`,
+#'   `state`, `count` and `proportion`, the share within the group), and
+#'   the `style`, `metric` and source class of the call. The `print()`
+#'   methods return their input invisibly, `plot()` returns `NULL`
+#'   invisibly. Any other class raises an error, a tna model included;
+#'   draw a tna model with `tna::plot_frequencies()`.
 #'
 #' @examples
 #' if (requireNamespace("ggplot2", quietly = TRUE)) {
@@ -2138,10 +2207,14 @@ plot_state_frequencies.netobject_group <- function(x,
 #' @rdname plot_state_frequencies
 plot_state_frequencies.default <- function(x, ...) {
   cls <- paste(class(x), collapse = "/")
-  stop("plot_state_frequencies(): no method for class '", cls, "'.\n",
-       "Supported: netobject, netobject_group, mcml, htna.\n",
-       "For tna objects, use tna::plot_frequencies(x).",
-       call. = FALSE)
+  stop(errorCondition(
+    paste0(
+      "plot_state_frequencies(): no method for class '",
+      cls,
+      "'.\n",
+      "Supported: netobject, netobject_group, mcml, htna.\n",
+      "For tna objects, use tna::plot_frequencies(x)."),
+    class = "nestimate_bad_input", call = NULL))
 }
 
 
@@ -2237,7 +2310,7 @@ plot_state_frequencies.default <- function(x, ...) {
 .abbreviate_states <- function(freq_df, abbreviate) {
   if (isFALSE(abbreviate) || is.null(abbreviate)) return(freq_df)
   minlen <- if (isTRUE(abbreviate)) 3L else as.integer(abbreviate[[1L]])
-  stopifnot(minlen >= 1L)
+  .assert(minlen >= 1L)
   short <- abbreviate(as.character(freq_df$state), minlength = minlen)
   freq_df$state <- unname(short)
   agg <- aggregate(count ~ group + state, data = freq_df, FUN = sum)
@@ -2256,7 +2329,7 @@ plot_state_frequencies.default <- function(x, ...) {
 # .abbreviate_states. `NULL` (default) is a no-op.
 .collapse_states_to_groups <- function(freq_df, node_groups) {
   if (is.null(node_groups)) return(freq_df)
-  stopifnot(is.character(node_groups), length(node_groups) >= 1L,
+  .assert(is.character(node_groups), length(node_groups) >= 1L,
             !is.null(names(node_groups)))
   lookup <- node_groups
   s <- as.character(freq_df$state)
@@ -2275,29 +2348,36 @@ plot_state_frequencies.default <- function(x, ...) {
 
 #' Per-Class State Distribution as a Tidy Data Frame
 #'
-#' Returns a tidy \code{data.frame(group, state, count, proportion)} with one
-#' row per (group, state) cell. Companion to \code{\link{state_frequencies}}
-#' (which counts unique states in raw sequence input);
-#' \code{state_distribution()} pulls the same shape of frame from a fitted
-#' Nestimate object so analyses don't have to reach for the underlying
-#' \code{$data} slot directly.
+#' @description
+#' `state_distribution()` counts how often each state occurs in the
+#' sequences behind a network and returns one row per group and state,
+#' with the count and the share within the group. The groups follow the
+#' class: a single `netobject` is one group, `"all"`, unless it carries node
+#' groups, which then form the groups (states in none are `"(ungrouped)"`);
+#' an `htna` network has one group per actor; a `netobject_group` one per
+#' network, named as in the group (or `"Group 1"`, `"Group 2"`, ...); an
+#' `mcml` one per cluster, with the node labels it was given in place of
+#' the raw codes. Missing and empty cells are not counted.
 #'
-#' Used internally by \code{\link{plot_state_frequencies}} as the data layer
-#' behind every chart, and surfaced as the \code{$table} slot of the
-#' returned \code{state_freq} object.
+#' The table is the one behind [plot_state_frequencies()], and the per-group
+#' counterpart of [state_frequencies()], which counts the states of raw
+#' sequence data.
 #'
-#' @param x A \code{netobject}, \code{netobject_group}, \code{mcml}, or
-#'   \code{htna} object.
-#' @param include_macro For \code{mcml}: when \code{TRUE}, prepend a
-#'   \code{group = "macro"} block aggregating across clusters. Ignored for
-#'   the other classes.
-#' @param ... Currently unused.
+#' @param x A `netobject`, `netobject_group`, `mcml` or `htna` network
+#'   built from sequences. A network without sequence data raises an error;
+#'   in a `netobject_group` or `mcml`, groups without it are left out, and
+#'   an error is raised only when none has any. Other classes raise an
+#'   error.
+#' @param include_macro For an `mcml`: whether to add a `"macro"` group in
+#'   front, holding the state counts over all clusters. Default `FALSE`.
+#' @param ... Not used. The `mcml` method raises an error for any argument
+#'   it does not take; the other methods ignore it.
 #'
-#' @return A \code{data.frame} with one row per (group, state) cell and
-#'   columns \code{group} (character), \code{state} (character),
-#'   \code{count} (integer), and \code{proportion} (numeric, within-group
-#'   share). A single ungrouped network yields a single group labelled
-#'   \code{"all"}.
+#' @return A data frame with one row per group and state and the columns
+#'   `group` (character), `state` (character), `count` (integer) and
+#'   `proportion` (the state's share of its group's events). Within a group
+#'   the rows run from the most to the least frequent state; the `"macro"`
+#'   group is in alphabetical order.
 #' @export
 #' @examples
 #' data(group_regulation_long, package = "Nestimate")
@@ -2329,12 +2409,14 @@ state_distribution.mcml <- function(x, include_macro = FALSE, ...) {
   }
   dot_names <- names(dots)
   dot_names[!nzchar(dot_names)] <- paste0("..", which(!nzchar(dot_names)))
-  stop(
-    method, "() got unsupported argument",
-    if (length(dots) == 1L) ": " else "s: ",
-    paste(dot_names, collapse = ", "),
-    call. = FALSE
-  )
+  stop(errorCondition(
+    paste0(
+      method, "() got unsupported argument",
+      if (length(dots) == 1L) ": " else "s: ",
+      paste(dot_names, collapse = ", ")
+    ),
+    class = "nestimate_bad_input", call = NULL
+  ))
 }
 
 #' @export
@@ -2347,9 +2429,13 @@ state_distribution.netobject_group <- function(x, ...) {
 #' @rdname state_distribution
 state_distribution.default <- function(x, ...) {
   cls <- paste(class(x), collapse = "/")
-  stop("state_distribution(): no method for class '", cls, "'.\n",
-       "Supported: netobject, netobject_group, mcml, htna.",
-       call. = FALSE)
+  stop(errorCondition(
+    paste0(
+      "state_distribution(): no method for class '",
+      cls,
+      "'.\n",
+      "Supported: netobject, netobject_group, mcml, htna."),
+    class = "nestimate_bad_input", call = NULL))
 }
 
 
@@ -2370,23 +2456,15 @@ state_distribution.default <- function(x, ...) {
 }
 
 #' @section The state_freq object:
-#' \code{plot_state_frequencies()} returns a \code{state_freq} object holding
-#' both the rendered chart and the tidy frequency table. \code{print()} shows
-#' the table in the console \emph{and} draws the chart on the active graphics
-#' device, \code{plot()} draws the chart alone, and \code{as.data.frame()}
-#' returns the tidy table for downstream piping.
+#' In a knitr document, printing the object puts the table in the text and
+#' the chart in a figure of the chunk's size; a list of per-panel plots
+#' gives one figure per panel.
 #'
-#' @param digits Number of decimal places for proportion / share columns.
-#'   Default 1.
-#' @param max_states Cap on rows shown per group in the per-state table
-#'   (default 20); the surplus is folded into a single \code{"(+k more)"}
-#'   row. The full, uncapped table is returned by
-#'   \code{as.data.frame(x)}.
-#' @return \code{print()} returns \code{x} invisibly (after printing the
-#'   table and drawing the chart); \code{plot()} returns \code{invisible(NULL)}
-#'   after drawing; \code{as.data.frame()} returns the tidy
-#'   \code{data.frame}, one row per (group, state) cell with columns
-#'   \code{group}, \code{state}, \code{count}, \code{proportion}.
+#' @param digits For `print()` of the result: decimal places of the
+#'   percentages. Default `1`.
+#' @param max_states For `print()` of the result: the most states shown
+#'   per group (default `20`); the rest are folded into one `"(+k more)"`
+#'   row. [state_distribution()] gives the full table.
 #' @name state_freq
 #' @rdname plot_state_frequencies
 NULL
@@ -2511,7 +2589,8 @@ knit_print.state_freq <- function(x, options = list(), ...) {
                           combine = TRUE, ncol = NULL,
                           node_groups = NULL) {
   if (nrow(freq_df) == 0L) {
-    stop("No state observations available to plot.", call. = FALSE)
+    stop(errorCondition("No state observations available to plot.",
+                        class = "nestimate_bad_input", call = NULL))
   }
 
   # node_groups: collapse the per-state fill onto the semantic groups

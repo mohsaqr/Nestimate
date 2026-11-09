@@ -13,40 +13,57 @@
 
 #' Cluster-Level Network, With One Cluster Expanded
 #'
-#' Returns the macro (cluster-level) network of an \code{mcml}, optionally
-#' with one or more clusters expanded back into their member states. Every
-#' other cluster stays collapsed to a single node, so the result is a network
-#' at mixed resolution: the cluster of interest in detail, its context in
-#' summary.
+#' @description
+#' `macro_network()` returns the cluster-level (macro) network of an `mcml`,
+#' optionally with one or more clusters expanded back into their member
+#' states. Every other cluster stays collapsed to a single node, so the
+#' result is a network at mixed resolution: the cluster of interest in
+#' detail, its context in summary, with weights counted from the sequences.
+#' For an `mcml_pc` from [build_mcml_pc()], it returns the cluster-level
+#' network that fit already holds.
 #'
-#' @param x An \code{mcml} built from sequence data, or an
-#'   \code{mcml_pc} from \code{\link{build_mcml_pc}}. A matrix-derived
-#'   \code{mcml} carries no node-level data and cannot be expanded.
-#' @param expand Names of clusters to expand into their member states.
-#'   \code{NULL} (default) collapses every cluster, reproducing the macro
-#'   layer; \code{"all"} or \code{TRUE} expands every cluster, so each state
-#'   is its own node.
-#' @param method Estimator passed to \code{\link{build_network}}. Default
-#'   \code{"relative"} (row-normalised transitions). Not used for an
-#'   \code{mcml_pc}.
-#' @param ... Further arguments passed to \code{\link{build_network}}. Not
-#'   used for an \code{mcml_pc}.
+#' @details
+#' The weights are counted again from the sequences, after each state is
+#' recoded to its cluster (or kept, for an expanded cluster), because a
+#' cluster-level matrix cannot be split back into its states.
 #'
-#' @return For an \code{mcml_pc}: its cluster-level network, the netobject
-#'   estimated by \code{\link{build_mcml_pc}}, unchanged. Its estimator is
-#'   set when the fit is built, so \code{method} or \code{...} raise an
-#'   error, and \code{expand} errors with class \code{nestimate_no_expand}
-#'   (there are no sequences to re-count).
+#' @param x An `mcml` built from sequence data, or an `mcml_pc` from
+#'   [build_mcml_pc()]. An `mcml` built from a matrix or an edge list holds
+#'   no sequences to count, so it raises an error of class
+#'   `nestimate_no_expand_source`, even with `expand = NULL`; a name in
+#'   `expand` that is not a cluster is reported first.
+#' @param expand The clusters to expand into their member states. `NULL`
+#'   (default) collapses every cluster, which reproduces the macro layer;
+#'   `"all"` or `TRUE` expands every cluster, so each state is its own
+#'   node. A name that is not a cluster raises an error. For an `mcml_pc`,
+#'   any value other than `NULL` raises an error of class
+#'   `nestimate_no_expand`: there are no sequences to count again.
+#' @param method The estimator passed to [build_network()]. Default
+#'   `"relative"` (row-normalised transitions). For an `mcml_pc`, giving it
+#'   raises an error: the estimator was set by [build_mcml_pc()].
+#' @param scaling,threshold,params Passed to [build_network()] for the
+#'   re-counted network: `scaling` (default `NULL`, none), `threshold`
+#'   (default `0`) and `params` (default `list()`), as there. For an
+#'   `mcml_pc`, giving any raises an error, as for `method`.
+#' @param ... Further arguments for [build_network()], such as `start` or
+#'   `end`. For an `mcml_pc`, giving any raises an error, as for `method`.
 #'
-#'   For an \code{mcml}: a \code{netobject} (also a \code{cograph_network}) whose nodes are
-#'   the collapsed clusters plus the member states of any expanded cluster,
-#'   with weights re-counted from the sequence data by
-#'   \code{\link{build_network}}. \code{$node_groups} is a two-column data
-#'   frame (\code{node}, \code{group}) mapping every node to its cluster, and
-#'   the same labels are a factor in \code{$nodes$groups}, so the result
-#'   plots grouped; an expanded cluster's states each map to that cluster, a
-#'   collapsed cluster maps to itself. \code{$expanded} records the cluster
-#'   names that were expanded (\code{NULL} when none were).
+#' @return For an `mcml`: a `netobject` (also a `cograph_network`) whose
+#'   nodes are the collapsed clusters plus the member states of any
+#'   expanded cluster, with weights counted by [build_network()]. It is
+#'   printed, resampled (for example with [bootstrap_network()]) and drawn
+#'   like any other `netobject`; its node grouping is read by cograph's
+#'   group-aware plots, such as `cograph::plot_mtna()`. Beside the usual
+#'   `netobject` fields it holds `node_groups`, a data frame with the
+#'   columns `node` and `group` that maps each node to its cluster (an
+#'   expanded cluster's states map to that cluster, a collapsed cluster maps
+#'   to itself), the same labels as a factor in the `groups` column of
+#'   `nodes`, and
+#'   `expanded`, the names of the clusters expanded (`NULL` when none
+#'   were).
+#'
+#'   For an `mcml_pc`: its cluster-level network, the `netobject` estimated
+#'   by [build_mcml_pc()], unchanged.
 #' @seealso \code{\link{build_mcml}}, \code{\link{as_tna}}
 #' @examples
 #' seqs <- data.frame(
@@ -57,8 +74,10 @@
 #' macro_network(mc)                    # every cluster collapsed
 #' macro_network(mc, expand = "G2")     # G2 shown as C and D
 #' @export
-macro_network <- function(x, expand = NULL, method = "relative", ...) {
-  stopifnot(
+macro_network <- function(x, expand = NULL, method = "relative",
+                          scaling = NULL, threshold = 0, params = list(),
+                          ...) {
+  .assert(
     "`x` must be an mcml or an mcml_pc" =
       inherits(x, "mcml") || inherits(x, "mcml_pc"),
     "`expand` must be a character vector, TRUE, \"all\" or NULL" =
@@ -76,10 +95,14 @@ macro_network <- function(x, expand = NULL, method = "relative", ...) {
                "the macro network together with every within-cluster network."),
         class = "nestimate_no_expand", call = NULL))
     }
-    if (!missing(method) || ...length() > 0L) {
-      stop("`method` and `...` do not apply to an mcml_pc: its cluster-level ",
-           "network was estimated by build_mcml_pc(); set the estimator there.",
-           call. = FALSE)
+    if (!missing(method) || !missing(scaling) || !missing(threshold) ||
+        !missing(params) || ...length() > 0L) {
+      stop(errorCondition(
+        paste0(
+          "`method`, `scaling`, `threshold`, `params` and `...` do not apply ",
+          "to an mcml_pc: its cluster-level ",
+          "network was estimated by build_mcml_pc(); set the estimator there."),
+        class = "nestimate_bad_input", call = NULL))
     }
     return(x$macro)
   }
@@ -90,10 +113,10 @@ macro_network <- function(x, expand = NULL, method = "relative", ...) {
   if (isTRUE(expand) || identical(expand, "all")) expand <- names(members)
   unknown <- setdiff(expand, names(members))
   if (length(unknown) > 0L) {
-    stop("Unknown cluster(s) in `expand`: ",
+    stop(errorCondition(paste0("Unknown cluster(s) in `expand`: ",
          paste(utils::head(unknown, 5L), collapse = ", "),
-         ". Available: ", paste(names(members), collapse = ", "),
-         call. = FALSE)
+         ". Available: ", paste(names(members), collapse = ", ")),
+      class = "nestimate_bad_input", call = NULL))
   }
   data <- attr(x, "htna_source")
   if (is.null(data)) {
@@ -117,7 +140,9 @@ macro_network <- function(x, expand = NULL, method = "relative", ...) {
     lapply(data, function(col) unname(map[as.character(col)])),
     stringsAsFactors = FALSE
   )
-  net <- build_network(.mark_positions(recoded), method = method, ...)
+  net <- build_network(.mark_positions(recoded), method = method,
+                       scaling = scaling, threshold = threshold,
+                       params = params, ...)
 
   # Label every node with the cluster it belongs to, so the result plots
   # grouped: an expanded state carries its cluster, a collapsed cluster itself.

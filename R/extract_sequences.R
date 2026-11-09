@@ -1,34 +1,60 @@
 #' Extract Sequences in Wide Format
 #'
-#' Returns the sequences behind any Nestimate input as a wide data frame, one
-#' row per sequence and one column per position. Accepts the output of
-#' \code{\link{prepare}()}, a long event log, a wide data frame or character
-#' matrix, a \code{netobject}, a grouped \code{netobject_group}, or a
-#' \code{tna} model. Model objects return their stored, decoded states.
+#' @description
+#' `extract_sequences()` returns the sequences behind a Nestimate input as a
+#' wide data frame, one row per sequence and one column per position. It
+#' reads the output of [prepare()], a long event log (with `action` set), a
+#' wide data frame or character matrix, a `netobject`, `netobject_group` or
+#' `cograph_network` built from sequences, and a `tna` model; networks and
+#' models give back their stored, decoded states. The sequence verbs, such
+#' as [sequence_metrics()] and [sequence_patterns()], read their input the
+#' same way.
 #'
-#' @param x Sequence data: a \code{nestimate_data} object from
-#'   \code{\link{prepare}()}; a long event log (supply \code{action});
-#'   a wide \code{data.frame} or character matrix; a \code{netobject},
-#'   \code{netobject_group}, \code{cograph_network} or \code{tna} built from
-#'   sequence data.
-#' @param cols Character vector of state columns for wide data frames. When
-#'   \code{NULL}, numeric columns of a mixed data frame are treated as
-#'   covariates and the remaining columns as states. Ignored for model
-#'   objects.
-#' @param actor,action,time Column names of a long event log, passed to
-#'   \code{\link{prepare}()}. Supplying \code{action} marks \code{x} as long.
-#' @param meta Logical. When \code{TRUE}, the covariate columns that belong
-#'   to each sequence (actor, session, group, metadata) are placed before the
-#'   state columns. Default \code{FALSE}.
-#' @param ... Further arguments passed to \code{\link{prepare}()} for long
-#'   input (e.g. \code{time_threshold}, \code{order}).
+#' Column roles are declared, never guessed: an event log needs `action`,
+#' and a wide table needs its positions named as a numbered run or listed in
+#' `cols`. When the positions were listed and their names are not a run,
+#' the result records them, so it can be passed to another sequence verb
+#' without `cols` again (not when `meta = TRUE` adds covariate columns).
 #'
-#' @return A \code{data.frame} with one row per sequence. State columns are
-#'   character, with \code{NA} after a sequence ends; their names are the
-#'   position names of the input (\code{T1}, \code{T2}, ... for prepared or
-#'   long data). With \code{meta = TRUE} the covariate columns come first.
-#'   A grouped network adds its grouping column. Input that has no sequence
-#'   data raises \code{nestimate_bad_input}.
+#' @param x The sequence data: a `nestimate_data` object from [prepare()];
+#'   a long event log (set `action`); a wide data frame or character
+#'   matrix; or a `netobject`, `netobject_group`, `cograph_network` or `tna`
+#'   model built from sequence data. A network estimated with an
+#'   association method (`cor`, `pcor`, `glasso`, `ising`, `mgm`) or from
+#'   one-hot codes, a network built from a matrix (it holds no sequences),
+#'   and any other input raise an error of class `nestimate_bad_input`.
+#' @param cols The state columns of a wide data frame; the other columns
+#'   are the sequences' covariates. Default `NULL`: the frame must be a
+#'   single column or hold its positions as a numbered run of names (a
+#'   shared prefix and a number, `T1`, `T2`, ..., or `1`, `2`, ...), and the
+#'   columns outside the run, and numeric columns beside it, are
+#'   covariates. Any other frame, or columns holding only 0 and 1 (which
+#'   could be one-hot codes), then raise an error of class
+#'   `nestimate_bad_input`; listing them in `cols` reads them as positions.
+#'   A name in `cols` that is not in the frame raises the same class.
+#'   Ignored for prepared data, event logs (where a listed name must still
+#'   exist) and model objects.
+#' @param actor,action,time The actor, action and timestamp columns of a
+#'   long event log. Setting `action` declares `x` an event log and passes
+#'   `actor` and `time` to [prepare()]. On a wide table without `action`,
+#'   the columns they name must exist, or an error of class
+#'   `nestimate_bad_input` is raised. The columns they name are covariates,
+#'   never positions: they are left out of the states (also from a numbered
+#'   run) and kept with the covariates, and naming one of them in `cols`
+#'   too raises an error of class `nestimate_bad_input`. Default `NULL`.
+#' @param meta Whether to put the covariate columns of each sequence
+#'   (actor, session, group, metadata) before the state columns; a grouped
+#'   network adds its grouping column among them. Default `FALSE`.
+#' @param ... Further arguments passed to [prepare()] for a long event log,
+#'   such as `time_threshold` or `order`; ignored otherwise.
+#'
+#' @return A data frame with one row per sequence. The state columns are
+#'   character, `NA` after a sequence ends and at missing positions (empty
+#'   strings and TraMineR's void `%` and missing `*` markers are read as
+#'   `NA`). Their names are the position names of the input (`T1`, `T2`,
+#'   ... for prepared or long data, `V1`, `V2`, ... for an unnamed matrix).
+#'   With `meta = TRUE` the covariate columns come first. Input that holds
+#'   no observed state raises an error of class `nestimate_bad_input`.
 #'
 #' @examples
 #' extract_sequences(trajectories)
@@ -43,7 +69,7 @@
 #' @export
 extract_sequences <- function(x, cols = NULL, actor = NULL, action = NULL,
                               time = NULL, meta = FALSE, ...) {
-  stopifnot("`meta` must be TRUE or FALSE" = isTRUE(meta) || isFALSE(meta))
+  .assert("`meta` must be TRUE or FALSE" = isTRUE(meta) || isFALSE(meta))
   seqs <- .as_sequences(x, cols = cols, actor = actor, action = action,
                         time = time, ...)
   states <- as.data.frame(seqs$states, stringsAsFactors = FALSE)
@@ -131,8 +157,18 @@ extract_sequences <- function(x, cols = NULL, actor = NULL, action = NULL,
                 paste(missing_cols, collapse = ", ")),
         class = "nestimate_bad_input", call = NULL))
     }
-    state_cols <- .build_sequence_cols(df, cols = cols, exclude = exclude) %||%
-      names(df)
+    # a column declared as actor or time is a covariate, never a position
+    roles <- intersect(c(actor, time), names(df))
+    if (length(intersect(cols, roles)) > 0L) {
+      stop(errorCondition(
+        sprintf(paste("column(s) %s are declared both as positions (`cols`)",
+                      "and as `actor`/`time`; a column has one role."),
+                paste(intersect(cols, roles), collapse = ", ")),
+        class = "nestimate_bad_input", call = NULL))
+    }
+    state_cols <- .build_sequence_cols(df, cols = cols,
+                                       exclude = c(exclude, roles)) %||%
+      setdiff(names(df), roles)
     states <- df[state_cols]
     units <- df[setdiff(names(df), state_cols)]
   } else {

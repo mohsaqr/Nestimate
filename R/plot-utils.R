@@ -16,7 +16,8 @@
   if (is.data.frame(x)) x <- as.matrix(x)
   levels <- sort.int(unique(as.vector(x)), na.last = NA)
   if (length(levels) == 0L) {
-    stop("`x` contains no non-NA values.", call. = FALSE)
+    stop(errorCondition("`x` contains no non-NA values.",
+                        class = "nestimate_bad_input", call = NULL))
   }
   codes <- matrix(match(x, levels),
                   nrow = nrow(x), ncol = ncol(x),
@@ -30,7 +31,7 @@
 # each NULL or one positive number, for .trim_keep() / .trim_rows_blank().
 .trim_axes <- function(trim) {
   if (is.null(trim)) return(list(cols = NULL, rows = NULL))
-  stopifnot(
+  .assert(
     "`trim` must be one number (time axis) or two (time axis, rows)" =
       is.numeric(trim) && length(trim) %in% c(1L, 2L)
   )
@@ -45,7 +46,7 @@
 # what is left does not move. Works on numeric or character matrices.
 .trim_rows_blank <- function(codes, rows) {
   if (is.null(rows)) return(codes)
-  stopifnot(
+  .assert(
     "the row half of `trim` must be a single positive number" =
       is.numeric(rows) && length(rows) == 1L && !is.na(rows) && rows > 0
   )
@@ -68,7 +69,7 @@
 .trim_cut <- function(codes, trim) {
   n_cols <- ncol(codes)
   if (is.null(trim)) return(n_cols)
-  stopifnot(is.numeric(trim), length(trim) == 1L, !is.na(trim), trim > 0)
+  .assert(is.numeric(trim), length(trim) == 1L, !is.na(trim), trim > 0)
   if (trim < 1) {
     pos <- col(codes)
     pos[is.na(codes)] <- 0L
@@ -100,7 +101,7 @@
 .trim_keep <- function(codes, trim) {
   n_cols <- ncol(codes)
   if (is.null(trim)) return(seq_len(n_cols))
-  stopifnot(is.numeric(trim), length(trim) == 1L, !is.na(trim), trim > 0)
+  .assert(is.numeric(trim), length(trim) == 1L, !is.na(trim), trim > 0)
   if (trim >= 1) return(seq_len(min(n_cols, as.integer(round(trim)))))
   keep <- which(unname(.keep_busiest(colSums(!is.na(codes)), trim)))
   if (length(keep) > 0L) keep else seq_len(min(1L, n_cols))
@@ -196,7 +197,7 @@
 # most ~15 labels are drawn.
 .tick_positions <- function(n_cols, tick, colnames_ = NULL) {
   by <- if (!is.null(tick)) {
-    stopifnot(is.numeric(tick), length(tick) == 1L, tick >= 1)
+    .assert(is.numeric(tick), length(tick) == 1L, tick >= 1)
     as.integer(tick)
   } else {
     max(1L, as.integer(ceiling(n_cols / 15)))
@@ -233,24 +234,29 @@
 #             .report_unused_colors().
 .state_palette <- function(user_colors, n_states, states = NULL) {
   if (is.null(user_colors)) return(rep_len(.okabe_ito, n_states))
-  stopifnot("`state_colors` must be a character vector of colours" =
+  .assert("`state_colors` must be a character vector of colours" =
               is.character(user_colors))
   # Half-named is ambiguous - the unnamed entries would be dropped without a
   # word - so it is rejected rather than half-honoured.
   nm <- names(user_colors)
   if (!is.null(nm) && any(nzchar(nm)) && !all(nzchar(nm))) {
-    stop("`state_colors` mixes named and unnamed colours. Name every colour ",
-         "(a lookup) or none of them (positional).", call. = FALSE)
+    stop(errorCondition(
+      paste0(
+        "`state_colors` mixes named and unnamed colours. Name every colour ",
+        "(a lookup) or none of them (positional)."),
+      class = "nestimate_bad_input", call = NULL))
   }
   if (!.is_named_colors(user_colors)) {
-    stopifnot("`state_colors` must supply at least one colour per state" =
+    .assert("`state_colors` must supply at least one colour per state" =
                 length(user_colors) >= n_states)
     return(unname(user_colors[seq_len(n_states)]))
   }
   if (is.null(states)) {
-    stop("Named `state_colors` needs the state names; this plot supplies ",
-         "only a count. Pass an unnamed vector of colours instead.",
-         call. = FALSE)
+    stop(errorCondition(
+      paste0(
+        "Named `state_colors` needs the state names; this plot supplies ",
+        "only a count. Pass an unnamed vector of colours instead."),
+      class = "nestimate_bad_input", call = NULL))
   }
   .fill_state_colors(states, user_colors)
 }

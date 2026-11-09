@@ -14,13 +14,16 @@ utils::globalVariables(c("time", "y", "key", "prop"))
 .mcml_seq_channels <- function(x, trim = NULL, expand = NULL, combine = NULL) {
   layers <- x$clusters
   if (is.null(layers) || !length(layers)) {
-    stop("mcml has no clusters to plot.", call. = FALSE)
+    stop(errorCondition("mcml has no clusters to plot.",
+      class = "nestimate_bad_input", call = NULL))
   }
   datas <- lapply(layers, function(z) z$data)
   if (any(vapply(datas, is.null, logical(1L)))) {
-    stop("This mcml carries no sequence data (built from a matrix). ",
-         "Multichannel sequence plots need an mcml built from sequences.",
-         call. = FALSE)
+    stop(errorCondition(
+      paste0(
+        "This mcml carries no sequence data (built from a matrix). ",
+        "Multichannel sequence plots need an mcml built from sequences."),
+      class = "nestimate_bad_input", call = NULL))
   }
   cluster_names <- names(layers)
   clusters <- lapply(layers, function(z) z$labels)
@@ -117,7 +120,7 @@ utils::globalVariables(c("time", "y", "key", "prop"))
     return(NULL)
   }
   groups <- if (is.list(combine)) combine else list(combine)
-  stopifnot(
+  .assert(
     "`combine` must be a character vector or a list of character vectors" =
       all(vapply(groups, is.character, logical(1L))),
     "each `combine` group must name at least two clusters" =
@@ -125,15 +128,17 @@ utils::globalVariables(c("time", "y", "key", "prop"))
   members <- unlist(groups, use.names = FALSE)
   unknown <- setdiff(members, cluster_names)
   if (length(unknown) > 0L) {
-    stop("Unknown cluster(s) in `combine`: ",
+    stop(errorCondition(paste0("Unknown cluster(s) in `combine`: ",
          paste(utils::head(unknown, 5L), collapse = ", "),
-         ". Available: ", paste(cluster_names, collapse = ", "),
-         call. = FALSE)
+         ". Available: ", paste(cluster_names, collapse = ", ")),
+      class = "nestimate_bad_input", call = NULL))
   }
   if (anyDuplicated(members) > 0L) {
-    stop("A cluster appears in more than one `combine` group: ",
-         paste(unique(members[duplicated(members)]), collapse = ", "),
-         call. = FALSE)
+    stop(errorCondition(
+      paste0(
+        "A cluster appears in more than one `combine` group: ",
+        paste(unique(members[duplicated(members)]), collapse = ", ")),
+      class = "nestimate_bad_input", call = NULL))
   }
   labels <- names(groups) %||% character(length(groups))
   missing <- !nzchar(labels)
@@ -141,8 +146,11 @@ utils::globalVariables(c("time", "y", "key", "prop"))
                             collapse = " + ")
   clash <- intersect(labels, setdiff(cluster_names, members))
   if (length(clash) > 0L) {
-    stop("`combine` label clashes with an existing cluster: ",
-         paste(clash, collapse = ", "), call. = FALSE)
+    stop(errorCondition(
+      paste0(
+        "`combine` label clashes with an existing cluster: ",
+        paste(clash, collapse = ", ")),
+      class = "nestimate_bad_input", call = NULL))
   }
   stats::setNames(groups, labels)
 }
@@ -156,14 +164,14 @@ utils::globalVariables(c("time", "y", "key", "prop"))
   if (isTRUE(expand) || identical(expand, "all")) {
     return(cluster_names)
   }
-  stopifnot("`expand` must be a character vector, TRUE, \"all\" or NULL" =
+  .assert("`expand` must be a character vector, TRUE, \"all\" or NULL" =
               is.character(expand))
   unknown <- setdiff(expand, cluster_names)
   if (length(unknown) > 0L) {
-    stop("Unknown cluster(s) in `expand`: ",
+    stop(errorCondition(paste0("Unknown cluster(s) in `expand`: ",
          paste(utils::head(unknown, 5L), collapse = ", "),
-         ". Available: ", paste(cluster_names, collapse = ", "),
-         call. = FALSE)
+         ". Available: ", paste(cluster_names, collapse = ", ")),
+      class = "nestimate_bad_input", call = NULL))
   }
   expand
 }
@@ -375,9 +383,11 @@ utils::globalVariables(c("time", "y", "key", "prop"))
 
 #' @rdname sequence_plot
 #' @section Methods:
-#' * \code{print.mcml_sequence_plot()}: Print method for the figure \code{\link{sequence_plot}} returns for an \code{mcml} with more than one channel: one panel per channel (the macro \code{Summary} and one per cluster), each with its own legend.
-#' @param ... In \code{print.mcml_sequence_plot()}: Ignored.
-#' @return In \code{print.mcml_sequence_plot()}: \code{x}, invisibly. Called for the side effect of drawing it on a new page of the current graphics device.
+#' * `print.mcml_sequence_plot()` draws the figure `sequence_plot()` returns
+#'   for an `mcml` with more than one channel (the macro `Summary` and one
+#'   panel per cluster, each with its own legend) on a new page of the
+#'   current graphics device.
+#' @param ... For the `print()` method: ignored.
 #' @export
 print.mcml_sequence_plot <- function(x, ...) {
   grid::grid.newpage()
@@ -502,20 +512,26 @@ print.mcml_sequence_plot <- function(x, ...) {
                                 combine = NULL, rest = "clusters", na = TRUE,
                                 rest_label = "Other states") {
   panel <- match.arg(panel, c("both", "summary", "channels"))
-  stopifnot("`rest_label` must be a single non-empty string" =
+  .assert("`rest_label` must be a single non-empty string" =
               is.character(rest_label) && length(rest_label) == 1L &&
               !is.na(rest_label) && nzchar(rest_label))
   ch   <- .mcml_seq_channels(x, trim, expand, combine)
   if (rest_label %in% c(ch$all_states, ch$cluster_names, ch$macro_keys, "NA")) {
-    stop("`rest_label` \"", rest_label, "\" is already a state or cluster ",
-         "name, or the reserved \"NA\" key.", call. = FALSE)
+    stop(errorCondition(
+      paste0(
+        "`rest_label` \"",
+        rest_label,
+        "\" is already a state or cluster ",
+        "name, or the reserved \"NA\" key."),
+      class = "nestimate_bad_input", call = NULL))
   }
   ch$rest_label <- rest_label
   .report_unused_colors(state_colors, .mcml_color_keys(ch))
   pals <- .mcml_seq_palettes(ch, state_colors)
   if (type %in% c("heatmap", "index")) {
     if (!identical(panel, "both")) {
-      stop("`panel` applies to type = \"distribution\".", call. = FALSE)
+      stop(errorCondition("`panel` applies to type = \"distribution\".",
+        class = "nestimate_bad_input", call = NULL))
     }
     return(.mcml_index_plot(ch, pals, main, time_label, rest = rest))
   }

@@ -16,66 +16,82 @@ as_htna(x, clusters = NULL, method = "relative", ...)
 \method{as_htna}{default}(x, clusters = NULL, method = "relative", ...)
 }
 \arguments{
-\item{x}{Data accepted by \code{\link{build_network}} (sequence data frame,
-edgelist, transition matrix, \code{netobject}, or \code{tna}); or an
-\code{mcml} object, which provides the node-cluster membership and, when
-it was built from wide sequence data, the retained source as well (see
-\code{data}); or a fitted
-\code{net_mmm} object, which is materialized into one HTNA per sequence
-cluster using its preserved actor partition.}
+\item{x}{The data, in any form \code{\link[=build_network]{build_network()}} accepts (a sequence data
+frame, an event log, an edge list, a transition matrix, a \code{netobject}
+or a \code{tna} model); or an \code{mcml} object, which provides the cluster
+membership and, when it was built from a wide sequence frame or an
+event log, the data as well (see \code{data}); or a \code{net_mmm} fitted by
+\code{\link[=cluster_mmm]{cluster_mmm()}} on an HTNA network, which is materialised into one HTNA
+per sequence cluster using its preserved actor partition.}
 
-\item{clusters}{Cluster assignment: a named list of node-name vectors, a
-per-node membership vector, or a two-column data frame. When \code{NULL}
-and \code{x} carries node groups (or is an \code{mcml}), those are used.}
+\item{clusters}{The cluster of each node: a named list of node-name
+vectors, a membership vector with one value per node (in the order of
+the built network's nodes, alphabetical for sequence data, or named by
+node), or a two-column data frame of node and cluster names. Default \code{NULL}, under which the
+node groups of the network (\code{node_groups} with \code{node} and \code{group}
+columns) or an \code{mcml}'s clusters are used; with neither, an error is
+raised. Every node must belong to a cluster, and unassigned nodes are
+named in an error. A fitted \code{net_mmm} takes no \code{clusters}: passing them
+raises an error.}
 
-\item{method}{Estimator passed to \code{\link{build_network}}. Default
-\code{"relative"} (row-normalized transitions).}
+\item{method}{The estimator passed to \code{\link[=build_network]{build_network()}}. Default
+\code{"relative"} (row-normalised transitions).}
 
-\item{...}{Further arguments forwarded to \code{\link{build_network}}
-(e.g. \code{actor}, \code{action}, \code{time} for long-format data).}
+\item{...}{Further arguments for \code{\link[=build_network]{build_network()}}, such as \code{actor},
+\code{action} and \code{time} for an event log. A \code{group} argument raises an
+error, because a single network is expected.}
 
-\item{data}{For the \code{mcml} method, the original data the mcml was built
-from (sequence/edgelist/etc.). Optional when the mcml was built from wide
-sequence data (long-format input counts, since \code{build_mcml()} widens
-it first): that source is stashed on the object, so
-\code{as_htna(mcml)} works on its own. Required for an mcml built from a
-matrix, an aggregate, or an edge list, none of which retain a usable
-node-level source.}
+\item{data}{For the \code{mcml} method: the original data the \code{mcml} was built
+from. Optional when it was built from a wide sequence frame, a
+character sequence matrix, or an event log (which
+\code{build_mcml()} turns into sequences first): that source is kept on the
+object, so \code{as_htna(mcml)} works on its own, except for an \code{mcml} built
+with \code{labels}, whose kept source holds the original state names (pass
+\code{clusters} with those names then). Required for
+an \code{mcml} built from a matrix, an edge list, a \code{netobject} or a \code{tna}
+model, which keep no usable node-level source; without it an error is
+raised. Default \code{NULL}.}
 }
 \value{
-For data and \code{mcml} inputs, a single \code{htna} (also a \code{netobject} and
-\code{cograph_network}) over all nodes. Cluster labels are stored as a
-factor in \code{$nodes$groups} and as character values in
-\code{$node_groups$group}; \code{$actor_levels} records their order and
-is also attached to \code{$node_groups} for lossless partition round trips.
-For compatibility, the result also retains \code{$nodes$cluster} and the
-membership in the \code{"cluster_members"} attribute. A fitted
-\code{net_mmm} returns an \code{htna_group}, one materialized HTNA network
-per sequence cluster, while preserving the MMM diagnostics.
+For data and \code{mcml} input, a single \code{htna} network (class
+\code{c("htna", "netobject", "cograph_network")}) over all nodes. Print it for
+an overview, call \code{\link[=summary]{summary()}} for its network metrics, and draw it with
+\code{cograph::plot_htna()}. The clusters are stored as a factor in the
+\code{groups} column of the node table and as character values in the
+\code{group} column of \code{node_groups}; \code{actor_levels} records their order and
+is also attached to \code{node_groups}, so the partition survives a round
+trip. For compatibility, the node table also keeps a \code{cluster} column,
+and the membership is kept in the \code{"cluster_members"} attribute. A
+fitted \code{net_mmm} returns an \code{htna_group}, one HTNA network per sequence
+cluster, with the MMM diagnostics kept; a \code{net_mmm} fitted on data
+without an HTNA actor partition raises an error.
 }
 \description{
-Builds the full node-level network from the original data and attaches a
-cluster grouping, producing a single \code{htna} network in which every actor
-is a node and cluster membership labels the actors. This is the node-level
-counterpart of \code{\link{build_mcml}}: where \code{build_mcml} collapses
-the network to a cluster-level (macro) summary, \code{as_htna} keeps every
-node and every transition - including the between-cluster transitions an
-mcml only retains in aggregate.
+\code{as_htna()} builds the full node-level network from the original data
+with \code{\link[=build_network]{build_network()}} and attaches a cluster to every node, returning a
+single \code{htna} network: every state is a node, and the clusters group the
+nodes. It is the node-level counterpart of \code{\link[=build_mcml]{build_mcml()}}: where
+\code{build_mcml()} collapses the network to a cluster-level (macro) summary,
+\code{as_htna()} keeps every node and every transition, including the
+between-cluster transitions an \code{mcml} keeps only in aggregate. It takes
+data with a clustering, an \code{mcml} (which supplies the clustering, and
+often the data), or a fitted \code{net_mmm}.
+
+The result is an ordinary \code{netobject}, so the inference verbs apply to it
+(\code{\link[=bootstrap_network]{bootstrap_network()}}, \code{\link[=net_centrality]{net_centrality()}}, \code{\link[=permutation]{permutation()}}), and
+cograph draws it as a grouped network:
+\code{cograph::plot_htna(as_htna(data, clusters))}.
 }
 \details{
-\strong{Why this rebuilds from data.} An \code{mcml} stores cluster-level
-data (the macro sequences are recoded to cluster labels, and the per-cluster
-data is filtered to within-cluster nodes), so it does not retain a faithful
-node-level transition network. The only faithful source of node-level
-between-cluster transitions is the original data. \code{as_htna()} therefore
-rebuilds from data via \code{\link{build_network}}; an \code{mcml} supplies
-the cluster membership and either its retained source or explicitly supplied
-original data supplies the transitions.
+\subsection{Why it rebuilds from data}{
 
-The result is a genuine \code{netobject}, so it supports inference
-(\code{\link{bootstrap_network}}, centrality, \code{\link{permutation}})
-and plots directly as a grouped network with cograph:
-\code{cograph::plot_htna(as_htna(data, clusters))}.
+It rebuilds from data because an \code{mcml} holds no faithful node-level
+network: its macro sequences are recoded to cluster labels, and its
+per-cluster data keep only that cluster's states, so the node-level
+transitions between clusters survive only in the original data. An
+\code{mcml} therefore supplies the cluster membership, and either the source
+it retained or the \code{data} passed supplies the transitions.
+}
 }
 \examples{
 seqs <- data.frame(
@@ -85,9 +101,7 @@ seqs <- data.frame(
 clusters <- list(C1 = c("A", "B"), C2 = c("C", "D"), C3 = c("E", "F"))
 net <- as_htna(seqs, clusters)
 net
-\dontrun{
-cograph::plot_htna(net)
-}
+if (requireNamespace("cograph", quietly = TRUE)) cograph::plot_htna(net)
 }
 \seealso{
 \code{\link{build_mcml}}, \code{\link{build_network}}; plot with

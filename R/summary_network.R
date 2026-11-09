@@ -19,7 +19,7 @@ summary.netobject <- function(object, ...) {
 #' @export
 summary.netobject_group <- function(object, combined = TRUE, ...) {
   stopifnot(inherits(object, "netobject_group"))
-  stopifnot(is.logical(combined), length(combined) == 1L)
+  .assert(is.logical(combined), length(combined) == 1L, !is.na(combined))
 
   per_group <- lapply(object, summary)
 
@@ -150,7 +150,6 @@ summary.netobject_group <- function(object, combined = TRUE, ...) {
 # ---- print methods ----
 
 #' @rdname build_network
-#' @return In \code{print.summary.netobject()}: \code{x}, invisibly.
 #' @export
 print.summary.netobject <- function(x, ...) {
   cat("Network metrics:\n")
@@ -172,7 +171,6 @@ print.summary.netobject <- function(x, ...) {
 }
 
 #' @rdname build_network
-#' @return In \code{print.summary.netobject_group()}: \code{x}, invisibly.
 #' @export
 print.summary.netobject_group <- function(x, ...) {
   if (isFALSE(attr(x, "combined"))) {

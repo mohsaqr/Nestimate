@@ -5,7 +5,7 @@
 \alias{print.cluster_choice}
 \alias{summary.cluster_choice}
 \alias{plot.cluster_choice}
-\title{Cluster Choice -- sweep k, dissimilarity and method}
+\title{Compare Clusterings Across k, Dissimilarity and Method}
 \usage{
 cluster_choice(
   data,
@@ -28,101 +28,127 @@ cluster_choice(
 )
 }
 \arguments{
-\item{data}{Sequence data (data frame or matrix) -- forwarded to
-\code{\link{build_clusters}}.}
+\item{data}{The sequences, passed to \code{\link[=build_clusters]{build_clusters()}} unchanged: any
+input it takes, such as a wide data frame of sequences or a network
+built from sequences.}
 
-\item{k}{Integer vector of cluster counts to sweep. Default
-\code{2:5}. Each value must be >= 2 and <= n - 1.}
+\item{k}{The cluster counts to try. Default \code{2:5}. Each must be a whole
+finite number, or an error is raised; \code{\link[=build_clusters]{build_clusters()}} also requires
+each to be at least 2 and at most the number of sequences minus 1.}
 
-\item{dissimilarity}{Character vector of dissimilarity metrics. Use
-\code{"all"} to expand to every supported metric:
-\code{c("hamming", "osa", "lv", "dl", "lcs", "qgram", "cosine",}
-\code{"jaccard", "jw")}. Default \code{"hamming"}.}
+\item{dissimilarity}{The dissimilarity measures to try. Default
+\code{"hamming"}. \code{"all"} expands to every supported measure: \code{"hamming"},
+\code{"osa"}, \code{"lv"}, \code{"dl"}, \code{"lcs"}, \code{"qgram"}, \code{"cosine"}, \code{"jaccard"}
+and \code{"jw"}, and may stand beside named ones (each is fitted once).}
 
-\item{method}{Character vector of clustering algorithms. Use
-\code{"all"} to expand to every supported method:
-\code{c("pam", "ward.D2", "ward.D", "complete", "average", "single",}
-\code{"mcquitty", "median", "centroid")}. Default \code{"ward.D2"}.}
+\item{method}{The clustering algorithms to try. Default \code{"ward.D2"}
+(where \code{\link[=build_clusters]{build_clusters()}} defaults to \code{"pam"}). \code{"all"} expands to every
+supported algorithm: \code{"pam"}, \code{"ward.D2"}, \code{"ward.D"}, \code{"complete"},
+\code{"average"}, \code{"single"}, \code{"mcquitty"}, \code{"median"} and \code{"centroid"}.}
 
-\item{...}{Other arguments forwarded to
-\code{\link{build_clusters}} (\code{weighted}, \code{lambda},
-\code{q}, \code{p}, \code{seed}, \code{na_syms}, \code{covariates},
-\code{estimator}).
-Note: \code{weighted = TRUE} only works with
-\code{dissimilarity = "hamming"} and is rejected up-front when
-sweeping mixed dissimilarities. In \code{plot.cluster_choice()}, \code{print.cluster_choice()} and \code{summary.cluster_choice()}: Unsupported. Supplying unused arguments raises an error.}
+\item{...}{Further arguments of \code{\link[=build_clusters]{build_clusters()}}, used for every
+combination: \code{weighted}, \code{lambda}, \code{q}, \code{p}, \code{seed}, \code{na_syms},
+\code{covariates} and \code{estimator}; any other name raises an error.
+\code{weighted = TRUE} works only with \code{dissimilarity = "hamming"} and is
+refused before any fit when the sweep holds another measure. The
+\code{print()}, \code{summary()} and \code{plot()} methods take no further arguments
+and raise an error on any.}
 
-\item{x}{For the \code{print()} and \code{plot()} methods: an object of class \code{cluster_choice}.}
+\item{x}{For the \code{print()} and \code{plot()} methods: a \code{cluster_choice}.}
 
-\item{digits}{Integer. Decimal places for floating-point columns. Default \code{3L}.}
+\item{digits}{For the \code{print()} method: the decimal places of the
+silhouette, within-cluster distance and size ratio. Default \code{3}. Must
+be a single non-negative whole number.}
 
-\item{object}{For the \code{summary()} method: an object of class \code{cluster_choice}.}
+\item{object}{For the \code{summary()} method: a \code{cluster_choice}.}
 
-\item{type}{Character. One of \code{"auto"} (default), \code{"lines"}, \code{"bars"}, \code{"heatmap"}, \code{"tradeoff"}, \code{"facet"}.}
+\item{type}{For the \code{plot()} method: the kind of plot, one of \code{"auto"}
+(default), \code{"lines"}, \code{"bars"}, \code{"heatmap"}, \code{"tradeoff"} and
+\code{"facet"} (see \emph{Plot types}). A type the sweep cannot support raises
+an error that names the alternatives.}
 
-\item{abbrev}{Logical. If \code{TRUE}, dissimilarity and method names shown on tick labels and point labels are shortened (e.g. \code{"hamming"} -> \code{"ham"}, \code{"ward.D2"} -> \code{"wD2"}). The legend shows the full canonical name. Default \code{FALSE}.}
+\item{abbrev}{For the \code{plot()} method: whether to shorten the
+dissimilarity and method names (e.g. \code{"hamming"} to \code{"ham"},
+\code{"ward.D2"} to \code{"wD2"}) on the axes, point labels and legend. Default
+\code{FALSE}.}
 
-\item{combined}{Only meaningful for \code{type = "facet"}. When \code{TRUE} (default), all methods are shown in one ggplot via \code{facet_wrap(~ method)}. When \code{FALSE}, returns a named list of single-panel ggplots, one per method.}
+\item{combined}{For \code{plot(type = "facet")}: \code{TRUE} (default) draws one
+panel per method in a single plot; \code{FALSE} returns a named list of
+one-method plots instead. Ignored by the other types, but must still
+be a single logical value.}
 }
 \value{
-A \code{cluster_choice} object (a data.frame subclass) with
-one row per (k, dissimilarity, method) combination and columns:
+A \code{cluster_choice} (a data frame subclass) with one row per
+combination, \code{k} varying fastest, then \code{dissimilarity}, then \code{method}.
+\code{print()} shows the table, with only the settings that vary as columns,
+and flags the row with the highest silhouette in a \code{best} column;
+\code{summary()} returns the full table as a plain data frame with a
+character \code{best} column that holds \code{"silhouette"} on that row;
+\code{plot()} draws the silhouette across the swept settings (see \emph{Plot
+types}) and returns the \code{ggplot} invisibly (with \code{type = "facet"} and
+\code{combined = FALSE}, a named list of \code{ggplot}s, returned invisibly and
+not drawn). The \code{print()} method returns its input invisibly. The
+columns:
 \describe{
-\item{k, dissimilarity, method}{The configuration for that row.}
-\item{silhouette}{Overall average silhouette width (from
-\code{cluster::silhouette}, computed inside
-\code{\link{build_clusters}}).}
-\item{mean_within_dist}{Size-weighted mean of within-cluster
-distances, in the units of the row's dissimilarity.}
-\item{min_size, max_size, size_ratio}{Cluster-size balance bounds
-and their ratio (\code{max / min}).}
+\item{k, dissimilarity, method}{The configuration of the row.}
+\item{silhouette}{The average silhouette width over all sequences,
+computed by \code{\link[=build_clusters]{build_clusters()}} (from \code{cluster::pam()} for
+\code{"pam"}, with \code{cluster::silhouette()} otherwise).}
+\item{mean_within_dist}{The mean distance between members of the
+same cluster, averaged over clusters weighted by their size (a
+one-member cluster counts as 0), in the units of the row's
+dissimilarity.}
+\item{min_size, max_size, size_ratio}{The sizes of the smallest and
+the largest cluster, and their ratio \code{max_size / min_size}.}
 }
-
-In \code{print.cluster_choice()}: The input object, invisibly.
-
-In \code{summary.cluster_choice()}: A data frame with the swept configurations, all metrics, and a \code{best} character column flagging the silhouette-max row.
-
-In \code{plot.cluster_choice()}: A \code{ggplot} object, invisibly; for \code{type = "facet"} with \code{combined = FALSE}, a named list of ggplots.
 }
 \description{
-One-call sweep across any combination of k, dissimilarity metric, and
-clustering algorithm for distance-based sequence clustering. Mirrors
-\code{\link{compare_mmm}} for model-based clustering: returns a data
-frame with one row per swept configuration, a \code{best} marker on
-the silhouette-max row in the print method, and a \code{plot()} that
-adapts to the swept axes.
-}
-\section{Methods}{
+\code{cluster_choice()} clusters the same sequences under every combination of
+the cluster counts, dissimilarities and algorithms given, each with
+\code{\link[=build_clusters]{build_clusters()}}, and returns one row per combination with its average
+silhouette width, mean within-cluster distance and cluster-size balance.
+It is the distance-based counterpart of \code{\link[=compare_mmm]{compare_mmm()}}, which compares
+mixtures of Markov chains across k. \code{"all"} expands \code{dissimilarity} or
+\code{method} to every supported option.
 
-\itemize{
-\item \code{plot.cluster_choice()}: Six explicit chart types plus a smart \code{"auto"} default. The user picks the shape; the function does not editorialise (no "best" annotation, no interpretive subtitles, no inferred recommendation).
+The silhouette of a sequence (Rousseeuw, 1987) compares its mean distance
+to its own cluster with that to the nearest other cluster: near 1 it sits
+well inside its cluster, near 0 between two, and below 0 it is closer to
+another cluster. Rows that share a dissimilarity compare k and algorithms
+on one distance scale; across dissimilarities the silhouettes and
+within-cluster distances rest on different distances and compare less
+directly. The row with the highest silhouette is marked, but that is not
+a decision: also weigh the cluster sizes (\code{min_size}, \code{size_ratio}), as
+a high silhouette can come with a cluster of very few sequences; then
+fit the chosen configuration with \code{\link[=build_clusters]{build_clusters()}} and read it with its
+\code{summary()}, \code{plot()} and \code{\link[=cluster_diagnostics]{cluster_diagnostics()}}.
 }
-}
-
 \section{Plot types}{
 
-Type cheat-sheet:
+The plots show the values only: they carry no "best" marker and no
+recommendation. \code{plot()} needs at least one swept setting.
 \describe{
-\item{\code{"auto"}}{Default. Picks one of the others based on which
-axes were swept. k-only -> \code{"lines"}; one categorical axis
-swept -> \code{"bars"}; k plus one categorical -> \code{"lines"};
-k plus two categoricals -> \code{"facet"}; both categoricals
-without k -> \code{"heatmap"}.}
-\item{\code{"lines"}}{Silhouette across k (and \code{mean_within_dist}
-when \code{k} is the only swept axis), one line per non-k axis
-when present.}
-\item{\code{"bars"}}{Horizontal bar chart of silhouette per axis
-level. Bars sorted by silhouette.}
-\item{\code{"heatmap"}}{Tiled silhouette across two categorical
-axes. Requires both \code{dissimilarity} and \code{method} swept.}
-\item{\code{"tradeoff"}}{Scatter: silhouette (y) vs \code{size_ratio}
-(x). Works for any sweep; labels each point.}
-\item{\code{"facet"}}{Lines vs k, colour by one categorical axis,
-facet by another. Requires \code{k} plus two categoricals.}
+\item{\code{"auto"}}{The default. Picks a type from the swept settings:
+\code{"lines"} when k is swept with at most one other setting, \code{"bars"}
+when only \code{dissimilarity} or only \code{method} is swept, \code{"heatmap"}
+when both are swept at a single k, and \code{"facet"} when all three are
+swept.}
+\item{\code{"lines"}}{The silhouette across k, one line per value of the
+other swept setting. When only k is swept, \code{mean_within_dist} is
+drawn as a second line on the same axis. With all three swept, the
+lines follow \code{dissimilarity} and the methods share them; use
+\code{"facet"} instead. Needs k swept.}
+\item{\code{"bars"}}{Horizontal bars of the silhouette per value of the
+swept setting, or per combination when several are swept, sorted by
+silhouette, with the values printed.}
+\item{\code{"heatmap"}}{Tiles of the silhouette over \code{dissimilarity} and
+\code{method}, with the values printed. Needs both swept, and is meant
+for a single k.}
+\item{\code{"tradeoff"}}{The silhouette against \code{size_ratio}, each point
+labelled with its swept settings.}
+\item{\code{"facet"}}{The silhouette across k, one line per dissimilarity
+and one panel per method. Needs all three swept.}
 }
-
-Asking for a type the data can't support raises an error pointing at
-the alternatives.
 }
 
 \examples{

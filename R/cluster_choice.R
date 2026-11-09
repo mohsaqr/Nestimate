@@ -12,45 +12,72 @@
 # same lower.tri block used in summary.net_clustering.
 # ==============================================================================
 
-#' Cluster Choice -- sweep k, dissimilarity and method
+#' Compare Clusterings Across k, Dissimilarity and Method
 #'
-#' One-call sweep across any combination of k, dissimilarity metric, and
-#' clustering algorithm for distance-based sequence clustering. Mirrors
-#' \code{\link{compare_mmm}} for model-based clustering: returns a data
-#' frame with one row per swept configuration, a \code{best} marker on
-#' the silhouette-max row in the print method, and a \code{plot()} that
-#' adapts to the swept axes.
+#' @description
+#' `cluster_choice()` clusters the same sequences under every combination of
+#' the cluster counts, dissimilarities and algorithms given, each with
+#' [build_clusters()], and returns one row per combination with its average
+#' silhouette width, mean within-cluster distance and cluster-size balance.
+#' It is the distance-based counterpart of [compare_mmm()], which compares
+#' mixtures of Markov chains across k. `"all"` expands `dissimilarity` or
+#' `method` to every supported option.
 #'
-#' @param data Sequence data (data frame or matrix) -- forwarded to
-#'   \code{\link{build_clusters}}.
-#' @param k Integer vector of cluster counts to sweep. Default
-#'   \code{2:5}. Each value must be >= 2 and <= n - 1.
-#' @param dissimilarity Character vector of dissimilarity metrics. Use
-#'   \code{"all"} to expand to every supported metric:
-#'   \code{c("hamming", "osa", "lv", "dl", "lcs", "qgram", "cosine",}
-#'   \code{"jaccard", "jw")}. Default \code{"hamming"}.
-#' @param method Character vector of clustering algorithms. Use
-#'   \code{"all"} to expand to every supported method:
-#'   \code{c("pam", "ward.D2", "ward.D", "complete", "average", "single",}
-#'   \code{"mcquitty", "median", "centroid")}. Default \code{"ward.D2"}.
-#' @param ... Other arguments forwarded to
-#'   \code{\link{build_clusters}} (\code{weighted}, \code{lambda},
-#'   \code{q}, \code{p}, \code{seed}, \code{na_syms}, \code{covariates},
-#'   \code{estimator}).
-#'   Note: \code{weighted = TRUE} only works with
-#'   \code{dissimilarity = "hamming"} and is rejected up-front when
-#'   sweeping mixed dissimilarities. In \code{plot.cluster_choice()}, \code{print.cluster_choice()} and \code{summary.cluster_choice()}: Unsupported. Supplying unused arguments raises an error.
-#' @return A \code{cluster_choice} object (a data.frame subclass) with
-#'   one row per (k, dissimilarity, method) combination and columns:
+#' The silhouette of a sequence (Rousseeuw, 1987) compares its mean distance
+#' to its own cluster with that to the nearest other cluster: near 1 it sits
+#' well inside its cluster, near 0 between two, and below 0 it is closer to
+#' another cluster. Rows that share a dissimilarity compare k and algorithms
+#' on one distance scale; across dissimilarities the silhouettes and
+#' within-cluster distances rest on different distances and compare less
+#' directly. The row with the highest silhouette is marked, but that is not
+#' a decision: also weigh the cluster sizes (`min_size`, `size_ratio`), as
+#' a high silhouette can come with a cluster of very few sequences; then
+#' fit the chosen configuration with [build_clusters()] and read it with its
+#' `summary()`, `plot()` and [cluster_diagnostics()].
+#'
+#' @param data The sequences, passed to [build_clusters()] unchanged: any
+#'   input it takes, such as a wide data frame of sequences or a network
+#'   built from sequences.
+#' @param k The cluster counts to try. Default `2:5`. Each must be a whole
+#'   finite number, or an error is raised; [build_clusters()] also requires
+#'   each to be at least 2 and at most the number of sequences minus 1.
+#' @param dissimilarity The dissimilarity measures to try. Default
+#'   `"hamming"`. `"all"` expands to every supported measure: `"hamming"`,
+#'   `"osa"`, `"lv"`, `"dl"`, `"lcs"`, `"qgram"`, `"cosine"`, `"jaccard"`
+#'   and `"jw"`, and may stand beside named ones (each is fitted once).
+#' @param method The clustering algorithms to try. Default `"ward.D2"`
+#'   (where [build_clusters()] defaults to `"pam"`). `"all"` expands to every
+#'   supported algorithm: `"pam"`, `"ward.D2"`, `"ward.D"`, `"complete"`,
+#'   `"average"`, `"single"`, `"mcquitty"`, `"median"` and `"centroid"`.
+#' @param ... Further arguments of [build_clusters()], used for every
+#'   combination: `weighted`, `lambda`, `q`, `p`, `seed`, `na_syms`,
+#'   `covariates` and `estimator`; any other name raises an error.
+#'   `weighted = TRUE` works only with `dissimilarity = "hamming"` and is
+#'   refused before any fit when the sweep holds another measure. The
+#'   `print()`, `summary()` and `plot()` methods take no further arguments
+#'   and raise an error on any.
+#' @return A `cluster_choice` (a data frame subclass) with one row per
+#'   combination, `k` varying fastest, then `dissimilarity`, then `method`.
+#'   `print()` shows the table, with only the settings that vary as columns,
+#'   and flags the row with the highest silhouette in a `best` column;
+#'   `summary()` returns the full table as a plain data frame with a
+#'   character `best` column that holds `"silhouette"` on that row;
+#'   `plot()` draws the silhouette across the swept settings (see *Plot
+#'   types*) and returns the `ggplot` invisibly (with `type = "facet"` and
+#'   `combined = FALSE`, a named list of `ggplot`s, returned invisibly and
+#'   not drawn). The `print()` method returns its input invisibly. The
+#'   columns:
 #'   \describe{
-#'     \item{k, dissimilarity, method}{The configuration for that row.}
-#'     \item{silhouette}{Overall average silhouette width (from
-#'       \code{cluster::silhouette}, computed inside
-#'       \code{\link{build_clusters}}).}
-#'     \item{mean_within_dist}{Size-weighted mean of within-cluster
-#'       distances, in the units of the row's dissimilarity.}
-#'     \item{min_size, max_size, size_ratio}{Cluster-size balance bounds
-#'       and their ratio (\code{max / min}).}
+#'     \item{k, dissimilarity, method}{The configuration of the row.}
+#'     \item{silhouette}{The average silhouette width over all sequences,
+#'       computed by [build_clusters()] (from `cluster::pam()` for
+#'       `"pam"`, with `cluster::silhouette()` otherwise).}
+#'     \item{mean_within_dist}{The mean distance between members of the
+#'       same cluster, averaged over clusters weighted by their size (a
+#'       one-member cluster counts as 0), in the units of the row's
+#'       dissimilarity.}
+#'     \item{min_size, max_size, size_ratio}{The sizes of the smallest and
+#'       the largest cluster, and their ratio `max_size / min_size`.}
 #'   }
 #' @seealso \code{\link{build_clusters}}, \code{\link{compare_mmm}} for
 #'   the model-based equivalent, \code{\link{cluster_diagnostics}} for
@@ -87,8 +114,9 @@ cluster_choice <- function(data,
                                 "method")
   if (!is.numeric(k) || !length(k) || any(!is.finite(k)) ||
       any(k != floor(k))) {
-    stop("'k' must be a non-empty vector of whole finite numbers.",
-         call. = FALSE)
+    stop(errorCondition(
+      "'k' must be a non-empty vector of whole finite numbers.",
+      class = "nestimate_bad_input", call = NULL))
   }
   k             <- as.integer(k)
 
@@ -96,9 +124,13 @@ cluster_choice <- function(data,
   dots <- list(...)
   if (isTRUE(dots$weighted) &&
       any(dissimilarity != "hamming")) {
-    stop("weighted = TRUE requires dissimilarity = \"hamming\". ",
-         "Got: ", paste(dissimilarity, collapse = ", "), ".",
-         call. = FALSE)
+    stop(errorCondition(
+      paste0(
+        "weighted = TRUE requires dissimilarity = \"hamming\". ",
+        "Got: ",
+        paste(dissimilarity, collapse = ", "),
+        "."),
+      class = "nestimate_bad_input", call = NULL))
   }
 
   # ---- Build the cartesian-product grid ------------------------------
@@ -147,7 +179,9 @@ cluster_choice <- function(data,
     values <- unique(c(values[values != "all"], full))
   }
   if (!length(values)) {
-    stop("'", name, "' is empty.", call. = FALSE)
+    stop(errorCondition(
+      paste0("'", name, "' is empty."),
+      class = "nestimate_bad_input", call = NULL))
   }
   values
 }
@@ -181,15 +215,23 @@ cluster_choice <- function(data,
 # ---------------------------------------------------------------------------
 
 #' @rdname cluster_choice
-#' @param x For the \code{print()} and \code{plot()} methods: an object of class \code{cluster_choice}.
-#' @param digits Integer. Decimal places for floating-point columns. Default \code{3L}.
-#' @param object For the \code{summary()} method: an object of class \code{cluster_choice}.
-#' @param type Character. One of \code{"auto"} (default), \code{"lines"}, \code{"bars"}, \code{"heatmap"}, \code{"tradeoff"}, \code{"facet"}.
-#' @param abbrev Logical. If \code{TRUE}, dissimilarity and method names shown on tick labels and point labels are shortened (e.g. \code{"hamming"} -> \code{"ham"}, \code{"ward.D2"} -> \code{"wD2"}). The legend shows the full canonical name. Default \code{FALSE}.
-#' @param combined Only meaningful for \code{type = "facet"}. When \code{TRUE} (default), all methods are shown in one ggplot via \code{facet_wrap(~ method)}. When \code{FALSE}, returns a named list of single-panel ggplots, one per method.
-#' @return In \code{print.cluster_choice()}: The input object, invisibly.
-#' @return In \code{summary.cluster_choice()}: A data frame with the swept configurations, all metrics, and a \code{best} character column flagging the silhouette-max row.
-#' @return In \code{plot.cluster_choice()}: A \code{ggplot} object, invisibly; for \code{type = "facet"} with \code{combined = FALSE}, a named list of ggplots.
+#' @param x For the `print()` and `plot()` methods: a `cluster_choice`.
+#' @param digits For the `print()` method: the decimal places of the
+#'   silhouette, within-cluster distance and size ratio. Default `3`. Must
+#'   be a single non-negative whole number.
+#' @param object For the `summary()` method: a `cluster_choice`.
+#' @param type For the `plot()` method: the kind of plot, one of `"auto"`
+#'   (default), `"lines"`, `"bars"`, `"heatmap"`, `"tradeoff"` and
+#'   `"facet"` (see *Plot types*). A type the sweep cannot support raises
+#'   an error that names the alternatives.
+#' @param abbrev For the `plot()` method: whether to shorten the
+#'   dissimilarity and method names (e.g. `"hamming"` to `"ham"`,
+#'   `"ward.D2"` to `"wD2"`) on the axes, point labels and legend. Default
+#'   `FALSE`.
+#' @param combined For `plot(type = "facet")`: `TRUE` (default) draws one
+#'   panel per method in a single plot; `FALSE` returns a named list of
+#'   one-method plots instead. Ignored by the other types, but must still
+#'   be a single logical value.
 #' @export
 print.cluster_choice <- function(x, digits = 3L, ...) {
   .cluster_choice_check_unused_dots("print.cluster_choice", ...)
@@ -276,31 +318,31 @@ summary.cluster_choice <- function(object, ...) {
 }
 
 #' @rdname cluster_choice
-#' @section Methods:
-#' * \code{plot.cluster_choice()}: Six explicit chart types plus a smart \code{"auto"} default. The user picks the shape; the function does not editorialise (no "best" annotation, no interpretive subtitles, no inferred recommendation).
 #' @section Plot types:
-#' Type cheat-sheet:
+#' The plots show the values only: they carry no "best" marker and no
+#' recommendation. `plot()` needs at least one swept setting.
 #' \describe{
-#'   \item{\code{"auto"}}{Default. Picks one of the others based on which
-#'     axes were swept. k-only -> \code{"lines"}; one categorical axis
-#'     swept -> \code{"bars"}; k plus one categorical -> \code{"lines"};
-#'     k plus two categoricals -> \code{"facet"}; both categoricals
-#'     without k -> \code{"heatmap"}.}
-#'   \item{\code{"lines"}}{Silhouette across k (and \code{mean_within_dist}
-#'     when \code{k} is the only swept axis), one line per non-k axis
-#'     when present.}
-#'   \item{\code{"bars"}}{Horizontal bar chart of silhouette per axis
-#'     level. Bars sorted by silhouette.}
-#'   \item{\code{"heatmap"}}{Tiled silhouette across two categorical
-#'     axes. Requires both \code{dissimilarity} and \code{method} swept.}
-#'   \item{\code{"tradeoff"}}{Scatter: silhouette (y) vs \code{size_ratio}
-#'     (x). Works for any sweep; labels each point.}
-#'   \item{\code{"facet"}}{Lines vs k, colour by one categorical axis,
-#'     facet by another. Requires \code{k} plus two categoricals.}
+#'   \item{`"auto"`}{The default. Picks a type from the swept settings:
+#'     `"lines"` when k is swept with at most one other setting, `"bars"`
+#'     when only `dissimilarity` or only `method` is swept, `"heatmap"`
+#'     when both are swept at a single k, and `"facet"` when all three are
+#'     swept.}
+#'   \item{`"lines"`}{The silhouette across k, one line per value of the
+#'     other swept setting. When only k is swept, `mean_within_dist` is
+#'     drawn as a second line on the same axis. With all three swept, the
+#'     lines follow `dissimilarity` and the methods share them; use
+#'     `"facet"` instead. Needs k swept.}
+#'   \item{`"bars"`}{Horizontal bars of the silhouette per value of the
+#'     swept setting, or per combination when several are swept, sorted by
+#'     silhouette, with the values printed.}
+#'   \item{`"heatmap"`}{Tiles of the silhouette over `dissimilarity` and
+#'     `method`, with the values printed. Needs both swept, and is meant
+#'     for a single k.}
+#'   \item{`"tradeoff"`}{The silhouette against `size_ratio`, each point
+#'     labelled with its swept settings.}
+#'   \item{`"facet"`}{The silhouette across k, one line per dissimilarity
+#'     and one panel per method. Needs all three swept.}
 #' }
-#' 
-#' Asking for a type the data can't support raises an error pointing at
-#' the alternatives.
 #' @export
 plot.cluster_choice <- function(x,
                                  type   = c("auto", "lines", "bars",
@@ -311,9 +353,11 @@ plot.cluster_choice <- function(x,
                                  ...) {
   .cluster_choice_check_unused_dots("plot.cluster_choice", ...)
   if (!is.logical(abbrev) || length(abbrev) != 1L || is.na(abbrev)) {
-    stop("'abbrev' must be TRUE or FALSE.", call. = FALSE)
+    stop(errorCondition(
+      "'abbrev' must be TRUE or FALSE.",
+      class = "nestimate_bad_input", call = NULL))
   }
-  stopifnot(is.logical(combined), length(combined) == 1L)
+  .assert(is.logical(combined), length(combined) == 1L, !is.na(combined))
   if (!requireNamespace("ggplot2", quietly = TRUE)) { # nocov start
     stop("Package 'ggplot2' required.", call. = FALSE)
   } # nocov end
@@ -359,11 +403,11 @@ plot.cluster_choice <- function(x,
   }
   dot_names <- names(dots)
   dot_names[!nzchar(dot_names)] <- paste0("..", which(!nzchar(dot_names)))
-  stop(
+  stop(errorCondition(paste0(
     method, "() got unsupported argument",
     if (length(dots) == 1L) ": " else "s: ",
-    paste(dot_names, collapse = ", "),
-    call. = FALSE
+    paste(dot_names, collapse = ", ")),
+    class = "nestimate_bad_input", call = NULL)
   )
 }
 
@@ -371,8 +415,9 @@ plot.cluster_choice <- function(x,
 .cluster_choice_check_digits <- function(digits) {
   if (!is.numeric(digits) || length(digits) != 1L ||
       !is.finite(digits) || digits != floor(digits) || digits < 0L) {
-    stop("'digits' must be a single non-negative whole finite number.",
-         call. = FALSE)
+    stop(errorCondition(
+      "'digits' must be a single non-negative whole finite number.",
+      class = "nestimate_bad_input", call = NULL))
   }
   invisible(TRUE)
 }
@@ -393,7 +438,9 @@ plot.cluster_choice <- function(x,
 
 #' @noRd
 .require_type_supported <- function(type, swept) {
-  msg <- function(...) stop(..., call. = FALSE)
+  msg <- function(...) stop(errorCondition(
+    paste0(...),
+    class = "nestimate_bad_input", call = NULL))
   switch(type,
          lines = if (!("k" %in% swept))
            msg("type = \"lines\" requires k to be swept (length > 1). ",

@@ -16,47 +16,61 @@ predictability(object, ...)
 \method{predictability}{netobject_group}(object, ...)
 }
 \arguments{
-\item{object}{A \code{netobject}, \code{netobject_ml}, or
-\code{netobject_group} object.}
+\item{object}{The network: a \code{netobject} estimated with \code{method = "glasso"}, \code{"pcor"} or \code{"cor"}, or a \code{netobject_ml} or \code{netobject_group}
+of them. A network from any other method raises an error.}
 
-\item{...}{Additional arguments (ignored).}
+\item{...}{Not used.}
 
-\item{data}{Optional data frame of the original variables used to estimate
-the network. R\eqn{^2} never needs it (it comes from the precision or
-correlation matrix stored on the object). It is used only for the
-\code{RMSE} column and defaults to \code{object$data}; when neither is
-available \code{RMSE} is \code{NA}.}
+\item{data}{The variables the network was estimated from, used only for
+the \code{RMSE} column; R\eqn{^2} comes from the matrices stored on the
+network. Its columns are matched by node label or, failing that, by
+node name. Default \code{NULL}, which uses the data stored on the network;
+without either, or when the columns do not match, \code{RMSE} is \code{NA}. The
+\code{netobject_ml} and \code{netobject_group} methods take no \code{data} (one passed
+to them is ignored) and use each network's own.}
 }
 \value{
-For \code{netobject}: a data frame with one row per node and columns
-\code{node} (character), \code{R2} (numeric, between 0 and 1) and
-\code{RMSE} (numeric, \code{NA} when no data is available).
-
-For \code{netobject_ml}: a list with elements \code{$between} and
-\code{$within}, each such a data frame.
-
-For \code{netobject_group}: a named list of such data frames, one per
-group.
-
-A data frame with one row per node and columns \code{node},
-\code{R2} and \code{RMSE}.
-
-A list with \code{between} and \code{within} predictability data
-frames.
-
-A named list of per-group predictability data frames.
+A data frame with one row per node and the columns \code{node} (the
+node label), \code{R2} (between 0 and 1) and \code{RMSE} (\code{NA} when no data is
+available). A \code{netobject_ml} gives a list of two such data frames,
+\code{between} and \code{within}, and a \code{netobject_group} a named list of them,
+one per group.
 }
 \description{
-Computes the proportion of variance explained (R\eqn{^2}) for each node in
-the network, following Haslbeck & Waldorp (2018).
+\code{predictability()} computes how well each node of an association network
+is predicted by the others: the proportion of its variance explained
+(R\eqn{^2}), with the root mean squared error (RMSE) of that prediction,
+following Haslbeck & Waldorp (2018). It reads networks estimated with
+\code{method = "glasso"}, \code{"pcor"} or \code{"cor"}, single, multilevel
+(\code{netobject_ml}) or grouped (\code{netobject_group}). \code{\link[=build_network]{build_network()}}
+stores the same R\eqn{^2} values on these networks when
+\code{predictability = TRUE} (the default), and \code{cograph::splot()} draws them
+as a ring around each node.
 
-For \code{method = "glasso"} or \code{"pcor"}, predictability is computed
-analytically from the precision matrix:
+R\eqn{^2} says how much of a node's variance its connections in the
+network account for; a low value leaves most of it to variables outside
+the network or to noise. It is computed from the matrices estimated on
+the sample, so it describes that sample. For \code{"glasso"} it reflects the
+regularised estimate, and for \code{"cor"} it depends on which edges survive
+\code{threshold}.
+}
+\details{
+For \code{"glasso"} and \code{"pcor"}, R\eqn{^2} comes from the estimated precision
+matrix \eqn{\Omega} (the inverse of the correlation matrix, regularised
+for \code{"glasso"}):
 \deqn{R^2_j = 1 - 1 / \Omega_{jj}}
-where \eqn{\Omega} is the precision (inverse correlation) matrix.
+For \code{"cor"}, it is the multiple R\eqn{^2} of each node regressed on its
+neighbours (the nodes it shares a non-zero edge with), computed from the
+stored correlation matrix: 0 for a node without neighbours, the squared
+correlation for a node with one. Values are clipped to [0, 1].
 
-For \code{method = "cor"}, predictability is the multiple R\eqn{^2} from
-regressing each node on its network neighbors (nodes with non-zero edges).
+RMSE predicts each standardised variable from the others (for \code{"cor"},
+from its neighbours) with the regression weights implied by the same
+matrix, on the complete rows of the data, and reports the error on the
+variable's original scale. For \code{"cor"}, a node without neighbours has an
+RMSE equal to its standard deviation (prediction by the mean), and a
+singular correlation block of its neighbours gives an R\eqn{^2} of 0 and
+an RMSE of \code{NA}.
 }
 \examples{
 set.seed(42)

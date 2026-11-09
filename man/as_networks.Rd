@@ -13,37 +13,32 @@ as_networks(x)
 \method{as_networks}{default}(x)
 }
 \arguments{
-\item{x}{An object to convert. The \code{mcml_pc} method (from
-\code{\link{build_mcml_pc}}) is the primary path.}
+\item{x}{The object to convert: an \code{mcml_pc} fit from \code{\link[=build_mcml_pc]{build_mcml_pc()}},
+or a \code{netobject_group}, which is returned unchanged. Any other object
+raises an error.}
 }
 \value{
-A \code{netobject_group}: a named list whose first element is
-\code{macro} (the cluster-level network), followed by one netobject per
-non-singleton cluster.
-
-The \code{mcml_pc} method returns a \code{netobject_group};
-singleton clusters (no within-network) are dropped with a
-\code{warning()}.
-
-The default method returns the input unchanged if it is already a
-\code{netobject_group}, otherwise it errors.
+A \code{netobject_group}, read by \code{print()}, \code{summary()} and
+\code{\link[=net_centrality]{net_centrality()}} and drawn by \code{cograph::splot()}: a named list whose
+first element, \code{macro}, is the cluster-level network, followed by one
+netobject per cluster with more than one member. A singleton cluster has no within-cluster network
+and is left out, with a warning naming it.
 }
 \description{
-\code{as_networks()} is the psychometric-network counterpart of
-\code{\link{as_tna}}. It promotes the cluster-level (macro) and
-within-cluster networks produced by \code{\link{build_mcml_pc}} into a
-single \code{netobject_group}, so the result flows into the same
-downstream verbs as any other group of networks (\code{print()},
-\code{summary()}, \code{plot()}, \code{\link{net_centrality}}).
-}
-\details{
-Where \code{as_tna()} promotes \emph{transition} networks (directed,
-row-normalised, with initial probabilities) and re-wraps raw matrices,
-\code{as_networks()} promotes \emph{psychometric} networks (undirected;
-correlation / partial-correlation / glasso). The macro and within-cluster
-components of an \code{mcml_pc} object are already full netobjects carrying
-their estimator, directedness and data, so this function assembles them
-into a group rather than re-wrapping matrices.
+\code{as_networks()} gathers the cluster-level (macro) network and the
+within-cluster networks of a \code{\link[=build_mcml_pc]{build_mcml_pc()}} fit into one
+\code{netobject_group}, so they go through the same verbs as any other group of
+networks: \code{print()}, \code{summary()}, \code{\link[=net_centrality]{net_centrality()}}, and
+\code{cograph::splot()} for drawing. It is the psychometric-network
+counterpart of \code{\link[=as_tna]{as_tna()}}.
+
+\code{\link[=as_tna]{as_tna()}} converts \emph{transition} networks (directed, row-normalised,
+with initial probabilities) and re-wraps raw matrices. The macro and
+within-cluster networks of an \code{mcml_pc} object are already full
+netobjects of \emph{psychometric} networks (undirected; correlation,
+partial correlation or glasso) carrying their estimator and directedness,
+and their data when they were re-estimated, so \code{as_networks()} only
+assembles them into a group.
 }
 \examples{
 set.seed(1)

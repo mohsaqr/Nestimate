@@ -248,3 +248,16 @@ test_that("a subset with a constant edge vector counts against the certainty", {
   expect_true(anyNA(res$correlations))
   expect_equal(res$cs, 0)
 })
+
+test_that("casedrop CS does not depend on the order of drop_prop", {
+  net <- build_network(group_regulation_long, method = "relative",
+                       action = "Action", actor = "Actor", time = "Time")
+  a <- casedrop_reliability(net, drop_prop = c(0.1, 0.3, 0.5), iter = 10L,
+                            seed = 1)
+  b <- casedrop_reliability(net, drop_prop = c(0.5, 0.1, 0.3), iter = 10L,
+                            seed = 1)
+  passing <- c(0.1, 0.3, 0.5)[colMeans(a$correlations >= a$threshold,
+                                       na.rm = FALSE) >= a$certainty]
+  expect_equal(a$cs, max(c(0, passing)))
+  expect_equal(b$cs, a$cs)
+})

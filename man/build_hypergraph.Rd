@@ -21,82 +21,103 @@ build_hypergraph(
 \method{summary}{net_hypergraph}(object, ...)
 }
 \arguments{
-\item{net}{A \code{netobject}, \code{cograph_network}, \code{simplicial_complex}, or
-numeric adjacency / weight matrix. Directed inputs are symmetrised by
-the underlying clique enumerator.}
+\item{net}{The network: a \code{netobject}, bare \code{cograph_network},
+\code{simplicial_complex} (its edges are read as ties of weight 1 and the
+cliques are found again up to \code{max_size}), or a numeric or logical adjacency or weight
+matrix (nodes are named \code{V1}, \code{V2}, ... when it has no row names). A
+tie counts in either direction, so a directed network is symmetrised,
+and self-loops are ignored.}
 
-\item{p}{Probability in \verb{[0, 1]} that each k-clique with k >= 3 becomes a
-k-hyperedge. Default \code{1} (deterministic - every found clique is
-included).}
+\item{p}{The probability that each clique of 3 or more nodes becomes a
+hyperedge, a number in \verb{[0, 1]}; each clique is kept or dropped
+independently. Default \code{1} (every clique is kept). Pairwise edges are
+not sampled.}
 
-\item{method}{Hyperedge enumeration. \code{"clique"} (default) promotes
-k-cliques in the binarised adjacency to k-hyperedges. A metric
-Vietoris-Rips construction is \strong{not implemented}; \code{"vr"} /
-\code{"rips"} are accepted by \code{match.arg} but raise an error rather than
-silently aliasing \code{"clique"}.}
+\item{method}{How hyperedges are found. \code{"clique"} (default) promotes
+the cliques of the thresholded network. \code{"vr"} and \code{"rips"} (a metric
+Vietoris-Rips construction) are not implemented and raise an error
+instead of falling back to \code{"clique"}.}
 
-\item{include_pairwise}{Logical. Include 2-edges from the input network as
-2-hyperedges. Default \code{TRUE}. Set \code{FALSE} for a "fully higher-order"
-hypergraph containing only k-hyperedges with k >= 3.}
+\item{include_pairwise}{Whether the pairwise edges of the thresholded
+network become hyperedges of size 2. \code{FALSE} gives a hypergraph of
+hyperedges of size 3 or more only. Default \code{TRUE}.}
 
-\item{max_size}{Integer >= 2. Maximum hyperedge size to extract. Default
-\code{3L} (triangles only). \code{4L} also includes 4-cliques as 4-hyperedges, etc.}
+\item{max_size}{The largest hyperedge size, at least 2. Default \code{3}
+(triangles); \code{4} adds the 4-cliques, and so on. With \code{2}, only the
+pairwise edges remain (none, with \code{include_pairwise = FALSE}).}
 
-\item{threshold}{Numeric. Edge weight cutoff used to binarise the
-adjacency for clique enumeration. Default \code{0} (any non-zero weight is
-an edge).}
+\item{threshold}{The cut-off that turns weights into ties: an edge is
+kept when its absolute weight is non-zero and at least \code{threshold}, so
+negative weights count by their size. A negative value raises an
+error. Default \code{0} (every non-zero weight is a tie).}
 
-\item{seed}{Optional integer for reproducible Bernoulli sampling when
-\verb{0 < p < 1}.}
+\item{seed}{An integer that makes the sampling reproducible when
+\verb{0 < p < 1}. The session's own random stream is left as it was.
+Default \code{NULL}.}
 
-\item{x}{For the \code{print()} method: an object of class \code{net_hypergraph}.}
+\item{x}{For the \code{print()} method: a \code{net_hypergraph}.}
 
-\item{...}{In \code{print.net_hypergraph()}: Additional arguments (ignored). In \code{summary.net_hypergraph()}: Ignored.}
+\item{...}{Not used.}
 
-\item{object}{For the \code{summary()} method: an object of class \code{net_hypergraph}.}
+\item{object}{For the \code{summary()} method: a \code{net_hypergraph}.}
 }
 \value{
-A \code{net_hypergraph} object: a list with components
+A \code{net_hypergraph} object. \code{print()} shows the numbers of nodes
+and hyperedges, the size distribution and the settings, and returns
+its input invisibly. \code{summary()} prints the counts with the mean and
+largest hyperedge size, and returns a data frame with one row per node:
+\code{node} and \code{degree}, the number of hyperedges that contain it. The
+object holds:
 \describe{
-\item{\code{hyperedges}}{List of integer vectors. Each entry is a hyperedge
-given as the sorted node indices it spans.}
-\item{\code{incidence}}{Numeric matrix of size \code{n_nodes} x \code{n_hyperedges}.
-\code{incidence[i, j] = 1} iff node i belongs to hyperedge j. Row names
-are node names; column names are \code{h1}, \code{h2}, ...}
-\item{\code{nodes}}{Character vector of node names.}
-\item{\code{n_nodes}, \code{n_hyperedges}}{Scalar counts.}
-\item{\code{size_distribution}}{Named integer vector: number of hyperedges
-of each size, named \code{size_2}, \code{size_3}, ...}
-\item{\code{params}}{Recorded call parameters: \code{method}, \code{p},
-\code{include_pairwise}, \code{max_size}, \code{threshold}, \code{seed}.}
+\item{\code{hyperedges}}{A list of integer vectors, one per hyperedge,
+each the sorted indices of the nodes it spans; pairwise edges, when
+kept, come first.}
+\item{\code{incidence}}{An integer matrix of nodes by hyperedges, 1 where a
+node belongs to a hyperedge and 0 elsewhere. Its row names are the
+node names and its column names \code{h1}, \code{h2}, ...}
+\item{\code{nodes}}{The node names.}
+\item{\code{n_nodes}, \code{n_hyperedges}}{The numbers of nodes and
+hyperedges.}
+\item{\code{size_distribution}}{A named integer vector with the number of
+hyperedges of each size, named \code{size_2}, \code{size_3}, ...}
+\item{\code{params}}{The settings used: \code{method}, \code{p},
+\code{include_pairwise}, \code{max_size}, \code{threshold} and \code{seed}.}
 }
-
-In \code{print.net_hypergraph()}: For \code{print()}, the input \code{x} invisibly.
-
-In \code{summary.net_hypergraph()}: For \code{summary()}, a data.frame with one row per node and columns \code{node} (node name) and \code{degree} (number of hyperedges containing the node), returned visibly; the summary block (node / hyperedge counts, mean and maximum hyperedge size) is printed as a side effect.
 }
 \description{
-Takes a network and produces a hypergraph by promoting k-cliques (k >= 3)
-to k-hyperedges. Each k-clique is independently included as a k-hyperedge
-with probability \code{p}. Optionally retains the underlying pairwise edges as
-2-hyperedges. Foundation for higher-order analyses.
+\code{build_hypergraph()} turns a network into a hypergraph by promoting its
+cliques to hyperedges: every set of 3 to \code{max_size} nodes that are all
+tied to each other becomes a hyperedge, kept with probability \code{p}, and
+the pairwise edges can be kept as hyperedges of size 2. It takes a
+\code{netobject}, a bare \code{cograph_network}, a \code{simplicial_complex} or an
+adjacency or weight matrix, and returns a \code{net_hypergraph}, the input of
+the hypergraph verbs such as \code{\link[=hypergraph_measures]{hypergraph_measures()}},
+\code{\link[=hypergraph_centrality]{hypergraph_centrality()}} and \code{\link[=clique_expansion]{clique_expansion()}}.
+
+A hyperedge built this way records that every pair of its nodes is tied
+in the thresholded network; a pairwise network cannot show whether those
+nodes also act together as a group. When group memberships are observed
+directly, \code{\link[=bipartite_groups]{bipartite_groups()}} builds the hypergraph from them instead.
+Each clique also contributes its smaller cliques: with \code{max_size = 4}, a
+4-clique gives one hyperedge of size 4 and four of size 3.
 }
 \details{
-The construction follows Burgio, Matamalas, Gomez & Arenas (2020) on
-simplicial / hypergraph contagion. For each k-clique with k >= 3 found in
-the underlying graph (via \code{\link[=build_simplicial]{build_simplicial()}}), an independent
-Bernoulli(\code{p}) trial decides whether that clique becomes a k-hyperedge.
-Underlying pairwise edges are always retained when
-\code{include_pairwise = TRUE}, so the resulting hypergraph contains both the
-original 2-edge structure and the sampled higher-order interactions.
+The construction follows Burgio, Matamalas, Gomez and Arenas (2020) on
+cooperation in networks and hypergraphs. The cliques are found with
+\code{\link[=build_simplicial]{build_simplicial()}}, and each clique of 3 or more nodes then goes
+through an independent Bernoulli(\code{p}) trial that decides whether it
+becomes a hyperedge. The pairwise edges are not sampled: with
+\code{include_pairwise = TRUE} all of them are kept, so the hypergraph holds
+the pairwise structure and the sampled higher-order interactions
+together.
 
 At the limits:
 \itemize{
-\item \code{p = 0} with \code{include_pairwise = TRUE} reproduces the input
+\item \code{p = 0} with \code{include_pairwise = TRUE} gives the thresholded
 pairwise network as a hypergraph of size-2 edges.
-\item \code{p = 1} with \code{include_pairwise = FALSE} returns a fully
-higher-order hypergraph containing only the k-hyperedges (k >= 3)
-found in the network's clique complex.
+\item \code{p = 1} with \code{include_pairwise = FALSE} gives only the
+hyperedges of size 3 or more, every clique of the network's clique
+complex up to \code{max_size}.
 }
 }
 \examples{
@@ -118,6 +139,6 @@ networks to hypergraphs. \emph{Entropy} 22(7), 744.
 \doi{10.3390/e22070744}
 }
 \seealso{
-\code{\link[=build_simplicial]{build_simplicial()}} (underlying clique enumeration),
-\code{\link[=build_network]{build_network()}}.
+\code{\link[=build_simplicial]{build_simplicial()}} (the clique enumeration),
+\code{\link[=bipartite_groups]{bipartite_groups()}}, \code{\link[=build_network]{build_network()}}.
 }

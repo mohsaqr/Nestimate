@@ -198,86 +198,120 @@ utils::globalVariables(c("u", "y", "ymin", "ymax", "label", "state", "group", "v
 #' Stability Landscape of a Transition Network
 #'
 #' @description
-#' Draws a transition network as a ball-in-cup landscape (Scheffer et al.
-#' 2009) in which the depth of each cup is the stability of the state: how
-#' long the process stays once it is there. A state with stay probability
-#' \eqn{P_{ii}} is left after \eqn{1 / (1 - P_{ii})} steps on average (its
-#' dwell time), and its cup depth is the log of that time,
-#' \eqn{-\log(1 - P_{ii})}, so that dwell time = \eqn{e^{depth}}: the
-#' escape-time law of a particle in a potential well (Kramers 1940). A state
-#' that is left at once has depth 0, no cup at all. Intervals come from
+#' `stability_landscape()` estimates the ball-in-cup landscape (Scheffer et
+#' al. 2009) of a transition network, which `plot()` draws: one cup per
+#' state, whose depth is the stability of that state, how long the process
+#' stays once it is there. A
+#' state with stay probability \eqn{P_{ii}} is left after
+#' \eqn{1 / (1 - P_{ii})} steps on average (its expected stay, or dwell
+#' time), and its cup depth is the log of that time, \eqn{-\log(1 - P_{ii})},
+#' so that dwell time = \eqn{e^{depth}}: the escape-time law of a particle in
+#' a potential well (Kramers 1940). A state that is left at once has depth 0,
+#' no cup at all. It takes a `"relative"` or `"frequency"` network, a grouped
+#' network (one landscape per group, on one state order) or the wide
+#' sequences themselves, and gives every depth a percentile interval from
 #' resampling whole sequences.
 #'
-#' @param x A transition network from \code{build_network()} (method
-#'   \code{"relative"} or \code{"frequency"}), a grouped one
-#'   (\code{netobject_group}, for example \code{build_network()} of a
-#'   \code{build_clusters()} result) or a wide sequence data frame or matrix.
-#'   The network must carry its sequences. For the \code{print()} and
-#'   \code{plot()} methods: an object of class \code{net_landscape}.
-#' @param object A \code{net_landscape} object (for \code{summary()}).
-#' @param states Character vector naming every state once, in the order to
-#'   draw them (for example from least to most engaged). Default: the
-#'   alphabetical order.
-#' @param iter Integer. Bootstrap resamples of sequences. Default 1000.
-#' @param ci_level Numeric in (0, 1). Interval level. Default 0.95.
-#' @param cols Character vector or \code{NULL}. For a wide data frame: the columns
-#'   holding the positions. Needed when they are not a numbered run (\code{T1},
-#'   \code{T2}, ...) or one of them is called \code{action}.
-#' @param seed Integer or \code{NULL}. Seed for the resampling, scoped to the
-#'   call (the global random state is restored).
-#' @param table One of \code{"cups"}, \code{"exits"}, \code{"circulation"}.
-#'   In \code{summary()}: which table to return.
-#' @param digits Integer. Decimal places in \code{print()}. Default 2.
-#' @param ... Ignored.
+#' Depth is a property of the state alone. How often the process enters the
+#' state is its `share` of the observed time steps, reported beside the
+#' depth, and where the process goes when it leaves is in the exit
+#' probabilities (`summary(x, table = "exits")`), which the plot writes under
+#' each cup. With three states the result also reports the net circulation,
+#' the net probability flux \eqn{\pi_i P_{ij} - \pi_j P_{ji}} around the
+#' cycle, which stationarity makes equal on all three edges (Schnakenberg
+#' 1976): zero for a chain whose every transition is as common as its
+#' reverse. The depths pool every sequence and every time step; whether they
+#' change over the programme or along a covariate is what [landscape_trend()]
+#' shows, and how long the process takes to get from one state to another is
+#' given by [passage_time()].
 #'
 #' @details
-#' Network input replays per-sequence weighting, concatenation and boundary
-#' markers. Concatenated sequences are the resampling units. With a covariate,
-#' its value must be constant within each concatenated unit. Scaled,
-#' thresholded or otherwise modified networks whose weights do not match
-#' their stored sequences are refused; pass the original sequences to
-#' estimate a new landscape. Observed shares count prepared positions without
-#' sequence weighting. Phase windows retain the full sequence's weight.
-#'
-#' Depth is a property of the state alone; how often the process enters the
-#' state is its \code{share} of the observed time steps, reported beside the
-#' depth. Where the process goes when it leaves is in the exit probabilities
-#' (\code{summary(x, table = "exits")}), which the plot writes under each
-#' cup. With three states the plot also reports the net circulation, the net
-#' probability flux \eqn{\pi_i P_{ij} - \pi_j P_{ji}} around the cycle, which
-#' stationarity makes equal on all three edges (Schnakenberg 1976): zero for
-#' a chain whose every transition is as common as its reverse.
+#' Network input replays the network's per-sequence weighting, concatenation
+#' and boundary markers (a `start` or `end` state is a state of the
+#' landscape), and the concatenated sequences are the resampling units. An
+#' end state, or any state seen only at the last position of a sequence, has
+#' no outgoing transitions, so its depth, stay and dwell are `NA`, and the
+#' plot draws it flat at depth 0, without a cup.
+#' Scaled, thresholded or otherwise modified networks whose weights do not
+#' match their stored sequences are refused; pass the original sequences to
+#' estimate a new landscape. The `share` column counts prepared positions
+#' without sequence weighting.
 #'
 #' In a resample where a state is never left, its depth is infinite, so an
-#' upper interval limit can be \code{Inf}; a resample in which a state never
-#' occurs is left out of that state's interval (\code{resamples} counts the
+#' upper interval limit can be `Inf`; a resample in which a state never
+#' occurs is left out of that state's interval (`resamples` counts the
 #' rest). Only the cup floors carry data in the plot; the curve between them
 #' is a smooth join, and every rim is drawn at 0.
 #'
-#' @return An object of class \code{"net_landscape"}: one fit per network
-#'   (\code{"network"} for a single one, the group names for a grouped one),
-#'   with \code{states}, \code{iter} and \code{ci_level}.
-#' @return In \code{summary()}: a data frame. \code{table = "cups"} (default):
-#'   one row per network and state, with \code{group}, \code{state},
-#'   \code{depth}, \code{ci_lower}, \code{ci_upper}, \code{dwell} (expected
-#'   consecutive steps in the state), \code{stay} (\eqn{P_{ii}}),
-#'   \code{share} (share of observed time steps in the state), \code{n_from}
-#'   (transitions out of the state, self-transitions included) and
-#'   \code{resamples}. \code{table = "exits"}: one row per network and pair
-#'   of distinct states, with \code{probability} and \code{count}.
-#'   \code{table = "circulation"}: one row per network (three states only),
-#'   with \code{cycle} (the direction of the net flow), \code{current},
-#'   \code{ci_lower}, \code{ci_upper} and \code{resamples} (resamples with a
-#'   stationary distribution).
-#' @return In \code{print()}: \code{x}, invisibly.
-#' @return In \code{plot()}: a \code{ggplot} object, one panel per network.
+#' @param x The network or sequences: a transition network from
+#'   [build_network()] with method `"relative"` or `"frequency"` (or a bare
+#'   `cograph_network` of one), a grouped one (`netobject_group`, for example
+#'   [build_network()] of a [build_clusters()] result), a `tna` model, or a
+#'   wide sequence data frame or matrix. A network must carry its sequences;
+#'   a network of another method (for example `"glasso"`) raises an error of
+#'   class `nestimate_not_markov`. For the `print()` and `plot()` methods: a
+#'   `net_landscape` object.
+#' @param object For the `summary()` method: a `net_landscape` object.
+#' @param states Every state, each named once, in the order to draw them (for
+#'   example from least to most engaged). Default `NULL`, the alphabetical
+#'   order. A vector that leaves out, adds or repeats a state raises an error
+#'   of class `nestimate_bad_input`.
+#' @param iter The number of bootstrap resamples of sequences behind the
+#'   intervals, a non-negative whole number. Default `1000`; `0` skips the
+#'   resampling and leaves the intervals `NA`.
+#' @param ci_level The interval level, a number between 0 and 1. Default
+#'   `0.95`.
+#' @param cols For a wide data frame: the columns holding the positions.
+#'   Needed when they are not a numbered run (`T1`, `T2`, ...) or one of them
+#'   is called `action`; such a frame without `cols` raises an error of class
+#'   `nestimate_bad_input`. Default `NULL`.
+#' @param seed A seed for the resampling. It applies to this call only: the
+#'   session's random state is restored afterwards. Default `NULL`.
+#' @param table For the `summary()` method: which table to return, `"cups"`
+#'   (default), `"exits"` or `"circulation"`. The circulation exists for
+#'   three states only; asking for it otherwise raises an error of class
+#'   `nestimate_bad_input`.
+#' @param digits For the `print()` method: decimal places (the circulation
+#'   gets two more). Default `2`.
+#' @param ... Ignored.
+#'
+#' @return A `net_landscape` object. `print()` shows each state's depth with
+#'   its interval, expected stay, stay probability and share, and the net
+#'   circulation for three states; `summary()` returns the tables below;
+#'   `plot()` returns the landscape as a `ggplot`, one panel per network, with
+#'   the intervals as bars and the expected stay, share and exit
+#'   probabilities written under each cup, and with three states the net
+#'   circulation and its interval at the top of the panel. `print()` returns its input
+#'   invisibly.
+#'
+#'   `summary()` returns a data frame. With `table = "cups"`: one row per
+#'   network and state, with `group`, `state`, `depth`, `ci_lower`,
+#'   `ci_upper`, `dwell` (expected consecutive steps in the state), `stay`
+#'   (\eqn{P_{ii}}), `share` (share of observed time steps in the state),
+#'   `n_from` (transitions out of the state, self-transitions included) and
+#'   `resamples`. With `table = "exits"`: one row per network and pair of
+#'   distinct states, with `group`, `from`, `to`, `probability` and `count`.
+#'   With `table = "circulation"`: one row per network, with `group`,
+#'   `cycle` (the direction of the net flow), `current`, `ci_lower`,
+#'   `ci_upper` and `resamples` (resamples with a unique stationary
+#'   distribution).
+#'
+#'   The object's fields:
+#'   \describe{
+#'     \item{fits}{One fit per network, named `"network"` for a single one
+#'       and by group for a grouped one; each holds the cups, exits and
+#'       circulation tables and the numbers of sequences and transitions.}
+#'     \item{states}{The states, in drawing order.}
+#'     \item{iter, ci_level}{The resampling settings.}
+#'   }
 #'
 #' @section Errors:
-#' \code{nestimate_not_markov} for a network that is not a transition
-#' network; \code{nestimate_bad_input} for \code{states} that do not name
-#' every state once, or input without sequences;
-#' \code{nestimate_landscape_unestimable} for a state that is never left or
-#' input with no observed transition.
+#' `nestimate_not_markov` for a network that is not a transition network;
+#' `nestimate_bad_input` for `states` that do not name every state once,
+#' fewer than two states, input without sequences, or a network whose
+#' weights cannot be rebuilt from its sequences;
+#' `nestimate_landscape_unestimable` for a state that is never left or input
+#' with no observed transition.
 #'
 #' @examples
 #' net <- build_network(trajectories, method = "relative")
@@ -306,7 +340,7 @@ utils::globalVariables(c("u", "y", "ymin", "ymax", "label", "state", "group", "v
 #' @export
 stability_landscape <- function(x, states = NULL, iter = 1000L,
                                 ci_level = 0.95, seed = NULL, cols = NULL) {
-  stopifnot(
+  .assert(
     "`iter` must be a single non-negative integer" =
       length(iter) == 1L && is.numeric(iter) && is.finite(iter) && iter >= 0,
     "`ci_level` must be a single number in (0, 1)" =
@@ -319,15 +353,7 @@ stability_landscape <- function(x, states = NULL, iter = 1000L,
   alphabet <- sort(unique(unlist(lapply(seqs, \(s) s$alphabet))))
   if (length(alphabet) < 2L) .ls_bad("A landscape needs at least two states.")
   states <- .ls_states(states, alphabet)
-  if (!is.null(seed)) {
-    if (exists(".Random.seed", envir = globalenv())) {
-      old <- get(".Random.seed", envir = globalenv())
-      on.exit(assign(".Random.seed", old, envir = globalenv()), add = TRUE)
-    } else {
-      on.exit(rm(".Random.seed", envir = globalenv()), add = TRUE)
-    }
-    set.seed(seed)
-  }
+  if (!is.null(seed)) .local_seed(seed)
   fits <- Map(\(s, nm) .ls_fit(s$states, states, as.integer(iter), ci_level,
                                nm, s$sequence_weights), seqs, names(parts))
   structure(list(fits = fits, states = states, iter = as.integer(iter),
@@ -533,83 +559,114 @@ plot.net_landscape <- function(x, ...) {
 #' Stability Landscape Across a Stability Measure
 #'
 #' @description
-#' The cups of \code{\link{stability_landscape}()} drawn as a surface over a
-#' second axis: a per-sequence stability measure from
-#' \code{\link{sequence_metrics}()}, such as self-loop tendency or
-#' longitudinal entropy. At each value of the measure, sequences are weighted
-#' by a tricube kernel on their distance to that value over the \code{k}
-#' nearest (Cleveland 1979), and each state's cup depth,
-#' \eqn{-\log(1 - P_{ii})} (the log of its expected stay), is computed from
-#' their weighted pooled transitions. Moving along the axis goes from the
-#' most stable to the most volatile sequences.
-#'
-#' @param cols Character vector or \code{NULL}. For a wide data frame: the columns
-#'   holding the positions. Needed when they are not a numbered run (\code{T1},
-#'   \code{T2}, ...) or one of them is called \code{action}.
-#' @param x A transition network from \code{build_network()} (method
-#'   \code{"relative"} or \code{"frequency"}), a grouped one, or a wide
-#'   sequence data frame or matrix. For the \code{print()} and \code{plot()}
-#'   methods: an object of class \code{net_landscape_surface}.
-#' @param object A \code{net_landscape_surface} object (for
-#'   \code{summary()}).
-#' @param measure Character vector of numeric \code{sequence_metrics()}
-#'   columns, one surface each. Default \code{"longitudinal_entropy"}.
-#' @param states Character vector naming every state once, in drawing order.
-#'   Default: alphabetical.
-#' @param k Integer. Nearest sequences per slice. Default 30 (capped at the
-#'   number of sequences).
-#' @param n_grid Integer. Slices between the 5th and 95th percentile of the
-#'   measure. If these percentiles coincide for a nonconstant measure,
-#'   its full range is used. Default 25.
-#' @param ends Logical. In \code{summary()}: \code{TRUE} (default) compares
-#'   the low and the high end of each measure; \code{FALSE} returns every
-#'   slice.
-#' @param max_stay Numeric. In \code{plot()}: cups of states whose expected
-#'   stay exceeds this many steps (including states never left in a slice)
-#'   are drawn at the depth \code{log(max_stay)}, a display floor only.
-#'   Default 50.
-#' @param theta,phi Numeric. In \code{plot()}: viewing angles passed to
-#'   \code{persp()}.
-#' @param ncol Integer or \code{NULL}. In \code{plot()}: panels per row.
-#'   Default: one row per network, one column per measure.
-#' @param digits Integer. Decimal places in \code{print()}. Default 2.
-#' @param ... Ignored.
-#'
-#' @details
-#' Network input replays per-sequence weighting, concatenation and boundary
-#' markers. Concatenated sequences are the resampling units. With a covariate,
-#' its value must be constant within each concatenated unit. Scaled,
-#' thresholded or otherwise modified networks whose weights do not match
-#' their stored sequences are refused; pass the original sequences to
-#' estimate a new landscape. Observed shares count prepared positions without
-#' sequence weighting. Phase windows retain the full sequence's weight.
+#' `landscape_surface()` traces the cups of [stability_landscape()] over a
+#' second axis, a per-sequence stability measure from [sequence_metrics()]
+#' such as self-loop tendency or longitudinal entropy, and returns the cup
+#' depth of every state at each point of that axis. At each of `n_grid`
+#' values of the measure, sequences are weighted by a tricube kernel on their
+#' distance to that value over the `k` nearest (Cleveland 1979), and each
+#' state's cup depth, \eqn{-\log(1 - P_{ii})} (the log of its expected
+#' stay), is computed from their weighted pooled transitions. With the
+#' default measure, longitudinal entropy, moving up the axis goes from the
+#' most stable to the most volatile sequences; for a measure where higher
+#' means more stable (self-loop tendency, spell durations, initial-state
+#' persistence, dominant-state share) it goes the other way. Several
+#' measures give one surface each, and a grouped network one set per group.
 #'
 #' The measures are computed from the same sequences as the depths, so the
 #' cups of the most stable sequences are deep by construction (self-loop
 #' tendency in particular is closely tied to the stay probabilities). What
 #' the surface adds is which cup deepens as stability rises. A slice's
-#' \code{effective_n} (\eqn{(\sum w)^2 / \sum w^2}) shows how many sequences
-#' it rests on. A state that does not occur in a slice has an \code{NA}
-#' depth and leaves a gap in the surface.
+#' `effective_n` (\eqn{(\sum w)^2 / \sum w^2}) shows how many sequences it
+#' rests on, and a warning of class `nestimate_thin_slice` flags slices
+#' resting on fewer than five. For change over the programme rather than
+#' across sequences, use [landscape_trend()].
 #'
-#' @return An object of class \code{"net_landscape_surface"} holding the
-#'   slices as one data frame (one row per network, measure, slice and
-#'   state), with \code{states}, \code{measure} and \code{k}.
-#' @return In \code{summary()}: with \code{ends = TRUE}, a data frame with
-#'   one row per network, measure and state: \code{group}, \code{measure},
-#'   \code{state}, \code{low_value}, \code{depth_at_low}, \code{high_value},
-#'   \code{depth_at_high}; with \code{ends = FALSE}, every slice
-#'   (\code{group}, \code{measure}, \code{value}, \code{state}, \code{depth},
-#'   \code{dwell}, \code{effective_n}).
-#' @return In \code{print()}: \code{x}, invisibly.
-#' @return In \code{plot()}: \code{x}, invisibly; draws one \code{persp()}
-#'   surface per network and measure on a shared depth scale.
+#' @details
+#' Network input replays the network's per-sequence weighting, concatenation
+#' and boundary markers; concatenated sequences are weighted as one unit.
+#' Scaled, thresholded or otherwise modified networks whose weights do not
+#' match their stored sequences are refused; pass the original sequences to
+#' estimate a new landscape.
+#'
+#' Sequences with fewer than two observed positions, or no value of the
+#' measure, are left out. The kernel's half-width is the distance to the
+#' `k`-th nearest sequence, but at least 1/50 of the measure's range. A state
+#' that does not occur in a slice has an `NA` depth and leaves a gap in the
+#' surface, and one that is never left in a slice has an infinite depth.
+#'
+#' @param x The network or sequences: a transition network from
+#'   [build_network()] with method `"relative"` or `"frequency"` (or a bare
+#'   `cograph_network` of one), a grouped one (`netobject_group`), a `tna`
+#'   model, or a wide sequence data frame or matrix. A network must carry its
+#'   sequences; a network of another method (for example `"glasso"`) raises
+#'   an error of class `nestimate_not_markov`. For the `print()` and `plot()`
+#'   methods: a `net_landscape_surface` object.
+#' @param object For the `summary()` method: a `net_landscape_surface`
+#'   object.
+#' @param measure The per-sequence measures to trace, one surface each: one
+#'   or more numeric columns of [sequence_metrics()]. Default
+#'   `"longitudinal_entropy"`. A name that is not a numeric column, or a
+#'   measure that is the same for every sequence, raises an error of class
+#'   `nestimate_bad_input`.
+#' @param states Every state, each named once, in drawing order. Default
+#'   `NULL`, the alphabetical order. A vector that leaves out, adds or
+#'   repeats a state raises an error of class `nestimate_bad_input`.
+#' @param k The number of nearest sequences each slice is weighted over, at
+#'   least 5. Default `30`, capped at the number of usable sequences.
+#' @param n_grid The number of slices, at least 2, spread evenly between the
+#'   5th and 95th percentile of the measure. If these percentiles coincide
+#'   for a measure that is not constant, its full range is used. Default
+#'   `25`.
+#' @param cols For a wide data frame: the columns holding the positions.
+#'   Needed when they are not a numbered run (`T1`, `T2`, ...) or one of them
+#'   is called `action`; such a frame without `cols` raises an error of class
+#'   `nestimate_bad_input`. Default `NULL`.
+#' @param ends For the `summary()` method: `TRUE` (default) compares the low
+#'   and the high end of each measure; `FALSE` returns every slice.
+#' @param max_stay For the `plot()` method: the longest expected stay drawn,
+#'   in steps, a number above 1. Cups of states whose expected stay is longer
+#'   (including states never left in a slice) are drawn at the depth
+#'   `log(max_stay)`, a display floor only. Default `50`.
+#' @param theta,phi For the `plot()` method: the viewing angles passed to
+#'   [graphics::persp()]. Defaults `10` and `30`.
+#' @param ncol For the `plot()` method: panels per row. Default `NULL`, one
+#'   column per measure and one row per network.
+#' @param digits For the `print()` method: decimal places. Default `2`.
+#' @param ... Ignored.
+#'
+#' @return A `net_landscape_surface` object. `print()` shows each state's
+#'   depth at the low and the high end of each measure and the range of
+#'   effective sequences per slice; `summary()` returns the tables below;
+#'   `plot()` draws one [graphics::persp()] surface per network and measure
+#'   on a shared depth scale, the most stable end of each measure in front
+#'   (for a measure with no stability direction, the low end) and the
+#'   surface shaded from green (deep) to orange (shallow). `print()` and
+#'   `plot()` return their input invisibly.
+#'
+#'   `summary()` returns a data frame. With `ends = TRUE`: one row per
+#'   network, measure and state, with `group`, `measure`, `state`,
+#'   `low_value`, `depth_at_low`, `high_value` and `depth_at_high`. With
+#'   `ends = FALSE`: one row per network, measure, slice and state, with
+#'   `group`, `measure`, `value`, `state`, `depth`, `dwell` and
+#'   `effective_n`.
+#'
+#'   The object's fields:
+#'   \describe{
+#'     \item{slices}{Every slice, as `summary(x, ends = FALSE)` returns it.}
+#'     \item{states}{The states, in drawing order.}
+#'     \item{measure, groups}{The measures traced and the network names
+#'       (`"network"` for a single one).}
+#'     \item{k}{The number of nearest sequences per slice.}
+#'   }
 #'
 #' @section Errors:
-#' \code{nestimate_not_markov}, \code{nestimate_bad_input} (unknown,
-#' non-numeric or constant \code{measure}, bad \code{states}),
-#' \code{nestimate_landscape_unestimable} (fewer than five usable sequences).
-#' Warning \code{nestimate_thin_slice} when slices rest on fewer than five
+#' `nestimate_not_markov` for a network that is not a transition network;
+#' `nestimate_bad_input` for an unknown, non-numeric or constant `measure`,
+#' bad `states`, input without sequences, or a network whose weights cannot
+#' be rebuilt from its sequences (a scaled or thresholded one included);
+#' `nestimate_landscape_unestimable` for fewer than five usable sequences.
+#' Warning `nestimate_thin_slice` when slices rest on fewer than five
 #' effective sequences.
 #'
 #' @examples
@@ -634,7 +691,7 @@ plot.net_landscape <- function(x, ...) {
 #' @export
 landscape_surface <- function(x, measure = "longitudinal_entropy",
                               states = NULL, k = 30L, n_grid = 25L, cols = NULL) {
-  stopifnot(
+  .assert(
     "`k` must be a single integer >= 5" =
       length(k) == 1L && is.numeric(k) && k >= 5,
     "`n_grid` must be a single integer >= 2" =
@@ -726,7 +783,7 @@ print.net_landscape_surface <- function(x, digits = 2, ...) {
 #' @export
 plot.net_landscape_surface <- function(x, max_stay = 50, theta = 10, phi = 30,
                                        ncol = NULL, ...) {
-  stopifnot("`max_stay` must be a single number > 1" =
+  .assert("`max_stay` must be a single number > 1" =
               length(max_stay) == 1L && is.numeric(max_stay) && max_stay > 1)
   states <- x$states
   kk <- length(states)
@@ -899,98 +956,145 @@ plot.net_landscape_surface <- function(x, max_stay = 50, theta = 10, phi = 30,
     n_used = length(keep))
 }
 
-#' Stability Landscape Along the Program or a Covariate
+#' Stability Landscape Along the Programme or a Covariate
 #'
 #' @description
-#' The landscape of \code{\link{stability_landscape}()} traced along a second
-#' axis. The axis is either the program phase, \code{along = "phase"}: the
-#' landscape is estimated from the transitions inside a sliding window of
-#' \code{window} time steps; or a numeric per-sequence covariate such as a
-#' grade, \code{along = "grade"}: at each value of the covariate it comes
-#' from the \code{k} nearest sequences, weighted by a tricube kernel
-#' (Cleveland 1979). Intervals come from resampling whole sequences.
+#' `landscape_trend()` traces the landscape of [stability_landscape()] along
+#' a second axis and returns the height of every state, with a bootstrap
+#' interval, at each point of that axis. The axis is either the programme
+#' phase, `along = "phase"`: the landscape is estimated from the transitions
+#' inside a window of `window` time steps that slides one step at a time; or
+#' a numeric per-sequence covariate such as a grade, `along = "grade"`: at
+#' each value of the covariate it comes from the `k` nearest sequences,
+#' weighted by a tricube kernel (Cleveland 1979). Intervals come from
+#' resampling whole sequences, and the same resamples serve every window or
+#' slice. A grouped network gives one trend per group.
 #'
-#' Two heights are available. \code{depth = "stay"} (default) is the depth
-#' of \code{stability_landscape()}, the log of each state's expected stay,
-#' \eqn{-\log(1 - P_{ii})}. \code{depth = "occupancy"} is the quasi-potential
+#' Two heights are available. `depth = "stay"` (default) is the depth of
+#' [stability_landscape()], the log of each state's expected stay,
+#' \eqn{-\log(1 - P_{ii})}; a window as long as the sequences gives that
+#' function's values. `depth = "occupancy"` is the quasi-potential
 #' \eqn{-\log \pi_i} of the stationary distribution, with ridges at
 #' \eqn{-\log} of the symmetrised probability flux
 #' \eqn{(\pi_i P_{ij} + \pi_j P_{ji}) / 2} between neighbouring states
 #' (Wang et al. 2008): a low cup is a state the process spends much of its
 #' time in, a high ridge a switch it rarely makes.
 #'
-#' @param x A transition network from \code{build_network()} (method
-#'   \code{"relative"} or \code{"frequency"}), a grouped one, or a wide
-#'   sequence data frame. A covariate is read from the network's metadata,
-#'   which \code{build_network()} fills with the numeric columns of a wide
-#'   data frame. For the \code{print()} and \code{plot()} methods: an object
-#'   of class \code{net_landscape_trend}.
-#' @param object A \code{net_landscape_trend} object (for \code{summary()}).
-#' @param along \code{"phase"} (default), or the name of a numeric
-#'   per-sequence covariate.
-#' @param depth \code{"stay"} (default) or \code{"occupancy"}, see above.
-#' @param states Character vector naming every state once, in drawing order.
-#'   Default: alphabetical.
-#' @param window Integer. With \code{along = "phase"}: time steps per window.
-#'   Default 5.
-#' @param k Integer. With a covariate: nearest sequences per slice. Default
-#'   30 (capped at the number of sequences).
-#' @param n_grid Integer. With a covariate: slices between its 5th and 95th
-#'   percentile, with the full range used if these coincide. Default 20.
-#' @param iter Integer. Bootstrap resamples of sequences. Default 500.
-#' @param ci_level Numeric in (0, 1). Interval level. Default 0.95.
-#' @param cols Character vector or \code{NULL}. For a wide data frame: the columns
-#'   holding the positions. Needed when they are not a numbered run (\code{T1},
-#'   \code{T2}, ...) or one of them is called \code{action}.
-#' @param seed Integer or \code{NULL}. Seed for the resampling, scoped to the
-#'   call.
-#' @param type In \code{plot()}: \code{"lines"} (default), one line per state
-#'   with its interval band; or \code{"surface"}, a 3D \code{persp()}
-#'   landscape with the states across and the second axis in depth, one
-#'   panel per network on a shared height scale.
-#' @param theta,phi Numeric. In \code{plot(type = "surface")}: viewing
-#'   angles.
-#' @param digits Integer. Decimal places in \code{print()}. Default 2.
-#' @param ... Ignored.
+#' Consecutive windows share all but one step and neighbouring slices most
+#' of their sequences, so neighbouring points are not independent. Along a
+#' covariate, each point describes the sequences with values near it; the
+#' trend is an association with the covariate, not its effect.
 #'
 #' @details
-#' Network input replays per-sequence weighting, concatenation and boundary
-#' markers. Concatenated sequences are the resampling units. With a covariate,
-#' its value must be constant within each concatenated unit. Scaled,
-#' thresholded or otherwise modified networks whose weights do not match
-#' their stored sequences are refused; pass the original sequences to
-#' estimate a new landscape. Observed shares count prepared positions without
-#' sequence weighting. Phase windows retain the full sequence's weight.
+#' Network input replays the network's per-sequence weighting, concatenation
+#' and boundary markers, and the concatenated sequences are the resampling
+#' units. With a covariate, its value must be constant within each
+#' concatenated unit. Scaled, thresholded or otherwise modified networks
+#' whose weights do not match their stored sequences are refused; pass the
+#' original sequences to estimate a new landscape. In a network built with
+#' `params = list(weighted = TRUE)`, the transitions of a phase window keep
+#' the weight of their whole sequence.
 #'
-#' With \code{depth = "stay"}, a window or slice in which a state is never
-#' left gives an infinite depth, and one in which it does not occur gives
-#' \code{NA}. With \code{depth = "occupancy"}, a window whose chain has no
-#' unique stationary distribution is \code{NA} throughout. Such points are
-#' kept in \code{summary()}, left out of the lines and the surface, and
-#' counted in the plot caption. Interval bands are clipped at the panel
-#' edge, which is set by the estimates. Consecutive windows share all but
-#' one step and neighbouring slices most of their sequences, so neighbouring
-#' points are not independent.
+#' With `depth = "stay"`, a window or slice in which a state is never left
+#' gives an infinite depth, and one in which it does not occur gives `NA`.
+#' With `depth = "occupancy"`, ridges join the states next to each other in
+#' `states` order and the last state to the first (one ridge with two
+#' states); a window whose chain has no unique stationary distribution is
+#' `NA` throughout, and a ridge never crossed is `NA`. Such points are kept
+#' in `summary()`, left out of the lines and the surface, and counted in the
+#' plot caption. Interval bands are clipped at the panel edge, which is set
+#' by the estimates.
 #'
-#' @return An object of class \code{"net_landscape_trend"}.
-#' @return In \code{summary()}: a data frame with one row per network,
-#'   position and feature: \code{group}, \code{along}, \code{value} (window
-#'   centre or covariate value), \code{label} (window steps or value),
-#'   \code{feature} (\code{"well"}, or \code{"ridge"} with
-#'   \code{depth = "occupancy"}), \code{state} (a state, or two for a
-#'   ridge), the height (\code{depth} for \code{"stay"}, \code{potential}
-#'   for \code{"occupancy"}), \code{ci_lower}, \code{ci_upper}, \code{dwell}
-#'   (\code{"stay"} only) and \code{n_from} (transitions out of the state in
-#'   the window, or their weighted sum in the slice; wells only).
-#' @return In \code{print()}: \code{x}, invisibly.
-#' @return In \code{plot()}: with \code{type = "lines"} a \code{ggplot}
-#'   object; with \code{type = "surface"} \code{x}, invisibly, after drawing.
+#' Along a covariate, sequences without its value or with fewer than two
+#' observed positions are left out, and the kernel's half-width is the distance
+#' to the `k`-th nearest sequence, but at least 1/50 of the covariate's
+#' range.
+#'
+#' @param x The network or sequences: a transition network from
+#'   [build_network()] with method `"relative"` or `"frequency"` (or a bare
+#'   `cograph_network` of one), a grouped one (`netobject_group`), a `tna`
+#'   model, or a wide sequence data frame. A covariate is read from the
+#'   network's metadata, which [build_network()] fills with the numeric
+#'   columns of a wide data frame, or from a data frame's columns beside the
+#'   positions. A network must carry its sequences; a network of another
+#'   method (for example `"glasso"`) raises an error of class
+#'   `nestimate_not_markov`. For the `print()` and `plot()` methods: a
+#'   `net_landscape_trend` object.
+#' @param object For the `summary()` method: a `net_landscape_trend` object.
+#' @param along The axis: `"phase"` (default), or the name of a numeric
+#'   per-sequence covariate. A name that is not a numeric covariate of the
+#'   sequences, a covariate that is the same for every sequence, or one that
+#'   varies within a concatenated sequence raises an error of class
+#'   `nestimate_bad_input`.
+#' @param depth The height: `"stay"` (default) or `"occupancy"`, as described
+#'   above.
+#' @param states Every state, each named once, in drawing order; with
+#'   `depth = "occupancy"` it also sets which states share a ridge. Default
+#'   `NULL`, the alphabetical order. A vector that leaves out, adds or
+#'   repeats a state raises an error of class `nestimate_bad_input`.
+#' @param window With `along = "phase"`: the time steps per window, at least
+#'   2. Default `5`. A window longer than the sequences raises an error of
+#'   class `nestimate_bad_input`. Not used with a covariate, but still
+#'   checked.
+#' @param k With a covariate: the number of nearest sequences each slice is
+#'   weighted over, at least 5. Default `30`, capped at the number of usable
+#'   sequences. Not used with `along = "phase"`, but still checked.
+#' @param n_grid With a covariate: the number of slices, at least 2, between
+#'   its 5th and 95th percentile, with the full range used if these coincide.
+#'   Default `20`. Not used with `along = "phase"`, but still checked.
+#' @param iter The number of bootstrap resamples of sequences, a non-negative
+#'   whole number. Default `500`; `0` leaves the intervals `NA`.
+#' @param ci_level The interval level, a number between 0 and 1. Default
+#'   `0.95`.
+#' @param cols For a wide data frame: the columns holding the positions.
+#'   Needed when they are not a numbered run (`T1`, `T2`, ...) or one of them
+#'   is called `action`; such a frame without `cols` raises an error of class
+#'   `nestimate_bad_input`. Default `NULL`.
+#' @param seed A seed for the resampling. It applies to this call only: the
+#'   session's random state is restored afterwards. Default `NULL`.
+#' @param type For the `plot()` method: `"lines"` (default) draws one line
+#'   per state with its interval band, the states told apart by colour,
+#'   point shape, line type and a label at the end of each line;
+#'   `"surface"` draws a 3D [graphics::persp()] landscape with the states
+#'   across and the second axis in depth, one panel per network on a shared
+#'   height scale, ridges included with `depth = "occupancy"`.
+#' @param theta,phi For `plot(type = "surface")`: the viewing angles.
+#'   Defaults `10` and `30`.
+#' @param digits For the `print()` method: decimal places. Default `2`.
+#' @param ... Ignored.
+#'
+#' @return A `net_landscape_trend` object. `print()` shows each state's
+#'   height at the first and the last window or slice and its range, and
+#'   counts the points that could not be estimated; `summary()` returns the
+#'   table below; `plot()` returns a `ggplot` with `type = "lines"`, and
+#'   with `type = "surface"` draws the landscape and returns its input
+#'   invisibly. `print()` returns its input invisibly.
+#'
+#'   `summary()` returns a data frame with one row per network, position and
+#'   feature: `group`, `along`, `value` (window centre or covariate value),
+#'   `label` (window steps or value), `feature` (`"well"`, or `"ridge"` with
+#'   `depth = "occupancy"`), `state` (a state, or two for a ridge), the height
+#'   (`depth` for `"stay"`, `potential` for `"occupancy"`), `ci_lower`,
+#'   `ci_upper`, `n_from` (transitions out of the state in the window, or
+#'   their weighted sum in the slice; wells only) and `dwell` (`"stay"`
+#'   only).
+#'
+#'   The object's fields:
+#'   \describe{
+#'     \item{table}{The table `summary()` returns.}
+#'     \item{states, groups}{The states in drawing order and the network
+#'       names (`"network"` for a single one).}
+#'     \item{along, depth, window, k, iter, ci_level}{The settings used.}
+#'   }
 #'
 #' @section Errors:
-#' \code{nestimate_not_markov}; \code{nestimate_bad_input} for an unknown,
-#' non-numeric or constant covariate, bad \code{states}, or a \code{window} longer than
-#' the sequences; \code{nestimate_landscape_unestimable} for fewer than five
-#' usable sequences.
+#' `nestimate_not_markov` for a network that is not a transition network;
+#' `nestimate_bad_input` for an unknown, non-numeric or constant covariate,
+#' a covariate that varies within a concatenated sequence, bad `states`, a
+#' `window` longer than the sequences, input without sequences, or a network
+#' whose weights cannot be rebuilt from its sequences (a scaled or
+#' thresholded one included); `nestimate_landscape_unestimable` for fewer
+#' than five usable sequences along a covariate.
 #'
 #' @examples
 #' net <- build_network(trajectories, method = "relative")
@@ -1023,7 +1127,7 @@ landscape_trend <- function(x, along = "phase",
                             window = 5L, k = 30L, n_grid = 20L, iter = 500L,
                             ci_level = 0.95, seed = NULL, cols = NULL) {
   depth <- match.arg(depth)
-  stopifnot(
+  .assert(
     "`along` must be a single string" =
       is.character(along) && length(along) == 1L,
     "`window` must be a single integer >= 2" =
@@ -1033,9 +1137,10 @@ landscape_trend <- function(x, along = "phase",
     "`n_grid` must be a single integer >= 2" =
       length(n_grid) == 1L && is.numeric(n_grid) && n_grid >= 2,
     "`iter` must be a single non-negative integer" =
-      length(iter) == 1L && is.numeric(iter) && iter >= 0,
+      length(iter) == 1L && is.numeric(iter) && is.finite(iter) && iter >= 0,
     "`ci_level` must be a single number in (0, 1)" =
-      length(ci_level) == 1L && ci_level > 0 && ci_level < 1
+      length(ci_level) == 1L && is.numeric(ci_level) && ci_level > 0 &&
+      ci_level < 1
   )
   parts <- if (inherits(x, "netobject_group")) as.list(x) else
     list(network = x)
@@ -1056,15 +1161,7 @@ landscape_trend <- function(x, along = "phase",
     }
     v
   })
-  if (!is.null(seed)) {
-    if (exists(".Random.seed", envir = globalenv())) {
-      old <- get(".Random.seed", envir = globalenv())
-      on.exit(assign(".Random.seed", old, envir = globalenv()), add = TRUE)
-    } else {
-      on.exit(rm(".Random.seed", envir = globalenv()), add = TRUE)
-    }
-    set.seed(seed)
-  }
+  if (!is.null(seed)) .local_seed(seed)
   kk <- length(states)
   nxt <- c(seq_len(kk)[-1L], 1L)
   metric <- if (depth == "stay") .ls_depth else .ls_occupancy

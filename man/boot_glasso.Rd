@@ -5,7 +5,7 @@
 \alias{print.boot_glasso}
 \alias{summary.boot_glasso}
 \alias{plot.boot_glasso}
-\title{Bootstrap for Regularized Partial Correlation Networks}
+\title{Bootstrap for Regularised Partial Correlation Networks}
 \usage{
 boot_glasso(
   x,
@@ -29,128 +29,238 @@ boot_glasso(
 \method{plot}{boot_glasso}(x, type = "edges", measure = NULL, ...)
 }
 \arguments{
-\item{x}{A data frame, numeric matrix (observations x variables), or
-a \code{netobject} with \code{method = "glasso"}. For the \code{print()} and \code{plot()} methods: an object of class \code{boot_glasso}.}
+\item{x}{The data: a data frame or numeric matrix with one row per
+observation and one column per variable, cleaned as in
+\code{\link[=build_glasso]{build_glasso()}}: non-numeric columns and a column named \code{rid} are
+set aside; columns with non-syntactic names, all-missing and constant
+columns, and rows with a missing value are dropped, each with a
+message; fewer than 2 variables or 3 complete rows raise an error. A
+square symmetric matrix with matching row and column names is read as a
+correlation or covariance matrix and refused (class
+\code{nestimate_bad_input}): it has no observations to resample. Or a
+\code{netobject} (or \code{cograph_network}) built with \code{method = "glasso"},
+whose data are resampled; any \code{gamma}, \code{nlambda} or \code{cor_method} set in
+its \code{params} replaces the arguments of the same name, and its
+\code{lambda.min.ratio}, \code{penalize.diagonal} and \code{refit} are used too, so
+\code{original_pcor} is the network's weights. Any other network raises an
+error. A correlation or
+covariance matrix is not accepted: a matrix is always read as data,
+its rows as observations. For the \code{print()}
+and \code{plot()} methods: a \code{boot_glasso}.}
 
-\item{iter}{Integer. Number of nonparametric bootstrap iterations
-(default: 1000).}
+\item{iter}{The number of nonparametric bootstrap resamples, at least 2.
+Default \code{1000}.}
 
-\item{cs_iter}{Integer. Total number of case-dropping iterations
-(default: 500). Following \pkg{bootnet}, each iteration draws one
-drop proportion at random from \code{cs_drop}, so the iterations are
-spread across the proportions rather than repeated \code{cs_iter}
-times at each one.}
+\item{cs_iter}{The total number of case-dropping iterations, at
+least 1. Default \code{500}. As in \pkg{bootnet}, each iteration draws one
+proportion from \code{cs_drop} at random, so the iterations are spread
+across the proportions (about \code{cs_iter / length(cs_drop)} each) rather
+than repeated \code{cs_iter} times at each one.}
 
-\item{cs_drop}{Numeric vector. Drop proportions for CS-coefficient
-computation (default: \code{seq(0.1, 0.9, by = 0.1)}).}
+\item{cs_drop}{The proportions of cases to drop, each in (0, 1). Default
+\code{seq(0.1, 0.9, by = 0.1)}.}
 
-\item{alpha}{Numeric. Significance level for CIs (default: 0.05).}
+\item{alpha}{The significance level: the intervals run from the
+\code{alpha / 2} to the \code{1 - alpha / 2} quantile, and \code{print()} and the
+\code{"edge_diff"} / \code{"centrality_diff"} plots mark the difference tests'
+p-values below it as differing. Default \code{0.05}.}
 
-\item{gamma}{Numeric. EBIC hyperparameter (default: 0.5).}
+\item{gamma}{The EBIC hyperparameter; larger values give sparser
+networks. Default \code{0.5}. Replaced by the value stored in a \code{netobject}.}
 
-\item{nlambda}{Integer. Number of lambda values in the regularization
-path (default: 100).}
+\item{nlambda}{The number of lambda values in the regularisation path,
+at least 2. Default \code{100}. Replaced by the value stored in a
+\code{netobject}.}
 
-\item{centrality}{Character vector. Centrality measures to compute.
-All four built-in measures (\code{"strength"},
-\code{"expected_influence"}, \code{"betweenness"},
-\code{"closeness"}) are computed internally with no extra
-dependencies and are always taken from the built-in path even if
-\code{centrality_fn} is supplied. Names that are not one of these
-four are valid only when a \code{centrality_fn} is supplied; that
-function is then responsible for returning them.
-Default: \code{c("strength", "expected_influence", "betweenness", "closeness")}.}
+\item{centrality}{The centrality measures to compute. Default all four
+built-in ones: \code{"strength"} (sum of absolute edge weights),
+\code{"expected_influence"} (sum of signed edge weights), \code{"betweenness"}
+and \code{"closeness"} (on shortest paths with distance 1 / |weight|).
+Without \code{centrality_fn}, names may be abbreviated. Any other name
+needs \code{centrality_fn}, which then computes it; the built-in measures
+are always computed internally.}
 
-\item{centrality_fn}{Optional function. A custom centrality function
-that takes a weight matrix and returns a named list of centrality
-vectors. When \code{NULL} (default), all four built-in measures are
-computed internally: \code{"strength"}/\code{"expected_influence"}
-via \code{rowSums}, and \code{"betweenness"}/\code{"closeness"} via
-an internal Floyd-Warshall shortest-path routine. When provided, the
-function is called as \code{centrality_fn(mat)} and is used only for
-requested measures that are not one of the four built-ins; it should
-return a named list (e.g., \code{list(my_metric = ...)}).}
+\item{centrality_fn}{A function for measures beyond the four built-in
+ones: it is called as \code{centrality_fn(mat)} on the partial correlation
+matrix and returns a named list of centrality vectors, such as
+\code{list(my_metric = ...)}. Default \code{NULL}; a measure in \code{centrality}
+that is neither built in nor returned by it raises an error.}
 
-\item{cor_method}{Character. Correlation method: \code{"pearson"}
-(default), \code{"spearman"}, or \code{"kendall"}.}
+\item{cor_method}{The correlation method: \code{"pearson"} (default),
+\code{"spearman"} or \code{"kendall"}. Replaced by the value stored in a
+\code{netobject}.}
 
-\item{ncores}{Integer. Number of parallel cores for mclapply
-(default: 1, sequential).}
+\item{ncores}{The number of cores for the resampling, used through
+\code{\link[parallel:mclapply]{parallel::mclapply()}}, which forks the R process; on Windows it
+accepts only 1, and any larger value raises an error. Default \code{1}
+(sequential).}
 
-\item{seed}{Integer or NULL. RNG seed for reproducibility.}
+\item{seed}{A seed for reproducible resampling; the session's random
+state is restored when the call returns. Default \code{NULL} uses the
+current random stream. With \code{ncores > 1} the resamples are
+reproducible only under \code{RNGkind("L'Ecuyer-CMRG")}.}
 
-\item{...}{In \code{plot.boot_glasso()}: Additional arguments passed to plotting functions. For \code{type = "edge_diff"} and \code{type = "centrality_diff"}, accepts \code{order}: \code{"sample"} (default, sorted by value) or \code{"id"} (alphabetical). In \code{print.boot_glasso()} and \code{summary.boot_glasso()}: Additional arguments (ignored).}
+\item{...}{For the \code{plot()} method with \code{type = "edge_diff"} or
+\code{"centrality_diff"}: \code{order}, \code{"sample"} (default) to sort the edges by
+their absolute weight or the nodes by their centrality, or \code{"id"} to
+sort them alphabetically; with \code{type = "edge_diff"} also \code{pos_color}
+and \code{neg_color}, the fills for a cell where the edge on the x-axis has a
+larger or a smaller mean bootstrap weight than the edge on the y-axis
+(defaults
+\code{"#C0392B"} and \code{"#2C6E8A"}). Ignored
+otherwise, and by the \code{print()} and \code{summary()} methods.}
 
-\item{object}{For the \code{summary()} method: an object of class \code{boot_glasso}.}
+\item{object}{For the \code{summary()} method: a \code{boot_glasso}.}
 
-\item{type}{In \code{summary.boot_glasso()}: Character. Summary type: \code{"edges"} (default), \code{"centrality"}, \code{"cs"}, \code{"predictability"}, or \code{"all"}. In \code{plot.boot_glasso()}: Character. Plot type: \code{"edges"} (default), \code{"stability"}, \code{"edge_diff"}, \code{"centrality_diff"}, or \code{"inclusion"}.}
+\item{type}{What to return or draw. For the \code{summary()} method:
+\code{"edges"} (default), the edge intervals sorted by decreasing absolute
+weight; \code{"centrality"}, the centrality intervals; \code{"cs"}, the
+case-dropping table; \code{"predictability"}, the predictability intervals;
+or \code{"all"}, the four together. For the \code{plot()} method: \code{"edges"}
+(default), each edge's weight and interval; \code{"stability"}, the mean
+correlation with the original centralities against the proportion
+dropped, with a dashed line at 0.7; \code{"edge_diff"}, a heatmap of the
+mean bootstrap difference between every pair of edges, faint where the
+pair does not differ at \code{alpha} and starred where it does, with the
+edge weights on the diagonal; \code{"centrality_diff"}, a heatmap of which
+node pairs differ on \code{measure}, with the node values on the diagonal;
+or \code{"inclusion"}, each edge's inclusion probability, with a dashed line
+at 0.5.}
 
-\item{measure}{Character. Centrality measure for \code{type = "centrality_diff"} (default: first available measure).}
+\item{measure}{For the \code{plot()} method with \code{type = "centrality_diff"}:
+the centrality measure to compare, one of those computed (names may be
+abbreviated). Default \code{NULL}, the first measure computed.}
 }
 \value{
-An object of class \code{"boot_glasso"} containing:
+A \code{boot_glasso} object. \code{print()} reports the data size,
+\code{alpha} and \code{gamma}, the number of edges whose interval excludes zero,
+the mean inclusion probability, the failed resamples when there are
+any, each measure's CS-coefficient with its
+label, the number of edge pairs that differ, and the timing;
+\code{\link[=summary]{summary()}} returns the table chosen by \code{type} (edges, centralities,
+case-dropping results or predictability; described at the end of this
+section); \code{plot()} draws one figure chosen by \code{type}. The object's
+fields:
 \describe{
-\item{original_pcor}{Original partial correlation matrix.}
-\item{original_precision}{Original precision matrix.}
-\item{original_centrality}{Named list of original centrality vectors.}
-\item{original_predictability}{Named numeric vector of node R-squared.}
-\item{edge_ci}{Data frame of edge CIs (edge, weight, ci_lower, ci_upper,
-inclusion).}
-\item{edge_inclusion}{Named numeric vector of edge inclusion probabilities.}
-\item{thresholded_pcor}{Partial correlation matrix with non-significant
-edges zeroed.}
-\item{centrality_ci}{Named list of data frames (node, value, ci_lower,
-ci_upper) per centrality measure.}
-\item{cs_coefficient}{Named numeric vector of CS-coefficients per
+\item{original_pcor}{The partial correlation matrix of the original
+data.}
+\item{original_precision}{The precision matrix of the original data.}
+\item{original_centrality}{A named list with one vector of node values
+per centrality measure.}
+\item{original_predictability}{A named vector of each node's R-squared.}
+\item{edge_ci}{A data frame with one row per edge: \code{edge}, \code{weight},
+\code{ci_lower}, \code{ci_upper} and \code{inclusion}.}
+\item{edge_inclusion}{A named vector of edge inclusion probabilities.}
+\item{thresholded_pcor}{The partial correlation matrix with every edge
+whose interval includes zero set to zero.}
+\item{centrality_ci}{A named list with one data frame per centrality
+measure: \code{node}, \code{value}, \code{ci_lower}, \code{ci_upper}.}
+\item{cs_coefficient}{A named vector with the CS-coefficient of each
 centrality measure.}
-\item{cs_data}{Data frame of case-dropping results, one row per
-drop proportion by measure, with columns \code{drop_prop},
-\code{measure}, \code{mean_cor}, \code{prop_above} (fraction of
-that proportion's iterations correlating above 0.7) and
-\code{n_samples} (iterations that landed on that proportion).}
-\item{edge_diff_p}{Symmetric matrix of pairwise edge difference
-p-values; \code{NULL} when the network has more than 500 edges.}
-\item{centrality_diff_p}{Named list of symmetric p-value matrices per
-centrality measure.}
-\item{predictability_ci}{Data frame of node predictability CIs (node,
-r2, ci_lower, ci_upper).}
-\item{boot_edges}{iter x n_edges matrix of bootstrap edge weights.}
-\item{boot_centrality}{Named list of iter x p bootstrap centrality
-matrices.}
-\item{boot_predictability}{iter x p matrix of bootstrap R-squared.}
-\item{nodes}{Character vector of node names.}
-\item{n}{Sample size.}
-\item{p}{Number of variables.}
-\item{iter}{Number of nonparametric iterations.}
-\item{cs_iter}{Number of case-dropping iterations.}
-\item{cs_drop}{Drop proportions used.}
-\item{alpha}{Significance level.}
-\item{gamma}{EBIC hyperparameter.}
-\item{nlambda}{Lambda path length.}
-\item{centrality_measures}{Character vector of centrality measures.}
-\item{cor_method}{Correlation method.}
-\item{lambda_path}{Lambda sequence used.}
-\item{lambda_selected}{Selected lambda for original data.}
-\item{timing}{Named numeric vector with timing in seconds.}
+\item{cs_data}{A data frame of the case-dropping results, one row per
+drop proportion and measure: \code{drop_prop}, \code{measure}, \code{mean_cor},
+\code{prop_above} (the share of that proportion's iterations correlating
+above 0.7) and \code{n_samples} (the iterations that drew that
+proportion).}
+\item{edge_diff_p}{A symmetric matrix of the edge-difference p-values;
+\code{NULL} when the network has more than 500 edges.}
+\item{centrality_diff_p}{A named list with one symmetric matrix of
+node-difference p-values per centrality measure.}
+\item{predictability_ci}{A data frame with one row per node: \code{node},
+\code{r2}, \code{ci_lower}, \code{ci_upper}.}
+\item{boot_edges}{An \code{iter} x edges matrix of the bootstrap edge
+weights.}
+\item{boot_centrality}{A named list with one \code{iter} x nodes matrix of
+bootstrap values per centrality measure.}
+\item{boot_predictability}{An \code{iter} x nodes matrix of bootstrap
+R-squared values.}
+\item{nodes}{The node names.}
+\item{n}{The sample size.}
+\item{p}{The number of variables.}
+\item{iter, cs_iter, cs_drop, alpha, gamma, nlambda}{The settings used.}
+\item{centrality_measures}{The centrality measures computed.}
+\item{cor_method}{The correlation method used.}
+\item{lambda_path}{The lambda path used for every fit.}
+\item{lambda_selected}{The lambda selected on the original data.}
+\item{n_failed, cs_n_failed}{The numbers of bootstrap and
+case-dropping resamples whose estimation failed and that were left
+out.}
+\item{timing}{A named vector of elapsed seconds: \code{total}, \code{phase1}
+(the original fit), \code{bootstrap}, \code{case_drop} and \code{statistics}.}
 }
 
-In \code{print.boot_glasso()}: The input object, invisibly.
-
-In \code{summary.boot_glasso()}: For \code{type = "edges"}, the \code{edge_ci} data frame (\code{edge}, \code{weight}, \code{ci_lower}, \code{ci_upper}, \code{inclusion}) ordered by decreasing absolute weight; for \code{"cs"} the \code{cs_data} data frame; for \code{"predictability"} the \code{predictability_ci} data frame; for \code{"centrality"} a named list of one data frame per measure (\code{node}, \code{value}, \code{ci_lower}, \code{ci_upper}); for \code{"all"} a named list holding all four.
-
-In \code{plot.boot_glasso()}: A \code{ggplot} object (returned, and so printed when the call is made at the top level).
+\code{print()} returns its input invisibly. \code{summary()} returns a data
+frame: for \code{type = "edges"} the \code{edge_ci} table (\code{edge}, \code{weight},
+\code{ci_lower}, \code{ci_upper}, \code{inclusion}) sorted by decreasing absolute
+weight, for \code{"cs"} the \code{cs_data} table and for \code{"predictability"} the
+\code{predictability_ci} table; \code{"centrality"} returns a named list with one
+data frame per measure (\code{node}, \code{value}, \code{ci_lower}, \code{ci_upper}), and
+\code{"all"} a named list of the four (\code{edges}, \code{centrality}, \code{cs},
+\code{predictability}). \code{plot()} returns a \code{ggplot} object, which is drawn
+when the call is made at the top level. The edge-difference plot raises
+an error when the test was skipped (more than 500 edges).
 }
 \description{
-Fast, single-call bootstrap for EBICglasso partial correlation networks.
-Combines nonparametric edge/centrality bootstrap, case-dropping stability
-analysis, edge/centrality difference tests, predictability CIs, and
-thresholded network into one function. Designed as a faster alternative
-to bootnet with richer output.
+\code{boot_glasso()} assesses how accurately an EBIC graphical lasso network
+is estimated and how stable its centralities are, by resampling the
+observations (Epskamp, Borsboom & Fried, 2018). One call runs a
+nonparametric bootstrap, which gives percentile intervals and inclusion
+probabilities for every edge, intervals for each node's centralities and
+predictability, and bootstrap tests of the difference between every pair
+of edges and every pair of nodes; and a case-dropping bootstrap, which
+gives each centrality measure's correlation-stability (CS) coefficient.
+It takes the raw data or a network built with \code{method = "glasso"}.
+
+An interval shows how precisely an edge weight is estimated: a wide one
+means the weight changes a good deal between samples. Epskamp et al.
+(2018) caution that, because the lasso shrinks estimates towards zero,
+these intervals are not tests of whether an edge differs from zero; the
+thresholded network (edges whose interval excludes zero) and the
+"significant" count in \code{print()} read them that way, and the inclusion
+probability (how often an edge is non-zero across resamples) is a
+separate summary. The CS-coefficient is the largest proportion of cases
+that can be dropped while more than 95\% of the subsamples keep a
+correlation above 0.7 with the original centralities; Epskamp et al.
+(2018) suggest it should not be below 0.25 and preferably above 0.5
+before the centrality order is interpreted, and \code{print()} labels the
+values accordingly. The difference tests are not corrected for the
+number of pairs compared.
+}
+\details{
+The network is estimated as \code{\link[=build_glasso]{build_glasso()}} estimates it: with a
+\code{netobject}, with its own \code{params} (\code{lambda.min.ratio},
+\code{penalize.diagonal}, \code{refit}); with data, with that function's defaults
+(smallest lambda 0.01 times the largest, no penalty on the diagonal, the
+selected penalty re-solved exactly, no unregularised refit). The lambda
+path is set once from the original data and reused for every resample,
+which is fitted with the same settings; the penalty is chosen on it by
+EBIC with \code{gamma}. Strength is the sum of a node's absolute edge weights and
+expected influence the sum of its signed weights; betweenness and
+closeness use shortest paths with distance 1 / |weight|, computed
+without igraph. Predictability is \eqn{1 - 1 / \Theta_{ii}}, from the
+diagonal of the precision matrix, bounded to 0--1.
+
+The case-dropping bootstrap follows \pkg{bootnet}: each of the \code{cs_iter}
+iterations draws one proportion from \code{cs_drop} at random, keeps that
+share of the rows (at least \code{p + 1} of them) without replacement, and
+correlates the subsample's centralities with the original ones; a
+centrality that is constant across nodes counts as a correlation of 0.
+The difference tests give, for each pair, the two-sided bootstrap p-value
+\code{2 * min(P(d >= 0), P(d <= 0))} of the difference \code{d} between the two
+edges or nodes, capped at 1, with ties counted in both tails. The
+edge-difference test is skipped for networks with more than 500 edges. A
+resample whose estimation fails (for example, a variable constant in the
+resample) is kept as missing and left out of the intervals and the
+case-dropping results; the failures are counted in \code{n_failed} and
+\code{cs_n_failed}, shown by \code{print()}, and reported in a warning of class
+\code{nestimate_resample_failed}. The function was written as a faster, single-call
+alternative to running \pkg{bootnet} several times.
 }
 \section{Methods}{
 
 \itemize{
-\item \code{plot.boot_glasso()}: Plots bootstrap results for GLASSO networks.
+\item \code{plot()} draws one figure of the bootstrap results per call, chosen with
+\code{type}.
 }
 }
 

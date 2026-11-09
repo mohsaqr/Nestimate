@@ -7,25 +7,62 @@
 register_estimator(name, fn, description, directed)
 }
 \arguments{
-\item{name}{Character. Unique name for the estimator (e.g. \code{"relative"},
-\code{"glasso"}).}
+\item{name}{The name the estimator is called by, as \code{method} in
+\code{\link[=build_network]{build_network()}}: a single non-empty string. A name already registered
+is replaced.}
 
-\item{fn}{Function. The estimator function. Must accept \code{data} as its
-first argument and \code{...} for additional parameters. Must return a list
-with at least: \code{matrix} (square numeric matrix), \code{nodes}
-(character vector), \code{directed} (logical).}
+\item{fn}{The estimator function. Its first argument is \code{data}, and it
+must accept \code{...}, because \code{\link[=build_network]{build_network()}} passes every setting by
+name. It returns a list with \code{matrix} (the square numeric weight matrix),
+\code{nodes} (the node names, in the matrix's order) and \code{directed} (\code{TRUE}
+or \code{FALSE}); see \emph{Details} for the optional elements.}
 
-\item{description}{Character. Short description of the estimator.}
+\item{description}{A short description of the estimator, a single string,
+shown by \code{\link[=list_estimators]{list_estimators()}}.}
 
-\item{directed}{Logical. Whether the estimator produces directed networks.}
+\item{directed}{Whether the estimator produces directed networks, \code{TRUE}
+or \code{FALSE}. \code{\link[=build_network]{build_network()}} reads it to decide whether \code{level} (the
+multilevel decomposition) is allowed: a directed estimator refuses it.
+The edges of the network follow the \code{directed} element \code{fn} returns,
+but \code{\link[=bootstrap_network]{bootstrap_network()}} reads this registered flag to build its edge
+tables, so the two should agree.}
 }
 \value{
-Invisible \code{NULL}.
+\code{NULL}, invisibly. The estimator is added to the registry as a
+side effect.
 }
 \description{
-Register a custom or built-in network estimator function by name.
-Estimators registered here can be used by \code{\link{build_network}}
-via the \code{method} parameter.
+\code{register_estimator()} adds an estimator function to the registry that
+\code{\link[=build_network]{build_network()}} reads, so that \code{build_network(data, method = name)} calls
+it the way it calls a built-in method; the package registers its fourteen
+built-in methods with this function when it loads. A name already in the
+registry is replaced, built-ins included, without a message.
+\code{\link[=list_estimators]{list_estimators()}} shows what is
+registered and \code{\link[=remove_estimator]{remove_estimator()}} takes
+an entry out.
+
+A name that \code{\link[=build_network]{build_network()}} maps to a different built-in method (an
+alias such as \code{"tna"} or \code{"ebicglasso"}) is resolved to that method before
+the registry is read, so an estimator registered under it is never called;
+pick a name that is not an alias.
+}
+\details{
+\code{\link[=build_network]{build_network()}} calls the function as \code{fn(data = data, ...)}, where \code{...}
+holds the \code{params} list, the further arguments given to \code{\link[=build_network]{build_network()}}
+and a \code{format} setting, which is why \code{fn} must accept \code{...}. When \code{actor}
+names a column of wide or association data (long data is prepared by
+\code{\link[=build_network]{build_network()}} itself) and \code{fn} has an \code{id_col} argument (or, failing
+that and for data that is not one-hot, an \code{id} argument), the actor
+column is passed under that name unless \code{params} already sets it. Scaling,
+thresholding and the edge list are then applied to the returned \code{matrix},
+as for a built-in method.
+
+Besides \code{matrix}, \code{nodes} and \code{directed}, the returned list may hold
+\code{cleaned_data}, the data frame the network was estimated from, which
+\code{\link[=build_network]{build_network()}} splits into the network's \code{data} and \code{metadata} fields;
+any other named element is copied onto the \code{netobject}, replacing a field
+of the same name. A return value without \code{matrix}, \code{nodes} or \code{directed}
+makes \code{\link[=build_network]{build_network()}} stop with an error.
 }
 \examples{
 my_fn <- function(data, ...) {

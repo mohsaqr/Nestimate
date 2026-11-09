@@ -18,7 +18,7 @@ permutation(
   paired = FALSE,
   adjust = "none",
   measures = NULL,
-  nlambda = 50L,
+  nlambda = NULL,
   seed = NULL,
   actor = NULL
 )
@@ -36,180 +36,257 @@ permutation(
 \method{summary}{wtna_perm_mixed}(object, ...)
 }
 \arguments{
-\item{x}{A \code{netobject} (from \code{\link{build_network}}) or a
-\code{\link{net_edge_betweenness}} object. For the \code{print()} method: an object of class \code{net_permutation}, \code{net_permutation_group} or \code{wtna_perm_mixed}.}
+\item{x}{The first network: a \code{netobject} from \code{\link[=build_network]{build_network()}} (a bare
+\code{cograph_network} is converted to one), a \code{netobject_group} or \code{mcml},
+a \code{wtna_mixed}, or a \code{\link[=net_edge_betweenness]{net_edge_betweenness()}} result. For the \code{print()}
+methods: a \code{net_permutation}, \code{net_permutation_group} or
+\code{wtna_perm_mixed}.}
 
-\item{y}{A \code{netobject} (from \code{\link{build_network}}) or a
-\code{\link{net_edge_betweenness}} object.
-Must use the same method and have the same nodes as \code{x}.
-Default \code{NULL}: when \code{x} is a \code{netobject_group} (or an
-\code{mcml}) and \code{y} is left \code{NULL}, every pair of groups is
-tested and the result is a \code{net_permutation_group} named
-\code{"<group i> vs <group j>"}.}
+\item{y}{The second network, of the same kind as \code{x}, estimated with the
+same method on the same nodes (their order may differ); other methods
+or nodes raise an error. Default \code{NULL}: when \code{x} is a
+\code{netobject_group} or an \code{mcml}, every pair of its groups is tested.
+When both are \code{netobject_group}s, the groups present in both under the
+same name are tested, and having none in common raises an error.}
 
-\item{iter}{Integer. Number of permutation iterations (default: 1000).}
+\item{iter}{The number of shuffles, at least 2. Default \code{1000}. The
+smallest attainable p-value is \code{1 / (iter + 1)}.}
 
-\item{alpha}{Numeric. Significance level (default: 0.05).}
+\item{alpha}{The significance level, strictly between 0 and 1, that marks
+an edge or centrality as significant (\code{sig}, \code{diff_sig}) and that the
+\code{nestimate_few_actors} warning is checked against. It does not change
+the p-values. Default \code{0.05}.}
 
-\item{paired}{Logical. If \code{TRUE}, permute within pairs (requires
-equal number of observations in \code{x} and \code{y}). Default: FALSE.}
+\item{paired}{Whether the two networks hold paired observations (the
+i-th sequence or row of \code{x} with the i-th of \code{y}, such as the same
+people measured twice). Each shuffle then swaps the two members of a
+pair at random instead of shuffling all labels, so \code{x} and \code{y} need the
+same number of sequences (after \code{concat}) or rows; otherwise an error is
+raised. It cannot be combined with \code{actor}, of which it is the special
+case of one actor per pair. Default \code{FALSE}.}
 
-\item{adjust}{Character. p-value adjustment method passed to
-\code{\link[stats]{p.adjust}} (default: \code{"none"}). Common choices:
-\code{"holm"}, \code{"BH"}, \code{"bonferroni"}.}
+\item{adjust}{The multiplicity correction for the p-values, a method of
+\code{\link[stats:p.adjust]{stats::p.adjust()}}: \code{"none"} (default), \code{"holm"}, \code{"hochberg"},
+\code{"hommel"}, \code{"bonferroni"}, \code{"BH"}, \code{"BY"} or \code{"fdr"}. The correction
+runs over the tested edges: the cells non-zero in either network (a
+self-loop included), each pair counted once in an undirected network,
+whose matrix stays symmetric. Cells zero in both networks keep their
+raw p-value, 1. The centrality p-values are corrected separately, over
+all states and measures. Any other value raises an error of class
+\code{nestimate_bad_input} before anything runs.}
 
-\item{measures}{Character vector of centrality measures to permutation-test
-in addition to the edges, or \code{"all"} for every built-in measure.
-Default \code{NULL} (edges only). When supplied, the result gains a
-\code{$centralities} block matching the layout of
-\code{tna::permutation_test(measures = )}: per state and measure it reports
-the observed difference, an effect size (difference / SD of the permutation
-null), and a permutation p-value, all using the same permuted networks as
-the edge test. \code{Diffusion} is compared after min-max scaling to
-0-1 in each network, as in \code{net_centrality()}. Not supported for
-\code{net_edge_betweenness} inputs.}
+\item{measures}{Centrality measures to test as well as the edges: any of
+\code{"OutStrength"}, \code{"InStrength"}, \code{"ClosenessIn"}, \code{"ClosenessOut"},
+\code{"Closeness"}, \code{"Betweenness"}, \code{"BetweennessRSP"}, \code{"Diffusion"} and
+\code{"Clustering"} (\code{"InCloseness"} and \code{"OutCloseness"} are accepted for
+\code{"ClosenessIn"} and \code{"ClosenessOut"}), or \code{"all"} for the nine. Default
+\code{NULL} (edges only). Every state and measure gets the observed
+difference, an effect size and a p-value from the same shuffled
+networks as the edge test. The centralities are computed as by
+\code{\link[=net_centrality]{net_centrality()}} with its defaults: self-loops left out, heavier edges
+as shorter steps, and \code{Diffusion} range-normalised to 0--1 in each
+network. An unknown name raises an error, and so does any \code{measures}
+with \code{\link[=net_edge_betweenness]{net_edge_betweenness()}} input.}
 
-\item{nlambda}{Integer. Number of lambda values for the EBIC-glasso
-regularisation path (only used when \code{method = "glasso"}).
-Higher values give finer lambda resolution at the cost of speed.
-Default: 50.}
+\item{nlambda}{Ignored, kept so existing calls run. Default \code{NULL}. The
+shuffled glasso networks use the \code{nlambda} the networks were built with
+(see \emph{Details}); a value other than \code{NULL} gives a warning of class
+\code{nestimate_ignored_argument}.}
 
-\item{seed}{Integer or NULL. RNG seed for reproducibility.}
+\item{seed}{An integer that makes the shuffles reproducible. Default
+\code{NULL}. The session's own random stream is left as it was; with grouped
+input each pair,
+or each shared group, is tested from the same seed.}
 
-\item{actor}{Character or NULL. Name of the column identifying the actor
-each sequence belongs to: the person whose sessions they are, or the
-team of a student. Looked up in the network's \code{$metadata} (e.g.
-\code{"student_id"} when sessions are nested in students,
-\code{"Group"} for students nested in teams) or in its wide sequence
-data. When supplied, whole actors are permuted and the ICC and design
-effect are reported; see the sections \emph{Nested data and actor} and
-\emph{ICC and design effect}. Supported for transition
-methods (\code{"relative"}, \code{"frequency"}, \code{"co_occurrence"});
-cannot be combined with \code{paired = TRUE}, which is the special case
-of one actor per pair. Default \code{NULL}: sequences are permuted
-individually.}
+\item{actor}{The column identifying the actor each sequence belongs to:
+the person whose sessions they are, or the team of a student. It is
+looked up in the network's metadata (such as \code{"student_id"} when
+sessions are nested in students, or \code{"Group"} for students nested in
+teams) and then in its wide sequence data. Whole actors are then
+shuffled, and the ICC and design effect are reported; see the sections
+\emph{Nested data and actor} and \emph{ICC and design effect}. Default \code{NULL}:
+sequences are shuffled one by one. A value that is not one column name,
+or \code{actor} with \code{paired = TRUE}, raises an error of class
+\code{nestimate_bad_actor}; a column that is absent or has missing values,
+\code{nestimate_actor_missing}; a column whose values do not give one id per
+sequence (or, with \code{concat}, that joins rows of different actors),
+\code{nestimate_actor_misaligned}; a method other than the transition
+methods, \code{nestimate_actor_unsupported}.}
 
-\item{...}{In \code{print.net_permutation()}, \code{print.net_permutation_group()}, \code{print.wtna_perm_mixed()}, \code{summary.net_permutation()}, \code{summary.net_permutation_group()} and \code{summary.wtna_perm_mixed()}: Additional arguments (ignored).}
+\item{...}{For the \code{print()} and \code{summary()} methods: not used.}
 
-\item{object}{For the \code{summary()} method: an object of class \code{net_permutation}, \code{net_permutation_group} or \code{wtna_perm_mixed}.}
+\item{object}{For the \code{summary()} methods: a \code{net_permutation},
+\code{net_permutation_group} or \code{wtna_perm_mixed}.}
 }
 \value{
-An object of class \code{"net_permutation"} containing:
+A \code{net_permutation} object. \code{print()} shows the settings, the
+number of edges tested and significant, the global test and, with
+\code{actor}, the ICC and design effects; \code{summary()} returns the edge table,
+one row per edge present in either network; \code{cograph::splot()} draws
+the difference network. Grouped input gives a \code{net_permutation_group}, a
+named list of \code{net_permutation} results (one per group pair, named
+\code{"<group i> vs <group j>"}, when \code{y} is \code{NULL}; one per shared group
+name otherwise), whose \code{print()} prints each and whose \code{summary()}
+stacks the edge tables with a leading \code{group} column naming the pair or
+group. Two \code{wtna_mixed} inputs give a \code{wtna_perm_mixed}, the
+\code{net_permutation} results of the \code{transition} and \code{cooccurrence}
+networks, whose \code{print()} prints both and whose \code{summary()} returns a
+list of their two edge tables. The \code{print()} methods return their input
+invisibly. The \code{net_permutation}'s fields:
 \describe{
-\item{x}{The first \code{netobject}.}
-\item{y}{The second \code{netobject}.}
-\item{diff}{Observed difference matrix (\code{x - y}).}
-\item{diff_sig}{Observed difference where \code{p < alpha}, else 0.}
-\item{p_values}{P-value matrix (adjusted if \code{adjust != "none"}).}
-\item{effect_size}{Effect size matrix (observed diff / SD of permutation diffs).}
-\item{summary}{Long-format data frame, one row per edge present in
-either network (undirected networks keep one row per unordered
-pair), with columns \code{from}, \code{to}, \code{weight_x},
-\code{weight_y}, \code{diff}, \code{effect_size}, \code{p_value},
-\code{sig}.}
-\item{global}{Data frame of the two global difference statistics, one
-row each: \code{statistic} (\code{"M"}, the sum of absolute edge
-differences, and \code{"S"}, the largest absolute edge difference),
-\code{observed}, and \code{p_value} from the same permutation null
-as the edge test. Absent on the edge-betweenness path.}
-\item{method}{The network estimation method.}
-\item{source_method}{For edge-betweenness tests, the source network method.}
-\item{iter}{Number of permutation iterations.}
-\item{alpha}{Significance level used.}
-\item{paired}{Whether paired permutation was used.}
-\item{adjust}{p-value adjustment method used.}
+\item{x, y}{The two networks compared.}
+\item{diff}{The observed difference matrix, \code{x - y}.}
+\item{diff_sig}{The observed difference where \code{p < alpha}, else 0.}
+\item{p_values}{The p-value matrix (adjusted when \code{adjust} is not
+\code{"none"}).}
+\item{effect_size}{The effect-size matrix: the observed difference
+divided by the SD of the shuffled differences.}
+\item{summary}{The edge table \code{summary()} returns: one row per edge
+present in either network (an undirected network has one row per
+unordered pair), with columns \code{from}, \code{to}, \code{weight_x}, \code{weight_y},
+\code{diff}, \code{effect_size}, \code{p_value} and \code{sig}.}
+\item{global}{The global test, one row per statistic: \code{statistic}
+(\code{"M"}, the sum of absolute differences, and \code{"S"}, the largest
+absolute difference), \code{observed}, and \code{p_value} from the same
+shuffles as the edge test. Absent for edge-betweenness input.}
+\item{method}{The network estimation method (\code{"edge_betweenness"} for
+edge-betweenness input).}
+\item{source_method}{For edge-betweenness input: the source networks'
+method.}
+\item{edge_betweenness}{For edge-betweenness input: the \code{invert}
+setting and the source method used.}
+\item{iter, alpha, paired, adjust}{The settings used.}
 \item{actor}{The \code{actor} column name, or \code{NULL}.}
-\item{n_actors}{Number of distinct actors, or \code{NULL}.}
-\item{null_sd}{Matrix of the SD of each edge difference over the
-permutation null (the effect-size denominator).}
-\item{null_sd_m}{SD of the global \code{M} statistic over the
-permutation null. Absent on the edge-betweenness path.}
-\item{clustering}{Present only with \code{actor}. One-row data frame:
-\code{n_sequences}, \code{n_actors}, \code{design}
-(\code{"between"}, \code{"within"}, \code{"mixed"}), \code{icc} with
-\code{icc_ci_lower}/\code{icc_ci_upper} (how alike sequences of one
-actor are; see \code{\link{permutation_diagnostics}}),
-\code{deff_edges} (median over edges) and \code{deff_global} (for
-\code{M}): the actor-level over the sequence-level null variance, drawn in the
-same run (the design effect; Kish, 1965). \code{min_p} is the
-smallest attainable p-value.}
-\item{clustering_edges}{Present only with \code{actor}. One row per
-edge of \code{summary}: \code{from}, \code{to}, \code{icc},
-\code{null_sd_actor}, \code{null_sd_sequence}, \code{deff}.}
-\item{centralities}{Present only when \code{measures} is supplied. A list
-with \code{stats} (one row per state-by-measure: \code{state},
-\code{centrality}, \code{diff_true}, \code{effect_size}, \code{p_value}),
-\code{diffs_true} (wide observed differences), and \code{diffs_sig}
-(observed differences where \code{p < alpha}, else 0).}
+\item{n_actors}{The number of distinct actors, or \code{NULL}.}
+\item{null_sd}{The SD of each edge's shuffled differences (the
+effect-size denominator), as a matrix.}
+\item{null_sd_m}{The SD of the global statistic M over the shuffles.
+Absent for edge-betweenness input.}
+\item{clustering}{Only with \code{actor}: a one-row data frame with
+\code{n_sequences}, \code{n_actors}, \code{design} (\code{"between"}, \code{"within"} or
+\code{"mixed"}), \code{icc} with \code{icc_ci_lower} and \code{icc_ci_upper} (how alike
+the sequences of one actor are), \code{deff_edges} (the median design
+effect over edges), \code{deff_global} (the design effect for M) and
+\code{min_p}, the smallest attainable p-value.}
+\item{clustering_edges}{Only with \code{actor}: one row per edge of the edge
+table, with \code{from}, \code{to}, \code{icc}, \code{null_sd_actor}, \code{null_sd_sequence}
+and \code{deff}.}
+\item{centralities}{Only with \code{measures}: a list of \code{stats} (one row
+per state and measure, with \code{state}, \code{centrality}, \code{diff_true},
+\code{effect_size} and \code{p_value}), \code{diffs_true} (the observed differences,
+one row per state and one column per measure) and \code{diffs_sig} (the
+same where \code{p < alpha}, else 0).}
 }
-Grouped input returns a \code{"net_permutation_group"} (a named list of
-\code{net_permutation} results): one element per matching group name
-when both \code{x} and \code{y} are \code{netobject_group}s, or one per
-group pair when \code{y} is \code{NULL}. Two \code{wtna_mixed} inputs
-return a \code{"wtna_perm_mixed"} with \code{$transition} and
-\code{$cooccurrence} results.
-
-In \code{print.net_permutation()} and \code{print.wtna_perm_mixed()}: The input object, invisibly.
-
-In \code{summary.net_permutation()}: The \code{$summary} data frame: one row per edge present in either network, with columns \code{from}, \code{to}, \code{weight_x}, \code{weight_y}, \code{diff}, \code{effect_size}, \code{p_value}, \code{sig}.
-
-In \code{print.net_permutation_group()}: \code{x} invisibly.
-
-In \code{summary.net_permutation_group()}: The per-group summaries stacked into one data frame: the columns of \code{\link{summary.net_permutation}} prefixed by a \code{group} column naming the group (or group pair) each row came from.
-
-In \code{summary.wtna_perm_mixed()}: A list with transition and co-occurrence permutation summaries.
 }
 \description{
-Tests whether two networks estimated by \code{\link{build_network}}
-differ more than chance would produce. The sequences (or rows) of both
-networks are pooled, the group labels are shuffled \code{iter} times, both
-networks are re-estimated on every shuffle, and the observed differences
-are compared with the shuffled ones. Works with every built-in method and
-with registered custom estimators.
+\code{permutation()} tests whether two networks differ more than chance would
+produce. The sequences (or, for association networks, the rows) behind
+both networks are pooled, the group labels are shuffled \code{iter} times, both
+networks are re-estimated on every shuffle, and each observed difference
+is compared with the shuffled ones. It tests every edge, the network as a
+whole and, with \code{measures}, the nodes' centralities.
+
+It compares two \code{netobject}s from \code{\link[=build_network]{build_network()}} estimated with the
+same method on the same nodes, for every built-in method and for
+registered estimators whose result keeps the data (\code{cleaned_data}, see
+\code{\link[=register_estimator]{register_estimator()}}). A \code{netobject_group} (or an \code{mcml}, converted with
+\code{\link[=as_tna]{as_tna()}}) is tested pair by pair: every pair of its groups when \code{y} is
+\code{NULL}, or the groups of the same name in a second \code{netobject_group}. Two
+\code{wtna_mixed} results of \code{\link[=wtna]{wtna()}} are tested on their transition and
+co-occurrence networks, and two \code{\link[=net_edge_betweenness]{net_edge_betweenness()}} results on their
+edge betweenness.
+
+A small p-value says that the observed difference is larger than the
+shuffles produce; it does not say how large or how probable the
+difference is, which \code{\link[=bayes_compare]{bayes_compare()}} estimates. With many edges, some
+fall below \code{alpha} by chance: set \code{adjust} to correct for that. The
+shuffle treats every sequence as exchangeable; when sequences are nested
+in persons or teams, set \code{actor}, and see what the nesting changes with
+\code{\link[=permutation_diagnostics]{permutation_diagnostics()}}.
+}
+\details{
+For transition methods, per-sequence count matrices are computed once and
+each shuffle only re-sums them, which keeps a large \code{iter} fast; the
+networks' \code{scaling} and \code{threshold} are applied to every shuffled network
+as to the observed one. For the other methods the estimator is re-run on
+every shuffle (\code{cor} and \code{pcor} through a lighter direct path).
+For \code{glasso}, every shuffled network is estimated as \code{\link[=build_network]{build_network()}}
+estimated the observed ones, with \code{x}'s \code{params} (each sample's own
+lambda path, \code{nlambda}, \code{lambda.min.ratio}, \code{gamma},
+\code{penalize.diagonal}, \code{refit}), so the observed difference and its null
+come from one estimator (van Borkulo et al. 2022). Two glasso networks
+built with different settings raise an error of class
+\code{nestimate_bad_input}.
+A network that rests on one sequence, or one-hot data with no actor or
+session, has nothing to shuffle and raises an error of class
+\code{nestimate_single_sequence}.
+
+Wide rows combined with \code{params = list(concat = k)} are shuffled as the
+merged sequences the estimator used, keeping their internal joins. A
+merged sequence must lie within one actor when \code{actor} is set (class
+\code{nestimate_actor_misaligned} otherwise), and paired tests need the same
+number of merged sequences. Both networks must use the same \code{weighted}
+setting (class \code{nestimate_bad_input} otherwise).
+
+A refit that fails or produces non-finite weights makes the permutation
+statistic undefined for that shuffle. The test then raises an error of
+class \code{nestimate_permutation_failed} that reports the number of failed
+shuffles, and returns no p-values: failed shuffles are neither counted as
+non-exceedances nor dropped from the null.
+
+For \code{\link[=net_edge_betweenness]{net_edge_betweenness()}} input, the source networks are shuffled and
+edge betweenness is recomputed on each shuffle. Both objects must come
+from the same source method and use the same \code{invert} setting.
+
+The centrality block follows the layout of
+\code{tna::permutation_test(measures = )}: a centrality whose shuffled
+differences do not vary gets an effect size of \code{NaN} or \code{Inf}, as there,
+rather than the 0 the edge table uses.
 }
 \section{What is tested}{
 
 Two kinds of question are answered from the same shuffles.
 \describe{
 \item{Edge tests}{One test per edge: is the difference in this edge's
-weight, \code{x - y}, larger than the shuffles produce? Reported in
-\code{summary()} with an effect size (observed difference divided by
-the SD of the shuffled differences) and a p-value
-\code{(number of shuffles at least as extreme + 1) / (iter + 1)}. With
-many edges, some fall below \code{alpha} by chance; use \code{adjust}
-to correct for that.}
+weight, \code{x - y}, larger in absolute value than the shuffles produce?
+\code{summary()} reports each with an effect size (the observed difference
+divided by the SD of the shuffled differences, 0 when that SD is 0)
+and a p-value, \verb{(number of shuffles at least as extreme + 1) / (iter + 1)}.}
 \item{Global test}{One test for the whole network: do the two networks
-differ at all? Two statistics: \strong{M}, the sum of the absolute edge
-differences (the total amount of difference), and \strong{S}, the
-largest absolute edge difference. Being a single test, it needs no
-multiplicity correction. It is shown by \code{print()}.}
+differ at all? Two statistics: \strong{M}, the sum of the absolute
+differences over all cells of the weight matrix (the total amount of
+difference; an undirected edge counts twice), and \strong{S}, the largest
+absolute difference. Being a single test, it needs no multiplicity
+correction. \code{print()} shows it.}
 }
-The letters follow this function's historical convention. In
-\code{\link{nct}}, M is instead the largest absolute edge difference and
-S the difference in global strength. The sum of absolute edge differences
-here measures total edge difference, not a difference in global strength.
-The smallest attainable p-value is \code{1 / (iter + 1)}; with the
-default \code{iter = 1000} it is 0.000999, meaning no shuffle came close.
+The letters follow this function's historical convention. In \code{\link[=nct]{nct()}}, M
+is instead the largest absolute edge difference and S the difference in
+global strength; the sum of absolute edge differences here measures total
+edge difference, not a difference in global strength. The smallest
+attainable p-value is \code{1 / (iter + 1)}; with the default \code{iter = 1000} it
+is 0.000999, meaning that no shuffle came close.
 }
 
 \section{Nested data and \code{actor}}{
 
 Shuffling treats every sequence as an exchangeable unit. When several
 sequences come from the same actor (sessions of one person, students of
-one team), \code{actor} names the column identifying that actor. The
-shuffle then respects it (Good, 2005; Anderson & ter Braak, 2003): a
-person whose sequences are all in one group moves to the other group
-as a whole; a person with sequences in both groups has their labels
-shuffled among their own sequences only. Mixed designs combine the two.
-The observed differences do not change; only the p-values and effect
-sizes do. With few persons there are few distinct ways to shuffle them,
-and a warning (class \code{nestimate_few_actors}) is raised when no
-p-value could fall below \code{alpha}.
+one team), \code{actor} names the column identifying that actor, and the
+shuffle respects it (Good, 2005; Anderson & ter Braak, 2003): an actor
+whose sequences are all in one group moves to the other group as a whole,
+and an actor with sequences in both groups has their labels shuffled
+among their own sequences only. Mixed designs combine the two. The
+observed differences do not change; only the p-values and effect sizes
+do. With few actors there are few distinct ways to shuffle them, and a
+warning of class \code{nestimate_few_actors} is raised when no p-value could
+fall below \code{alpha}.
 
-\code{actor} is available for transition networks (\code{"relative"},
-\code{"frequency"}, \code{"co_occurrence"}). Association networks
-(\code{"cor"}, \code{"pcor"}, \code{"glasso"}, ...) do not keep row
-identifiers after estimation and raise \code{nestimate_actor_unsupported}.
+\code{actor} is available for transition networks built from sequences
+(\code{"relative"}, \code{"frequency"}, \code{"co_occurrence"}). On one-hot data the
+actor column is held per row rather than per unit, so the call raises an
+error of class \code{nestimate_actor_misaligned}. The other methods, association networks (\code{"cor"},
+\code{"pcor"}, \code{"glasso"}, ...) among them, do not keep row identifiers after
+estimation and raise an error of class \code{nestimate_actor_unsupported}.
 }
 
 \section{ICC and design effect}{
@@ -218,18 +295,19 @@ With \code{actor}, \code{print()} also reports:
 \describe{
 \item{ICC}{The intraclass correlation, the proportion of the total
 variance that lies between actors (Shrout & Fleiss, 1979). An ICC
-close to 0 indicates little evidence of a nesting effect. Computed as
-the one-way ANOVA ICC of each sequence's transition shares within each
-group, averaged over edges weighted by edge frequency, jackknife
+close to 0 indicates little evidence of a nesting effect. It is the
+one-way ANOVA ICC of each sequence's transition shares within each
+group, averaged over edges weighted by edge frequency and jackknife
 bias-corrected, with a 95\% interval from the leave-one-actor-out
 jackknife (Efron & Tibshirani, 1993).}
 \item{Design effect}{The ratio of the variance of an estimate under the
 clustered design to its variance had the units been sampled
-independently (Kish, 1965). Here: the variance of the shuffled
+independently (Kish, 1965). Here it is the variance of the shuffled
 differences when whole actors are moved, divided by the variance when
-single sequences are moved, both drawn in the same run. Reported as
+single sequences are moved, both drawn in the same run, reported as
 the median over edges and for the global statistic M. For equal
-numbers of sequences per actor m, Kish gives the approximation \code{1 + (m - 1) * ICC}.}
+numbers of sequences per actor m, Kish gives the approximation
+\code{1 + (m - 1) * ICC}.}
 }
 }
 
@@ -243,47 +321,13 @@ Permutation Test: Transition Network (relative probabilities) [directed]
   Nesting in Group: ICC = -0.002 [95\% CI -0.006, 0.002]  |  between design
   Design effect (1 = nesting does not matter): edges 1.03  |  global 1.20
 }
-Line 2: settings, and the actor column with its number of actors.
-Line 3: edges present in either network and how many differ at
-\code{alpha}. Line 4: the global test. Lines 5-6, only with
-\code{actor}: the ICC with its interval, whether actors sit in one group
-(\code{between}), in both (\code{within}) or either (\code{mixed}), and
-the design effects.
-}
-
-\section{Other inputs}{
-
-For transition methods, per-sequence count matrices are computed once
-and each shuffle only re-sums them, which keeps large \code{iter} fast.
-For association methods the estimator is re-run on every shuffle. A network
-that rests on one sequence, or one-hot data with no actor or session, has
-nothing to shuffle and raises an error of class
-\code{nestimate_single_sequence}.
-
-Wide rows combined with \code{params = list(concat = k)} are shuffled
-as the merged sequences used by the estimator, keeping their internal
-joins. A merged sequence must lie within one actor when \code{actor}
-is supplied; paired tests need the same number of merged sequences.
-Both networks must use the same \code{weighted} setting.
-
-An association refit that fails or produces non-finite weights makes
-the permutation statistic undefined for that draw. In that case the
-test raises \code{nestimate_permutation_failed}, reporting the number
-of failed draws, and returns no p-values. Failed draws are neither
-counted as non-exceedances nor silently discarded from the null.
-
-\code{permutation()} also accepts two \code{\link{net_edge_betweenness}}
-objects. It then permutes the source networks, recomputes edge
-betweenness for each shuffle, and tests the edge-betweenness
-differences. Both objects must come from the same source method and use
-the same \code{invert} setting.
-}
-
-\section{Methods}{
-
-\itemize{
-\item \code{summary.net_permutation_group()}: Returns a combined summary data frame across all groups.
-}
+Line 2: the settings, and the actor column with its number of actors.
+Line 3: the edges present in either network and how many differ at
+\code{alpha}. Line 4: the global test. Lines 5 and 6, only with \code{actor}: the
+ICC with its interval, whether actors sit in one group (\code{between}), in
+both (\code{within}) or either (\code{mixed}), and the design effects. With \code{actor},
+when no p-value can fall below \code{alpha} (too few actors, or too small an
+\code{iter}), a last line says so.
 }
 
 \examples{
@@ -338,11 +382,9 @@ Comparing network structures on three aspects: A permutation test.
 \emph{Psychological Methods}, 28(6), 1273-1285.
 }
 \seealso{
-\code{\link{permutation_diagnostics}} to compare the
-actor-level and ordinary tests side by side; \code{\link{bayes_compare}} for the Bayesian complement: instead of
-"is this difference more extreme than chance?" it answers "how probable is
-a difference, and how large?";
-\code{\link{build_network}}, \code{\link{bootstrap_network}},
-\code{\link{print.net_permutation}},
-\code{\link{summary.net_permutation}}
+\code{\link[=permutation_diagnostics]{permutation_diagnostics()}} to compare the actor-level and
+ordinary tests side by side; \code{\link[=bayes_compare]{bayes_compare()}} for the Bayesian
+complement, which instead of "is this difference more extreme than
+chance?" answers "how probable is a difference, and how large?";
+\code{\link[=build_network]{build_network()}}, \code{\link[=bootstrap_network]{bootstrap_network()}}
 }

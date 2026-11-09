@@ -1,117 +1,142 @@
 #' Discover Sequential Patterns
 #'
-#' Finds the ordered patterns that occur in a set of sequences and reports,
-#' for each one, how often it occurs, how many sequences contain it, and its
-#' lift. Three pattern types are supported:
+#' @description
+#' `sequence_patterns()` finds the ordered patterns of states that occur in
+#' a set of sequences and returns one row per pattern with how often it
+#' occurs, how many sequences contain it, and its lift. It reads sequences
+#' in every form [extract_sequences()] accepts, and finds three kinds of
+#' pattern:
 #' \describe{
-#'   \item{\code{"ngram"}}{Contiguous runs of \code{len} states,
-#'     e.g. \code{A->B->C}.}
-#'   \item{\code{"gapped"}}{Two states separated by \code{gap} positions of
-#'     any state, e.g. \code{A->*->B} (gap 1) or \code{A->**->B} (gap 2).}
-#'   \item{\code{"repeated"}}{Runs of \code{len} identical states,
-#'     e.g. \code{A->A->A}.}
+#'   \item{`"ngram"`}{Contiguous runs of `len` states, e.g. `A->B->C`.}
+#'   \item{`"gapped"`}{Two states separated by `gap` positions of any
+#'     state, e.g. `A->*->B` (gap 1) or `A->**->B` (gap 2).}
+#'   \item{`"repeated"`}{Runs of `len` identical states, e.g. `A->A->A`.}
 #' }
-#' A window that contains a missing value is skipped, so a pattern never
-#' spans a gap or the end of a sequence.
+#' A `pattern` template searches for the instances of one pattern instead,
+#' and `group` adds a test of whether the share of sequences containing a
+#' pattern differs between groups (see *Group test*).
+#'
+#' Support and lift describe the sequences at hand. A lift above 1 says the
+#' states of a pattern occur in this order in more sequences than their
+#' separate presence predicts; it does not account for the transition
+#' structure, so a pattern that the transition probabilities make likely
+#' can have a lift above 1. Many patterns are searched at once, so read
+#' the group test's `p_adj`, not `p_value`, and its effect sizes beside
+#' them. To relate patterns to an outcome, use [pattern_outcome()]; to
+#' compare how often each run of states occurs in each group,
+#' [sequence_compare()].
 #'
 #' @details
-#' \code{support} is the share of sequences that contain the pattern at
-#' least once. \code{lift} compares it with the support expected if the
-#' states in the pattern appeared in sequences independently:
-#' \code{support / prod(state_support)}, where the support of a state is the
-#' share of sequences in which it occurs and wildcard positions are left out.
-#' A lift above 1 means the states co-occur in this order more often than
-#' independent presence predicts. It does not account for the transition
-#' structure: a pattern that the transition probabilities make likely can
-#' have a lift above 1.
+#' `support` is the share of sequences that contain the pattern at least
+#' once. `lift` compares it with the support expected if the states in the
+#' pattern appeared in sequences independently:
+#' `support / prod(state_support)`, where the support of a state is the
+#' share of sequences in which it occurs and wildcard positions are left
+#' out.
 #'
-#' \code{proportion} is computed over all patterns of the same length before
-#' \code{min_freq}, \code{min_support}, \code{start}, \code{end} and
-#' \code{contain} are applied, so it does not change with the filters.
+#' A window that contains a missing value, at a fixed or a wildcard
+#' position, is skipped, so a pattern never spans a gap or the end of a
+#' sequence.
 #'
-#' @param x Sequence data, in any form accepted by
-#'   \code{\link{extract_sequences}()}: prepared data, a long event log
-#'   (with \code{action}), a wide data frame or character matrix, a
-#'   \code{netobject}, \code{netobject_group} or \code{tna} model.
-#' @param type Pattern type: \code{"ngram"} (default), \code{"gapped"} or
-#'   \code{"repeated"}.
-#' @param len Integer vector of pattern lengths for \code{"ngram"} and
-#'   \code{"repeated"}. Default \code{2:5}.
-#' @param gap Integer vector of gap sizes for \code{"gapped"}. Default
-#'   \code{1:3}.
-#' @param min_freq Minimum number of occurrences. Default \code{2}.
-#' @param min_support Minimum share of sequences containing the pattern.
-#'   Default \code{0.01}.
-#' @param start,end Optional character vectors of states. Keep only patterns
-#'   that begin (\code{start}) or end (\code{end}) with one of them.
-#' @param contain Optional character vector of states. Keep only patterns
-#'   that include at least one of them.
-#' @param pattern Optional template to search for instead of discovering
-#'   all patterns, e.g. \code{"discuss->*->consensus"}: each \code{*} is one
-#'   position holding any state (\code{**} is two). Every concrete instance
-#'   is returned as its own row (\code{"discuss->plan->consensus"}, ...).
-#'   \code{type}, \code{len} and \code{gap} are then ignored.
-#' @param group Optional grouping of the sequences: the name of a column
-#'   stored with them (a covariate of a wide data frame or long event log,
-#'   or of a network's metadata), or a vector with one value per sequence.
-#'   For a \code{netobject_group} its own grouping is used when \code{group}
-#'   is \code{NULL}. Adds a test of pattern presence by group; see Details.
-#'   \code{group = "last_obs"} uses each sequence's last observed state as
-#'   its group and removes the states that end some sequence from all
-#'   sequences (for data whose final state codes the outcome, e.g. an
-#'   appended \code{"pass"}/\code{"fail"}; codyna's \code{last_obs}).
-#' @param reference For two groups, the reference group; the odds ratio is
-#'   for the other group. Default: the first group in sorted order.
-#' @param adjust Multiplicity correction for the group test, passed to
-#'   \code{\link[stats]{p.adjust}}. Default \code{"BH"}.
-#' @param top Optional number of rows to return (the first \code{top} in the
-#'   output order). Default \code{NULL}, all rows.
-#' @param cols State columns of a wide data frame; see
-#'   \code{\link{extract_sequences}()}.
-#' @param ... Passed to \code{\link{extract_sequences}()}, e.g.
-#'   \code{actor}, \code{action} and \code{time} for a long event log.
+#' `proportion` is computed over all patterns of the same length before
+#' `min_freq`, `min_support`, `start`, `end` and `contain` are applied, so
+#' it does not change with the filters. Counts, support and lift agree with
+#' `codyna::discover_patterns()`, which computes `proportion` after the
+#' filters instead.
+#'
+#' @param x The sequences, in any form [extract_sequences()] accepts:
+#'   prepared data, a long event log (with `action`), a wide data frame or
+#'   character matrix, a `netobject`, `netobject_group` or `tna` model.
+#' @param type The kind of pattern to find: `"ngram"` (default),
+#'   `"gapped"` or `"repeated"`. Ignored when `pattern` is given.
+#' @param len The pattern lengths, in states, for `"ngram"` and
+#'   `"repeated"`: positive whole numbers. Default `2:5`.
+#' @param gap The gap sizes, in positions, for `"gapped"`: positive whole
+#'   numbers. Default `1:3`.
+#' @param min_freq The fewest times a pattern must occur to be kept, at
+#'   least 1. Default `2`.
+#' @param min_support The smallest share of sequences that must contain a
+#'   pattern for it to be kept, between 0 and 1. Default `0.01`.
+#' @param start,end States a pattern must begin (`start`) or end (`end`)
+#'   with, one of them at least; wildcards do not count. Default `NULL`
+#'   (any).
+#' @param contain States a pattern must include, one of them at least.
+#'   Default `NULL` (any).
+#' @param pattern A template to search for instead of discovering all
+#'   patterns, such as `"discuss->*->consensus"`: each `*` is one position
+#'   holding any state (`**` is two). Every concrete instance is returned
+#'   as its own row (`"discuss->plan->consensus"`, ...). States are joined
+#'   by `"->"` (spaces around it are allowed), and a template may mix fixed
+#'   states and wildcards or hold no wildcard at all. `type`, `len` and
+#'   `gap` are then ignored. An empty template, or one with an empty step
+#'   such as `"A->->B"` or a leading or trailing `"->"`, raises an error of
+#'   class `nestimate_bad_input`. Default `NULL`.
+#' @param group The grouping of the sequences for the group test: the name
+#'   of a column stored with them (a covariate of a wide data frame or long
+#'   event log, or of a network's metadata), or a vector with one value per
+#'   sequence. A `netobject_group` is grouped by its own groups when
+#'   `group` is `NULL`. `"last_obs"` takes each sequence's last observed
+#'   state as its group and removes every state that ends some sequence
+#'   from all sequences, for data whose final state codes the outcome
+#'   (such as an appended `"pass"` or `"fail"`), as codyna's `last_obs`
+#'   does. Sequences with a missing group are dropped with a warning of
+#'   class `nestimate_missing_group`. A column not found, a vector of the
+#'   wrong length or a single group raise an error of class
+#'   `nestimate_bad_input`. Default `NULL` (no test).
+#' @param reference For two groups: the reference group, so the odds ratio
+#'   is that of the other group. Default `NULL`, the first group in sorted
+#'   order; a value that is not a group raises an error of class
+#'   `nestimate_bad_input`.
+#' @param adjust The multiplicity correction of the group test's p-values,
+#'   one of `p.adjust.methods` (see [stats::p.adjust()]). Default `"BH"`.
+#' @param top The number of rows to return, a positive whole number: the
+#'   first in the output order. Default `NULL` (all).
+#' @param cols The state columns of a wide data frame, as in
+#'   [extract_sequences()]. Default `NULL`.
+#' @param actor,action,time The actor, action and timestamp columns of a
+#'   long event log, as in [extract_sequences()]: setting `action` declares
+#'   `x` an event log. Default `NULL`.
+#' @param ... Further arguments passed to [prepare()] for a long event log,
+#'   such as `time_threshold` or `order`.
 #'
 #' @section Group test:
-#' With \code{group}, each pattern's presence (in a sequence or not) is
+#' With `group`, each pattern's presence (in a sequence or not) is
 #' cross-tabulated against the group. For two groups, Fisher's exact test
 #' gives the p-value, the conditional maximum-likelihood odds ratio of
-#' containing the pattern in the non-reference group, and its 95\%
+#' containing the pattern in the non-reference group, and its 95%
 #' confidence interval. A pattern that occurs in one group only has an
 #' infinite (or zero) odds ratio, with a finite lower (or upper) limit; a
-#' pattern present in every sequence has none (\code{NA}). For three or more
-#' groups, the Pearson chi-square of
-#' the presence-by-group table gives the p-value (G - 1 degrees of freedom),
-#' with Cram\enc{é}{e}r's V as the effect size. Unlike a comparison of counts against
-#' an equal split, both tests account for unequal group sizes. p-values are
-#' adjusted across the returned patterns' family (all patterns passing the
-#' filters) with \code{adjust}. The rows are then ordered by \code{p_value}.
+#' pattern present in every sequence has none (`NA`). For three or more
+#' groups, the Pearson chi-square of the presence-by-group table gives the
+#' p-value (G - 1 degrees of freedom), with Cram\enc{é}{e}r's V as the
+#' effect size. Unlike a comparison of counts against an equal split, both
+#' tests account for unequal group sizes. The p-values are adjusted with
+#' `adjust` over all patterns that pass the filters, before `top` is
+#' applied, and the rows are ordered by `p_value`.
 #'
-#' @return A \code{data.frame} with one row per pattern, ordered by
-#'   \code{support} (then \code{occurrences}, then \code{pattern}):
+#' @return A data frame with one row per pattern, ordered by `support`
+#'   (then `occurrences`, then `pattern`):
 #'   \describe{
-#'     \item{pattern}{States joined by \code{"->"}; \code{*} marks a
-#'       wildcard position.}
-#'     \item{length}{Number of positions the pattern spans.}
-#'     \item{occurrences}{Total number of times it occurs.}
-#'     \item{proportion}{\code{occurrences} as a share of all patterns of
-#'       the same length.}
-#'     \item{n_sequences}{Number of sequences that contain it.}
-#'     \item{support}{\code{n_sequences} divided by the number of
-#'       sequences.}
-#'     \item{lift}{Support relative to independent presence of its states.}
+#'     \item{pattern}{The states joined by `"->"`; `*` marks a wildcard
+#'       position.}
+#'     \item{length}{The number of positions the pattern spans, gaps
+#'       included.}
+#'     \item{occurrences}{The number of times it occurs.}
+#'     \item{proportion}{`occurrences` as a share of all patterns of the
+#'       same length.}
+#'     \item{n_sequences}{The number of sequences that contain it.}
+#'     \item{support}{`n_sequences` divided by the number of sequences.}
+#'     \item{lift}{Support relative to the independent presence of its
+#'       states.}
 #'   }
-#'   With \code{group}, also \code{support_<group>} (the support within each
-#'   group); for two groups \code{odds_ratio}, \code{or_lower},
-#'   \code{or_upper}; for more, \code{chisq} and \code{cramers_v}; then
-#'   \code{p_value} and \code{p_adj}. Rows are ordered by \code{p_value}
-#'   (then \code{support}).
+#'   With `group`, the columns `support_<group>` (the support within each
+#'   group) follow; then `odds_ratio`, `or_lower` and `or_upper` for two
+#'   groups, or `chisq` and `cramers_v` for more; then `p_value` and
+#'   `p_adj`. The rows are then ordered by `p_value` (then `support`).
 #'
-#'   Conditions: \code{nestimate_bad_input} for a state name containing
-#'   \code{"->"} or consisting only of asterisks (reserved for wildcards),
-#'   a missing group column, a group vector of the wrong length,
-#'   or a group with fewer than two values; warning
-#'   \code{nestimate_missing_group} when sequences with a missing group are
-#'   dropped.
+#'   A state name that contains `"->"` or consists only of asterisks
+#'   (reserved for wildcards) raises an error of class
+#'   `nestimate_bad_input`.
 #'
 #' @references
 #' Agrawal, R., & Srikant, R. (1995). Mining sequential patterns.
@@ -142,11 +167,12 @@ sequence_patterns <- function(x, type = c("ngram", "gapped", "repeated"),
                               min_support = 0.01, start = NULL, end = NULL,
                               contain = NULL, pattern = NULL, group = NULL,
                               reference = NULL, adjust = "BH", top = NULL,
-                              cols = NULL, ...) {
+                              cols = NULL, actor = NULL, action = NULL,
+                              time = NULL, ...) {
   type <- match.arg(type)
   adjust <- match.arg(adjust, stats::p.adjust.methods)
   .sp_check_args(len, gap, min_freq, min_support, start, end, contain)
-  stopifnot(
+  .assert(
     "`top` must be NULL or a single positive whole number" = is.null(top) ||
       (is.numeric(top) && length(top) == 1L && top >= 1 && top == round(top)),
     "`pattern` must be NULL or a single string" = is.null(pattern) ||
@@ -157,7 +183,8 @@ sequence_patterns <- function(x, type = c("ngram", "gapped", "repeated"),
   }
   last_obs <- identical(group, "last_obs")
   group_is_column <- !last_obs && is.character(group) && length(group) == 1L
-  seqs <- .as_sequences(x, cols = cols,
+  seqs <- .as_sequences(x, cols = cols, actor = actor, action = action,
+                        time = time,
                         exclude = if (group_is_column) group, ...)
   states <- seqs$states
 
@@ -351,7 +378,7 @@ sequence_patterns <- function(x, type = c("ngram", "gapped", "repeated"),
                            start = NULL, end = NULL, contain = NULL) {
   is_counts <- function(v) is.numeric(v) && length(v) >= 1L &&
     all(is.finite(v)) && all(v >= 1) && all(v == round(v))
-  stopifnot(
+  .assert(
     "`len` must be positive whole numbers" = is_counts(len),
     "`gap` must be positive whole numbers" = is_counts(gap),
     "`min_freq` must be a single number >= 1" =

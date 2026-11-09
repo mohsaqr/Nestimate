@@ -17,54 +17,74 @@ frequencies(
 \method{summary}{nest_transition_counts}(object, ...)
 }
 \arguments{
-\item{data}{Data frame containing sequence data in long or wide format.}
+\item{data}{A data frame of sequences: an event log or a wide table.}
 
-\item{action}{Character or NULL. Name of the column containing actions/states
-(for long format). Column names are not read: without it the data is taken
-as wide. Default: NULL.}
+\item{action}{The column holding each event's state; setting it declares
+an event log. Default \code{NULL}. Column names give no role: a column called
+\code{Action} with nothing declared raises an error of class
+\code{nestimate_bad_input}, and so does an \code{action} not in \code{data}.}
 
-\item{id}{Character vector. Name(s) of the column(s) identifying sequences.
-For long format, each unique combination of ID values defines a sequence.
-For wide format, used to exclude non-state columns. Default: NULL.}
+\item{id}{The column(s) identifying sequences. Default \code{NULL}. In an
+event log, each unique combination of their values is one sequence, and
+without \code{id} all rows form a single sequence. In a wide table, they are
+left out of the state columns. A column not in \code{data} raises an error of
+class \code{nestimate_bad_input}.}
 
-\item{time}{Character or NULL. Name of the time column used to order actions
-within sequences (for long format). Default: NULL (row order).}
+\item{time}{The column that orders the events of each sequence in an
+event log. Default \code{NULL}: events keep their row order. A wide table
+does not use it and leaves it out of the positions. A column not in
+\code{data}, or one also listed in \code{cols}, raises an error of class
+\code{nestimate_bad_input}.}
 
-\item{cols}{Character vector. Names of columns containing states (for wide
-format). If NULL, all non-ID columns are used. Default: NULL.}
+\item{cols}{The state columns of a wide table; setting them declares a
+wide table. Default \code{NULL}. With neither \code{action} nor \code{cols}, the frame
+must be one column or hold position columns named as a numbered run
+(\code{T1}, \code{T2}, ..., or \code{1}, \code{2}, ...), with nothing beside them but the
+\code{id} (and \code{time}) columns; anything else raises an error of class
+\code{nestimate_bad_input}, as does a listed column not in \code{data}. A single
+column is read as one position per row, so it counts no transitions;
+declare an event log with \code{action}.}
 
-\item{format}{Character. Format of input data: "auto" (detect automatically),
-"long", or "wide". Default: "auto".}
+\item{format}{How to read \code{data}. \code{"auto"} (default) reads an event log
+when \code{action} is set and a wide table otherwise. \code{"long"} forces an
+event log and needs \code{action}. \code{"wide"} forces a wide table and reads
+every column outside \code{id} and \code{time} (or the columns in \code{cols}) as a
+position, without the check on undeclared columns; it ignores \code{action},
+so that column is counted as a position unless \code{cols} leaves it out.
+\code{"long"} ignores \code{cols}.}
 
-\item{object}{For the \code{summary()} method: an object of class \code{nest_transition_counts}.}
+\item{object}{For the \code{summary()} method: a \code{nest_transition_counts}
+matrix from \code{frequencies()}.}
 
-\item{...}{In \code{summary.nest_transition_counts()}: Additional arguments (ignored).}
+\item{...}{For the \code{summary()} method: ignored.}
 }
 \value{
-A square integer matrix of transition frequencies, of class
-\code{c("nest_transition_counts", "matrix", "array")}, where
-\code{mat[i, j]} is the number of times state i was followed by state j.
-Row and column names are the sorted unique states. It behaves as an
-ordinary matrix and can be passed directly to \code{tna::tna()}; the
-class stamp only adds a \code{summary()} method, which returns the same
-counts as a tidy \code{from}/\code{to}/\code{count} data frame.
-
-In \code{summary.nest_transition_counts()}: A tidy data frame with columns \code{from}, \code{to}, \code{count}, with one row per non-zero transition.
+A square integer matrix of transition counts, of class
+\code{c("nest_transition_counts", "matrix", "array")}, where \code{mat[i, j]} is
+the number of times state i was followed by state j; the row and column
+names are the sorted unique states. It behaves as an ordinary matrix and
+can be passed directly to \code{tna::tna()}. Its \code{summary()} returns the same
+counts as a data frame with one row per non-zero transition and columns
+\code{from}, \code{to} and \code{count}.
 }
 \description{
-Convert long or wide format sequence data into a transition frequency matrix.
-Counts how many times each transition from state_i to state_j occurs across
-all sequences.
+\code{frequencies()} counts how often each state is followed by each other
+state across all sequences and returns the counts as a square integer
+matrix. It reads an event log (one row per event, \code{action} set) or a wide
+table (one row per sequence, one column per position).
 }
 \details{
-For \strong{long format} data, each row is a single action/event. Sequences
-are defined by the \code{id} column(s), and actions are ordered by the
-\code{time} column within each sequence. Consecutive actions within a
-sequence form transition pairs.
+In an \strong{event log}, the sequences are defined by the \code{id}
+column(s), and the events of each sequence are ordered by \code{time} (events
+sharing a time keep their row order) or, without \code{time}, by row order.
+Each pair of consecutive events is one transition.
 
-For \strong{wide format} data, each row is a sequence and columns represent
-consecutive time points. Transitions are counted across consecutive columns,
-skipping any \code{NA} values.
+In a \strong{wide table}, each row is a sequence and the state columns are
+consecutive positions; each pair of adjacent positions is one transition.
+
+In both, a missing state (\code{NA} or an empty string) breaks the sequence: no
+transition is counted into or out of it, and the states on either side
+are not joined. \code{\link[=convert_sequence_format]{convert_sequence_format()}} closes such gaps instead.
 }
 \examples{
 # Wide format

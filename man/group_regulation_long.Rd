@@ -7,13 +7,15 @@
 \format{
 A data frame with 27,533 rows and 6 columns:
 \describe{
-\item{Actor}{Integer. Student identifier.}
-\item{Achiever}{Character. Achievement level: \code{"High"} or \code{"Low"}.}
-\item{Group}{Numeric. Collaboration group identifier.}
-\item{Course}{Character. Course identifier (\code{"A"}, \code{"B"}, or \code{"C"}).}
-\item{Time}{POSIXct. Timestamp of the action.}
-\item{Action}{Character. Regulation action (e.g., cohesion, consensus,
-discuss, synthesis).}
+\item{Actor}{Integer student identifier, 1 to 2,000.}
+\item{Achiever}{Character achievement level, \code{"High"} or \code{"Low"}.}
+\item{Group}{Numeric collaboration group identifier, 1 to 200; each
+student belongs to one group.}
+\item{Course}{Character course identifier, \code{"A"}, \code{"B"} or \code{"C"}.}
+\item{Time}{POSIXct timestamp of the action.}
+\item{Action}{Character regulation action, one of adapt, cohesion,
+consensus, coregulate, discuss, emotion, monitor, plan and
+synthesis.}
 }
 }
 \source{
@@ -24,9 +26,9 @@ in the \pkg{tna} package.
 group_regulation_long
 }
 \description{
-Students' regulation strategies during collaborative learning, in long
-format. Contains 27,533 timestamped action records from multiple students
-working in groups across two courses.
+Students' regulation actions during collaborative learning, in long
+format: 27,533 timestamped actions by 2,000 students working in 200
+groups across three courses, one row per action.
 }
 \examples{
 net <- build_network(group_regulation_long,

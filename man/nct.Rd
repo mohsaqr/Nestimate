@@ -26,139 +26,151 @@ nct(
 \method{as.data.frame}{net_nct}(x, row.names = NULL, optional = FALSE, ...)
 }
 \arguments{
-\item{data1}{A numeric matrix or data.frame of observations from group 1.}
+\item{data1}{The observations of group 1: a numeric matrix or data frame,
+one row per observation. Non-numeric columns are dropped; at least two
+numeric variables and three rows are needed.}
 
-\item{data2}{A numeric matrix or data.frame of observations from group 2,
-with the same variables as \code{data1}.}
+\item{data2}{The observations of group 2, with the same variables as
+\code{data1} in the same order; columns that differ in name or order raise an
+error of class \code{nestimate_bad_input}. An unnamed matrix is matched by
+position and takes the other group's names, or \code{V1}, \code{V2}, ... when
+neither group has names.}
 
-\item{iter}{Integer. Number of permutation iterations. Default 1000.}
+\item{iter}{The number of permutations, a whole number of at least 1.
+Default \code{1000}.}
 
-\item{gamma}{EBIC tuning parameter for glasso. Default 0.5.}
+\item{gamma}{The EBIC tuning parameter of the glasso, a non-negative
+number; larger values give sparser networks. Default \code{0.5}.}
 
-\item{paired}{Logical. If \code{TRUE}, perform a paired permutation
-(within-subject swap; row \code{i} of both groups is the same unit).
-Default \code{FALSE}.}
+\item{paired}{Whether row \code{i} of both groups is the same unit (such as a
+person measured twice). Each permutation then swaps the two rows of a
+unit at random instead of shuffling all rows, and the groups need the
+same number of rows, otherwise an error of class \code{nestimate_bad_input}
+is raised. Default \code{FALSE}.}
 
-\item{abs}{Logical. If \code{TRUE}, compute global strength on absolute
-edge weights. Default \code{TRUE}.}
+\item{abs}{Whether global strength sums the absolute edge weights. With
+\code{FALSE}, it sums the signed weights (global expected influence). Default
+\code{TRUE}.}
 
-\item{weighted}{Logical. If \code{TRUE}, use weighted networks for the
-tests. If \code{FALSE}, binarize before computing statistics.
-Default \code{TRUE}.}
+\item{weighted}{Whether the tests compare the weighted networks. With
+\code{FALSE}, both networks are binarised (an edge is present or absent)
+before the statistics are computed. Default \code{TRUE}.}
 
-\item{p_adjust}{P-value adjustment method for the per-edge tests
-(any method in \code{stats::p.adjust.methods}). Default \code{"none"}.}
+\item{p_adjust}{The multiplicity correction for the per-edge p-values,
+any method of \code{\link[stats:p.adjust]{stats::p.adjust()}}. Default \code{"none"}.}
 
-\item{na_method}{\code{"pairwise"} (default) or \code{"listwise"} handling
-of missing values; see Details.}
+\item{na_method}{How missing values are handled. \code{"pairwise"} (default)
+keeps every row, permutes rows as usual, and estimates each sample or
+permuted split from its pairwise-complete correlation matrix, with the
+median pairwise co-observation count as the sample size; a variable
+pair sharing fewer than two observed rows there raises an error of class
+\code{nestimate_degenerate_sample}. \code{"listwise"} drops incomplete rows first
+(with \code{paired = TRUE}, a pair is dropped when either member is
+incomplete). Complete data are unaffected by the choice.}
 
-\item{x}{For the \code{print()} and \code{as.data.frame()} methods: an
-object of class \code{net_nct}.}
+\item{x}{For the \code{print()} and \code{as.data.frame()} methods: a \code{net_nct}
+object.}
 
-\item{n}{For the \code{print()} method: number of edges to list, largest
+\item{n}{For the \code{print()} method: the number of edges to list, largest
 difference first. Default \code{Inf} (all).}
 
-\item{...}{In \code{print.net_nct()}, \code{summary.net_nct()} and
-\code{as.data.frame.net_nct()}: Ignored.}
+\item{...}{For the \code{print()}, \code{summary()} and \code{as.data.frame()} methods:
+ignored.}
 
-\item{object}{For the \code{summary()} method: an object of class \code{net_nct}.}
+\item{object}{For the \code{summary()} method: a \code{net_nct} object.}
 
-\item{row.names, optional}{For \code{as.data.frame()}: ignored (base
-generic compatibility).}
+\item{row.names, optional}{For the \code{as.data.frame()} method: ignored, kept
+for compatibility with the base generic.}
 }
 \value{
-A list of class \code{net_nct} with elements:
+A \code{net_nct} object. \code{print()} reports the three tests, each
+group's global strength and the edges, largest difference first, and
+returns the object invisibly; \code{\link[=summary]{summary()}} returns the M and S tests as
+a data frame with one row per test. The object's fields:
 \describe{
-\item{nw1, nw2}{Estimated weighted adjacency matrices.}
+\item{nw1, nw2}{The estimated weighted adjacency matrices of the two
+groups (binarised with \code{weighted = FALSE}).}
 \item{structure}{The network-structure test (statistic M, the largest
-absolute edge difference): list with \code{observed}, \code{perm},
-\code{p_value}. P-values are permutation p-values,
-\code{(sum(perm >= observed) + 1) / (iter + 1)}.}
-\item{strength}{The global-strength test (statistic S): same structure,
-plus \code{by_group}, each network's global strength (NCT's
-\code{glstrinv.sep}).}
-\item{E}{Same structure for the per-edge tests (\code{observed} and
-\code{p_value} are one value per upper-triangle edge, \code{perm} an
-\code{iter} by edges matrix), plus \code{edge_names}, a data frame
-with columns \code{from} and \code{to} naming each node pair.}
-\item{n_iter}{Number of permutations.}
-\item{groups}{Display names of the two groups: the argument names when
-they are plain variables, otherwise "group 1" / "group 2".}
-\item{n}{Rows used in each group.}
+absolute edge difference): \code{observed}, \code{perm} (the statistic in each
+permutation) and \code{p_value}.}
+\item{strength}{The global-strength test (statistic S): the same, plus
+\code{by_group}, each network's global strength (NCT's \code{glstrinv.sep}).}
+\item{E}{The per-edge tests: \code{observed} and \code{p_value} hold one value per
+node pair (the upper triangle), \code{perm} is an \code{iter} by node-pair
+matrix, and \code{edge_names} is a data frame with the columns \code{from} and
+\code{to} naming each node pair.}
+\item{n_iter}{The number of permutations.}
+\item{groups}{The display names of the two groups: the argument names
+when they are plain variables, otherwise \code{"group 1"} and
+\code{"group 2"}.}
+\item{n}{The rows used in each group.}
 \item{paired}{Whether a paired test was used.}
-\item{params}{List of the settings used: \code{gamma}, \code{abs},
-\code{weighted}, \code{p_adjust}, \code{na_method}.}
+\item{params}{The settings used: \code{gamma}, \code{abs}, \code{weighted}, \code{p_adjust}
+and \code{na_method}.}
 }
 The letters follow van Borkulo et al. (2022) and
-\code{NetworkComparisonTest}. Before Nestimate 0.9.27 the fields
-\code{$M} and \code{$S} held the global-strength and network-structure
-tests the other way round; accessing them now raises a
-\code{nestimate_renamed} error.
-Errors of class \code{nestimate_bad_input} for malformed arguments or
-groups whose columns differ (in name or order); of class
-\code{nestimate_degenerate_sample} when (pairwise) a variable pair shares
-fewer than two observed rows in a group or a permuted split. A warning of
-class \code{nestimate_constant_variable} when a variable is constant in an
-observed group.
+\code{NetworkComparisonTest}. Before Nestimate 0.9.27 the fields \code{M} and \code{S}
+held the global-strength and network-structure tests the other way
+round; reading them now raises an error of class \code{nestimate_renamed}.
 
-In \code{print.net_nct()}: The input object, invisibly.
-
-In \code{summary.net_nct()}: a data frame with one row per global
-test, columns \code{test} (\code{"network structure"};
+For the \code{summary()} method: a data frame with one row per global
+test and the columns \code{test} (\code{"network structure"}, and
 \code{"global strength"}, or \code{"global expected influence"} when
-\code{abs = FALSE}), \code{statistic} (\code{"M"}, \code{"S"}),
-\code{observed}, \code{p_value}, \code{significant} (\code{p_value < 0.05}).
-
-In \code{as.data.frame.net_nct()}: a data frame with one row per
-node pair, columns \code{from}, \code{to}, \code{weight_1},
-\code{weight_2} (the edge in each group's network), \code{difference}
-(statistic E), \code{p_value}, \code{significant}.
+\code{abs = FALSE}), \code{statistic} (\code{"M"}, \code{"S"}), \code{observed}, \code{p_value} and
+\code{significant} (\code{p_value < 0.05}, a fixed level). The \code{as.data.frame()}
+method gives one row per node pair, with the columns \code{from}, \code{to},
+\code{weight_1} and \code{weight_2} (the edge in each group's network),
+\code{difference} (statistic E), \code{p_value} and \code{significant}
+(\code{p_value < 0.05}).
 }
 \description{
-Tests whether two networks estimated from independent samples differ at
-three levels (van Borkulo et al. 2022): \strong{network structure}
-(M-statistic, the largest absolute edge difference), \strong{global
-strength} (S-statistic, the difference in summed absolute edge weights;
-with \code{abs = FALSE}, summed signed weights, i.e. global expected
-influence), and \strong{individual edges} (E-statistic per edge).
-Inference is via permutation of group labels.
+\code{nct()} tests whether two networks estimated from two samples of the same
+variables differ, at the three levels of van Borkulo et al. (2022):
+\strong{network structure} (statistic M, the largest absolute edge
+difference), \strong{global strength} (statistic S, the difference in the
+summed absolute edge weights, or with \code{abs = FALSE} in the summed signed
+weights, the global expected influence) and \strong{individual edges}
+(statistic E, the absolute difference of each edge). Each network is an
+EBIC graphical lasso network of the Pearson correlations, and each
+p-value comes from re-estimating both networks on permuted group labels
+(within-pair swaps with \code{paired = TRUE}).
+
+A p-value counts the permutations whose statistic is at least the
+observed one, with the observed split added:
+\code{(sum(perm >= observed) + 1) / (iter + 1)}, so the smallest attainable
+value is \code{1 / (iter + 1)}. A non-significant test does not
+show that the networks are equal; with small samples the test has little
+power (van Borkulo et al. 2022). The edge tests are many tests at once;
+set \code{p_adjust} before reading single edges.
+Both networks are regularised estimates, so check how stable each one is
+with \code{\link[=boot_glasso]{boot_glasso()}}.
 }
 \details{
-Follows \code{NetworkComparisonTest::NCT()} with defaults
-\code{abs = TRUE}, \code{weighted = TRUE}, \code{paired = FALSE}. The
-network estimator is EBIC-selected glasso (\code{psychnets::ebic_glasso()})
-applied to a Pearson correlation matrix, with \code{Matrix::nearPD}
-symmetrization (matching NCT's \code{NCT_estimator_GGM} default). Under
-the same seed both functions permute the same rows, so permutation
-p-values agree; the glasso solver is not the Fortran one NCT wraps, so
-the test statistics agree to independent-solver precision (of the order
-of \code{1e-4}) rather than bit-for-bit.
+\code{nct()} follows \code{NetworkComparisonTest::NCT()} with its defaults
+\code{abs = TRUE}, \code{weighted = TRUE} and \code{paired = FALSE}. The network
+estimator is EBIC-selected glasso (\code{psychnets::ebic_glasso()}) applied to
+a Pearson correlation matrix made positive definite with
+\code{Matrix::nearPD()} (NCT's \code{NCT_estimator_GGM} default). Under the same
+seed both functions permute the same rows, so the permutation p-values
+agree; the glasso solver is not the Fortran one NCT wraps, so the test
+statistics agree to independent-solver precision (of the order of
+\code{1e-4}) rather than bit for bit. The \pkg{Matrix} package (in Suggests)
+must be installed.
 
-The two groups must hold the same variables in the same order
-(non-numeric columns such as an id or a group label are dropped first).
-Infinite values are refused; use finite observations or \code{NA} for
-missing data.
-
-Missing data follow \code{na_method}. \code{"pairwise"} (default) keeps
-every row, permutes rows as usual, and estimates each (sub)sample from its
-pairwise-complete correlation matrix, with the median pairwise
-co-observation count as the sample size. \code{"listwise"} drops
-incomplete rows first (in a paired design, a pair is dropped when either
-member is incomplete). Complete data are unaffected by the choice.
+The two groups must hold the same variables in the same order;
+non-numeric columns, such as an id or a group label, are dropped first.
+Infinite values are refused; use finite observations or \code{NA} for missing
+data.
 
 A variable without variation in a group, or in a permuted split (a rare
 binary item can be constant in a split), enters that network as an
 isolated node. The statistic is then defined on every split, so the
 permutation test stays exact. A constant variable in an observed group
-raises a \code{nestimate_constant_variable} warning.
-}
-\section{Methods}{
+raises a warning of class \code{nestimate_constant_variable}.
 
-\itemize{
-\item Printing the object shows every result. \code{summary.net_nct()} returns the M (network structure) and S (global strength) tests; \code{as.data.frame.net_nct()} returns one row per edge.
+Malformed \code{iter}, \code{gamma}, \code{paired}, \code{abs}, \code{weighted} or data raise an
+error of class \code{nestimate_bad_input}.
 }
-}
-
 \examples{
 set.seed(1)
 x1 <- matrix(rnorm(100 * 4), 100, 4)

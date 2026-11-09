@@ -10,41 +10,62 @@
 #' Build a Transition Frequency Matrix
 #'
 #' @description
-#' Convert long or wide format sequence data into a transition frequency matrix.
-#' Counts how many times each transition from state_i to state_j occurs across
-#' all sequences.
-#'
-#' @param data Data frame containing sequence data in long or wide format.
-#' @param action Character or NULL. Name of the column containing actions/states
-#'   (for long format). Column names are not read: without it the data is taken
-#'   as wide. Default: NULL.
-#' @param id Character vector. Name(s) of the column(s) identifying sequences.
-#'   For long format, each unique combination of ID values defines a sequence.
-#'   For wide format, used to exclude non-state columns. Default: NULL.
-#' @param time Character or NULL. Name of the time column used to order actions
-#'   within sequences (for long format). Default: NULL (row order).
-#' @param cols Character vector. Names of columns containing states (for wide
-#'   format). If NULL, all non-ID columns are used. Default: NULL.
-#' @param format Character. Format of input data: "auto" (detect automatically),
-#'   "long", or "wide". Default: "auto".
-#'
-#' @return A square integer matrix of transition frequencies, of class
-#'   \code{c("nest_transition_counts", "matrix", "array")}, where
-#'   \code{mat[i, j]} is the number of times state i was followed by state j.
-#'   Row and column names are the sorted unique states. It behaves as an
-#'   ordinary matrix and can be passed directly to \code{tna::tna()}; the
-#'   class stamp only adds a \code{summary()} method, which returns the same
-#'   counts as a tidy \code{from}/\code{to}/\code{count} data frame.
+#' `frequencies()` counts how often each state is followed by each other
+#' state across all sequences and returns the counts as a square integer
+#' matrix. It reads an event log (one row per event, `action` set) or a wide
+#' table (one row per sequence, one column per position).
 #'
 #' @details
-#' For \strong{long format} data, each row is a single action/event. Sequences
-#' are defined by the \code{id} column(s), and actions are ordered by the
-#' \code{time} column within each sequence. Consecutive actions within a
-#' sequence form transition pairs.
+#' In an \strong{event log}, the sequences are defined by the `id`
+#' column(s), and the events of each sequence are ordered by `time` (events
+#' sharing a time keep their row order) or, without `time`, by row order.
+#' Each pair of consecutive events is one transition.
 #'
-#' For \strong{wide format} data, each row is a sequence and columns represent
-#' consecutive time points. Transitions are counted across consecutive columns,
-#' skipping any \code{NA} values.
+#' In a \strong{wide table}, each row is a sequence and the state columns are
+#' consecutive positions; each pair of adjacent positions is one transition.
+#'
+#' In both, a missing state (`NA` or an empty string) breaks the sequence: no
+#' transition is counted into or out of it, and the states on either side
+#' are not joined. [convert_sequence_format()] closes such gaps instead.
+#'
+#' @param data A data frame of sequences: an event log or a wide table.
+#' @param action The column holding each event's state; setting it declares
+#'   an event log. Default `NULL`. Column names give no role: a column called
+#'   `Action` with nothing declared raises an error of class
+#'   `nestimate_bad_input`, and so does an `action` not in `data`.
+#' @param id The column(s) identifying sequences. Default `NULL`. In an
+#'   event log, each unique combination of their values is one sequence, and
+#'   without `id` all rows form a single sequence. In a wide table, they are
+#'   left out of the state columns. A column not in `data` raises an error of
+#'   class `nestimate_bad_input`.
+#' @param time The column that orders the events of each sequence in an
+#'   event log. Default `NULL`: events keep their row order. A wide table
+#'   does not use it and leaves it out of the positions. A column not in
+#'   `data`, or one also listed in `cols`, raises an error of class
+#'   `nestimate_bad_input`.
+#' @param cols The state columns of a wide table; setting them declares a
+#'   wide table. Default `NULL`. With neither `action` nor `cols`, the frame
+#'   must be one column or hold position columns named as a numbered run
+#'   (`T1`, `T2`, ..., or `1`, `2`, ...), with nothing beside them but the
+#'   `id` (and `time`) columns; anything else raises an error of class
+#'   `nestimate_bad_input`, as does a listed column not in `data`. A single
+#'   column is read as one position per row, so it counts no transitions;
+#'   declare an event log with `action`.
+#' @param format How to read `data`. `"auto"` (default) reads an event log
+#'   when `action` is set and a wide table otherwise. `"long"` forces an
+#'   event log and needs `action`. `"wide"` forces a wide table and reads
+#'   every column outside `id` and `time` (or the columns in `cols`) as a
+#'   position, without the check on undeclared columns; it ignores `action`,
+#'   so that column is counted as a position unless `cols` leaves it out.
+#'   `"long"` ignores `cols`.
+#'
+#' @return A square integer matrix of transition counts, of class
+#'   `c("nest_transition_counts", "matrix", "array")`, where `mat[i, j]` is
+#'   the number of times state i was followed by state j; the row and column
+#'   names are the sorted unique states. It behaves as an ordinary matrix and
+#'   can be passed directly to `tna::tna()`. Its `summary()` returns the same
+#'   counts as a data frame with one row per non-zero transition and columns
+#'   `from`, `to` and `count`.
 #'
 #' @examples
 #' # Wide format
@@ -68,17 +89,24 @@ frequencies <- function(data,
                         time = NULL,
                         cols = NULL,
                         format = c("auto", "long", "wide")) {
-  stopifnot(is.data.frame(data))
-  stopifnot(is.null(action) || (is.character(action) && length(action) == 1))
-  stopifnot(is.null(time) || (is.character(time) && length(time) == 1))
-  stopifnot(is.null(id) || is.character(id))
-  stopifnot(is.null(cols) || is.character(cols))
+  .assert(is.data.frame(data))
+  .assert(is.null(action) || (is.character(action) && length(action) == 1))
+  .assert(is.null(time) || (is.character(time) && length(time) == 1))
+  .assert(is.null(id) || is.character(id))
+  .assert(is.null(cols) || is.character(cols))
   format <- match.arg(format)
   .check_declared_columns(data, "frequencies()", action = action, id = id,
                           time = time, cols = cols)
   if (is.null(action) && is.null(cols) && identical(format, "auto")) {
     .refuse_undeclared_roles(data, "frequencies()", taken = c(id, time),
                              whole_frame = TRUE)
+  }
+  # A wide table never reads a declared id or time column as a position.
+  reads_wide <- identical(format, "wide") ||
+    (identical(format, "auto") && is.null(action))
+  if (reads_wide) {
+    .refuse_role_positions(cols, c(id, time), "cols", "`id`/`time`")
+    if (!is.null(time)) data <- data[setdiff(names(data), time)]
   }
 
   mat <- .count_transitions(
@@ -92,9 +120,9 @@ frequencies <- function(data,
 
 
 #' @rdname frequencies
-#' @param object For the \code{summary()} method: an object of class \code{nest_transition_counts}.
-#' @param ... In \code{summary.nest_transition_counts()}: Additional arguments (ignored).
-#' @return In \code{summary.nest_transition_counts()}: A tidy data frame with columns \code{from}, \code{to}, \code{count}, with one row per non-zero transition.
+#' @param object For the `summary()` method: a `nest_transition_counts`
+#'   matrix from `frequencies()`.
+#' @param ... For the `summary()` method: ignored.
 #' @export
 summary.nest_transition_counts <- function(object, ...) {
   .matrix_to_long_df(unclass(object), value_col = "count",
@@ -105,41 +133,56 @@ summary.nest_transition_counts <- function(object, ...) {
 #' Convert Sequence Data to Different Formats
 #'
 #' @description
-#' Convert wide or long sequence data into frequency counts, one-hot encoding,
-#' edge lists, or follows format.
+#' `convert_sequence_format()` turns wide or long sequence data into one of
+#' four data frames: per-sequence state counts, per-sequence state presence
+#' (one-hot), the list of consecutive transitions, or each event paired with
+#' the one before it. It reads an event log (`action` set) or a wide table
+#' (one row per sequence, one column per position). The counts can serve as
+#' per-sequence behaviour profiles for the association estimators of
+#' [build_network()] and for [build_mcml_pc()]. The id columns (those that
+#' `id_col` names, and `.rid` for a wide table without `id_col`) are not
+#' variables and must be set aside there (`id_col` in [build_mcml_pc()],
+#' `actor` in [build_network()]); the `rid` column is
+#' dropped automatically.
 #'
-#' @param data Data frame containing sequence data.
-#' @param seq_cols Character vector. Names of columns containing sequential
-#'   states (for wide format input). If NULL, all columns except \code{id_col}
-#'   are used. Default: NULL.
-#' @param id_col Character vector. Name(s) of the ID column(s). For long
-#'   format, required. For wide format, optional: if NULL, the first column
-#'   is used as the id only when it is a genuine identifier (its values are
-#'   disjoint from the states in the remaining columns); for canonical wide
-#'   sequence data with no id column (e.g. \code{V1..Vn} / \code{T1..Tn}), a
-#'   row-index id is synthesized and every column is treated as a sequence
-#'   column. Default: NULL.
-#' @param action Character or NULL. Name of the column containing actions/states
-#'   (for long format input). If provided, data is treated as long format.
-#'   Default: NULL.
-#' @param time Character or NULL. Name of the time column for ordering actions
-#'   within sequences (for long format). Default: NULL.
-#' @param format Character. Output format:
-#' \describe{
-#'   \item{"frequency"}{Count of each action per sequence (wide, one column per
-#'     state).}
-#'   \item{"onehot"}{Binary presence/absence of each action per sequence.}
-#'   \item{"edgelist"}{Consecutive transition pairs (from, to) per sequence.}
-#'   \item{"follows"}{Each action paired with the action that preceded it.}
-#' }
+#' @details
+#' A missing state (`NA` or an empty string) is dropped and the states on
+#' either side are joined, so a sequence `A, NA, B` gives the transition
+#' `A -> B`. [frequencies()] counts no transition across a missing state
+#' instead.
 #'
-#' @return A data frame in the requested format:
-#' \describe{
-#'   \item{frequency}{ID columns + one integer column per state with counts.}
-#'   \item{onehot}{ID columns + one binary column per state (0/1).}
-#'   \item{edgelist}{ID columns + \code{from} and \code{to} columns.}
-#'   \item{follows}{ID columns + \code{act} and \code{follows} columns.}
-#' }
+#' @param data A data frame of sequences: an event log or a wide table.
+#' @param seq_cols The state columns of a wide table; setting them declares
+#'   a wide table. Default `NULL`: every column except `id_col` and `time`.
+#'   With neither `action` nor `seq_cols`, the frame must be one column or
+#'   hold position columns named as a numbered run (`T1`, `T2`, ..., or `1`,
+#'   `2`, ...), with nothing beside them but the `id_col` (and `time`)
+#'   columns; anything else raises an error of class `nestimate_bad_input`,
+#'   as does a column listed both here and in `id_col` or `time`.
+#' @param id_col The identifier column(s), copied to every output row. In an
+#'   event log, each unique combination of their values is one sequence,
+#'   and it is required: an event log without `id_col` raises an error of
+#'   class `nestimate_bad_input` (no column is taken by position). In a wide
+#'   table, each row is one sequence and no id is inferred from the data:
+#'   without `id_col`, a row-index column `.rid` is added. Default `NULL`.
+#' @param action The column holding each event's state; setting it declares
+#'   an event log. Default `NULL`.
+#' @param time The column that orders the events within each sequence of an
+#'   event log; without it, events keep their row order. A wide table leaves
+#'   it out of the state columns. Default `NULL`.
+#' @param format The output format: `"frequency"` (default), the count of
+#'   each state per sequence; `"onehot"`, whether each state occurs in the
+#'   sequence (0/1); `"edgelist"`, each pair of consecutive states (`from`,
+#'   `to`); `"follows"`, each event (`act`) paired with the event before it
+#'   (`follows`).
+#'
+#' @return A data frame with the id column(s) first. For `"frequency"` and
+#'   `"onehot"`: one row per sequence, a `rid` column identifying the
+#'   sequence, and one integer column per state, holding counts or 0/1. For
+#'   `"edgelist"`: one row per transition, with columns `from` and `to`. For
+#'   `"follows"`: one row per event after the first of its sequence, with
+#'   columns `act` and `follows`. An event log's rows come out sorted by
+#'   `id_col`.
 #'
 #' @examples
 #' # Wide format input
@@ -157,7 +200,7 @@ convert_sequence_format <- function(data,
                                     time = NULL,
                                     format = c("frequency", "onehot",
                                                "edgelist", "follows")) {
-  stopifnot(is.data.frame(data))
+  .assert(is.data.frame(data))
   format <- match.arg(format)
 
   .check_declared_columns(data, "convert_sequence_format()", action = action,
@@ -167,6 +210,17 @@ convert_sequence_format <- function(data,
     .refuse_undeclared_roles(data, "convert_sequence_format()",
                              taken = c(id_col, time), wide = "`seq_cols`",
                              whole_frame = TRUE)
+  }
+
+  if (is_long && is.null(id_col)) {
+    stop(errorCondition(
+      paste("an event log needs its sequences declared: set `id_col` to the",
+            "column(s) identifying them; no column is taken by position."),
+      class = "nestimate_bad_input", call = NULL))
+  }
+  if (!is_long) {
+    .refuse_role_positions(seq_cols, c(id_col, time), "seq_cols",
+                           "`id_col`/`time`")
   }
 
   if (is_long) {
@@ -184,7 +238,7 @@ convert_sequence_format <- function(data,
       data[[".rid"]] <- seq_len(nrow(data))
       id_col <- ".rid"
     }
-    if (is.null(seq_cols)) seq_cols <- setdiff(names(data), id_col)
+    if (is.null(seq_cols)) seq_cols <- setdiff(names(data), c(id_col, time))
     .validate_cols(data, c(id_col, seq_cols))
     long <- .pivot_wide_to_long(data, id_col, seq_cols)
   }
@@ -203,12 +257,16 @@ convert_sequence_format <- function(data,
 #' @noRd
 .build_pairs_long <- function(data, action, id, time) {
   if (is.null(action) || !action %in% names(data)) {
-    stop("Action column '", action %||% "NULL", "' not found in data.")
+    stop(errorCondition(paste0("Action column '", action %||% "NULL",
+                               "' not found in data."),
+                               class = "nestimate_bad_input", call = NULL))
   }
   if (!is.null(id)) {
     missing_ids <- setdiff(id, names(data))
     if (length(missing_ids) > 0) {
-      stop("ID column(s) not found: ", paste(missing_ids, collapse = ", "))
+      stop(errorCondition(paste0("ID column(s) not found: ",
+                                 paste(missing_ids, collapse = ", ")),
+                          class = "nestimate_bad_input", call = NULL))
     }
   }
 
@@ -252,10 +310,14 @@ convert_sequence_format <- function(data,
 
   missing_cols <- setdiff(state_cols, names(data))
   if (length(missing_cols) > 0) {
-    stop("Columns not found: ", paste(missing_cols, collapse = ", "))
+    stop(errorCondition(paste0("Columns not found: ",
+                               paste(missing_cols, collapse = ", ")),
+                        class = "nestimate_bad_input", call = NULL))
   }
   if (length(state_cols) < 2L) {
-    stop("At least 2 state columns are required for wide format.")
+    stop(errorCondition(
+      "At least 2 state columns are required for wide format.",
+      class = "nestimate_bad_input", call = NULL))
   }
 
   state_data <- data[, state_cols, drop = FALSE]
@@ -278,25 +340,33 @@ convert_sequence_format <- function(data,
 
 # ---- Internal helpers for convert_sequence_format() ----
 
+#' Refuse a column declared both as a position and as another role
+#' @noRd
+.refuse_role_positions <- function(positions, roles, arg, role_args) {
+  clash <- intersect(positions, roles)
+  if (length(clash) > 0L) {
+    stop(errorCondition(
+      sprintf(paste("column(s) %s are declared both as positions (`%s`)",
+                    "and as %s; a column has one role."),
+              paste(clash, collapse = ", "), arg, role_args),
+      class = "nestimate_bad_input", call = NULL))
+  }
+  invisible(NULL)
+}
+
 #' @noRd
 .validate_cols <- function(data, cols) {
   missing <- setdiff(cols, names(data))
   if (length(missing) > 0) {
-    stop("Columns not found: ", paste(missing, collapse = ", "))
+    stop(errorCondition(paste0("Columns not found: ",
+                               paste(missing, collapse = ", ")),
+                        class = "nestimate_bad_input", call = NULL))
   }
 }
 
 #' Standardize long format input for convert_sequence_format
 #' @noRd
 .standardize_long <- function(data, id_col, action, time) {
-  if (is.null(id_col)) { # nocov start
-    non_meta <- setdiff(names(data), c(action, time))
-    if (length(non_meta) == 0) {
-      stop("id_col is required for long format data.")
-    }
-    id_col <- non_meta[1]
-    message("Using '", id_col, "' as id_col.")
-  } # nocov end
   .validate_cols(data, c(id_col, action))
 
   # Order by id columns + time

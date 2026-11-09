@@ -4,6 +4,7 @@
 \alias{build_mlvar}
 \alias{print.net_mlvar}
 \alias{summary.net_mlvar}
+\alias{plot.net_mlvar}
 \title{Build a Multilevel Vector Autoregression (mlVAR) network}
 \usage{
 build_mlvar(
@@ -19,130 +20,172 @@ build_mlvar(
 \method{print}{net_mlvar}(x, ...)
 
 \method{summary}{net_mlvar}(object, ...)
+
+\method{plot}{net_mlvar}(x, layer = NULL, ...)
 }
 \arguments{
-\item{data}{A \code{data.frame} containing the panel data.}
+\item{data}{The panel data: a data frame with one row per measurement
+occasion. A column named in \code{vars}, \code{id}, \code{day} or \code{beep} that is not in
+it raises an error.}
 
-\item{vars}{Character vector of variable column names to model.}
+\item{vars}{The columns to model, at least two.}
 
-\item{id}{Character string naming the person-ID column.}
+\item{id}{The column identifying the person each row belongs to.}
 
-\item{day}{Character string naming the day/session column, or \code{NULL}.
-When provided, lag pairs are only formed within the same day.}
+\item{day}{The column identifying the day (or session) of each row. When
+given, lagged pairs are formed only within the same day. Default \code{NULL}.}
 
-\item{beep}{Character string naming the measurement-occasion column, or
-\code{NULL}. When \code{NULL}, row position within each (id, day) is used.}
+\item{beep}{The column numbering the measurement occasions. When \code{NULL}
+(default), the row position within each person (and day) is used.}
 
-\item{lag}{Integer. The lag order (default 1).}
+\item{lag}{How many occasions back the predictors of the temporal network
+are, a whole number of at least 1: \code{lag = 2} regresses each variable on
+every variable two occasions earlier (that lag only, not lags 1 and 2).
+Default \code{1}.}
 
-\item{standardize}{Logical. If \code{TRUE}, each variable is grand-mean
-centered and divided by its pooled SD \emph{before} augmentation. Default
-\code{FALSE}, matching \code{mlVAR::mlVAR(scale = FALSE)} - the only setting for
-which numerical equivalence has been validated.}
+\item{standardize}{Whether to grand-mean centre each variable and divide
+it by its pooled SD before the panel is augmented, as
+\code{mlVAR::mlVAR(scale = TRUE)} does. Default \code{FALSE}, matching
+\code{mlVAR::mlVAR(scale = FALSE)} (mlVAR's own default is \code{TRUE}); \code{FALSE}
+is the only setting for which agreement with mlVAR has been validated.}
 
-\item{x}{For the \code{print()} method: an object of class \code{net_mlvar}.}
+\item{x}{For the \code{print()} method: a \code{net_mlvar}.}
 
-\item{...}{In \code{print.net_mlvar()} and \code{summary.net_mlvar()}: Unused; present for S3 consistency.}
+\item{...}{For the \code{print()} and \code{summary()} methods: not used.}
 
-\item{object}{For the \code{summary()} method: an object of class \code{net_mlvar}.}
+\item{object}{For the \code{summary()} method: a \code{net_mlvar}.}
+
+\item{layer}{For the \code{plot()} method: \code{"temporal"}, \code{"contemporaneous"}
+or \code{"between"} to draw that network alone. Default \code{NULL} draws all
+three side by side.}
 }
 \value{
-A dual-class \code{c("net_mlvar", "netobject_group")} object - a
-named list of three full netobjects, one per network, plus
-model-level metadata stored as attributes. Each element is a
-standard \code{c("netobject", "cograph_network")} weight-matrix wrapper
-(no raw \verb{$data}), so \code{print()}, \code{summary()}, \code{\link[=coefs]{coefs()}}, and
-\code{cograph::splot(fit$temporal)} work directly. See
-\strong{Dispatch limitation} for the verbs that do \emph{not} work on this
-object (\code{plot()}, \code{\link[=bootstrap_network]{bootstrap_network()}}, \code{centrality()},
-reliability/stability). Structure:
+A \code{net_mlvar} object (class \code{c("net_mlvar", "netobject_group")}):
+a named list of three networks, with the model-level results stored as
+attributes. \code{print()} gives the number of subjects, observations and
+variables, the lag, and how many temporal edges are significant;
+\code{\link[=coefs]{coefs()}} returns the temporal coefficients, one row per outcome and
+predictor; \code{summary()} prints the three weight matrices and the
+significant temporal edges and returns the same table as \code{\link[=coefs]{coefs()}},
+visibly, so at the console the matrices are followed by the table.
+\pkg{idiographic} registers its own \code{print()} and \code{summary()} methods
+for \code{net_mlvar}; Nestimate loads it first and registers its methods
+after, so these two are the ones that run. Each
+network is a \code{netobject} (class \code{c("netobject", "cograph_network")})
+built from its weight matrix, without data; the \emph{Dispatch limitation}
+section lists the verbs that do not work on it. The parts:
 \describe{
-\item{\code{fit$temporal}}{Directed netobject for the \verb{d x d} matrix of
-fixed-effect lagged coefficients. \verb{$weights[i, j]} is the effect
-of variable j at t-lag on variable i at t. \code{method = "mlvar_temporal"}, \code{directed = TRUE}.}
-\item{\code{fit$contemporaneous}}{Undirected netobject for the \verb{d x d}
-partial-correlation network of within-person lmer residuals.
-\code{method = "mlvar_contemporaneous"}, \code{directed = FALSE}.}
-\item{\code{fit$between}}{Undirected netobject for the \verb{d x d}
-partial-correlation network of person means, derived from
-\code{D (I - Gamma)}. \code{method = "mlvar_between"}, \code{directed = FALSE}.}
-\item{\code{attr(fit, "coefs")} / \code{\link[=coefs]{coefs()}}}{Tidy \code{data.frame} with one
-row per \verb{(outcome, predictor)} pair and columns \code{outcome},
-\code{predictor}, \code{beta}, \code{se}, \code{t}, \code{p}, \code{ci_lower}, \code{ci_upper},
-\code{significant}. Filter, sort, or plot with base R or the tidyverse.
-Retrieve with \code{coefs(fit)}.}
-\item{\code{attr(fit, "n_obs")}}{Number of rows in the augmented panel
-after na.omit.}
-\item{\code{attr(fit, "n_subjects")}}{Number of unique subjects remaining.}
-\item{\code{attr(fit, "lag")}}{Lag order used.}
-\item{\code{attr(fit, "standardize")}}{Logical; whether pre-augmentation
-standardization was applied.}
+\item{\code{temporal}}{Directed network of the \verb{d x d} matrix of
+fixed-effect lagged coefficients: the weight in row \code{i}, column \code{j}
+is the effect of variable \code{i} at \code{t - lag} on variable \code{j} at \code{t},
+so edges run from predictor to outcome. Method
+\code{"mlvar_temporal"}.}
+\item{\code{contemporaneous}}{Undirected \verb{d x d} network of the partial
+correlations of the within-person lmer residuals. Method
+\code{"mlvar_contemporaneous"}.}
+\item{\code{between}}{Undirected \verb{d x d} network of the partial
+correlations of the person means, derived from \code{D (I - Gamma)}.
+Method \code{"mlvar_between"}.}
+\item{coefficient table (attribute \code{coefs})}{The data frame \code{\link[=coefs]{coefs()}}
+returns: one row per \verb{(outcome, predictor)} pair, with columns
+\code{outcome}, \code{predictor}, \code{beta}, \code{se}, \code{t}, \code{p}, \code{ci_lower},
+\code{ci_upper} and \code{significant}.}
+\item{attribute \code{n_obs}}{The number of rows of the augmented panel
+after rows with missing values are removed.}
+\item{attribute \code{n_subjects}}{The number of subjects remaining.}
+\item{attribute \code{lag}}{The lag used.}
+\item{attribute \code{standardize}}{Whether the variables were
+standardised before augmentation.}
 }
-
-In \code{print.net_mlvar()}: Invisibly returns \code{x}.
-
-In \code{summary.net_mlvar()}: The tidy coefficient \code{data.frame} - the same table \code{\link[=coefs]{coefs()}} returns, with one row per \verb{(outcome, predictor)} pair and columns \code{outcome}, \code{predictor}, \code{beta}, \code{se}, \code{t}, \code{p}, \code{ci_lower}, \code{ci_upper}, \code{significant}. Returned visibly, so calling \code{summary(fit)} at the console prints the matrices and then the table.
+The \code{print()} method returns its input invisibly.
 }
 \description{
-Estimates three networks from ESM/EMA panel data, matching
-\code{mlVAR::mlVAR()} with \code{estimator = "lmer"}, \code{temporal = "fixed"},
-\code{contemporaneous = "fixed"} at machine precision: (1) a directed
-temporal network of fixed-effect lagged regression coefficients, (2)
-an undirected contemporaneous network of partial correlations among
-residuals, and (3) an undirected between-subjects network of partial
-correlations derived from the person-mean fixed effects.
+\code{build_mlvar()} fits a multilevel vector autoregression to intensive
+longitudinal panel data (ESM or EMA: many people, each measured on many
+occasions) and returns its three networks. The \emph{temporal} network is
+directed and holds the fixed-effect lagged regression coefficients: the
+weight in row \code{i}, column \code{j} is the coefficient of variable \code{i} at an
+earlier occasion on variable \code{j} now, so each edge runs from the earlier
+variable to the one it predicts.
+The \emph{contemporaneous} network is undirected: the partial correlations of
+the within-person residuals at the same occasion. The \emph{between-subjects}
+network is undirected too: the partial correlations of the person means.
+Each variable is regressed, in a mixed model, on every variable
+\code{lag} occasions earlier and on the other variables' person means; the
+temporal and contemporaneous effects are fixed and only the intercepts are
+random.
+
+The temporal and contemporaneous edges describe within-person relations
+averaged over people; the between-subjects edges describe how people who
+differ in one variable on average differ in another (Epskamp et al.,
+2018). Only random intercepts are estimated, so the networks do not show
+how people differ in their dynamics. A temporal edge is a lagged
+predictive association, and a contemporaneous edge has no temporal order.
+\code{\link[=coefs]{coefs()}} gives each temporal coefficient with its standard error,
+p-value and confidence interval; check them before interpreting any
+single temporal edge.
 }
 \details{
-Estimation is delegated to \code{\link[idiographic:fit_mlvar]{idiographic::fit_mlvar()}} (the
-clean-room home of the temporal idiographic estimators), called with
-\code{estimator = "lmer"}, \code{temporal = "fixed"},
-\code{contemporaneous = "fixed"}. The pipeline follows mlVAR's lmer path
-exactly:
+Estimation is done by \code{\link[idiographic:fit_mlvar]{idiographic::fit_mlvar()}}, called with
+\code{estimator = "lmer"}, \code{temporal = "fixed"} and \code{contemporaneous = "fixed"}. It follows mlVAR's lmer path:
 \enumerate{
-\item Drop rows with NA in id/day/beep and optionally grand-mean
-standardize each variable.
-\item Expand the per-(id, day) beep grid and right-join original
-values, producing the augmented panel (\code{augData}).
+\item Drop rows with NA in id/day/beep and, with \code{standardize = TRUE},
+grand-mean standardise each variable.
+\item Expand the per-(id, day) beep grid and right-join the original
+values, giving the augmented panel (\code{augData}).
 \item Add within-person lagged predictors (\verb{L1_*}) and person-mean
 predictors (\verb{PM_*}).
 \item For each outcome variable fit
 \code{lmer(y ~ within + between-except-own-PM + (1 | id))} with
-\code{REML = FALSE}. Collect the fixed-effect temporal matrix \code{B},
-between-effect matrix \code{Gamma}, random-intercept SDs (\code{mu_SD}),
-and lmer residual SDs.
+\code{REML = FALSE}. Collect the fixed-effect temporal matrix \code{B}, the
+between-effect matrix \code{Gamma}, the random-intercept SDs (\code{mu_SD})
+and the lmer residual SDs.
 \item Contemporaneous network:
 \code{cor2pcor(D \%*\% cov2cor(cor(resid)) \%*\% D)}.
 \item Between-subjects network:
 \code{cor2pcor(pseudoinverse(forcePositive(D (I - Gamma))))}.
 }
 
-Validated to machine precision (max_diff < 1e-10) against
-\code{mlVAR::mlVAR()} on 25 real ESM datasets from \code{openesm} and 20 simulated
-configurations, and to exact equality (max_diff == 0) against the
-pre-delegation Nestimate implementation on all layers, coefficients,
-and observation counts across lag/standardize/day/beep configurations.
+The result agrees with \code{mlVAR::mlVAR()} to machine precision (largest
+difference below 1e-10) on 25 real ESM datasets from \code{openesm} and 20
+simulated configurations, and exactly with the implementation Nestimate
+carried before 0.9.0 on all layers, coefficients and observation counts,
+across settings of \code{lag}, \code{standardize}, \code{day} and \code{beep}.
+
+The temporal weight matrix has predictors in rows and outcomes in columns,
+the transpose of mlVAR's \code{Beta} and the same matrix as
+\code{mlVAR::getNet(, "temporal")}. A Nestimate network reads its weight matrix
+from row to column, so the edges of the temporal network (its edge list
+and \code{\link[=extract_edges]{extract_edges()}}) run from the predictor at \code{t - lag} to the outcome
+at \code{t}. Nestimate 1.0.9 and earlier did not transpose it, so every
+temporal edge pointed from the outcome to its predictor.
 
 When the data carry no between-person variance (a random-intercept SD of
-zero), the between-subjects network is not estimable. Since 0.9.0 this
-raises a warning from \pkg{idiographic} and still returns the zero matrix
-by convention; before 0.9.0 the zero matrix was returned silently.
+zero), the between-subjects network cannot be estimated. Since 0.9.0
+\pkg{idiographic} then raises a warning and the zero matrix is returned by
+convention; before 0.9.0 the zero matrix was returned silently.
 }
 \section{Dispatch limitation}{
 
-There is no \code{plot()} method for \code{net_mlvar} - plot a single constituent
-(\code{cograph::splot(fit$temporal)}) instead. The three constituents are
-matrix-wrapped and carry no \verb{$data}, so the data-resampling and
-data-reading verbs do \strong{not} work on the fitted object or its parts:
-\code{\link[=bootstrap_network]{bootstrap_network()}}, \code{\link[=certainty]{certainty()}}, \code{\link[=network_reliability]{network_reliability()}},
-\code{\link[=centrality_stability]{centrality_stability()}} and \code{centrality()} all need the source panel.
-Extract a constituent and rebuild it through \code{\link[=build_network]{build_network()}} if you
-need those. Use \code{\link[=coefs]{coefs()}} for the tidy model output.
+\code{plot()} draws the three networks side by side, or one with \code{layer},
+with \code{cograph::splot()} when \pkg{cograph} is installed and in base
+graphics otherwise; each constituent can also be drawn on its own
+(\code{cograph::splot()} on the temporal network). The constituents are
+wrappers around their weight matrices and carry no
+data, so the verbs that resample or reread the data,
+\code{\link[=bootstrap_network]{bootstrap_network()}}, \code{\link[=network_reliability]{network_reliability()}} and
+\code{\link[=centrality_stability]{centrality_stability()}}, raise an error on the fit and on each
+constituent, and \code{\link[=certainty]{certainty()}} refuses them as not transition networks.
+\code{\link[=net_centrality]{net_centrality()}} and \code{summary()} read the weights and work on each
+constituent. \code{\link[=coefs]{coefs()}} gives the model output.
 }
 
 \section{Methods}{
 
 \itemize{
-\item \code{summary.net_mlvar()}: Prints the three weight matrices and the significant temporal edges, then returns the tidy coefficient table.
+\item \code{summary.net_mlvar()} prints the three weight matrices and the
+significant temporal edges, then returns the coefficient table of
+\code{\link[=coefs]{coefs()}}.
 }
 }
 

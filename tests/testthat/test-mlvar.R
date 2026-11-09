@@ -11,9 +11,9 @@ testthat::skip_on_cran()
 # Numerical equivalence against `mlVAR::mlVAR()` is not shipped; it lives in
 # the local suite (local_testing_and_equivalence/).
 #
-# Plotting is cograph's responsibility. Nestimate never calls cograph and
-# does not define a plot method for net_mlvar; each constituent is a
-# standard cograph_network that cograph::splot dispatches on directly.
+# plot.net_mlvar draws each constituent with cograph::splot() when cograph
+# is installed (base graphics otherwise); it replaces idiographic's method,
+# which would transpose the predictor -> outcome temporal matrix again.
 
 test_that("build_mlvar returns a net_mlvar / netobject_group", {
   d <- simulate_data("mlvar", seed = 1)
@@ -168,4 +168,79 @@ test_that("build_mlvar warns on singular fit", {
   # Test passes if no error — the warning pathway is exercised
   # (the actual singular condition depends on the data/optimizer)
   expect_true(TRUE)
+})
+
+# ---- Edge direction, p-values, method registration (2026-11-08) ----
+
+.mlvar_lagged_panel <- function() {
+  # b at t - 1 drives a at t with coefficient 0.6; a does not drive b.
+  set.seed(1)
+  do.call(rbind, lapply(seq_len(30), function(i) {
+    n <- 40
+    b <- stats::rnorm(n) + stats::rnorm(1)
+    a <- c(stats::rnorm(1), 0.6 * b[-n] + stats::rnorm(n - 1, sd = 1.5)) +
+      stats::rnorm(1)
+    data.frame(id = i, beep = seq_len(n), a = a, b = b)
+  }))
+}
+
+test_that("temporal edges run from the lagged predictor to the outcome", {
+  fit <- build_mlvar(.mlvar_lagged_panel(), vars = c("a", "b"),
+                     id = "id", beep = "beep")
+  w  <- fit$temporal$weights
+  cf <- coefs(fit)
+  beta_b_on_a <- cf$beta[cf$outcome == "a" & cf$predictor == "b"]
+  beta_a_on_b <- cf$beta[cf$outcome == "b" & cf$predictor == "a"]
+  # row = predictor, column = outcome (the transpose of mlVAR's Beta);
+  # before the fix w["a", "b"] held the b -> a effect.
+  expect_equal(w["b", "a"], beta_b_on_a)
+  expect_equal(w["a", "b"], beta_a_on_b)
+  expect_gt(w["b", "a"], 0.5)
+  expect_lt(abs(w["a", "b"]), 0.2)
+  # the edge list follows the matrix: from b to a with the 0.6-ish weight
+  e <- fit$temporal$edges
+  ids <- stats::setNames(seq_along(rownames(w)), rownames(w))
+  expect_equal(e$weight[e$from == ids[["b"]] & e$to == ids[["a"]]],
+               beta_b_on_a)
+})
+
+test_that("coefs() p-values do not underflow to zero for large t", {
+  fit <- build_mlvar(.mlvar_lagged_panel(), vars = c("a", "b"),
+                     id = "id", beep = "beep")
+  cf <- coefs(fit)
+  big <- cf[cf$outcome == "a" & cf$predictor == "b", ]
+  expect_gt(abs(big$t), 8.5)
+  expect_identical(2 * (1 - stats::pnorm(abs(big$t))), 0)
+  # 2 * (1 - pnorm(|t|)) is exactly 0 here; the upper tail is not.
+  expect_gt(big$p, 0)
+  expect_equal(cf$p, 2 * stats::pnorm(-abs(cf$t)))
+  expect_identical(cf$significant, cf$p < 0.05)
+})
+
+test_that("Nestimate's print/summary methods for net_mlvar win dispatch", {
+  # idiographic registers its own net_mlvar methods; importing from it
+  # loads its namespace before Nestimate registers, so Nestimate's win.
+  expect_true("fit_mlvar" %in%
+                getNamespaceImports(asNamespace("Nestimate"))$idiographic)
+  fit <- build_mlvar(.mlvar_lagged_panel(), vars = c("a", "b"),
+                     id = "id", beep = "beep")
+  expect_identical(environment(getS3method("print", "net_mlvar")),
+                   asNamespace("Nestimate"))
+  expect_identical(environment(getS3method("summary", "net_mlvar")),
+                   asNamespace("Nestimate"))
+  utils::capture.output(s <- summary(fit))
+  expect_identical(s, coefs(fit))
+})
+
+test_that("plot.net_mlvar is Nestimate's and draws every layer", {
+  fit <- build_mlvar(.mlvar_lagged_panel(), vars = c("a", "b"),
+                     id = "id", beep = "beep")
+  expect_identical(environment(getS3method("plot", "net_mlvar")),
+                   asNamespace("Nestimate"))
+  pdf_file <- tempfile(fileext = ".pdf")
+  grDevices::pdf(pdf_file)
+  on.exit({ grDevices::dev.off(); unlink(pdf_file) }, add = TRUE)
+  expect_identical(plot(fit), fit)
+  expect_identical(plot(fit, layer = "temporal"), fit)
+  expect_error(plot(fit, layer = "lagged"))
 })

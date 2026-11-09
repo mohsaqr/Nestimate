@@ -25,114 +25,138 @@ pattern_outcome(
   reference = NULL,
   ci_level = 0.95,
   cols = NULL,
+  actor = NULL,
+  action = NULL,
+  time = NULL,
   ...
 )
 }
 \arguments{
-\item{x}{Sequence data, in any form accepted by
-\code{\link{extract_sequences}()}: prepared data, a long event log, a
-wide data frame, a \code{netobject}, \code{netobject_group} or
-\code{tna} model.}
+\item{x}{The sequence data, in any form \code{\link[=extract_sequences]{extract_sequences()}} accepts:
+prepared data, a long event log, a wide data frame, a \code{netobject},
+\code{netobject_group} or \code{tna} model.}
 
 \item{outcome}{The outcome, with exactly two distinct values: the name of
 a column stored with the sequences (a covariate of a wide data frame or
 long event log, or of a network's metadata), or a vector with one value
-per sequence. Use a vector for a model that stores no covariates, such
-as a \code{tna} model. \code{outcome = "last_obs"} uses each sequence's
-last observed state as the outcome and removes the states that end some
-sequence from all sequences (the default, as in codyna; for data whose
-final state codes the outcome, such as an appended \code{"pass"} or
-\code{"fail"}).}
+per sequence; use a vector for a model that stores no covariates, such
+as a \code{tna} model. The default, \code{"last_obs"}, uses each sequence's last
+observed state as the outcome and removes the states that end some
+sequence from all sequences, as codyna does; it suits data whose final
+state codes the outcome, such as an appended \code{"pass"} or \code{"fail"}. An
+outcome without exactly two values, a vector of the wrong length or a
+column that is not stored with the sequences raises an error of class
+\code{nestimate_bad_input}.}
 
-\item{type, len, gap, min_freq, min_support, start, end, contain}{Pattern
-definition and filters; see \code{\link{sequence_patterns}()}. The
-defaults are codyna's: \code{len = 1:2}, \code{gap = 1},
-\code{min_freq = 5}, \code{min_support = 0.01}.}
+\item{type, len, gap, min_freq, min_support, start, end, contain}{The pattern
+definition and filters; see \code{\link[=sequence_patterns]{sequence_patterns()}}. The defaults are
+codyna's: \code{type = "ngram"}, \code{len = 1:2}, \code{gap = 1}, \code{min_freq = 5} and
+\code{min_support = 0.01}. When no pattern passes the filters under both
+outcome values, an error of class \code{nestimate_no_patterns} is raised.}
 
-\item{n}{Number of patterns entered into the model. Default \code{10}.}
+\item{n}{The number of patterns entered into the model, a positive whole
+number. Default \code{10}.}
 
-\item{priority}{Column(s) ranking the patterns for selection, applied in
-order: \code{"chisq"} (default), \code{"p_value"}, \code{"support"},
-\code{"n_sequences"}, \code{"occurrences"}, \code{"proportion"},
-\code{"lift"}, \code{"length"}.}
+\item{priority}{The columns ranking the patterns for selection, applied
+in order: \code{"chisq"} (default), \code{"p_value"}, \code{"support"},
+\code{"n_sequences"}, \code{"occurrences"}, \code{"proportion"}, \code{"lift"} and
+\code{"length"}.}
 
-\item{desc}{Logical, recycled to \code{priority}: rank in descending
-order. Default \code{TRUE}.}
+\item{desc}{Whether each \code{priority} column ranks in descending order,
+recycled to the length of \code{priority}. Default \code{TRUE}, so \code{"p_value"}
+needs \code{desc = FALSE} to select the smallest p-values.}
 
-\item{occurrences}{Logical. Enter each pattern as its number of
-occurrences in the sequence instead of presence (0/1). Default
+\item{occurrences}{Whether each pattern enters the model as its number of
+occurrences in the sequence instead of its presence (0/1). Default
 \code{FALSE}.}
 
-\item{adjust}{Optional character vector of covariate columns added to
-the model.}
+\item{adjust}{Covariate columns added to the model. Default \code{NULL}. A
+name that is not a column stored with the sequences raises an error of
+class \code{nestimate_bad_input}.}
 
-\item{adjust_length}{Logical. Also add the number of observed states per
-sequence as a covariate. Default \code{FALSE} (codyna does not).}
+\item{adjust_length}{Whether to add the number of observed states per
+sequence as a covariate. Default \code{FALSE}, as in codyna.}
 
-\item{group}{Optional column identifying the actor (or other cluster)
-each sequence belongs to; adds a random intercept. Requires \pkg{lme4}.}
+\item{group}{The column identifying the actor (or other cluster) each
+sequence belongs to; it adds a random intercept per group. It needs
+\pkg{lme4}, otherwise an error of class \code{nestimate_no_lme4} is raised.
+Default \code{NULL}. A name that is not a column stored with the sequences
+raises an error of class \code{nestimate_bad_input}.}
 
 \item{reference}{The reference outcome value; the odds ratios are for
-the other value. Default: the first value in sorted order.}
+the other value. Default \code{NULL}, the first value in sorted order; a
+value that does not occur raises an error of class
+\code{nestimate_bad_input}.}
 
-\item{ci_level}{Confidence level of the Wald intervals. Default
-\code{0.95}.}
+\item{ci_level}{The confidence level of the Wald intervals, a number
+between 0 and 1. Default \code{0.95}.}
 
-\item{cols}{State columns of a wide data frame; see
-\code{\link{extract_sequences}()}.}
+\item{cols}{The state columns of a wide data frame; see
+\code{\link[=extract_sequences]{extract_sequences()}}. Default \code{NULL}.}
 
-\item{...}{Passed to \code{\link{extract_sequences}()}, e.g.
-\code{actor}, \code{action} and \code{time} for a long event log.}
+\item{actor, action, time}{The actor, action and timestamp columns of a
+long event log, as in \code{\link[=extract_sequences]{extract_sequences()}}: setting \code{action} declares
+\code{x} an event log. Default \code{NULL}.}
+
+\item{...}{Further arguments passed to \code{\link[=prepare]{prepare()}} for a long event log,
+such as \code{time_threshold} or \code{order}.}
 }
 \value{
-A \code{data.frame} with one row per selected pattern, in the
-model's term order (pattern name): \code{pattern}, \code{length},
-\code{occurrences}, \code{n_sequences}, \code{support}, \code{lift}
-(as in \code{\link{sequence_patterns}()}), the support within each
-outcome value (\code{support_<value>}), \code{chisq} (the selection
-statistic),
-\code{estimate} (log odds ratio, adjusted for the other terms),
-\code{std_error}, \code{ci_lower}, \code{ci_upper}, \code{p_value}
-(Wald z), \code{odds_ratio}, \code{or_lower}, \code{or_upper}.
+A data frame with one row per selected pattern, ordered by
+pattern name, with the columns \code{pattern}, \code{length}, \code{occurrences},
+\code{n_sequences}, \code{support} and \code{lift} (as in \code{\link[=sequence_patterns]{sequence_patterns()}}); the
+share of the sequences of each outcome value that contain the pattern
+(\verb{support_<value>}); \code{chisq} (the selection statistic); \code{estimate} (the
+log odds ratio, adjusted for the other terms), \code{std_error}, \code{ci_lower},
+\code{ci_upper} and \code{p_value} (Wald z); and \code{odds_ratio}, \code{or_lower} and
+\code{or_upper}.
 
-Conditions: \code{nestimate_bad_input} for a missing column, an outcome
-without exactly two values, or an unknown \code{reference};
-\code{nestimate_no_patterns} when no pattern passes the filters;
-\code{nestimate_no_lme4} when \code{group} is set and \pkg{lme4} is not
-installed; warning \code{nestimate_missing_outcome} when sequences with
-a missing outcome, covariate or group are dropped; warning
-\code{nestimate_aliased_pattern} when a selected pattern is collinear
-with the other terms (its row is \code{NA}). Warnings from the model
-fit (e.g. separation) are passed on unchanged.
+Sequences with a missing outcome, covariate or group are dropped with a
+warning of class \code{nestimate_missing_outcome}. A selected pattern
+collinear with the other terms gets \code{NA} estimates (and \code{NA} standard
+error, intervals, p-value and odds ratios), its descriptive columns
+kept, and a warning of class
+\code{nestimate_aliased_pattern}. Warnings from the model fit (such as
+separation) are passed on unchanged.
 }
 \description{
-Selects the \code{n} patterns most associated with a two-valued outcome
-and fits one logistic regression of the outcome on their presence. This
-reproduces \code{codyna::analyze_outcome()}: the same pattern discovery
-and filters, the same ranking, and the same model, so the coefficients
-agree. The result is a tidy table, one row per selected pattern.
+\code{pattern_outcome()} selects the \code{n} sequential patterns most associated
+with a two-valued outcome and fits one logistic regression of the
+outcome on their presence (or their counts), returning one row per
+selected pattern with its log odds ratio, odds ratio and Wald interval.
+It reads any sequence data \code{\link[=extract_sequences]{extract_sequences()}} reads, takes the
+outcome from a stored covariate, a vector or each sequence's last state,
+and can adjust for covariates and add a random intercept per actor.
+
+Each estimate is the association of one pattern with the outcome,
+adjusted for the other selected patterns and the covariates; it is not a
+causal effect. The patterns are chosen by their association with the
+outcome in the same data the model is fitted to, so the p-values do not
+account for that selection and overstate the evidence: treat them as a
+ranking, or confirm the selected patterns on new data. A pattern and a
+longer pattern containing it often occur together, and each coefficient
+is then adjusted for the other; \code{\link[=sequence_patterns]{sequence_patterns()}} shows how often
+each pattern occurs, overall and by group.
 }
 \details{
-Steps:
+\code{pattern_outcome()} reproduces \code{codyna::analyze_outcome()}: the same
+pattern discovery and filters, the same ranking and the same model, so
+the coefficients agree. The steps:
 \enumerate{
-\item Patterns are found as in \code{\link{sequence_patterns}()} and
-filtered by \code{min_freq}, \code{min_support}, \code{start},
-\code{end} and \code{contain}. Patterns absent from all sequences of
-one outcome value are dropped.
+\item Patterns are found as in \code{\link[=sequence_patterns]{sequence_patterns()}} and filtered by
+\code{min_freq}, \code{min_support}, \code{start}, \code{end} and \code{contain}. Patterns
+absent from all sequences of one outcome value are dropped.
 \item Each pattern gets the chi-square statistic of the number of
 sequences containing it under each outcome value, against an equal
 split across the values (codyna's statistic; it does not weight by
 the size of each outcome group).
 \item The top \code{n} patterns by \code{priority} enter one model,
 \code{outcome ~ adjust + pattern_1 + ... + pattern_n}, as presence
-indicators (or occurrence counts with \code{occurrences = TRUE}).
+indicators (or occurrence counts with \code{occurrences = TRUE}). Ties
+keep codyna's order: more occurrences first, then first appearance.
 With \code{group}, a random intercept per group is added
-(\code{lme4::glmer}).
+(\code{lme4::glmer()}); otherwise the model is a plain \code{glm()}.
 }
-The patterns are chosen by their association with the outcome in the
-same data the model is fitted to, so the p-values do not account for
-that selection and overstate the evidence. Treat them as a ranking, or
-confirm the selected patterns on new data.
 }
 \examples{
 pattern_outcome(group_regulation_long, outcome = "Achiever",

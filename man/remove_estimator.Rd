@@ -7,13 +7,18 @@
 remove_estimator(name)
 }
 \arguments{
-\item{name}{Character. Name of the estimator to remove.}
+\item{name}{The registered name of the estimator to remove, a single
+string.}
 }
 \value{
-Invisible \code{NULL}.
+\code{NULL}, invisibly. The entry is removed from the registry as a
+side effect.
 }
 \description{
-Remove a network estimator from the registry.
+\code{remove_estimator()} takes an estimator out of the registry, so
+\code{\link[=build_network]{build_network()}} no longer finds it by name. Built-ins can be removed
+too; they come back when the package is loaded again. A name that is not
+registered raises an error.
 }
 \examples{
 register_estimator("test_est", function(data, ...) diag(3),

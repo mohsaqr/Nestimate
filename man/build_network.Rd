@@ -54,207 +54,189 @@ build_network(
 \method{print}{summary.netobject_group}(x, ...)
 }
 \arguments{
-\item{data}{Data frame (sequences or per-observation frequencies) or a
-square symmetric matrix (correlation or covariance). A fitted
-\code{net_clustering} or \code{net_mmm} object is also accepted: the
-per-cluster networks are (re)built and a \code{netobject_group} is
-returned.}
+\item{data}{The data to estimate from: a data frame of sequences (one row
+per sequence, one column per position), an event log (one row per
+event, with \code{action} set), one-hot code columns, numeric variables (one
+row per observation) for the association methods, or a square symmetric
+correlation or covariance matrix. A fitted \code{net_clustering} or \code{net_mmm}
+object also works: its per-cluster networks are built, with the
+\code{scaling}, \code{threshold}, \code{start}, \code{end} and \code{params} given here, and
+returned as a \code{netobject_group}. The relative networks of a \code{net_mmm}
+are the fitted chains: \code{scaling} and \code{threshold} are applied to them,
+and any other argument raises an error of class \code{nestimate_bad_input}.}
 
-\item{method}{Character. Required, except when \code{data} is a
-\code{net_clustering} or \code{net_mmm} object, where the fitted
-object's own network method is used. Name of a registered estimator.
-Built-in methods: \code{"relative"}, \code{"frequency"},
-\code{"co_occurrence"}, \code{"cor"}, \code{"pcor"}, \code{"glasso"},
-\code{"ising"}, \code{"mgm"}, \code{"attention"}, \code{"wtna"},
-\code{"wtna_cooccurrence"}, \code{"ngram"}, \code{"gap"},
-\code{"reverse"}. The last three mirror \code{tna::build_model()}
-types \code{"n-gram"} (adjacent pairs counted once per n-gram window
-containing them; \code{params = list(n_gram = 2)}), \code{"gap"}
-(pairs up to \code{max_gap + 1} positions apart, weighted by
-\code{1 / distance}; \code{params = list(max_gap = 1)}) and
-\code{"reverse"} (reply network: the transpose of \code{"frequency"};
-\code{params = list(weighted = FALSE)}). All three return raw weights;
-add \code{scaling = "normalize"} for row probabilities.
-Aliases: \code{"tna"} and \code{"transition"} map to \code{"relative"};
-\code{"ftna"} and \code{"counts"} map to \code{"frequency"};
-\code{"cna"} and \code{"wcna"} map to \code{"co_occurrence"};
-\code{"corr"} and \code{"correlation"} map to \code{"cor"};
-\code{"partial"} maps to \code{"pcor"};
-\code{"ebicglasso"} and \code{"regularized"} map to \code{"glasso"};
-\code{"isingfit"} maps to \code{"ising"};
-\code{"atna"} maps to \code{"attention"};
-\code{"mixed"} and \code{"mixed_graphical"} map to \code{"mgm"};
-\code{"wtna_transition"} maps to \code{"wtna"};
-\code{"co-occurrence"} maps to \code{"co_occurrence"};
-\code{"n-gram"} and \code{"n_gram"} map to \code{"ngram"}.}
+\item{method}{The estimator: a built-in method or alias (see the
+\emph{Estimators} section), or a name added with \code{\link[=register_estimator]{register_estimator()}};
+\code{\link[=list_estimators]{list_estimators()}} lists them. Required, except when \code{data} is a
+\code{net_clustering} or \code{net_mmm} object, whose own method is used.}
 
-\item{actor}{Character. Name of the actor/person ID column for sequence
-grouping. Default: \code{NULL}.}
+\item{actor}{The column naming who each row belongs to (a person, a team).
+In an event log, each actor's events form a sequence, split further by
+\code{session} or \code{time_threshold}. With \code{level}, it is the id the multilevel
+decomposition groups by. Default \code{NULL}.}
 
-\item{action}{Character. Name of the action/state column (long format).
-Default: \code{NULL}. Column names give no role: \code{action},
-\code{actor}, \code{time} and \code{session} are read only when set. A
-column called \code{Action} with nothing declared raises an error of class
-\code{nestimate_bad_input}; an undeclared time or session column beside
-\code{action} is named in a message of class
-\code{nestimate_column_role}.}
+\item{action}{The column holding each event's state; setting it declares
+the data an event log. Column names give no role: \code{action}, \code{actor},
+\code{time} and \code{session} are read only when set. A column called \code{Action}
+with nothing declared raises an error of class \code{nestimate_bad_input},
+and an undeclared time or session column beside \code{action} is named in a
+message of class \code{nestimate_column_role}. Default \code{NULL}.}
 
-\item{time}{Character. Name of the time column (long format).
-Default: \code{NULL}.}
+\item{time}{The timestamp column of an event log. Events are ordered by
+it, and a gap longer than \code{time_threshold} starts a new sequence.
+Default \code{NULL}.}
 
-\item{session}{Character. Name of the session column. Default: \code{NULL}.}
+\item{session}{The column identifying sessions in an event log; each
+session is its own sequence, also without \code{actor}. Default \code{NULL}.}
 
-\item{order}{Character. Name of the ordering column. Default: \code{NULL}.}
+\item{order}{The column that orders events sharing a timestamp; without
+it, those events keep their row order. Default \code{NULL}.}
 
-\item{codes}{Character vector. Column names of one-hot encoded states
-(for onehot format). Default: \code{NULL}.}
+\item{codes}{The one-hot code columns (one per state, 1 when the state is
+active); setting them declares one-hot data. Default \code{NULL}.}
 
-\item{group}{Character. Name of a grouping column for per-group networks.
-Returns a \code{netobject_group} (named list of netobjects).
-Default: \code{NULL}.}
+\item{group}{A column to split the data by: one network is estimated per
+value and the result is a \code{netobject_group}. Default \code{NULL}.}
 
-\item{format}{Character. Input format: \code{"auto"}, \code{"wide"},
-\code{"long"}, or \code{"onehot"}. Default: \code{"auto"} reads an event log when
-\code{action} is set, one-hot data when \code{codes} is set, and otherwise wide
-positions; it does not read one-hot data from the values. The association methods
-and the \code{wtna} methods read 0/1 columns as they always do.}
+\item{format}{How to read \code{data}. \code{"auto"} (default) reads an event log
+when \code{action} is set, one-hot data when \code{codes} is set, and wide
+positions otherwise; it never infers one-hot data from the values.
+\code{"wide"}, \code{"long"} and \code{"onehot"} force a reading. The association
+methods and the \code{wtna} methods read 0/1 columns as they always do.}
 
-\item{window_size}{Integer. Window size for one-hot windowing.
-Default: \code{3L}.}
+\item{window_size}{For one-hot data: how many consecutive rows form one
+window (default \code{3}). Windows on sequence data are set through \code{params}
+instead.}
 
-\item{mode}{Character. Windowing mode for one-hot input only:
-\code{"non-overlapping"} or \code{"overlapping"}. Has no effect on
-wide or long sequence data (only the one-hot/wtna path reads it).
-See \code{\link{wtna}} for how overlapping windows are counted.
-Default: \code{"non-overlapping"}.}
+\item{mode}{For one-hot data: \code{"non-overlapping"} (default) or
+\code{"overlapping"} windows; \code{\link[=wtna]{wtna()}} describes how overlapping windows are
+counted. Wide and long sequence data ignore it.}
 
-\item{scaling}{Character vector or NULL. Post-estimation scaling to apply
-(in order). Options: \code{"minmax"}, \code{"max"}, \code{"rank"},
-\code{"normalize"}. Can combine: \code{c("rank", "minmax")}.
-Default: \code{NULL} (no scaling).}
+\item{scaling}{Rescaling applied to the weights after estimation, in the
+order given: \code{"minmax"} maps the non-zero weights into (0, 1],
+\code{"max"} divides by the largest absolute weight, \code{"rank"} replaces the
+non-zero weights by their ranks, and \code{"normalize"} makes each row's
+absolute weights sum to 1. Zero weights stay zero under every option.
+Combine them as in \code{c("rank", "minmax")}. Default \code{NULL} (none).}
 
-\item{threshold}{Numeric. Absolute values below this are set to zero in the
-result matrix. Default: 0 (no thresholding).}
+\item{threshold}{Weights whose absolute value is below this are set to
+zero. Default \code{0} (none). For \code{method = "mgm"}, \code{"LW"} or \code{"none"}
+instead selects mgm's coefficient-thresholding rule (a \code{threshold} in
+\code{params} takes precedence); any other non-numeric value raises an
+error.}
 
-\item{level}{Character or NULL. Multilevel decomposition for the undirected
-association methods (\code{cor}, \code{pcor}, \code{glasso}, \code{mgm}); a directed
-estimator errors. One of \code{NULL}, \code{"between"}, \code{"within"},
-\code{"both"}. Requires an id column, supplied either as \code{actor} or
-as \code{params$id} / \code{params$id_col}. Default: \code{NULL}.
-For \code{method = "mgm"}, a numeric vector instead supplies one
-category count per modeled variable (\code{1} for continuous variables),
-after excluding group, actor and metadata columns. It is checked and
-retained for compatibility; the MGM fit infers category levels from data.}
+\item{level}{Multilevel decomposition for the undirected association
+methods (\code{cor}, \code{pcor}, \code{glasso}, \code{mgm}): \code{"between"} estimates the
+network of person means, \code{"within"} the network of deviations from them,
+and \code{"both"} returns the two as a \code{netobject_ml}. It needs an id column,
+given as \code{actor} or as \code{params$id}; a directed method raises an error.
+Default \code{NULL} (no decomposition). For \code{method = "mgm"}, a numeric
+vector instead gives one category count per modelled variable (\code{1} for
+continuous ones), after group, actor and metadata columns are set
+aside; it is checked and kept for compatibility, and the fit reads the
+categories from the data.}
 
-\item{time_threshold}{Numeric or FALSE. Maximum time gap (seconds) for long
-format session splitting. Set to \code{FALSE} to switch session-interval
-splitting off, so each actor (or actor-session) forms a single sequence.
-Default: \code{900}.}
+\item{time_threshold}{The longest gap, in seconds, between two events of
+the same sequence in an event log; a longer gap starts a new sequence.
+\code{FALSE} turns the split off, so each actor (or actor-session) is one
+sequence. Default \code{900}.}
 
-\item{timezone}{Character. Olson time zone used to interpret naive
-timestamps in long-format data (offset-bearing timestamps such as
-\code{...Z} or \code{+02:00} are converted from their offset). Passed to
-\code{\link{prepare}}. Default: \code{"UTC"}.}
+\item{timezone}{The Olson time zone for timestamps without an offset
+(passed to \code{\link[=prepare]{prepare()}}); timestamps with an offset, such as \code{...Z} or
+\code{+02:00}, are converted from it. Default \code{"UTC"}.}
 
-\item{predictability}{Logical. If \code{TRUE} (default), compute and store
-node predictability (R-squared) for undirected association methods
-(glasso, pcor, cor). Stored in \code{$predictability} and auto-displayed
-as donuts by \code{cograph::splot()}.}
+\item{predictability}{Whether to compute each node's predictability (the
+R-squared of the node on its neighbours) for the undirected association
+methods \code{cor}, \code{pcor} and \code{glasso}. It is stored on the network,
+and \code{cograph::splot()} draws it as a ring around each node. Default
+\code{TRUE}.}
 
-\item{state_cols}{Character vector or \code{NULL}. Explicit names of columns
-to classify as state columns in the returned netobject's \code{$data}
-slot. When provided, all other columns of the cleaned input go to
-\code{$metadata}. Auto-detection (values-in-nodes heuristic) is bypassed.
-Use this when a metadata column happens to contain values that overlap
-with node names (e.g. condition labels \code{"A","B","C"} and nodes
-\code{"A","B","C"}) and auto-detection would misclassify it. Default:
-\code{NULL}. Declared columns are positions, also when they hold only 0 and 1:
-use \code{codes} or \code{format = "onehot"} for one-hot data. For wide sequence
-data with nothing declared, the frame must be one column or hold position
-columns named as a run (a shared prefix and a number: \code{T1}, \code{T2}, ...;
-or \code{1}, \code{2}, ...). Columns of only 0 and 1 on a sequence method raise an
-error of class \code{nestimate_bad_input}: nothing says whether they are one-hot
-codes or positions. Numeric
-columns of a mixed frame are then covariates, and so is every character or
-factor column outside the run. Any other frame on a sequence method raises
-an error of class \code{nestimate_bad_input}: set \code{action} for an
-event log, or this argument for a wide table.}
+\item{state_cols}{The columns of a wide table that are sequence positions;
+every other column of the cleaned input goes to the network's metadata. Declared
+columns are positions even when they hold only 0 and 1; one-hot data is
+declared with \code{codes} or \code{format = "onehot"}. With nothing declared, the
+frame must be one column or hold position columns named as a numbered
+run (a shared prefix and a number, \code{T1}, \code{T2}, ..., or \code{1}, \code{2}, ...);
+numeric columns beside the run and character or factor columns outside
+it are then covariates. Any other frame on a sequence method, and
+columns of only 0 and 1, raise an error of class \code{nestimate_bad_input}:
+nothing says whether they are positions or one-hot codes. Default
+\code{NULL}.}
 
-\item{metadata_cols}{Character vector or \code{NULL}. Explicit names of
-columns to force into the \code{$metadata} slot. Cannot overlap
-with \code{state_cols}. Default: \code{NULL}. A column left out of a numbered
-run of positions is named in a message of class
-\code{nestimate_column_role}; listing it here or in \code{state_cols}
-settles it.}
+\item{metadata_cols}{Columns to keep as the network's metadata (covariates), never as
+positions; they cannot overlap \code{state_cols}. A column left out of a
+numbered run of positions is named in a message of class
+\code{nestimate_column_role}, and listing it here or in \code{state_cols} settles
+it. Default \code{NULL}.}
 
-\item{start}{Boundary marker prepended to every sequence as an explicit
-start state (a pure source: no incoming edges, every sequence's first
-transition is \code{start -> first_observed}). \code{FALSE} (default)
-adds nothing; \code{TRUE} uses the label \code{"Start"}; a single string
-uses that string as the label. Only valid for the transition methods
-(\code{relative}, \code{frequency}, \code{co_occurrence},
-\code{attention}, \code{ngram}, \code{gap}, \code{reverse}); errors
-otherwise (\code{wtna} included).}
+\item{start}{A start state put before every sequence, so the network shows
+where sequences begin (an edge from it to each sequence's first state).
+\code{FALSE} (default) adds none, \code{TRUE} adds one labelled \code{"Start"}, and a
+single string adds one with that label. Only for the transition methods
+\code{relative}, \code{frequency}, \code{co_occurrence}, \code{attention}, \code{ngram}, \code{gap}
+and \code{reverse}; any other method, \code{wtna} included, raises an error.}
 
-\item{end}{Boundary marker placed in the single cell after each sequence's
-last observed (non-\code{NA}) state, as an explicit terminal state (a
-pure sink: no outgoing edges, no self-loop -- distinct from
-\code{\link{mark_terminal_state}}, which fills all trailing NAs into an
-absorbing state). \code{FALSE} (default) adds nothing; \code{TRUE} uses
-the label \code{"End"}; a single string uses that string as the label.
-Same method restriction as \code{start}.}
+\item{end}{An end state put in the cell after each sequence's last
+observed state, so the network shows where sequences stop. It has no
+outgoing edges and no self-loop, unlike \code{\link[=mark_terminal_state]{mark_terminal_state()}}, which
+fills all trailing missing cells with an absorbing state. \code{FALSE}
+(default) adds none, \code{TRUE} adds one labelled \code{"End"}, and a single
+string adds one with that label. Same methods as \code{start}.}
 
-\item{params}{Named list. Method-specific parameters passed to the estimator
-function (e.g. \code{list(gamma = 0.5)} for glasso, or
-\code{list(format = "wide")} for transition methods). This is the key
-composability feature: downstream functions like bootstrap or grid search
-can store and replay the full params list without knowing method internals.
-Transition estimators accept tna-style sequence options such as
-\code{weighted} and \code{concat} (and the low-level \code{begin_state}
-/ \code{end_state}, of which \code{start} / \code{end} are the public
-form -- see those arguments).
-\code{window_size} (and \code{window_span}, or \code{windowed = TRUE} for a
-size of 2) counts the methods \code{relative}, \code{frequency} and
-\code{co_occurrence} between consecutive non-overlapping blocks of that many
-positions, as \code{tna::tna()} does; other transition methods raise an error
-of class \code{nestimate_bad_input}, and \code{mode = "overlapping"} a warning
-of class \code{nestimate_ignored_mode}.
-Column-like entries in \code{params} (\code{action}, \code{id},
-\code{id_col}, \code{actor}, \code{time}, \code{session}, \code{order},
-\code{cols}, \code{codes}, and \code{group}) are resolved before format
-detection and must name existing columns. If the same column role is supplied both directly and
-through \code{params}, the names must agree.}
+\item{params}{Settings passed to the estimator, as a named list, such as
+\code{list(gamma = 0.5)} for \code{glasso} or \code{list(n_gram = 3)} for \code{ngram}. The
+list is stored on the network, so \code{\link[=bootstrap_network]{bootstrap_network()}} and the other
+resampling verbs re-estimate with exactly the same settings. The
+transition methods take tna's sequence options \code{weighted} and \code{concat},
+and the low-level \code{begin_state} / \code{end_state} that \code{start} and \code{end}
+set. \code{window_size} (with \code{window_span}, or \code{windowed = TRUE} for a size
+of 2) counts \code{relative}, \code{frequency} and \code{co_occurrence} between
+consecutive non-overlapping blocks of that many positions, as
+\code{tna::tna()} does; other transition methods raise an error of class
+\code{nestimate_bad_input}, and \code{mode = "overlapping"} a warning of class
+\code{nestimate_ignored_mode}. Column roles given here (\code{action}, \code{id},
+\code{id_col}, \code{actor}, \code{time}, \code{session}, \code{order}, \code{cols}, \code{codes},
+\code{group}) must name existing columns, and must agree with the same role
+given directly.}
 
-\item{labels}{Optional name -> label remap applied after construction.
-Accepts a 2-column data.frame \code{(name, label)}, a named character
-vector \code{c(name = "label")}, or a named list. Rewrites
-\code{$nodes$label} and \code{dimnames(weights)}. Unmapped names pass
-through unchanged.}
+\item{labels}{New display labels for the nodes, applied after estimation:
+a two-column data frame (\code{name}, \code{label}), a named character vector
+\code{c(name = "label")} or a named list. It rewrites the node labels and the
+weight matrix's dimnames; nodes not listed keep their names.}
 
-\item{...}{Additional arguments passed to the estimator function. For
-long data, \code{prepare()}'s time options \code{unix_time_unit},
-\code{is_unix_time} and \code{custom_format} are passed to
-\code{\link{prepare}} instead (e.g. \code{unix_time_unit =
-  "milliseconds"} for millisecond timestamps).
-In \code{print.netobject()}, \code{print.netobject_group()} and \code{print.netobject_ml()}: Additional arguments (ignored). In \code{print.summary.netobject()}, \code{print.summary.netobject_group()}, \code{summary.netobject()} and \code{summary.netobject_group()}: Ignored.}
+\item{...}{Further arguments for the estimator. For event logs,
+\code{\link[=prepare]{prepare()}}'s time options \code{unix_time_unit}, \code{is_unix_time} and
+\code{custom_format} go to \code{\link[=prepare]{prepare()}} instead (e.g.
+\code{unix_time_unit = "milliseconds"}). For the \code{print()} and \code{summary()}
+methods: ignored.}
 
-\item{x}{For the \code{print()} method: an object of class \code{netobject}, \code{netobject_group} or \code{netobject_ml} (or its \code{summary()}).}
+\item{x}{For the \code{print()} methods: a \code{netobject}, \code{netobject_group} or
+\code{netobject_ml}, or the result of \code{summary()} on one.}
 
-\item{digits}{Integer. Decimal places for the weight summary. Default \code{3}. Non-breaking: \code{print(x)} keeps the same shape as before, with the addition of a weight-range column.}
+\item{digits}{For \code{print()} of a \code{netobject_group}: decimal places of the
+weight range. Default \code{3}.}
 
-\item{object}{For the \code{summary()} method: an object of class \code{netobject} or \code{netobject_group}.}
+\item{object}{For \code{summary()}: a \code{netobject} or \code{netobject_group}.}
 
-\item{combined}{Logical. Combine into one wide data.frame? Default \code{TRUE}.}
+\item{combined}{For \code{summary()} of a \code{netobject_group}: \code{TRUE} (default)
+joins the groups' metrics into one data frame with a column per group;
+\code{FALSE} returns a named list of the per-group tables.}
 }
 \value{
-An object of class \code{c("netobject", "cograph_network")} containing:
+A \code{netobject} (class \code{c("netobject", "cograph_network")}). Print it
+for an overview; \code{\link[=extract_edges]{extract_edges()}} gives one row per edge, \code{\link[=extract_transition_matrix]{extract_transition_matrix()}}
+and \code{\link[=extract_initial_probs]{extract_initial_probs()}} the weights and initial-state
+probabilities, and \code{cograph::splot()} draws it. \code{\link[=summary]{summary()}} returns the
+descriptive metrics, one row per metric (a \code{netobject_group} gives one
+column per group). The \code{print()} methods return their input invisibly.
+The \code{netobject}'s fields:
 \describe{
 \item{data}{The state columns of the cleaned input data, as a data frame.}
 \item{metadata}{Data frame of the non-state columns of the cleaned input
 (and, for long input, the per-sequence metadata), or NULL.}
 \item{weights}{The estimated network weight matrix.}
 \item{nodes}{Data frame with columns \code{id}, \code{label}, \code{name},
-\code{x}, \code{y}. Node labels are in \code{$nodes$label}.}
+\code{x}, \code{y}.}
 \item{edges}{Data frame of non-zero edges with integer \code{from}/\code{to}
 (node IDs) and numeric \code{weight}.}
 \item{directed}{Logical. Whether the network is directed.}
@@ -264,7 +246,8 @@ An object of class \code{c("netobject", "cograph_network")} containing:
 \item{threshold}{The threshold applied.}
 \item{n_nodes}{Number of nodes.}
 \item{n_edges}{Number of non-zero edges.}
-\item{level}{Decomposition level used (or NULL).}
+\item{level}{Decomposition level used, or NULL; for \code{mgm}, the category
+count of each variable.}
 \item{build_args}{The resolved column/format arguments (\code{actor},
 \code{action}, \code{time}, \code{session}, \code{order}, \code{codes},
 \code{format}, \code{window_size}, \code{mode}) used for this build.}
@@ -272,71 +255,130 @@ An object of class \code{c("netobject", "cograph_network")} containing:
 (cograph-compatible).}
 \item{node_groups}{Node groupings data frame, or NULL.}
 \item{predictability}{Named numeric vector of R-squared predictability
-values per node (for undirected association methods when
-\code{predictability = TRUE}). NULL for directed methods.}
+values per node, for \code{cor}, \code{pcor} and \code{glasso} when
+\code{predictability = TRUE}; NULL otherwise.}
 }
-Method-specific extras (e.g. \code{precision_matrix}, \code{cor_matrix},
-\code{frequency_matrix}, \code{initial}, \code{lambda_selected}, etc.) are
-preserved from the estimator output.
+The estimator's own results are kept beside these fields, depending on
+the method: for example \code{frequency_matrix} and \code{initial} for \code{relative},
+\code{frequency}, \code{ngram}, \code{gap} and \code{reverse} (only \code{initial} for
+\code{attention}, neither for \code{co_occurrence}), \code{cor_matrix} and the sample
+size \code{n} for \code{cor}, \code{pcor} and \code{glasso}, \code{precision_matrix} for \code{pcor}
+and \code{glasso}, and \code{lambda_selected} for \code{glasso}.
 
-When \code{level = "both"}, returns an object of class
-\code{"netobject_ml"} with \code{$between} and \code{$within}
-sub-networks and a \code{$method} field. \code{level = "between"} or
-\code{"within"} returns a single \code{netobject} estimated on the
-decomposed data.
+With \code{level = "both"}, the result is a \code{netobject_ml} holding the
+between-person and within-person networks (\code{between} and \code{within}, each a
+\code{netobject}) and the \code{method}. \code{level = "between"} or \code{"within"} returns
+a single \code{netobject} estimated on the decomposed data.
 
-When \code{group} is supplied (or \code{data} is a \code{net_clustering} /
-\code{net_mmm} object), returns an object of class
-\code{"netobject_group"}: a named list of \code{netobject}s, one per group,
-carrying the grouping column in \code{attr(x, "group_col")}.
-
-In \code{print.netobject()}, \code{print.netobject_group()} and \code{print.netobject_ml()}: The input object, invisibly.
-
-In \code{summary.netobject()}: A \code{data.frame} with columns \code{metric} and \code{value}, of class \code{c("summary.netobject", "data.frame")}.
-
-In \code{summary.netobject_group()}: Either a \code{data.frame} (one column per group) or a named list of \code{summary.netobject} objects, of class \code{c("summary.netobject_group", ...)}.
-
-In \code{print.summary.netobject()}: \code{x}, invisibly.
-
-In \code{print.summary.netobject_group()}: \code{x}, invisibly.
+With \code{group}, or when \code{data} is a \code{net_clustering} or \code{net_mmm} object,
+the result is a \code{netobject_group}: a named list of \code{netobject}s, one per
+group, that records the grouping column in its \code{group_col} attribute.
 }
 \description{
-Universal network estimation function that supports both transition
-networks (relative, frequency, co-occurrence) and association networks
-(correlation, partial correlation, graphical lasso). Uses the global
-estimator registry, so custom estimators can also be used.
+\code{build_network()} estimates a network from sequences, an event log,
+one-hot codes or numeric variables, and returns a \code{netobject}: the object
+every other Nestimate verb reads (bootstrap, permutation, centrality,
+clustering, plotting). One call covers two kinds of network.
+Transition networks (\code{"relative"}, \code{"frequency"}, \code{"co_occurrence"} and
+their variants) are directed or undirected graphs of states, where an edge
+says how often or how likely one state follows another. Association
+networks (\code{"cor"}, \code{"pcor"}, \code{"glasso"}, \code{"ising"}, \code{"mgm"}) are undirected
+graphs of variables, where an edge is a correlation or a (regularised)
+partial correlation. The \emph{Estimators} section lists every method and its
+aliases; estimators added with \code{\link[=register_estimator]{register_estimator()}} are called the same
+way.
+
+Column roles are declared, never read from names or values. An event log
+needs \code{action}, and usually \code{actor}, \code{time} or \code{session}; a wide table
+needs position columns named as a numbered run (\code{T1}, \code{T2}, ...) or listed
+in \code{state_cols}; one-hot data needs \code{codes} or \code{format = "onehot"}. Input
+that fits none of these raises an error of class \code{nestimate_bad_input}
+instead of being read one way or another.
+
+The weights are point estimates. Before reading single edges, see how far
+they move under resampling with \code{\link[=bootstrap_network]{bootstrap_network()}}, and compare groups
+with \code{\link[=permutation]{permutation()}} rather than by eye. An event log that yields a single
+sequence is reported with a message of class \code{nestimate_single_sequence}:
+that network describes one sequence and cannot be resampled.
 }
 \details{
-The function works as follows:
-\enumerate{
-\item Resolves method aliases to canonical names.
-\item Validates explicit column arguments before any format guessing.
-\item Retrieves the estimator function from the global registry.
-\item For association methods with \code{level} specified, decomposes
-the data (between-person means or within-person centering).
-\item Calls the estimator: \code{do.call(fn, c(list(data = data), params))}.
-\item Applies scaling and thresholding to the result matrix.
-\item Extracts edges and constructs the \code{netobject}.
-}
+\code{build_network()} resolves the method alias, checks the declared column
+arguments before the format is resolved, and takes the estimator from the
+registry. For an association method with \code{level}, it first decomposes
+the data into person means (\code{"between"}) or deviations from them
+(\code{"within"}). It then calls the estimator with \code{data} and \code{params},
+applies \code{scaling} and then \code{threshold} to the weight matrix, and extracts
+the edges.
 
-For long-format transition data, supplying \code{action} alone treats all
-rows as one sequence in row order; \code{session}, or a \code{time} gap above
-\code{time_threshold}, splits them without an \code{actor}. A message says so
-when one sequence is built, because a one-sequence transition network is not
-recommended and cannot be validated by bootstrap or other confirmatory tests.
+In an event log, \code{action} alone makes all rows one sequence in row order;
+\code{session}, or a \code{time} gap above \code{time_threshold}, splits them without an
+\code{actor}. When the log yields a single sequence, a message of class
+\code{nestimate_single_sequence} says so, because such a network cannot be
+validated by bootstrap or the other confirmatory tests.
 
 For \code{method = "mgm"}, missing continuous values are filled with the
 observed column mean and missing categorical values with the modal level.
-This retains the rows and is \pkg{psychnets}' documented
+This keeps the rows and is \pkg{psychnets}' documented
 \code{na_method = "pairwise"} policy; it is not pairwise deletion.
+
+For a network with non-negative weights, the \code{summary()} values equal
+those of \code{tna::summary.tna()} from tna 1.5.4 on.
 }
+\section{Estimators}{
+
+\describe{
+\item{\code{"relative"}}{Transition probabilities (row-normalised counts); directed. Aliases: \code{"tna"}, \code{"transition"}.}
+\item{\code{"frequency"}}{Transition counts; directed. Aliases: \code{"ftna"}, \code{"counts"}.}
+\item{\code{"co_occurrence"}}{Co-occurrence within sequences; undirected. Aliases: \code{"cna"}, \code{"wcna"}, \code{"co-occurrence"}.}
+\item{\code{"attention"}}{Decay-weighted transitions; directed. Alias: \code{"atna"}.}
+\item{\code{"ngram"}}{Adjacent pairs counted once per n-gram window; directed. Aliases: \code{"n-gram"}, \code{"n_gram"}.}
+\item{\code{"gap"}}{Pairs up to \code{max_gap + 1} positions apart, weighted \code{1 / distance}; directed.}
+\item{\code{"reverse"}}{Reply network, the transpose of \code{"frequency"}; directed.}
+\item{\code{"wtna"}}{Window-based transitions on one-hot data; directed. Alias: \code{"wtna_transition"}.}
+\item{\code{"wtna_cooccurrence"}}{Window-based co-occurrence on one-hot data; undirected.}
+\item{\code{"cor"}}{Pearson correlations; undirected. Aliases: \code{"corr"}, \code{"correlation"}.}
+\item{\code{"pcor"}}{Partial correlations, unregularised; undirected. Alias: \code{"partial"}.}
+\item{\code{"glasso"}}{EBIC graphical lasso partial correlations; undirected. Aliases: \code{"ebicglasso"}, \code{"regularized"}.}
+\item{\code{"ising"}}{Ising model (L1-penalised logistic regression); undirected. Alias: \code{"isingfit"}.}
+\item{\code{"mgm"}}{Mixed graphical model; undirected. Aliases: \code{"mixed"}, \code{"mixed_graphical"}.}
+}
+
+\code{"ngram"}, \code{"gap"} and \code{"reverse"} are \code{tna::build_model()}'s
+types \code{"n-gram"}, \code{"gap"} and \code{"reverse"}. Their settings go in
+\code{params}: \code{list(n_gram = 2)}, \code{list(max_gap = 1)} and
+\code{list(weighted = FALSE)} are the defaults. All three return raw weights;
+add \code{scaling = "normalize"} for row probabilities.
+}
+
 \section{Methods}{
 
-\itemize{
-\item \code{print.netobject_group()}: Compact summary of a \code{netobject_group}. Header surfaces the source (a clustering attached by \code{\link{cluster_network}} or \code{\link{cluster_mmm}}, or a plain split by \code{group_col}). The per-group table carries node and edge counts, weight range, and -- when a clustering attribute is present -- N and percentage of sequences per cluster (matching the layout used by \code{\link{print.net_clustering}} and \code{\link{print.net_mmm}}).
-\item \code{summary.netobject()}: Computes node count, edge count, density, mean shortest-path distance, mean and SD of in/out strength, mean and SD of in/out degree, in/out degree centralization (Freeman), and reciprocity. Mirrors the metric set returned by \code{tna::summary.tna()} so a Nestimate netobject and the equivalent tna model report numerically identical descriptive metrics.
-\item \code{summary.netobject_group()}: Returns one summary per constituent network. With \code{combined = TRUE} (default) the per-group tables are joined into a single wide \code{data.frame} with one column per group; with \code{combined = FALSE} returns a named list.
-}
+Printing a \code{netobject} shows the kind of network, the range of its
+weights (with the numbers of positive and negative edges for \code{cor},
+\code{pcor}, \code{glasso} and \code{ising}, the mean weight otherwise), the weight
+matrix under the node labels, the initial probabilities and the
+predictability values when present, the sample size for \code{cor}, \code{pcor},
+\code{glasso} and \code{ising}, the tuning values of \code{glasso} and \code{ising}, and any
+scaling or threshold. Printing a \code{netobject_group} gives a header naming
+its source (a clustering from \code{build_network()} on a \code{net_clustering} or
+\code{net_mmm} fit, or \code{\link[=cluster_network]{cluster_network()}}, or a plain split by the grouping
+column) and one row per group with its node and edge counts and weight
+range; when the groups are clusters, it also shows the number and share
+of sequences in each, in the layout of the \code{\link[=build_clusters]{build_clusters()}} and
+\code{\link[=build_mmm]{build_mmm()}} prints. A \code{netobject_ml} prints the node, edge and sample
+counts of its between- and within-person networks.
+
+\code{summary()} gives the descriptive metrics \code{tna::summary.tna()} reports:
+node and edge counts, density, mean shortest-path distance, the mean and
+SD of out- and in-strength, the mean and SD of out-degree, out- and
+in-degree centralisation (Freeman) and reciprocity. A self-loop counts as
+an edge, an undirected edge is counted once, and density is capped at 1.
+Strengths sum absolute weights. Distances take each edge's absolute
+weight as its length, not its inverse, and pairs with no path between
+them are left out of the mean. Degree centralisation ignores self-loops,
+and reciprocity is the share of off-diagonal edges whose reverse is also
+present (1 for an undirected network). Mean distance and reciprocity are
+\code{NaN} when no pair qualifies. Printing a summary shows the counts as
+integers and the other metrics to four significant digits.
 }
 
 \examples{

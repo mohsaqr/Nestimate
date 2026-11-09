@@ -25,29 +25,38 @@ set_state_colors(x, colors)
 state_colors(x) <- value
 }
 \arguments{
-\item{x}{A \code{netobject}, \code{netobject_group}, \code{mcml} or
-\code{htna}.}
+\item{x}{A \code{netobject}, \code{netobject_group}, \code{mcml} or \code{htna}; any other
+object raises an error.}
 
-\item{colors}{A named character vector of colours, e.g.
-\code{c(plan = "#0072B2", monitor = "#D55E00")}. Names are states, and for
-an \code{mcml} may also be cluster names. Names the object does not carry
-are dropped with a message, so one project-wide palette can be attached to
-every object. States you do not name keep the default Okabe-Ito colour.
-\code{NULL} removes a palette set earlier.}
+\item{colors}{The palette: a named character vector of colours, such as
+\code{c(plan = "#0072B2", monitor = "#D55E00")}. Names are states, and for an
+\code{mcml} may also be cluster names. A name the object does not carry is
+reported in a message and draws nothing, so one project-wide palette can
+be attached to every object. States left unnamed are dealt the
+Okabe-Ito colours the palette does not already use, in the object's
+state order (recycled when there are more such states than colours).
+The palette replaces any palette set earlier, and \code{NULL} removes it. An
+unnamed vector raises an error.}
 
 \item{value}{The palette, as for \code{colors}, in the replacement form
 \code{state_colors(x) <- value}.}
 }
 \value{
-\code{x}, with the palette stored in \code{x$state_colors} and, for
-an object carrying \code{$nodes}, mirrored into
-\code{x$meta$splot$defaults$node_fill} in node order so
-\code{cograph::splot()} honours it. The class is unchanged.
+\code{x} with the palette stored on it; the class is unchanged.
+\code{\link[=state_colors]{state_colors()}} shows the colours it resolves to. For a \code{netobject} or
+\code{htna}, the palette is also written, in node order, into the
+\code{meta$splot} producer contract (\code{defaults$node_fill}), so
+\code{cograph::splot()} draws the same colours without being passed any. A
+\code{netobject_group} stores the palette on the group and on each member
+network, so a member drawn on its own carries it too.
 }
 \description{
-Attaches a palette to the object so every figure drawn from it uses the same
-colours: \code{\link{sequence_plot}}, \code{\link{distribution_plot}},
-\code{\link{plot_state_frequencies}} and \code{cograph::splot()}.
+\code{set_state_colors()} attaches a palette to a network object, so every
+figure drawn from it uses the same colours: \code{\link[=sequence_plot]{sequence_plot()}},
+\code{\link[=distribution_plot]{distribution_plot()}}, \code{\link[=plot_state_frequencies]{plot_state_frequencies()}} and \code{cograph::splot()}.
+A colour argument given to one of those plot verbs still wins for that
+figure, and the object keeps its palette. \code{state_colors(x) <- value} is
+the replacement form, and \code{\link[=state_colors]{state_colors()}} reads back the colours in use.
 }
 \examples{
 net <- build_network(group_regulation_long, method = "relative",

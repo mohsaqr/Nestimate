@@ -5,21 +5,21 @@
 \alias{trajectories}
 \title{Student Engagement Trajectories}
 \format{
-A character matrix with 138 rows and 15 columns, one row per
-student. Columns are named \code{"1"}..\code{"15"} (the week). Entries
-are one of \code{"Active"}, \code{"Average"}, \code{"Disengaged"}, or
-\code{NA}; \code{NA} runs at the end of a row mark drop-out, which the
-right-censored sequence verbs (\code{\link{actor_endpoints}},
-\code{\link{mark_terminal_state}}) are built to read.
+A character matrix with 138 rows and 15 columns named \code{"1"} to
+\code{"15"}, in time order. Each entry is \code{"Active"}, \code{"Average"},
+\code{"Disengaged"} or \code{NA}. The trailing \code{NA} runs are what the
+right-censored sequence verbs (\code{\link[=actor_endpoints]{actor_endpoints()}},
+\code{\link[=mark_terminal_state]{mark_terminal_state()}}) are built to read.
 }
 \usage{
 trajectories
 }
 \description{
-Wide-format state sequences of student engagement over 15 weekly
-observations. Each row is one student; columns \code{1}..\code{15}
-hold the engagement state for that week. States: \code{"Active"},
-\code{"Average"}, \code{"Disengaged"}. Missing weeks are \code{NA}.
+Wide-format sequences of student engagement over 15 consecutive
+observations, one row per student and one column per observation. The
+states are \code{"Active"}, \code{"Average"} and \code{"Disengaged"}. A missing value
+occurs only as a run at the end of a row, which marks drop-out; two rows
+are missing throughout.
 }
 \examples{
 sequence_plot(trajectories, main = "Engagement trajectories")

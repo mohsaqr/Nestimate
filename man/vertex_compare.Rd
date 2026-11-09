@@ -26,78 +26,100 @@ vertex_compare(
 \method{plot}{net_vertex_comparison}(x, ...)
 }
 \arguments{
-\item{x, y}{The two networks: \code{netobject}s, \code{cograph_network}s,
-square weight matrices, or precomputed \code{net_vertex_bootstrap}
-objects (then \code{iter}, \code{statistics}, \code{statistic_fn},
-\code{directed}, and \code{seed} are ignored for that argument). For the
-\code{print()} and \code{plot()} methods, \code{x} is an object of class
-\code{net_vertex_comparison}.
-The two sides must cover exactly the same statistics; a mismatch
-(e.g., a directed network's \code{reciprocity} against an undirected
-one, or precomputed objects built with different \code{statistics}
-selections) is an error, never a silent subset.}
+\item{x, y}{The two networks: \code{netobject}s, \code{cograph_network}s, square
+weight matrices, or \code{net_vertex_bootstrap} results computed beforehand.
+A precomputed result is used as it is, so \code{iter}, \code{statistics},
+\code{statistic_fn} and \code{directed} do not apply to it. The two must cover
+the same statistics: a mismatch, such as a directed network's
+\code{reciprocity} against an undirected network, or two precomputed results
+with different \code{statistics}, raises an error rather than comparing a
+subset. For the \code{print()} and \code{plot()} methods, \code{x} is a
+\code{net_vertex_comparison} result.}
 
-\item{iter}{Integer. Number of bootstrap replicates (default 1000).}
+\item{iter}{The number of bootstrap replicates, at least 2. Default
+\code{1000}.}
 
-\item{ci_level}{Numeric. Significance level for the confidence
-intervals (default 0.05 for 95\% CIs).}
+\item{ci_level}{The significance level of the normal-approximation
+intervals for the differences: \code{0.05} (default) gives 95\% intervals. It
+is also passed to the bootstraps run here; with a precomputed result,
+the differences still use this level.}
 
-\item{statistics}{Character vector selecting built-in statistics
-(see Details). Default: all applicable to the network's directedness.}
+\item{statistics}{The built-in statistics to compare, as named for
+\code{\link[=vertex_bootstrap]{vertex_bootstrap()}}: \code{density}, \code{mean_weight}, \code{centralization} and,
+for directed networks, \code{reciprocity}. Default \code{NULL}: all that apply.
+A name not available for a network raises an error.}
 
-\item{statistic_fn}{Optional named list of functions, each taking the
-weight matrix and returning a single numeric value. Computed alongside
-the built-ins.}
+\item{statistic_fn}{Statistics of your own, as a named list of functions,
+each taking the weight matrix and returning a single number. They are
+computed beside the built-ins on the whole matrix, diagonal included.
+Default \code{NULL}.}
 
-\item{directed}{Logical or NULL. Directedness of the network. NULL
-(default) reads \code{x$directed} when available, otherwise falls
-back to matrix symmetry.}
+\item{directed}{Whether the networks are directed, which decides how
+collisions are filled and whether \code{reciprocity} is available; one value
+applies to both networks, not to a precomputed result. Default \code{NULL}
+reads each network's own directedness, and for a matrix (or a network
+that records none) treats an asymmetric matrix as directed.}
 
-\item{seed}{Integer or NULL. RNG seed for reproducibility.}
+\item{seed}{A seed passed to \code{\link[=set.seed]{set.seed()}} once, before both bootstraps
+run, so the comparison can be repeated; the session's random-number
+stream then continues from it. Default \code{NULL} uses the current stream.}
 
-\item{labels}{Character vector of length 2 naming the networks in the
-output (default \code{c("x", "y")}).}
+\item{labels}{Two names for the networks, used in the print header, the
+plot axis and the column names \verb{observed_<label>} (made syntactic with
+\code{\link[=make.names]{make.names()}}). Default \code{c("x", "y")}.}
 
-\item{digits}{Number of digits to display (default 3).}
+\item{digits}{For the \code{print()} method: the number of decimals shown.
+Default \code{3}.}
 
-\item{...}{In \code{plot.net_vertex_comparison()}, \code{print.net_vertex_comparison()} and \code{summary.net_vertex_comparison()}: Additional arguments (ignored).}
+\item{...}{Not used.}
 
-\item{object}{For the \code{summary()} method: an object of class \code{net_vertex_comparison}.}
+\item{object}{For the \code{summary()} method: a \code{net_vertex_comparison}
+result.}
 }
 \value{
-An object of class \code{"net_vertex_comparison"} containing:
+A \code{net_vertex_comparison} object. Printing it shows the two
+networks' sizes and the first network's number of replicates, then the
+summary table
+with significance stars; \code{summary()} returns that table as a data frame
+with one row per statistic and the columns \code{statistic}, the two
+observed values (\verb{observed_<label>}), \code{diff} (first minus second),
+\code{se_diff}, \code{z}, \code{p_value} (two-sided), \code{ci_lower} and \code{ci_upper};
+\code{plot()} draws the differences with their intervals. When a statistic
+has no bootstrap variation in either network (both standard errors 0),
+its \code{z} and \code{p_value} are \code{NA}. The object holds:
 \describe{
-\item{summary}{Tidy data frame, one row per statistic:
-\code{statistic}, the two observed values, \code{diff},
-\code{se_diff}, \code{z}, \code{p_value}, and a normal-approximation
-confidence interval for the difference.}
+\item{summary}{The summary table described above.}
 \item{x, y}{The two \code{net_vertex_bootstrap} results.}
-\item{labels, ci_level}{Configuration.}
+\item{labels, ci_level}{The settings used.}
 }
-When both bootstrap SEs are zero (a statistic with no resampling
-variation in either network) \code{z} and \code{p_value} are \code{NA}.
 
-In \code{print.net_vertex_comparison()}: \code{x}, invisibly.
-
-In \code{summary.net_vertex_comparison()}: The tidy summary data frame (one row per statistic).
-
-In \code{plot.net_vertex_comparison()}: A ggplot object.
+The \code{print()} method returns its input invisibly, \code{summary()} the
+summary data frame and \code{plot()} a \code{ggplot} object.
 }
 \description{
-Snijders & Borgatti (1999) two-network test: each network's statistics
-get vertex-bootstrap standard errors, and each difference is tested with
+\code{vertex_compare()} tests whether two observed networks differ in their
+network-level statistics, the two-network test Snijders & Borgatti
+(1999) proposed the vertex bootstrap for. Each network's statistics get
+vertex-bootstrap standard errors from \code{\link[=vertex_bootstrap]{vertex_bootstrap()}}, and each
+difference is tested with
 \deqn{z = (\hat{\theta}_x - \hat{\theta}_y) /
   \sqrt{SE_x^2 + SE_y^2}}
-against a standard normal reference. This is the comparison the vertex
-bootstrap was originally proposed for: deciding whether two observed
-networks differ in density, centralization, reciprocity, or any other
-whole-network descriptive.
+against a standard normal distribution, with a normal-approximation
+confidence interval for the difference. It covers density, mean weight,
+centralisation, reciprocity and any statistic of your own.
+
+The test is about whole-network descriptives, and its standard errors
+reflect the resampling of nodes, not of the cases behind the weights.
+The p-values are not adjusted for the number of statistics tested; pass
+them to \code{\link[stats:p.adjust]{stats::p.adjust()}} when several are read together. When the raw
+data of both networks are available, \code{\link[=permutation]{permutation()}} and \code{\link[=nct]{nct()}} compare
+them edge by edge.
 }
 \section{Methods}{
 
-\itemize{
-\item \code{plot.net_vertex_comparison()}: Forest plot of the statistic differences with normal-approximation confidence intervals; differences whose interval excludes zero are the statistically distinguishable ones.
-}
+\code{plot()} draws each statistic's difference as a point with its
+normal-approximation interval, beside a dashed line at zero; intervals
+that exclude zero are drawn in red, the others in blue.
 }
 
 \examples{

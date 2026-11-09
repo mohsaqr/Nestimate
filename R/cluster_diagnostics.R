@@ -19,47 +19,84 @@
 
 #' Cluster Diagnostics
 #'
-#' Unified entry point for clustering quality information. Returns a
-#' \code{net_cluster_diagnostics} object that normalises the diagnostic
-#' surface across distance-based and model-based clusterings -- you no
-#' longer have to know which fields live on \code{net_clustering} vs.
-#' \code{net_mmm} vs. the slim \code{net_mmm_clustering} attribute of a
-#' \code{netobject_group}.
+#' @description
+#' `cluster_diagnostics()` collects the quality measures of a clustering in
+#' one `net_cluster_diagnostics` object, laid out the same way whichever
+#' route produced the clusters: a distance clustering from
+#' [build_clusters()], a mixed Markov model from [build_mmm()] or
+#' [cluster_mmm()], the `netobject_group` that [cluster_network()] or
+#' [build_network()] builds from one of them, or the `net_mmm_clustering`
+#' attribute of such a group. It packages what the fit already computed and
+#' adds only the per-cluster summaries the fit does not store (silhouette
+#' means and mean within-cluster distances for a distance clustering, the
+#' classification error within each cluster for a mixture); it does not
+#' refit.
 #'
-#' The returned object carries:
+#' For a distance clustering it reports the average silhouette width,
+#' overall and per cluster, and each cluster's mean within-cluster
+#' distance. For a mixture it reports each cluster's average posterior
+#' probability (AvePP) and mixing proportion, the overall AvePP, the
+#' normalised entropy of the posterior probabilities (0 when every sequence
+#' is assigned with certainty, 1 when all assignments are equally likely;
+#' the reverse of the relative entropy often reported for latent class
+#' models), the classification error (the expected share of sequences
+#' misclassified when each is assigned to its most likely cluster: one minus
+#' the largest posterior, averaged over all sequences and over each
+#' cluster's members, so it equals one minus the AvePP; Vermunt & Magidson,
+#' 2005), and the log-likelihood with BIC, AIC and ICL.
+#'
+#' These measures describe how cleanly one solution separates the
+#' sequences; none of them picks the number of clusters. Compare solutions
+#' with [cluster_choice()] for distance clustering or [compare_mmm()] for
+#' mixtures, and build the clusters' networks with [build_network()] on the
+#' clustering to see how they differ, with [bootstrap_network()] for how
+#' stable their edges are.
+#'
+#' @param x The clustering: a `net_clustering`, a `net_mmm`, a
+#'   `netobject_group` carrying a clustering (built by [cluster_network()]
+#'   or by [build_network()] from a `net_clustering` or `net_mmm`), or a
+#'   `net_mmm_clustering`. A `netobject_group` without a clustering, and any
+#'   other object, raise an error. For the `print()`, `plot()` and
+#'   `as.data.frame()` methods: a `net_cluster_diagnostics`.
+#' @param ... Not used: an extra argument raises an error, here and in the
+#'   `print()` and `as.data.frame()` methods. For `plot()`: further
+#'   arguments for the clustering's own `plot()` method, such as `combined`.
+#' @return A `net_cluster_diagnostics` object. `print()` shows the numbers
+#'   of sequences and clusters (with the method and dissimilarity of a
+#'   distance clustering, or the number of states of a mixture), the overall
+#'   quality measures, the information criteria of a mixture, one row per
+#'   cluster, and the covariates of the fit, if any; `plot()` draws the clustering's own views. The object's
+#'   fields:
 #' \describe{
-#'   \item{family}{Either \code{"distance"} or \code{"mmm"}.}
-#'   \item{k, n, sizes}{Number of clusters, number of sequences, sizes
-#'     vector.}
-#'   \item{per_cluster}{A \code{data.frame} -- one row per cluster, columns
-#'     differ by family. Distance: \code{cluster}, \code{size},
-#'     \code{pct}, \code{mean_within_dist}, \code{sil_mean}. MMM:
+#'   \item{family}{\code{"distance"} or \code{"mmm"}.}
+#'   \item{k, n, sizes}{Number of clusters, number of sequences, and the
+#'     cluster sizes.}
+#'   \item{per_cluster}{Data frame with one row per cluster; its columns
+#'     depend on the family. Distance: \code{cluster}, \code{size},
+#'     \code{pct}, \code{mean_within_dist}, \code{sil_mean}. Mixture:
 #'     \code{cluster}, \code{size}, \code{pct}, \code{mix_pct},
-#'     \code{avepp}, \code{class_err_pct}.}
-#'   \item{overall}{A named list of family-specific summary metrics
-#'     (\code{silhouette} for distance; \code{avepp_overall},
-#'     \code{entropy}, \code{classification_error} for MMM).}
-#'   \item{ics}{For MMM: a list with \code{BIC}, \code{AIC}, \code{ICL}.
-#'     \code{NULL} for distance.}
-#'   \item{metadata}{Method / dissimilarity / weighted / lambda etc.}
-#'   \item{source}{The original clustering object, kept by reference so
-#'     \code{plot()} can delegate without recomputing anything.}
+#'     \code{avepp}, \code{class_err_pct}. \code{pct}, \code{mix_pct}
+#'     and \code{class_err_pct} are in percent.}
+#'   \item{overall}{List of the family's summary measures:
+#'     \code{silhouette} for distance; \code{avepp_overall},
+#'     \code{entropy} and \code{classification_error} (a proportion) for a
+#'     mixture.}
+#'   \item{ics}{For a mixture, a list with \code{BIC}, \code{AIC},
+#'     \code{ICL} and \code{log_likelihood}; NULL for distance.}
+#'   \item{metadata}{The settings of the fit. Distance: \code{method},
+#'     \code{dissimilarity}, \code{weighted}, \code{lambda},
+#'     \code{medoids}, \code{covariates}. Mixture: \code{states},
+#'     \code{n_states}, \code{iterations}, \code{converged},
+#'     \code{covariates}.}
+#'   \item{source}{The clustering object itself, which \code{plot()} draws
+#'     without recomputing anything.}
 #' }
+#' @references
+#' Vermunt, J. K., & Magidson, J. (2005). \emph{Latent GOLD 4.0 User's
+#' Guide}. Statistical Innovations.
 #'
-#' @param x A \code{net_clustering}, \code{net_mmm}, \code{netobject_group}
-#'   (with \code{attr(, "clustering")} attached by \code{cluster_network()}
-#'   or \code{build_network(net_mmm)}), or \code{net_mmm_clustering}. For the \code{print()}, \code{plot()} and \code{as.data.frame()} methods: an object of class \code{net_cluster_diagnostics}.
-#' @param ... Unsupported. Supplying unused arguments raises an error. In \code{as.data.frame.net_cluster_diagnostics()} and \code{print.net_cluster_diagnostics()}: Unsupported. Supplying unused arguments raises an error. In \code{plot.net_cluster_diagnostics()}: Forwarded to the underlying plot method.
-#' @return \code{cluster_diagnostics()} returns a
-#'   \code{net_cluster_diagnostics} object: a list carrying
-#'   \code{family}, \code{k}, \code{n}, \code{sizes}, the
-#'   \code{per_cluster} data frame (one row per cluster), \code{overall},
-#'   \code{ics}, \code{metadata} and \code{source}, as detailed above.
-#'   \code{as.data.frame()} on that object returns the
-#'   \code{per_cluster} data frame itself -- one row per cluster, with
-#'   family-specific columns.
-#' @seealso \code{\link{print.net_cluster_diagnostics}},
-#'   \code{\link{plot.net_cluster_diagnostics}},
+#' @seealso \code{\link{build_clusters}}, \code{\link{build_mmm}},
+#'   \code{\link{cluster_choice}},
 #'   \code{\link{compare_mmm}} for k-sweep model selection (MMM only).
 #' @examples
 #' seqs <- data.frame(V1 = sample(c("A","B","C"), 30, TRUE),
@@ -79,12 +116,12 @@ cluster_diagnostics <- function(x, ...) {
 #' @export
 cluster_diagnostics.default <- function(x, ...) {
   .cluster_diag_check_unused_dots(...)
-  stop("cluster_diagnostics() has no method for class '",
+  stop(errorCondition(paste0("cluster_diagnostics() has no method for class '",
        paste(class(x), collapse = "/"), "'. Supported inputs: ",
        "net_clustering (from build_clusters), net_mmm (from build_mmm), ",
        "netobject_group (from cluster_network / build_network), ",
-       "or net_mmm_clustering (the clustering attribute itself).",
-       call. = FALSE)
+       "or net_mmm_clustering (the clustering attribute itself)."),
+       class = "nestimate_bad_input", call = NULL))
 }
 
 # ---------------------------------------------------------------------------
@@ -173,18 +210,16 @@ cluster_diagnostics.net_mmm <- function(x, ...) {
   sizes <- as.integer(tabulate(assignments, nbins = k))
   n_total <- as.integer(x$n_sequences %||% sum(sizes))
 
-  # Per-cluster classification-error decomposition: of obs assigned to
-  # cluster m, what fraction have max(posterior) < 0.5? This is the
-  # missing breakdown of quality$classification_error.
+  # Per-cluster classification error: the expected misclassification
+  # 1 - max posterior averaged over the sequences assigned to cluster m
+  # (Vermunt & Magidson, 2005), the breakdown of quality$classification_error.
   class_err_pct <- rep(NA_real_, k)
   if (!is.null(x$posterior)) {
     max_post <- apply(x$posterior, 1L, max)
-    for (cl in seq_len(k)) {
+    class_err_pct <- vapply(seq_len(k), \(cl) {
       members <- which(assignments == cl)
-      if (length(members) > 0L) {
-        class_err_pct[cl] <- mean(max_post[members] < 0.5) * 100
-      }
-    }
+      if (length(members) == 0L) NA_real_ else mean(1 - max_post[members]) * 100
+    }, numeric(1))
   }
 
   avepp <- as.numeric(x$quality$avepp %||% rep(NA_real_, k))
@@ -257,10 +292,13 @@ cluster_diagnostics.netobject_group <- function(x, ...) {
   .cluster_diag_check_unused_dots(...)
   cl <- attr(x, "clustering")
   if (is.null(cl)) {
-    stop("cluster_diagnostics() requires a clustering attribute on the ",
-         "netobject_group. Build with cluster_network() or cluster_mmm() ",
-         "(or attach an existing net_clustering / net_mmm_clustering as ",
-         "attr(grp, \"clustering\")).", call. = FALSE)
+    stop(errorCondition(
+      paste0(
+        "cluster_diagnostics() requires a clustering attribute on the ",
+        "netobject_group. Build with cluster_network() or cluster_mmm() ",
+        "(or attach an existing net_clustering / net_mmm_clustering as ",
+        "attr(grp, \"clustering\"))."),
+      class = "nestimate_bad_input", call = NULL))
   }
   cluster_diagnostics(cl)
 }
@@ -272,11 +310,11 @@ cluster_diagnostics.netobject_group <- function(x, ...) {
   }
   dot_names <- names(dots)
   dot_names[!nzchar(dot_names)] <- paste0("..", which(!nzchar(dot_names)))
-  stop(
+  stop(errorCondition(paste0(
     "cluster_diagnostics() got unsupported argument",
     if (length(dots) == 1L) ": " else "s: ",
-    paste(dot_names, collapse = ", "),
-    call. = FALSE
+    paste(dot_names, collapse = ", ")),
+    class = "nestimate_bad_input", call = NULL)
   )
 }
 
@@ -285,20 +323,36 @@ cluster_diagnostics.netobject_group <- function(x, ...) {
 # ---------------------------------------------------------------------------
 
 #' @rdname cluster_diagnostics
-#' @param digits Integer. Decimal places for floating-point statistics. Default \code{3L}.
-#' @param type Character. Forwarded to the underlying plot method. Valid values for distance: \code{"silhouette"} (default), \code{"mds"}, \code{"heatmap"}, \code{"predictors"}. Valid values for mmm: \code{"posterior"} (default), \code{"covariates"} / \code{"predictors"}.
-#' @param row.names,optional Standard \code{as.data.frame} arguments (ignored).
-#' @return In \code{print.net_cluster_diagnostics()}: The input object, invisibly.
-#' @return In \code{plot.net_cluster_diagnostics()}: Whatever the underlying plot method returns: a \code{ggplot} object, invisibly; or, for the covariate forest views called with \code{combined = FALSE}, a list of \code{ggplot} objects named by cluster (invisibly).
+#' @param digits For `print()`: decimal places of the silhouette widths,
+#'   distances, AvePP, entropy and information criteria, a non-negative
+#'   whole number. Default `3`. Percentages are always shown to one
+#'   decimal.
+#' @param type For `plot()`: the view, passed to the clustering's own
+#'   `plot()` method. Default `NULL`, which draws `"silhouette"` for a
+#'   distance clustering and `"posterior"` for a mixture. A distance
+#'   clustering also takes `"mds"`, `"heatmap"` and `"predictors"` (see
+#'   [build_clusters()]); a mixture takes `"covariates"`, with
+#'   `"predictors"` accepted for it when the source is a
+#'   `net_mmm_clustering` (see [build_mmm()]).
+#' @param row.names,optional For `as.data.frame()`: accepted for the
+#'   generic and ignored.
+#' @return For `print()`: the input, invisibly. For `plot()`: what the
+#'   clustering's own `plot()` method returns, a `ggplot` object (invisibly)
+#'   or, for the covariate views with `combined = FALSE`, a list of
+#'   `ggplot` objects named by cluster (invisibly). For `as.data.frame()`:
+#'   the per-cluster table described under `per_cluster`.
 #' @export
 print.net_cluster_diagnostics <- function(x, digits = 3L, ...) {
   dots <- list(...)
   if (length(dots)) {
     dot_names <- names(dots)
     dot_names[!nzchar(dot_names)] <- paste0("..", which(!nzchar(dot_names)))
-    stop("print.net_cluster_diagnostics() got unsupported argument",
-         if (length(dots) == 1L) ": " else "s: ",
-         paste(dot_names, collapse = ", "), call. = FALSE)
+    stop(errorCondition(
+      paste0(
+        "print.net_cluster_diagnostics() got unsupported argument",
+        if (length(dots) == 1L) ": " else "s: ",
+        paste(dot_names, collapse = ", ")),
+      class = "nestimate_bad_input", call = NULL))
   }
   .net_clustering_check_digits(digits)
   digits <- as.integer(digits)
@@ -375,9 +429,6 @@ print.net_cluster_diagnostics <- function(x, digits = 3L, ...) {
 # ---------------------------------------------------------------------------
 
 #' @rdname cluster_diagnostics
-#' @section Methods:
-#' * \code{plot.net_cluster_diagnostics()}: Delegates to the original clustering object's plot method (\code{\link{plot.net_clustering}} for distance-based diagnostics, \code{\link{plot.net_mmm_clustering}} or \code{\link{plot.net_mmm}} for model-based). The diagnostics object itself stores no plot geometry -- it just keeps a reference to the source so the existing visual layer is reused.
-#' * \code{print.net_cluster_diagnostics()}: Prints a uniform header, family-specific quality / IC line, and a per-cluster table. Layout matches \code{\link{print.net_clustering}} and \code{\link{print.net_mmm}}.
 #' @export
 plot.net_cluster_diagnostics <- function(x, type = NULL, ...) {
   if (is.null(type)) {
@@ -399,9 +450,12 @@ as.data.frame.net_cluster_diagnostics <- function(x, row.names = NULL,
   if (length(dots)) {
     dot_names <- names(dots)
     dot_names[!nzchar(dot_names)] <- paste0("..", which(!nzchar(dot_names)))
-    stop("as.data.frame.net_cluster_diagnostics() got unsupported argument",
-         if (length(dots) == 1L) ": " else "s: ",
-         paste(dot_names, collapse = ", "), call. = FALSE)
+    stop(errorCondition(
+      paste0(
+        "as.data.frame.net_cluster_diagnostics() got unsupported argument",
+        if (length(dots) == 1L) ": " else "s: ",
+        paste(dot_names, collapse = ", ")),
+      class = "nestimate_bad_input", call = NULL))
   }
   x$per_cluster
 }

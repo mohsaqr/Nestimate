@@ -28,88 +28,129 @@ outcome_model(
 \method{plot}{net_outcome_model}(x, ...)
 }
 \arguments{
-\item{data}{A \code{data.frame} with one row per unit of analysis.}
+\item{data}{A data frame with one row per unit of analysis. Rows with a
+missing value in the outcome, a predictor, an \code{adjust} covariate or the
+\code{group} column are left out; when none is left, an error of class
+\code{nestimate_empty_model_frame} is raised. A column that is not in \code{data}
+raises an error.}
 
-\item{outcome}{Name of the outcome column. A two-valued outcome is
-modelled with a binomial family, a numeric one with gaussian; override
-with \code{family}.}
+\item{outcome}{The outcome column. With \code{family = "auto"}, an outcome
+with two distinct values is modelled with the binomial family (the
+second value in sort order, level order for a factor, or \code{TRUE},
+coded 1) and any other with the gaussian
+family, which needs a numeric outcome.}
 
-\item{predictors}{Character vector of predictor column names.}
+\item{predictors}{The predictor columns. A predictor that is not numeric
+(a logical column included; convert it with \code{as.integer()}) or has no
+variance in the complete rows is dropped and listed in the result; when
+every predictor is dropped, an error of class \code{nestimate_no_variance} is
+raised.}
 
-\item{group}{Optional column name giving a grouping factor. When
-supplied and \pkg{lme4} is installed, a random intercept per group is
-added -- the right treatment for units nested in actors. \pkg{lme4} is
-a suggested package: when it is not installed the random intercept is
-dropped, a \code{"nestimate_no_lme4"} warning is raised, and a plain
-\code{\link[stats]{glm}} is fitted instead.}
+\item{group}{A grouping column, such as the actor the units are nested
+in. When \pkg{lme4} is installed, a random intercept per group is added,
+the right treatment for units nested in actors. \pkg{lme4} is a
+suggested package: without it the random intercept is dropped, a
+warning of class \code{nestimate_no_lme4} is raised, and a plain
+\code{\link[stats:glm]{stats::glm()}} is fitted. Default \code{NULL}.}
 
-\item{adjust}{Optional character vector of covariates entered before the
-predictors. Use it for exposure: a unit observed longer contains more
-of every pattern, so an unadjusted effect can be volume in disguise.}
+\item{adjust}{Covariates entered before the predictors. Use it for
+exposure: a unit observed longer contains more of every pattern, so an
+unadjusted effect can be volume in disguise. Default \code{NULL}.}
 
-\item{family}{\code{"auto"} (default), \code{"binomial"} or
-\code{"gaussian"}.}
+\item{family}{The model family: \code{"auto"} (default) reads it from the
+outcome, \code{"binomial"} and \code{"gaussian"} force one. \code{"binomial"} codes the
+second-smallest outcome value (or \code{TRUE}) as 1 and every other value as
+0, so give it a two-valued outcome.}
 
-\item{select}{\code{"none"} (default) fits all predictors;
-\code{"split"} ranks them on half the data and fits on the other half.}
+\item{select}{How the predictors are chosen: \code{"none"} (default) fits all
+of them; \code{"split"} ranks them on a random half of the rows by the
+absolute z or t statistic of a one-predictor \code{glm()} (without \code{adjust}
+or \code{group}), keeps the best \code{n_select}, and fits the reported model on
+the other half.}
 
-\item{n_select}{Number of predictors kept when \code{select = "split"}.
-Default \code{10}.}
+\item{n_select}{The number of predictors kept when \code{select = "split"}.
+Default \code{10}. Ignored otherwise.}
 
-\item{correction}{Multiplicity correction passed to
-\code{\link[stats]{p.adjust}}. Default \code{"BH"}.}
+\item{correction}{The multiplicity correction, one of
+\code{stats::p.adjust.methods}, passed to \code{\link[stats:p.adjust]{stats::p.adjust()}}. Default
+\code{"BH"}.}
 
-\item{ci_level}{Confidence level for the intervals. Default \code{0.95}.}
+\item{ci_level}{The confidence level of the intervals, between 0 and 1.
+Default \code{0.95}.}
 
-\item{seed}{Optional integer seed for the split, so the result is
-reproducible. The RNG state is restored on exit.}
+\item{seed}{An integer that makes the split reproducible; used only with
+\code{select = "split"}. A random-number state that existed before the call
+is restored afterwards. Default \code{NULL}.}
 
-\item{x}{For the \code{print()} and \code{plot()} methods: an object of class \code{net_outcome_model}.}
+\item{x}{For the \code{print()} and \code{plot()} methods: an \code{outcome_model()}
+result.}
 
-\item{...}{In \code{plot.net_outcome_model()} and \code{summary.net_outcome_model()}: Ignored. In \code{print.net_outcome_model()}: Unused.}
+\item{...}{For the \code{print()}, \code{summary()} and \code{plot()} methods: not used.}
 
-\item{object}{For the \code{summary()} method: an object of class \code{net_outcome_model}.}
+\item{object}{For \code{summary()}: an \code{outcome_model()} result.}
 }
 \value{
-An object of class \code{net_outcome_model}: a list whose
-\code{$effects} element is the tidy \code{data.frame}, one row per
-model term (the intercept included), with columns \code{term},
-\code{estimate}, \code{std_error}, \code{statistic}, \code{ci_lower},
-\code{ci_upper}, \code{p_value} and \code{p_adj} (\code{NA} on the
-intercept row, which is excluded from the correction), plus
-\code{odds_ratio}, \code{or_lower} and \code{or_upper} for a binomial
-fit. The remaining elements are the fitted \code{$model} (a
-\code{glm}, or an \pkg{lme4} fit when a random intercept was added),
-\code{$family}, \code{$n} (rows the reported model was fitted on),
-\code{$n_groups} (\code{NA} unless mixed), \code{$selected},
-\code{$dropped} (zero-variance predictors), \code{$adjust},
-\code{$select}, \code{$correction}, \code{$ci_level}, \code{$mixed}
-and \code{$outcome}. Retrieve the table with
-\code{\link{effects_table}}.
-Ordinary Gaussian fits use Student t confidence limits with the model's
-residual degrees of freedom; binomial and mixed fits use normal Wald limits.
-
-In \code{print.net_outcome_model()}: \code{print} returns its input invisibly.
-
-In \code{summary.net_outcome_model()}: \code{summary} returns the tidy effect table.
-
-In \code{plot.net_outcome_model()}: \code{plot} returns a \code{ggplot} forest of the effects.
+A \code{net_outcome_model} object. \code{print()} shows the outcome and
+family, the number of units (and groups), the number of selected terms,
+the adjustments, the dropped predictors and the correction, followed by
+the effect table, and returns its input invisibly. \code{summary()} and
+\code{\link[=effects_table]{effects_table()}} return the effect table without the intercept,
+rounded to three decimals except the p-values; \code{\link[=effects_table]{effects_table()}} also
+keeps the intercept, or only the significant terms, on request.
+\code{plot()} returns a \code{ggplot} forest plot of the effects (odds ratios for
+a binomial fit, against a dashed line at no effect), with filled markers
+for terms whose corrected p-value is below 0.05. The object's fields:
+\describe{
+\item{effects}{The effect table: a data frame with one row per model
+term, the intercept and the \code{adjust} covariates included, and columns
+\code{term}, \code{estimate}, \code{std_error}, \code{statistic}, \code{ci_lower}, \code{ci_upper},
+\code{p_value} and \code{p_adj} (\code{NA} on the intercept row, which is left out
+of the correction), plus \code{odds_ratio}, \code{or_lower} and \code{or_upper} for a
+binomial fit.}
+\item{model}{The fitted model: a \code{glm}, or an \pkg{lme4} fit when a
+random intercept was added.}
+\item{family}{\code{"binomial"} or \code{"gaussian"}.}
+\item{n}{The number of rows the reported model was fitted on.}
+\item{n_groups}{The number of groups; \code{NA} unless a random intercept
+was fitted.}
+\item{selected}{The predictors in the reported model.}
+\item{dropped}{The predictors dropped as non-numeric or constant.}
+\item{adjust, select, correction, ci_level, outcome}{The settings
+used.}
+\item{mixed}{Whether a random intercept was fitted.}
+}
 }
 \description{
-Fits a regression of an outcome on predictor columns -- pattern
-indicators, topological features from
-\code{\link{simplicial_features}}, or any other numeric covariates --
-and returns a tidy effect table with confidence intervals and
-multiplicity-corrected p-values.
+\code{outcome_model()} fits a regression of a unit-level outcome on predictor
+columns (pattern indicators, topological features from
+\code{\link[=simplicial_features]{simplicial_features()}}, or any other numeric covariates) and returns a
+tidy effect table with confidence intervals and multiplicity-corrected
+p-values. A two-valued outcome gets a logistic regression and a numeric
+one a linear regression; a \code{group} column adds a random intercept per
+group, and \code{select = "split"} chooses the predictors on one half of the
+data and fits them on the other.
+
+Each effect is conditional on the other terms in the model; for a
+two-valued outcome, the odds ratio is the factor by which the odds of the
+outcome value coded 1 change per unit of the predictor. The p-values are
+corrected across every term except the intercept, the \code{adjust} covariates
+included. A predictor that counts events also measures how long the unit
+was observed; enter that exposure through \code{adjust}.
+}
+\details{
+Ordinary gaussian fits use Student t confidence limits with the model's
+residual degrees of freedom; binomial and mixed fits use normal (Wald)
+limits. A linear mixed model (\code{lme4::lmer()}) reports no p-values,
+so they are computed from the normal distribution of its t statistics.
 }
 \section{Honest inference}{
 
 Choosing predictors by their association with the outcome and then
 testing them on the same rows invalidates the p-values. With
-\code{select = "split"} the data is halved: predictors are ranked on one
-half and the reported model is fitted on the other, so the returned
-inference is valid for the selected set. \code{select = "none"}
-(default) fits every supplied predictor and needs no split.
+\code{select = "split"} the data is halved: predictors are ranked on one half
+and the reported model is fitted on the other, so the returned inference
+is valid for the selected set. \code{select = "none"} (default) fits every
+supplied predictor and needs no split.
 }
 
 \examples{

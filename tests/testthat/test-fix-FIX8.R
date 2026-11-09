@@ -140,8 +140,11 @@ test_that("mosaic_plot.netobject recounts non-integer nets from $data", {
   no_counts <- nw_rel
   no_counts$data <- NULL
   no_counts$frequency_matrix <- NULL
-  no_counts$method <- "glasso"
   expect_error(mosaic_plot(no_counts), "integer-valued")
+  # an association network holds no transitions at all: refused before that
+  no_counts$method <- "glasso"
+  expect_error(mosaic_plot(no_counts), "holds variables",
+               class = "nestimate_bad_input")
 })
 
 # ---- A12-F04: mosaic_plot data-bearing NULL angle auto-rule reachable -------

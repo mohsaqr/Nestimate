@@ -23,100 +23,128 @@ landscape_surface(
 \method{plot}{net_landscape_surface}(x, max_stay = 50, theta = 10, phi = 30, ncol = NULL, ...)
 }
 \arguments{
-\item{x}{A transition network from \code{build_network()} (method
-\code{"relative"} or \code{"frequency"}), a grouped one, or a wide
-sequence data frame or matrix. For the \code{print()} and \code{plot()}
-methods: an object of class \code{net_landscape_surface}.}
+\item{x}{The network or sequences: a transition network from
+\code{\link[=build_network]{build_network()}} with method \code{"relative"} or \code{"frequency"} (or a bare
+\code{cograph_network} of one), a grouped one (\code{netobject_group}), a \code{tna}
+model, or a wide sequence data frame or matrix. A network must carry its
+sequences; a network of another method (for example \code{"glasso"}) raises
+an error of class \code{nestimate_not_markov}. For the \code{print()} and \code{plot()}
+methods: a \code{net_landscape_surface} object.}
 
-\item{measure}{Character vector of numeric \code{sequence_metrics()}
-columns, one surface each. Default \code{"longitudinal_entropy"}.}
+\item{measure}{The per-sequence measures to trace, one surface each: one
+or more numeric columns of \code{\link[=sequence_metrics]{sequence_metrics()}}. Default
+\code{"longitudinal_entropy"}. A name that is not a numeric column, or a
+measure that is the same for every sequence, raises an error of class
+\code{nestimate_bad_input}.}
 
-\item{states}{Character vector naming every state once, in drawing order.
-Default: alphabetical.}
+\item{states}{Every state, each named once, in drawing order. Default
+\code{NULL}, the alphabetical order. A vector that leaves out, adds or
+repeats a state raises an error of class \code{nestimate_bad_input}.}
 
-\item{k}{Integer. Nearest sequences per slice. Default 30 (capped at the
-number of sequences).}
+\item{k}{The number of nearest sequences each slice is weighted over, at
+least 5. Default \code{30}, capped at the number of usable sequences.}
 
-\item{n_grid}{Integer. Slices between the 5th and 95th percentile of the
-measure. If these percentiles coincide for a nonconstant measure,
-its full range is used. Default 25.}
+\item{n_grid}{The number of slices, at least 2, spread evenly between the
+5th and 95th percentile of the measure. If these percentiles coincide
+for a measure that is not constant, its full range is used. Default
+\code{25}.}
 
-\item{cols}{Character vector or \code{NULL}. For a wide data frame: the columns
-holding the positions. Needed when they are not a numbered run (\code{T1},
-\code{T2}, ...) or one of them is called \code{action}.}
+\item{cols}{For a wide data frame: the columns holding the positions.
+Needed when they are not a numbered run (\code{T1}, \code{T2}, ...) or one of them
+is called \code{action}; such a frame without \code{cols} raises an error of class
+\code{nestimate_bad_input}. Default \code{NULL}.}
 
-\item{object}{A \code{net_landscape_surface} object (for
-\code{summary()}).}
+\item{object}{For the \code{summary()} method: a \code{net_landscape_surface}
+object.}
 
-\item{ends}{Logical. In \code{summary()}: \code{TRUE} (default) compares
-the low and the high end of each measure; \code{FALSE} returns every
-slice.}
+\item{ends}{For the \code{summary()} method: \code{TRUE} (default) compares the low
+and the high end of each measure; \code{FALSE} returns every slice.}
 
 \item{...}{Ignored.}
 
-\item{digits}{Integer. Decimal places in \code{print()}. Default 2.}
+\item{digits}{For the \code{print()} method: decimal places. Default \code{2}.}
 
-\item{max_stay}{Numeric. In \code{plot()}: cups of states whose expected
-stay exceeds this many steps (including states never left in a slice)
-are drawn at the depth \code{log(max_stay)}, a display floor only.
-Default 50.}
+\item{max_stay}{For the \code{plot()} method: the longest expected stay drawn,
+in steps, a number above 1. Cups of states whose expected stay is longer
+(including states never left in a slice) are drawn at the depth
+\code{log(max_stay)}, a display floor only. Default \code{50}.}
 
-\item{theta, phi}{Numeric. In \code{plot()}: viewing angles passed to
-\code{persp()}.}
+\item{theta, phi}{For the \code{plot()} method: the viewing angles passed to
+\code{\link[graphics:persp]{graphics::persp()}}. Defaults \code{10} and \code{30}.}
 
-\item{ncol}{Integer or \code{NULL}. In \code{plot()}: panels per row.
-Default: one row per network, one column per measure.}
+\item{ncol}{For the \code{plot()} method: panels per row. Default \code{NULL}, one
+column per measure and one row per network.}
 }
 \value{
-An object of class \code{"net_landscape_surface"} holding the
-slices as one data frame (one row per network, measure, slice and
-state), with \code{states}, \code{measure} and \code{k}.
+A \code{net_landscape_surface} object. \code{print()} shows each state's
+depth at the low and the high end of each measure and the range of
+effective sequences per slice; \code{summary()} returns the tables below;
+\code{plot()} draws one \code{\link[graphics:persp]{graphics::persp()}} surface per network and measure
+on a shared depth scale, the most stable end of each measure in front
+(for a measure with no stability direction, the low end) and the
+surface shaded from green (deep) to orange (shallow). \code{print()} and
+\code{plot()} return their input invisibly.
 
-In \code{summary()}: with \code{ends = TRUE}, a data frame with
-one row per network, measure and state: \code{group}, \code{measure},
-\code{state}, \code{low_value}, \code{depth_at_low}, \code{high_value},
-\code{depth_at_high}; with \code{ends = FALSE}, every slice
-(\code{group}, \code{measure}, \code{value}, \code{state}, \code{depth},
-\code{dwell}, \code{effective_n}).
+\code{summary()} returns a data frame. With \code{ends = TRUE}: one row per
+network, measure and state, with \code{group}, \code{measure}, \code{state},
+\code{low_value}, \code{depth_at_low}, \code{high_value} and \code{depth_at_high}. With
+\code{ends = FALSE}: one row per network, measure, slice and state, with
+\code{group}, \code{measure}, \code{value}, \code{state}, \code{depth}, \code{dwell} and
+\code{effective_n}.
 
-In \code{print()}: \code{x}, invisibly.
-
-In \code{plot()}: \code{x}, invisibly; draws one \code{persp()}
-surface per network and measure on a shared depth scale.
+The object's fields:
+\describe{
+\item{slices}{Every slice, as \code{summary(x, ends = FALSE)} returns it.}
+\item{states}{The states, in drawing order.}
+\item{measure, groups}{The measures traced and the network names
+(\code{"network"} for a single one).}
+\item{k}{The number of nearest sequences per slice.}
+}
 }
 \description{
-The cups of \code{\link{stability_landscape}()} drawn as a surface over a
-second axis: a per-sequence stability measure from
-\code{\link{sequence_metrics}()}, such as self-loop tendency or
-longitudinal entropy. At each value of the measure, sequences are weighted
-by a tricube kernel on their distance to that value over the \code{k}
-nearest (Cleveland 1979), and each state's cup depth,
-\eqn{-\log(1 - P_{ii})} (the log of its expected stay), is computed from
-their weighted pooled transitions. Moving along the axis goes from the
-most stable to the most volatile sequences.
-}
-\details{
-Network input replays per-sequence weighting, concatenation and boundary
-markers. Concatenated sequences are the resampling units. With a covariate,
-its value must be constant within each concatenated unit. Scaled,
-thresholded or otherwise modified networks whose weights do not match
-their stored sequences are refused; pass the original sequences to
-estimate a new landscape. Observed shares count prepared positions without
-sequence weighting. Phase windows retain the full sequence's weight.
+\code{landscape_surface()} traces the cups of \code{\link[=stability_landscape]{stability_landscape()}} over a
+second axis, a per-sequence stability measure from \code{\link[=sequence_metrics]{sequence_metrics()}}
+such as self-loop tendency or longitudinal entropy, and returns the cup
+depth of every state at each point of that axis. At each of \code{n_grid}
+values of the measure, sequences are weighted by a tricube kernel on their
+distance to that value over the \code{k} nearest (Cleveland 1979), and each
+state's cup depth, \eqn{-\log(1 - P_{ii})} (the log of its expected
+stay), is computed from their weighted pooled transitions. With the
+default measure, longitudinal entropy, moving up the axis goes from the
+most stable to the most volatile sequences; for a measure where higher
+means more stable (self-loop tendency, spell durations, initial-state
+persistence, dominant-state share) it goes the other way. Several
+measures give one surface each, and a grouped network one set per group.
 
 The measures are computed from the same sequences as the depths, so the
 cups of the most stable sequences are deep by construction (self-loop
 tendency in particular is closely tied to the stay probabilities). What
 the surface adds is which cup deepens as stability rises. A slice's
-\code{effective_n} (\eqn{(\sum w)^2 / \sum w^2}) shows how many sequences
-it rests on. A state that does not occur in a slice has an \code{NA}
-depth and leaves a gap in the surface.
+\code{effective_n} (\eqn{(\sum w)^2 / \sum w^2}) shows how many sequences it
+rests on, and a warning of class \code{nestimate_thin_slice} flags slices
+resting on fewer than five. For change over the programme rather than
+across sequences, use \code{\link[=landscape_trend]{landscape_trend()}}.
+}
+\details{
+Network input replays the network's per-sequence weighting, concatenation
+and boundary markers; concatenated sequences are weighted as one unit.
+Scaled, thresholded or otherwise modified networks whose weights do not
+match their stored sequences are refused; pass the original sequences to
+estimate a new landscape.
+
+Sequences with fewer than two observed positions, or no value of the
+measure, are left out. The kernel's half-width is the distance to the
+\code{k}-th nearest sequence, but at least 1/50 of the measure's range. A state
+that does not occur in a slice has an \code{NA} depth and leaves a gap in the
+surface, and one that is never left in a slice has an infinite depth.
 }
 \section{Errors}{
 
-\code{nestimate_not_markov}, \code{nestimate_bad_input} (unknown,
-non-numeric or constant \code{measure}, bad \code{states}),
-\code{nestimate_landscape_unestimable} (fewer than five usable sequences).
+\code{nestimate_not_markov} for a network that is not a transition network;
+\code{nestimate_bad_input} for an unknown, non-numeric or constant \code{measure},
+bad \code{states}, input without sequences, or a network whose weights cannot
+be rebuilt from its sequences (a scaled or thresholded one included);
+\code{nestimate_landscape_unestimable} for fewer than five usable sequences.
 Warning \code{nestimate_thin_slice} when slices rest on fewer than five
 effective sequences.
 }

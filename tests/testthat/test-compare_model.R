@@ -72,3 +72,37 @@ test_that("compare_model metrics take direction from the network, not symmetry",
   expect_identical(metrics$y[metrics$metric == "Edge Count"], 2)
   expect_identical(edge_count(res), 4)
 })
+
+# ---- Review fixes 2026-11-08 ----
+
+test_that("scaling = 'max' divides by the largest absolute weight, keeping signs", {
+  # All-negative x: max |w| = 4, so x / 4 keeps every sign (w / max(w)
+  # divided by -1 and flipped them).
+  x <- matrix(c(-1, -2, -3, -4), 2, 2)
+  y <- matrix(c(1, 0.5, -2, 0), 2, 2)
+  r <- compare_model(x, y, scaling = "max", network = FALSE)
+  expect_equal(unname(r$matrices$x), matrix(c(-0.25, -0.5, -0.75, -1), 2, 2))
+  # Mixed signs: y / max |y| = y / 2
+  expect_equal(unname(r$matrices$y), matrix(c(0.5, 0.25, -1, 0), 2, 2))
+})
+
+test_that("scaling = 'log' refuses weights at or below zero with a classed error", {
+  dn <- list(c("A", "B"), c("A", "B"))
+  x <- matrix(c(0, 1, 2, 3), 2, 2, dimnames = dn)
+  y <- matrix(c(1, 1, 2, 3), 2, 2, dimnames = dn)
+  expect_error(compare_model(x, y, scaling = "log", network = FALSE),
+               class = "nestimate_bad_input")
+  ok <- compare_model(y, y, scaling = "log", network = FALSE)
+  expect_equal(unname(ok$matrices$x), log(unname(y)))
+})
+
+test_that("heatmap subtitle matches its fill: blue where x > y", {
+  skip_if_not_installed("ggplot2")
+  dn <- list(c("A", "B"), c("A", "B"))
+  x <- matrix(c(0, 1, 0, 0), 2, 2, dimnames = dn)
+  y <- matrix(0, 2, 2, dimnames = dn)
+  p <- plot(compare_model(x, y, network = FALSE), type = "heatmap")
+  fills <- ggplot2::ggplot_build(p)$data[[1]]$fill
+  expect_true("#4A6FE3" %in% fills)
+  expect_match(p$labels$subtitle, "^Blue: x > y")
+})

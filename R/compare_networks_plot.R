@@ -118,25 +118,61 @@
 
 
 #' @rdname compare_networks
-#' @param type For `plot()`: one view per call. `"networks"` (default) draws each network once with `cograph::splot()`; `"difference"` draws the signed difference network of each pair; `"edges"` is a ranked dumbbell of the largest edge differences; `"nodes"` the same for centralities; `"global"` the 22 comparison metrics; `"heatmap"` the signed difference matrix; `"scatter"` weight against weight; `"inference"` is a forest of the edge differences on the difference scale, with credible intervals when the Bayesian backend ran and the p-value printed per edge. It needs `test != "none"` and raises `nestimate_compare_no_test` otherwise.
-#' @param pair Optional selection of comparisons to draw; default all. Any of: the pair name(s) as printed (`"A vs B"`); the two network names (`c("A", "B")`, either order); one network name (`"A"`, every pair it takes part in); or index/indices into the pair table (`1`, `c(1, 3)`). For `type = "networks"` this selects the networks taking part in the chosen pairs.
-#' @param combined When `TRUE` (default), a multi-pair view is one figure (facets for the `ggplot` views, one base-graphics page for `"networks"` and `"difference"`). When `FALSE`, the view is split: the `ggplot` views return a named list of single-pair plots, one per pair, and the base-graphics views draw one panel per page.
-#' @param top_n Number of edges shown in the edge view (largest absolute differences first). Default `20`.
-#' @param measure Optional centrality measure(s) to restrict the node view.
-#' @param digits In \code{plot.net_network_comparison()}: Decimals in printed values. Default `2`. In \code{print.net_network_comparison()}: Decimals shown. Default `2`.
-#' @param what Deprecated alias for `type`, kept so existing calls keep working.
-#' @param x For the \code{print()} and \code{plot()} methods: an object of class \code{net_network_comparison}.
-#' @return In \code{plot.net_network_comparison()}: `plot()` returns a `ggplot` for `type = "edges"`, `"nodes"`, `"global"`, `"heatmap"`, `"scatter"` and `"inference"`, or a named list of such plots (one per pair) when `combined = FALSE`. `type = "networks"` and `type = "difference"` draw in base graphics -- with `cograph::splot()` when cograph is installed, otherwise with a built-in circular drawer -- and return `NULL` invisibly.
-#' @return In \code{print.net_network_comparison()}: `print()` returns `x` invisibly.
+#' @param type For the `plot()` method: the view to draw, one per call.
+#'   `"networks"` (default) draws each network once with `cograph::splot()`;
+#'   `"difference"` draws the signed difference network of each pair;
+#'   `"edges"` is a ranked dumbbell of the largest edge differences, and
+#'   `"nodes"` the same for the centralities; `"global"` shows the 22
+#'   comparison metrics as points, plus the inference rows with their
+#'   p-values (and bootstrap intervals) when `test` was run; `"heatmap"` the
+#'   signed difference matrix;
+#'   `"scatter"` the weights of one network against the other's; and
+#'   `"inference"` a forest of the edge differences on the difference scale,
+#'   with the credible intervals when the Bayesian test ran and the p-value
+#'   printed per edge. `"inference"` needs `test`, otherwise an error of class
+#'   `nestimate_compare_no_test` is raised.
+#' @param pair For the `plot()` method: the comparisons to draw. Default
+#'   `NULL`, all of them. Give the pair names as printed (`"A vs B"`), the
+#'   two network names in either order (`c("A", "B")`), one network name
+#'   (`"A"`, every pair it takes part in), or indices into the pair table
+#'   (`1`, `c(1, 3)`). For `type = "networks"`, it selects the networks
+#'   taking part in the chosen pairs. A selection that matches no comparison
+#'   raises an error of class `nestimate_compare_unknown_pair`.
+#' @param combined For the `plot()` method: whether a view of several pairs
+#'   is one figure. With `TRUE` (default), the `ggplot` views facet by pair
+#'   and the `"networks"` and `"difference"` views draw all panels on one
+#'   base-graphics page. With `FALSE`, the `ggplot` views return a named list
+#'   of single-pair plots, for iterating over or saving, and the
+#'   base-graphics views draw one panel per page.
+#' @param top_n For the `plot()` method: the number of edges shown per pair
+#'   in the `"edges"` and `"inference"` views, largest absolute difference
+#'   first. Default `20`.
+#' @param measure For the `plot()` method: the centrality measures shown in
+#'   the `"nodes"` view. Default `NULL`, all measures of the comparison; a
+#'   measure the object does not carry raises an error of class
+#'   `nestimate_compare_unknown_measure`.
+#' @param digits For the `print()` and `plot()` methods: the decimals shown
+#'   in printed values. Default `2`.
+#' @param what Deprecated alias for `type`, kept so existing calls keep
+#'   working.
+#' @param x For the `print()` and `plot()` methods: a
+#'   `net_network_comparison` object.
+#' @return For the `plot()` method: a `ggplot` for the `"edges"`, `"nodes"`,
+#'   `"global"`, `"heatmap"`, `"scatter"` and `"inference"` views, or, with
+#'   `combined = FALSE`, a named list of them, one per pair, returned
+#'   invisibly. The `"networks"` and `"difference"` views draw in base
+#'   graphics (with `cograph::splot()` when cograph is installed, otherwise
+#'   with a built-in circular drawer that ignores `...`) and return `NULL`
+#'   invisibly.
 #' @section Reading the figures:
-#' One colour contract in every view and every backend: `"#4A6FE3"` marks
-#' `network_a` (the reference, when one is set) as the higher of the two,
-#' `"#D33F6A"` marks `network_b`, and grey marks no difference; the plotted
-#' quantity is always `diff = a - b`. Colour never carries the sign alone --
-#' a solid line and a circular marker repeat "`a` higher", a dashed line and
-#' a square marker repeat "`b` higher", and the printed value carries its
-#' sign. When `test` was run, evidence is shown by opacity and a starred
-#' (edge and node views) or annotated (inference view) label: a
+#' One colour contract holds in every view and every backend: `"#4A6FE3"`
+#' marks `network_a` (the reference, when one is set) as the higher of the
+#' two, `"#D33F6A"` marks `network_b`, and grey marks no difference; the
+#' plotted quantity is always `diff = a - b`. Colour never carries the sign
+#' alone: a solid line and a circular marker repeat "`a` higher", a dashed
+#' line and a square marker repeat "`b` higher", and the printed value
+#' carries its sign. When `test` was run, evidence is shown by opacity and a
+#' starred (edge and node views) or annotated (inference view) label: a
 #' non-significant difference is faded, never deleted.
 #' @export
 plot.net_network_comparison <- function(x,
@@ -155,7 +191,7 @@ plot.net_network_comparison <- function(x,
   if (!is.null(what)) type <- what
   type <- match.arg(type, c("networks", "difference", "edges", "nodes",
                             "global", "heatmap", "scatter", "inference"))
-  stopifnot(
+  .assert(
     "`combined` must be TRUE or FALSE" = isTRUE(combined) || isFALSE(combined),
     "`top_n` must be a single positive integer" =
       is.numeric(top_n) && length(top_n) == 1L && top_n >= 1,

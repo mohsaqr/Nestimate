@@ -1,40 +1,46 @@
 #' The session behind each sequence
 #'
 #' @description
-#' Names every sequence of a network or of a clustering by the columns it was
-#' built from. A network built from long data with \code{actor} and
-#' \code{session} has one sequence per actor-session; its rows are ordered by
-#' the grouping, not by the input, and a fitted clustering reports its
-#' assignments in that same order. \code{session_ids()} returns the key that
-#' joins them back to the input data, so no label has to be parsed.
+#' `session_ids()` names every sequence of a network, or of a clustering
+#' fitted on one, by the actor and session values it was built from, and
+#' returns one row per sequence. A network built from long data with
+#' `actor` and `session` holds one sequence per actor-session; its rows
+#' are ordered by the grouping, not by the input, and a fitted clustering
+#' reports its assignments in that same order. `session_ids()` returns the
+#' key that joins them back to the input data, so no label has to be
+#' parsed. For a clustering it adds each sequence's cluster, and for a
+#' mixed Markov model also the posterior probability of that cluster.
 #'
-#' @param x A \code{netobject} from \code{\link{build_network}} on long data,
-#'   or a \code{net_mmm} (\code{\link{build_mmm}}) or \code{net_clustering}
-#'   (\code{\link{build_clusters}}) fitted on such a network.
-#' @param ... Unused.
+#' @param x A `netobject` built by [build_network()] from long data, or a
+#'   `net_mmm` ([build_mmm()]) or `net_clustering` ([build_clusters()])
+#'   fitted on such a network. Any other object raises an error of class
+#'   `nestimate_no_session_ids` (see *Errors*).
+#' @param ... Not used.
 #'
 #' @return A data frame with one row per sequence, in the row order of the
-#'   network's \code{$data} (and of the fit's assignments):
+#'   network's sequence data (and of the fit's assignments):
 #'   \describe{
-#'     \item{sequence}{Integer row number of the sequence.}
-#'     \item{actor and session columns}{The \code{actor} and \code{session}
-#'       columns given to \code{build_network()}, under their own names and
-#'       with their own values.}
+#'     \item{sequence}{The integer row number of the sequence.}
+#'     \item{actor and session columns}{The `actor` and `session` columns
+#'       given to [build_network()], under their own names and with their
+#'       own values.}
 #'     \item{session_label}{The readable label of the sequence. With
-#'       \code{time}, sessions split at time gaps carry a \code{" s<n>"}
-#'       suffix, so this column separates them.}
-#'     \item{cluster}{For a \code{net_mmm} or \code{net_clustering}: the
-#'       assigned cluster (integer).}
-#'     \item{posterior}{For a \code{net_mmm}: the posterior probability of
-#'       the assigned cluster.}
+#'       `time`, the sessions split at time gaps carry an `" s<n>"`
+#'       suffix, so this column tells them apart.}
+#'     \item{cluster}{For a `net_mmm` or `net_clustering`: the assigned
+#'       cluster (integer).}
+#'     \item{posterior}{For a `net_mmm`: the posterior probability of the
+#'       assigned cluster.}
 #'   }
 #'
 #' @section Errors:
-#' Raises \code{nestimate_no_session_ids} when \code{x} carries no
-#' per-sequence metadata: a network built from wide data, a fit on wide data
-#' or on a \code{tna} model, or a fit made before Nestimate 0.9.6 (refit it).
-#' Raises \code{nestimate_session_ids_misaligned} when the metadata and the
-#' sequences differ in number.
+#' Raises an error of class `nestimate_no_session_ids` when `x` carries no
+#' per-sequence metadata (a network built from wide data, a fit on wide
+#' data or on a `tna` model, or a fit made before Nestimate 0.9.6, which
+#' must be refitted) and when `x` is of another class, such as a
+#' `netobject_group`. Raises an error of class
+#' `nestimate_session_ids_misaligned` when the metadata and the sequences
+#' differ in number.
 #'
 #' @examples
 #' events <- data.frame(

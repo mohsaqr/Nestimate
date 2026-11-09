@@ -7,42 +7,48 @@
 mogen_transitions(x, order = NULL, min_count = 1L)
 }
 \arguments{
-\item{x}{A \code{net_mogen} object from \code{build_mogen()}.}
+\item{x}{A \code{net_mogen} object from \code{\link[=build_mogen]{build_mogen()}}.}
 
-\item{order}{Integer >= 1 and at most the highest order tested. Which
-order's transitions to extract. Must be a whole number; a non-integer
-value is an error rather than being silently truncated. Defaults to the
-optimal order selected by the model - pass an explicit \code{order} when
-that optimal order is 0, which has no transition table and therefore
-errors.}
+\item{order}{The order whose transitions are returned, a whole number
+from 1 to the highest order fitted; a non-integer value is an error,
+not truncated. Default \code{NULL}, the order the model selected. Order 0
+has no transitions, so when the model selected order 0, give \code{order}
+explicitly; otherwise \code{mogen_transitions()} stops.}
 
-\item{min_count}{Integer. Minimum observed count to include (default 1).
-Use this to filter out rare transitions that have unreliable probabilities.}
+\item{min_count}{The smallest observed count a transition needs to be
+listed. Default \code{1}, every observed transition. A value below 1 also
+lists the transitions that never occurred, with count and probability
+0: every pair of observed contexts where the second continues the first
+(at order 1, every pair of states).}
 }
 \value{
-A data frame with one row per retained transition, sorted by
+A data frame with one row per listed transition, sorted by
 \code{count} (descending), with columns:
 \describe{
-\item{path}{The full state sequence (e.g., "AI -> FAIL -> SOLVE").}
-\item{count}{Number of times this transition was observed.}
-\item{probability}{Transition probability P(to | from), rounded to 4
-decimal places.}
-\item{from}{The context / conditioning states (k-gram source node).}
-\item{to}{The predicted next state.}
+\item{path}{The full sequence of states, such as
+\code{"AI -> FAIL -> SOLVE"}.}
+\item{count}{How often the transition was observed.}
+\item{probability}{The transition probability P(to | from), rounded
+to 4 decimal places.}
+\item{from}{The context: the k states the transition starts from.}
+\item{to}{The next state.}
 }
-A zero-row data frame with the same columns when no transition reaches
-\code{min_count}.
+When no transition reaches \code{min_count}, a data frame with the same
+columns and no rows.
 }
 \description{
-Returns a data frame of all transitions at a given Markov order,
-sorted by count (descending). Each row shows the full path as a readable
-sequence of states, along with the observed count and transition probability.
-}
-\details{
-At order k, each edge in the De Bruijn graph represents a (k+1)-step path.
-For example, at order 2, the edge from node "AI -> FAIL" to node
-"FAIL -> SOLVE" represents the three-step path AI -> FAIL -> SOLVE.
-The \code{path} column reconstructs this full sequence for readability.
+\code{mogen_transitions()} returns the transitions of a fitted \code{\link[=build_mogen]{build_mogen()}}
+model at one order, one row per path, most frequent first, with the
+path written out in arrow notation, its observed count and its
+transition probability. At order k each edge of the De Bruijn graph is a
+path of k + 1 states: at order 2, the edge from node \code{"AI -> FAIL"} to
+node \code{"FAIL -> SOLVE"} is the path \code{AI -> FAIL -> SOLVE}, read as the
+probability of \code{SOLVE} after the context \code{AI -> FAIL}.
+
+A probability is the share of its context's observations that moved to
+that state, so in a context seen a few times it rests on those few
+observations: read it with its \code{count}, and use \code{min_count} to leave
+rare transitions out.
 }
 \examples{
 seqs <- list(c("A","B","C","D"), c("A","B","C","A"), c("B","C","D","A"))

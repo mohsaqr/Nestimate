@@ -1,3 +1,26 @@
+# Nestimate 1.0.10
+
+* Release review: TNA shortcuts keep positional `start`/`end` calls working; `markov_stability()` keeps recurrence times for separate closed classes; rectangular numeric sequence matrices accept `build_mcml()`'s `exclude`, `trim` and `end`.
+* Help pages rewritten: what each function does, how to read the result, and every argument's default and errors.
+* `build_mlvar()`: temporal edges ran from outcome to predictor; they now run predictor to outcome. Tiny p-values are no longer 0, and Nestimate's own print/summary/plot are used.
+* `permutation()`: glasso shuffles use the same estimator as the observed networks; `adjust` corrects over the edges tested, as tna does.
+* `extract_edges()`: keeps negative edges, drops zero-weight pairs, lists undirected edges once.
+* `build_mmm()`: classification error is 1 - mean largest posterior (it was always 0 for k = 2).
+* `net_prune()`: undirected networks are pruned by pair; groups take one bootstrap per network; re-pruning after `net_deprune()` works.
+* `centrality_stability()`, `casedrop_reliability()`: the CS-coefficient no longer depends on the order of `drop_prop`.
+* `passage_time()`, `chain_structure()`: unreachable targets give `Inf`; absorption probabilities sum to 1.
+* Also fixed: `predict_links()` weighted Jaccard, `cooccurrence(similarity = "relative")` (now directed), `compare_model(scaling = "max")`, `extract_initial_probs()` on tna models, `boot_glasso()` settings and failed resamples, `cluster_network()` dropped arguments, declared `actor`/`time` columns read as states, `prepare()` time zone and `is_unix_time`.
+* Input errors carry the class `nestimate_bad_input` across the package (messages unchanged), so they can be caught by class.
+* `seed =` no longer moves the session's random stream after the call; results for a given seed are unchanged.
+* `plot()` of an `entropy_trajectory()` with more than nine groups draws one panel per group instead of failing.
+* The shortcut verbs name the arguments they used to hide in `...`: `build_tna()`, `build_ftna()`, `build_atna()`, `build_cna()` take `actor`, `action`, `time`, `session`; `build_cor()`, `build_pcor()`, `build_glasso()` take `actor`, `level`; `build_ising()` takes `actor`; `sequence_patterns()`, `sequence_metrics()`, `pattern_outcome()` take `actor`, `action`, `time`; `compare_mmm()` takes `build_mmm()`'s settings (`seed`, `n_starts`, ...); `macro_network()` takes `scaling`, `threshold`, `params`. Existing calls give the same results. A wrapper given `method` says which method it always uses.
+* Entropy: `entropy_network()` refuses `scaling = "share"` on a zero-rate chain and `"chance"` on one state (was a cryptic error), keeps a bare `cograph_network` a `netobject`, and warns on a non-ergodic chain as `transition_entropy()` does; `entropy_bayes()` networks declare the TNA geometry and accept `wtna()` output; grouped results have `summary()` (a data frame) and `plot()`; `entropy_trajectory()` refuses a character time column and labels its axes correctly (row number, numeric column name, nats/hartleys).
+* `mosaic_plot(residuals = "asymptotic")` keeps the residuals of a table with an empty row or column (it set every tile to 0). `state_distribution()`, `plot_state_frequencies()` and `mosaic_plot()` refuse association and one-hot networks instead of counting their values as states.
+* `compare_model()`: undefined edge ratios are `NA` (were `NaN`/`Inf`), and `logarithmic_ratio` no longer warns "NaNs produced".
+* `build_mcml(method = "density")`: within-cluster weights are the sum, matching the macro layer's sum / (n_i * n_j) (they were the mean). A weight matrix with `exclude`, `trim` or `end` is refused.
+* Persistent homology: the Vietoris-Rips print counts essential classes and shows the ascending range; `bottleneck_distance()` reads a (0, 0) pair as finite, as `persistence_landscape()` does.
+* Also fixed: `evaluate_links()` validates `k` and returns an empty table instead of `NULL`; `net_centrality()` warns when a normalised measure is constant; `landscape_trend()` validates `iter`; `network_reliability()` refuses a split that empties the second half; `boot_glasso()` refuses a correlation matrix; `path_dependence()` refuses a 0/1 matrix; `mogen_transitions(min_count = 0)` lists only contexts that can follow each other; logical flags such as `combined` refuse `NA`; `build_hypa()`'s message lists `none` once; `compare_networks()` errors are also `nestimate_bad_input`. `plot()` of `chain_structure()` names each state's class in its axis label (it coloured the labels, which ggplot2 warns about and which encoded the class by colour alone).
+
 # Nestimate 1.0.9
 
 Corrections to 1.0.7, from a review of that release.

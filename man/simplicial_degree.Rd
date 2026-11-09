@@ -7,16 +7,31 @@
 simplicial_degree(sc, normalized = FALSE)
 }
 \arguments{
-\item{sc}{A \code{simplicial_complex} object.}
+\item{sc}{A \code{simplicial_complex} from \code{\link[=build_simplicial]{build_simplicial()}}.}
 
-\item{normalized}{Divide by maximum possible count. Default \code{FALSE}.}
+\item{normalized}{Whether to divide each count of dimension k by the
+largest possible one, \code{choose(n_nodes - 1, k)}, the number of
+k-simplices a node can be in. Default \code{FALSE}.}
 }
 \value{
-Data frame with \code{node}, columns \code{d0} through
-\code{d_k}, and \code{total} (sum of d1+). Sorted by total descending.
+A data frame with one row per node, sorted by decreasing \code{total}:
+\code{node}, then \code{d0}, \code{d1}, ... up to the dimension of the complex (the
+number of simplices of that dimension containing the node; \code{d0} is
+always 1), and \code{total}, the sum of \code{d1} onwards.
 }
 \description{
-Counts how many simplices of each dimension contain each node.
+\code{simplicial_degree()} counts, for each node of a simplicial complex, how
+many simplices of each dimension contain it: edges (dimension 1),
+triangles (dimension 2) and so on. It is the higher-order counterpart of
+a node's degree, and says which nodes take part in many group-level
+structures rather than only in pairs.
+
+The counts describe the complex as built, so they move with the
+threshold or pathways \code{\link[=build_simplicial]{build_simplicial()}} was given. A node in a clique
+of m nodes is in \code{choose(m - 1, k)} of its k-simplices, so one large
+clique raises the node's counts in every dimension up to the clique's
+own;
+compare nodes within a dimension.
 }
 \examples{
 mat <- matrix(c(0,.6,.5,.6,0,.4,.5,.4,0), 3, 3)

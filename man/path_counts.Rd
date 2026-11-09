@@ -7,27 +7,35 @@
 path_counts(data, k = 2L, top = NULL)
 }
 \arguments{
-\item{data}{A list of character vectors (trajectories) or a data.frame
-(rows = trajectories, columns = time points).}
+\item{data}{The trajectories: a list of state vectors, a data frame or
+character matrix with one row per trajectory and one column per time
+point, a \code{tna} model or a \code{netobject} built from sequences. A data
+frame needs position columns named as a numbered run (\code{T1}, \code{T2}, ...);
+any other frame, a one-hot or association network and a 0/1 matrix
+raise an error of class \code{nestimate_bad_input}. A missing value ends a
+run of observed states, and no path spans it.}
 
-\item{k}{Integer >= 2. Length of the path / n-gram (default 2). A k of 2
-counts individual transitions; k of 3 counts two-step paths, etc. Must be
-a whole number; a non-integer value is an error rather than being
-silently truncated.}
+\item{k}{The number of states in each path, a whole number of at least
+2; a non-integer value is an error, not truncated. Default \code{2}, which
+counts single transitions; \code{3} counts two-step paths, and so on.}
 
-\item{top}{Integer or NULL. If set, returns only the top N most frequent
-paths (default NULL = all).}
+\item{top}{The number of most frequent paths to keep. Default \code{NULL},
+every path.}
 }
 \value{
-A data frame with one row per distinct k-gram, sorted by
-\code{count} (descending), with columns \code{path} (the k states in
-arrow notation, e.g. "A -> B"), \code{count} and \code{proportion}
-(share of all k-grams, rounded to 4 decimal places).
+A data frame with one row per distinct path, sorted by \code{count}
+(descending), with columns \code{path} (the k states in arrow notation, such
+as \code{"A -> B"}), \code{count} and \code{proportion} (the path's share of all paths
+counted, rounded to 4 decimal places). When no trajectory holds \code{k}
+consecutive observed states, the data frame has no rows.
 }
 \description{
-Counts the frequency of k-step paths (k-grams) across all trajectories.
-Useful for understanding which sequences dominate the data before applying
-formal models.
+\code{path_counts()} counts how often each path of \code{k} consecutive states
+(a k-gram) occurs across all trajectories, and returns one row per path,
+most frequent first. Every position of a trajectory starts a path, so the
+paths of one trajectory overlap. The counts are descriptive: they show
+which runs of states dominate the data before a model such as
+\code{\link[=build_mogen]{build_mogen()}} or \code{\link[=build_hon]{build_hon()}} is fitted to them.
 }
 \examples{
 trajs <- list(c("A","B","C","D"), c("A","B","D","C"))

@@ -14,27 +14,36 @@ action_to_onehot(
 )
 }
 \arguments{
-\item{data}{Data frame containing an action column.}
+\item{data}{A data frame with an action column.}
 
-\item{action_col}{Character. Name of the action column. Default: "Action".}
+\item{action_col}{The action column. Default \code{"Action"}; a name that is
+not a column raises an error.}
 
-\item{states}{Character vector or NULL. States to include as columns.
-If NULL, uses all unique values. Default: NULL.}
+\item{states}{The states to make columns for, in that order. Default
+\code{NULL}, every non-missing value of the action column in order of first
+appearance. A listed state that never occurs gets a column of zeros, and
+a row whose state is not listed is 0 in every column.}
 
-\item{drop_action}{Logical. Remove the original action column. Default: TRUE.}
+\item{drop_action}{Whether to remove the action column. Default \code{TRUE}.}
 
-\item{sort_states}{Logical. Sort state columns alphabetically. Default: FALSE.}
+\item{sort_states}{Whether to sort the state columns alphabetically (in
+level order for a factor action column). Default \code{FALSE}.}
 
-\item{prefix}{Character. Prefix for state column names. Default: "".}
+\item{prefix}{A prefix for the state column names. Without one, a state
+named like an existing column replaces that column. Default \code{""}.}
 }
 \value{
-The input data frame with one 0/1 integer column appended per
-state (named \code{paste0(prefix, state)}). All other columns are kept;
-the original action column is removed unless
-\code{drop_action = FALSE}.
+The input data frame with one integer column per state appended,
+named \code{paste0(prefix, state)}. All other columns are kept; the action
+column is removed unless \code{drop_action = FALSE}. A row with a missing
+action is \code{NA} in every state column.
 }
 \description{
-Convert a categorical Action column to one-hot (binary indicator) columns.
+\code{action_to_onehot()} adds one 0/1 indicator column per state to a data
+frame with a categorical action column: the column of a row's state is 1
+and the others are 0. The result is the one-hot layout that
+\code{\link[=build_network]{build_network()}} reads with \code{codes} or \code{format = "onehot"}, and \code{\link[=wtna]{wtna()}}
+reads directly.
 }
 \examples{
 long_data <- data.frame(

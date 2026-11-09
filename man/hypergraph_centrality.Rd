@@ -13,63 +13,82 @@ hypergraph_centrality(
 )
 }
 \arguments{
-\item{hg}{A \code{net_hypergraph} (from \code{\link[=build_hypergraph]{build_hypergraph()}} or
-\code{\link[=bipartite_groups]{bipartite_groups()}}).}
+\item{hg}{The hypergraph: a \code{net_hypergraph} from \code{\link[=build_hypergraph]{build_hypergraph()}}
+or \code{\link[=bipartite_groups]{bipartite_groups()}}.}
 
-\item{type}{Character vector, any subset of \code{c("clique", "Z", "H")}.
-Default \code{"clique"}. \code{"Z"} and \code{"H"} need a uniform hypergraph (every
-hyperedge with two or more members has the same size).}
+\item{type}{The centralities to compute, any of \code{"clique"}, \code{"Z"} and
+\code{"H"}, returned in the order given. Default \code{"clique"}. \code{"Z"} and \code{"H"}
+need a uniform hypergraph (every hyperedge with two or more members has
+the same size); on any other they raise an error of class
+\code{nestimate_nonuniform_hypergraph}.}
 
-\item{max_iter}{Maximum number of power-iteration steps of the \code{"Z"}
-and \code{"H"} iterations. Default \code{1000}. \code{"clique"} is solved directly.}
+\item{max_iter}{The largest number of power-iteration steps for \code{"Z"} and
+\code{"H"}. Default \code{1000}. \code{"clique"} is solved directly and ignores it.}
 
-\item{tol}{Convergence tolerance on the L1 change between successive
-iterates of \code{"Z"} and \code{"H"}. Default \code{1e-8}. An iteration that does not
-reach it within \code{max_iter} steps warns with class
-\code{nestimate_no_converge}.}
+\item{tol}{The convergence tolerance for \code{"Z"} and \code{"H"}: the iteration
+stops once the L1 change between successive iterates is below it.
+Default \code{1e-8}. An iteration that does not get there within \code{max_iter}
+steps, or that stops without solving the eigen-equation, warns with
+class \code{nestimate_no_converge}.}
 
-\item{normalize}{Logical. If \code{TRUE} (default), each returned
-centrality vector is L2-normalized to unit norm (compatible with
-\code{igraph::eigen_centrality()}'s scale for type \code{"clique"}). If
-\code{FALSE}, the vector is rescaled so its largest absolute entry is 1.}
+\item{normalize}{How each vector is scaled. \code{TRUE} (default) gives it
+unit Euclidean (L2) norm; \code{FALSE} divides it by its largest absolute
+entry, so the top node scores 1, the scale of
+\code{igraph::eigen_centrality()}.}
 }
 \value{
-A named list, one component per requested \code{type}, in the order
-given by \code{type}. Each component is a numeric vector of length
-\code{hg$n_nodes} named by \code{hg$nodes}. A hypergraph with no hyperedges
-yields all-zero vectors. Requesting \code{"Z"} or \code{"H"} on a non-uniform
-hypergraph raises an error of class \code{nestimate_nonuniform_hypergraph}.
+A named list with one numeric vector per requested \code{type}, in the
+order given, each with one value per node of \code{hg}, named by the nodes.
+A hypergraph with no hyperedges, or with only one-member hyperedges,
+gives all-zero vectors, and one without nodes empty vectors.
 }
 \description{
-Computes one or more eigenvector-style centralities on a
-\link[=build_hypergraph]{net_hypergraph}: \emph{clique-motif} (CEC),
-\emph{Z-eigenvector} (ZEC), and \emph{H-eigenvector} (HEC). Each variant
-captures influence differently - CEC flattens group structure via
-clique expansion, while ZEC and HEC propagate through the
-higher-order groups directly.
+\code{hypergraph_centrality()} scores how central each node of a hypergraph
+is, with up to three eigenvector centralities from Benson (2019):
+clique-motif (CEC, \code{"clique"}), Z-eigenvector (ZEC, \code{"Z"}) and
+H-eigenvector (HEC, \code{"H"}). CEC flattens the groups into pairs by clique
+expansion and takes the eigenvector centrality of that pairwise graph.
+ZEC and HEC work on the hyperedges directly: a node's score grows with
+the product of the scores of the other members of each hyperedge it
+belongs to. It reads a \code{net_hypergraph} from \code{\link[=build_hypergraph]{build_hypergraph()}} or
+\code{\link[=bipartite_groups]{bipartite_groups()}}.
+
+The variants can rank the nodes differently, since CEC counts shared
+memberships pair by pair while ZEC and HEC weigh each group as a whole.
+ZEC and HEC are defined for uniform hypergraphs only, where every
+hyperedge of two or more members has the same size. On a disconnected
+hypergraph, compare scores within one component: CEC gives zero to every
+component whose leading eigenvalue is below the largest, and the
+Z-eigenvector is not unique.
+\code{\link[=hypergraph_measures]{hypergraph_measures()}} describes the structure the scores come from.
 }
 \details{
-\strong{Clique-motif eigenvector centrality (CEC)}: forms the
-clique-expanded pairwise graph \eqn{W} where
-\eqn{W_{ij} = |\{e : i, j \in e\}|} and returns the leading
-eigenvector of \eqn{W}. Equivalent to running
-\code{igraph::eigen_centrality()} on \code{\link[=clique_expansion]{clique_expansion()}} output. The vector
-is solved directly from a symmetric eigendecomposition of each connected
-component (Perron-Frobenius makes the leading eigenvalue of a connected
-component simple), not by power iteration, which oscillates when the
-clique expansion is bipartite (for example a star of pairs). When several
+\strong{Clique-motif eigenvector centrality (CEC)} is the leading eigenvector
+of the clique-expanded pairwise graph \eqn{W} with
+\eqn{W_{ij} = |\{e : i, j \in e\}|}, the number of hyperedges two
+nodes share. It reads membership only, so incidence weights are ignored:
+it equals \code{igraph::eigen_centrality()} on
+\code{clique_expansion(hg, weighted = FALSE)}, and on \code{\link[=clique_expansion]{clique_expansion()}}'s
+default output only for an unweighted hypergraph. The vector is solved
+directly from a symmetric eigendecomposition of each connected component
+(Perron-Frobenius makes the leading eigenvalue of a connected component
+simple), not by power iteration, which oscillates when the clique
+expansion is bipartite (for example a star of pairs). When several
 components share the largest eigenvalue, the result is the projection of
 the uniform vector onto their joint leading eigenspace; components with a
 smaller leading eigenvalue score zero.
 
-\strong{Z-eigenvector centrality (ZEC)}: solves the eigen-equation on the
+\strong{Z-eigenvector centrality (ZEC)} solves the eigen-equation on the
 hyperedge tensor,
 \deqn{\lambda\, x_i \;=\; \sum_{e \ni i}\; \prod_{j \in e,\; j \neq i} x_j,}
-by shifted power iteration. Tensor products and normalization are
-evaluated in log space to retain finite, normalized centralities for
-large hyperedges.
+by a shifted power iteration (a variant of SS-HOPM, Kolda & Mayo, 2011,
+that normalises the tensor step before adding the shift). Tensor products
+and normalisation are evaluated in log space, so the centralities stay
+finite and normalised for large hyperedges. Besides the step tolerance,
+the iteration checks that the eigen-equation residual is small (relative
+residual at most \code{max(sqrt(tol), 1e-6)}); otherwise it warns.
 
-\strong{H-eigenvector centrality (HEC)}: solves
+\strong{H-eigenvector centrality (HEC)} solves, by the same iteration,
 \deqn{\lambda\, x_i^{k-1} \;=\; \sum_{e \ni i}\; \prod_{j \in e,\; j \neq i} x_j.}
 
 \strong{Uniform hypergraphs only.} Benson (2019) defines ZEC and HEC for
@@ -82,16 +101,16 @@ size with \code{\link[=build_hypergraph]{build_hypergraph()}} (\code{include_pai
 
 \strong{Disconnected hypergraphs.} The Z-eigenvector is not unique when the
 hypergraph has several components: different iterations can solve the
-equation with different vectors, so compare \code{"Z"} values within one connected
-hypergraph only.
+equation with different vectors, so compare \code{"Z"} values within one
+connected hypergraph only.
 }
 \note{
 The \code{"clique"} (CEC) variant is validated against
-\code{igraph::eigen_centrality} (cosine ~ 1). The \code{"Z"} and \code{"H"} variants are
-\strong{(experimental)} - validated only against a clean-room list-based
-tensor power iteration (same operator, different loop structure); no
-R package exposes tensor eigenvectors as a primitive for independent
-comparison.
+\code{igraph::eigen_centrality()} (cosine ~ 1). The \code{"Z"} and \code{"H"} variants
+are \strong{experimental}: they are validated only against a clean-room
+list-based tensor power iteration (the same operator with a different
+loop structure), as no R package exposes tensor eigenvectors for an
+independent comparison.
 }
 \examples{
 df <- data.frame(
@@ -114,6 +133,10 @@ hypergraph_centrality(bipartite_groups(df3, "player", "session"),
 Benson, A. R. (2019). Three hypergraph eigenvector centralities.
 \emph{SIAM Journal on Mathematics of Data Science} 1(2), 293-312.
 arXiv:1807.09644.
+
+Kolda, T. G., & Mayo, J. R. (2011). Shifted power method for computing
+tensor eigenpairs. \emph{SIAM Journal on Matrix Analysis and
+Applications} 32(4), 1095-1124. \doi{10.1137/100801482}
 }
 \seealso{
 \code{\link[=build_hypergraph]{build_hypergraph()}}, \code{\link[=clique_expansion]{clique_expansion()}},

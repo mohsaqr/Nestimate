@@ -16,56 +16,79 @@ build_honem(hon, dim = 32L, max_power = 10L)
 \method{plot}{net_honem}(x, dims = c(1L, 2L), ...)
 }
 \arguments{
-\item{hon}{A \code{net_hon} object from \code{\link{build_hon}}, or a
-square weighted adjacency matrix.}
+\item{hon}{The network to embed: a \code{net_hon} object from \code{\link[=build_hon]{build_hon()}},
+or a square weighted adjacency matrix with at least 2 rows. Anything
+else raises an error.}
 
-\item{dim}{Integer. Embedding dimension (default 32). Silently capped at
-\code{n_nodes - 1}; the dimension actually used is reported in the
-returned \code{dim} component.}
+\item{dim}{The number of embedding dimensions. Default \code{32}. It is capped
+at the number of nodes minus 1 without a warning; \code{print()} reports the
+dimension used.}
 
-\item{max_power}{Integer. \eqn{L}, the highest matrix power in the
-decayed sum (default 10). Higher values capture longer-range
-structure.}
+\item{max_power}{\eqn{L}, the highest matrix power in the decayed sum, at
+least 1. Default \code{10}. Higher values let longer paths shape the
+proximities.}
 
-\item{x}{For the \code{print()} and \code{plot()} methods: an object of class \code{net_honem}.}
+\item{x}{For the \code{print()} and \code{plot()} methods: a \code{net_honem} object.}
 
-\item{...}{In \code{plot.net_honem()}: Additional arguments passed to \code{\link[graphics]{plot}}. In \code{print.net_honem()} and \code{summary.net_honem()}: Additional arguments (ignored).}
+\item{...}{For the \code{plot()} method: further arguments passed to
+\code{\link[graphics:plot.default]{graphics::plot()}}. For the \code{print()} and \code{summary()} methods: ignored.}
 
-\item{object}{For the \code{summary()} method: an object of class \code{net_honem}.}
+\item{object}{For the \code{summary()} method: a \code{net_honem} object.}
 
-\item{dims}{Integer vector of length 2. Dimensions to plot (default: \code{c(1, 2)}).}
+\item{dims}{For the \code{plot()} method: the two dimensions to draw. Default
+\code{c(1, 2)}. Nodes are labelled when there are at most 50; an embedding
+with a single dimension draws nothing and says so in a message.}
 }
 \value{
-An object of class \code{net_honem} with components:
+A \code{net_honem} object. \code{print()} shows the number of nodes, the
+dimensions, \code{max_power} and the variance explained; \code{summary()} prints
+the leading singular values and the range of the coordinates, and
+returns one row per node; \code{plot()} draws the nodes on two dimensions.
+The object's fields:
 \describe{
-\item{embeddings}{Numeric matrix (n_nodes x dim) of node embeddings,
-row names = node names, column names \code{dim_1}, \code{dim_2},
-...}
+\item{embeddings}{Numeric matrix (nodes x \code{dim}) of coordinates, with
+the node names as row names and columns \code{dim_1}, \code{dim_2}, ...}
 \item{nodes}{Character vector of node names.}
-\item{singular_values}{Numeric vector of top singular values.}
-\item{explained_variance}{Proportion of variance explained.}
+\item{singular_values}{The \code{dim} leading singular values.}
+\item{explained_variance}{Share of the squared singular values held
+by the kept dimensions.}
 \item{dim}{Embedding dimension used.}
-\item{max_power}{Maximum power used.}
+\item{max_power}{Highest matrix power used.}
 \item{n_nodes}{Number of nodes embedded.}
 }
 
-In \code{print.net_honem()} and \code{plot.net_honem()}: The input object, invisibly.
-
-In \code{summary.net_honem()}: A data.frame with one row per node: column \code{node} (node label) followed by \code{dim1}, \code{dim2}, ..., \code{dim}\emph{d} embedding coordinates, returned visibly; the summary text is printed as a side effect.
+The \code{print()} and \code{plot()} methods return the input invisibly.
+\code{summary()} returns a data frame with one row per node: \code{node} (the node
+name), then \code{dim1}, \code{dim2}, ... with the coordinates; the summary text is
+printed as a side effect.
 }
 \description{
-Constructs low-dimensional embeddings of the nodes of a Higher-Order
-Network (HON), after the HONEM approach of Saebi et al. (2020): no random
-walks or skip-gram, a decayed multi-step proximity matrix and its
-truncated SVD.
+\code{build_honem()} places the nodes of a higher-order network (HON) in a
+low-dimensional space, after the HONEM approach of Saebi et al. (2020):
+nodes whose multi-step transition profiles are alike (where they lead in
+one, two or more steps) get nearby coordinates. It reads a \code{net_hon} from
+\code{\link[=build_hon]{build_hon()}}, whose higher-order nodes (such as \code{"A -> B"}) are embedded
+beside the first-order ones, or any square weighted adjacency matrix. The
+coordinates come from a decayed multi-step proximity matrix (see
+\emph{Details}).
+
+The coordinates have no units and the sign of each dimension is
+arbitrary; what carries meaning is how close nodes lie to each other.
+The variance explained says how much of the proximity matrix the \code{dim}
+kept dimensions reproduce; a plot of two of them shows less than that.
 }
 \details{
-What is computed: with \eqn{D} the row-normalised HON transition matrix
-over \emph{all HON nodes} (higher-order nodes such as \code{"A -> B"}
-included), \eqn{S = Z^{-1} \sum_{k=0}^{L} e^{-k} D^{k+1}} with
+No random walks or skip-gram are used: the coordinates come from the
+truncated singular value decomposition of the proximity matrix. With
+\eqn{D} the row-normalised transition matrix over all HON nodes (rows
+without outgoing edges stay zero), the proximity matrix is
+\eqn{S = Z^{-1} \sum_{k=0}^{L} e^{-k} D^{k+1}} with
 \eqn{Z = \sum_{k=0}^{L} e^{-k}} and \eqn{L} = \code{max_power}, where
-\eqn{D^{k+1}} is a matrix power. Each HON node gets one embedding row,
-\eqn{U_d \sqrt{\Sigma_d}}.
+\eqn{D^{k+1}} is a matrix power. Each node's embedding is its row of
+\eqn{U_d \sqrt{\Sigma_d}}, from the first \eqn{d} = \code{dim} singular
+vectors and values of \eqn{S}. \code{explained_variance} is the share of the
+sum of squared singular values held by the first \eqn{d}; \eqn{S} is not
+centred, so this is not a principal-component variance.
 
 \strong{How this differs from the paper.} Saebi et al. write the same
 sum, but there \eqn{D^v} is a \emph{v-th-order neighbourhood matrix

@@ -46,13 +46,6 @@
 
 
 #' @rdname build_mcml
-#' @section Methods:
-#' * \code{print.mcml_layer()}: Compact view of one mcml layer (the macro layer or a single within-cluster network): a header line with the node and non-zero edge counts and the weight range, the rounded weight matrix, the initial probabilities as a bar chart, and the dimensions of any attached data -- rather than the raw list contents.
-#' @param ... In \code{print.mcml()}, \code{print.mcml_layer()} and \code{summary.mcml()}: Unsupported. Supplying unused arguments raises an error.
-#' @param object For the \code{summary()} method: an object of class \code{mcml}.
-#' @return In \code{print.mcml_layer()}: The input \code{mcml_layer}, invisibly.
-#' @return In \code{print.mcml()}: The input object, invisibly.
-#' @return In \code{summary.mcml()}: A tidy data frame with one row per cluster and columns \code{cluster}, \code{size}, \code{within_total}, \code{between_out}, \code{between_in}. For undirected macro networks the in/out split is not meaningful, so \code{between_out} reports total incident weight and \code{between_in} is \code{NA}. The data frame is returned silently \emph{without} printing the full object -- call \code{print(object)} explicitly if you want the verbose dump.
 #' @export
 print.mcml_layer <- function(x, ...) {
   .mcml_check_unused_dots("print.mcml_layer", ...)
@@ -115,28 +108,33 @@ print.mcml_layer <- function(x, ...) {
 
 #' Aggregate Edge Weights
 #'
-#' Aggregates a vector of edge weights using various methods.
-#' Compatible with igraph's edge.attr.comb parameter.
+#' @description
+#' `net_aggregate_weights()` reduces a vector of edge weights to one number:
+#' their sum, mean, median, maximum, minimum, product, density or geometric
+#' mean. Missing and zero weights are removed first, so every method works on
+#' the edges that are present. [cluster_summary()] and [build_mcml()] use it to
+#' combine the edges between two clusters into one cluster-level weight.
 #'
-#' @param w Numeric vector of finite edge weights. \code{NA} and zero weights
-#'   are excluded before aggregation, so every method (including
-#'   \code{"density"}, \code{"min"}, \code{"max"}, \code{"prod"},
-#'   \code{"geomean"}) operates on the non-zero, non-\code{NA} subset.
-#' @param method Single aggregation method: "sum", "mean", "median", "max",
-#'   "min", "prod", "density", or "geomean". Because zeros are stripped first,
-#'   \code{"density"} (\code{sum(w) / n_possible}) and \code{"mean"}
-#'   (\code{sum(w) / number of non-zero edges}) return the \emph{same} value
-#'   whenever the block is fully dense -- i.e. when the count of non-zero
-#'   edges equals \code{n_possible}. They diverge only when zero/\code{NA}
-#'   edges are present (then \code{"density"} divides by the larger
-#'   \code{n_possible}, \code{"mean"} by the smaller non-zero count).
-#' @param n_possible Optional single finite numeric number of possible edges
-#'   for density calculation. When omitted, \code{"density"} falls back to
-#'   \code{sum(w) / length(w)} on the non-zero subset (equivalent to
-#'   \code{"mean"}); supply \code{n_possible} (e.g. the block size
-#'   \code{n_i * n_j}) for a true edge density.
-#' @return A single numeric value: the chosen aggregation of the non-zero,
-#'   non-\code{NA} weights, or \code{0} when none remain.
+#' @param w The edge weights, a numeric vector. `NA` is allowed and removed
+#'   with the zeros; an infinite value raises an error.
+#' @param method How to combine the weights: `"sum"` (default), `"mean"`,
+#'   `"median"`, `"max"`, `"min"`, `"prod"`, `"density"` or `"geomean"`. A
+#'   single value; any other raises an error. `"density"` divides the sum by
+#'   `n_possible`, and `"mean"` by the number of non-zero weights, so the two
+#'   agree when every possible edge is present, and `"density"` is the
+#'   smaller when some are zero or missing. `"geomean"` is the geometric mean of the
+#'   positive weights; negative weights are left out, and the result is `0`
+#'   when none is positive.
+#' @param n_possible For `method = "density"`: the number of possible edges,
+#'   such as the block size `n_i * n_j` of two clusters, a single finite
+#'   number. Default `NULL`, under which (as with a value of 0 or less)
+#'   `"density"` returns the mean of the non-zero weights. Other methods
+#'   ignore it.
+#' @return A single number: the chosen aggregate of the non-zero, non-missing
+#'   weights, or `0` when none remain.
+#' @details
+#' `"sum"`, `"prod"`, `"min"`, `"max"`, `"mean"` and `"median"` mean what
+#' they mean in igraph's `edge.attr.comb` argument.
 #' @export
 #' @examples
 #' w <- c(0.5, 0.8, 0.3, 0.9)
@@ -146,24 +144,30 @@ print.mcml_layer <- function(x, ...) {
 #' net_aggregate_weights(w, "density", n_possible = 9)  # 2.5 / 9
 net_aggregate_weights <- function(w, method = "sum", n_possible = NULL) {
   if (!is.numeric(w)) {
-    stop("'w' must be a numeric vector.", call. = FALSE)
+    stop(errorCondition("'w' must be a numeric vector.",
+      class = "nestimate_bad_input", call = NULL))
   }
   if (any(!is.na(w) & !is.finite(w))) {
-    stop("'w' must contain only finite values or NA.", call. = FALSE)
+    stop(errorCondition("'w' must contain only finite values or NA.",
+      class = "nestimate_bad_input", call = NULL))
   }
   if (!is.character(method) || length(method) != 1L || is.na(method)) {
-    stop("'method' must be a single non-missing character value.", call. = FALSE)
+    stop(errorCondition(
+      "'method' must be a single non-missing character value.",
+      class = "nestimate_bad_input", call = NULL))
   }
   valid_methods <- c("sum", "mean", "median", "max", "min",
                      "prod", "density", "geomean")
   if (!method %in% valid_methods) {
-    stop("Unknown method: ", method, call. = FALSE)
+    stop(errorCondition(paste0("Unknown method: ", method),
+      class = "nestimate_bad_input", call = NULL))
   }
   if (!is.null(n_possible) &&
       (!is.numeric(n_possible) || length(n_possible) != 1L ||
        is.na(n_possible) || !is.finite(n_possible))) {
-    stop("'n_possible' must be a single finite numeric value or NULL.",
-         call. = FALSE)
+    stop(errorCondition(
+      "'n_possible' must be a single finite numeric value or NULL.",
+      class = "nestimate_bad_input", call = NULL))
   }
 
   # Remove NA and zero weights
@@ -197,108 +201,115 @@ net_aggregate_weights <- function(w, method = "sum", n_possible = NULL) {
 
 #' Cluster Summary Statistics
 #'
-#' Aggregates node-level network weights to cluster-level summaries. Computes
-#' both between-cluster transitions (how clusters connect to each other) and
-#' within-cluster transitions (how nodes connect within each cluster).
+#' @description
+#' `cluster_summary()` aggregates a node-level weight matrix to clusters of
+#' nodes and returns an `mcml` object with two levels: a macro network whose
+#' entry (i, j) combines every edge from a node of cluster i to a node of
+#' cluster j (the diagonal combines the edges inside a cluster), and one
+#' within-cluster network per cluster, the submatrix of its nodes. It takes a
+#' weight matrix, a `netobject`, a bare `cograph_network` or a `tna` model,
+#' and the clusters as a membership vector, a node-to-cluster data frame or a
+#' named list. This is the matrix route of Multi-Cluster Multi-Level (MCML)
+#' analysis; [build_mcml()] calls it for matrix input.
 #'
-#' This is the core function for Multi-Cluster Multi-Level (MCML) analysis.
-#' Use \code{as_tna()} to convert results to tna objects for further
-#' analysis with the tna package.
+#' The macro weights are arithmetic aggregates (see `method`) of weights that
+#' already exist. They are not row-normalised and are not the transition
+#' probabilities of a process over clusters: the transitions between
+#' clusters can be counted only from the sequences, which [build_mcml()]
+#' does (its default `type = "tna"` gives transition probabilities between
+#' clusters). \code{\link[=as_tna]{as_tna()}} keeps the macro weights as
+#' they are and does not normalise them.
 #'
-#' @param x Network input. Accepts multiple formats:
+#' @param x The node-level network: a numeric square matrix whose row and
+#'   column names (identical, in the same order) label the nodes, with
+#'   finite weights such as transition counts, co-occurrence frequencies or
+#'   probabilities; a `netobject` from [build_network()] or a bare
+#'   `cograph_network`, whose weight matrix is used; or a `tna` model, whose
+#'   weights are used. An `mcml` object is returned unchanged. A matrix
+#'   without names labels its nodes `"1"`, `"2"`, ....
+#' @param clusters The cluster of each node, required (`NULL`, the default,
+#'   raises an error; [build_mcml()] is the verb that reads clusters from a
+#'   `netobject`'s node table). Accepted forms:
 #'   \describe{
-#'     \item{matrix}{Numeric adjacency/weight matrix. Row and column names are
-#'       used as node labels. Values represent edge weights (e.g., transition
-#'       counts, co-occurrence frequencies, or probabilities).}
-#'     \item{netobject}{A network object built by \code{\link{build_network}}.
-#'       Its weight matrix \code{x$weights} is aggregated; a bare
-#'       \code{cograph_network} is coerced to a netobject first.}
-#'     \item{tna}{A tna object from the tna package. Extracts \code{x$weights}.}
-#'     \item{mcml}{An \code{mcml} object is returned unchanged.}
+#'     \item{membership vector}{One value per node, in the order of the
+#'       matrix rows, such as `c(1, 1, 2, 2, 3, 3)` or `c("A", "A", "B")`. A
+#'       named vector is matched to the nodes by name instead. Numeric values
+#'       give clusters in sorted order, character values in order of first
+#'       appearance.}
+#'     \item{data frame}{Node names in the first column, cluster names in the
+#'       second, such as
+#'       `data.frame(node = c("A", "B", "C"), group = c("G1", "G1", "G2"))`;
+#'       the clusters come in alphabetical order.}
+#'     \item{named list}{Cluster names mapped to their nodes, such as
+#'       `list(Alpha = c("A", "B"), Beta = c("C", "D"))`; the clusters keep
+#'       the list's order.}
 #'   }
-#'
-#' @param clusters Cluster/group assignments for nodes. Accepts multiple formats:
+#'   Every node must belong to exactly one cluster: an unknown node, a node
+#'   listed twice, a node left out or an empty cluster raises an error.
+#' @param method How the edges between (or within) two clusters are combined
+#'   into one weight, with [net_aggregate_weights()]; zero edges are left out
+#'   first.
 #'   \describe{
-#'     \item{NULL}{(default) Not usable here: \code{clusters} is required and
-#'       \code{NULL} raises an error. Auto-detection of a cluster column in a
-#'       \code{netobject}'s node table happens in \code{\link{build_mcml}},
-#'       which then calls this function with the detected assignment.}
-#'     \item{vector}{Cluster membership for each node, in the same order as the
-#'       matrix rows/columns. Can be numeric (1, 2, 3) or character ("A", "B").
-#'       Cluster names will be derived from unique values.
-#'       Example: \code{c(1, 1, 2, 2, 3, 3)} assigns first two nodes to cluster 1.}
-#'     \item{data.frame}{A data frame where the first column contains node names
-#'       and the second column contains group/cluster names.
-#'       Example: \code{data.frame(node = c("A", "B", "C"), group = c("G1", "G1", "G2"))}}
-#'     \item{named list}{Explicit mapping of cluster names to node labels.
-#'       List names become cluster names, values are character vectors of node
-#'       labels that must match matrix row/column names.
-#'       Example: \code{list(Alpha = c("A", "B"), Beta = c("C", "D"))}}
-#'   }
-#'
-#' @param method Aggregation method for combining edge weights within/between
-#'   clusters. Controls how multiple node-to-node edges are summarized:
-#'   \describe{
-#'     \item{"sum"}{(default) Sum of all edge weights. Best for count data
-#'       (e.g., transition frequencies). Preserves total flow.}
-#'     \item{"mean"}{Average edge weight. Best when cluster sizes differ and
-#'       you want to control for size. Note: when input is already a transition
-#'       matrix (rows sum to 1), "mean" avoids size bias.
-#'       Example: cluster with 5 nodes won't have 5x the weight of cluster with 1 node.}
-#'     \item{"median"}{Median edge weight. Robust to outliers.}
-#'     \item{"max"}{Maximum edge weight. Captures strongest connection.}
-#'     \item{"min"}{Minimum edge weight. Captures weakest connection.}
-#'     \item{"density"}{Sum of (non-zero) edge weights divided by the number
-#'       of possible edges between the two clusters (\code{n_i * n_j}).
-#'       Normalizes by cluster size combinations. Because zero/\code{NA}
-#'       edges are stripped before aggregation, this equals \code{"mean"}
-#'       exactly when the cluster-pair block is fully dense (no zero edges),
-#'       and is strictly smaller than \code{"mean"} when zero edges are
-#'       present (it divides by the larger possible-edge count).}
-#'     \item{"geomean"}{Geometric mean of positive weights. Useful for
+#'     \item{`"sum"`}{(default) The total weight, which keeps the total flow.
+#'       Suits counts such as transition frequencies.}
+#'     \item{`"mean"`}{The mean weight, so a cluster of 5 nodes does not get
+#'       5 times the weight of a cluster of 1. Suits a matrix of
+#'       probabilities (rows summing to 1), where a sum would grow with
+#'       cluster size.}
+#'     \item{`"median"`}{The median weight, less affected by a few extreme
+#'       weights.}
+#'     \item{`"max"`}{The strongest connection.}
+#'     \item{`"min"`}{The weakest connection.}
+#'     \item{`"density"`}{The total weight divided by the number of possible
+#'       edges between the two clusters (`n_i * n_j`). It equals `"mean"`
+#'       when the block has no zero edges and is smaller than it when it has
+#'       some.}
+#'     \item{`"geomean"`}{The geometric mean of the positive weights, for
 #'       multiplicative processes.}
 #'   }
+#' @param directed Whether the network is directed, so that A->B and B->A are
+#'   separate edges. Default `TRUE`. `FALSE` replaces the matrix by the mean
+#'   of it and its transpose before aggregating, which makes every layer
+#'   symmetric.
+#' @param compute_within Whether to build the within-cluster networks, one
+#'   n_i x n_i matrix per cluster. Default `TRUE`; `FALSE` skips them when
+#'   only the macro network is needed, and [summary()] then reports their
+#'   totals as `NA`.
 #'
-#' @param directed Logical. If \code{TRUE} (default), treat network as directed.
-#'   A->B and B->A are separate edges. If \code{FALSE}, edges are undirected
-#'   and the matrix is symmetrized before processing.
-#'
-#' @param compute_within Logical. If \code{TRUE} (default), compute within-cluster
-#'   transition matrices for each cluster. Each cluster gets its own n_i x n_i
-#'   matrix showing internal node-to-node transitions.
-#'   Set to \code{FALSE} to skip this computation for better performance when
-#'   only between-cluster summary is needed.
-#'
-#' @return An \code{mcml} object (S3 class): a list with
+#' @return An `mcml` object. Print it for the aggregation method, the node
+#'   and cluster counts, the clusters and the macro weights; [summary()]
+#'   returns a data frame with one row per cluster with its size, total absolute
+#'   within-cluster weight and between-cluster weight sent and received
+#'   (described under [build_mcml()]);
+#'   \code{\link[=as_tna]{as_tna()}} turns the layers into a `netobject_group`;
+#'   [simplicial_features()] summarises the topology of each within-cluster
+#'   network. [macro_network()], which opens chosen clusters into their
+#'   states, needs an `mcml` built from sequences by [build_mcml()]; on this
+#'   result it raises an error of class `nestimate_no_expand_source`. The
+#'   object's fields:
 #'   \describe{
-#'     \item{macro}{An \code{mcml_layer} holding the cluster-level network:
-#'       \code{$weights}, the k x k matrix whose entry (i, j) is the
-#'       aggregation (per \code{method}) of all edges from nodes in cluster i
-#'       to nodes in cluster j, with the diagonal holding the within-cluster
-#'       edges -- pure arithmetic, no row normalization; \code{$inits}, the
-#'       length-k column sums of that matrix normalized to sum to 1;
-#'       \code{$labels}, the cluster names; and \code{$data}, \code{NULL} on
-#'       this path.}
-#'     \item{clusters}{Named list with one \code{mcml_layer} per cluster.
-#'       Its \code{$weights} is the n_i x n_i submatrix of the nodes in that
-#'       cluster and its \code{$inits} the normalized column sums of that
-#'       submatrix. \code{NULL} when \code{compute_within = FALSE}.}
-#'     \item{cluster_members}{Named list mapping cluster names to their member
-#'       node labels, e.g.
-#'       \code{list(A = c("n1", "n2"), B = c("n3", "n4", "n5"))}.}
-#'     \item{edges}{\code{NULL} on this path -- a matrix carries no node-level
-#'       transitions. The sequence and edge-list paths of
-#'       \code{\link{build_mcml}} fill in a tidy edge table here.}
-#'     \item{meta}{List with \code{type} (always \code{"aggregate"} here),
-#'       \code{method}, \code{directed}, \code{n_nodes}, \code{n_clusters},
-#'       \code{cluster_sizes} (named integer vector) and \code{source}
-#'       (\code{"matrix"}).}
+#'     \item{macro}{The cluster-level layer (class `mcml_layer`): `weights`,
+#'       the k x k matrix of aggregated weights, diagonal included and rows
+#'       not normalised; `inits`, the column sums of that matrix normalised
+#'       to sum to 1 (equal shares when every weight is zero); `labels`, the
+#'       cluster names; and `data`, `NULL` on this route.}
+#'     \item{clusters}{A named list of one `mcml_layer` per cluster: the
+#'       n_i x n_i submatrix of its nodes, self-loops included, and its
+#'       normalised column sums as `inits` (1 for a single-node cluster).
+#'       `NULL` when `compute_within = FALSE`.}
+#'     \item{cluster_members}{A named list of each cluster's node labels,
+#'       such as `list(A = c("n1", "n2"), B = c("n3", "n4", "n5"))`.}
+#'     \item{edges}{`NULL`: a matrix carries no node-level transitions. The
+#'       sequence and edge-list routes of [build_mcml()] fill it.}
+#'     \item{meta}{A list with `type` (always `"aggregate"` here), `method`,
+#'       `directed`, `n_nodes`, `n_clusters`, `cluster_sizes` (a named
+#'       integer vector) and `source` (`"matrix"`).}
 #'   }
 #'
 #' @details
 #' ## Workflow
 #'
-#' Typical MCML analysis workflow:
+#' A typical MCML analysis:
 #' \preformatted{
 #' # 1. Create the node-level network
 #' net <- build_network(data, method = "relative")
@@ -314,33 +325,28 @@ net_aggregate_weights <- function(w, method = "sum", n_possible = NULL) {
 #' nets <- as_tna(cs)
 #' }
 #'
-#' ## Between-Cluster Matrix Structure
+#' ## The macro matrix
 #'
-#' The \code{macro$weights} matrix has clusters as both rows and columns:
-#' \itemize{
-#'   \item Off-diagonal (row i, col j): Aggregated weight from cluster i to cluster j
-#'   \item Diagonal (row i, col i): Within-cluster total (aggregation of internal edges)
-#' }
+#' The macro matrix has clusters as both rows and columns. An off-diagonal
+#' entry (i, j) is the aggregated weight from cluster i to cluster j; a
+#' diagonal entry (i, i) aggregates the edges inside cluster i.
 #'
-#' Rows are NOT normalized. Entries are elementwise aggregates produced by
-#' \code{method}. If the caller wants probabilities, they should normalize
-#' downstream (e.g. via \code{as_tna()}). Mixing an arithmetic aggregation
-#' with row-normalization here (the old \code{type = "tna"} combined with
-#' \code{method = "min"} / \code{"mean"} etc.) produces numbers that sum to 1
-#' per row but are not a probability distribution over any process; that
-#' silently-wrong combination is why \code{type} was removed from the matrix
-#' path. The sequence and edgelist paths of \code{build_mcml()} keep
-#' \code{type}, where the aggregation is always counts and the post-processing
-#' chooses between well-defined network constructions.
+#' Rows are not normalised: each entry is the aggregate `method` produces.
+#' Row-normalising an arithmetic aggregate here (the old `type = "tna"`
+#' combined with `method = "min"`, `"mean"` and so on) gave rows that sum to
+#' 1 but are not a probability distribution over any process, which is why
+#' `type` was removed from the matrix route. The sequence and edge-list
+#' routes of [build_mcml()] keep `type`: there the aggregate is always a
+#' count, and `type` chooses between well-defined network constructions.
 #'
 #' ## Choosing method
 #'
 #' \tabular{lll}{
-#'   \strong{Input data} \tab \strong{Recommended method} \tab \strong{Reason} \cr
-#'   Edge counts \tab \code{"sum"} \tab Preserves total flow between clusters \cr
-#'   Transition matrix \tab \code{"mean"} \tab Avoids cluster size bias \cr
+#'   \strong{Input data} \tab \strong{Suggested method} \tab \strong{Reason} \cr
+#'   Edge counts \tab \code{"sum"} \tab Keeps the total flow between clusters \cr
+#'   Transition matrix \tab \code{"mean"} \tab Avoids cluster-size bias \cr
 #'   Correlation matrix \tab \code{"mean"} \tab Average correlations \cr
-#'   Dense weighted \tab \code{"max"} / \code{"median"} \tab Robust summary \cr
+#'   Dense weighted \tab \code{"max"} / \code{"median"} \tab Less sensitive to single weights \cr
 #' }
 #'
 #' @export
@@ -407,11 +413,13 @@ cluster_summary <- function(x,
                             directed = TRUE,
                             compute_within = TRUE) {
   if (!is.logical(directed) || length(directed) != 1L || is.na(directed)) {
-    stop("'directed' must be TRUE or FALSE.", call. = FALSE)
+    stop(errorCondition("'directed' must be TRUE or FALSE.",
+      class = "nestimate_bad_input", call = NULL))
   }
   if (!is.logical(compute_within) || length(compute_within) != 1L ||
       is.na(compute_within)) {
-    stop("'compute_within' must be TRUE or FALSE.", call. = FALSE)
+    stop(errorCondition("'compute_within' must be TRUE or FALSE.",
+      class = "nestimate_bad_input", call = NULL))
   }
 
   # If already an mcml object, return as-is
@@ -437,15 +445,18 @@ cluster_summary <- function(x,
   }
 
   if (is.null(clusters)) {
-    stop("clusters argument is required", call. = FALSE)
+    stop(errorCondition("clusters argument is required",
+      class = "nestimate_bad_input", call = NULL))
   }
 
   # Validate input matrix
   if (!is.matrix(mat) || !is.numeric(mat)) {
-    stop("x must be a netobject, tna object, or numeric matrix", call. = FALSE) # nocov
+    stop(errorCondition("x must be a netobject, tna object, or numeric matrix",
+      class = "nestimate_bad_input", call = NULL)) # nocov
   }
   if (nrow(mat) != ncol(mat)) {
-    stop("x must be a square matrix", call. = FALSE)
+    stop(errorCondition("x must be a square matrix",
+      class = "nestimate_bad_input", call = NULL))
   }
   .validate_mcml_matrix(mat)
 
@@ -587,29 +598,35 @@ cluster_summary <- function(x,
 
 .validate_mcml_matrix <- function(mat) {
   if (any(is.na(mat) | !is.finite(mat))) {
-    stop("x matrix must contain finite non-missing weights.", call. = FALSE)
+    stop(errorCondition("x matrix must contain finite non-missing weights.",
+      class = "nestimate_bad_input", call = NULL))
   }
   row_names <- rownames(mat)
   col_names <- colnames(mat)
   has_row_names <- !is.null(row_names)
   has_col_names <- !is.null(col_names)
   if (has_row_names && (any(is.na(row_names)) || any(!nzchar(row_names)))) {
-    stop("x matrix row names must not contain missing or empty values.",
-         call. = FALSE)
+    stop(errorCondition(
+      "x matrix row names must not contain missing or empty values.",
+      class = "nestimate_bad_input", call = NULL))
   }
   if (has_col_names && (any(is.na(col_names)) || any(!nzchar(col_names)))) {
-    stop("x matrix column names must not contain missing or empty values.",
-         call. = FALSE)
+    stop(errorCondition(
+      "x matrix column names must not contain missing or empty values.",
+      class = "nestimate_bad_input", call = NULL))
   }
   if (has_row_names && anyDuplicated(row_names)) {
-    stop("x matrix row names must be unique.", call. = FALSE)
+    stop(errorCondition("x matrix row names must be unique.",
+      class = "nestimate_bad_input", call = NULL))
   }
   if (has_col_names && anyDuplicated(col_names)) {
-    stop("x matrix column names must be unique.", call. = FALSE)
+    stop(errorCondition("x matrix column names must be unique.",
+      class = "nestimate_bad_input", call = NULL))
   }
   if (has_row_names && has_col_names && !identical(row_names, col_names)) {
-    stop("x matrix row and column names must be identical and in the same order.",
-         call. = FALSE)
+    stop(errorCondition(
+      "x matrix row and column names must be identical and in the same order.",
+      class = "nestimate_bad_input", call = NULL))
   }
   invisible(TRUE)
 }
@@ -667,8 +684,9 @@ cluster_summary <- function(x,
   if (is.null(end_by)) return(seq_len(n_rows))
   missing_cols <- setdiff(end_by, names(meta))
   if (length(missing_cols) > 0L) {
-    stop("`end_by` column(s) not found in the data: ",
-         paste(missing_cols, collapse = ", "), call. = FALSE)
+    stop(errorCondition(paste0("`end_by` column(s) not found in the data: ",
+         paste(missing_cols, collapse = ", ")),
+      class = "nestimate_bad_input", call = NULL))
   }
   # Position of each session's final event in the ORIGINAL event order.
   # `.order` is prepare()'s record of that; row position in `long_data` is
@@ -706,7 +724,7 @@ cluster_summary <- function(x,
 
 # Validate the four preprocessing arguments up front.
 .mcml_check_seq_args <- function(exclude, trim, end, end_by) {
-  stopifnot(
+  .assert(
     "`exclude` must be a character vector or NULL" =
       is.null(exclude) || is.character(exclude),
     "`trim` must be a single positive number or NULL" =
@@ -719,8 +737,11 @@ cluster_summary <- function(x,
       is.null(end_by) || is.character(end_by)
   )
   if (!is.null(end_by) && isFALSE(end)) {
-    stop("`end_by` groups the terminal marker, so it needs `end` as well ",
-         "(e.g. end = \"Conclude\", end_by = \"SkillID\").", call. = FALSE)
+    stop(errorCondition(
+      paste0(
+        "`end_by` groups the terminal marker, so it needs `end` as well ",
+        "(e.g. end = \"Conclude\", end_by = \"SkillID\")."),
+      class = "nestimate_bad_input", call = NULL))
   }
   invisible(TRUE)
 }
@@ -732,171 +753,237 @@ cluster_summary <- function(x,
 
 #' Build MCML from Raw Transition Data
 #'
-#' Builds a Multi-Cluster Multi-Level (MCML) model from raw transition data
-#' (edge lists or sequences) by recoding node labels to cluster labels and
-#' counting actual transitions. Unlike \code{\link{cluster_summary}} which
-#' aggregates a pre-computed weight matrix, this function works from the
-#' original transition data to produce the TRUE Markov chain over cluster states.
+#' @description
+#' `build_mcml()` builds a Multi-Cluster Multi-Level (MCML) model from
+#' transitions: it recodes every state to its cluster and counts the
+#' transitions that occur, which gives the Markov chain over clusters (the
+#' macro network) and one network per cluster of the transitions among its
+#' own states. It reads sequences (one row per sequence), event logs (with
+#' `action`), edge lists (with `from` and `to`), `tna` models and
+#' `netobject`s that carry their data, and it re-partitions an existing
+#' `mcml` (see `combine` and `expand`). A weight matrix has no transitions to
+#' count, so it is passed to [cluster_summary()], which aggregates the
+#' weights instead.
 #'
-#' @param x Input data. Accepts multiple formats:
-#'   \describe{
-#'     \item{data.frame with \code{from} and \code{to} set}{Edge list, with
-#'       optional \code{weight}.}
-#'     \item{data.frame with \code{action} set}{Event log, read by
-#'       \code{\link{prepare}}.}
-#'     \item{data.frame of positions}{Sequence data, either nothing but a
-#'       numbered run of columns or the columns set in \code{cols}. Each row is
-#'       a sequence, columns are time steps. Consecutive pairs (t, t+1) become
-#'       transitions.}
-#'     \item{tna object}{If \code{x$data} is non-NULL, uses sequence path on
-#'       the raw data. Otherwise falls back to \code{\link{cluster_summary}}.}
-#'     \item{netobject}{If \code{x$data} is non-NULL, uses sequence path on
-#'       it. Otherwise falls back to \code{\link{cluster_summary}}.}
-#'     \item{mcml}{An \code{mcml} object is returned unchanged, unless
-#'       \code{clusters}, \code{combine} or \code{expand} changes its
-#'       partition: it is then re-estimated from the sequences it carries
-#'       (see \code{combine}).}
-#'     \item{square numeric matrix}{Falls back to \code{\link{cluster_summary}}.}
-#'     \item{non-square or character matrix}{Treated as sequence data.}
-#'   }
-#' For the \code{print()} method: an object of class \code{mcml_layer} or \code{mcml}.
-#' @param clusters Cluster/group assignments. Accepts:
-#'   \describe{
-#'     \item{named list}{Direct mapping. List names = cluster names, values =
-#'       character vectors of node labels.
-#'       Example: \code{list(A = c("N1","N2"), B = c("N3","N4"))}}
-#'     \item{data.frame}{A data frame where the first column contains node names
-#'       and the second column contains group/cluster names.
-#'       Example: \code{data.frame(node = c("N1","N2","N3"), group = c("A","A","B"))}}
-#'     \item{membership vector}{Character or numeric vector. Node names are
-#'       extracted from the data.
-#'       Example: \code{c("A","A","B","B")}}
-#'     \item{column name string}{For edge list data.frames, the name of a
-#'       column containing cluster labels. The mapping is built from unique
-#'       (node, group) pairs in both from and to columns. \strong{Limitation:}
-#'       this mode assigns the row's group label to \emph{both} endpoints, so
-#'       it only makes sense for edge lists where source and target nodes
-#'       always share the same group (within-group edges only). For general
-#'       edge lists where a single node may be source in some rows and target
-#'       in others, or where source and target belong to different groups,
-#'       pass an explicit named list (\code{list(G1 = c("N1","N2"), ...)})
-#'       or a two-column data frame \code{data.frame(node, group)} instead.}
-#'     \item{NULL}{Auto-detect from a \code{netobject}'s node table (a
-#'       \code{clusters}/\code{cluster}/\code{groups}/\code{group} column) or
-#'       from its \code{node_groups}. Only \code{netobject} input can
-#'       auto-detect; data frames and matrices require an explicit
-#'       assignment.}
-#'   }
+#' With the defaults (`type = "tna"`, `method = "sum"`), a macro edge is the
+#' probability that the
+#' next state lies in cluster j given that the current one lies in cluster i;
+#' its diagonal is the probability of staying in a cluster, whether in the
+#' same state or a different one. Both levels depend on the partition, which
+#' is the analyst's: compare a few partitions with `combine` and `expand`
+#' rather than reading one. The weights are point estimates;
+#' \code{\link[=as_tna]{as_tna()}}
+#' turns the levels into networks that carry their sequences, so
+#' [bootstrap_network()] can show how far each edge moves under resampling.
 #'
-#' @param method Aggregation method for combining edge weights: "sum", "mean",
-#'   "median", "max", "min", "density", "geomean". Default "sum". For raw
-#'   sequence/event-log inputs the function is counting observed transitions,
-#'   so \code{"sum"} is the only interpretation that preserves the count
-#'   semantics -- the other methods are useful when aggregating
-#'   weighted edge lists or pre-existing weight matrices, where each row
-#'   already represents a measurement rather than a single observation.
-#' @param type Post-processing of the aggregated count matrix. One of:
+#' @param x The data. Accepted forms:
 #'   \describe{
-#'     \item{"tna"}{(default) Row-normalize so each row sums to 1
-#'       (first-order Markov transition probabilities).}
-#'     \item{"raw"}{Return the un-normalized count matrix.}
-#'     \item{"frequency"}{Explicit alias of \code{"raw"} -- identical raw
-#'       count construction (kept as a synonym for callers using
-#'       frequency-network terminology).}
-#'     \item{"cooccurrence"}{Symmetrize the matrix (undirected
-#'       co-occurrence).}
+#'     \item{data frame with `from` and `to` set}{An edge list: one row per
+#'       transition, with an optional `weight` column.}
+#'     \item{data frame with `action` set}{An event log, turned into
+#'       sequences by [prepare()].}
+#'     \item{data frame of positions}{Sequences, one row per sequence and one
+#'       column per time step: either a numbered run of columns (`T1`, `T2`,
+#'       ...) and nothing else, or the columns named in `cols`. Each pair of
+#'       adjacent columns (t, t + 1) whose two states are both observed is a
+#'       transition; a missing cell breaks the sequence.}
+#'     \item{`tna` model}{Its stored sequences are decoded and counted; a
+#'       model without data is passed to [cluster_summary()].}
+#'     \item{`netobject` or bare `cograph_network`}{A network of a counting
+#'       method (`relative`, `frequency`, `co_occurrence` and their aliases)
+#'       is re-counted from the data it carries. A network of another method
+#'       (such as an association or attention network), a one-hot network, or one
+#'       without data is passed to [cluster_summary()], which aggregates its
+#'       weights.}
+#'     \item{`mcml`}{Returned unchanged, unless `clusters`, `combine` or
+#'       `expand` changes its partition: it is then re-estimated from the
+#'       sequences it carries (see `combine`).}
+#'     \item{square numeric matrix}{Passed to [cluster_summary()].}
+#'     \item{non-square or character matrix}{Read as sequences.}
 #'   }
-#'   \code{"semi_markov"} is \emph{not} accepted: the package does not
-#'   implement a semi-Markov / holding-time construction, so passing it
-#'   errors rather than silently aliasing \code{"tna"}.
-#' @param directed Logical. If \code{TRUE} (default), treat transitions as
-#'   directed. If \code{FALSE}, symmetrize sequence- and edge-derived weights
-#'   before returning raw/frequency weights or before row-normalizing
-#'   transition probabilities.
-#' @param compute_within Logical. Compute within-cluster matrices? Default TRUE.
-#' @param actor,action,time,order,session,time_threshold Long-format event-log
-#'   shortcut. When \code{action} is supplied on a data.frame input, the data
-#'   is passed through \code{prepare()} to derive a wide sequence, which is
-#'   then routed to the existing sequence path. Behaves identically to
-#'   \code{prepare(...) |> build_network() |> build_mcml()}.
-#' @param exclude Optional character vector of state labels to drop before
-#'   the network is built (e.g. a technical-void marker). On long-format
-#'   input the matching events are removed before sequences are formed, so a
-#'   dropped state never occupies a sequence position; on wide sequence input
-#'   the matching cells are set to \code{NA}.
-#' @param trim Optional truncation of each sequence. \code{NULL} (default)
-#'   keeps every time point. A fraction in \code{(0, 1)} keeps the columns
-#'   covering that quantile of sequence lengths (\code{trim = 0.95} keeps the
-#'   shortest 95%); a value \code{>= 1} is an absolute cut
-#'   (\code{trim = 10} keeps the first 10 time points). This changes the
-#'   data, so it only ever cuts the end of a sequence. The fraction in
-#'   \code{\link{sequence_plot}}'s \code{trim} works differently, because it
+#'   A data frame that declares no role and is not a numbered run of
+#'   positions, or whose columns hold only 0 and 1, raises an error of class
+#'   `nestimate_bad_input`. For the `print()` methods: an `mcml` object or
+#'   one of its layers (an `mcml_layer`).
+#' @param clusters The cluster of each state. Accepted forms:
+#'   \describe{
+#'     \item{named list}{Cluster names mapped to their states, such as
+#'       `list(A = c("N1", "N2"), B = c("N3", "N4"))`.}
+#'     \item{data frame}{State names in the first column, cluster names in
+#'       the second, such as
+#'       `data.frame(node = c("N1", "N2", "N3"), group = c("A", "A", "B"))`.}
+#'     \item{membership vector}{One cluster per state, such as
+#'       `c("A", "A", "B", "B")`, matched to the states of the data in
+#'       alphabetical order (a named vector is matched by name).}
+#'     \item{column name}{For an edge list only: a column holding each row's
+#'       cluster, given to both its endpoints. It suits edge lists whose
+#'       edges never cross clusters; a node that gets two clusters raises an
+#'       error, so pass a list or a data frame for any other edge list.}
+#'     \item{`NULL`}{(default) Read from a `netobject`'s node table (a
+#'       column `clusters`, `cluster`, `groups` or `group`) or from its
+#'       `node_groups` (aligned to the node table by label). The values are
+#'       then taken in the order of the node table, which must list the
+#'       states in the order [build_network()] gives them (alphabetical for
+#'       sequence data). Other input needs an explicit assignment and raises
+#'       an error without one.}
+#'   }
+#'   Every state must belong to exactly one cluster, the `end` state
+#'   included. On the sequence and edge-list routes the clusters of the
+#'   result come in alphabetical order.
+#' @param method How the transitions between (or within) two clusters are
+#'   combined into one weight, with [net_aggregate_weights()]: `"sum"`
+#'   (default), `"mean"`, `"median"`, `"max"`, `"min"`, `"density"` or
+#'   `"geomean"`. On sequences and event logs every transition weighs 1, so
+#'   only `"sum"` keeps the counts: `"mean"`, `"median"`, `"max"`, `"min"`
+#'   and `"geomean"` give 1 for every pair of clusters with a transition, and
+#'   `"density"` divides each count by `n_i * n_j`. The other methods suit
+#'   weighted edge lists and weight matrices, where each row is already a
+#'   measurement rather than one observation. On sequences and event logs the
+#'   within-cluster networks likewise get 1 for each observed pair of states
+#'   under every method but `"sum"` (`"density"` too, which is not divided by
+#'   `n_i * n_j` there); on an edge list they hold the aggregated weights.
+#' @param type How the aggregated counts are turned into weights:
+#'   \describe{
+#'     \item{`"tna"`}{(default) Each row is normalised to sum to 1, giving
+#'       first-order Markov transition probabilities.}
+#'     \item{`"raw"`}{The counts as they are.}
+#'     \item{`"frequency"`}{The same counts as `"raw"`, under the name
+#'       frequency networks use.}
+#'     \item{`"cooccurrence"`}{The mean of the count matrix and its
+#'       transpose (undirected co-occurrence); the result is recorded as
+#'       undirected.}
+#'   }
+#'   `"semi_markov"` raises an error: the package has no semi-Markov
+#'   (holding-time) construction. For input passed to [cluster_summary()]
+#'   (a weight matrix, a `tna` model or `netobject` without data, or a
+#'   `netobject` of a method that is not a count, such as `"attention"` or
+#'   `"glasso"`) `type` has no effect; setting it gives a warning for a
+#'   matrix, or for a `tna` model or `netobject` without data.
+#' @param directed Whether transitions are directed. Default `TRUE`. `FALSE`
+#'   replaces the counts by the mean of the count matrix and its transpose
+#'   before `type` is applied.
+#' @param compute_within Whether to build the within-cluster networks.
+#'   Default `TRUE`. An `mcml` built with `FALSE` keeps no per-cluster
+#'   sequences, so it cannot be re-partitioned (see `combine`).
+#' @param actor,action,time,order,session,time_threshold For an event log:
+#'   the columns and the session gap (in seconds, default `900`) passed to
+#'   [prepare()], which forms the sequences that are then counted, as
+#'   `prepare(...) |> build_network() |> build_mcml()` would. Setting
+#'   `action` declares the data an event log.
+#' @param exclude States to drop before anything is counted, such as a
+#'   technical marker. In an event log the matching events are removed
+#'   before sequences are formed, so a dropped state never takes a position;
+#'   in wide sequences the matching cells become missing. Default `NULL`.
+#'   Only for wide sequences and event logs: an edge list, a `netobject` or
+#'   a `tna` model raises an error. The same holds for `trim` and `end`. On
+#'   an existing `mcml` they raise an error together with a re-partition
+#'   (`clusters`, `combine` or `expand`); without one the `mcml` is returned
+#'   unchanged and they have no effect (see `combine`).
+#' @param trim How much of each sequence to keep. `NULL` (default) keeps
+#'   every time step. A fraction in (0, 1) keeps the columns up to that
+#'   quantile of the sequence lengths (the last observed position of each
+#'   row), so `trim = 0.95` cuts only the longest 5% of sequences; a value of
+#'   1 or more keeps that many leading columns (`trim = 10` keeps the first
+#'   10). It changes the data, so it only ever cuts the end of a sequence;
+#'   the fraction in [sequence_plot()]'s `trim` works differently because it
 #'   changes only the drawing.
-#' @param end Terminal state appended after each sequence's last observed
-#'   state. \code{FALSE} (default) adds none, \code{TRUE} adds one labelled
-#'   \code{"End"}, and a string supplies the label. Applied \emph{after}
-#'   \code{trim}, so trimming can never remove the marker.
-#' @param end_by Optional column name(s) grouping the terminal marker at a
-#'   coarser unit than the sequence. \code{NULL} (default) marks every
-#'   sequence. When supplied, only the \emph{last} sequence of each group is
-#'   marked -- e.g. \code{session = "AttemptID", end = "Conclude",
-#'   end_by = "SkillID"} closes each skill once, not each attempt. Requires
-#'   long-format input, since the grouping column lives there.
-#' @param from,to,weight Column names of an edge list, and its optional weight.
-#'   Names give no role: a frame is an edge list only when these are set.
-#' @param cols Character vector or \code{NULL}. For a wide data frame: the columns
-#'   holding the positions. Needed when the frame is anything but a numbered run
-#'   (\code{T1}, \code{T2}, ...). Any other frame with no role declared raises
-#'   an error of class \code{nestimate_bad_input}.
-#' @param labels Optional name -> label remap applied to within-cluster nodes
-#'   (the macro layer is left untouched because its labels are cluster
-#'   names). Accepts a 2-column data.frame \code{(name, label)}, a named
-#'   character vector \code{c(name = "label")}, or a named list. Unmapped
-#'   names pass through unchanged.
-#' @param combine,expand Change the partition. On new input they apply to
-#'   \code{clusters} (in any of its accepted forms, including
-#'   auto-detection) before estimation, so
-#'   \code{build_mcml(data, clusters = cl, combine = c("A", "B"))} equals a
-#'   build with \code{A} and \code{B} merged in \code{cl} (the merged
-#'   cluster lists its states in cluster-name order); this works for every
-#'   input type, matrices included. On an existing \code{mcml} they
-#'   re-partition it (see below).
-#'   \code{combine} merges clusters into one: a character vector merges one
-#'   group, a list merges several and its names label them (default label
-#'   \code{"A + B"}). \code{expand} then splits the named clusters (or
-#'   \code{"all"}/\code{TRUE}) into one cluster per member state, named by
-#'   the state. For an existing \code{mcml} the model is re-estimated --
-#'   macro network, within-cluster
-#'   networks and stored sequences -- from the sequences the \code{mcml}
-#'   carries, with its original \code{type}, \code{method} and
-#'   \code{directed} unless passed explicitly. Any session split,
-#'   \code{exclude}, \code{trim} or \code{end} applied when it was built is
-#'   already in those sequences, so passing any of these (or \code{actor},
-#'   \code{action}, \code{time}, \code{session}, \code{labels}) together
-#'   with a re-partition is an error. Passing a new \code{clusters} list
-#'   instead re-estimates under that partition; with the partition unchanged
-#'   the result equals the input. Errors with class
-#'   \code{nestimate_mcml_no_sequences} when the \code{mcml} was built from a
-#'   matrix, from an edge list (only within-cluster edges are kept), or with
-#'   \code{compute_within = FALSE}.
-#'   \code{\link{sequence_plot}} accepts the same two arguments as display
-#'   options: its \code{combine} draws exactly what it draws for
-#'   \code{build_mcml(x, combine = )}, while its \code{expand} opens clusters
-#'   in the Summary panel only and keeps one panel per cluster.
+#' @param end A terminal state put in the cell after each sequence's last
+#'   observed state. `FALSE` (default) adds none, `TRUE` adds one labelled
+#'   `"End"`, and a single string adds one with that label; assign it to a
+#'   cluster in `clusters`. It is added after `trim`, so trimming never
+#'   removes it.
+#' @param end_by Columns grouping the terminal marker at a coarser unit than
+#'   the sequence: only the sequence holding each group's last event is
+#'   marked. For example,
+#'   `session = "AttemptID", end = "Conclude", end_by = "SkillID"`
+#'   closes each skill once, not each attempt. It needs
+#'   `end` and an event log, and raises an error otherwise. Default `NULL`
+#'   (every sequence is marked).
+#' @param from,to,weight The columns of an edge list: its source, its target
+#'   and an optional non-negative weight (each transition counts 1 without
+#'   it). Names give no role: a frame is read as an edge list only when
+#'   `from` and `to` are set, and setting them with `action` or `cols` raises
+#'   an error of class `nestimate_bad_input`.
+#' @param cols For a wide data frame: the columns holding the positions,
+#'   needed when the frame is anything but a numbered run (`T1`, `T2`, ...).
+#'   Default `NULL`.
+#' @param labels New display labels for the states of the within-cluster
+#'   networks, applied after estimation: a two-column data frame
+#'   (`name`, `label`), a named character vector `c(name = "label")` or a
+#'   named list. States not listed keep their names. The new labels also
+#'   replace the state names in the cluster membership and the edge table;
+#'   the macro network keeps its cluster names.
+#' @param combine,expand Change the partition. `combine` merges clusters into
+#'   one: a character vector merges one group, and a list merges several,
+#'   labelled by its names (default label `"A + B"`); the merged cluster
+#'   lists its states in cluster-name order. `expand` then splits the named
+#'   clusters (or every cluster, with `"all"` or `TRUE`) into one cluster per
+#'   state, named by the state. On new input they apply to `clusters` (in any
+#'   of its forms, auto-detection included) before estimation, so
+#'   `build_mcml(data, clusters = cl, combine = c("A", "B"))` equals a build
+#'   with `A` and `B` merged in `cl`; this works for every input, matrices
+#'   included. On an existing `mcml` they re-estimate the model (macro
+#'   network, within-cluster networks and stored sequences) from the
+#'   sequences it carries, with its original `type`, `method` and `directed`
+#'   unless these are passed; a new `clusters` does the same under that
+#'   partition, and an unchanged partition returns an equal object. Any
+#'   session split, `exclude`, `trim` or `end` applied at build time is
+#'   already in those sequences, so passing one of them (or `actor`,
+#'   `action`, `time`, `order`, `session`, `time_threshold`, `end_by`,
+#'   `labels`, `from`, `to`, `weight`, `cols`) with a re-partition raises an
+#'   error, as does passing `clusters` together with `combine` or `expand`.
+#'   An `mcml` built from a matrix, from an edge list (it keeps only the
+#'   within-cluster edges) or with `compute_within = FALSE` raises an error
+#'   of class `nestimate_mcml_no_sequences`. [sequence_plot()] takes the
+#'   same two arguments as display options: its `combine` draws what it
+#'   draws for `build_mcml(x, combine = )`, while its `expand` opens
+#'   clusters in the Summary panel only and keeps one panel per cluster.
+#' @param ... For the `print()` and `summary()` methods: not used; any extra
+#'   argument raises an error.
+#' @param object For `summary()`: an `mcml` object.
 #'
-#' @return An \code{mcml} object with the same layout as the return value of
-#'   \code{\link{cluster_summary}} (\code{macro}, \code{clusters},
-#'   \code{cluster_members}, \code{edges}, \code{meta}). On the sequence and
-#'   edge-list paths \code{meta$source} is \code{"transitions"},
-#'   \code{meta$type} records the \code{type} post-processing, and
-#'   \code{edges} is a tidy data frame with one row per observed node-level
-#'   transition and columns \code{from}, \code{to}, \code{weight},
-#'   \code{cluster_from}, \code{cluster_to}, \code{type}
-#'   (\code{"within"}/\code{"between"}). Matrix input falls through to
-#'   \code{\link{cluster_summary}}, so \code{meta$source} is \code{"matrix"}
-#'   and \code{edges} is \code{NULL}. Works with \code{print()},
-#'   \code{summary()}, \code{\link{as_tna}}, \code{\link{as_htna}} and
-#'   \code{\link{macro_network}}.
+#' @return An `mcml` object with the layout described under
+#'   [cluster_summary()]. Print it for the type, the method, the node and
+#'   cluster counts, the clusters,
+#'   the number of transitions between and within clusters and the macro
+#'   weights; printing one layer (an `mcml_layer`) shows its node and edge
+#'   counts, weight range, weight matrix, initial probabilities and the size
+#'   of the data it carries. [summary()] returns a data frame with one row
+#'   per cluster, with
+#'   columns `cluster`, `size`, `within_total` (the total absolute weight of
+#'   the within-cluster network, `NA` when it was not built), `between_out`
+#'   and `between_in` (the absolute macro weight leaving and entering the
+#'   cluster, diagonal excluded); for an undirected macro network, `between_out` is
+#'   the total incident weight and `between_in` is `NA`.
+#'   \code{\link[=as_tna]{as_tna()}} turns
+#'   the levels into a `netobject_group`, [as_htna()] rebuilds the
+#'   node-level network with its clusters, [macro_network()] opens chosen
+#'   clusters into their states, and [sequence_plot()] draws the sequences
+#'   by cluster. The `print()` methods return their input invisibly.
+#'
+#'   On the sequence and edge-list routes, the object differs from the
+#'   matrix route's in these fields:
+#'   \describe{
+#'     \item{edges}{A data frame with one row per observed node-level
+#'       transition and columns `from`, `to`, `weight`, `cluster_from`,
+#'       `cluster_to` and `type` (`"within"` or `"between"`).}
+#'     \item{macro}{Its `inits` are the shares of the clusters among the
+#'       first-column states (missing cells left out), or the normalised
+#'       column sums for an edge list; its `data` holds the sequences recoded to
+#'       cluster labels, or one `from`/`to` row per transition for an edge
+#'       list.}
+#'     \item{clusters}{Each layer counts only the transitions between states
+#'       of its own cluster. Its `inits` are the shares of its states among
+#'       the first-column states that belong to it (normalised column sums
+#'       for an edge list), and its `data` the sequences with the states of other
+#'       clusters set missing (for an edge list, its within-cluster
+#'       transitions).}
+#'     \item{meta}{`source` is `"transitions"`, `type` records the `type`
+#'       used, and `directed` whether the stored weights are directed
+#'       (`FALSE` for `type = "cooccurrence"`).}
+#'   }
+#'   Input passed to [cluster_summary()] gives its result: `source`
+#'   `"matrix"` in `meta`, and no edge table.
 #'
 #' @order 1
 #' @export
@@ -961,11 +1048,13 @@ build_mcml <- function(x,
                        weight = NULL,
                        cols = NULL) {
   if (!is.logical(directed) || length(directed) != 1L || is.na(directed)) {
-    stop("'directed' must be TRUE or FALSE.", call. = FALSE)
+    stop(errorCondition("'directed' must be TRUE or FALSE.",
+      class = "nestimate_bad_input", call = NULL))
   }
   if (!is.logical(compute_within) || length(compute_within) != 1L ||
       is.na(compute_within)) {
-    stop("'compute_within' must be TRUE or FALSE.", call. = FALSE)
+    stop(errorCondition("'compute_within' must be TRUE or FALSE.",
+      class = "nestimate_bad_input", call = NULL))
   }
 
   # An existing mcml: unchanged unless the partition is changed, in which
@@ -987,10 +1076,14 @@ build_mcml <- function(x,
                  to = !missing(to), weight = !missing(weight),
                  cols = !missing(cols))
     if (any(shaping)) {
-      stop("`", paste(names(shaping)[shaping], collapse = "`, `"),
-           "` cannot be applied when re-partitioning an mcml: the sequences ",
-           "it carries already reflect how it was built. Build from the ",
-           "original data to change them.", call. = FALSE)
+      stop(errorCondition(
+        paste0(
+          "`",
+          paste(names(shaping)[shaping], collapse = "`, `"),
+          "` cannot be applied when re-partitioning an mcml: the sequences ",
+          "it carries already reflect how it was built. Build from the ",
+          "original data to change them."),
+        class = "nestimate_bad_input", call = NULL))
     }
     return(.mcml_rebuild(
       x, clusters = clusters, combine = combine, expand = expand,
@@ -1033,10 +1126,12 @@ build_mcml <- function(x,
   # semi-Markov model).
   if (is.character(type) && length(type) == 1L &&
       !is.na(type) && type == "semi_markov") {
-    stop("type = \"semi_markov\" is not implemented: Nestimate has no ",
-         "semi-Markov / holding-time construction. Use type = \"tna\" for a ",
-         "first-order Markov transition matrix, or \"raw\"/\"cooccurrence\".",
-         call. = FALSE)
+    stop(errorCondition(
+      paste0(
+        "type = \"semi_markov\" is not implemented: Nestimate has no ",
+        "semi-Markov / holding-time construction. Use type = \"tna\" for a ",
+        "first-order Markov transition matrix, or \"raw\"/\"cooccurrence\"."),
+      class = "nestimate_bad_input", call = NULL))
   }
 
   type <- match.arg(type)
@@ -1074,17 +1169,34 @@ build_mcml <- function(x,
     # Wide sequence input supports exclude/trim/end; end_by needs the
     # long-format columns prepare() carries, so it has nothing to group by.
     if (!is.null(end_by)) {
-      stop("`end_by` needs long-format input (supply `action`), because the ",
-           "grouping column it names exists only there.", call. = FALSE)
+      stop(errorCondition(
+        paste0(
+          "`end_by` needs long-format input (supply `action`), because the ",
+          "grouping column it names exists only there."),
+        class = "nestimate_bad_input", call = NULL))
     }
     if (!is.data.frame(x) && !is.matrix(x)) {
-      stop("`exclude`, `trim` and `end` need sequence data (a wide ",
-           "data.frame/matrix, or long-format input via `action`); got '",
-           class(x)[1L], "'.", call. = FALSE)
+      stop(errorCondition(
+        paste0(
+          "`exclude`, `trim` and `end` need sequence data (a wide ",
+          "data.frame/matrix, or long-format input via `action`); got '",
+          class(x)[1L],
+          "'."),
+        class = "nestimate_bad_input", call = NULL))
     }
     if (is_edge_list) {
-      stop("`exclude`, `trim` and `end` apply to sequence data, not to an ",
-           "edge list.", call. = FALSE)
+      stop(errorCondition(
+        paste0(
+          "`exclude`, `trim` and `end` apply to sequence data, not to an ",
+          "edge list."),
+        class = "nestimate_bad_input", call = NULL))
+    }
+    if (is.matrix(x) && is.numeric(x) && nrow(x) == ncol(x)) {
+      stop(errorCondition(
+        paste0(
+          "`exclude`, `trim` and `end` apply to sequence data, not to a ",
+          "weight matrix: there are no sequences to drop states from."),
+        class = "nestimate_bad_input", call = NULL))
     }
     seq_df <- as.data.frame(x, stringsAsFactors = FALSE)
     if (!is.null(exclude)) seq_df <- .mcml_blank_states(seq_df, exclude)
@@ -1166,8 +1278,9 @@ build_mcml <- function(x,
     "matrix" = cluster_summary(x, clusters, method = method,
                                 directed = directed,
                                 compute_within = compute_within),
-    stop("Cannot build MCML from input of class '", class(x)[1], "'",
-         call. = FALSE)
+    stop(errorCondition(
+      paste0("Cannot build MCML from input of class '", class(x)[1], "'"),
+      class = "nestimate_bad_input", call = NULL))
   )
 
   if (!is.null(labels)) {
@@ -1208,8 +1321,11 @@ build_mcml <- function(x,
     states <- unlist(clusters[opened], use.names = FALSE)
     clash  <- intersect(states, kept)
     if (length(clash) > 0L) {
-      stop("Expanding would give a state the name of an existing cluster: ",
-           paste(clash, collapse = ", "), call. = FALSE)
+      stop(errorCondition(
+        paste0(
+          "Expanding would give a state the name of an existing cluster: ",
+          paste(clash, collapse = ", ")),
+        class = "nestimate_bad_input", call = NULL))
     }
     clusters <- do.call(c, lapply(names(clusters), function(k) {
       if (k %in% opened) stats::setNames(as.list(clusters[[k]]), clusters[[k]]) else clusters[k]
@@ -1245,8 +1361,9 @@ build_mcml <- function(x,
       class = "nestimate_mcml_no_sequences", call = NULL))
   }
   if (!is.null(clusters) && (!is.null(combine) || !is.null(expand))) {
-    stop("Pass either `clusters` or `combine`/`expand`, not both.",
-         call. = FALSE)
+    stop(errorCondition(
+      "Pass either `clusters` or `combine`/`expand`, not both.",
+      class = "nestimate_bad_input", call = NULL))
   }
   seqs <- Reduce(function(a, b) { a[is.na(a)] <- b[is.na(a)]; a },
                  lapply(datas, as.data.frame, stringsAsFactors = FALSE))
@@ -1386,76 +1503,92 @@ build_mcml <- function(x,
     } else if (!is.null(rownames(x$weights))) {
       rownames(x$weights)
     } else {
-      stop("Cannot align node_groups: x$nodes$label and ",
-           "rownames(x$weights) are both unavailable.", call. = FALSE)
+      stop(errorCondition(paste0("Cannot align node_groups: x$nodes$label and ",
+           "rownames(x$weights) are both unavailable."),
+        class = "nestimate_bad_input", call = NULL))
     }
 
     if (is.data.frame(ng)) {
       cluster_col <- intersect(c("cluster", "group", "layer"), names(ng))
       if (length(cluster_col) == 0L) {
-        stop("'node_groups' data.frame is missing a recognised cluster ",
-             "column (one of: cluster, group, layer).", call. = FALSE)
+        stop(errorCondition(
+          paste0(
+            "'node_groups' data.frame is missing a recognised cluster ",
+            "column (one of: cluster, group, layer)."),
+          class = "nestimate_bad_input", call = NULL))
       }
       node_col <- intersect(c("node", "name", "label", "id"), names(ng))
       if (length(node_col) == 0L) {
-        stop("'node_groups' must include a node identifier column ",
-             "(one of: node, name, label, id) so cluster assignments can ",
-             "be aligned with x$nodes by label rather than by row order. ",
-             "Add the column or pass clusters explicitly as a named list ",
-             "or vector.", call. = FALSE)
+        stop(errorCondition(
+          paste0(
+            "'node_groups' must include a node identifier column ",
+            "(one of: node, name, label, id) so cluster assignments can ",
+            "be aligned with x$nodes by label rather than by row order. ",
+            "Add the column or pass clusters explicitly as a named list ",
+            "or vector."),
+          class = "nestimate_bad_input", call = NULL))
       }
       node_values <- as.character(ng[[node_col[1L]]])
       cluster_values <- as.character(ng[[cluster_col[1L]]])
       if (any(is.na(node_values) | !nzchar(node_values))) {
-        stop("'node_groups' node column must not contain missing or empty values.",
-             call. = FALSE)
+        stop(errorCondition(
+          "'node_groups' node column must not contain missing or empty values.",
+          class = "nestimate_bad_input", call = NULL))
       }
       .validate_auto_clusters(cluster_values, "node_groups")
       duplicated_nodes <- unique(node_values[duplicated(node_values)])
       if (length(duplicated_nodes) > 0L) {
-        stop("'node_groups' assigns duplicate rows to node(s): ",
-             paste(utils::head(duplicated_nodes, 5L), collapse = ", "),
-             call. = FALSE)
+        stop(errorCondition(
+          paste0(
+            "'node_groups' assigns duplicate rows to node(s): ",
+            paste(utils::head(duplicated_nodes, 5L), collapse = ", ")),
+          class = "nestimate_bad_input", call = NULL))
       }
       lookup <- setNames(cluster_values, node_values)
     } else if (is.atomic(ng) && !is.null(names(ng))) {
       node_values <- names(ng)
       cluster_values <- as.character(ng)
       if (any(is.na(node_values) | !nzchar(node_values))) {
-        stop("'node_groups' names must not contain missing or empty values.",
-             call. = FALSE)
+        stop(errorCondition(
+          "'node_groups' names must not contain missing or empty values.",
+          class = "nestimate_bad_input", call = NULL))
       }
       .validate_auto_clusters(cluster_values, "node_groups")
       duplicated_nodes <- unique(node_values[duplicated(node_values)])
       if (length(duplicated_nodes) > 0L) {
-        stop("'node_groups' assigns duplicate rows to node(s): ",
-             paste(utils::head(duplicated_nodes, 5L), collapse = ", "),
-             call. = FALSE)
+        stop(errorCondition(
+          paste0(
+            "'node_groups' assigns duplicate rows to node(s): ",
+            paste(utils::head(duplicated_nodes, 5L), collapse = ", ")),
+          class = "nestimate_bad_input", call = NULL))
       }
       lookup <- setNames(cluster_values, node_values)
     } else {
-      stop("'node_groups' must be a data.frame with node + cluster ",
-           "columns, or a named atomic vector keyed by node label. ",
-           "Unnamed vectors cannot be safely aligned to x$nodes.",
-           call. = FALSE)
+      stop(errorCondition(
+        paste0(
+          "'node_groups' must be a data.frame with node + cluster ",
+          "columns, or a named atomic vector keyed by node label. ",
+          "Unnamed vectors cannot be safely aligned to x$nodes."),
+        class = "nestimate_bad_input", call = NULL))
     }
 
     missing_nodes <- setdiff(target_labels, names(lookup))
     if (length(missing_nodes) > 0L) {
-      stop(sprintf(
+      stop(errorCondition(sprintf(
         paste0("node_groups is missing cluster assignments for %d node(s) ",
                "present in x$nodes/weights: %s"),
         length(missing_nodes),
         paste(utils::head(missing_nodes, 5L), collapse = ", ")
-      ), call. = FALSE)
+      ),
+        class = "nestimate_bad_input", call = NULL))
     }
     clusters <- unname(lookup[target_labels])
   }
 
   if (is.null(clusters)) {
-    stop("No clusters found in netobject. ",
-         "Add a 'clusters' column to nodes or provide clusters argument.",
-         call. = FALSE)
+    stop(errorCondition(paste0("No clusters found in netobject. ",
+         "Add a 'clusters' column to nodes or provide clusters argument."),
+      class = "nestimate_bad_input", call = NULL))
   }
   clusters
 }
@@ -1463,8 +1596,11 @@ build_mcml <- function(x,
 .validate_auto_clusters <- function(clusters, source) {
   clusters <- as.character(clusters)
   if (any(is.na(clusters) | !nzchar(clusters))) {
-    stop(source, " cluster assignments must not contain missing or empty values.",
-         call. = FALSE)
+    stop(errorCondition(
+      paste0(
+        source,
+        " cluster assignments must not contain missing or empty values."),
+      class = "nestimate_bad_input", call = NULL))
   }
   invisible(TRUE)
 }
@@ -1768,7 +1904,9 @@ build_mcml <- function(x,
         # multi-node branch (1x1 [N] -> [1.0]; 1x1 [0] stays [0]).
         keep_self <- w_from %in% cl_nodes & w_to %in% cl_nodes
         self_weight <- if (any(keep_self)) {
-          net_aggregate_weights(w_w[keep_self], method)
+          # one node pair: one possible edge, so "density" is the sum, as
+          # the macro layer's sum / (n_i * n_j)
+          net_aggregate_weights(w_w[keep_self], method, n_possible = 1)
         } else { 0 }
         within_raw <- matrix(self_weight, 1, 1,
                              dimnames = list(cl_nodes, cl_nodes))
@@ -1792,7 +1930,7 @@ build_mcml <- function(x,
           fc <- factor(cf, levels = cl_nodes)
           tc <- factor(ct, levels = cl_nodes)
           agg <- tapply(cw, list(fc, tc), function(w) {
-            net_aggregate_weights(w, method)
+            net_aggregate_weights(w, method, n_possible = 1)
           }, default = NA_real_)
           agg[is.na(agg)] <- 0
           within_raw[] <- as.numeric(agg)
@@ -1878,30 +2016,35 @@ build_mcml <- function(x,
                                   directed, compute_within, from = "from",
                                   to = "to", weight = NULL) {
   if (identical(from, to)) {
-    stop("Edge-list input must include at least two endpoint columns.",
-         call. = FALSE)
+    stop(errorCondition(
+      "Edge-list input must include at least two endpoint columns.",
+      class = "nestimate_bad_input", call = NULL))
   }
   has_weight <- !is.null(weight)
   from_vals <- as.character(df[[from]])
   to_vals <- as.character(df[[to]])
   if (any(is.na(from_vals) | !nzchar(from_vals) |
           is.na(to_vals) | !nzchar(to_vals))) {
-    stop("Edge-list source and target columns must not contain missing or empty values.",
-         call. = FALSE)
+    stop(errorCondition(
+      "Edge-list source and target columns must not contain missing or empty values.",
+      class = "nestimate_bad_input", call = NULL))
   }
 
   if (has_weight) {
     weights <- df[[weight]]
     if (!is.numeric(weights)) {
-      stop("Edge-list weight column must be numeric.", call. = FALSE)
+      stop(errorCondition("Edge-list weight column must be numeric.",
+        class = "nestimate_bad_input", call = NULL))
     }
     if (any(is.na(weights) | !is.finite(weights))) {
-      stop("Edge-list weight column must contain finite non-missing values.",
-           call. = FALSE)
+      stop(errorCondition(
+        "Edge-list weight column must contain finite non-missing values.",
+        class = "nestimate_bad_input", call = NULL))
     }
     if (any(weights < 0)) {
-      stop("Edge-list weight column must not contain negative values.",
-           call. = FALSE)
+      stop(errorCondition(
+        "Edge-list weight column must not contain negative values.",
+        class = "nestimate_bad_input", call = NULL))
     }
   } else {
     weights <- rep(1, nrow(df))
@@ -1915,8 +2058,9 @@ build_mcml <- function(x,
     # Column name: build lookup from both from+group and to+group
     group_col <- as.character(df[[clusters]])
     if (any(is.na(group_col) | !nzchar(group_col))) {
-      stop("Edge-list cluster column must not contain missing or empty values.",
-           call. = FALSE)
+      stop(errorCondition(
+        "Edge-list cluster column must not contain missing or empty values.",
+        class = "nestimate_bad_input", call = NULL))
     }
 
     node_group <- data.frame(
@@ -1927,10 +2071,12 @@ build_mcml <- function(x,
     node_group <- unique(node_group)
     conflicts <- unique(node_group$node[duplicated(node_group$node)])
     if (length(conflicts) > 0L) {
-      stop("Edge-list cluster column assigns nodes to multiple groups: ",
-           paste(utils::head(conflicts, 5L), collapse = ", "),
-           ". Pass clusters as a named list or node-group data.frame instead.",
-           call. = FALSE)
+      stop(errorCondition(
+        paste0(
+          "Edge-list cluster column assigns nodes to multiple groups: ",
+          paste(utils::head(conflicts, 5L), collapse = ", "),
+          ". Pass clusters as a named list or node-group data.frame instead."),
+        class = "nestimate_bad_input", call = NULL))
     }
 
     full_map <- setNames(node_group$group, node_group$node)
@@ -1945,7 +2091,8 @@ build_mcml <- function(x,
   } else {
     # List or vector clusters
     if (is.null(clusters)) {
-      stop("clusters argument is required for data.frame input", call. = FALSE)
+      stop(errorCondition("clusters argument is required for data.frame input",
+        class = "nestimate_bad_input", call = NULL))
     }
 
     if (is.list(clusters) && !is.data.frame(clusters)) {
@@ -1977,8 +2124,9 @@ build_mcml <- function(x,
 
   nc <- ncol(df)
   if (nc < 2) {
-    stop("Sequence data must have at least 2 columns (time steps)",
-         call. = FALSE)
+    stop(errorCondition(
+      "Sequence data must have at least 2 columns (time steps)",
+      class = "nestimate_bad_input", call = NULL))
   }
 
   # Extract consecutive pairs: (col[t], col[t+1]) for all rows
@@ -2000,7 +2148,8 @@ build_mcml <- function(x,
   all_nodes <- sort(unique(observed_nodes))
 
   if (is.null(clusters)) {
-    stop("clusters argument is required for sequence data", call. = FALSE)
+    stop(errorCondition("clusters argument is required for sequence data",
+      class = "nestimate_bad_input", call = NULL))
   }
 
   if (is.list(clusters) && !is.data.frame(clusters)) {
@@ -2063,25 +2212,49 @@ build_mcml <- function(x,
 
 #' Promote the Layers of an mcml to Networks
 #'
-#' Converts an \code{mcml} object into a \code{netobject_group}: one
-#' netobject for the cluster-level (macro) layer, and one per cluster for the
+#' @description
+#' `as_tna()` turns an `mcml` object into a `netobject_group`: one network
+#' for the cluster-level (macro) layer, followed by one per cluster for the
 #' within-cluster layers. The stored weights are carried over as they are --
-#' nothing is re-normalised here, so the aggregation chosen when the
-#' \code{mcml} was built is what the networks hold.
+#' nothing is re-normalised -- so the networks hold the aggregation and
+#' `type` chosen when the `mcml` was built. Despite its name it returns
+#' Nestimate networks, not `tna` models; a `tna` model passed to it is
+#' returned unchanged.
 #'
-#' This is the step that lets an MCML result flow into the verbs that take a
-#' group of networks (printing, network-metric summaries, rendering with
-#' cograph).
+#' This is the step that lets an MCML result reach the verbs that take a
+#' group of networks: printing, the network metrics of [summary()],
+#' [bootstrap_network()] (for an `mcml` built from sequences, whose layers
+#' keep them; the layers of a [cluster_summary()] result carry none) and
+#' drawing with cograph.
 #'
-#' @param x An \code{mcml} object created by \code{\link{cluster_summary}} or
-#'   \code{\link{build_mcml}}.
+#' @param x An `mcml` object from [cluster_summary()] or [build_mcml()]. The
+#'   default method also takes a `tna` model.
+#' @param expand For the `mcml` method: clusters whose member states replace
+#'   the collapsed cluster node in the macro network, as in
+#'   [macro_network()]. Default `NULL` (the macro network stays fully
+#'   collapsed). The within-cluster networks are not affected. It needs an
+#'   `mcml` that [build_mcml()] built from a wide sequence frame, a sequence
+#'   matrix or an event log; one from [cluster_summary()], an edge list, a
+#'   `netobject` or a `tna` model raises an error of class
+#'   `nestimate_no_expand_source`.
+#' @param ... Not used.
 #'
-#' @return A \code{netobject_group}: a named list whose first element is
-#'   \code{macro} (the k x k cluster-level network) followed by one element
-#'   per cluster, each a \code{netobject}/\code{cograph_network} carrying
-#'   \code{$weights}, \code{$inits}, \code{$nodes}, \code{$edges} and the
-#'   recorded \code{$method} (\code{"relative"} for an mcml whose weights are
-#'   already row-normalised, \code{"frequency"} otherwise).
+#' @return A `netobject_group`: a named list whose first element, `macro`, is
+#'   the k x k cluster-level network, followed by one network per cluster.
+#'   Print it for one row per layer (nodes, edges, weight range), call
+#'   [summary()] for the network metrics of each layer, and draw a layer
+#'   with `cograph::splot()`. Each
+#'   element is a `netobject` (class `c("netobject", "cograph_network")`)
+#'   with the layer's weights, initial probabilities, node and edge tables
+#'   and data, and records `method = "relative"` when the `mcml` holds
+#'   row-normalised weights (`type = "tna"`), `method = "co_occurrence"`
+#'   for symmetrised counts (`type = "cooccurrence"`), and
+#'   `method = "frequency"` for counts (`type` `"raw"` or `"frequency"`) and
+#'   for the aggregates of [cluster_summary()]. With
+#'   `expand`, the `macro` element is the mixed-resolution network of
+#'   [macro_network()] instead of the fully collapsed one. The default
+#'   method returns a `tna` model unchanged and raises an error for any
+#'   other class.
 #'
 #' @details
 #' ## Workflow
@@ -2097,20 +2270,14 @@ build_mcml <- function(x,
 #' summary(nets)    # network metrics per layer
 #' }
 #'
-#' ## Zero-out-degree (sink) nodes
+#' ## Sink nodes
 #'
-#' Every cluster is returned, regardless of its row sums. A node with zero
-#' outgoing weight is a legitimate sink (a terminal state); its row in the
-#' wrapped network is left all-zero. This holds for both
-#' \code{net_method = "relative"} and \code{"frequency"} -- the stored
-#' weights are never re-normalised, so a sink row needs no special handling.
-#' Inspect \code{rowSums(x$clusters[[cl]]$weights)} to find sink nodes.
+#' Every cluster is returned, whatever its row sums. A node with no outgoing
+#' weight is a legitimate sink (a terminal state), and its row stays all
+#' zero in the network, for `method = "relative"` and `"frequency"` alike:
+#' the stored weights are never re-normalised, so a sink row needs no
+#' special handling.
 #'
-#' @param expand For the \code{mcml} method, names of clusters whose member
-#'   states replace the collapsed cluster node in the \code{macro} layer (see
-#'   \code{\link{macro_network}}). \code{NULL} (default) keeps the macro
-#'   fully collapsed. The per-cluster layers are unaffected.
-#' @param ... Passed to methods.
 #' @export
 #' @seealso
 #'   \code{\link{cluster_summary}} and \code{\link{build_mcml}} to create the
@@ -2132,10 +2299,6 @@ as_tna <- function(x, ...) {
 }
 
 #' @rdname as_tna
-#' @return The \code{mcml} method returns that \code{netobject_group}, each
-#'   layer keeping the data the corresponding \code{mcml} layer carried. With
-#'   \code{expand}, its \code{macro} element is the mixed-resolution network
-#'   of \code{\link{macro_network}} rather than the fully collapsed one.
 #' @export
 as_tna.mcml <- function(x, expand = NULL, ...) {
   # `expand` replaces the collapsed macro layer with the mixed-resolution
@@ -2153,10 +2316,16 @@ as_tna.mcml <- function(x, expand = NULL, ...) {
   # Determine the method to record on the wrapped netobjects:
   #   * "raw"/"frequency"/"aggregate" -> "frequency" (matrix-path or counts)
   #   * "tna" (already row-normalised) -> "relative"
+  #   * "cooccurrence" (symmetrised counts, rows do not sum to 1, the
+  #     "undirected co-occurrence" of build_mcml()) -> "co_occurrence";
+  #     recording "relative" made downstream verbs read counts as
+  #     probabilities.
   meta_type <- x$meta$type
   net_method <- if (is.null(meta_type) ||
                     meta_type %in% c("raw", "frequency", "aggregate")) {
     "frequency"
+  } else if (identical(meta_type, "cooccurrence")) {
+    "co_occurrence"
   } else {
     "relative"
   }
@@ -2264,14 +2433,14 @@ as_tna.mcml <- function(x, expand = NULL, ...) {
 }
 
 #' @rdname as_tna
-#' @return The default method returns the input unchanged when it already
-#'   inherits from \code{tna}, and otherwise raises an error.
 #' @export
 as_tna.default <- function(x, ...) {
  if (inherits(x, "tna")) {
     return(x)
   }
-  stop("Cannot convert object of class '", class(x)[1], "' to tna", call. = FALSE)
+  stop(errorCondition(
+    paste0("Cannot convert object of class '", class(x)[1], "' to tna"),
+    class = "nestimate_bad_input", call = NULL))
 }
 
 
@@ -2281,51 +2450,64 @@ as_tna.default <- function(x, ...) {
 
 #' Build a grouped node-level network (htna) from data and a clustering
 #'
-#' Builds the full node-level network from the original data and attaches a
-#' cluster grouping, producing a single \code{htna} network in which every actor
-#' is a node and cluster membership labels the actors. This is the node-level
-#' counterpart of \code{\link{build_mcml}}: where \code{build_mcml} collapses
-#' the network to a cluster-level (macro) summary, \code{as_htna} keeps every
-#' node and every transition - including the between-cluster transitions an
-#' mcml only retains in aggregate.
+#' @description
+#' `as_htna()` builds the full node-level network from the original data
+#' with [build_network()] and attaches a cluster to every node, returning a
+#' single `htna` network: every state is a node, and the clusters group the
+#' nodes. It is the node-level counterpart of [build_mcml()]: where
+#' `build_mcml()` collapses the network to a cluster-level (macro) summary,
+#' `as_htna()` keeps every node and every transition, including the
+#' between-cluster transitions an `mcml` keeps only in aggregate. It takes
+#' data with a clustering, an `mcml` (which supplies the clustering, and
+#' often the data), or a fitted `net_mmm`.
 #'
-#' \strong{Why this rebuilds from data.} An \code{mcml} stores cluster-level
-#' data (the macro sequences are recoded to cluster labels, and the per-cluster
-#' data is filtered to within-cluster nodes), so it does not retain a faithful
-#' node-level transition network. The only faithful source of node-level
-#' between-cluster transitions is the original data. \code{as_htna()} therefore
-#' rebuilds from data via \code{\link{build_network}}; an \code{mcml} supplies
-#' the cluster membership and either its retained source or explicitly supplied
-#' original data supplies the transitions.
+#' The result is an ordinary `netobject`, so the inference verbs apply to it
+#' ([bootstrap_network()], [net_centrality()], [permutation()]), and
+#' cograph draws it as a grouped network:
+#' `cograph::plot_htna(as_htna(data, clusters))`.
 #'
-#' The result is a genuine \code{netobject}, so it supports inference
-#' (\code{\link{bootstrap_network}}, centrality, \code{\link{permutation}})
-#' and plots directly as a grouped network with cograph:
-#' \code{cograph::plot_htna(as_htna(data, clusters))}.
+#' @param x The data, in any form [build_network()] accepts (a sequence data
+#'   frame, an event log, an edge list, a transition matrix, a `netobject`
+#'   or a `tna` model); or an `mcml` object, which provides the cluster
+#'   membership and, when it was built from a wide sequence frame or an
+#'   event log, the data as well (see `data`); or a `net_mmm` fitted by
+#'   [cluster_mmm()] on an HTNA network, which is materialised into one HTNA
+#'   per sequence cluster using its preserved actor partition.
+#' @param clusters The cluster of each node: a named list of node-name
+#'   vectors, a membership vector with one value per node (in the order of
+#'   the built network's nodes, alphabetical for sequence data, or named by
+#'   node), or a two-column data frame of node and cluster names. Default `NULL`, under which the
+#'   node groups of the network (`node_groups` with `node` and `group`
+#'   columns) or an `mcml`'s clusters are used; with neither, an error is
+#'   raised. Every node must belong to a cluster, and unassigned nodes are
+#'   named in an error. A fitted `net_mmm` takes no `clusters`: passing them
+#'   raises an error.
+#' @param method The estimator passed to [build_network()]. Default
+#'   `"relative"` (row-normalised transitions).
+#' @param ... Further arguments for [build_network()], such as `actor`,
+#'   `action` and `time` for an event log. A `group` argument raises an
+#'   error, because a single network is expected.
+#' @return For data and `mcml` input, a single `htna` network (class
+#'   `c("htna", "netobject", "cograph_network")`) over all nodes. Print it for
+#'   an overview, call [summary()] for its network metrics, and draw it with
+#'   `cograph::plot_htna()`. The clusters are stored as a factor in the
+#'   `groups` column of the node table and as character values in the
+#'   `group` column of `node_groups`; `actor_levels` records their order and
+#'   is also attached to `node_groups`, so the partition survives a round
+#'   trip. For compatibility, the node table also keeps a `cluster` column,
+#'   and the membership is kept in the `"cluster_members"` attribute. A
+#'   fitted `net_mmm` returns an `htna_group`, one HTNA network per sequence
+#'   cluster, with the MMM diagnostics kept; a `net_mmm` fitted on data
+#'   without an HTNA actor partition raises an error.
+#' @details
+#' ## Why it rebuilds from data
 #'
-#' @param x Data accepted by \code{\link{build_network}} (sequence data frame,
-#'   edgelist, transition matrix, \code{netobject}, or \code{tna}); or an
-#'   \code{mcml} object, which provides the node-cluster membership and, when
-#'   it was built from wide sequence data, the retained source as well (see
-#'   \code{data}); or a fitted
-#'   \code{net_mmm} object, which is materialized into one HTNA per sequence
-#'   cluster using its preserved actor partition.
-#' @param clusters Cluster assignment: a named list of node-name vectors, a
-#'   per-node membership vector, or a two-column data frame. When \code{NULL}
-#'   and \code{x} carries node groups (or is an \code{mcml}), those are used.
-#' @param method Estimator passed to \code{\link{build_network}}. Default
-#'   \code{"relative"} (row-normalized transitions).
-#' @param ... Further arguments forwarded to \code{\link{build_network}}
-#'   (e.g. \code{actor}, \code{action}, \code{time} for long-format data).
-#' @return For data and \code{mcml} inputs, a single \code{htna} (also a \code{netobject} and
-#'   \code{cograph_network}) over all nodes. Cluster labels are stored as a
-#'   factor in \code{$nodes$groups} and as character values in
-#'   \code{$node_groups$group}; \code{$actor_levels} records their order and
-#'   is also attached to \code{$node_groups} for lossless partition round trips.
-#'   For compatibility, the result also retains \code{$nodes$cluster} and the
-#'   membership in the \code{"cluster_members"} attribute. A fitted
-#'   \code{net_mmm} returns an \code{htna_group}, one materialized HTNA network
-#'   per sequence cluster, while preserving the MMM diagnostics.
+#' It rebuilds from data because an `mcml` holds no faithful node-level
+#' network: its macro sequences are recoded to cluster labels, and its
+#' per-cluster data keep only that cluster's states, so the node-level
+#' transitions between clusters survive only in the original data. An
+#' `mcml` therefore supplies the cluster membership, and either the source
+#' it retained or the `data` passed supplies the transitions.
 #' @seealso \code{\link{build_mcml}}, \code{\link{build_network}}; plot with
 #'   \code{cograph::plot_htna()}.
 #' @export
@@ -2337,21 +2519,22 @@ as_tna.default <- function(x, ...) {
 #' clusters <- list(C1 = c("A", "B"), C2 = c("C", "D"), C3 = c("E", "F"))
 #' net <- as_htna(seqs, clusters)
 #' net
-#' \dontrun{
-#' cograph::plot_htna(net)
-#' }
+#' if (requireNamespace("cograph", quietly = TRUE)) cograph::plot_htna(net)
 as_htna <- function(x, clusters = NULL, method = "relative", ...) {
   UseMethod("as_htna")
 }
 
 #' @rdname as_htna
-#' @param data For the \code{mcml} method, the original data the mcml was built
-#'   from (sequence/edgelist/etc.). Optional when the mcml was built from wide
-#'   sequence data (long-format input counts, since \code{build_mcml()} widens
-#'   it first): that source is stashed on the object, so
-#'   \code{as_htna(mcml)} works on its own. Required for an mcml built from a
-#'   matrix, an aggregate, or an edge list, none of which retain a usable
-#'   node-level source.
+#' @param data For the `mcml` method: the original data the `mcml` was built
+#'   from. Optional when it was built from a wide sequence frame, a
+#'   character sequence matrix, or an event log (which
+#'   `build_mcml()` turns into sequences first): that source is kept on the
+#'   object, so `as_htna(mcml)` works on its own, except for an `mcml` built
+#'   with `labels`, whose kept source holds the original state names (pass
+#'   `clusters` with those names then). Required for
+#'   an `mcml` built from a matrix, an edge list, a `netobject` or a `tna`
+#'   model, which keep no usable node-level source; without it an error is
+#'   raised. Default `NULL`.
 #' @export
 as_htna.mcml <- function(x, clusters = NULL, method = "relative",
                          data = NULL, ...) {
@@ -2361,12 +2544,14 @@ as_htna.mcml <- function(x, clusters = NULL, method = "relative",
   src <- attr(x, "htna_source")
   if (is.null(data) && !is.null(src)) data <- src
   if (is.null(data)) {
-    stop("This mcml carries no expandable node-level source (it was built ",
-         "from a matrix, aggregate, or edge list), so it cannot be expanded ",
-         "to an htna on its own. Pass the original data:\n",
-         "  as_htna(mcml, data = <original data>)   # reuses mcml$cluster_members\n",
-         "or equivalently as_htna(<original data>, clusters = mcml$cluster_members).",
-         call. = FALSE)
+    stop(errorCondition(
+      paste0(
+        "This mcml carries no expandable node-level source (it was built ",
+        "from a matrix, aggregate, or edge list), so it cannot be expanded ",
+        "to an htna on its own. Pass the original data:\n",
+        "  as_htna(mcml, data = <original data>)   # reuses mcml$cluster_members\n",
+        "or equivalently as_htna(<original data>, clusters = mcml$cluster_members)."),
+      class = "nestimate_bad_input", call = NULL))
   }
   if (is.null(clusters)) clusters <- x$cluster_members
   as_htna.default(data, clusters = clusters, method = method, ...)
@@ -2376,16 +2561,22 @@ as_htna.mcml <- function(x, clusters = NULL, method = "relative",
 #' @export
 as_htna.net_mmm <- function(x, clusters = NULL, method = "relative", ...) {
   if (!is.null(clusters)) {
-    stop("`clusters` is not used for a fitted `net_mmm`: its sequence ",
-         "clusters are already fitted and its HTNA actor partition is ",
-         "preserved separately.", call. = FALSE)
+    stop(errorCondition(
+      paste0(
+        "`clusters` is not used for a fitted `net_mmm`: its sequence ",
+        "clusters are already fitted and its HTNA actor partition is ",
+        "preserved separately."),
+      class = "nestimate_bad_input", call = NULL))
   }
 
   nets <- build_network(x, method = method, ...)
   if (!inherits(nets, "htna_group")) {
-    stop("The fitted `net_mmm` does not carry an HTNA actor partition. ",
-         "Fit `cluster_mmm()` on an HTNA object, or materialize ordinary ",
-         "cluster networks with `build_network()`.", call. = FALSE)
+    stop(errorCondition(
+      paste0(
+        "The fitted `net_mmm` does not carry an HTNA actor partition. ",
+        "Fit `cluster_mmm()` on an HTNA object, or materialize ordinary ",
+        "cluster networks with `build_network()`."),
+      class = "nestimate_bad_input", call = NULL))
   }
   nets
 }
@@ -2395,9 +2586,14 @@ as_htna.net_mmm <- function(x, clusters = NULL, method = "relative", ...) {
 as_htna.default <- function(x, clusters = NULL, method = "relative", ...) {
   net <- build_network(x, method = method, ...)
   if (!inherits(net, "netobject")) {
-    stop("as_htna() expects a single node-level network; build_network() ",
-         "returned class '", class(net)[1], "'. Provide ungrouped data ",
-         "(do not pass a 'group' argument).", call. = FALSE)
+    stop(errorCondition(
+      paste0(
+        "as_htna() expects a single node-level network; build_network() ",
+        "returned class '",
+        class(net)[1],
+        "'. Provide ungrouped data ",
+        "(do not pass a 'group' argument)."),
+      class = "nestimate_bad_input", call = NULL))
   }
   node_names <- net$nodes$label
 
@@ -2407,8 +2603,11 @@ as_htna.default <- function(x, clusters = NULL, method = "relative", ...) {
     if (is.data.frame(ng) && all(c("node", "group") %in% names(ng))) {
       clusters <- stats::setNames(ng$group, ng$node)
     } else {
-      stop("'clusters' is required: a named list of node vectors, a per-node ",
-           "membership vector, or a two-column data frame.", call. = FALSE)
+      stop(errorCondition(
+        paste0(
+          "'clusters' is required: a named list of node vectors, a per-node ",
+          "membership vector, or a two-column data frame."),
+        class = "nestimate_bad_input", call = NULL))
     }
   }
   members <- .normalize_clusters(clusters, node_names)
@@ -2420,8 +2619,9 @@ as_htna.default <- function(x, clusters = NULL, method = "relative", ...) {
   )
   missing_nodes <- setdiff(node_names, names(map))
   if (length(missing_nodes) > 0L) {
-    stop("These nodes are not assigned to any cluster: ",
-         paste(missing_nodes, collapse = ", "), call. = FALSE)
+    stop(errorCondition(paste0("These nodes are not assigned to any cluster: ",
+         paste(missing_nodes, collapse = ", ")),
+      class = "nestimate_bad_input", call = NULL))
   }
 
   cluster_labels <- unname(map[node_names])
@@ -2450,18 +2650,20 @@ as_htna.default <- function(x, clusters = NULL, method = "relative", ...) {
   if (is.data.frame(clusters)) {
     # Data frame with node and group columns
     if (ncol(clusters) < 2L) {
-      stop("clusters data.frame must have at least two columns.",
-           call. = FALSE)
+      stop(errorCondition("clusters data.frame must have at least two columns.",
+        class = "nestimate_bad_input", call = NULL))
     }
     nodes <- as.character(clusters[[1]])
     groups <- as.character(clusters[[2]])
     if (any(is.na(nodes) | !nzchar(nodes))) {
-      stop("clusters data.frame node column must not contain missing or empty values.",
-           call. = FALSE)
+      stop(errorCondition(
+        "clusters data.frame node column must not contain missing or empty values.",
+        class = "nestimate_bad_input", call = NULL))
     }
     if (any(is.na(groups) | !nzchar(groups))) {
-      stop("clusters data.frame group column must not contain missing or empty values.",
-           call. = FALSE)
+      stop(errorCondition(
+        "clusters data.frame group column must not contain missing or empty values.",
+        class = "nestimate_bad_input", call = NULL))
     }
     clusters <- split(nodes, groups)
   }
@@ -2476,8 +2678,9 @@ as_htna.default <- function(x, clusters = NULL, method = "relative", ...) {
     # Membership vector
     clusters <- .align_cluster_membership(clusters, node_names)
     if (any(is.na(clusters) | !is.finite(clusters))) {
-      stop("Membership vector must not contain missing or non-finite values.",
-           call. = FALSE)
+      stop(errorCondition(
+        "Membership vector must not contain missing or non-finite values.",
+        class = "nestimate_bad_input", call = NULL))
     }
     # Convert to list
     unique_clusters <- sort(unique(clusters))
@@ -2493,8 +2696,9 @@ as_htna.default <- function(x, clusters = NULL, method = "relative", ...) {
     clusters <- .align_cluster_membership(clusters, node_names)
     clusters <- as.character(clusters)
     if (any(is.na(clusters) | !nzchar(clusters))) {
-      stop("Membership vector must not contain missing or empty values.",
-           call. = FALSE)
+      stop(errorCondition(
+        "Membership vector must not contain missing or empty values.",
+        class = "nestimate_bad_input", call = NULL))
     }
     unique_clusters <- unique(clusters)
     cluster_list <- lapply(unique_clusters, function(k) {
@@ -2504,76 +2708,83 @@ as_htna.default <- function(x, clusters = NULL, method = "relative", ...) {
     return(cluster_list)
   }
 
-  stop("clusters must be a list, numeric vector, or factor", call. = FALSE)
+  stop(errorCondition("clusters must be a list, numeric vector, or factor",
+    class = "nestimate_bad_input", call = NULL))
 }
 
 .align_cluster_membership <- function(clusters, node_names) {
   if (length(clusters) != length(node_names)) {
-    stop("Membership vector length (", length(clusters),
-         ") must equal number of nodes (", length(node_names), ")",
-         call. = FALSE)
+    stop(errorCondition(paste0("Membership vector length (", length(clusters),
+         ") must equal number of nodes (", length(node_names), ")"),
+      class = "nestimate_bad_input", call = NULL))
   }
   nm <- names(clusters)
   if (is.null(nm)) {
     return(clusters)
   }
   if (any(is.na(nm) | !nzchar(nm))) {
-    stop("Named membership vector names must not contain missing or empty values.",
-         call. = FALSE)
+    stop(errorCondition(
+      "Named membership vector names must not contain missing or empty values.",
+      class = "nestimate_bad_input", call = NULL))
   }
   if (anyDuplicated(nm)) {
-    stop("Named membership vector names must be unique.", call. = FALSE)
+    stop(errorCondition("Named membership vector names must be unique.",
+      class = "nestimate_bad_input", call = NULL))
   }
   missing_nodes <- setdiff(node_names, nm)
   extra_nodes <- setdiff(nm, node_names)
   if (length(missing_nodes) > 0L || length(extra_nodes) > 0L) {
-    stop("Named membership vector names must match node names exactly.",
-         call. = FALSE)
+    stop(errorCondition(
+      "Named membership vector names must match node names exactly.",
+      class = "nestimate_bad_input", call = NULL))
   }
   clusters[node_names]
 }
 
 .validate_cluster_partition <- function(clusters, node_names) {
   if (!is.list(clusters) || is.data.frame(clusters)) {
-    stop("clusters must be a named list.", call. = FALSE)
+    stop(errorCondition("clusters must be a named list.",
+      class = "nestimate_bad_input", call = NULL))
   }
   cluster_names <- names(clusters)
   if (is.null(cluster_names) || any(!nzchar(cluster_names)) ||
       any(is.na(cluster_names))) {
-    stop("clusters list must have non-empty cluster names.", call. = FALSE)
+    stop(errorCondition("clusters list must have non-empty cluster names.",
+      class = "nestimate_bad_input", call = NULL))
   }
   cluster_sizes <- vapply(clusters, length, integer(1L))
   if (any(cluster_sizes == 0L)) {
-    stop("clusters list contains empty clusters: ",
-         paste(names(clusters)[cluster_sizes == 0L], collapse = ", "),
-         call. = FALSE)
+    stop(errorCondition(paste0("clusters list contains empty clusters: ",
+         paste(names(clusters)[cluster_sizes == 0L], collapse = ", ")),
+      class = "nestimate_bad_input", call = NULL))
   }
 
   nodes <- unlist(clusters, use.names = FALSE)
   nodes <- as.character(nodes)
   if (any(is.na(nodes)) || any(!nzchar(nodes))) {
-    stop("clusters list contains missing or empty node names.",
-         call. = FALSE)
+    stop(errorCondition("clusters list contains missing or empty node names.",
+      class = "nestimate_bad_input", call = NULL))
   }
 
   unknown <- setdiff(nodes, node_names)
   if (length(unknown) > 0L) {
-    stop("Unknown nodes in clusters: ",
-         paste(utils::head(unknown, 5L), collapse = ", "), call. = FALSE)
+    stop(errorCondition(paste0("Unknown nodes in clusters: ",
+         paste(utils::head(unknown, 5L), collapse = ", ")),
+      class = "nestimate_bad_input", call = NULL))
   }
 
   duplicated_nodes <- unique(nodes[duplicated(nodes)])
   if (length(duplicated_nodes) > 0L) {
-    stop("Nodes assigned to multiple clusters: ",
-         paste(utils::head(duplicated_nodes, 5L), collapse = ", "),
-         call. = FALSE)
+    stop(errorCondition(paste0("Nodes assigned to multiple clusters: ",
+         paste(utils::head(duplicated_nodes, 5L), collapse = ", ")),
+      class = "nestimate_bad_input", call = NULL))
   }
 
   unmapped <- setdiff(node_names, nodes)
   if (length(unmapped) > 0L) {
-    stop("Unmapped nodes: ",
-         paste(utils::head(unmapped, 5L), collapse = ", "),
-         call. = FALSE)
+    stop(errorCondition(paste0("Unmapped nodes: ",
+         paste(utils::head(unmapped, 5L), collapse = ", ")),
+      class = "nestimate_bad_input", call = NULL))
   }
 
   invisible(TRUE)
@@ -2684,10 +2895,9 @@ summary.mcml <- function(object, ...) {
   }
   dot_names <- names(dots)
   dot_names[!nzchar(dot_names)] <- paste0("..", which(!nzchar(dot_names)))
-  stop(
+  stop(errorCondition(paste0(
     method, "() got unsupported argument",
     if (length(dots) == 1L) ": " else "s: ",
-    paste(dot_names, collapse = ", "),
-    call. = FALSE
-  )
+    paste(dot_names, collapse = ", ")),
+    class = "nestimate_bad_input", call = NULL))
 }

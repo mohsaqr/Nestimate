@@ -4,6 +4,8 @@
 \alias{transition_entropy}
 \alias{print.net_transition_entropy}
 \alias{print.net_transition_entropy_group}
+\alias{summary.net_transition_entropy_group}
+\alias{plot.net_transition_entropy_group}
 \alias{summary.net_transition_entropy}
 \alias{print.summary.net_transition_entropy}
 \alias{plot.net_transition_entropy}
@@ -15,6 +17,10 @@ transition_entropy(x, base = 2, normalize = TRUE)
 
 \method{print}{net_transition_entropy_group}(x, ...)
 
+\method{summary}{net_transition_entropy_group}(object, ...)
+
+\method{plot}{net_transition_entropy_group}(x, title = "Transition Entropy", fill = "#0072B2", ...)
+
 \method{summary}{net_transition_entropy}(object, ...)
 
 \method{print}{summary.net_transition_entropy}(x, digits = 3, ...)
@@ -22,101 +28,133 @@ transition_entropy(x, base = 2, normalize = TRUE)
 \method{plot}{net_transition_entropy}(x, title = "Transition Entropy", fill = "#0072B2", ...)
 }
 \arguments{
-\item{x}{A \code{netobject}, \code{cograph_network}, \code{tna} object,
-row-stochastic numeric transition matrix, or a wide sequence data.frame
-(rows = actors, columns = time-steps; a relative transition network is
-built automatically). Group dispatch on \code{netobject_group}. For the \code{print()} and \code{plot()} methods: an object of class \code{net_transition_entropy} or \code{net_transition_entropy_group} (or its \code{summary()}).}
+\item{x}{The chain: a \code{netobject} or \code{cograph_network} with non-negative
+transition weights, a \code{tna} model, a numeric transition matrix, or wide
+sequence data (a data frame or a character matrix, one row per sequence)
+that holds a numbered run of positions (T1, T2, ...), from which a
+relative transition network is built; other columns are set aside with
+a message. For a frame without such a run, build the network with
+\code{\link[=build_network]{build_network()}} (\verb{state_cols =} or \verb{action =}) and pass that. A \code{netobject_group} gives one result per group. An association
+network (\code{cor}, \code{pcor}, \code{glasso}, \code{ising}, \code{mgm}) or a matrix with
+negative entries raises an error of class \code{nestimate_not_markov}. For the
+\code{print()} and \code{plot()} methods: a \code{transition_entropy()} result;
+\code{print()} also takes a group result or the result of \code{summary()}.}
 
-\item{base}{Numeric. Logarithm base. \code{2} (default) for bits,
-\code{exp(1)} for nats, \code{10} for hartleys.}
+\item{base}{The logarithm base, which sets the unit: \code{2} (default) for
+bits, \code{exp(1)} for nats, \code{10} for hartleys. Any positive number other
+than 1.}
 
-\item{normalize}{Logical. If \code{TRUE} (default), rows that do not sum
-to 1 are normalised automatically (with a warning).}
+\item{normalize}{Whether rows that do not sum to 1 (a frequency network, a
+count matrix) are divided by their sums, with a warning. With \code{FALSE},
+such rows raise an error. Default \code{TRUE}. A state with no outgoing
+transitions (a row summing to zero) is an error either way.}
 
-\item{digits}{Integer. Digits to round numeric output. Default \code{3}.}
+\item{digits}{For the \code{print()} methods of a result and of its summary:
+decimal places of the values. Default \code{3}. A result's normalised values
+always print with three decimals, the summary's percentages with one.}
 
-\item{...}{In \code{plot.net_transition_entropy()}, \code{print.net_transition_entropy()}, \code{print.summary.net_transition_entropy()} and \code{summary.net_transition_entropy()}: Ignored. In \code{print.net_transition_entropy_group()}: Forwarded to \code{print.net_transition_entropy}.}
+\item{...}{For the \code{print()}, \code{summary()} and \code{plot()} methods: not used.}
 
-\item{object}{For the \code{summary()} method: an object of class \code{net_transition_entropy}.}
+\item{object}{For \code{summary()}: a \code{transition_entropy()} result.}
 
-\item{title}{Character. Plot title.}
+\item{title}{For \code{plot()}: the plot title. Default \code{"Transition Entropy"}.}
 
-\item{fill}{Character. Bar fill colour. Default Okabe-Ito blue.}
+\item{fill}{For \code{plot()}: the bar fill colour. Default \code{"#0072B2"}, the
+Okabe-Ito blue.}
 }
 \value{
-An object of class \code{"net_transition_entropy"} with:
+A \code{net_transition_entropy} object, or for a \code{netobject_group} a
+\code{net_transition_entropy_group}: a named list of them, one per group.
+\code{print()} shows the entropy rate, stationary entropy and redundancy, raw
+and normalised, and for a group the entropy rate of each group. For a
+group, \code{summary()} returns a data frame with one row per group (\code{group},
+\code{n_states}, the raw and normalised entropy rate and stationary entropy,
+\code{redundancy} and \code{unit}), and \code{plot()} draws the bar chart below in one
+panel per group.
+\code{summary()} returns a \code{summary.net_transition_entropy} object, printed by
+its own \code{print()} method, that holds \code{table}, one row per state
+(stationary probability, raw and normalised branching entropy, the
+state's additive contribution \eqn{\pi_i H(P_{i\cdot})} to the entropy
+rate and that contribution as a percentage of it), sorted by contribution,
+largest first; \code{chain}, one row per chain-level quantity (entropy rate,
+stationary entropy, redundancy and the ceiling, raw and normalised),
+with the unit; and the logarithm \code{base}.
+\code{plot()} returns a \code{ggplot} bar chart of each state's branching entropy,
+with bar widths proportional to the stationary probability (so a bar's
+area is proportional to the state's contribution), a dashed line at the
+entropy rate \eqn{h(P)} and a dotted line at the ceiling \eqn{\log_b n}
+(uniform branching). The \code{print()} methods return their input
+invisibly. The object's fields:
 \describe{
-\item{row_entropy}{Named numeric vector, length \eqn{n}. Per-state
-branching entropy \eqn{H(P_{i\cdot}) = -\sum_j P_{ij} \log P_{ij}}.}
-\item{row_entropy_norm}{Named numeric vector. \code{row_entropy}
-divided by the ceiling \eqn{\log_b n} (in \eqn{[0, 1]}; all zeros
-when \eqn{n = 1}).}
-\item{stationary}{Named numeric vector. Stationary distribution
+\item{row_entropy}{Named numeric vector of length \eqn{n}: each state's
+branching entropy \eqn{H(P_{i\cdot}) = -\sum_j P_{ij} \log_b P_{ij}}.}
+\item{row_entropy_norm}{\code{row_entropy} divided by the ceiling
+\eqn{\log_b n}, in \eqn{[0, 1]}; all zeros when \eqn{n = 1}.}
+\item{stationary}{Named numeric vector: the stationary distribution
 \eqn{\pi}.}
-\item{stationary_entropy}{Scalar. \eqn{H(\pi) = -\sum_i \pi_i \log \pi_i}
-- the entropy of \eqn{\pi} treated as an i.i.d. distribution. Upper
+\item{stationary_entropy}{\eqn{H(\pi) = -\sum_i \pi_i \log_b \pi_i}, the
+entropy of \eqn{\pi} read as an independent draw each step; an upper
 bound on the entropy rate.}
-\item{stationary_entropy_norm}{Scalar. \code{stationary_entropy}
-divided by the ceiling \eqn{\log_b n}.}
-\item{entropy_rate}{Scalar. \eqn{h(P) = \sum_i \pi_i H(P_{i\cdot})} -
-the Shannon-McMillan-Breiman entropy rate.}
-\item{entropy_rate_norm}{Scalar. \code{entropy_rate} divided by the
+\item{stationary_entropy_norm}{\code{stationary_entropy} divided by the
 ceiling \eqn{\log_b n}.}
-\item{redundancy}{Scalar. \eqn{H(\pi) - h(P)}, the entropy deficit
-attributable to serial dependence; zero for an i.i.d. chain (rows of
-\eqn{P} all equal \eqn{\pi}).}
-\item{redundancy_norm}{Scalar. The \emph{relative} redundancy
-\eqn{(H(\pi) - h(P)) / H(\pi)} (the fraction of the stationary
-entropy removed by order-1 memory), \strong{not}
-\code{redundancy} divided by \eqn{\log_b n}; \code{0} when
-\eqn{H(\pi) = 0}.}
-\item{max_entropy}{Scalar. The normalising ceiling \eqn{\log_b n}.}
-\item{base}{Logarithm base used.}
+\item{entropy_rate}{\eqn{h(P) = \sum_i \pi_i H(P_{i\cdot})}, the
+Shannon-McMillan-Breiman entropy rate.}
+\item{entropy_rate_norm}{\code{entropy_rate} divided by the ceiling
+\eqn{\log_b n}.}
+\item{redundancy}{\eqn{H(\pi) - h(P)}, the entropy deficit due to serial
+dependence; zero for an independent chain (every row of \eqn{P} equal
+to \eqn{\pi}).}
+\item{redundancy_norm}{The relative redundancy
+\eqn{(H(\pi) - h(P)) / H(\pi)}, the share of the stationary entropy
+that order-1 memory removes; \strong{not} \code{redundancy} divided by
+\eqn{\log_b n}. \code{0} when \eqn{H(\pi) = 0}.}
+\item{max_entropy}{The normalising ceiling \eqn{\log_b n}.}
+\item{base}{The logarithm base used.}
 \item{states}{Character vector of state names.}
 }
-For a \code{netobject_group} the result is a
-\code{"net_transition_entropy_group"}: a named list holding one such
-object per group.
-
-In \code{print.net_transition_entropy()}, \code{print.net_transition_entropy_group()} and \code{print.summary.net_transition_entropy()}: \code{x} invisibly.
-
-In \code{summary.net_transition_entropy()}: A \code{summary.net_transition_entropy} containing \describe{ \item{table}{tidy per-state data.frame, sorted by \code{contribution_pct} descending} \item{chain}{tidy chain-level data.frame with raw and normalised \eqn{h(P)}, \eqn{H(\pi)}, redundancy, and ceiling} \item{base}{logarithm base used} }
-
-In \code{plot.net_transition_entropy()}: A ggplot object.
 }
 \description{
-Computes per-state branching entropy, stationary entropy, and the
-chain-level entropy rate of a Markov transition process. The entropy rate
-\eqn{H = -\sum_i \pi_i \sum_j P_{ij} \log_b P_{ij}} (with \eqn{\pi} the
-stationary distribution from the eigendecomposition of \eqn{P^\top} at
-\eqn{\lambda = 1}) is the Shannon-McMillan-Breiman per-step uncertainty
-of trajectories - the canonical information-theoretic summary of a
-transition matrix, introduced to behavioral research as gaze transition
-entropy by Krejtz et al. (2015) and tracked in real time as mobile
-transition matrix entropy by Krejtz et al. (2025). The normalized fields
-(\code{*_norm}, division by \eqn{\log_b n}) are the scale-free variants
+\code{transition_entropy()} measures how uncertain a Markov chain's next step
+is, at three levels: the branching entropy of each state (how evenly its
+outgoing transitions spread), the entropy of the stationary distribution,
+and the chain's entropy rate, the average uncertainty per step. It takes a
+transition network, a \code{tna} model, a transition matrix or wide sequence
+data; a \code{netobject_group} gives one result per group. The entropy rate
+\deqn{h(P) = -\sum_i \pi_i \sum_j P_{ij} \log_b P_{ij},}
+with \eqn{\pi} the stationary distribution, is the per-step uncertainty of
+the chain's trajectories (Cover & Thomas, 2006, ch. 4). It was introduced
+to behavioural research as gaze transition entropy by Krejtz et al. (2015)
+and tracked in real time as mobile transition matrix entropy by Krejtz et
+al. (2025). The normalised values divide by \eqn{\log_b n}, the entropy of
+uniform branching among \eqn{n} states; they are the scale-free variants
 those papers report.
+
+An entropy rate near 0 means the current state almost fixes the next one;
+near the ceiling \eqn{\log_b n} (normalised 1), every next state is about
+equally likely. The redundancy \eqn{H(\pi) - h(P)} is the uncertainty that
+knowing the current state removes, zero when successive states are
+independent. All of these are point estimates from one transition matrix:
+\code{\link[=entropy_bayes]{entropy_bayes()}} gives their credible intervals, \code{\link[=entropy_network]{entropy_network()}}
+shows which transitions carry the entropy, and \code{\link[=entropy_trajectory]{entropy_trajectory()}} how
+it changes over time. A chain with more than one closed class has more
+than one stationary distribution; check its classes with
+\code{\link[=chain_structure]{chain_structure()}}.
 }
 \details{
-Convention \eqn{0 \log 0 := 0} is applied, so absorbing or
-deterministic rows contribute zero per-row entropy. The chain need not be
-irreducible; \eqn{\pi} is computed from the eigendecomposition of
-\eqn{P^\top} as elsewhere in the package. For non-ergodic chains the
-returned \eqn{\pi} is one stationary distribution among many - interpret
-with the help of \code{\link{chain_structure}}.
+The convention \eqn{0 \log 0 = 0} applies, so an absorbing or
+deterministic row has zero branching entropy. The chain need not be
+irreducible: \eqn{\pi} is the eigenvector of \eqn{P^\top} for the
+eigenvalue closest to 1, as elsewhere in the package. For a chain with
+more than one closed class this is one stationary distribution among
+many; when some of
+its probabilities are zero, a warning says so, and they are set to machine
+epsilon and the distribution renormalised before the entropies are
+computed.
 
-The relation \eqn{h(P) \leq H(\pi)} holds with equality iff successive
+\eqn{h(P) \le H(\pi)} holds, with equality if and only if successive
 states are independent. The deficit \eqn{H(\pi) - h(P)} is reported as
-\code{redundancy} - a measure of how much memory the chain has at order 1.
+\code{redundancy}, a measure of how much memory the chain has at order 1.
 }
-\section{Methods}{
-
-\itemize{
-\item \code{plot.net_transition_entropy()}: Bar chart of per-state row entropy with overlaid horizontal lines at the entropy rate \eqn{h(P)} (chain-level summary) and the maximum row entropy \eqn{\log_b n} (uniform branching). Bar widths are proportional to the stationary probability so the visual area sums to the entropy rate.
-\item \code{summary.net_transition_entropy()}: Returns a tidy per-state contribution table sorted by share of the chain-level entropy rate (largest first), so the dominant contributors to \eqn{h(P)} are visible at a glance. Each row contains the stationary mass, the raw and normalised row entropy, the additive contribution \eqn{\pi_i H(P_{i\cdot})}, and that contribution as a percentage of \eqn{h(P)}.
-}
-}
-
 \examples{
 net <- build_network(as.data.frame(trajectories), method = "relative")
 te  <- transition_entropy(net)

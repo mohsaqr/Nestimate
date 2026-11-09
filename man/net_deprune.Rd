@@ -16,18 +16,23 @@ net_deprune(x, ...)
 \method{net_deprune}{default}(x, ...)
 }
 \arguments{
-\item{x}{A pruned \code{netobject} or \code{netobject_group}.}
+\item{x}{A pruned \code{netobject} or \code{netobject_group}. A network that was
+never pruned, or whose pruning is already inactive, raises an error,
+and so does another class.}
 
 \item{...}{Ignored.}
 }
 \value{
-The network (or group) with original weights restored and its
-pruning marked inactive.
+The input, of the same class, with the original weights, its
+edge table and edge count updated to them, and its pruning marked
+inactive.
 }
 \description{
-Restores the original (pre-pruning) weights of a network pruned by
-\code{\link{net_prune}}, without recomputation. The pruning record is kept,
-so \code{\link{net_reprune}} can re-apply it.
+\code{net_deprune()} restores the weights a network had before
+\code{\link[=net_prune]{net_prune()}}, without recomputing anything, and marks its pruning
+inactive. The pruning record stays on the network, so \code{\link[=net_reprune]{net_reprune()}}
+can re-apply it and \code{\link[=net_pruning_details]{net_pruning_details()}} still lists what the
+pruning removed. A \code{netobject_group} is restored network by network.
 }
 \examples{
 seqs <- data.frame(V1 = c("A","B","C"), V2 = c("B","C","A"),

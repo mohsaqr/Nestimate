@@ -31,67 +31,94 @@ hypergraph_transduction(
 \method{plot}{net_hypergraph_transduction}(x, ...)
 }
 \arguments{
-\item{hg}{A connected \code{net_hypergraph}.}
+\item{hg}{The hypergraph: a connected \code{net_hypergraph}, as for
+\code{\link[=hypergraph_laplacian]{hypergraph_laplacian()}}.}
 
-\item{labels}{Node labels. Either a named vector (names = node names,
-values = class labels) covering a subset of nodes, or a full-length
-vector aligned with \code{hg$nodes} with \code{NA} for unlabeled nodes. At least
-two distinct classes must be labeled.}
+\item{labels}{The known class labels, in one of two forms: a vector
+named by node, covering some of the nodes, or an unnamed vector with one
+entry per node, in the hypergraph's node order, and \code{NA} for the
+unlabelled ones. Required. It must hold at least two distinct classes;
+a name that is not a node, or an unnamed vector of the wrong length,
+raises an error.}
 
-\item{xi}{Numeric in \verb{(0, 1)}. Spreading coefficient (default \code{0.99});
-larger values weight the hypergraph structure more relative to the
-initial labels.}
+\item{xi}{The spreading coefficient, a number strictly between 0 and 1.
+Larger values give the hypergraph structure more weight relative to the
+given labels. Default \code{0.99}.}
 
-\item{type, edge_weights}{Passed to \code{\link[=hypergraph_laplacian]{hypergraph_laplacian()}}.}
+\item{type, edge_weights}{The Laplacian and its hyperedge weights, passed
+to \code{\link[=hypergraph_laplacian]{hypergraph_laplacian()}}. Defaults \code{"zhou"} and \code{NULL}.}
 
-\item{x}{For the \code{print()}, \code{as.data.frame()} and \code{plot()} methods: an object of class \code{net_hypergraph_transduction}.}
+\item{x}{For the \code{print()}, \code{as.data.frame()} and \code{plot()} methods: a
+\code{net_hypergraph_transduction} object.}
 
-\item{...}{In \code{as.data.frame.net_hypergraph_transduction()}, \code{plot.net_hypergraph_transduction()}, \code{print.net_hypergraph_transduction()} and \code{summary.net_hypergraph_transduction()}: Additional arguments (ignored).}
+\item{...}{For the methods: ignored.}
 
-\item{object}{For the \code{summary()} method: an object of class \code{net_hypergraph_transduction}.}
+\item{object}{For the \code{summary()} method: a \code{net_hypergraph_transduction}
+object.}
 
-\item{row.names}{\code{NULL} (default) or a character vector of row names for the returned data frame.}
+\item{row.names}{For the \code{as.data.frame()} method: row names for the
+returned data frame. Default \code{NULL} keeps the default row numbers.}
 
-\item{optional}{Ignored; present so the method matches the signature of the \code{\link[base:as.data.frame]{base::as.data.frame()}} generic.}
+\item{optional}{For the \code{as.data.frame()} method: ignored; it is there to
+match the \code{\link[base:as.data.frame]{base::as.data.frame()}} generic.}
 
-\item{what}{Character. \code{"predictions"} (default) for the one-row-per-node table, \code{"scores"} for the tidy long score table (one row per node x class: \code{node}, \code{class}, \code{score}).}
+\item{what}{For the \code{as.data.frame()} method: the table to return.
+\code{"predictions"} (default) gives one row per node; \code{"scores"} gives one
+row per node and class.}
 }
 \value{
-An object of class \code{net_hypergraph_transduction}: a list with
-\verb{$predictions} (data.frame, one row per node: \code{node}, \code{label} (given,
-\code{NA} if unlabeled), \code{predicted}, \code{score} (winning class score),
-\code{margin} (winning minus runner-up score)), \verb{$classes}, \verb{$scores}
-(node x class score matrix), \verb{$xi}, \verb{$type}, \verb{$n_labeled}, \verb{$n_nodes}
-and \verb{$params} (the \code{edge_weights} used).
-Has \code{print}, \code{summary}, \code{plot} and \code{as.data.frame} methods;
-\code{as.data.frame(x, what = "scores")} returns the tidy long score table.
+A \code{net_hypergraph_transduction} object. \code{print()} reports the
+Laplacian, \code{xi}, the classes and how many nodes each was predicted
+for; \code{\link[=summary]{summary()}} returns one row per class; \code{plot()} draws the
+node-by-class score heatmap. The object's fields:
+\describe{
+\item{predictions}{A data frame with one row per node: \code{node},
+\code{label} (the given label, \code{NA} for an unlabelled node),
+\code{predicted}, \code{score} (the winning class's score) and \code{margin} (the
+winning minus the runner-up score).}
+\item{classes}{The classes, sorted.}
+\item{scores}{The node-by-class score matrix.}
+\item{xi, type}{The spreading coefficient and the Laplacian type.}
+\item{n_labeled, n_nodes}{The numbers of labelled and of all nodes.}
+\item{params}{The \code{edge_weights} used.}
+}
 
-In \code{print.net_hypergraph_transduction()}: The input object, invisibly.
-
-In \code{summary.net_hypergraph_transduction()}: A data.frame, one row per class: \code{class}, \code{n_labeled}, \code{n_predicted}, \code{mean_margin} (mean winning margin among the nodes predicted into the class).
-
-In \code{as.data.frame.net_hypergraph_transduction()}: A data.frame selected by \code{what}: for \code{"predictions"}, one row per node with columns \code{node}, \code{label} (the given label, \code{NA} if unlabeled), \code{predicted}, \code{score} and \code{margin}; for \code{"scores"}, one row per node x class with columns \code{node}, \code{class} and \code{score}.
-
-In \code{plot.net_hypergraph_transduction()}: A ggplot object (the score heatmap), returned visibly so that \code{plot(x)} draws it.
+The \code{print()} method returns its input invisibly. The \code{summary()}
+method returns a data frame with one row per class: \code{class},
+\code{n_labeled}, \code{n_predicted} and \code{mean_margin} (the mean margin of the
+nodes predicted into the class, \code{NA} when there are none). The
+\code{as.data.frame()} method returns, for \code{what = "predictions"}, one row
+per node with \code{node}, \code{label} (\code{NA} for an unlabelled node),
+\code{predicted}, \code{score} and \code{margin}, and for \code{what = "scores"} one row per
+node and class with \code{node}, \code{class} and \code{score}. The \code{plot()} method
+returns the score heatmap as a \code{ggplot}, visibly, so \code{plot(x)} draws
+it: one row per node, grouped by
+predicted class and ordered by margin within it, one column per class,
+the tiles shaded and labelled by score. Labelled nodes have a black
+border on their given class, and a dot marks each node's winning class,
+so seeds, scores and assignments can be compared in one panel.
 }
 \description{
-Semi-supervised classification of hypergraph nodes by the regularization
-framework of Zhou et al. (2006): given labels for a subset of nodes, the
-scores \verb{F = (1 - xi) * (I - xi * S)^\{-1\} Y} spread the labels over the
-hypergraph, where \code{S = I - L} is the normalized similarity operator of
-the chosen Laplacian and \code{Y} is the label indicator matrix. Each node is
-assigned the class with the highest score. This is the non-neural
-ancestor of hypergraph-attention text classifiers: with documents as
-hyperedges over words (or vice versa) it classifies unlabeled nodes from
-a handful of labeled ones.
-}
-\section{Methods}{
+\code{hypergraph_transduction()} classifies the unlabelled nodes of a
+hypergraph from a few labelled ones, by the label-spreading framework of
+Zhou et al. (2006). The labels spread over the hypergraph as the scores
+\deqn{F = (1 - \xi) (I - \xi S)^{-1} Y,}
+where \eqn{S = I - L} is the similarity operator of the chosen Laplacian
+(see \code{\link[=hypergraph_laplacian]{hypergraph_laplacian()}}) and \eqn{Y} marks each labelled node's
+class, and each node is assigned the class with the highest score. This
+is the non-neural ancestor of hypergraph-attention text classifiers: with
+documents as hyperedges over words (or the reverse), it classifies
+unlabelled nodes from a handful of labelled ones.
 
-\itemize{
-\item \code{plot.net_hypergraph_transduction()}: Heatmap of the full node-by-class score matrix: rows are nodes (grouped by predicted class), columns are classes, tile shading and printed values are the spreading scores. Seed nodes (given labels) carry a black tile border, and each node's winning class is marked with a dot, so agreement between seeds, scores, and decisions is visible in one panel. Rows whose winning and runner-up scores are close (small \code{margin}) are the assignments to distrust.
+The \code{margin} of a node, its winning minus its runner-up score, says how
+clearly it was assigned; assignments with a small margin are the ones to
+distrust. The given labels are not held fixed, so a labelled node can be
+predicted into another class, and a class's scores grow with its number
+of labelled nodes. As \code{xi} approaches 1, every node's scores become
+proportional to the same vector, so in the limit every node is assigned
+the same class. On a small hypergraph the default \code{0.99} can come close
+to that; compare the predictions under a smaller \code{xi}.
 }
-}
-
 \examples{
 events <- data.frame(
   person = c("a", "b", "c", "a", "b", "c", "d", "e", "f",
@@ -106,6 +133,7 @@ as.data.frame(tr)
 
 }
 \references{
-Zhou, D., Huang, J., & Scholkopf, B. (2006). Learning with hypergraphs:
-Clustering, classification, and embedding. \emph{NeurIPS 19}.
+Zhou, D., Huang, J., & Sch\enc{ö}{o}lkopf, B. (2006). Learning with
+hypergraphs: Clustering, classification, and embedding.
+\emph{NeurIPS 19}.
 }

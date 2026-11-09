@@ -5,131 +5,198 @@
 
 #' Compare two or more networks
 #'
-#' Compares any number of networks pairwise (all pairs, or every network
-#' against one `reference`) and returns one tidy object: an edge table, a
-#' node (centrality) table, a global-metric table and per-network structural
-#' metrics, each returned by a named verb and carrying a `pair` column so
-#' nothing ever needs list indexing.
-#' Descriptive by default; `test =` adds permutation, Bayesian and bootstrap
-#' evidence to the same tables. `plot()` draws one view per call.
+#' @description
+#' `compare_networks()` compares two or more networks cell by cell, node by
+#' node and on global metrics, and returns one `net_network_comparison`
+#' object. It compares every pair of networks, or every network against one
+#' `reference`, and takes any mix of `netobject`s, groups of them, `tna`
+#' models and square weight matrices, as long as they share the same nodes in
+#' the same order. Each table carries a `pair` column, so one call to a named
+#' verb returns it for every pair. The comparison is descriptive by default;
+#' `test` adds permutation, Bayesian and bootstrap evidence to the same
+#' tables.
 #'
-#' @param ... For `compare_networks()`: two or more networks, in any mix of:
-#'   `netobject`, `netobject_group` (members are flattened and keep their
-#'   names), `cograph_network` / `psychnet`, `mcml`, `tna`, `group_tna`,
-#'   square numeric matrices, or one unnamed `list` of these. Name the
-#'   arguments to name the networks (`compare_networks(early = a, late = b)`).
-#'   For `plot()`: passed to `cograph::splot()` for the network views (e.g.
-#'   `layout`, `node_size`, `minimum`); ignored by the other views and by
-#'   `print()`.
-#' @param reference `NULL` (default) compares all pairs. A single network name
-#'   or index compares every other network against that one; the reference is
-#'   always `network_a`, so `diff = reference - other`.
-#' @param scaling Scaling applied to every network before comparison; one of
-#'   `"none"` (default), `"minmax"`, `"max"`, `"rank"`, `"zscore"`, `"robust"`,
-#'   `"log"`, `"log1p"`, `"softmax"`, `"quantile"`, `"frobenius"`, `"row"`.
-#'   Inference (`test != "none"`) requires `"none"`: the tests are defined on
-#'   the networks as estimated.
-#' @param measures Centrality measures for the node table. Any of
-#'   `OutStrength`, `InStrength`, `ClosenessIn`, `ClosenessOut`, `Closeness`,
-#'   `Betweenness`, `BetweennessRSP`, `Diffusion`, `Clustering`; `"all"`
-#'   selects those nine. `NULL` or `character(0)` skips the node table.
-#'   Unknown names are dropped with a warning.
-#' @param labels For `compare_networks()`: optional character vector naming
-#'   the networks (one per network after flattening groups); overrides
-#'   argument names. For `plot()`: logical; print the signed difference on
-#'   the edge and node views, default `TRUE` (the heatmap always shows its
-#'   values).
-#' @param test Character vector of inference backends, any of `"none"`
-#'   (default), `"permutation"`, `"bayes"`, `"bootstrap"`. Several may be
-#'   combined; each fills the columns it supports (see Details).
-#' @param iter Number of permutations / posterior draws / bootstrap
-#'   replicates per pair. Default `1000`.
-#' @param alpha Significance level (permutation, bootstrap) and `1 - ci`
-#'   (Bayesian credible interval). Default `0.05`.
-#' @param adjust Multiplicity adjustment for permutation p-values, passed to
-#'   [stats::p.adjust()] within each pair and table. Default `"none"`.
-#' @param paired Logical; paired permutation (equal observation counts).
-#' @param rope Optional half-width of a region of practical equivalence on the
-#'   difference scale (Bayesian backend only). Adds `bayes_p_rope` and a
-#'   `bayes_decision` of `"different"`, `"equivalent"` or `"undecided"`.
-#' @param seed Optional integer seed. Each pair uses `seed + pair index`, so
-#'   results are reproducible and independent of pair order.
-#' @param actor Optional column name identifying the actor each sequence
-#'   belongs to (e.g. `"student_id"` when sessions are nested in students,
-#'   `"Group"` for students nested in teams). Passed to [permutation()], which
-#'   then reassigns whole actors; see its sections *Nested data and actor*
-#'   and *ICC and design effect*. Requires `test = "permutation"`. The ICC
-#'   and design effects are added to `global` under the category
-#'   `"Nesting"`. Default `NULL`.
+#' Every difference is `diff = a - b`, network `a` minus network `b` of a
+#' pair, between two sets of point estimates. The similarity metrics
+#' (Pearson, cosine, Jaccard and the others in the global table) describe
+#' how alike the two weight matrices are; neither they nor a large `diff`
+#' say whether a difference is larger than sampling variation would produce.
+#' For that, rerun with `test = "permutation"` (or `"bayes"` for relative or
+#' frequency networks) and read the `sig` column, and use `adjust` when many
+#' edges are read at once. `plot()` draws one view of the comparison per call.
+#'
+#' @param ... The networks, two or more, in any mix of `netobject`,
+#'   `netobject_group` (its members are compared individually and keep their
+#'   names), `cograph_network`, `psychnet`, `mcml`, `tna`, `group_tna`,
+#'   square numeric matrices, or one unnamed list of these. Name the
+#'   arguments to name the networks, as in `compare_networks(early = a, late
+#'   = b)`; an unnamed network is named after its method, or `network_<i>`.
+#'   Nested lists, non-square matrices and other classes raise an error of
+#'   class `nestimate_compare_bad_input`. For the `plot()` method: passed to
+#'   `cograph::splot()` in the `"networks"` and `"difference"` views (such as
+#'   `layout`, `node_size` or `minimum`) and ignored by the other views; the
+#'   `print()` method ignores it.
+#' @param reference The network every other one is compared against, by name
+#'   or index; it is always `network_a` of its pairs, so
+#'   `diff = reference - other`. Default `NULL`, which compares all pairs. A
+#'   name or index that matches no network raises an error of class
+#'   `nestimate_compare_reference_unknown`.
+#' @param scaling A rescaling applied to every weight matrix before the
+#'   comparison. `"none"` (default) keeps the weights as estimated;
+#'   `"minmax"`, `"max"`, `"rank"`, `"zscore"`, `"robust"` (median and MAD),
+#'   `"log"`, `"log1p"`, `"softmax"` and `"quantile"` (empirical percentile)
+#'   transform all cells of a matrix together; `"frobenius"` divides by the
+#'   Frobenius norm and `"row"` makes each row's absolute weights sum to 1.
+#'   `"log"` needs strictly positive weights and `"log1p"` weights of at least
+#'   -1, otherwise an error of class `nestimate_compare_scaling_domain` is
+#'   raised. The tests are defined on the networks as estimated, so any other
+#'   value than `"none"` with `test` raises an error of class
+#'   `nestimate_compare_scaling_inference`.
+#' @param measures The centrality measures compared in the node table.
+#'   Default `c("InStrength", "OutStrength", "Betweenness")`. Any of
+#'   `"OutStrength"`, `"InStrength"`, `"ClosenessIn"`, `"ClosenessOut"`,
+#'   `"Closeness"`, `"Betweenness"`, `"BetweennessRSP"`, `"Diffusion"` and
+#'   `"Clustering"`, or `"all"` for these nine (see [net_centrality()]).
+#'   `NULL` or `character(0)` skips the node table. Unknown names are dropped
+#'   with a warning of class `nestimate_compare_unknown_measure`.
+#' @param labels Names for the networks, one per network after groups are
+#'   expanded; they replace the argument names. Default `NULL`. A vector of
+#'   the wrong length raises an error of class
+#'   `nestimate_compare_labels_length`. For the `plot()` method: whether to
+#'   print the signed difference on the edge and node views and the p-values
+#'   on the inference view. Default `TRUE`; the heatmap always prints its
+#'   values.
+#' @param test The inference to add, one or more of `"none"` (default),
+#'   `"permutation"`, `"bayes"` and `"bootstrap"`. Each fills the columns it
+#'   supports (see *Details*). The permutation and Bayesian tests need
+#'   networks that carry their data and share one estimation method, and the
+#'   Bayesian test needs `"relative"` or `"frequency"` networks; otherwise an
+#'   error of class `nestimate_compare_test_unsupported` is raised.
+#' @param iter The number of permutations, posterior draws or bootstrap
+#'   replicates per pair, at least 2. Default `1000`.
+#' @param alpha The significance level of the permutation and bootstrap
+#'   tests, a number between 0 and 1; the Bayesian credible interval covers
+#'   `1 - alpha`. Default `0.05`.
+#' @param adjust The multiplicity correction for the permutation p-values, a
+#'   method of [stats::p.adjust()], applied within each pair and separately
+#'   to the edge and node tables, as [permutation()] does. Default
+#'   `"none"`.
+#' @param paired Whether the networks hold paired observations, so the
+#'   permutation test swaps the two members of each pair instead of
+#'   shuffling all labels; the networks then need the same number of
+#'   sequences. It cannot be combined with `actor` (an error of class
+#'   `nestimate_bad_actor`). Default `FALSE`.
+#' @param rope The half-width of a region of practical equivalence on the
+#'   difference scale, for the Bayesian test. It adds `bayes_p_rope` and a
+#'   `bayes_decision` of `"different"`, `"equivalent"` or `"undecided"` to
+#'   the edge table. Default `NULL` (none).
+#' @param seed An integer that makes the tests reproducible. Pair `i` uses
+#'   `seed + i`, so each pair's result does not depend on the others.
+#'   Default `NULL`.
+#' @param actor The column identifying the actor each sequence belongs to
+#'   (such as `"student_id"` when sessions are nested in students, or
+#'   `"Group"` for students nested in teams). It is passed to [permutation()],
+#'   which then shuffles whole actors; see its sections *Nested data and
+#'   actor* and *ICC and design effect*. The ICC and design effects are added
+#'   to the global table under the category `"Nesting"`. It needs
+#'   `test = "permutation"`, otherwise an error of class
+#'   `nestimate_compare_actor_needs_permutation` is raised. Default `NULL`.
 #'
 #' @details
-#' **Guarding.** Ratios are never `Inf`/`NaN`: `ratio` is `NA` when
-#' `weight_b == 0`, `rel_diff` is `NA` when both weights are 0, and
+#' **Cells.** Every cell of the weight matrix is a row of the edge table,
+#' the diagonal and the edges absent from one network (weight 0) included;
+#' when both networks are undirected only the cells with `from <= to` are
+#' kept. A difference smaller than `sqrt(.Machine$double.eps)` counts as no
+#' difference (`higher = "equal"`).
+#'
+#' **Guarding.** Ratios are never `Inf` or `NaN`, and no pseudo-counts are
+#' added: `ratio` is `NA` when `weight_b` is 0, `rel_diff`
+#' (`abs(diff) / (abs(a) + abs(b))`) is `NA` when both weights are 0, and
 #' `log_ratio = log1p(a) - log1p(b)` is `NA` when either weight is negative.
-#' No pseudo-counts are added.
 #'
-#' **Cells.** Every cell of the weight matrix is a row, including the
-#' diagonal and edges absent from one network (weight 0); when both networks
-#' are undirected only `from <= to` cells are kept.
+#' **Inference.** `"permutation"` runs [permutation()] per pair and adds
+#' `perm_effect`, `perm_p` and `perm_sig` to the edge and node tables, and
+#' two rows to the global table with permutation p-values: `M`, the sum of
+#' the absolute differences over all cells, and `S`, the largest absolute
+#' difference. With `actor`, whole actors are shuffled and the global table
+#' also gains the rows `"ICC"`, `"Design effect (edges)"` and
+#' `"Design effect (M)"`. `"bayes"` runs [bayes_compare()] per pair (prior
+#' `0.5`, `iter` draws) and adds to the edge table `bayes_diff` (posterior
+#' mean difference), `bayes_ci_lower`, `bayes_ci_upper`, `bayes_pd`
+#' (probability of direction), `bayes_p` (`2 * (1 - pd)`) and `bayes_sig`;
+#' with `rope`, also `bayes_p_rope` (a normal approximation from the
+#' posterior mean and SD) and `bayes_decision`. `"bootstrap"` runs the
+#' vertex bootstrap of [vertex_compare()] per pair and adds structural rows
+#' (density, mean weight, centralization and, for directed networks,
+#' reciprocity) to the global table,
+#' with `boot_observed_a`, `boot_observed_b`, `boot_se`, `boot_ci_lower`,
+#' `boot_ci_upper`, `boot_z`, `boot_p` and `boot_sig`. It reads only the
+#' weights, so plain matrices support it; the other two tests need
+#' [build_network()] output with data, or `tna` models, which are rebuilt
+#' from their sequences when these reproduce the weights. The `sig` and
+#' `evidence` columns take the permutation result when it was run (edge and
+#' node tables), and otherwise the Bayesian one (edge table only).
 #'
-#' **Inference.** `"permutation"` (via [permutation()]) adds
-#' `perm_effect`, `perm_p`, `perm_sig` to `edges` and `nodes`, and two rows
-#' `M` (sum of absolute edge differences) and `S` (largest absolute edge
-#' difference) to `global` with permutation p-values; with `actor`, the
-#' reassignment moves whole actors and `global` also gains the rows `ICC`,
-#' `Design effect (edges)` and `Design effect (M)`. `"bayes"` (via
-#' [bayes_compare()]) adds `bayes_diff` (posterior mean difference),
-#' `bayes_ci_lower`, `bayes_ci_upper`, `bayes_pd` (probability of direction),
-#' `bayes_p`, `bayes_sig` to `edges`; with `rope`, `bayes_p_rope` (normal
-#' approximation from the posterior mean and SD) and `bayes_decision`.
-#' `"bootstrap"` (via [vertex_compare()]) appends structural rows
-#' (density, mean weight, centralization, reciprocity) to `global` with
-#' `boot_se`, `boot_ci_lower`, `boot_ci_upper`, `boot_z`, `boot_p`,
-#' `boot_sig`. Unified `sig` and `evidence` columns take the permutation
-#' result when run (on both `edges` and `nodes`), else the Bayesian one (on
-#' `edges` only -- the Bayesian backend is edge-level).
-#' Permutation and Bayesian tests need networks that carry their data
-#' (`build_network()` output, or `tna` objects, which are rebuilt); plain
-#' matrices support `"bootstrap"` only.
-#'
-#' @return An object of class `net_network_comparison`: a list with
-#' * `networks`: named list of the input networks as `netobject`s (scaled
-#'   weights);
-#' * `matrices`: named list of scaled weight matrices;
-#' * `pairs`: data.frame, one row per comparison: `pair`, `network_a`,
+#' @return A `net_network_comparison` object. `print()` shows one line per
+#'   pair (Pearson correlation, mean and largest absolute difference, the
+#'   largest change) and returns `x` invisibly; [summary()] returns one row
+#'   per pair; [edge_differences()], [node_differences()],
+#'   [global_differences()] and [network_metrics()] return the full tables
+#'   (see [comparison_tables]); `plot()` draws one view per call. The
+#'   object's fields:
+#' * `networks`: the input networks as `netobject`s, with scaled weights;
+#' * `matrices`: the scaled weight matrices;
+#' * `pairs`: one row per comparison, with `pair`, `network_a` and
 #'   `network_b`;
-#' * `edges`: data.frame, one row per pair x cell: `pair`, `network_a`,
-#'   `network_b`, `from`, `to`, `weight_a`, `weight_b`, `diff`, `abs_diff`,
-#'   `rel_diff`, `ratio`, `log_ratio`, `rank_a`, `rank_b`, `rank_diff`,
-#'   `percentile_diff`, `status` (`both`/`only_a`/`only_b`/`neither`),
-#'   `higher` (`network_a`, `network_b` or `equal`), plus inference columns;
-#' * `nodes`: data.frame (or `NULL`), one row per pair x node x measure:
-#'   `pair`, `network_a`, `network_b`, `node`, `measure`, `value_a`,
-#'   `value_b`, `diff`, `abs_diff`, `rank_a`, `rank_b`, `higher`, plus
+#' * `edges`: one row per pair and cell: `pair`, `network_a`, `network_b`,
+#'   `from`, `to`, `weight_a`, `weight_b`, `diff`, `abs_diff`, `rel_diff`,
+#'   `ratio`, `log_ratio`, `rank_a`, `rank_b`, `rank_diff`,
+#'   `percentile_diff`, `status` (`both`, `only_a`, `only_b` or `neither`),
+#'   `higher` (the name of the higher network, or `equal`), and the
 #'   inference columns;
-#' * `global`: data.frame, one row per pair x metric (22 descriptive metrics
-#'   in five categories, plus inference rows): `pair`, `network_a`,
-#'   `network_b`, `category`, `metric`, `key`, `value`, plus inference
-#'   columns;
-#' * `network_metrics`: data.frame, one row per network x structural metric:
+#' * `nodes`: one row per pair, node and measure: `pair`, `network_a`,
+#'   `network_b`, `node`, `measure`, `value_a`, `value_b`, `diff`,
+#'   `abs_diff`, `rank_a`, `rank_b`, `higher`, and the inference columns;
+#'   `NULL` without `measures`;
+#' * `global`: one row per pair and metric (22 descriptive metrics in five
+#'   categories, and the inference rows): `pair`, `network_a`, `network_b`,
+#'   `category`, `metric`, `key`, `value`, and the inference columns;
+#' * `network_metrics`: one row per network and structural metric:
 #'   `network`, `metric`, `value`;
-#' * `differences`: named list of `netdifference` objects (one per pair);
-#' * `scaling`, `reference`, `measures`, `test`, `iter`, `alpha`, `adjust`,
-#'   `paired`, `rope`, `directed` (named logical), `n_networks`, `n_pairs`.
-#'
-#' `summary()` returns the one-row-per-pair overview table; the full tables
-#' come from the named verbs [edge_differences()], [node_differences()],
-#' [global_differences()] and [network_metrics()]. `plot()` draws one view
-#' per call.
+#' * `differences`: one `netdifference` object per pair (from
+#'   [subtract_networks()]);
+#' * the settings `scaling`, `reference`, `measures`, `test`, `iter`,
+#'   `alpha`, `adjust`, `paired`, `rope` and `actor`, with `directed` (one
+#'   logical per network), `n_networks` and `n_pairs`.
 #'
 #' @section Errors:
-#' Classed conditions (`nestimate_compare_*`): `too_few`, `bad_input`,
-#' `dim_mismatch`, `node_mismatch`, `na_weights`, `reference_unknown`,
-#' `labels_length`, `scaling_domain`, `scaling_inference`,
-#' `test_unsupported`, `unknown_pair`, `no_nodes`, `no_test`
-#' (`plot(type = "inference")` under `test = "none"`), `unknown_measure`
-#' (selecting a measure the object does not carry); warning
-#' `unknown_measure` (an unknown name in `measures`).
+#' The errors that `compare_networks()` and its verbs raise themselves have
+#' the class `nestimate_compare_error` and one of these:
+#' * `nestimate_compare_too_few`: fewer than two networks;
+#' * `nestimate_compare_bad_input`: an input of an unsupported class, a
+#'   non-square matrix or a nested list;
+#' * `nestimate_compare_dim_mismatch`: different numbers of nodes;
+#' * `nestimate_compare_node_mismatch`: node labels that differ in set or
+#'   order;
+#' * `nestimate_compare_na_weights`: missing weights;
+#' * `nestimate_compare_reference_unknown`, `nestimate_compare_labels_length`,
+#'   `nestimate_compare_scaling_domain`, `nestimate_compare_scaling_inference`,
+#'   `nestimate_compare_test_unsupported` and
+#'   `nestimate_compare_actor_needs_permutation`: see the arguments;
+#' * `nestimate_compare_unknown_pair`: a `pair` that matches no comparison;
+#' * `nestimate_compare_no_nodes`: the node view or table of a comparison
+#'   without `measures`;
+#' * `nestimate_compare_no_test`: `plot(type = "inference")` without `test`;
+#' * `nestimate_compare_unknown_measure`: selecting a measure the object
+#'   does not carry.
+#'
+#' Plain argument-type checks raise unclassed errors, and errors from
+#' [permutation()], [bayes_compare()] and [vertex_compare()] keep their own
+#' classes (for example `nestimate_bad_actor` for `paired = TRUE` with
+#' `actor`).
+#'
+#' An unknown name in `measures` gives a warning of class
+#' `nestimate_compare_warning` and `nestimate_compare_unknown_measure`.
 #'
 #' @seealso [compare_model()] (two-network predecessor), [permutation()],
 #'   [bayes_compare()], [vertex_compare()], [subtract_networks()].
@@ -176,7 +243,7 @@ compare_networks <- function(...,
                              seed = NULL,
                              actor = NULL) {
   scaling <- match.arg(scaling)
-  stopifnot(
+  .assert(
     "`test` must be a character vector" = is.character(test) && length(test) >= 1L,
     "`iter` must be a single integer >= 2" =
       is.numeric(iter) && length(iter) == 1L && is.finite(iter) && iter >= 2,
@@ -312,8 +379,11 @@ compare_networks <- function(...,
 # ---- Conditions ----------------------------------------------------------
 
 .cn_stop <- function(msg, class) {
+  # every compare_networks() refusal is about its input, so it is also a
+  # nestimate_bad_input, as everywhere else in the package
   stop(errorCondition(msg, class = c(paste0("nestimate_compare_", class),
-                                     "nestimate_compare_error"),
+                                     "nestimate_compare_error",
+                                     "nestimate_bad_input"),
                       call = NULL))
 }
 
@@ -328,7 +398,7 @@ compare_networks <- function(...,
 
 .cn_resolve_measures <- function(measures) {
   if (is.null(measures) || length(measures) == 0L) return(character(0))
-  stopifnot("`measures` must be a character vector" = is.character(measures))
+  .assert("`measures` must be a character vector" = is.character(measures))
   if (length(measures) == 1L && identical(tolower(measures), "all")) {
     return(.centrality_all_measures())
   }
@@ -503,7 +573,7 @@ compare_networks <- function(...,
     a <- names[idx[1L, ]]
     b <- names[idx[2L, ]]
   } else {
-    stopifnot("`reference` must be a single name or index" = length(reference) == 1L)
+    .assert("`reference` must be a single name or index" = length(reference) == 1L)
     ref <- if (is.character(reference)) match(reference, names) else
       as.integer(reference)
     if (is.na(ref) || ref < 1L || ref > length(names)) {
@@ -913,48 +983,63 @@ print.net_network_comparison <- function(x, digits = 2L, ...) {
 
 #' Tables of a network comparison
 #'
-#' Named accessors for the tables inside a `net_network_comparison` object
-#' (from [compare_networks()]). Each returns a plain data frame with one row
-#' per unit and no row names. Numeric columns are rounded to `digits`
-#' decimals; p-value columns are never rounded.
+#' @description
+#' `summary()`, `edge_differences()`, `node_differences()`,
+#' `global_differences()` and `network_metrics()` return the tables of a
+#' comparison made with [compare_networks()]: one row per pair, per pair and
+#' cell, per pair, node and measure, per pair and metric, and per network
+#' and structural metric. Each is a data frame with no row names, numeric
+#' columns rounded to `digits` decimals and p-value and
+#' probability-of-direction columns left unrounded.
+#' All but `network_metrics()` select pairs with the same `pair` argument as
+#' the `plot()` method.
 #'
-#' @param x,object A `net_network_comparison` object (for `print.net_table()`,
-#'   a table returned by one of these verbs).
-#' @param pair Optional selection of comparisons. Any of: the pair name(s) as
-#'   printed (`"A vs B"`); the two network names (`c("A", "B")`, either
-#'   order); one network name (`"A"`, every pair it takes part in); or
-#'   index/indices into the pair table (`1`, `c(1, 3)`). `NULL` keeps all.
-#' @param measure Optional centrality measure name(s) to keep.
-#' @param digits Decimals kept in numeric columns. Default `2`.
+#' @param x,object A `net_network_comparison` object from
+#'   [compare_networks()]. For the `print()` method: a table returned by one
+#'   of these verbs.
+#' @param pair The comparisons to keep. Default `NULL`, all of them. Give
+#'   the pair names as printed (`"A vs B"`), the two network names in either
+#'   order (`c("A", "B")`), one network name (`"A"`, every pair it takes part
+#'   in), or indices into the pair table (`1`, `c(1, 3)`). A selection that
+#'   matches no comparison raises an error of class
+#'   `nestimate_compare_unknown_pair`.
+#' @param measure The centrality measures to keep in `node_differences()`.
+#'   Default `NULL`, all measures of the comparison; a measure the object
+#'   does not carry raises an error of class
+#'   `nestimate_compare_unknown_measure`.
+#' @param digits The decimals kept in the numeric columns. Default `2`. For
+#'   the `print()` method: the decimals shown, by default those the table
+#'   was made with.
 #' @param ... Ignored.
-#' @return
-#' * `summary()`: one row per pair -- `pair`, `network_a`, `network_b`,
-#'   `n_cells`, `n_differing`, `share_higher_a`, `share_higher_b`,
-#'   `mean_abs_diff`, `max_abs_diff`, `pearson`, `spearman`, `cosine`,
-#'   `jaccard`, `top_edge`, `top_edge_higher`, and with inference
-#'   `n_sig_edges`, `n_sig_nodes`, `m_stat`, `m_p`, `s_stat`, `s_p`. The
-#'   per-edge, per-node, per-metric and per-network tables are the four
-#'   verbs below.
-#' * `edge_differences()`: one row per pair x transition: `pair`,
+#' @return Each verb returns a data frame of class `net_table`. Its `print()`
+#'   shows whole numbers without decimals, exact zeros as `0`, other values
+#'   with `digits` decimals and p-values and probabilities of direction with
+#'   three decimals, and returns the table invisibly. The tables:
+#' * `summary()`: one row per pair, with `pair`, `network_a`, `network_b`,
+#'   `n_cells` (cells compared), `n_differing` (cells whose weights differ),
+#'   `share_higher_a`, `share_higher_b`, `mean_abs_diff`, `max_abs_diff`,
+#'   `pearson`, `spearman`, `cosine`, `jaccard`, `top_edge` (the cell with
+#'   the largest absolute difference) and `top_edge_higher`; with the
+#'   permutation or Bayesian test, also `n_sig_edges`, and with the
+#'   permutation test `n_sig_nodes` (when there is a node table), `m_stat`,
+#'   `m_p`, `s_stat` and `s_p`.
+#' * `edge_differences()`: one row per pair and cell, with `pair`,
 #'   `network_a`, `network_b`, `from`, `to`, `weight_a`, `weight_b`, `diff`,
 #'   `abs_diff`, `rel_diff`, `ratio`, `log_ratio`, `rank_a`, `rank_b`,
 #'   `rank_diff`, `percentile_diff`, `status`, `higher`, and the inference
 #'   columns when `test` was used.
-#' * `node_differences()`: one row per pair x state x measure: `pair`,
+#' * `node_differences()`: one row per pair, node and measure, with `pair`,
 #'   `network_a`, `network_b`, `node`, `measure`, `value_a`, `value_b`,
-#'   `diff`, `abs_diff`, `rank_a`, `rank_b`, `higher`, plus inference columns.
-#'   Errors (class `nestimate_compare_no_nodes`) when `compare_networks()`
-#'   was called with no `measures`.
-#' * `global_differences()`: one row per pair x metric: `pair`, `network_a`,
-#'   `network_b`, `category`, `metric`, `key`, `value`, plus inference rows
-#'   and columns.
-#' * `network_metrics()`: one row per network x structural metric:
-#'   `network`, `metric`, `value`.
+#'   `diff`, `abs_diff`, `rank_a`, `rank_b`, `higher`, and the inference
+#'   columns. It raises an error of class `nestimate_compare_no_nodes` when
+#'   [compare_networks()] was called without `measures`.
+#' * `global_differences()`: one row per pair and metric, with `pair`,
+#'   `network_a`, `network_b`, `category`, `metric`, `key`, `value`, and the
+#'   inference rows and columns.
+#' * `network_metrics()`: one row per network and structural metric, with
+#'   `network`, `metric` and `value`.
 #'
-#' Every table is a data frame of class `net_table` whose `print()` shows
-#' whole numbers without decimals, exact zeros as `0`, other values with
-#' `digits` decimals, and p-values with three decimals; `print()` itself
-#' returns the table invisibly.
+#' [compare_networks()] describes every column under *Details* and *Value*.
 #' @examples
 #' achievers <- build_network(group_regulation_long, method = "relative",
 #'                            actor = "Actor", action = "Action",
@@ -1020,13 +1105,13 @@ network_metrics <- function(x, digits = 2L) {
 }
 
 .cn_check_object <- function(x) {
-  stopifnot("`x` must be a net_network_comparison (from compare_networks())" =
+  .assert("`x` must be a net_network_comparison (from compare_networks())" =
               inherits(x, "net_network_comparison"))
   invisible(TRUE)
 }
 
 .cn_check_digits <- function(digits) {
-  stopifnot("`digits` must be a single non-negative integer" =
+  .assert("`digits` must be a single non-negative integer" =
               is.numeric(digits) && length(digits) == 1L && !is.na(digits) &&
               digits >= 0)
   as.integer(digits)

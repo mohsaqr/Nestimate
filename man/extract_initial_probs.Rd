@@ -10,34 +10,38 @@ extract_initial_probs(model)
 \method{summary}{nest_initial_probs}(object, ...)
 }
 \arguments{
-\item{model}{A \code{netobject}, TNA model object, \code{mcml} object, or
-a list containing an \code{initial} element.}
+\item{model}{The network: a \code{netobject}, a \code{tna}-family model, an \code{mcml},
+or a list holding an \code{initial} element. Input from which neither
+initial probabilities nor a weight matrix can be read raises an error.}
 
-\item{object}{For the \code{summary()} method: an object of class \code{nest_initial_probs}.}
+\item{object}{For the \code{summary()} method: a \code{nest_initial_probs}.}
 
-\item{...}{In \code{summary.nest_initial_probs()}: Additional arguments (ignored).}
+\item{...}{For the \code{summary()} method: ignored.}
 }
 \value{
-For a single network: a named numeric vector of initial state
-probabilities summing to 1, of class
-\code{c("nest_initial_probs", "numeric")}. The class stamp only adds a
-\code{summary()} method returning a tidy \code{state}/\code{prob} data
-frame.
+For a single network: a named numeric vector of initial-state
+probabilities that sums to 1 (stored values are rescaled when their sum
+differs from 1 by more than 1e-6), of class \code{c("nest_initial_probs", "numeric")}. \code{summary()} returns a data frame with one row per state and
+the columns \code{state} and \code{prob}, sorted by decreasing probability.
 
-For an \code{mcml} object: a named list of such vectors, with
-\code{macro} first and then one element per cluster (taken from each
-layer's \code{$inits}, unstamped).
-
-In \code{summary.nest_initial_probs()}: A tidy data frame with columns \code{state} and \code{prob}, sorted by decreasing probability.
+For an \code{mcml}: a named list of plain numeric vectors, \code{macro} first and
+then one per cluster, taken as stored in each layer (\code{inits}).
 }
 \description{
-Extract the initial state probability vector from a TNA model object.
-}
-\details{
-Initial probabilities represent the probability of starting a sequence in
-each state. If the model doesn't have explicit initial probabilities,
-this function falls back to a uniform distribution over the states of the
-transition matrix and warns.
+\code{extract_initial_probs()} returns the initial-state probabilities of a
+network: the share of sequences that start in each state. It reads a
+\code{netobject} (or any list) that stores them as \code{initial}, \code{initial_probs},
+\code{inits} or \code{initial_probabilities}, a \code{tna}-family object that stores
+them as \code{initial}, \code{initial_probs} or \code{inits} (models from the tna
+package store \code{inits}), or an \code{mcml} (one vector per layer).
+
+Of the \code{build_network()} methods, the transition methods (\code{"relative"},
+\code{"frequency"}, \code{"attention"}, \code{"ngram"}, \code{"gap"} and \code{"reverse"}) store
+initial probabilities, as do \code{\link[=wtna]{wtna()}} transition networks. For
+co-occurrence and association networks, and for a model that keeps them
+under another name, the function returns a uniform distribution over the
+states of the weight matrix, with a warning: those values are a
+placeholder, not an estimate.
 }
 \examples{
 seqs <- data.frame(V1 = c("A","B","A"), V2 = c("B","A","C"), V3 = c("A","C","B"))

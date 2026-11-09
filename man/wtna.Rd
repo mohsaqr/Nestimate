@@ -18,78 +18,118 @@ wtna(
 \method{print}{wtna_mixed}(x, ...)
 }
 \arguments{
-\item{data}{Data frame with one-hot encoded columns (0/1 binary).}
+\item{data}{A data frame or matrix whose rows are time points, in order,
+holding the one-hot code columns and, optionally, the \code{actor} column.
+A column named in \code{codes} may hold only 0, 1 or missing; a missing
+cell counts as inactive, and any other value raises an error of class
+\code{nestimate_bad_input}. Under the default \code{codes = NULL} such a column
+is not read as a code.}
 
-\item{method}{Character. Network type: \code{"transition"} (directed),
-\code{"cooccurrence"} (undirected), or \code{"both"} (returns list of
-two networks). Default: \code{"transition"}.}
+\item{method}{The network to build: \code{"transition"} (default), directed,
+from the codes of one window to those of the next; \code{"cooccurrence"},
+undirected, between the codes of the same window; or \code{"both"}, which
+returns the two networks together as a \code{wtna_mixed}.}
 
-\item{type}{Character. Output type: \code{"frequency"} (raw counts) or
-\code{"relative"} (row-normalized probabilities). Default: \code{"frequency"}.
-Note that \code{type = "relative"} applied to \code{method = "cooccurrence"}
-produces an asymmetric matrix (conditional co-occurrence given row state),
-not a symmetric undirected weight matrix - use \code{type = "frequency"}
-if symmetric co-occurrence counts are required.}
+\item{type}{The weights: \code{"frequency"} (default) keeps the counts, and
+\code{"relative"} divides each row by its sum (a row without counts stays
+zero). On a co-occurrence network \code{"relative"} gives an asymmetric
+matrix, the co-occurrence conditional on the row's code, so keep
+\code{"frequency"} when symmetric counts are needed.}
 
-\item{codes}{Character vector or NULL. Names of the one-hot columns to use.
-If NULL, auto-detects binary columns. Default: NULL.}
+\item{codes}{The one-hot columns, as names, as column positions, or as a
+single \code{"first:last"} string naming a range of adjacent columns.
+Default \code{NULL}, every numeric or logical column holding only 0, 1 and
+missing values, except \code{actor}. At least two codes are needed, and a
+name that is not a column stops \code{wtna()}.}
 
-\item{window_size}{Integer (>= 1). Number of consecutive rows to aggregate
-per window. Default: 3 (windowed pairwise between-window counting). Set
-\code{window_size = 1} for ordinary consecutive (t -> t+1) transitions
-with no windowing.}
+\item{window_size}{The number of consecutive rows in a window, a whole
+number of at least 1. Default \code{3}. With \code{1} there is no windowing:
+transitions are counted from each row to the next, and co-occurrence
+within each row, and \code{mode} is ignored.}
 
-\item{mode}{Character. Window mode: \code{"non-overlapping"} (fixed, separate
-windows) or \code{"overlapping"} (rolling, step = 1, the same count as
-\code{tna::import_onehot(window_type = "sliding")}).
-Default: \code{"non-overlapping"}.}
+\item{mode}{How windows are formed when \code{window_size} is above 1.
+\code{"non-overlapping"} (default) cuts the rows into consecutive, separate
+blocks of \code{window_size} rows. \code{"overlapping"} first replaces the rows
+by one row per sliding window of \code{window_size} rows (step 1), marking
+a code active when it is active in any of them, so n rows give
+n - \code{window_size} + 1 windows, and then counts those in blocks of
+\code{window_size}, as \code{tna::import_onehot(window_type = "sliding")} does.}
 
-\item{actor}{Character or NULL. Name of the actor/ID column for per-group
-computation. If NULL, treats all rows as one group. Default: NULL.}
+\item{actor}{The column, or columns, naming who each row belongs to.
+The counts are computed per actor (per combination of values, for
+several columns) and summed. Default \code{NULL}, all rows as one sequence.
+A missing identifier raises an error of class \code{nestimate_bad_input},
+and a name that is not a column stops \code{wtna()}. With several columns,
+the initial-state distribution groups the rows by the first column
+only.}
 
-\item{x}{For the \code{print()} method: an object of class \code{wtna_mixed}.}
+\item{x}{For the \code{print()} method: a \code{wtna_mixed} object.}
 
-\item{...}{In \code{print.wtna_mixed()}: Additional arguments (ignored).}
+\item{...}{For the \code{print()} method: ignored.}
 }
 \value{
-For \code{method = "transition"} or \code{"cooccurrence"}: a
-\code{c("netobject", "cograph_network")} object (see
-\code{\link{build_network}}) with \code{method} set to
-\code{"wtna_transition"} or \code{"wtna_cooccurrence"},
-\code{directed = TRUE} only for transitions, and the windowing
-settings (\code{type}, \code{window_size}, \code{mode}, \code{codes},
-\code{actor}) recorded in \code{$params}. Transition networks also
-carry \code{$initial}, the per-actor-averaged initial state
-distribution.
+For \code{method = "transition"} or \code{"cooccurrence"}: a \code{netobject}
+(class \code{c("netobject", "cograph_network")}, see \code{\link[=build_network]{build_network()}}) with
+\code{method} set to \code{"wtna_transition"} or \code{"wtna_cooccurrence"}. \code{print()}
+shows the weights and, for transitions, the initial probabilities;
+\code{\link[=extract_edges]{extract_edges()}} gives one row per edge, \code{\link[=extract_initial_probs]{extract_initial_probs()}}
+the initial-state distribution of a transition network,
+\code{cograph::splot()} draws it,
+\code{\link[=bootstrap_network]{bootstrap_network()}} resamples its actors, and \code{\link[=permutation]{permutation()}}
+compares it with a second network by permuting actors. It is directed
+only for transitions, holds the input as given in \code{data},
+and records the windowing settings (\code{type}, \code{window_size}, \code{mode},
+\code{codes}, \code{actor}) in \code{params}. A transition network also stores the
+initial-state distribution in \code{initial}: for each actor (the first
+\code{actor} column when there are several), the codes active in its first
+row with an active code share its weight equally, and the shares are
+averaged over actors (without \code{actor}, the first row with an active
+code in the whole data).
 
-For \code{method = "both"}: a \code{wtna_mixed} object - a list with
-elements \code{$transition} and \code{$cooccurrence} (each a
-\code{netobject} as above) and \code{$method = "wtna_both"}.
-
-In \code{print.wtna_mixed()}: The input object, invisibly.
+For \code{method = "both"}: a \code{wtna_mixed} object, a list of the
+\code{transition} and \code{cooccurrence} networks (each a \code{netobject} as above)
+and \code{method = "wtna_both"}. Its \code{print()} gives the node and edge
+counts of each network and returns its input invisibly;
+\code{\link[=bootstrap_network]{bootstrap_network()}} and \code{\link[=permutation]{permutation()}} test both networks.
 }
 \description{
-Computes networks from one-hot (binary indicator) data using temporal
-windowing. Supports transition (directed), co-occurrence (undirected),
-or both network types.
+\code{wtna()} builds a network from one-hot data, where each row is a time
+point and each code column holds 1 when that code is active, by counting
+codes across windows of consecutive rows. It returns a directed
+transition network (codes active in one window, followed by codes active
+in the next), an undirected co-occurrence network (codes active in the
+same window), or both. With \code{actor}, each actor's rows are counted on
+their own and the counts summed, so no window spans two actors. The
+networks are the ones \code{build_network(method = "wtna")} and
+\code{build_network(method = "wtna_cooccurrence")} estimate.
+
+The weights count pairs of active codes, not events: a row with several
+active codes adds to several edges at once, and a larger window pairs
+more rows. Compare networks built with the same \code{window_size} and
+\code{mode}. How far the weights move under resampling of actors is checked
+with \code{\link[=bootstrap_network]{bootstrap_network()}}, and two networks are compared with
+\code{\link[=permutation]{permutation()}}; both need \code{actor}, since rows without it form a single
+unit.
 }
 \details{
-\strong{Transitions}: Uses \code{crossprod(X[-n,], X[-1,])} to count
-how often state i is active at time t AND state j at time t+1.
+\strong{Transitions}: with \code{window_size = 1}, \code{crossprod(X[-n, ], X[-1, ])}
+counts how often code i is active in row t and code j in row t + 1. With
+larger windows, every row of a window is paired with every row of the
+next window, which is the outer product of the two windows' column sums;
+a final, shorter window is counted as the successor of the last full
+one.
 
-\strong{Co-occurrence}: Uses \code{crossprod(X)} to count states that are
-simultaneously active in the same row.
+\strong{Co-occurrence}: with \code{window_size = 1}, \code{crossprod(X)} counts the
+codes active in the same row, so the diagonal is how often each code is
+active. With larger windows, every row of a window is paired with every
+row of the same window, itself included, which is the outer product of
+the window's column sums.
 
-\strong{Windowing}: For \code{window_size > 1}, rows are aggregated into
-windows before computing networks. Non-overlapping windows are fixed,
-separate blocks, and a state counts once for each row it is active in.
-Overlapping windows roll forward one row at a time: each window of exactly
-\code{window_size} rows marks a state active if it is active in any of them,
-a group of n rows gives n - window_size + 1 windows, and those windows are
-then counted in blocks of \code{window_size}.
+\strong{Windows}: in non-overlapping windows a code counts once for each
+row it is active in. These counts follow tna's windowed algorithm.
 
-\strong{Per-actor}: When \code{actor} is specified, networks are computed
-per group and summed.
+\strong{Per actor}: with \code{actor}, the counts are computed per group and
+summed.
 }
 \examples{
 oh <- matrix(c(1,0,0, 0,1,0, 0,0,1, 1,0,0), nrow = 4, byrow = TRUE,

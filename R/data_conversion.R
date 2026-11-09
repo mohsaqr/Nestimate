@@ -1,37 +1,43 @@
 #' Convert Wide Sequences to Long Format
 #'
 #' @description
-#' Convert sequence data from wide format (one row per sequence, columns as
-#' time points) to long format (one row per action).
+#' `wide_to_long()` turns sequences in wide format (one row per sequence,
+#' one column per time point) into long format, with one row per sequence
+#' and time point. The time point columns are those named `time_prefix`
+#' followed by a number (`V1`, `V2`, ...); every other column is kept and
+#' repeated on each row of its sequence.
 #'
-#' @param data Data frame in wide format with sequences in rows.
-#' @param id_col Character. Name of the ID column, or NULL to auto-generate IDs.
-#'   Default: NULL.
-#' @param time_prefix Character. Prefix for time point columns (e.g., "V" for V1,
-#'   V2, ...). Default: "V".
-#' @param action_col Character. Name of the action column in output.
-#'   Default: "Action".
-#' @param time_col Character. Name of the time column in output.
-#'   Default: "Time".
-#' @param drop_na Logical. Whether to drop NA values. Default: TRUE.
+#' @param data A data frame in wide format, one row per sequence.
+#' @param id_col The column identifying each sequence. Default `NULL`, which
+#'   adds a column `id` holding the row number of the wide input (replacing
+#'   any existing column of that name). A name that is not a column raises
+#'   an error.
+#' @param time_prefix The prefix of the time point columns: with `"V"`
+#'   (default), the columns `V1`, `V2`, ... are read. No column matching it
+#'   raises an error.
+#' @param action_col The name of the state column in the output. Default
+#'   `"Action"`.
+#' @param time_col The name of the time column in the output. Default
+#'   `"Time"`.
+#' @param drop_na Whether to drop the rows whose state is missing, such as
+#'   the padding after a shorter sequence ends. Default `TRUE`.
 #'
-#' @return A data frame in long format, one row per (sequence, time point),
-#'   sorted by identifier then time, with columns:
+#' @return A data frame in long format, one row per sequence and time point,
+#'   sorted by identifier and then time. Its columns are the identifier, the
+#'   other kept columns, the time and the state:
 #' \describe{
-#'   \item{id}{Sequence identifier. Named by \code{id_col}; when that is
-#'     \code{NULL} the column is called \code{id} and holds the row number
-#'     of the wide input (integer).}
-#'   \item{Time}{Time point within the sequence (integer), taken from the
-#'     numeric suffix of the wide column name. Named by \code{time_col}.}
-#'   \item{Action}{The action/state at that time point. Named by
-#'     \code{action_col}.}
+#'   \item{id}{The sequence identifier, named by `id_col`; with
+#'     `id_col = NULL` it is called `id` and holds the row number of the wide
+#'     input (integer).}
+#'   \item{Time}{The time point within the sequence (integer), taken from
+#'     the number in the wide column name; named by `time_col`.}
+#'   \item{Action}{The state at that time point; named by `action_col`.}
 #' }
-#' Any additional non-time columns from the original data are preserved and
-#' repeated on every row of their sequence.
 #'
 #' @details
-#' Converts wide sequence data (one row per sequence, one column per time
-#' point) to the long format used by many TNA functions and analyses.
+#' The long format is the event-log layout read by [build_network()] with
+#' `action` (and [prepare()]): give `action = "Action"`, `actor = "id"` and
+#' `time = "Time"` (or the names chosen here).
 #'
 #' @examples
 #' wide_data <- data.frame(
@@ -51,16 +57,18 @@ wide_to_long <- function(data,
                          time_col = "Time",
                          drop_na = TRUE) {
   # Input validation
-  stopifnot(is.data.frame(data))
-  stopifnot(is.character(time_prefix), length(time_prefix) == 1)
-  stopifnot(is.character(action_col), length(action_col) == 1)
-  stopifnot(is.character(time_col), length(time_col) == 1)
-  stopifnot(is.logical(drop_na), length(drop_na) == 1)
+  .assert(is.data.frame(data))
+  .assert(is.character(time_prefix), length(time_prefix) == 1)
+  .assert(is.character(action_col), length(action_col) == 1)
+  .assert(is.character(time_col), length(time_col) == 1)
+  .assert(is.logical(drop_na), length(drop_na) == 1)
 
   # Identify time columns
   time_cols <- grep(paste0("^", time_prefix, "[0-9]+$"), names(data), value = TRUE)
   if (length(time_cols) == 0) {
-    stop("No columns matching time prefix '", time_prefix, "' found.")
+    stop(errorCondition(
+      paste0("No columns matching time prefix '", time_prefix, "' found."),
+      class = "nestimate_bad_input", call = NULL))
   }
 
   # Add ID column if needed
@@ -68,7 +76,8 @@ wide_to_long <- function(data,
     data$id <- seq_len(nrow(data))
     id_col <- "id"
   } else if (!id_col %in% names(data)) {
-    stop("ID column '", id_col, "' not found in data.")
+    stop(errorCondition(paste0("ID column '", id_col, "' not found in data."),
+                        class = "nestimate_bad_input", call = NULL))
   }
 
   # Identify other columns to preserve
@@ -104,35 +113,40 @@ wide_to_long <- function(data,
 #' Convert Long Format to Wide Sequences
 #'
 #' @description
-#' Convert sequence data from long format (one row per action) to wide format
-#' (one row per sequence, columns as time points).
+#' `long_to_wide()` turns a long event table (one row per action) into wide
+#' sequences, with one row per sequence and one column per position
+#' (`V1`, `V2`, ...). Each sequence's actions are ordered by `time_col`, and
+#' the k-th action fills column k.
 #'
-#' @param data Data frame in long format.
-#' @param id_col Character. Name of the column identifying sequences.
-#'   Default: "Actor".
-#' @param time_col Character. Name of the column identifying time points.
-#'   Default: "Time".
-#' @param action_col Character. Name of the column containing actions/states.
-#'   Default: "Action".
-#' @param time_prefix Character. Prefix for time point columns in output.
-#'   Default: "V".
-#' @param fill_na Logical. Whether to fill missing time points with NA.
-#'   Default: TRUE.
+#' @param data A data frame in long format, one row per action.
+#' @param id_col The column identifying each sequence. Default `"Actor"`;
+#'   a missing column raises an error.
+#' @param time_col The column that orders the actions within a sequence.
+#'   Default `"Time"`. Its values only order the actions; they do not set
+#'   the column numbers, so gaps between time points are not kept. Actions
+#'   with the same time keep their row order. When the column is absent, the
+#'   row order is used.
+#' @param action_col The column holding the actions (states). Default
+#'   `"Action"`; a missing column raises an error.
+#' @param time_prefix The prefix of the position columns in the output.
+#'   Default `"V"`.
+#' @param fill_na How to handle sequences of different lengths. With `TRUE`
+#'   (default), shorter sequences are padded with `NA`, so every row has the
+#'   columns of the longest sequence. With `FALSE`, only the positions present
+#'   in every sequence are kept, so longer sequences are cut to the length of
+#'   the shortest.
 #'
-#' @return A data frame in wide format, one row per sequence: the
-#'   \code{id_col} column followed by the time point columns
-#'   \code{V1}, \code{V2}, ... (named with \code{time_prefix}) holding the
-#'   action at each time point. With \code{fill_na = TRUE} short sequences
-#'   are padded with \code{NA} so every row shares the same columns; with
-#'   \code{fill_na = FALSE} only the time points present in every sequence
-#'   are kept.
+#' @return A data frame in wide format, one row per sequence in the sorted
+#'   order of `id_col`: the `id_col` column followed by the position columns
+#'   (`V1`, `V2`, ..., named with `time_prefix`) holding the action at each
+#'   position. Other columns of `data` are dropped. A missing action stays a
+#'   missing cell.
 #'
 #' @details
-#' Converts long format data (one row per action) to the wide format expected
-#' by \code{\link{build_network}}, \code{tna::tna()} and related functions.
-#'
-#' If `time_col` contains non-integer values (e.g., timestamps), the function
-#' will use the ordering within each sequence to create time indices.
+#' The wide format is the one [build_network()], `tna::tna()` and related
+#' functions read without column declarations, since the position columns
+#' form a numbered run; [build_network()] sets the `id_col` column aside as
+#' metadata, with a message.
 #'
 #' @examples
 #' long_data <- data.frame(
@@ -154,18 +168,22 @@ long_to_wide <- function(data,
                          time_prefix = "V",
                          fill_na = TRUE) {
   # Input validation
-  stopifnot(is.data.frame(data))
-  stopifnot(is.character(id_col), length(id_col) == 1)
-  stopifnot(is.character(time_col), length(time_col) == 1)
-  stopifnot(is.character(action_col), length(action_col) == 1)
-  stopifnot(is.character(time_prefix), length(time_prefix) == 1)
-  stopifnot(is.logical(fill_na), length(fill_na) == 1)
+  .assert(is.data.frame(data))
+  .assert(is.character(id_col), length(id_col) == 1)
+  .assert(is.character(time_col), length(time_col) == 1)
+  .assert(is.character(action_col), length(action_col) == 1)
+  .assert(is.character(time_prefix), length(time_prefix) == 1)
+  .assert(is.logical(fill_na), length(fill_na) == 1)
 
   # Check required columns exist
   required_cols <- c(id_col, action_col)
   missing_cols <- setdiff(required_cols, names(data))
   if (length(missing_cols) > 0) {
-    stop("Missing required columns: ", paste(missing_cols, collapse = ", "))
+    stop(errorCondition(
+      paste0(
+        "Missing required columns: ",
+        paste(missing_cols, collapse = ", ")),
+      class = "nestimate_bad_input", call = NULL))
   }
 
   # Sort by id and time (stable sort preserves original order for ties)
@@ -234,41 +252,38 @@ long_to_wide <- function(data,
 #' Prepare Data for TNA Analysis
 #'
 #' @description
-#' Prepare simulated or real data for use with `tna::tna()` and related
-#' functions. Handles various input formats and ensures the output is
-#' compatible with TNA models.
+#' `prepare_for_tna()` returns the sequence columns of a data set as a wide
+#' data frame for `tna::tna()` and related functions: one row per sequence
+#' and the position columns `V1`, `V2`, ... in numeric order, with factors
+#' turned into character. Long input is converted with [long_to_wide()]
+#' first, padding shorter sequences with `NA`. Every other column (an id,
+#' metadata) is dropped.
 #'
-#' @param data Data frame containing sequence data.
-#' @param type Character. Type of input data:
-#' \describe{
-#'   \item{"sequences"}{Wide format with one row per sequence (default).}
-#'   \item{"long"}{Long format with one row per action.}
-#'   \item{"auto"}{Automatically detect format based on column names.}
-#' }
-#' @param state_names Character vector. Expected state names, or NULL to
-#'   extract from data. Default: NULL.
-#' @param id_col Character. Name of ID column for long format data.
-#'   Default: "Actor".
-#' @param time_col Character. Name of time column for long format data.
-#'   Default: "Time".
-#' @param action_col Character. Name of action column for long format data.
-#'   Default: "Action".
-#' @param validate Logical. Whether to validate that all actions are in
-#'   state_names. Default: TRUE.
+#' @param data A data frame of sequences: wide, with position columns named
+#'   `V1`, `V2`, ..., or long, with one row per action.
+#' @param type How to read `data`. `"sequences"` (default) reads wide
+#'   position columns; `"long"` converts a long table with [long_to_wide()],
+#'   which needs `id_col` and `action_col`; `"auto"` reads long data when
+#'   `action_col` is a column and no `V<number>` column exists, wide data in
+#'   the opposite case, and, when both exist, long data only if `id_col` is a
+#'   column and there are more than twice as many rows as ids. Data with
+#'   neither raises an error. Whatever the type, the result needs `V<number>`
+#'   columns; others, such as `T1`, `T2`, are not renamed and raise an error.
+#' @param state_names The expected states, used with `validate`. Default
+#'   `NULL`, which accepts the states found in the data.
+#' @param id_col The column identifying sequences in long data. Default
+#'   `"Actor"`.
+#' @param time_col The column ordering the actions in long data. Default
+#'   `"Time"`.
+#' @param action_col The column holding the actions in long data. Default
+#'   `"Action"`.
+#' @param validate Whether to check the states against `state_names`; states
+#'   not listed are named in a warning. Ignored when `state_names` is `NULL`.
+#'   Default `TRUE`.
 #'
-#' @return A data frame ready for use with TNA functions. For "sequences" type,
-#'   returns a data frame where each row is a sequence and columns are time
-#'   points (V1, V2, ...). For "long" type, converts to wide format first.
-#'
-#' @details
-#' This function performs several preparations:
-#' \enumerate{
-#'   \item Converts long format to wide format if needed.
-#'   \item Validates that all actions/states are recognized.
-#'   \item Removes any non-sequence columns (e.g., id, metadata).
-#'   \item Converts factors to characters.
-#'   \item Ensures consistent column naming (V1, V2, ...).
-#' }
+#' @return A data frame with one row per sequence and only the position
+#'   columns `V1`, `V2`, ..., in numeric order, holding character states (or
+#'   the original type for non-factor columns), with no row names.
 #'
 #' @examples
 #' # From wide format sequences
@@ -290,7 +305,7 @@ prepare_for_tna <- function(data,
                             action_col = "Action",
                             validate = TRUE) {
   # Input validation
-  stopifnot(is.data.frame(data))
+  .assert(is.data.frame(data))
   type <- match.arg(type)
 
   # Auto-detect format
@@ -315,17 +330,22 @@ prepare_for_tna <- function(data,
         type <- "sequences"
       }
     } else {
-      stop("Cannot auto-detect data format. Please specify 'type' explicitly.")
+      stop(errorCondition(
+        "Cannot auto-detect data format. Please specify 'type' explicitly.",
+        class = "nestimate_bad_input", call = NULL))
     }
   }
 
   # Convert long to wide if needed
   if (type == "long") {
     if (!action_col %in% names(data)) {
-      stop("Action column '", action_col, "' not found in data.")
+      stop(errorCondition(
+        paste0("Action column '", action_col, "' not found in data."),
+        class = "nestimate_bad_input", call = NULL))
     }
     if (!id_col %in% names(data)) {
-      stop("ID column '", id_col, "' not found in data.")
+      stop(errorCondition(paste0("ID column '", id_col, "' not found in data."),
+                          class = "nestimate_bad_input", call = NULL))
     }
 
     data <- long_to_wide(
@@ -339,7 +359,8 @@ prepare_for_tna <- function(data,
   # Identify sequence columns (V1, V2, ...)
   seq_cols <- grep("^V[0-9]+$", names(data), value = TRUE)
   if (length(seq_cols) == 0) {
-    stop("No sequence columns (V1, V2, ...) found in data.")
+    stop(errorCondition("No sequence columns (V1, V2, ...) found in data.",
+                        class = "nestimate_bad_input", call = NULL))
   }
 
   # Extract just the sequence columns
@@ -377,20 +398,29 @@ prepare_for_tna <- function(data,
 #' Convert Action Column to One-Hot Encoding
 #'
 #' @description
-#' Convert a categorical Action column to one-hot (binary indicator) columns.
+#' `action_to_onehot()` adds one 0/1 indicator column per state to a data
+#' frame with a categorical action column: the column of a row's state is 1
+#' and the others are 0. The result is the one-hot layout that
+#' [build_network()] reads with `codes` or `format = "onehot"`, and [wtna()]
+#' reads directly.
 #'
-#' @param data Data frame containing an action column.
-#' @param action_col Character. Name of the action column. Default: "Action".
-#' @param states Character vector or NULL. States to include as columns.
-#'   If NULL, uses all unique values. Default: NULL.
-#' @param drop_action Logical. Remove the original action column. Default: TRUE.
-#' @param sort_states Logical. Sort state columns alphabetically. Default: FALSE.
-#' @param prefix Character. Prefix for state column names. Default: "".
+#' @param data A data frame with an action column.
+#' @param action_col The action column. Default `"Action"`; a name that is
+#'   not a column raises an error.
+#' @param states The states to make columns for, in that order. Default
+#'   `NULL`, every non-missing value of the action column in order of first
+#'   appearance. A listed state that never occurs gets a column of zeros, and
+#'   a row whose state is not listed is 0 in every column.
+#' @param drop_action Whether to remove the action column. Default `TRUE`.
+#' @param sort_states Whether to sort the state columns alphabetically (in
+#'   level order for a factor action column). Default `FALSE`.
+#' @param prefix A prefix for the state column names. Without one, a state
+#'   named like an existing column replaces that column. Default `""`.
 #'
-#' @return The input data frame with one 0/1 integer column appended per
-#'   state (named \code{paste0(prefix, state)}). All other columns are kept;
-#'   the original action column is removed unless
-#'   \code{drop_action = FALSE}.
+#' @return The input data frame with one integer column per state appended,
+#'   named `paste0(prefix, state)`. All other columns are kept; the action
+#'   column is removed unless `drop_action = FALSE`. A row with a missing
+#'   action is `NA` in every state column.
 #'
 #' @examples
 #' long_data <- data.frame(
@@ -405,8 +435,8 @@ prepare_for_tna <- function(data,
 action_to_onehot <- function(data, action_col = "Action", states = NULL,
                              drop_action = TRUE, sort_states = FALSE,
                              prefix = "") {
-  stopifnot(is.data.frame(data))
-  stopifnot(action_col %in% names(data))
+  .assert(is.data.frame(data))
+  .assert(action_col %in% names(data))
 
   if (is.null(states)) {
     states <- unique(data[[action_col]])
@@ -479,11 +509,11 @@ action_to_onehot <- function(data, action_col = "Action", states = NULL,
                             window_size = 3L,
                             window_type = c("non-overlapping", "overlapping"),
                             aggregate = FALSE) {
-  stopifnot(is.data.frame(data))
-  stopifnot(is.character(cols), length(cols) >= 1)
-  stopifnot(all(cols %in% names(data)))
+  .assert(is.data.frame(data))
+  .assert(is.character(cols), length(cols) >= 1)
+  .assert(all(cols %in% names(data)))
   window_size <- as.integer(window_size)
-  stopifnot(window_size >= 1L)
+  .assert(window_size >= 1L)
   window_type <- match.arg(window_type)
 
   interval <- if (is.null(interval)) ncol(data) * nrow(data) else interval
@@ -500,8 +530,8 @@ action_to_onehot <- function(data, action_col = "Action", states = NULL,
 
   actor_col <- if (is.null(actor)) ".actor" else actor
   session_col <- if (is.null(session)) ".session" else session
-  if (!is.null(actor)) stopifnot(actor %in% names(data))
-  if (!is.null(session)) stopifnot(session %in% names(data))
+  if (!is.null(actor)) .assert(actor %in% names(data))
+  if (!is.null(session)) .assert(session %in% names(data))
   if (is.null(actor)) work[[actor_col]] <- 1L
   if (is.null(session)) work[[session_col]] <- 1L
 

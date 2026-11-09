@@ -38,74 +38,95 @@ build_mmm(
 )
 }
 \arguments{
-\item{data}{A data.frame (wide format), \code{netobject},
-\code{cograph_network}, or \code{tna} model. For tna and
-cograph_network objects the stored (integer-encoded) data is
-extracted and decoded to state labels. Columns of a data.frame take the
-same roles as in \code{\link{build_network}}: an id or a covariate is not
-a sequence position. Those set aside are named in a message and kept in
-\code{$metadata}.}
+\item{data}{The sequences: a data frame with one row per sequence and one
+column per position, a \code{netobject} or bare \code{cograph_network} built from
+sequences, or a \code{tna} model (whose stored states are decoded to their
+labels). Columns take the same roles as in \code{\link[=build_network]{build_network()}}: an id or a
+covariate is not a position, and the columns set aside are named in a
+message and kept as metadata. Association networks (\code{cor}, \code{pcor},
+\code{glasso}, \code{ising}, \code{mgm}) hold variables, not sequences, and raise an
+error of class \code{nestimate_bad_input}.}
 
-\item{k}{Integer. Whole finite number of mixture components, >= 2.
-Default: 2.}
+\item{k}{The number of subgroups (mixture components), a whole number of
+at least 2. Default \code{2}.}
 
-\item{n_starts}{Integer. Positive whole finite number of random restarts.
-Default: 50.}
+\item{n_starts}{How many starting configurations to try, a positive whole
+number. More starts make it likelier that the best local maximum is
+found. Default \code{50}.}
 
-\item{max_iter}{Integer. Positive whole finite maximum EM iterations per
-start. Default: 200.}
+\item{max_iter}{The most EM iterations a start may run, a positive whole
+number. Default \code{200}.}
 
-\item{tol}{Numeric. Finite positive convergence tolerance. Default: 1e-6.}
+\item{tol}{The convergence tolerance: EM stops when the log-likelihood
+changes by less than this between iterations (with \code{covariate_effect = "em"}, also when its relative change does). A finite positive number;
+default \code{1e-6}.}
 
-\item{smooth}{Numeric. Finite non-negative Laplace smoothing constant.
-Default: 0.01.}
+\item{smooth}{A pseudo-count added to every transition count before the
+matrices are estimated, so a transition unseen in a subgroup gets a small
+probability instead of zero. A finite non-negative number; default
+\code{0.01}.}
 
-\item{seed}{Integer or NULL. Random seed.}
+\item{seed}{An integer that makes the random starts reproducible.
+Default \code{NULL}. The session's own random stream is left as it was.}
 
-\item{covariates}{Optional. Covariates integrated into the EM algorithm
-to model covariate-dependent mixing proportions. Accepts a string,
-character vector, formula, or data.frame (same forms as
-\code{\link{build_clusters}}). For \code{netobject} or
-\code{cograph_network} input, names are resolved against
-\code{$metadata} first, so a typical call is
-\code{build_mmm(net, k = 3, covariates = "session_label")}.
-Unlike the post-hoc analysis in \code{build_clusters()}, these
-covariates directly influence cluster membership during EM
-estimation (see \code{covariate_effect}).}
+\item{covariates}{Variables describing each sequence (such as a course or
+a grade), given as a column name, a character vector of names, a
+one-sided formula or a data frame, as in \code{\link[=build_clusters]{build_clusters()}}. For a
+\code{netobject}, names are looked up in its metadata first, so a typical call
+is \code{build_mmm(net, k = 3, covariates = "session_label")}. How they enter
+the model is set by \code{covariate_effect}. Default \code{NULL}.}
 
-\item{covariate_effect}{How \code{covariates} enter the model.
-\code{"em"} (default) folds them into the EM as covariate-dependent
-mixing proportions, so they shape the cluster fit itself (and rows
-with missing covariates are dropped before fitting). \code{"posthoc"}
-fits a plain mixture on every sequence and uses the covariates only
-for the after-fit multinomial logit, so covariate values --- and
-their missingness --- never change which clusters are found. Ignored
-when \code{covariates} is \code{NULL}.}
+\item{covariate_effect}{How \code{covariates} enter the model. \code{"em"}
+(default) makes the mixing proportions depend on them during EM, so they
+shape the subgroups found and add \code{(k - 1) * p} parameters for \code{p}
+covariate columns; rows with a missing covariate are dropped first, with
+a warning. \code{"posthoc"} fits a plain mixture on every sequence and relates
+the covariates to the subgroups only afterwards, with a multinomial logit,
+so neither their values nor their missingness change the subgroups.
+Ignored without \code{covariates}.}
 
-\item{estimator}{Multinomial fitter for the post-hoc covariate
-analysis (does not affect EM): \code{"auto"} (default) inspects the
-cluster x covariate cross-tab and falls back to \code{"firth"} only
-when any cell has fewer than 5 observations (separation risk),
-otherwise the much faster \code{"multinom"}; \code{"firth"} forces
-Firth's penalised likelihood via \code{brglm2::brmultinom} (finite
-under separation); \code{"multinom"} forces \code{nnet::multinom}
-(warns about separation risk); \code{"chisq"} runs descriptive
-tests (no logit). See \code{\link{build_clusters}} for full details.}
+\item{estimator}{How the after-fit multinomial logit is estimated; it never
+affects the EM. \code{"auto"} (default) uses Firth's penalised likelihood
+(\code{brglm2::brmultinom()}, finite under separation) when a cell of the
+subgroup-by-covariate table has fewer than 5 sequences, and
+\code{nnet::multinom()} otherwise. \code{"firth"} and \code{"multinom"} force one of
+them (\code{"multinom"} warns about separation risk), and \code{"chisq"} runs
+descriptive tests instead of a logit. \code{\link[=build_clusters]{build_clusters()}} has the details.
+Ignored without \code{covariates}.}
 
-\item{x}{For the \code{print()} and \code{plot()} methods: an object of class \code{net_mmm} or \code{net_mmm_clustering}.}
+\item{x}{For the \code{print()} and \code{plot()} methods: a
+\code{net_mmm} fit, or the \code{net_mmm_clustering} attribute of the
+\code{netobject_group} built from one.}
 
-\item{digits}{In \code{print.net_mmm()}: Integer. Decimal places for floating-point statistics. Default \code{3}. Non-breaking: \code{print(x)} keeps the same alignment as before. In \code{print.net_mmm_clustering()}: Integer. Decimal places for floating-point statistics. Default \code{3}.}
+\item{digits}{For the \code{print()} methods: decimal places of the
+statistics. Default \code{3}.}
 
-\item{...}{In \code{plot.net_mmm()}, \code{plot.net_mmm_clustering()}, \code{print.net_mmm()}, \code{print.net_mmm_clustering()} and \code{summary.net_mmm()}: Unsupported. Supplying unused arguments raises an error.}
+\item{...}{For the \code{print()}, \code{summary()} and \code{plot()}
+methods: not used; any extra argument raises an error.}
 
-\item{object}{For the \code{summary()} method: an object of class \code{net_mmm}.}
+\item{object}{For the \code{summary()} method: a \code{net_mmm} fit.}
 
-\item{type}{In \code{plot.net_mmm()}: Character. Plot type: \code{"posterior"} (default) or \code{"covariates"}. In \code{plot.net_mmm_clustering()}: Character. One of \code{"posterior"} (default; histogram of max posterior probability per sequence, coloured by cluster), \code{"covariates"} or its alias \code{"predictors"} (covariate forest plot when \code{cluster_mmm()} was run with \code{covariates}).}
+\item{type}{For the \code{plot()} methods: \code{"posterior"} (default), a
+histogram of each sequence's largest posterior probability, coloured by
+cluster; or \code{"covariates"}, a forest plot of the covariate effects,
+for a model fitted with \code{covariates}. On a
+\code{net_mmm_clustering}, \code{"predictors"} is an alias of
+\code{"covariates"}.}
 
-\item{combined}{In \code{plot.net_mmm()}: Logical. For \code{type = "covariates"} only: when \code{TRUE} (default), covariate forest panels are combined into a single faceted plot; when \code{FALSE}, a list of separate ggplots is returned. In \code{plot.net_mmm_clustering()}: Logical. For \code{type} in \code{"covariates"} or \code{"predictors"} only: when \code{TRUE} (default), forest panels are combined into a single faceted plot; when \code{FALSE}, a list of separate ggplots is returned.}
+\item{combined}{For the \code{plot()} methods with
+\code{type = "covariates"}: \code{TRUE} (default) draws the forest panels
+as one faceted plot; \code{FALSE} returns a list of ggplots, one per
+cluster.}
 }
 \value{
-An object of class \code{net_mmm} with components:
+A \code{net_mmm} object. \code{print()} shows the fit statistics,
+classification quality and subgroup sizes; \code{\link[=summary]{summary()}} adds each
+subgroup's transition matrix and returns one row per subgroup (mixing
+proportion, sequences assigned, mean posterior, AvePP); \code{plot()} draws
+the posterior probabilities or the covariate effects;
+\code{\link[=build_network]{build_network()}} turns the fit into one network per subgroup (a
+\code{netobject_group}); \code{\link[=cluster_diagnostics]{cluster_diagnostics()}} and \code{\link[=session_ids]{session_ids()}} give the
+classification and each sequence's subgroup. The object's fields:
 \describe{
 \item{data}{The full N-row sequence frame used for estimation.}
 \item{models}{List of \code{netobject}s, one per component. Each
@@ -140,51 +161,83 @@ per fitted sequence in the row order of \code{posterior}, so
 input.}
 }
 
-In \code{print.net_mmm()} and \code{print.net_mmm_clustering()}: The input object, invisibly.
-
-In \code{summary.net_mmm()}: A per-component summary \code{data.frame}. The class and visibility depend on whether the model was fitted with covariates: \describe{ \item{No covariates}{A plain \code{data.frame} with one row per component and columns \code{component}, \code{prior}, \code{n_assigned}, \code{mean_posterior}, \code{avepp}, returned \emph{visibly} (so it auto-prints after the printed summary block).} \item{With covariates}{A \code{tidy_covariates}/\code{data.frame} (the tidied covariate table, with the per-component stats attached), returned \emph{invisibly}.} } In both cases the printed summary (model fit, per-cluster transition matrices, optional covariate profiles) is emitted as a side effect.
-
-In \code{plot.net_mmm()}: A \code{ggplot} object, invisibly; for \code{type = "covariates"} with \code{combined = FALSE}, a list of \code{ggplot} objects named by cluster (invisibly).
-
-In \code{plot.net_mmm_clustering()}: A \code{ggplot} object, invisibly; for \code{type = "covariates"} / \code{"predictors"} with \code{combined = FALSE}, a list of \code{ggplot} objects named by cluster (invisibly).
+The \code{print()} methods return their input invisibly. For a model
+fitted with \code{covariates}, \code{summary()} also prints the covariate profiles
+and effects and returns, invisibly, a \code{tidy_covariates} data frame of
+the effects (one row per subgroup other than the reference and per
+predictor term, so a factor gives one row per non-reference level; one
+row per covariate test with \code{estimator = "chisq"}), with the
+per-subgroup table as its \code{cluster_stats} attribute. The \code{plot()}
+methods print the plot and return the \code{ggplot} invisibly; with
+\code{type = "covariates"} and \code{combined = FALSE} they return, invisibly and
+without printing, a list of \code{ggplot}s named by subgroup.
 }
 \description{
-Discovers latent subgroups with different transition dynamics using
-Expectation-Maximization. Each mixture component has its own transition
-matrix. Sequences are probabilistically assigned to components.
+\code{build_mmm()} fits a mixture of first-order Markov chains to a set of
+sequences by expectation-maximisation: it looks for \code{k} subgroups whose
+members move between states in different ways, each with its own
+transition matrix and initial-state distribution. Every sequence gets a
+posterior probability of belonging to each subgroup and is assigned to the
+most probable one. Covariates can shape the mixing proportions during
+estimation or be related to the subgroups afterwards (see
+\code{covariate_effect}).
+
+EM finds a local maximum, so the fit is started \code{n_starts} times (one
+start from k-means on the transition counts, the rest random), each is
+screened with a short EM run, the most promising are continued for up to
+\code{max_iter} iterations, and the one with the highest log-likelihood is
+kept. \code{print()} reports whether it converged within
+\code{max_iter}; a fit that did not is not a result. The information criteria
+(BIC, AIC, ICL) compare fits with different \code{k} -- \code{\link[=compare_mmm]{compare_mmm()}} fits a
+range of them -- while average posterior probability (AvePP), entropy and
+classification error describe how cleanly the sequences separate within
+one fit. None of them picks \code{k} alone: also check that the subgroups'
+transition matrices differ in ways that can be interpreted, and that
+each subgroup holds enough sequences to estimate its matrix.
 }
 \section{Initial states}{
 
-The first sequence column has special status: it is read directly as
-the per-sequence initial state (\code{init_state[i] <-
-match(raw_data[i, state_cols[1L]], states)}). The function does
-\strong{not} scan forward to the first non-missing position, and it
-does not apply any \code{na_syms}-style symbol conversion (unlike
-\code{\link{build_clusters}}). The state vocabulary is built from the
-unique non-\code{NA} values across all columns, so if your data uses
-a sentinel character such as \code{"*"} or \code{"\%"} for missing
-cells, that sentinel becomes a real state and the first column reads
-it as a valid initial state. If you want padded leading missings to
-be treated as missing, recode them to \code{NA} before calling
-\code{build_mmm()} (then \code{match()} returns \code{NA}, which the
-EM treats as an uninformative initial distribution), or left-trim the
-leading missings so each sequence's first column carries an observed
-state.
+Each sequence's initial state is the value in its first position column,
+read as it is: the function does not look ahead to the first observed
+state, and it does not convert missing-value symbols as \code{\link[=build_clusters]{build_clusters()}}
+does. The states are the distinct non-missing values of all position
+columns, so a placeholder such as \code{"*"} or \code{"\%"} for an empty cell becomes
+a state, and a sequence starting with it starts in that state. Recode such
+placeholders to \code{NA} first: a missing first position gives the sequence
+no initial state, which leaves its subgroup to the transitions alone. Or
+trim leading empty cells so every first position holds an observed state.
 
-A one-hot network is the exception: its units are windows whose slots
-are codes, not positions, so the first column only says whether the
-first code was active. Its initial state is the one code observed in the
-first window, and no initial state (uninformative) when that window holds
-several codes or none.
+A one-hot network is different: its units are windows of codes, not
+positions, so its initial state is the one code active in the first
+window, and none when that window holds several codes or none.
 }
 
 \section{Methods}{
 
-\itemize{
-\item \code{plot.net_mmm_clustering()}: Plot routines for the MMM clustering metadata attached to the \code{netobject_group} that \code{\link{build_network}} materializes from a \code{\link{cluster_mmm}} fit (or that \code{\link{cluster_network}} returns directly with \code{cluster_by = "mmm"}). Mirrors the type-driven surface of \code{\link{plot.net_clustering}} but covers only the metrics the EM fit produces -- there is no distance matrix on an MMM clustering, so \code{"silhouette"} / \code{"mds"} / \code{"heatmap"} aren't defined here and the dispatcher raises a clear error if you ask for one of those on an MMM result.
-\item \code{print.net_mmm()}: Compact summary of a Mixed Markov Model fit. Header carries dimensions and information criteria; cluster table carries N, mixing share, and per-cluster average posterior probability (AvePP). Layout matches \code{\link{print.net_clustering}} so distance- and model-based clusterings can be compared at a glance.
-\item \code{print.net_mmm_clustering()}: Prints the clustering metadata attached to the \code{netobject_group} that \code{\link{build_network}} materializes from a \code{\link{cluster_mmm}} fit (\code{attr(grp, "clustering")}). Layout mirrors \code{\link{print.net_clustering}}: a one-line dimension header, a quality line with AvePP / entropy / classification error, information criteria, and a per-cluster table.
-}
+\code{print()} of a \code{net_mmm} shows a header with the numbers of sequences,
+subgroups and states, the log-likelihood and the information criteria; a
+quality line with the overall AvePP, the normalised entropy (0 when every
+sequence is classified with certainty, 1 when all posteriors are equal)
+and the classification error (the expected share of sequences
+misclassified when each is assigned to its most likely subgroup, the mean
+of one minus the largest posterior; Vermunt & Magidson, 2005); a line when the EM did not converge;
+and one row per subgroup with its size, mixing proportion and AvePP. For a
+model fitted with \code{covariates}, a last line names them, says whether they
+entered the EM (integrated) or were related post hoc, and gives the number
+of predictors. The layout follows \code{print()} of a \code{net_clustering} from
+\code{\link[=build_clusters]{build_clusters()}}, so dissimilarity-based and model-based clusterings read
+alike.
+
+\code{\link[=build_network]{build_network()}} on a fit, and \code{\link[=cluster_network]{cluster_network()}} with
+\code{cluster_by = "mmm"}, return a \code{netobject_group} whose \code{"clustering"}
+attribute is a \code{net_mmm_clustering}: the fit without its
+subgroup networks. Its \code{print()} shows the same quality line,
+information criteria and subgroup table, without the state count, the
+log-likelihood or the convergence line, and its \code{plot()} draws the same
+two views as \code{plot()} of a \code{net_mmm}. The \code{"silhouette"}, \code{"mds"} and
+\code{"heatmap"} views of a dissimilarity-based clustering need a distance
+matrix, which an MMM clustering does not have, so asking for them raises
+an error.
 }
 
 \examples{
@@ -207,6 +260,9 @@ summary(mmm)
 Helske, S., & Helske, J. (2019). Mixture hidden Markov models for
 sequence data: The seqHMM package in R. \emph{Journal of Statistical
 Software}, 88(3), 1--32. \doi{10.18637/jss.v088.i03}
+
+Vermunt, J. K., & Magidson, J. (2005). \emph{Latent GOLD 4.0 User's
+Guide}. Statistical Innovations.
 }
 \seealso{
 \code{\link{compare_mmm}}, \code{\link{build_network}}

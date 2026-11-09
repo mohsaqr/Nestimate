@@ -47,10 +47,14 @@
   state_cols <- .select_state_cols(data, id, cols)
   missing_cols <- setdiff(state_cols, names(data))
   if (length(missing_cols) > 0) {
-    stop("Columns not found: ", paste(missing_cols, collapse = ", "))
+    stop(errorCondition(
+      paste0("Columns not found: ", paste(missing_cols, collapse = ", ")),
+      class = "nestimate_bad_input", call = NULL))
   }
   if (length(state_cols) < 1L) {
-    stop("At least 1 state column is required for wide format.")
+    stop(errorCondition(
+      "At least 1 state column is required for wide format.",
+      class = "nestimate_bad_input", call = NULL))
   }
 
   mat <- as.matrix(data[, state_cols, drop = FALSE])
@@ -65,7 +69,9 @@
 
   concat <- as.integer(concat %||% 1L)
   if (length(concat) != 1L || is.na(concat) || concat < 1L) {
-    stop("'concat' must be a positive integer.", call. = FALSE)
+    stop(errorCondition(
+      "'concat' must be a positive integer.",
+      class = "nestimate_bad_input", call = NULL))
   }
   if (concat > 1L && nrow(mat) > 0L) {
     n <- nrow(mat)
@@ -114,10 +120,14 @@
   type <- match.arg(type)
   x <- try(data.matrix(data), silent = TRUE)
   if (inherits(x, "try-error")) {
-    stop("'data' must be coercible to a numeric matrix.", call. = FALSE)
+    stop(errorCondition(
+      "'data' must be coercible to a numeric matrix.",
+      class = "nestimate_bad_input", call = NULL))
   }
   if (nrow(x) != ncol(x) || nrow(x) < 1L) {
-    stop("'data' must be a square matrix.", call. = FALSE)
+    stop(errorCondition(
+      "'data' must be a square matrix.",
+      class = "nestimate_bad_input", call = NULL))
   }
   if (is.null(colnames(x))) {
     dimnames(x) <- list(as.character(seq_len(ncol(x))),
@@ -128,15 +138,17 @@
   if (type == "relative") {
     rs <- rowSums(x)
     if (!all(rs > 0)) {
-      stop("At least one element of each row of 'data' must be positive.",
-           call. = FALSE)
+      stop(errorCondition(
+        "At least one element of each row of 'data' must be positive.",
+        class = "nestimate_bad_input", call = NULL))
     }
     x <- x / rs
   } else {
     xi <- as.integer(x)
     if (!all(x == xi) || any(x < 0)) {
-      stop("All elements of 'data' must be non-negative integers.",
-           call. = FALSE)
+      stop(errorCondition(
+        "All elements of 'data' must be non-negative integers.",
+        class = "nestimate_bad_input", call = NULL))
     }
     x[] <- xi
   }
@@ -178,7 +190,7 @@
                                concat = 1L,
                                begin_state = NULL,
                                end_state = NULL) {
-  stopifnot(is.data.frame(data))
+  .assert(is.data.frame(data))
 
   if (format == "auto") {
     format <- .format_from_action(action, data)
@@ -332,12 +344,16 @@
                                     weighted = FALSE, begin_state = NULL,
                                     end_state = NULL) {
   if (is.null(action) || !action %in% names(data)) {
-    stop("Action column '", action %||% "NULL", "' not found in data.")
+    stop(errorCondition(
+      paste0("Action column '", action %||% "NULL", "' not found in data."),
+      class = "nestimate_bad_input", call = NULL))
   }
   if (!is.null(id)) {
     missing_ids <- setdiff(id, names(data))
     if (length(missing_ids) > 0) {
-      stop("ID column(s) not found: ", paste(missing_ids, collapse = ", "))
+      stop(errorCondition(
+        paste0("ID column(s) not found: ", paste(missing_ids, collapse = ", ")),
+        class = "nestimate_bad_input", call = NULL))
     }
   }
 
@@ -690,7 +706,7 @@
     return(list(matrix = cooc_mat, nodes = rownames(cooc_mat),
                 directed = FALSE, cleaned_data = NULL))
   }
-  stopifnot(is.data.frame(data))
+  .assert(is.data.frame(data))
 
   # Before the format: a one-hot column may be called "Action".
   if (identical(format, "onehot") || !is.null(codes)) {
@@ -862,7 +878,9 @@
                                      weighted = FALSE, begin_state = NULL,
                                      end_state = NULL) {
   if (is.null(action) || !action %in% names(data)) {
-    stop("Action column '", action %||% "NULL", "' not found in data.")
+    stop(errorCondition(
+      paste0("Action column '", action %||% "NULL", "' not found in data."),
+      class = "nestimate_bad_input", call = NULL))
   }
 
   dt <- data.table::as.data.table(data)
@@ -994,10 +1012,10 @@
 
   # Build time matrix
   if (!is.null(time_matrix)) {
-    stopifnot(nrow(time_matrix) == nr, ncol(time_matrix) == nc)
+    .assert(nrow(time_matrix) == nr, ncol(time_matrix) == nc)
     tmat <- time_matrix
   } else if (!is.null(duration)) {
-    stopifnot(length(duration) == nc)
+    .assert(length(duration) == nc)
     cum_time <- cumsum(duration)
     tmat <- matrix(rep(cum_time, each = nr), nr, nc)
   } else {
@@ -1059,7 +1077,9 @@
                                    alphabet = NULL, begin_state = NULL,
                                    end_state = NULL) {
   if (is.null(action) || !action %in% names(data)) {
-    stop("Action column '", action %||% "NULL", "' not found in data.")
+    stop(errorCondition(
+      paste0("Action column '", action %||% "NULL", "' not found in data."),
+      class = "nestimate_bad_input", call = NULL))
   }
 
   dt <- data.table::as.data.table(data)
@@ -1190,8 +1210,8 @@
                                   time_matrix = NULL,
                                   duration = NULL,
                                   ...) {
-  stopifnot(is.data.frame(data))
-  stopifnot(is.numeric(lambda), length(lambda) == 1, lambda > 0)
+  .assert(is.data.frame(data))
+  .assert(is.numeric(lambda), length(lambda) == 1, lambda > 0)
   direction <- match.arg(direction, c("forward", "backward", "both"))
 
   if (format == "auto") {
@@ -1258,7 +1278,9 @@
     }
 
     if (length(keep) < 2) {
-      stop("At least 2 numeric columns are required after cleaning.")
+      stop(errorCondition(
+        "At least 2 numeric columns are required after cleaning.",
+        class = "nestimate_bad_input", call = NULL))
     }
 
     mat <- as.matrix(data[, keep, drop = FALSE])
@@ -1280,7 +1302,9 @@
     }
 
     if (nrow(mat) < 3) {
-      stop("Fewer than 3 complete rows remain after removing NAs.")
+      stop(errorCondition(
+        "Fewer than 3 complete rows remain after removing NAs.",
+        class = "nestimate_bad_input", call = NULL))
     }
 
     # Drop zero-variance columns
@@ -1293,7 +1317,9 @@
     }
 
     if (ncol(mat) < 2) {
-      stop("At least 2 variable columns are required after cleaning.")
+      stop(errorCondition(
+        "At least 2 variable columns are required after cleaning.",
+        class = "nestimate_bad_input", call = NULL))
     }
 
     n <- nrow(mat)
@@ -1309,12 +1335,16 @@
                     cor_method = cor_method, input_type = input_type))
     }
     if (!isSymmetric(unname(data), tol = 1e-8)) {
-      stop("Matrix input must be symmetric.")
+      stop(errorCondition(
+        "Matrix input must be symmetric.",
+        class = "nestimate_bad_input", call = NULL))
     }
     if (is.null(n)) {
-      stop("Sample size 'n' is required when data is a matrix.")
+      stop(errorCondition(
+        "Sample size 'n' is required when data is a matrix.",
+        class = "nestimate_bad_input", call = NULL))
     }
-    stopifnot(is.numeric(n), length(n) == 1, n > 0)
+    .assert(is.numeric(n), length(n) == 1, n > 0)
 
     if (input_type == "auto") {
       diag_vals <- diag(data)
@@ -1333,7 +1363,9 @@
     }
     mat <- NULL
   } else {
-    stop("data must be a data frame or a square symmetric matrix.")
+    stop(errorCondition(
+      "data must be a data frame or a square symmetric matrix.",
+      class = "nestimate_bad_input", call = NULL))
   }
 
   list(S = S, n = n, mat = mat)
@@ -1394,10 +1426,10 @@
 
   rc <- rcond(S)
   if (rc < .Machine$double.eps) {
-    stop(
+    stop(errorCondition(paste0(
       "Correlation matrix is singular (p >= n or collinear variables). ",
-      "Use method = 'glasso' for regularised estimation.",
-      call. = FALSE
+      "Use method = 'glasso' for regularised estimation."),
+      class = "nestimate_bad_input", call = NULL)
     )
   }
   if (rc < 1e-12) {
@@ -1437,7 +1469,9 @@
 .compute_lambda_path <- function(S, nlambda, lambda.min.ratio) {
   lambda_max <- max(abs(S[upper.tri(S)]))
   if (lambda_max <= 0) {
-    stop("All off-diagonal correlations are zero; nothing to regularise.")
+    stop(errorCondition(
+      "All off-diagonal correlations are zero; nothing to regularise.",
+      class = "nestimate_bad_input", call = NULL))
   }
   lambda_min <- lambda_max * lambda.min.ratio
   exp(seq(log(lambda_max), log(lambda_min), length.out = nlambda))
@@ -1476,11 +1510,11 @@
   n_obs <- prepared$n
   p <- ncol(S)
 
-  stopifnot(is.numeric(gamma), length(gamma) == 1, gamma >= 0)
-  stopifnot(is.numeric(nlambda), length(nlambda) == 1, nlambda >= 2)
-  stopifnot(is.numeric(lambda.min.ratio), lambda.min.ratio > 0,
+  .assert(is.numeric(gamma), length(gamma) == 1, gamma >= 0)
+  .assert(is.numeric(nlambda), length(nlambda) == 1, nlambda >= 2)
+  .assert(is.numeric(lambda.min.ratio), lambda.min.ratio > 0,
             lambda.min.ratio < 1)
-  stopifnot(is.logical(penalize.diagonal), length(penalize.diagonal) == 1)
+  .assert(is.logical(penalize.diagonal), length(penalize.diagonal) == 1)
 
   # Math delegated to psychnets. Default branch is exact (max abs delta 0
   # on weights/precision/lambda/EBIC path); penalize.diagonal is within
@@ -1540,7 +1574,7 @@
   # A fitted network stores its cleaned data as a numeric matrix; resamplers
   # pass that back in, so accept it as well as a data frame.
   if (is.matrix(data) && is.numeric(data)) data <- as.data.frame(data)
-  stopifnot(is.data.frame(data))
+  .assert(is.data.frame(data))
 
   # Exclude id columns and "rid"
 
@@ -1558,7 +1592,9 @@
   }
 
   if (length(keep) < 2L) {
-    stop("At least 2 numeric columns are required after cleaning.")
+    stop(errorCondition(
+      "At least 2 numeric columns are required after cleaning.",
+      class = "nestimate_bad_input", call = NULL))
   }
 
   mat <- as.matrix(data[, keep, drop = FALSE])
@@ -1580,7 +1616,9 @@
   }
 
   if (nrow(mat) < 3L) {
-    stop("Fewer than 3 complete rows remain after removing NAs.")
+    stop(errorCondition(
+      "Fewer than 3 complete rows remain after removing NAs.",
+      class = "nestimate_bad_input", call = NULL))
   }
 
   # Drop zero-variance columns
@@ -1593,15 +1631,20 @@
   }
 
   if (ncol(mat) < 2L) {
-    stop("At least 2 variable columns are required after cleaning.")
+    stop(errorCondition(
+      "At least 2 variable columns are required after cleaning.",
+      class = "nestimate_bad_input", call = NULL))
   }
 
   # Validate binary: all values must be 0 or 1
   unique_vals <- unique(as.vector(mat))
   if (!all(unique_vals %in% c(0, 1))) {
     bad <- setdiff(unique_vals, c(0, 1))
-    stop("Ising model requires binary (0/1) data. Found non-binary values: ",
-         paste(head(bad, 5), collapse = ", "))
+    stop(errorCondition(
+      paste0(
+        "Ising model requires binary (0/1) data. Found non-binary values: ",
+        paste(head(bad, 5), collapse = ", ")),
+      class = "nestimate_bad_input", call = NULL))
   }
 
   list(
@@ -1666,9 +1709,9 @@
   }
 
   # Validate parameters
-  stopifnot(is.numeric(gamma), length(gamma) == 1, gamma >= 0)
+  .assert(is.numeric(gamma), length(gamma) == 1, gamma >= 0)
   nlambda <- as.integer(nlambda)
-  stopifnot(is.integer(nlambda), length(nlambda) == 1, nlambda >= 2L)
+  .assert(is.integer(nlambda), length(nlambda) == 1, nlambda >= 2L)
   rule <- match.arg(rule, c("AND", "OR"))
 
   # Prepare input: listwise NA removal and the binary (0/1) check

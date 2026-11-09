@@ -5,21 +5,34 @@
 
 #' Coerce a network object to a Nestimate netobject
 #'
-#' Promotes a \pkg{psychnets} result (class \code{c("psychnet",
-#' "cograph_network")}) or any bare \code{cograph_network} to the dual-class
-#' \code{c("netobject", "cograph_network")} used throughout Nestimate, so it
-#' dispatches to the package's verbs (\code{centrality()}, \code{plot()},
-#' bootstrap, reliability, ...). A \code{netobject} is returned unchanged.
+#' @description
+#' `as_netobject()` converts a \pkg{psychnets} result (class
+#' `c("psychnet", "cograph_network")`) or any bare `cograph_network` into the
+#' `c("netobject", "cograph_network")` object the rest of Nestimate reads, so
+#' it can be passed to [net_centrality()] and the other verbs that read a
+#' network. The resampling verbs ([bootstrap_network()],
+#' [network_reliability()]) need the source data, which a psychnets result
+#' does not carry, so build the network with [build_network()] for those. A
+#' `netobject` is returned unchanged.
 #'
-#' The psychnet method re-derives the integer-indexed edge table that Nestimate
-#' expects (psychnet stores character-labelled edges), preserves the estimator
-#' name in \code{$method}, and parks every psychnet-specific field - including
-#' the graphical-lasso \code{$kkt} optimality certificate - under
-#' \code{$meta$psychnet} so nothing is lost in translation.
+#' @details
+#' For a `psychnet`, the edge table is rebuilt with integer node indices (a
+#' `psychnet` stores character-labelled edges), the estimator name is kept
+#' in `method`, and every field specific to the `psychnet`, including the
+#' graphical-lasso `kkt` optimality certificate, is kept in the `psychnet`
+#' entry of `meta`, so nothing is lost in the conversion.
 #'
-#' @param x A \code{psychnet} object, a \code{cograph_network}, or a
-#'   \code{netobject}.
-#' @return A \code{c("netobject", "cograph_network")} object.
+#' For a bare `cograph_network`, the method is read from the `tna` entry of
+#' its `meta`; without one, a symmetric weight matrix is taken as
+#' `"co_occurrence"` and any other as `"relative"`. A missing `directed`
+#' field is read as `TRUE`. Numeric state codes in the stored data of a
+#' converted tna model are decoded to their labels.
+#'
+#' @param x The network to convert: a `psychnet` object, a `cograph_network`
+#'   or a `netobject`. Any other object raises an error.
+#' @return A `netobject` (class `c("netobject", "cograph_network")`), read by
+#'   the same verbs as one from [build_network()]; [validate_netobject()]
+#'   checks its structure.
 #' @seealso \code{\link{validate_netobject}}
 #' @examples
 #' net <- build_cor(data.frame(a = rnorm(50), b = rnorm(50), c = rnorm(50)))
@@ -61,27 +74,34 @@ as_netobject.cograph_network <- function(x) {
 #' @rdname as_netobject
 #' @export
 as_netobject.default <- function(x) {
-  stop("as_netobject() needs a psychnet, cograph_network, or netobject; got <",
-       paste(class(x), collapse = "/"), ">.", call. = FALSE)
+  stop(errorCondition(paste0(
+    "as_netobject() needs a psychnet, cograph_network, or netobject; got <",
+    paste(class(x), collapse = "/"), ">."),
+    class = "nestimate_bad_input", call = NULL))
 }
 
 #' Validate a netobject / cograph_network against the shared schema
 #'
-#' Enforces the structural contract that both Nestimate netobjects and
-#' \pkg{psychnets} objects must satisfy to be interchangeable across the package
-#' boundary. This is the single place that says what "a network object" means,
-#' so a drift on either side (a renamed field, a mistyped edge column) fails
-#' loudly here rather than mis-rendering three layers downstream.
+#' @description
+#' `validate_netobject()` checks that an object meets the structure Nestimate
+#' `netobject`s and \pkg{psychnets} objects share, so either can be passed
+#' across the package boundary. It is the one place that says what a network
+#' object is, so a change on either side (a renamed field, a mistyped edge
+#' column) fails here instead of further down, for instance when the network
+#' is drawn.
 #'
-#' The contract is deliberately the \emph{shared} subset: the \code{$nodes}
-#' \code{x}/\code{y} layout columns and the Nestimate pipeline fields
-#' (\code{$data}, \code{$level}, ...) are not required, and \code{$edges}
-#' endpoints may be either integer node indices (Nestimate) or character labels
-#' (psychnet).
+#' The checks are the shared part only: the object inherits
+#' `cograph_network`; `weights` is a square numeric matrix with node names as
+#' dimnames; `nodes` is a data frame with columns `id`, `label` and `name`,
+#' one row per node; `edges` is a data frame with columns `from`, `to` and a
+#' numeric `weight`, whose endpoints are integer node indices (Nestimate) or
+#' node labels (\pkg{psychnets}); `directed` is a single logical value; and
+#' `method` is a single string. The `x`/`y` layout columns of `nodes` and
+#' Nestimate's own fields (`data`, `level`, ...) are not required.
 #'
-#' @param x An object expected to satisfy the \code{cograph_network} contract.
-#' @return Invisibly \code{TRUE} if \code{x} conforms; otherwise stops with the
-#'   full list of violations.
+#' @param x The object to check, expected to be a `cograph_network`.
+#' @return `TRUE`, invisibly, when `x` passes every check. Otherwise an error
+#'   that lists every check it failed.
 #' @seealso \code{\link{as_netobject}}
 #' @examples
 #' net <- build_cor(data.frame(a = rnorm(50), b = rnorm(50), c = rnorm(50)))
@@ -136,8 +156,10 @@ validate_netobject <- function(x) {
   }
 
   if (length(problems) > 0L) {
-    stop("invalid netobject / cograph_network:\n",
-         paste0("  - ", problems, collapse = "\n"), call. = FALSE)
+    stop(errorCondition(paste0(
+      "invalid netobject / cograph_network:\n",
+      paste0("  - ", problems, collapse = "\n")),
+      class = "nestimate_bad_input", call = NULL))
   }
   invisible(TRUE)
 }

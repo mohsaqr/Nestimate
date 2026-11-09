@@ -1,72 +1,107 @@
 #' Prepare Event Log Data for Network Estimation
 #'
 #' @description
-#' Converts event log data (actor, action, time) into wide sequence format
-#' suitable for \code{\link{build_network}}. Automatically parses timestamps,
-#' detects sessions from time gaps, and handles tie-breaking.
+#' `prepare()` turns an event log (one row per event: the action, and
+#' optionally who did it and when) into sequences, one row per session and
+#' one column per position (`T1`, `T2`, ...). It parses the timestamps,
+#' orders the events, splits each actor's events into sessions by explicit
+#' session columns and by time gaps, and keeps every other column as one
+#' row of metadata per session. [build_network()] runs the same preparation
+#' itself when given `action`, with the same arguments, so `prepare()` is
+#' for inspecting the sequences or passing them to the sequence verbs.
 #'
-#' @param data Data frame with event log columns.
-#' @param actor Character or character vector. Column name(s) identifying who
-#'   performed the action (e.g. \code{"student"} or
-#'   \code{c("student", "group")}). If missing, all data is treated as one
-#'   actor.
-#' @param action Character. Column name containing the action/state/code.
+#' @param data The event log: a data frame with one row per event.
+#' @param actor The column, or columns, identifying who performed each event
+#'   (e.g. `"student"` or `c("student", "group")`); several columns are
+#'   combined, each observed combination being one actor. Missing or `NULL`
+#'   treats all events as one actor.
+#' @param action The column holding each event's action (state or code).
+#' @param time The timestamp column. Default `NULL`, in which case the row
+#'   order (or `order`) gives the order of the events and no session is split
+#'   by time. Numeric values are read as Unix timestamps, and POSIXct and
+#'   POSIXlt values are used as they are, in their own time zone. Text may be
+#'   ISO 8601 (with `Z` or an offset), `YYYY-MM-DD HH:MM[:SS]` with `-`, `/`
+#'   or `.`, day-first or month-first dates, dates with month names, or
+#'   compact `YYYYMMDDHHMMSS`, more than 40 layouts in all; text that matches
+#'   none but reads as a number is taken as a Unix timestamp. A value must
+#'   match a layout completely, with a four-digit year, so a two-digit year
+#'   raises an error of class `nestimate_bad_input` instead of being misread,
+#'   as does any value no layout reads. Day-first or month-first is decided
+#'   once for the whole column: any first field above 12 means day-first, any
+#'   second field above 12 means month-first. When the column cannot decide,
+#'   values are read day-first with a warning of class
+#'   `nestimate_ambiguous_dates`; `custom_format` settles it. An empty or
+#'   missing timestamp is not an error: that event is sorted after its
+#'   session's timed events and starts a session of its own.
+#' @param order The column that orders the events: with `time`, it breaks
+#'   ties between events with the same timestamp; without `time`, it gives
+#'   the order of each session's events. Default `NULL` (the row order).
+#' @param session The column, or columns, identifying explicit sessions
+#'   (e.g. `"course"` or `c("course", "semester")`). Each actor's events in
+#'   one session form a sequence, further split by time gaps when `time` is
+#'   set. Default `NULL`.
+#' @param time_threshold The longest gap, in seconds, between consecutive
+#'   events of one session; a longer gap starts a new session, numbered
+#'   `s1`, `s2`, ... within its actor and session. Used only with `time`.
+#'   `FALSE` turns the split off, so each actor (or actor-session) forms one
+#'   sequence however long the gaps. Default `900` (15 minutes).
+#' @param custom_format A [strptime()] format tried before the built-in
+#'   layouts; values it does not match fall through to them. Default `NULL`.
+#' @param is_unix_time Whether `time` holds Unix timestamps. `TRUE` reads a
+#'   text column as numbers and never as a date layout (a 12- or 14-digit
+#'   value would otherwise match the compact `YYYYMMDDHHMM[SS]` layouts); a
+#'   value that is not a number then raises an error of class
+#'   `nestimate_bad_input`. With `FALSE` (default), text is matched to the
+#'   date layouts first and read as a Unix timestamp only when it matches
+#'   none. A numeric `time` column is always read as Unix timestamps.
+#' @param unix_time_unit The unit of Unix timestamps: `"seconds"` (default),
+#'   `"milliseconds"` or `"microseconds"`. A numeric `time` column that gives
+#'   dates after the year 2500 raises a warning of class
+#'   `nestimate_time_unit`, the usual sign of the wrong unit.
+#' @param timezone The Olson time zone (see [OlsonNames()]) in which
+#'   timestamps without zone information are read and Unix timestamps are
+#'   expressed. Timestamps that end in `Z`, `UTC`, `GMT` or a numeric offset
+#'   such as `+02:00` are converted from that offset, so parsing does not
+#'   depend on the machine's time zone. Default `"UTC"`.
+#'
 #' @details
-#' Sessions are identified by the observed combinations of the \code{actor} and
-#' \code{session} columns, so identifiers containing separator characters stay
-#' distinct and high-cardinality identifiers cannot overflow. Missing values in
-#' any grouping column raise an error: drop or relabel those events first.
-#' @param time Character or NULL. Column name containing timestamps.
-#'   Supports ISO8601, Unix timestamps (numeric), and 40+ date/time formats.
-#'   A value must match a format completely, with a four-digit year, so a
-#'   two-digit year raises an error instead of being misread. Day-first or
-#'   month-first is decided once for the whole column: any first field above
-#'   12 means day-first, any second field above 12 means month-first. When
-#'   the column cannot decide, values are read day-first with a warning of
-#'   class \code{nestimate_ambiguous_dates}; \code{custom_format} settles it.
-#'   If NULL, row order defines the sequence. Default: NULL.
-#' @param order Character or NULL. Column name for tie-breaking when
-#'   timestamps are identical. If NULL, original row order is used.
-#'   Default: NULL.
-#' @param session Character, character vector, or NULL. Column name(s) for
-#'   explicit session grouping (e.g. \code{"course"} or
-#'   \code{c("course", "semester")}). When combined with \code{time},
-#'   sessions are further split by time gaps. Default: NULL.
-#' @param time_threshold Numeric or FALSE. Maximum gap in seconds between
-#'   consecutive events before a new session starts. Only used when
-#'   \code{time} is provided. Set to \code{FALSE} to switch session-interval
-#'   splitting off, so each actor (or actor-session) forms a single sequence
-#'   however long the gaps are. Default: 900 (15 minutes).
-#' @param custom_format Character or NULL. Custom \code{strptime} format
-#'   string for parsing timestamps. Default: NULL (auto-detect).
-#' @param is_unix_time Logical. If TRUE, treat numeric time values as Unix
-#'   timestamps. Default: FALSE (auto-detected for numeric columns).
-#' @param unix_time_unit Character. Unit for Unix timestamps:
-#'   \code{"seconds"}, \code{"milliseconds"}, or \code{"microseconds"}.
-#'   Default: \code{"seconds"}.
-#' @param timezone Character. An Olson time zone (see
-#'   \code{\link[base]{OlsonNames}}) used to interpret timestamps that carry
-#'   no zone information, and in which Unix timestamps are expressed.
-#'   Timestamps that end in \code{Z}, \code{UTC}, \code{GMT} or a numeric
-#'   offset such as \code{+02:00} are converted from that offset. Parsing is
-#'   therefore independent of the machine's local time zone.
-#'   Default: \code{"UTC"}.
+#' Within each actor and session, events are sorted by time and then by
+#' `order`. Sessions are identified by the observed combinations of the
+#' `actor` and `session` values, so identifiers containing separator
+#' characters stay distinct and high-cardinality identifiers cannot
+#' overflow. A missing value in any of these columns raises an error of
+#' class `nestimate_bad_input`: drop or relabel those events first.
 #'
-#' @return A list with class \code{"nestimate_data"} containing:
+#' Every other column is aggregated into the session metadata: numeric
+#' columns by their mean, other columns by their most frequent value. A tie
+#' goes to the tied value that occurs first in the session, and a message
+#' names the columns where that happened.
+#'
+#' @return A `nestimate_data` object. `print()` gives the numbers of
+#'   sessions and actions, the longest sequence, the number of actors when
+#'   `actor` was given and whether times were parsed, and returns its input
+#'   invisibly. [extract_sequences()], [sequence_patterns()] and
+#'   [sequence_metrics()] read it directly. It holds:
 #' \describe{
-#'   \item{sequence_data}{Data frame in wide format (one row per session,
-#'     columns T1, T2, ...).}
-#'   \item{long_data}{The processed long-format data with session IDs.}
-#'   \item{meta_data}{Session-level metadata, one row per session in the row
-#'     order of \code{sequence_data}: \code{.session_id}, \code{.session_label},
-#'     the \code{actor} column, the \code{session} column(s) under their own
-#'     names, and every other column aggregated per session.}
-#'   \item{time_data}{Parsed time values in wide format (if time provided).}
-#'   \item{statistics}{List with \code{total_sessions},
-#'     \code{total_actions} and \code{max_sequence_length}, plus
-#'     \code{unique_actors} only when \code{actor} was supplied (with no
-#'     \code{actor} every row belongs to one synthetic actor, so the count
-#'     would be meaningless).}
+#'   \item{sequence_data}{The sequences as a data frame: one row per session,
+#'     one column per position (`T1`, `T2`, ...), padded with `NA`.}
+#'   \item{long_data}{The events in their sorted order, with the parsed time
+#'     and the working columns that identify each event's session and
+#'     position (`.session_id`, `.session_label`, `.sequence`, ...).}
+#'   \item{meta_data}{One row per session, in the row order of
+#'     `sequence_data`: `.session_id`, `.session_label`, the actor column
+#'     (with several, their combined label `.actor`, joined by `"-"`, or by
+#'     the first of `"|"`, `" | "`, `" / "`, `" :: "` that keeps distinct
+#'     actors apart when values contain `"-"`), the session column(s)
+#'     under their own names, and every other column aggregated per
+#'     session.}
+#'   \item{time_data}{The parsed times in the layout of `sequence_data`
+#'     (columns `time_T1`, `time_T2`, ...), in `timezone` (or the zone of a
+#'     date-time `time` column), or `NULL` without `time`.}
+#'   \item{statistics}{A list with `total_sessions`, `total_actions` and
+#'     `max_sequence_length`, plus `unique_actors` (distinct combinations of
+#'     the `actor` columns) only when `actor` was given (without it, every
+#'     event belongs to one actor).}
 #' }
 #'
 #' @examples
@@ -100,16 +135,16 @@ prepare <- function(data,
                          unix_time_unit = c("seconds", "milliseconds",
                                             "microseconds"),
                          timezone = "UTC") {
-  stopifnot(is.data.frame(data))
+  .assert(is.data.frame(data))
   .check_timezone(timezone)
-  stopifnot(is.character(action), length(action) == 1, action %in% names(data))
+  .assert(is.character(action), length(action) == 1, action %in% names(data))
   # FALSE disables gap-based splitting. Inf makes the `gaps > time_threshold`
   # test below never fire, so no separate code path is needed.
   if (isFALSE(time_threshold)) {
     time_threshold <- Inf
   }
-  stopifnot(is.numeric(time_threshold), length(time_threshold) == 1,
-            !is.na(time_threshold), time_threshold > 0)
+  .assert(is.numeric(time_threshold), length(time_threshold) == 1,
+          !is.na(time_threshold), time_threshold > 0)
   unix_time_unit <- match.arg(unix_time_unit)
 
   df <- as.data.frame(data)
@@ -122,10 +157,10 @@ prepare <- function(data,
     actor_col <- ".actor"
     default_actor <- TRUE
   } else {
-    stopifnot(is.character(actor), all(actor %in% names(df)))
+    .assert(is.character(actor), all(actor %in% names(df)))
     if (length(actor) > 1L) {
       # Display label only. Identity comes from the underlying columns below.
-      df$.actor <- .group_label(df[, actor, drop = FALSE], sep = "-")
+      df$.actor <- .distinct_label(df[, actor, drop = FALSE])
       actor_col <- ".actor"
     } else {
       actor_col <- actor
@@ -135,10 +170,9 @@ prepare <- function(data,
 
   # ---- Session (explicit grouping) ----
   if (!is.null(session)) {
-    stopifnot(is.character(session), all(session %in% names(df)))
+    .assert(is.character(session), all(session %in% names(df)))
     if (length(session) > 1L) {
-      df$.session_explicit <- .group_label(df[, session, drop = FALSE],
-                                           sep = "-")
+      df$.session_explicit <- .distinct_label(df[, session, drop = FALSE])
     } else {
       df$.session_explicit <- df[[session]]
     }
@@ -149,7 +183,7 @@ prepare <- function(data,
     df$.order <- seq_len(n)
     order_col <- ".order"
   } else {
-    stopifnot(is.character(order), length(order) == 1, order %in% names(df))
+    .assert(is.character(order), length(order) == 1, order %in% names(df))
     order_col <- order
   }
 
@@ -162,18 +196,34 @@ prepare <- function(data,
   df$.base_label <- if (is.null(session)) {
     as.character(df[[actor_col]])
   } else {
-    .group_label(list(df[[actor_col]], df$.session_explicit))
+    .distinct_label(list(actor = df[[actor_col]],
+                         session = df$.session_explicit),
+                    seps = c(" | ", " || ", " / ", " :: "))
   }
 
   # ---- Time parsing + inferred session detection ----
   if (!is.null(time)) {
-    stopifnot(is.character(time), length(time) == 1, time %in% names(df))
+    .assert(is.character(time), length(time) == 1, time %in% names(df))
 
     # Auto-detect numeric as unix
     if (is.numeric(df[[time]])) {
       is_unix_time <- TRUE
     }
 
+    if (isTRUE(is_unix_time) && !is.numeric(df[[time]])) {
+      # Declared Unix time: read the text as numbers, never as a date layout
+      # (a 12- or 14-digit value also matches the compact YYYYMMDDHHMM[SS]).
+      as_num <- suppressWarnings(as.numeric(trimws(df[[time]])))
+      bad <- !is.na(df[[time]]) & nzchar(trimws(df[[time]])) & is.na(as_num)
+      if (any(bad)) {
+        stop(errorCondition(sprintf(paste(
+          "`is_unix_time = TRUE`, but `%s` holds values that are not",
+          "numbers, e.g. %s."), time,
+          paste(utils::head(df[[time]][bad], 3), collapse = ", ")),
+          class = "nestimate_bad_input", call = NULL))
+      }
+      df[[time]] <- as_num
+    }
     parsed <- .parse_time(df[[time]], custom_format = custom_format,
                           is_unix_time = is_unix_time,
                           unix_time_unit = unix_time_unit,
@@ -240,9 +290,14 @@ prepare <- function(data,
     # Convert every column first, then build the frame once. Assigning into a
     # data.frame column-by-column copies the whole frame on each iteration,
     # which is quadratic in max_len -- 27k+ columns for a single long sequence.
+    # Keep the zone of the parsed times (`timezone`, or a POSIXct input's
+    # own), so the display does not depend on the machine's local zone.
+    time_tz <- attr(df$.parsed_time, "tzone")
+    if (is.null(time_tz) || !nzchar(time_tz[1L])) time_tz <- timezone
     time_cols <- lapply(
       seq_len(max_len),
-      function(j) as.POSIXct(time_mat[, j], origin = "1970-01-01")
+      function(j) as.POSIXct(time_mat[, j], origin = "1970-01-01",
+                             tz = time_tz[1L])
     )
     names(time_cols) <- paste0("time_T", seq_len(max_len))
     time_data <- as.data.frame(time_cols, stringsAsFactors = FALSE)
@@ -289,7 +344,7 @@ prepare <- function(data,
     max_sequence_length = max_len
   )
   if (!default_actor) {
-    stats$unique_actors <- length(unique(df[[actor_col]]))
+    stats$unique_actors <- nrow(unique(df[, actor, drop = FALSE]))
   }
 
   rownames(sequence_data) <- NULL
@@ -308,9 +363,8 @@ prepare <- function(data,
 
 
 #' @rdname prepare
-#' @param x For the \code{print()} method: an object of class \code{nestimate_data}.
-#' @param ... In \code{print.nestimate_data()}: Additional arguments (ignored).
-#' @return In \code{print.nestimate_data()}: The input object, invisibly.
+#' @param x For the `print()` method: a `nestimate_data` object.
+#' @param ... Not used.
 #' @export
 print.nestimate_data <- function(x, ...) {
   cat("Prepared Data for Network Estimation\n")
@@ -332,7 +386,7 @@ print.nestimate_data <- function(x, ...) {
 #' Validate an Olson time zone name
 #' @noRd
 .check_timezone <- function(timezone) {
-  stopifnot(
+  .assert(
     "`timezone` must be a single Olson time zone name (see OlsonNames())" =
       is.character(timezone) && length(timezone) == 1L &&
         !is.na(timezone) && timezone %in% OlsonNames()
@@ -609,4 +663,31 @@ print.nestimate_data <- function(x, ...) {
     result[[col]] <- unname(agg_list[[col]])
   }
   result
+}
+
+#' Display label for several grouping columns that never merges two groups
+#'
+#' Pasting with a separator that occurs in a value can give two different
+#' combinations the same label (`"1-a" + "b"` and `"1" + "a-b"` both give
+#' `"1-a-b"`). The first separator whose labels map one-to-one onto the
+#' combinations is used (the first, `"-"`, whenever nothing collides); when
+#' every candidate collides, colliding labels get the group's number
+#' appended.
+#' @noRd
+.distinct_label <- function(cols, seps = c("-", "|", " | ", " / ", " :: "),
+                            context = "actor/session") {
+  cols <- lapply(as.list(cols), as.character)
+  id <- .observed_group_id(cols, context = context)
+  cols <- unname(cols)
+  one_to_one <- function(label) {
+    all(tapply(id, label, function(i) length(unique(i)) == 1L))
+  }
+  labels <- lapply(seps, function(s) do.call(paste, c(cols, list(sep = s))))
+  ok <- vapply(labels, one_to_one, logical(1))
+  if (any(ok)) return(labels[[which(ok)[1L]]])
+  label <- labels[[1L]]
+  clash <- tapply(id, label, function(i) length(unique(i)) > 1L)
+  label_clash <- label %in% names(clash)[clash]
+  label[label_clash] <- paste0(label[label_clash], " #", id[label_clash])
+  label
 }

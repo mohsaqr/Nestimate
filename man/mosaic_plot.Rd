@@ -111,127 +111,156 @@ mosaic_plot(x, ...)
 )
 }
 \arguments{
-\item{x}{One of the four data-bearing Nestimate classes:
-\code{netobject} (single mosaic of \code{$weights}),
-\code{netobject_group} (one panel per group),
-\code{mcml} (between-cluster mosaic by default; per-cluster panels with
-\code{level = "within"}), or
-\code{htna} (single mosaic of \code{$weights}; htna inherits netobject
-so the geometry matches). Also accepts a contingency \code{table} or
-plain numeric \code{matrix} for ad-hoc plotting, and a tidy
-\code{data.frame} in long form (see \code{x_var}, \code{y_var},
-\code{weight}).}
+\item{x}{The object to draw: a \code{netobject}, \code{netobject_group}, \code{mcml} or
+\code{htna} network, a contingency \code{table}, a numeric count \code{matrix}, or a
+data frame in long form (see \code{x_var}, \code{y_var} and \code{weight}).}
 
-\item{...}{Flat styling overrides forwarded to the flat renderer when
-\code{style = "flat"} (otherwise ignored).}
+\item{...}{With \code{style = "flat"}: styling arguments for the flat mosaic
+of a network, table or matrix; an unknown name raises an error that
+lists the valid ones. The data-frame method takes no \code{style} and
+raises an error of class \code{nestimate_bad_input} for any argument it
+does not take; the \code{mcml} method does the same with
+\code{style = "classic"}; the other methods ignore it.}
 
-\item{xlab, ylab}{Axis labels. \code{NULL} (default) draws no axis title
-on the four data-bearing methods; the \code{table} / \code{matrix}
-methods default to \code{"Row"} and \code{"Column"}. Pass any string to
-set one.}
+\item{xlab, ylab}{Axis titles. The network and \code{mcml} methods draw none
+by default (\code{NULL}); the \code{table} and \code{matrix} methods default to
+\code{"Row"} and \code{"Column"}; a data frame defaults to the \code{x_var} name and
+\code{"Proportion"}. Not drawn with \code{style = "flat"}.}
 
-\item{range}{Numeric of length 2 giving the lower and upper colour-scale
-limits for the standardized residual. \code{NULL} (default) auto-fits
-the limits to the symmetric range \code{c(-M, M)} where
-\code{M = max(|stdres|)} floored at 1, so no signal is squished and the
-legend stays readable on a near-independent table. Pass an explicit
-range (e.g. \code{c(-4, 4)} for tna-style display, \code{c(-6, 6)} for
-moderate clipping) to clamp the colour scale.}
+\item{range}{The lower and upper limits of the residual colour scale, two
+increasing numbers; residuals beyond them take the end colours. Default
+\code{NULL}, which fits the symmetric range \code{c(-M, M)}, with \code{M} the largest
+absolute residual (at least 1), so no tile is clipped. \code{c(-4, 4)}
+matches tna's display.}
 
-\item{top_angle, left_angle}{Rotation in degrees for the top (x) and left
-(y) tick labels. \code{NULL} (default) uses the auto rule
-\code{90 if n_levels > 3 else 0} on each axis. Pass any numeric to
-override (e.g. \code{top_angle = 45, left_angle = 0}).}
+\item{top_angle, left_angle}{Rotation, in degrees, of the column labels on
+top and the segment labels on the left. Default \code{NULL}: 90 when an axis
+has more than three levels, 0 otherwise. Not used with \code{style = "flat"}
+or for the per-cluster \code{mcml} panels.}
 
-\item{residuals}{One of \code{"permutation"} (default) or
-\code{"asymptotic"}. \code{"permutation"} computes empirical-null
-z-scores by shuffling one variable's labels against the other for
-\code{n_perm} draws and reporting
-\code{(O - mean_perm) / sd_perm} per cell. Robust on sparse tables.
-\code{"asymptotic"} returns \code{stats::chisq.test()$stdres} (the
-closed-form \code{(O - E) / sqrt(E*(1 - p_row)*(1 - p_col))} that vcd
-and tna use).}
+\item{residuals}{How the standardised residuals are computed.
+\code{"permutation"} (default) shuffles one variable's labels against the
+other \code{n_perm} times, which keeps both margins, and gives each cell
+\code{(observed - mean) / sd} over the shuffles; a cell that never varies
+gets 0. It does not rely on large expected counts, so it suits sparse
+tables. \code{"asymptotic"} gives the adjusted residuals of
+\code{\link[stats:chisq.test]{stats::chisq.test()}}, \code{(O - E) / sqrt(E (1 - p_row) (1 - p_col))}, as
+vcd and tna do.}
 
-\item{n_perm}{Number of permutations when \code{residuals = "permutation"}.
-Default 500; use \code{>= 1000} for stable tail estimates.}
+\item{n_perm}{The number of shuffles for \code{residuals = "permutation"}, at
+least 2. Default \code{500}; use 1000 or more for stable values in the
+tails.}
 
-\item{seed}{Optional integer seed for the permutation RNG. Use for
-reproducible plots; ignored when \code{residuals = "asymptotic"}.}
+\item{seed}{A seed for the shuffles, so the residuals repeat exactly. The
+session's own random stream is left as it was. Default \code{NULL}. Ignored with
+\code{residuals = "asymptotic"}.}
 
-\item{values}{Logical. When \code{TRUE}, overlay each cell's standardized
-residual as a numeric label (one decimal). Text colour switches to
-white on saturated cells (|stdres| > 1.5) and dark grey otherwise.
-Default \code{FALSE} -- the colour bar legend already conveys the
-sign and magnitude.}
+\item{values}{Whether to print each tile's residual (one decimal) inside
+it. Default \code{FALSE}. In the classic style the text is white on
+strongly coloured tiles (absolute residual above 1.5) and dark grey
+otherwise; with \code{style = "flat"} it is white on tiles whose absolute
+residual exceeds 0.55 of the largest, and tiles too small for a label
+stay blank.}
 
-\item{style}{Character. \code{"classic"} (default) draws the
-black-bordered \code{theme_minimal} mosaic with axis labels;
-\code{"flat"} draws the flat \code{theme_void} mosaic with white
-gutters, a soft background and a colour-bar legend. With
-\code{style = "flat"}, \code{values = TRUE} prints the standardized
-residual inside each tile, and extra flat styling arguments
-(\code{tile_label}, \code{col_label_side}, \code{row_label_side},
-\code{legend_position}, \code{legend_size}, \code{label_size}, ...;
-see \code{\link{mosaic_analysis}}) may be passed via \code{...}.
-Not supported for multi-panel \code{mcml} (level = "clusters"),
-which falls back to the classic faceted style.}
+\item{style}{\code{"classic"} (default) draws black-bordered tiles with axis
+labels. \code{"flat"} draws the mosaic of \code{\link[=mosaic_analysis]{mosaic_analysis()}}: white gutters
+between tiles, labels beside them, no axes, and a ColorBrewer red-blue
+residual ramp; \code{values = TRUE} then prints the residuals in the tiles,
+and its styling arguments (\code{tile_label}, \code{col_label_side},
+\code{row_label_side}, \code{legend_position}, \code{legend_size}, \code{label_size}, ...)
+go in \code{...}. An \code{mcml} with \code{level = "clusters"} and more than one
+panel is drawn classic, with a message; an \code{htna} drawn flat loses its
+actor-coloured labels, with a warning.}
 
-\item{level}{For \code{mcml} only. \code{"macro"} (default) draws a
-single mosaic of \code{x$macro$weights} (the cluster-by-cluster
-aggregate); \code{"clusters"} draws one mosaic per cluster from
-\code{x$clusters[[k]]$weights}, faceted into one combined ggplot.}
+\item{level}{For an \code{mcml}: \code{"macro"} (default) draws one mosaic of the
+cluster-by-cluster counts; \code{"clusters"} draws one mosaic per cluster,
+as panels of one plot that share the residual scale.}
 
-\item{ncol}{Number of columns in the multi-panel layout. Default 2.
-Effective only for \code{mcml} with \code{level = "clusters"}, the one
-multi-panel case; \code{netobject_group} is drawn as a single
-(group x state) mosaic, so \code{ncol} is accepted but has no effect
-there.}
+\item{ncol}{For an \code{mcml} with \code{level = "clusters"}: the number of panel
+columns. Default \code{2}. Accepted by the \code{netobject_group} method, whose
+single mosaic does not use it.}
 
-\item{x_var, y_var, weight}{For a \code{data.frame}: the names of the
-column variable (one mosaic column per level, width proportional to its
-total \code{weight}), the segment variable (stacked within each column in
-proportion to its share), and the cell weight (e.g. a count).}
+\item{x_var, y_var, weight}{For a data frame: the column whose levels form
+the mosaic's columns (each as wide as its total \code{weight}), the column
+whose levels are stacked within each column (in proportion to their
+share), and the column holding each row's weight, such as a count.
+Levels keep their factor order, or sort alphabetically. \code{x_var},
+\code{y_var}, \code{weight}, \code{fill}, \code{colors} and \code{show_labels} given with any
+other input raise an error of class \code{nestimate_bad_input}, as does
+\code{label_size} outside \code{style = "flat"}.}
 
-\item{fill}{For a \code{data.frame}: \code{"y"} (default) colours the
-segments by \code{y_var}; the name of another column (e.g. a residual)
-maps that column to the fill instead.}
+\item{fill}{For a data frame: \code{"y"} (default) colours the segments by
+\code{y_var}; the name of another column maps that column to the fill
+instead (the first value per cell).}
 
-\item{colors}{For a \code{data.frame}: optional fill colours, either an
-unnamed vector in level order or a named lookup
-(\code{c(plan = "#0072B2")}) overriding only the levels named. Defaults
-to recycled Okabe-Ito.}
+\item{colors}{For a data frame with \code{fill = "y"}: fill colours, either an
+unnamed vector in level order (at least one per level) or a named
+lookup such as \code{c(plan = "#0072B2")} that overrides only the levels
+named. Default \code{NULL}, the Okabe-Ito palette, recycled.}
 
-\item{show_labels, label_size}{For a \code{data.frame}: draw percentage
-labels inside the segments, and their size.}
+\item{show_labels, label_size}{For a data frame: whether to print each
+segment's percentage inside it (default \code{TRUE}; segments under 4\% stay
+unlabelled), and the label size (default \code{3.5}). With
+\code{style = "flat"}, \code{label_size} also sizes the flat mosaic's tile
+labels.}
 }
 \value{
-A \code{ggplot} object: one \code{geom_rect} layer with one
-rectangle per contingency-table cell, filled by the standardized
-residual. \code{mcml} with \code{level = "clusters"} returns a single
-\code{facet_wrap}-ed \code{ggplot} (one panel per cluster, shared fill
-scale); every other input returns a single-panel \code{ggplot}.
+A \code{ggplot} object, one rectangle per cell (empty cells are left
+out of the flat and data-frame mosaics), filled by the standardised
+residual (by category for a data frame). Print it to draw
+it, or add ggplot2 layers and themes. An \code{mcml} with
+\code{level = "clusters"} gives one faceted \code{ggplot} with a panel per
+cluster and one shared fill scale. An object of an unsupported class
+raises an error.
 }
 \description{
-Draws a Hartigan-Friendly mosaic (marimekko geometry, chi-square
-standardized-residual fill) for an integer-weighted network. Equivalent in
-algorithm and appearance to \code{tna::plot_mosaic()}; named differently to
-avoid an export clash when both packages are attached.
+\code{mosaic_plot()} draws a mosaic display of a contingency table and fills
+each tile with its standardised residual under independence: blue tiles
+hold more cases than independence predicts, red tiles fewer. It reads the
+transition or co-occurrence counts of a \code{netobject} or \code{htna} network, the
+state counts of each group of a \code{netobject_group}, the cluster-level or
+per-cluster counts of an \code{mcml}, or a \code{table} or count \code{matrix} given
+directly. A data frame in long form is drawn as a plain marimekko of
+shares instead, coloured by the stacked variable (or the \code{fill}
+column), without residuals.
+
+In a network's mosaic each column is a target state, its width
+proportional to the transitions into it, and its segments are the source
+states, stacked in proportion to their share of those transitions. For a
+\code{netobject_group} the columns are the groups and the segments the states,
+counted from each group's sequences, so the mosaic shows how the state
+mix differs between groups. For a \code{table} or \code{matrix}, its rows are the
+columns of the mosaic and its columns the stacked segments. An \code{htna}
+network has its states ordered by actor, with each state's label set in
+bold in its actor's colour.
+
+The residuals describe where the counts depart from independence; they
+are not tests of single cells, and transitions taken from the same
+sequence are not independent draws. To test edges or group differences,
+use \code{\link[=permutation]{permutation()}}; for a chi-square or Fisher test with
+Cram\enc{é}{e}r's V on two variables of a data frame, use
+\code{\link[=mosaic_analysis]{mosaic_analysis()}}.
 }
 \details{
-Column widths are proportional to row marginals of the weight matrix
-(incoming totals when the matrix is transposed, as for transitions). Within
-each column, segment heights are proportional to that row's conditional
-distribution. Cell fill is the standardized residual under the independence
-null -- a permutation z-score by default, or the closed-form
-\code{stats::chisq.test()} residual with \code{residuals = "asymptotic"}
-(see \code{residuals}) -- on a diverging palette whose limits auto-fit the
-observed residuals unless \code{range} is supplied.
-Mosaics need integer counts: when \code{$weights} is already integer
-(\code{method = "frequency"} / \code{"co_occurrence"}) it is used directly;
-for a single \code{netobject} / \code{htna} otherwise (relative, glasso,
-cor, ...) order-1 transition counts are recounted from the raw \code{$data}
-sequences. The function errors only when neither integer weights nor
-\code{$data} are available.
+A mosaic needs counts. A network whose weights are whole numbers
+(\code{method = "frequency"} or \code{"co_occurrence"}) is drawn from its weights;
+otherwise from the transition counts stored with it at estimation, and
+failing that from first-order transitions recounted from its sequence
+data. A \code{netobject_group} is counted from each group's sequences, or
+from the column sums of its weights when they are counts. A single
+network with none of these, such as an association network (\code{cor},
+\code{pcor}, \code{glasso}, \code{ising}, \code{mgm}), raises an error. A \code{netobject_group}
+must hold sequence networks: the group method counts whatever its
+networks' data hold, so a group of association networks is drawn
+without an error, each distinct numeric value counted as a state. An
+\code{mcml} is counted the same way as a network, layer by layer; a cluster
+with a single state has no table to draw: when it holds self-transitions
+it is left out of the per-cluster figure with a warning, and when it holds
+no transition at all the call stops with an error. When a row or
+column of the table is empty, the asymptotic residuals are undefined
+and every tile is drawn at 0. The geometry and the asymptotic
+residuals follow \code{tna::plot_mosaic()}; the function has its own name so
+the two packages can be attached together.
 }
 \examples{
 data(group_regulation_long, package = "Nestimate")

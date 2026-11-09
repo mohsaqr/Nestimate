@@ -22,6 +22,16 @@ test_that(".mpt_stationary returns valid stationary distribution", {
 
 # ---- passage_time() basics ----
 
+test_that("markov_stability keeps recurrence times for separate closed classes", {
+  P <- matrix(c(0, 1, 0, 1, 0, 0, 0, 0, 1), 3, 3, byrow = TRUE,
+              dimnames = list(c("A", "B", "C"), c("A", "B", "C")))
+  result <- markov_stability(P)
+  expect_equal(result$stability$return_time, c(2, 2, 1))
+  expect_equal(result$stability$return_time, unname(result$mpt$return_times))
+  expect_true(all(is.na(result$stability$stationary_prob)))
+  expect_equal(result$mpt$matrix["A", "C"], Inf)
+})
+
 test_that("passage_time returns net_mpt with correct structure", {
   pt <- passage_time(.P3)
   expect_s3_class(pt, "net_mpt")
@@ -94,7 +104,7 @@ test_that("passage_time errors on zero-sum row and names the dead state", {
   P_dead["B", ] <- 0  # B has no outgoing transitions
   expect_error(
     passage_time(P_dead),
-    "zero-sum row.*B.*not.*ergodic"
+    "zero-sum row.*B.*no outgoing transitions"
   )
 })
 
@@ -103,7 +113,7 @@ test_that("markov_stability errors on zero-sum row and names the dead state", {
   P_dead["C", ] <- 0
   expect_error(
     markov_stability(P_dead),
-    "zero-sum row.*C.*not.*ergodic"
+    "zero-sum row.*C.*no outgoing transitions"
   )
 })
 
@@ -325,4 +335,40 @@ test_that("markov_stability dispatches over netobject_group", {
                  info = sprintf("group %s", nm))
   }
   expect_invisible(print(ms_grp))
+})
+
+test_that("passage_time gives Inf for states not reached with certainty", {
+  # a <-> b transient, c absorbing. By hand: m_ab = 1 / 0.5 = 2;
+  # m_ac = 1 + .5 m_ac + .5 m_bc and m_bc = 1 + .2 m_ac + .3 m_bc give
+  # m_ac = 4.8, m_bc = 2.8; c never leaves, so every time out of c is Inf,
+  # and b -> a is Inf (b may be absorbed first). The former epsilon floor
+  # returned ~1e15 here with a warning.
+  P <- rbind(c(.5, .5, 0), c(.2, .3, .5), c(0, 0, 1))
+  dimnames(P) <- list(c("a", "b", "c"), c("a", "b", "c"))
+  pt <- expect_silent(passage_time(P))
+  M <- pt$matrix
+  expect_equal(M["a", "b"], 2)
+  expect_equal(M["a", "c"], 4.8)
+  expect_equal(M["b", "c"], 2.8)
+  expect_identical(unname(M["c", c("a", "b")]), c(Inf, Inf))
+  expect_identical(M["b", "a"], Inf)
+  expect_identical(unname(pt$return_times), c(Inf, Inf, 1))
+  expect_equal(unname(pt$stationary), c(0, 0, 1))
+
+  # Two absorbing states: no error, Inf across, NA stationary (not unique).
+  P2 <- rbind(c(1, 0, 0), c(.2, .3, .5), c(0, 0, 1))
+  dimnames(P2) <- dimnames(P)
+  pt2 <- passage_time(P2)
+  expect_identical(unname(diag(pt2$matrix)), c(1, Inf, 1))
+  expect_true(all(is.infinite(pt2$matrix[row(P2) != col(P2)])))
+  expect_true(all(is.na(pt2$stationary)))
+})
+
+test_that("hitting-time route equals Kemeny-Snell on an irreducible chain", {
+  P <- rbind(c(.2, .5, .3), c(.4, .1, .5), c(.3, .3, .4))
+  dimnames(P) <- list(c("a", "b", "c"), c("a", "b", "c"))
+  pi <- .mpt_stationary(P)
+  expect_equal(.mpt_hitting_times(P), {
+    M <- .mpt_full(P, pi); dimnames(M) <- dimnames(P); M
+  }, tolerance = 1e-10)
 })

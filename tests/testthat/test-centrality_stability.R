@@ -289,3 +289,27 @@ test_that("centrality_stability counts subsets with a constant measure", {
                mean(!is.na(cs$correlations$InStrength)))
   expect_lt(abs(summary(cs)$prop_above - 6 / 11), 0.2)
 })
+
+test_that("CS is the largest passing proportion, whatever the order", {
+  # Columns pass, fail, pass: proportions 0.5 and 0.1 pass, so CS = 0.5
+  corr_mat <- cbind(rep(0.9, 4), rep(0.2, 4), rep(0.9, 4))
+  expect_equal(.calculate_cs(corr_mat, threshold = 0.7, certainty = 0.95,
+                             drop_prop = c(0.5, 0.9, 0.1)), 0.5)
+  # same draws, sorted proportions: same CS
+  expect_equal(.calculate_cs(corr_mat[, c(3, 1, 2)], threshold = 0.7,
+                             certainty = 0.95, drop_prop = c(0.1, 0.5, 0.9)),
+               0.5)
+})
+
+test_that("a measure constant up to rounding is dropped, not correlated", {
+  # OutStrength of a relative network with loops is 1 for every state up to
+  # ~1e-16: it has no variance to correlate.
+  net <- build_network(group_regulation_long, method = "relative",
+                       action = "Action", actor = "Actor", time = "Time")
+  expect_true(.is_constant_vector(c(1, 1 - 1.1e-16, 1)))
+  expect_false(.is_constant_vector(c(1, 1.001, 1)))
+  st <- centrality_stability(net, measures = c("InStrength", "OutStrength"),
+                             loops = TRUE, iter = 5L, drop_prop = 0.5,
+                             seed = 1)
+  expect_identical(names(st$cs), "InStrength")
+})

@@ -22,70 +22,112 @@ network_reliability(
 \method{plot}{net_reliability}(x, bins = 60L, combined = TRUE, ...)
 }
 \arguments{
-\item{...}{One or more \code{netobject}s (from \code{\link{build_network}}).
-If unnamed, each model is auto-named from its \code{$method}; duplicate
-names are made unique with \code{make.unique()}. A
-\code{netobject_group} is flattened into its constituent models (named
-by group), and an \code{mcml} or \code{cograph_network} is converted
-first. In \code{plot.net_reliability()} and \code{print.net_reliability()}: Additional arguments (ignored). In \code{summary.net_reliability()}: Ignored.}
+\item{...}{The networks: one or more \code{netobject}s from
+\code{\link[=build_network]{build_network()}}. A \code{netobject_group} is split into its networks,
+named by group; an \code{mcml} is converted with
+\code{\link[=as_tna]{as_tna()}} first, and a bare \code{cograph_network}
+is read as a \code{netobject}. Each network is named by its argument name
+or, failing that, its method; repeated names get a suffix (\code{"_1"},
+\code{"_2"}, ...). A network without its sequence data (which
+\code{\link[=build_network]{build_network()}} keeps) raises an error, a
+network resting on one sequence an error of class
+\code{nestimate_single_sequence}, and networks of different methods with
+\code{scale = "none"} a warning. For the \code{print()}, \code{summary()} and
+\code{plot()} methods: ignored.}
 
-\item{iter}{Integer. Number of split-half iterations (default: 1000).}
+\item{iter}{The number of split-half iterations, at least 2. Default
+\code{1000}.}
 
-\item{split}{Numeric. Fraction of sequences assigned to the first half
-(default: 0.5).}
+\item{split}{The share of the sequences that goes to the first half, the
+rest forming the second, strictly between 0 and 1. Default \code{0.5}.}
 
-\item{scale}{Character. Scaling applied to both split-half matrices
-before computing metrics. One of \code{"none"} (default),
-\code{"minmax"}, \code{"standardize"}, or \code{"proportion"}.
-Use scaling when comparing models on different scales (e.g. frequency
-vs relative).}
+\item{scale}{The rescaling applied to both halves' weight matrices
+before they are compared, so that networks on different scales can be
+set side by side: \code{"none"} (default); \code{"minmax"}, which maps each
+matrix to 0--1; \code{"standardize"}, which subtracts the mean of its cells
+and divides by their SD; or \code{"proportion"}, which divides by the sum
+of its cells. A matrix whose cells are all equal, or sum to 0, is left
+as it is.}
 
-\item{seed}{Integer or NULL. RNG seed for reproducibility.}
+\item{seed}{A seed for the random splits, so the result repeats exactly.
+The session's own random stream is left as it was. Default \code{NULL}.}
 
-\item{x}{For the \code{print()} and \code{plot()} methods: an object of class \code{net_reliability}.}
+\item{x}{For the \code{print()} and \code{plot()} methods: a \code{net_reliability}
+object.}
 
-\item{object}{For the \code{summary()} method: an object of class \code{net_reliability}.}
+\item{object}{For the \code{summary()} method: a \code{net_reliability} object.}
 
-\item{bins}{Integer. Number of histogram bins per panel (default 60).}
+\item{bins}{For the \code{plot()} method: the number of histogram bins per
+panel. Default \code{60}.}
 
-\item{combined}{When \code{TRUE} (default), all four metrics are shown in one ggplot via \code{facet_wrap(~ metric)}. When \code{FALSE}, returns a named list of four single-panel ggplots, one per metric.}
+\item{combined}{For the \code{plot()} method: \code{TRUE} (default) draws the four
+metrics as panels of one plot; \code{FALSE} returns a named list of four
+single-panel plots, one per metric, without drawing them.}
 }
 \value{
-An object of class \code{"net_reliability"} containing:
+A \code{net_reliability} object. \code{print()} shows the mean and SD of
+each metric over the iterations, per network; \code{\link[=summary]{summary()}} returns
+them as a data frame with one row per network and metric and the
+columns \code{model}, \code{metric} (\code{mean_dev}, \code{median_dev}, \code{cor},
+\code{max_dev}), \code{mean} and \code{sd}; \code{plot()} draws their distributions. The
+object's fields:
 \describe{
-\item{iterations}{Data frame with columns \code{model}, \code{mean_dev},
-\code{median_dev}, \code{cor}, \code{max_dev} (one row per iteration
-per model).}
-\item{summary}{Data frame with columns \code{model}, \code{metric},
-\code{mean}, \code{sd}.}
-\item{models}{Named list of the original \code{netobject}s.}
-\item{iter}{Number of iterations.}
-\item{split}{Split fraction.}
-\item{scale}{Scaling method used.}
+\item{iterations}{A data frame with one row per iteration and
+network, and the columns \code{model}, \code{mean_dev}, \code{median_dev}, \code{cor}
+and \code{max_dev}.}
+\item{summary}{The table \code{summary()} returns.}
+\item{models}{The networks compared, as a named list.}
+\item{iter, split, scale}{The settings of the call.}
 }
-
-In \code{print.net_reliability()}: The input object, invisibly.
-
-In \code{summary.net_reliability()}: A tidy data frame with columns \code{model}, \code{metric}, \code{mean}, \code{sd} summarising the split-half iterations.
-
-In \code{plot.net_reliability()}: A \code{ggplot} object (invisibly), or a named list of four ggplots when \code{combined = FALSE}.
+\code{print()} returns its input invisibly. \code{plot()} draws the histograms
+(see \emph{Methods}) and returns the \code{ggplot} invisibly; with
+\code{combined = FALSE} it returns, without drawing, a list of four
+\code{ggplot}s named by the metric labels (\code{"Max Abs. Diff."},
+\code{"Mean Abs. Diff."}, \code{"Median Abs. Diff."}, \code{"Pearson"}).
 }
 \description{
-Assesses the stability of network estimates by repeatedly splitting
-sequences into two halves, building networks from each half, and
-comparing them. Supports single-model reliability assessment and
-multi-model comparison with optional scaling for cross-method
-comparability.
+\code{network_reliability()} measures how much a network's weights depend on
+the particular sample: it splits the sequences (for an association
+network, the rows of its data) at random into two halves, estimates the
+network on each half with the original network's method and settings,
+compares the two weight matrices, and repeats this \code{iter} times. Each
+comparison gives four numbers: the mean, median and largest absolute
+difference between the halves' weights and their Pearson correlation,
+taken over all cells of the weight matrix. It takes
+one network or several, so the reliability of different methods or
+groups can be set side by side; a \code{netobject_group} contributes one
+network per group.
 
-For transition methods (\code{"relative"}, \code{"frequency"},
-\code{"co_occurrence"}), uses pre-computed per-sequence count matrices
-for fast resampling (same infrastructure as
-\code{\link{bootstrap_network}}).
+Each half holds only part of the sequences, so the agreement is that of
+networks estimated from a sample of that size. Differences are on the
+scale of the weights: counts of a \code{"frequency"} network and
+probabilities of a \code{"relative"} one are not comparable without \code{scale}.
+To see how far single edges move, use \code{\link[=bootstrap_network]{bootstrap_network()}}; to check
+centrality rankings, \code{\link[=centrality_stability]{centrality_stability()}}.
+}
+\details{
+The first half holds \code{round(split * n)} of the \code{n} sequences (at least
+one), the second the rest; a \code{split} that leaves the second half empty
+(few sequences, \code{split} far from 0.5) raises an error of class
+\code{nestimate_bad_input}. For the transition methods (\code{"relative"},
+\code{"frequency"}, \code{"co_occurrence"}, and one-hot \code{wtna} networks, which are
+counted the same way), each sequence's transition counts are computed
+once and each half is summed from them, as in \code{\link[=bootstrap_network]{bootstrap_network()}}.
+Other methods are re-estimated on each half of the rows. The network's
+own scaling and threshold are applied to both halves. A half on which
+the estimator fails, or that loses a variable (a column constant in
+that half), gives \code{NA} for that iteration, counted in a warning of class
+\code{nestimate_resample_failed}. The summary leaves out missing values, such
+as a correlation that is undefined because one half's weights are all
+equal.
 }
 \section{Methods}{
 
 \itemize{
-\item \code{plot.net_reliability()}: Density plots of split-half metrics faceted by metric type. Multi-model comparisons show overlaid densities colored by model.
+\item \code{plot()}: histograms of the split-half metrics over the iterations, one
+panel per metric, the mean marked by a dashed line and a label. With
+several networks, their histograms are overlaid, one colour per
+network, with a legend below.
 }
 }
 

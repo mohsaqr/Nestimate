@@ -2,109 +2,147 @@
 
 #' Build a Co-occurrence Network
 #'
-#' Constructs an undirected co-occurrence network from various input formats.
-#' Entities that appear together in the same transaction, document, or record
-#' are connected, with edge weights reflecting raw counts or a similarity
-#' measure. Argument names follow the citenets convention.
+#' @description
+#' `cooccurrence()` builds an undirected network of items that appear
+#' together in the same transaction (a document, a session, a record): an
+#' edge joins two items that occur together, weighted by how often they do,
+#' or by a similarity measure that adjusts that count for how often each item
+#' occurs overall. With `similarity = "relative"` the network is directed. It reads delimited columns (keywords separated by `";"`),
+#' a long table of items per transaction, a 0/1 incidence table, wide
+#' sequences or a list of transactions; the *Details* say how each is
+#' recognised.
 #'
-#' @param data Input data. Accepts:
+#' Raw counts grow with how frequent the two items are, so the most frequent
+#' items dominate a count network. The similarity measures correct for that
+#' in different ways (van Eck & Waltman, 2009); compare a few before reading
+#' which pairs are strongest. The network is descriptive: it keeps no source
+#' data, so [bootstrap_network()] and [permutation()] cannot resample it.
+#'
+#' @param data The transactions, in one of these forms:
 #'   \itemize{
-#'     \item A \code{data.frame} with a delimited column (\code{field} + \code{sep}).
-#'     \item A \code{data.frame} in long/bipartite format (\code{field} + \code{by}).
-#'     \item A binary \code{data.frame} or \code{matrix} (0/1 or
-#'       \code{TRUE}/\code{FALSE}), declared with \code{format = "binary"}.
-#'     \item A wide sequence \code{data.frame} or \code{matrix} (non-binary).
-#'     \item A \code{list} of character vectors (each element is a transaction).
+#'     \item a data frame with a delimited column (`field` and `sep`);
+#'     \item a data frame in long (bipartite) form, one row per item in a
+#'       transaction (`field` and `by`);
+#'     \item a 0/1 or `TRUE`/`FALSE` data frame or matrix, one row per
+#'       transaction and one column per item, declared with
+#'       `format = "binary"`;
+#'     \item a wide sequence data frame or matrix with other values, whose
+#'       rows are the transactions;
+#'     \item a plain list of character vectors, one per transaction.
 #'   }
-#' @param field Character. The entity column - determines what the nodes are.
-#'   For delimited format, a single column whose values are split by \code{sep}.
-#'   For long/bipartite format, the item column. For multi-column delimited,
-#'   a vector of column names whose split values are pooled per row.
-#' @param by Character or \code{NULL}. What links the nodes. For
-#'   long/bipartite format, the grouping column (e.g., \code{"paper_id"},
-#'   \code{"session_id"}). Each unique value of \code{by} defines one
-#'   transaction. If \code{NULL} (default), entities co-occur within the
-#'   same row/document.
-#' @param sep Character or \code{NULL}. Separator for splitting delimited
-#'   fields (e.g., \code{";"}, \code{","}). Default \code{NULL}.
-#' @param similarity Character. Similarity measure applied to the raw
-#'   co-occurrence counts. One of:
+#'   A network object (`netobject`, `netobject_group`, `cograph_network`,
+#'   `tna`) raises an error of class `nestimate_bad_input`; pass the data it
+#'   was built from.
+#' @param field The column holding the items, which become the nodes. With
+#'   `sep`, its values are split by `sep`; several column names pool the split
+#'   values of each row. With `by`, it is the item column of a long table.
+#'   Default `NULL`. Setting `by` or `sep` without `field`, or `field`
+#'   without either, raises an error of class `nestimate_bad_input`, as does
+#'   naming a column that `data` does not have, or setting any of the three
+#'   for a list.
+#' @param by The column that defines the transactions of a long table: each
+#'   of its values is one transaction, holding the distinct `field` values of
+#'   its rows (for example `"paper_id"` or `"session_id"`). Default `NULL`,
+#'   where items co-occur within the same row. Ignored when `sep` is set,
+#'   which reads `field` as delimited.
+#' @param sep The separator that splits delimited `field` values, such as
+#'   `";"` or `","`, matched literally; the split values are trimmed. Default
+#'   `NULL`. See `field` for the combinations that raise an error.
+#' @param similarity How the co-occurrence count \eqn{C_{ij}}{C_ij} of items
+#'   \eqn{i} and \eqn{j}, with item frequencies \eqn{f_i} and \eqn{f_j}, is
+#'   turned into an edge weight. Default `"none"`.
 #'   \describe{
-#'     \item{\code{"none"}}{Raw co-occurrence counts.}
-#'     \item{\code{"jaccard"}}{\eqn{C_{ij} / (f_i + f_j - C_{ij})}.}
-#'     \item{\code{"cosine"}}{\eqn{C_{ij} / \sqrt{f_i \cdot f_j}}
+#'     \item{`"none"`}{Raw co-occurrence counts.}
+#'     \item{`"jaccard"`}{\eqn{C_{ij} / (f_i + f_j - C_{ij})}{C_ij /
+#'       (f_i + f_j - C_ij)}.}
+#'     \item{`"cosine"`}{\eqn{C_{ij} / \sqrt{f_i \cdot f_j}}{C_ij /
+#'       sqrt(f_i * f_j)}
 #'       (Salton's cosine).}
-#'     \item{\code{"inclusion"}}{\eqn{C_{ij} / \min(f_i, f_j)}
+#'     \item{`"inclusion"`}{\eqn{C_{ij} / \min(f_i, f_j)}{C_ij / min(f_i, f_j)}
 #'       (Simpson coefficient).}
-#'     \item{\code{"association"}}{\eqn{C_{ij} / (f_i \cdot f_j)}
-#'       (association strength / probabilistic affinity index;
+#'     \item{`"association"`}{\eqn{C_{ij} / (f_i \cdot f_j)}{C_ij /
+#'       (f_i * f_j)}
+#'       (association strength, or probabilistic affinity index;
 #'       van Eck & Waltman, 2009).}
-#'     \item{\code{"dice"}}{\eqn{2 C_{ij} / (f_i + f_j)}.}
-#'     \item{\code{"equivalence"}}{\eqn{C_{ij}^2 / (f_i \cdot f_j)}
+#'     \item{`"dice"`}{\eqn{2 C_{ij} / (f_i + f_j)}{2 C_ij / (f_i + f_j)}.}
+#'     \item{`"equivalence"`}{\eqn{C_{ij}^2 / (f_i \cdot f_j)}{C_ij^2 /
+#'       (f_i * f_j)}
 #'       (Salton's cosine squared).}
-#'     \item{\code{"relative"}}{Row-normalized: each row sums to 1.}
+#'     \item{`"relative"`}{Each row divided by its sum (the diagonal
+#'       included when `diagonal = TRUE`), so each row sums to 1: the weight
+#'       from `i` to `j` is the share of `i`'s co-occurrences that involve
+#'       `j`. The matrix is no longer symmetric, so the network is directed
+#'       and both directions of a pair are edges.}
 #'   }
-#' @param threshold Numeric. Minimum edge weight to retain. Edges below this
-#'   value are set to zero. Applied \emph{after} similarity normalization.
-#'   Default 0.
-#' @param min_occur Integer. Minimum entity frequency (number of transactions
-#'   an entity must appear in). Entities below this threshold are dropped
-#'   before computing co-occurrence. Default 1 (keep all).
-#' @param diagonal Logical. If \code{TRUE} (default), the diagonal of the
-#'   co-occurrence matrix is kept (item self-co-occurrence = item frequency).
-#'   If \code{FALSE}, the diagonal is zeroed.
-#' @param top_n Integer or \code{NULL}. If specified, return only the top
-#'   \code{top_n} edges by weight. Default \code{NULL} (all edges).
-#' @param format \code{"auto"} (default) or \code{"binary"}. Columns of only 0 and 1
-#'   could be items or recoded positions, so \code{"auto"} raises an error of class
-#'   \code{nestimate_bad_input} on them. \code{"binary"} declares them items, one row
-#'   per transaction; a missing cell counts as no occurrence.
-#' @param ... Currently unused.
+#'   A zero denominator is replaced by 1, so an item without co-occurrences
+#'   gets weight 0 rather than `NaN`.
+#' @param threshold The smallest weight kept: weights below it, on the scale
+#'   of `similarity`, are set to zero. Default `0` (none).
+#' @param min_occur The fewest transactions an item must appear in to be
+#'   kept. Rarer items are dropped before the co-occurrences are counted, and
+#'   transactions left empty are dropped with them. Default `1` (keep all).
+#' @param diagonal Whether the diagonal is kept. With `TRUE` (default) it
+#'   holds each item's frequency (the number of transactions it appears in),
+#'   transformed by `similarity`; with `FALSE` it is set to zero. Item
+#'   frequencies for the similarity measures are the same either way.
+#' @param top_n How many of the strongest off-diagonal edges to keep: pairs
+#'   in an undirected network, directed cells with `similarity =
+#'   "relative"`. Edges tied with the `top_n`-th weight are all kept, so a
+#'   few more may remain, and the diagonal is not affected. Default `NULL`
+#'   (all edges).
+#' @param format How 0/1 columns are read. Columns of only 0 and 1 (or
+#'   `TRUE` and `FALSE`) could be items or recoded positions, so with
+#'   `"auto"` (default) they raise an error of class `nestimate_bad_input`.
+#'   `"binary"` declares them items, one row per transaction, where a missing
+#'   cell counts as no occurrence; it raises the same error on data with any
+#'   other value.
+#' @param ... Not used.
 #'
-#' @return A \code{netobject} (undirected, class
-#'   \code{c("netobject", "cograph_network")}) with
-#'   \code{method = "co_occurrence_fn"} and \code{$data = NULL} - this
-#'   function does \emph{not} go through \code{\link{build_network}}, so the
-#'   result carries no source data and the data-resampling verbs
-#'   (\code{\link{bootstrap_network}}, \code{\link{permutation}}) cannot be
-#'   run on it. The \code{$weights} matrix holds the similarity (or raw)
-#'   co-occurrence values, one row/column per retained item. The
-#'   \code{$params} list records \code{similarity}, \code{threshold},
-#'   \code{min_occur}, \code{diagonal}, \code{top_n},
-#'   \code{n_transactions} and \code{n_items}.
+#' @return A `netobject` (class `c("netobject", "cograph_network")`),
+#'   undirected (directed with `similarity = "relative"`), with
+#'   `method = "co_occurrence_fn"`. Print it for an
+#'   overview; [extract_edges()] gives one row per edge,
+#'   [extract_transition_matrix()] the weight matrix (one row and column per
+#'   item kept), [net_centrality()] the node centralities, and
+#'   `cograph::splot()` draws it. It is built without [build_network()] and
+#'   holds no source data (`data` is `NULL`). Its `params` record
+#'   `similarity`, `threshold`, `min_occur`, `diagonal`, `top_n`,
+#'   `n_transactions` and `n_items`.
 #'
 #' @details
-#' Six input formats are supported, auto-detected from the combination of
-#' \code{field}, \code{by}, and \code{sep}:
+#' Six input forms are recognised from `data` and from which of `field`,
+#' `by` and `sep` are set:
 #'
 #' \enumerate{
-#'   \item \strong{Delimited}: \code{field} + \code{sep} (single column).
-#'     Each cell is split by \code{sep}, trimmed, and de-duplicated per row.
-#'   \item \strong{Multi-column delimited}: \code{field} (vector) + \code{sep}.
-#'     Values from multiple columns are split, pooled, and de-duplicated per row.
-#'   \item \strong{Long bipartite}: \code{field} + \code{by}.
-#'     Groups by \code{by}; unique values of \code{field} within each group
-#'     form a transaction.
-#'   \item \strong{Binary matrix}: No \code{field}/\code{by}/\code{sep}, all
-#'     values 0/1 or logical, and \code{format = "binary"}. Columns are items,
-#'     rows are transactions; a missing cell is no occurrence. Without
-#'     \code{format = "binary"} such data is refused, since 0/1 columns could
-#'     also be recoded positions.
-#'   \item \strong{Wide sequence}: No \code{field}/\code{by}/\code{sep},
-#'     non-binary. Unique values across each row form a transaction.
-#'   \item \strong{List}: A plain list of character vectors.
+#'   \item \strong{Delimited}: `field` (one column) and `sep`. Each cell is
+#'     split by `sep`, trimmed, and its distinct values form a transaction.
+#'   \item \strong{Multi-column delimited}: `field` (several columns) and
+#'     `sep`. The split values of a row's columns are pooled into one
+#'     transaction.
+#'   \item \strong{Long bipartite}: `field` and `by`. The distinct `field`
+#'     values within each `by` group form a transaction.
+#'   \item \strong{Binary}: none of the three, all values 0/1 or logical,
+#'     and `format = "binary"`. Columns are items, rows are transactions;
+#'     a missing cell is no occurrence. Without `format = "binary"` such
+#'     data is refused, since 0/1 columns could also be recoded positions.
+#'   \item \strong{Wide sequence}: none of the three, other values. The
+#'     distinct states of each row form a transaction, leaving out missing
+#'     values and the void markers (`"%"`, `"*"`, `""`, `"NA"`, `"NaN"`). A
+#'     data frame must be a single column or a numbered run of position
+#'     columns (`T1`, `T2`, ...) with nothing beside it; any other frame
+#'     raises an error of class `nestimate_bad_input`, and a column called
+#'     `action` and repeated column names are refused the same way.
+#'   \item \strong{List}: a plain list of character vectors.
 #' }
 #'
-#' A network object (\code{netobject}, \code{netobject_group},
-#' \code{cograph_network}, \code{tna}) is refused: pass the data it was built
-#' from, or use \code{build_network(method = "co_occurrence")} for positional
-#' co-occurrence of sequences.
+#' To count co-occurrence of states within sequences through
+#' [build_network()], with its resampling verbs, use
+#' `build_network(method = "co_occurrence")` or [build_cna()] instead.
 #'
-#' The pipeline converts all formats into a list of character vectors
-#' (transactions), optionally filters by \code{min_occur}, builds a binary
-#' transaction matrix, computes \code{crossprod(B)} for the raw co-occurrence
-#' counts, normalizes via the chosen \code{similarity}, then applies
-#' \code{threshold} and \code{top_n} filtering.
+#' All forms are turned into a list of transactions, which `min_occur`
+#' filters. The raw counts are `crossprod(B)` of the binary transaction
+#' matrix `B`; `similarity` is applied to them, then `threshold`, then
+#' `top_n`.
 #'
 #' @references
 #' van Eck, N. J., & Waltman, L. (2009). How to normalize co-occurrence
@@ -153,8 +191,8 @@ cooccurrence <- function(data, field = NULL, by = NULL, sep = NULL,
   format <- match.arg(format)
   threshold <- as.numeric(threshold)
   min_occur <- as.integer(min_occur)
-  stopifnot(threshold >= 0, min_occur >= 1L,
-            is.logical(diagonal), length(diagonal) == 1L)
+  .assert(threshold >= 0, min_occur >= 1L,
+          is.logical(diagonal), length(diagonal) == 1L)
 
   # A network is a list, so its fields would otherwise be read as transactions
   if (inherits(data, c("netobject", "netobject_group", "cograph_network", "tna"))) {
@@ -223,7 +261,8 @@ cooccurrence <- function(data, field = NULL, by = NULL, sep = NULL,
   # Drop empty transactions
   transactions <- transactions[vapply(transactions, length, integer(1)) > 0L]
   if (length(transactions) == 0L)
-    stop("No non-empty transactions found in the input data.", call. = FALSE)
+    stop(errorCondition("No non-empty transactions found in the input data.",
+                        class = "nestimate_bad_input", call = NULL))
 
   # Apply min_occur filter (drop infrequent entities)
   if (min_occur > 1L) {
@@ -233,7 +272,8 @@ cooccurrence <- function(data, field = NULL, by = NULL, sep = NULL,
     transactions <- lapply(transactions, function(t) t[t %in% keep])
     transactions <- transactions[vapply(transactions, length, integer(1)) > 0L]
     if (length(transactions) == 0L)
-      stop("No transactions remain after min_occur filtering.", call. = FALSE)
+      stop(errorCondition("No transactions remain after min_occur filtering.",
+                          class = "nestimate_bad_input", call = NULL))
   }
 
   # Build binary transaction matrix and compute co-occurrence
@@ -254,16 +294,24 @@ cooccurrence <- function(data, field = NULL, by = NULL, sep = NULL,
   # Apply threshold (on final weight, after normalization)
   if (threshold > 0) W[W < threshold] <- 0
 
-  # Apply top_n (keep only top N edges by weight)
+  # Row-normalised ("relative") weights are directional: W[i, j] is the
+  # share of i's co-occurrences that involve j, so W[i, j] != W[j, i]. The
+  # network is directed then, so every cell reaches the edge list.
+  directed <- identical(similarity, "relative")
+
+  # Apply top_n (keep only top N edges by weight). An edge is one cell of
+  # the upper triangle when undirected, one off-diagonal cell when directed;
+  # the cutoff is taken from those same cells. Ties with the cutoff stay.
   if (!is.null(top_n)) {
-    stopifnot(is.numeric(top_n), top_n > 0)
+    .assert(is.numeric(top_n), top_n > 0)
     top_n <- as.integer(top_n)
-    # Extract upper triangle values, find cutoff
-    ut <- W[upper.tri(W)]
-    if (length(ut) > top_n) {
-      cutoff <- sort(ut, decreasing = TRUE)[top_n]
-      W[W < cutoff & upper.tri(W)] <- 0
-      W[W < cutoff & lower.tri(W)] <- 0
+    candidates <- if (directed) row(W) != col(W) else upper.tri(W)
+    values <- W[candidates]
+    if (length(values) > top_n) {
+      cutoff <- sort(values, decreasing = TRUE)[top_n]
+      drop <- candidates & W < cutoff
+      if (!directed) drop <- drop | t(drop)
+      W[drop] <- 0
     }
   }
 
@@ -272,7 +320,7 @@ cooccurrence <- function(data, field = NULL, by = NULL, sep = NULL,
     W,
     data = NULL,
     method = "co_occurrence_fn",
-    directed = FALSE
+    directed = directed
   )
 
   net$params <- list(
@@ -314,8 +362,10 @@ cooccurrence <- function(data, field = NULL, by = NULL, sep = NULL,
     return("wide")
   }
 
-  stop("Cannot detect input format. Provide field/by/sep arguments or a ",
-       "recognized data structure (data.frame, matrix, list).", call. = FALSE)
+  stop(errorCondition(paste0(
+    "Cannot detect input format. Provide field/by/sep arguments or a ",
+    "recognized data structure (data.frame, matrix, list)."),
+    class = "nestimate_bad_input", call = NULL))
 }
 
 
@@ -324,7 +374,7 @@ cooccurrence <- function(data, field = NULL, by = NULL, sep = NULL,
 #' Parse delimited field (single column)
 #' @noRd
 .co_parse_delimited <- function(data, field, sep) {
-  stopifnot(is.data.frame(data), length(field) == 1L, field %in% names(data))
+  .assert(is.data.frame(data), length(field) == 1L, field %in% names(data))
   vals <- as.character(data[[field]])
   lapply(strsplit(vals, sep, fixed = TRUE), function(items) {
     items <- trimws(items)
@@ -336,7 +386,7 @@ cooccurrence <- function(data, field = NULL, by = NULL, sep = NULL,
 #' Parse multi-column delimited (pool across columns)
 #' @noRd
 .co_parse_multi_delimited <- function(data, field, sep) {
-  stopifnot(is.data.frame(data), all(field %in% names(data)))
+  .assert(is.data.frame(data), all(field %in% names(data)))
   n <- nrow(data)
   lapply(seq_len(n), function(i) {
     items <- unlist(lapply(field, function(f) {
@@ -351,7 +401,7 @@ cooccurrence <- function(data, field = NULL, by = NULL, sep = NULL,
 #' Parse long/bipartite format
 #' @noRd
 .co_parse_long <- function(data, field, by) {
-  stopifnot(is.data.frame(data), field %in% names(data), by %in% names(data))
+  .assert(is.data.frame(data), field %in% names(data), by %in% names(data))
   groups <- split(as.character(data[[field]]), data[[by]])
   lapply(groups, function(items) {
     items <- items[nzchar(items) & !is.na(items)]

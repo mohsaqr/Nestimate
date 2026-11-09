@@ -18,24 +18,34 @@
 
 #' Set the state colours carried by a network object
 #'
-#' Attaches a palette to the object so every figure drawn from it uses the same
-#' colours: \code{\link{sequence_plot}}, \code{\link{distribution_plot}},
-#' \code{\link{plot_state_frequencies}} and \code{cograph::splot()}.
+#' @description
+#' `set_state_colors()` attaches a palette to a network object, so every
+#' figure drawn from it uses the same colours: [sequence_plot()],
+#' [distribution_plot()], [plot_state_frequencies()] and `cograph::splot()`.
+#' A colour argument given to one of those plot verbs still wins for that
+#' figure, and the object keeps its palette. `state_colors(x) <- value` is
+#' the replacement form, and [state_colors()] reads back the colours in use.
 #'
-#' @param x A \code{netobject}, \code{netobject_group}, \code{mcml} or
-#'   \code{htna}.
-#' @param colors A named character vector of colours, e.g.
-#'   \code{c(plan = "#0072B2", monitor = "#D55E00")}. Names are states, and for
-#'   an \code{mcml} may also be cluster names. Names the object does not carry
-#'   are dropped with a message, so one project-wide palette can be attached to
-#'   every object. States you do not name keep the default Okabe-Ito colour.
-#'   \code{NULL} removes a palette set earlier.
-#' @param value The palette, as for \code{colors}, in the replacement form
-#'   \code{state_colors(x) <- value}.
-#' @return \code{x}, with the palette stored in \code{x$state_colors} and, for
-#'   an object carrying \code{$nodes}, mirrored into
-#'   \code{x$meta$splot$defaults$node_fill} in node order so
-#'   \code{cograph::splot()} honours it. The class is unchanged.
+#' @param x A `netobject`, `netobject_group`, `mcml` or `htna`; any other
+#'   object raises an error.
+#' @param colors The palette: a named character vector of colours, such as
+#'   `c(plan = "#0072B2", monitor = "#D55E00")`. Names are states, and for an
+#'   `mcml` may also be cluster names. A name the object does not carry is
+#'   reported in a message and draws nothing, so one project-wide palette can
+#'   be attached to every object. States left unnamed are dealt the
+#'   Okabe-Ito colours the palette does not already use, in the object's
+#'   state order (recycled when there are more such states than colours).
+#'   The palette replaces any palette set earlier, and `NULL` removes it. An
+#'   unnamed vector raises an error.
+#' @param value The palette, as for `colors`, in the replacement form
+#'   `state_colors(x) <- value`.
+#' @return `x` with the palette stored on it; the class is unchanged.
+#'   [state_colors()] shows the colours it resolves to. For a `netobject` or
+#'   `htna`, the palette is also written, in node order, into the
+#'   `meta$splot` producer contract (`defaults$node_fill`), so
+#'   `cograph::splot()` draws the same colours without being passed any. A
+#'   `netobject_group` stores the palette on the group and on each member
+#'   network, so a member drawn on its own carries it too.
 #' @seealso \code{\link{state_colors}} to read the resolved palette back.
 #' @examples
 #' net <- build_network(group_regulation_long, method = "relative",
@@ -48,8 +58,13 @@ set_state_colors <- function(x, colors) UseMethod("set_state_colors")
 #' @rdname set_state_colors
 #' @export
 set_state_colors.default <- function(x, colors) {
-  stop("`set_state_colors()` needs a netobject, netobject_group, mcml or ",
-       "htna; got '", class(x)[1L], "'.", call. = FALSE)
+  stop(errorCondition(
+    paste0(
+      "`set_state_colors()` needs a netobject, netobject_group, mcml or ",
+      "htna; got '",
+      class(x)[1L],
+      "'."),
+    class = "nestimate_bad_input", call = NULL))
 }
 
 #' @rdname set_state_colors
@@ -96,18 +111,19 @@ set_state_colors.netobject_group <- function(x, colors) {
 
 #' The state colours an object will draw with
 #'
-#' Reads back the palette an object resolves to: the colours set with
-#' \code{\link{set_state_colors}} plus the defaults filled in for everything
-#' else, so the table is what the figures actually use.
+#' @description
+#' `state_colors()` returns the palette an object draws with: the colours set
+#' with [set_state_colors()] plus the defaults filled in for every other
+#' state, so the table shows what the figures use.
 #'
-#' @param x A \code{netobject}, \code{netobject_group}, \code{mcml} or
-#'   \code{htna}.
-#' @param ... Ignored, for method consistency.
-#' @return A \code{data.frame}, one row per colour key the object carries, with
-#'   columns \code{state} (the key), \code{color} (the hex colour it draws
-#'   with) and \code{source} (\code{"set"} when the palette named it,
-#'   \code{"default"} when it fell back to Okabe-Ito). For an \code{mcml} the
-#'   cluster names appear after the states.
+#' @param x A `netobject`, `netobject_group`, `mcml` or `htna`; any other
+#'   object raises an error.
+#' @param ... Not used.
+#' @return A data frame with one row per colour key the object carries
+#'   (for a `netobject_group`, the states of all its networks): `state` (the
+#'   key), `color` (the colour it draws with) and `source` (`"set"` when the
+#'   palette named it, `"default"` when it fell back to Okabe-Ito). For an
+#'   `mcml`, the cluster names follow the states.
 #' @seealso \code{\link{set_state_colors}}.
 #' @examples
 #' net <- build_network(group_regulation_long, method = "relative",
@@ -119,8 +135,13 @@ state_colors <- function(x, ...) UseMethod("state_colors")
 #' @rdname state_colors
 #' @export
 state_colors.default <- function(x, ...) {
-  stop("`state_colors()` needs a netobject, netobject_group, mcml or htna; ",
-       "got '", class(x)[1L], "'.", call. = FALSE)
+  stop(errorCondition(
+    paste0(
+      "`state_colors()` needs a netobject, netobject_group, mcml or htna; ",
+      "got '",
+      class(x)[1L],
+      "'."),
+    class = "nestimate_bad_input", call = NULL))
 }
 
 #' @rdname state_colors
@@ -163,7 +184,7 @@ state_colors.netobject_group <- function(x, ...) .state_colors_table(x)
   if (is.null(colors)) {
     return(NULL)
   }
-  stopifnot(
+  .assert(
     "`colors` must be a character vector of colours" = is.character(colors),
     "`colors` must be named: c(state = \"#0072B2\", ...)" =
       .is_named_colors(colors),

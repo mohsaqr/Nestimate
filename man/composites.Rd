@@ -10,30 +10,34 @@ composites(x, ...)
 \method{composites}{mcml_pc}(x, ...)
 }
 \arguments{
-\item{x}{An object carrying cluster scores.}
+\item{x}{An \code{mcml_pc} fit with a score aggregation (\code{"scaled"},
+\code{"composite"}, \code{"mean"}, \code{"median"} or \code{"loadings"}). The descriptive
+aggregations (\code{"average"}, \code{"escoufier"}, \code{"cancor"}) relate the clusters
+without ever forming a score and raise an error of class
+\code{nestimate_no_composites}.}
 
 \item{...}{Ignored.}
 }
 \value{
 A data frame with one row per row of the input data, in input
 order and with the input's row names, and one numeric column per
-cluster, named by the cluster. A row whose members of a cluster are all
-missing is \code{NA} in that column (items missing only in part are
-averaged over the observed ones). The macro network is estimated on the
-complete rows, so \code{build_network(composites(fit), method = ...)}
+cluster, named by the cluster (as a syntactic name, so \code{"Clu A"} becomes
+\code{Clu.A}). A row whose members of a cluster are all missing is \code{NA} in
+that column; items missing only in part are averaged over the observed
+ones. The macro network is estimated on the complete rows, so
+\code{build_network(composites(fit), method = ...)} with the fit's estimator
 reproduces it.
-
-The \code{mcml_pc} method errors with class
-\code{"nestimate_no_composites"} for the descriptive aggregations
-(\code{"average"}, \code{"escoufier"}, \code{"cancor"}), which relate
-clusters without ever forming a score.
 }
 \description{
-The per-observation cluster scores that a re-estimated
-\code{\link{build_mcml_pc}} macro network was fitted on: each
-respondent's weighted, sign-corrected score on every cluster. These
-are the scores to carry into a profile analysis, a regression, or any
-downstream model that needs one number per cluster per respondent.
+\code{composites()} returns the per-observation cluster scores that the macro
+network of a re-estimated \code{\link[=build_mcml_pc]{build_mcml_pc()}} fit was estimated from: each
+respondent's weighted, sign-corrected score on every cluster. These are
+the scores to carry into a profile analysis, a regression or any other
+model that needs one number per cluster per respondent.
+
+A score is only as good as the items behind it: check the item weights
+and misfit flags with \code{\link[=item_loadings]{item_loadings()}} and the stability of the weights
+with \code{\link[=loading_stability]{loading_stability()}} before using the scores elsewhere.
 }
 \examples{
 set.seed(1)
