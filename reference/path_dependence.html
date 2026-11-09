@@ -45,7 +45,7 @@ context."><meta property="og:image" content="https://pak.dynasite.org/Nestimate/
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.11</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.12</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -149,7 +149,8 @@ compares a three-state history, and so on. The data need at least
 <dd><p>The number of times a context must be observed to be
 reported, a whole number of at least 1. Default <code>5</code>. Contexts seen less
 often give noisy KL estimates; when no context reaches <code>min_count</code>,
-<code>path_dependence()</code> stops with an error.</p></dd>
+<code>path_dependence()</code> stops with an error of class
+<code>nestimate_bad_input</code>.</p></dd>
 
 
 <dt id="arg-base">base<a class="anchor" aria-label="anchor" href="#arg-base"></a></dt>

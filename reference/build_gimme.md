@@ -48,6 +48,9 @@ build_gimme(
   n_excellent = 2L,
   seed = NULL
 )
+
+# S3 method for class 'net_gimme'
+coefs(x, ...)
 ```
 
 ## Arguments
@@ -147,6 +150,19 @@ build_gimme(
 
   An integer that makes the estimation reproducible; the session's own
   random stream is left as it was. Default `NULL`.
+
+- x:
+
+  For the
+  [`coefs()`](https://pak.dynasite.org/Nestimate/reference/coefs.md)
+  method: a `net_gimme` from `build_gimme()`.
+
+- ...:
+
+  For the
+  [`coefs()`](https://pak.dynasite.org/Nestimate/reference/coefs.md)
+  method: passed to
+  [`idiographic::coefs()`](https://pak.dynasite.org/idiographic/reference/coefs.html).
 
 ## Value
 
@@ -268,6 +284,15 @@ changed which paths the search selects on the same data –
 individual-level paths in particular – so numeric results are not
 comparable with Nestimate \<= 0.8.5. The returned object also gained
 fields (see **Value**); nothing was removed.
+
+## Methods
+
+- [`coefs()`](https://pak.dynasite.org/Nestimate/reference/coefs.md) on
+  a `build_gimme()` result returns idiographic's coefficient table, one
+  row per person and path. Nestimate's own
+  [`coefs()`](https://pak.dynasite.org/Nestimate/reference/coefs.md)
+  generic masks idiographic's when both packages are attached; this
+  method makes either one give the same table.
 
 ## References
 

@@ -26,6 +26,12 @@ get_estimator(name)
 A list with `fn` (the estimator function), `description` (a string) and
 `directed` (`TRUE` or `FALSE`).
 
+## Note
+
+The idiographic package exports a function with the same name. With both
+packages attached, the one attached last masks the other; write
+`Nestimate::get_estimator()` to call this one.
+
 ## See also
 
 [`register_estimator`](https://pak.dynasite.org/Nestimate/reference/register_estimator.md),

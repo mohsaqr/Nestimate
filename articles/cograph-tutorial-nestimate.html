@@ -27,7 +27,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.11</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.12</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -274,13 +274,13 @@ Figure 3: Co-occurrence network (undirected)
 <span><span class="va">boot</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/bootstrap_network.html">bootstrap_network</a></span><span class="op">(</span><span class="va">net</span>, iter <span class="op">=</span> <span class="fl">1000</span><span class="op">)</span></span>
 <span><span class="va">boot</span></span></code></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>  Edge                   Mean     95% CI          p
-  -----------------------------------------------
-  cohesion → consensus   0.498  [0.474, 0.521]  ***
-  adapt → consensus    0.478  [0.430, 0.523]  ***
+<pre><code>  Edge                    Mean     95% CI          p
+  ------------------------------------------------
+  cohesion → consensus    0.498  [0.474, 0.521]  ***
+  adapt → consensus       0.478  [0.430, 0.523]  ***
   synthesis → consensus   0.466  [0.427, 0.507]  ***
-  consensus → plan     0.396  [0.383, 0.407]  ***
-  monitor → discuss    0.375  [0.351, 0.401]  ***
+  consensus → plan        0.396  [0.383, 0.407]  ***
+  monitor → discuss       0.375  [0.351, 0.401]  ***
   ... and 46 more significant edges
 
 Bootstrap Network  [Transition Network (relative) | directed]
@@ -971,7 +971,7 @@ attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base
 
 other attached packages:
-[1] cograph_2.7.11   Nestimate_1.0.11
+[1] cograph_2.7.11   Nestimate_1.0.12
 
 loaded via a namespace (and not attached):
  [1] gtable_0.3.6        jsonlite_2.0.0      dplyr_1.2.1

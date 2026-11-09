@@ -237,13 +237,13 @@ boot <- bootstrap_network(net, iter = 1000)
 boot
 ```
 
-      Edge                   Mean     95% CI          p
-      -----------------------------------------------
-      cohesion → consensus   0.498  [0.474, 0.521]  ***
-      adapt → consensus    0.478  [0.430, 0.523]  ***
+      Edge                    Mean     95% CI          p
+      ------------------------------------------------
+      cohesion → consensus    0.498  [0.474, 0.521]  ***
+      adapt → consensus       0.478  [0.430, 0.523]  ***
       synthesis → consensus   0.466  [0.427, 0.507]  ***
-      consensus → plan     0.396  [0.383, 0.407]  ***
-      monitor → discuss    0.375  [0.351, 0.401]  ***
+      consensus → plan        0.396  [0.383, 0.407]  ***
+      monitor → discuss       0.375  [0.351, 0.401]  ***
       ... and 46 more significant edges
 
     Bootstrap Network  [Transition Network (relative) | directed]
@@ -780,7 +780,7 @@ sessionInfo()
     [1] stats     graphics  grDevices utils     datasets  methods   base
 
     other attached packages:
-    [1] cograph_2.7.11   Nestimate_1.0.11
+    [1] cograph_2.7.11   Nestimate_1.0.12
 
     loaded via a namespace (and not attached):
      [1] gtable_0.3.6        jsonlite_2.0.0      dplyr_1.2.1

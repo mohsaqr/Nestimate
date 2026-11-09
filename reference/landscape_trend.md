@@ -259,7 +259,7 @@ net <- build_network(trajectories, method = "relative")
 trend <- landscape_trend(net, along = "phase",
   states = c("Disengaged", "Average", "Active"), iter = 50, seed = 1)
 trend
-#> Stability landscape along program phase (5-step windows): 3 states, 1 network, 50 resamples
+#> Stability landscape along programme phase (5-step windows): 3 states, 1 network, 50 resamples
 #> 
 #> Cup depth (log of the expected stay; higher = more stable) at the two ends and its range:
 #>       state first at_first  last at_last  min  max

@@ -318,7 +318,7 @@ largest posterior; Vermunt & Magidson, 2005); a line when the EM did not
 converge; and one row per subgroup with its size, mixing proportion and
 AvePP. For a model fitted with `covariates`, a last line names them,
 says whether they entered the EM (integrated) or were related post hoc,
-and gives the number of predictors. The layout follows
+and gives their number. The layout follows
 [`print()`](https://rdrr.io/r/base/print.html) of a `net_clustering`
 from
 [`build_clusters()`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md),

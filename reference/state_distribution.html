@@ -29,7 +29,7 @@ sequence data."><meta property="og:image" content="https://pak.dynasite.org/Nest
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.11</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.12</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -96,6 +96,9 @@ sequence data.</p>
 <span><span class="co"># S3 method for class 'netobject_group'</span></span>
 <span><span class="fu">state_distribution</span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span>
 <span></span>
+<span><span class="co"># S3 method for class 'state_freq'</span></span>
+<span><span class="fu">state_distribution</span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
 <span><span class="co"># Default S3 method</span></span>
 <span><span class="fu">state_distribution</span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -106,7 +109,8 @@ sequence data.</p>
 
 <dl><dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
 <dd><p>A <code>netobject</code>, <code>netobject_group</code>, <code>mcml</code> or <code>htna</code> network
-built from sequences. A network without sequence data raises an error;
+built from sequences, or the <code>state_freq</code> result of
+<code><a href="plot_state_frequencies.html">plot_state_frequencies()</a></code>, whose table is returned as drawn. A network without sequence data raises an error;
 in a <code>netobject_group</code> or <code>mcml</code>, groups without it are left out, and
 an error is raised only when none has any. Other classes raise an
 error.</p></dd>

@@ -73,8 +73,8 @@ distribution_plot(
   one panel per group in the order of its factor levels (sorted for a
   character or numeric vector). `NULL` (default) uses the cluster
   assignments carried by a `net_clustering`, `net_mmm` or
-  `netobject_group`; a `group` given overrides them. Grouped panels are
-  titled `"Cluster <label>"`, whatever the grouping.
+  `netobject_group`; a `group` given overrides them. Panels are titled
+  `"Cluster <label>"`, whatever the grouping.
 
 - scale:
 

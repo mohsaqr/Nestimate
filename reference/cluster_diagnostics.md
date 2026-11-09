@@ -55,7 +55,7 @@ print(x, digits = 3L, ...)
 plot(x, type = NULL, ...)
 
 # S3 method for class 'net_cluster_diagnostics'
-as.data.frame(x, row.names = NULL, optional = FALSE, ...)
+summary(object, ...)
 ```
 
 ## Arguments
@@ -69,18 +69,17 @@ as.data.frame(x, row.names = NULL, optional = FALSE, ...)
   [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
   from a `net_clustering` or `net_mmm`), or a `net_mmm_clustering`. A
   `netobject_group` without a clustering, and any other object, raise an
-  error. For the [`print()`](https://rdrr.io/r/base/print.html),
-  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) and
-  [`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html)
-  methods: a `net_cluster_diagnostics`.
+  error. For the [`print()`](https://rdrr.io/r/base/print.html) and
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods: a
+  `net_cluster_diagnostics`.
 
 - ...:
 
   Not used: an extra argument raises an error, here and in the
   [`print()`](https://rdrr.io/r/base/print.html) and
-  [`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html)
-  methods. For [`plot()`](https://rdrr.io/r/graphics/plot.default.html):
-  further arguments for the clustering's own
+  [`summary()`](https://rdrr.io/r/base/summary.html) methods. For
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html): further
+  arguments for the clustering's own
   [`plot()`](https://rdrr.io/r/graphics/plot.default.html) method, such
   as `combined`.
 
@@ -104,10 +103,10 @@ as.data.frame(x, row.names = NULL, optional = FALSE, ...)
   when the source is a `net_mmm_clustering` (see
   [`build_mmm()`](https://pak.dynasite.org/Nestimate/reference/build_mmm.md)).
 
-- row.names, optional:
+- object:
 
-  For [`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html):
-  accepted for the generic and ignored.
+  For the [`summary()`](https://rdrr.io/r/base/summary.html) method: a
+  `net_cluster_diagnostics`.
 
 ## Value
 
@@ -164,9 +163,9 @@ what the clustering's own
 [`plot()`](https://rdrr.io/r/graphics/plot.default.html) method returns,
 a `ggplot` object (invisibly) or, for the covariate views with
 `combined = FALSE`, a list of `ggplot` objects named by cluster
-(invisibly). For
-[`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html): the
-per-cluster table described under `per_cluster`.
+(invisibly). For [`summary()`](https://rdrr.io/r/base/summary.html): the
+per-cluster table described under `per_cluster`, a data frame with one
+row per cluster.
 
 ## References
 
@@ -206,7 +205,7 @@ cluster_diagnostics(fit)
 #>   Cluster  N           Mix%   AvePP  Class.Err%
 #>   1        21 (70.0%)  67.5%  0.943   5.7%
 #>   2        9 (30.0%)   32.5%  0.952   4.8%
-as.data.frame(cluster_diagnostics(fit))
+summary(cluster_diagnostics(fit))
 #>   cluster size pct  mix_pct     avepp class_err_pct
 #> 1       1   21  70 67.48869 0.9428695      5.713045
 #> 2       2    9  30 32.51131 0.9519734      4.802660

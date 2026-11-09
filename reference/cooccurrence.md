@@ -78,8 +78,10 @@ cooccurrence(
   The column that defines the transactions of a long table: each of its
   values is one transaction, holding the distinct `field` values of its
   rows (for example `"paper_id"` or `"session_id"`). Default `NULL`,
-  where items co-occur within the same row. Ignored when `sep` is set,
-  which reads `field` as delimited.
+  where items co-occur within the same row. It needs a single `field`
+  column (several raise an error of class `nestimate_bad_input`).
+  Ignored, with a warning of class `nestimate_ignored_argument`, when
+  `sep` is set, which reads `field` as delimited.
 
 - sep:
 
@@ -160,7 +162,8 @@ cooccurrence(
 
 - ...:
 
-  Not used.
+  Not used; an argument given here is ignored with a warning of class
+  `nestimate_ignored_argument`.
 
 - format:
 

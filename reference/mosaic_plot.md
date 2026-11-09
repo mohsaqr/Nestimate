@@ -154,7 +154,8 @@ mosaic_plot(
   the valid ones. The data-frame method takes no `style` and raises an
   error of class `nestimate_bad_input` for any argument it does not
   take; the `mcml` method does the same with `style = "classic"`; the
-  other methods ignore it.
+  other methods ignore it with a warning of class
+  `nestimate_ignored_argument`.
 
 - xlab, ylab:
 

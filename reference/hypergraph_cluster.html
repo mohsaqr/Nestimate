@@ -37,7 +37,7 @@ with other seeds to see whether it holds."><meta property="og:image" content="ht
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.11</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.12</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -109,8 +109,7 @@ with other seeds to see whether it holds.</p>
 <span><span class="co"># S3 method for class 'net_hypergraph_cluster'</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">object</span>, <span class="va">...</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># S3 method for class 'net_hypergraph_cluster'</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span>
+<span><span class="fu">node_clusters</span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S3 method for class 'net_hypergraph_cluster'</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">x</span>, what <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"both"</span>, <span class="st">"spectrum"</span>, <span class="st">"embedding"</span><span class="op">)</span>, n_values <span class="op">=</span> <span class="cn">NULL</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
@@ -147,8 +146,8 @@ The session's own random stream is left as it was. Default <code>NULL</code>.</p
 
 
 <dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
-<dd><p>For the <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code>, <code><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame()</a></code> and <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> methods: a
-<code>net_hypergraph_cluster</code> object.</p></dd>
+<dd><p>For the <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> and <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> methods and for
+<code>node_clusters()</code>: a <code>net_hypergraph_cluster</code> object.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
@@ -166,7 +165,9 @@ a scree plot of the smallest eigenvalues with the <code>k</code> used marked, so
 the eigengap after <code>k</code> can be read; <code>"embedding"</code> places the nodes on
 the first two embedding dimensions, labelled, coloured and shaped by
 cluster and sized by stationary probability, which is the geometry
-k-means clustered; <code>"both"</code> (default) draws the two side by side.</p></dd>
+k-means clustered (beyond nine clusters the colours repeat and the
+shape tells the clusters of one colour apart); <code>"both"</code> (default) draws
+the two side by side.</p></dd>
 
 
 <dt id="arg-n-values">n_values<a class="anchor" aria-label="anchor" href="#arg-n-values"></a></dt>
@@ -215,7 +216,7 @@ k-means total within-cluster sum of squares (<code>tot_withinss</code>).</p></dd
 
 </dl><p>The <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> method returns its input invisibly. The <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>
 method returns a data frame with one row per cluster: <code>cluster</code>, <code>size</code>
-and <code>share</code> (the proportion of nodes). The <code><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame()</a></code> method
+and <code>share</code> (the proportion of nodes). <code>node_clusters()</code>
 returns a data frame with one row per node: <code>node</code>, <code>cluster</code>, <code>pi</code>
 (the node's stationary probability under the Laplacian's walk) and the
 embedding coordinates <code>dim1</code> to <code>dimk</code>. The <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> method returns a
@@ -248,7 +249,7 @@ edge-dependent vertex weights. <em>ICML 2019</em>.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Nodes: 6 | Hyperedges: 5 | k: 2</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Cluster sizes: Cluster 1 = 3, Cluster 2 = 3</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Eigengap after k: 0.6667</span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="va">cl</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">node_clusters</span><span class="op">(</span><span class="va">cl</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   node   cluster        pi       dim1       dim2</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1    a Cluster 1 0.1428571 -0.6575959  0.7533708</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2    b Cluster 1 0.1428571 -0.6575959  0.7533708</span>

@@ -18,8 +18,11 @@ distrust. The given labels are not held fixed, so a labelled node can be
 predicted into another class, and a class's scores grow with its number
 of labelled nodes. As `xi` approaches 1, every node's scores become
 proportional to the same vector, so in the limit every node is assigned
-the same class. On a small hypergraph the default `0.99` can come close
-to that; compare the predictions under a smaller `xi`.
+the same class. The default `0.99` is the value of Zhou et al. (2006)
+and suits large hypergraphs; on a small one it over-smooths. In the
+example below it assigns five of the six nodes to one class, where
+`xi = 0.9` splits them three and three, so on a small hypergraph pass a
+smaller `xi` and compare.
 
 ## Usage
 
@@ -38,14 +41,9 @@ print(x, ...)
 # S3 method for class 'net_hypergraph_transduction'
 summary(object, ...)
 
-# S3 method for class 'net_hypergraph_transduction'
-as.data.frame(
-  x,
-  row.names = NULL,
-  optional = FALSE,
-  what = c("predictions", "scores"),
-  ...
-)
+label_predictions(x)
+
+label_scores(x)
 
 # S3 method for class 'net_hypergraph_transduction'
 plot(x, ...)
@@ -81,9 +79,9 @@ plot(x, ...)
 
 - x:
 
-  For the [`print()`](https://rdrr.io/r/base/print.html),
-  [`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html) and
-  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods: a
+  For the [`print()`](https://rdrr.io/r/base/print.html) and
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods and
+  for `label_predictions()` and `label_scores()`: a
   `net_hypergraph_transduction` object.
 
 - ...:
@@ -94,25 +92,6 @@ plot(x, ...)
 
   For the [`summary()`](https://rdrr.io/r/base/summary.html) method: a
   `net_hypergraph_transduction` object.
-
-- row.names:
-
-  For the [`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html)
-  method: row names for the returned data frame. Default `NULL` keeps
-  the default row numbers.
-
-- optional:
-
-  For the [`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html)
-  method: ignored; it is there to match the
-  [`base::as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html)
-  generic.
-
-- what:
-
-  For the [`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html)
-  method: the table to return. `"predictions"` (default) gives one row
-  per node; `"scores"` gives one row per node and class.
 
 ## Value
 
@@ -153,12 +132,11 @@ The [`print()`](https://rdrr.io/r/base/print.html) method returns its
 input invisibly. The [`summary()`](https://rdrr.io/r/base/summary.html)
 method returns a data frame with one row per class: `class`,
 `n_labeled`, `n_predicted` and `mean_margin` (the mean margin of the
-nodes predicted into the class, `NA` when there are none). The
-[`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html) method
-returns, for `what = "predictions"`, one row per node with `node`,
-`label` (`NA` for an unlabelled node), `predicted`, `score` and
-`margin`, and for `what = "scores"` one row per node and class with
-`node`, `class` and `score`. The
+nodes predicted into the class, `NA` when there are none).
+`label_predictions()` returns a data frame with one row per node:
+`node`, `label` (`NA` for an unlabelled node), `predicted`, `score` and
+`margin`. `label_scores()` returns a data frame with one row per node
+and class: `node`, `class` and `score`. The
 [`plot()`](https://rdrr.io/r/graphics/plot.default.html) method returns
 the score heatmap as a `ggplot`, visibly, so `plot(x)` draws it: one row
 per node, grouped by predicted class and ordered by margin within it,
@@ -182,17 +160,31 @@ events <- data.frame(
               "m4", "m4", "m4", "m5", "m5")
 )
 hg <- bipartite_groups(events, player = "person", group = "meeting")
-tr <- hypergraph_transduction(hg, labels = c(a = "x", d = "y"))
+tr <- hypergraph_transduction(hg, labels = c(a = "x", d = "y"), xi = 0.9)
 tr
-#> Hypergraph transductive label spreading (zhou Laplacian, xi = 0.99)
+#> Hypergraph transductive label spreading (zhou Laplacian, xi = 0.9)
 #>   Nodes: 6 (2 labeled) | Classes: x, y
-#>   Predicted: x = 1, y = 5
-as.data.frame(tr)
-#>   node label predicted     score      margin
-#> 1    a     x         x 0.1654808 0.003987167
-#> 2    b  <NA>         y 0.1614936 0.006012833
-#> 3    c  <NA>         y 0.2037821 0.019834793
-#> 4    d     y         y 0.2321154 0.070621782
-#> 5    e  <NA>         y 0.1839473 0.055966489
-#> 6    f  <NA>         y 0.1839473 0.055966489
+#>   Predicted: x = 3, y = 3
+label_predictions(tr)
+#>   node label predicted     score     margin
+#> 1    a     x         x 0.3062500 0.21439413
+#> 2    b  <NA>         x 0.2062500 0.11439413
+#> 3    c  <NA>         x 0.2143304 0.06433035
+#> 4    d     y         y 0.3500000 0.25814413
+#> 5    e  <NA>         y 0.2143304 0.15808035
+#> 6    f  <NA>         y 0.2143304 0.15808035
+label_scores(tr)
+#>    node class      score
+#> 1     a     x 0.30625000
+#> 2     b     x 0.20625000
+#> 3     c     x 0.21433035
+#> 4     d     x 0.09185587
+#> 5     e     x 0.05625000
+#> 6     f     x 0.05625000
+#> 7     a     y 0.09185587
+#> 8     b     y 0.09185587
+#> 9     c     y 0.15000000
+#> 10    d     y 0.35000000
+#> 11    e     y 0.21433035
+#> 12    f     y 0.21433035
 ```

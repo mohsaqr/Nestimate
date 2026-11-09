@@ -31,7 +31,7 @@ data, so bootstrap_network() and permutation() cannot resample it."><meta proper
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.11</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.12</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -134,8 +134,10 @@ for a list.</p></dd>
 <dd><p>The column that defines the transactions of a long table: each
 of its values is one transaction, holding the distinct <code>field</code> values of
 its rows (for example <code>"paper_id"</code> or <code>"session_id"</code>). Default <code>NULL</code>,
-where items co-occur within the same row. Ignored when <code>sep</code> is set,
-which reads <code>field</code> as delimited.</p></dd>
+where items co-occur within the same row. It needs a single <code>field</code>
+column (several raise an error of class <code>nestimate_bad_input</code>). Ignored,
+with a warning of class <code>nestimate_ignored_argument</code>, when <code>sep</code> is
+set, which reads <code>field</code> as delimited.</p></dd>
 
 
 <dt id="arg-sep">sep<a class="anchor" aria-label="anchor" href="#arg-sep"></a></dt>
@@ -211,7 +213,8 @@ few more may remain, and the diagonal is not affected. Default <code>NULL</code>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
-<dd><p>Not used.</p></dd>
+<dd><p>Not used; an argument given here is ignored with a warning of
+class <code>nestimate_ignored_argument</code>.</p></dd>
 
 
 <dt id="arg-format">format<a class="anchor" aria-label="anchor" href="#arg-format"></a></dt>

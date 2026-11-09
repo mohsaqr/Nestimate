@@ -344,8 +344,11 @@ plot(x, digits = 2, ...)
   for `"cfa"` (`estimator = "WLSMV"`, `missing = "fiml"`,
   `se = "robust"`, ...),
   [`stats::factanal()`](https://rdrr.io/r/stats/factanal.html) arguments
-  for `"ml"`, and `max_iter` / `tol` for `"paf"` (other names are not
-  used there); `"minres"` uses none. `estimator` is lavaan's and raises
+  for `"ml"`, and `max_iter` / `tol` for `"paf"`; `"minres"` uses none.
+  A name the backend does not read is dropped with a warning of class
+  `nestimate_ignored_argument`. A `"paf"` or `"minres"` extraction that
+  stops before converging keeps its last loadings and raises a warning
+  of class `nestimate_no_converge`. `estimator` is lavaan's and raises
   an error for any other `fa_method`, since the network estimator is set
   by `method`. Arguments the backend call sets itself (`model` and
   `data` for `"cfa"`; `covmat`, `n.obs`, `factors`, `x` and `data` for

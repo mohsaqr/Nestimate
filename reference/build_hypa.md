@@ -71,10 +71,11 @@ summary(
   states (`k` transitions), each conditioned on the `k`-state context
   before its last state. With several orders, one layer is built per
   order, in ascending order whatever the order given; an order with no
-  paths (longer than the sequences allow) is dropped without a message,
-  and an error is raised when none is left. The network fields
-  (`weights`, `edges`, `adjacency`, `xi`, `nodes`, `meta`) describe the
-  lowest order built, while `scores` holds every order.
+  paths (longer than the sequences allow) is dropped with a warning of
+  class `nestimate_ignored_argument`, and an error is raised when none
+  is left. The network fields (`weights`, `edges`, `adjacency`, `xi`,
+  `nodes`, `meta`) describe the lowest order built, while `scores` holds
+  every order.
 
 - alpha:
 

@@ -13,6 +13,9 @@ layer) or a bare matrix, and can rescale the rows to sum to 1.
 extract_transition_matrix(model, type = c("raw", "scaled"))
 
 # S3 method for class 'nest_transition_matrix'
+print(x, ...)
+
+# S3 method for class 'nest_transition_matrix'
 summary(object, ...)
 ```
 
@@ -31,15 +34,21 @@ summary(object, ...)
   matrix become transition probabilities; a row that sums to zero is
   left as it is.
 
-- object:
+- x:
 
-  For the [`summary()`](https://rdrr.io/r/base/summary.html) method: a
+  For the [`print()`](https://rdrr.io/r/base/print.html) method: a
   `nest_transition_matrix`.
 
 - ...:
 
   For the [`summary()`](https://rdrr.io/r/base/summary.html) method:
-  ignored.
+  ignored. For the [`print()`](https://rdrr.io/r/base/print.html)
+  method: passed on to the matrix print.
+
+- object:
+
+  For the [`summary()`](https://rdrr.io/r/base/summary.html) method: a
+  `nest_transition_matrix`.
 
 ## Value
 
@@ -78,6 +87,4 @@ print(trans_mat)
 #> A 0 0.3333333 0.6666667
 #> B 1 0.0000000 0.0000000
 #> C 0 1.0000000 0.0000000
-#> attr(,"class")
-#> [1] "nest_transition_matrix" "matrix"                 "array"                 
 ```

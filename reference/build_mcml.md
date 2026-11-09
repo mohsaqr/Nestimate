@@ -301,15 +301,17 @@ summary(object, ...)
   sequences it carries, with its original `type`, `method` and
   `directed` unless these are passed; a new `clusters` does the same
   under that partition, and an unchanged partition returns an equal
-  object. Any session split, `exclude`, `trim` or `end` applied at build
-  time is already in those sequences, so passing one of them (or
-  `actor`, `action`, `time`, `order`, `session`, `time_threshold`,
-  `end_by`, `labels`, `from`, `to`, `weight`, `cols`) with a
-  re-partition raises an error, as does passing `clusters` together with
-  `combine` or `expand`. An `mcml` built from a matrix, from an edge
-  list (it keeps only the within-cluster edges) or with
-  `compute_within = FALSE` raises an error of class
-  `nestimate_mcml_no_sequences`.
+  object. With none of `clusters`, `combine` and `expand` the `mcml` is
+  returned as it is, and a shaping argument passed with it is ignored
+  with a warning of class `nestimate_ignored_argument`. Any session
+  split, `exclude`, `trim` or `end` applied at build time is already in
+  those sequences, so passing one of them (or `actor`, `action`, `time`,
+  `order`, `session`, `time_threshold`, `end_by`, `labels`, `from`,
+  `to`, `weight`, `cols`) with a re-partition raises an error, as does
+  passing `clusters` together with `combine` or `expand`. An `mcml`
+  built from a matrix, from an edge list (it keeps only the
+  within-cluster edges) or with `compute_within = FALSE` raises an error
+  of class `nestimate_mcml_no_sequences`.
   [`sequence_plot()`](https://pak.dynasite.org/Nestimate/reference/sequence_plot.md)
   takes the same two arguments as display options: its `combine` draws
   what it draws for `build_mcml(x, combine = )`, while its `expand`

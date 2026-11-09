@@ -120,7 +120,8 @@ plot(
   method: the kind of plot, one of `"auto"` (default), `"lines"`,
   `"bars"`, `"heatmap"`, `"tradeoff"` and `"facet"` (see *Plot types*).
   A type the sweep cannot support raises an error that names the
-  alternatives.
+  alternatives, and so does a table with a single configuration, which
+  has nothing to compare.
 
 - abbrev:
 

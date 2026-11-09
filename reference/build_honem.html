@@ -29,7 +29,7 @@ kept dimensions reproduce; a plot of two of them shows less than that."><meta pr
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.11</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.12</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -131,8 +131,9 @@ proximities.</p></dd>
 
 <dt id="arg-dims">dims<a class="anchor" aria-label="anchor" href="#arg-dims"></a></dt>
 <dd><p>For the <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> method: the two dimensions to draw. Default
-<code>c(1, 2)</code>. Nodes are labelled when there are at most 50; an embedding
-with a single dimension draws nothing and says so in a message.</p></dd>
+<code>c(1, 2)</code>; a dimension the embedding does not have raises an error.
+Nodes are labelled when there are at most 50; an embedding with a single
+dimension draws nothing and says so in a message.</p></dd>
 
 </dl></div>
     <div class="section level2">

@@ -409,11 +409,11 @@ boot <- bootstrap_network(net_tna, iter = 100)
 boot
 #>   Edge                   Mean     95% CI          p
 #>   -----------------------------------------------
-#>   Request → Specify    0.619  [0.584, 0.655]  ** 
-#>   Refine → Specify     0.455  [0.413, 0.502]  ** 
-#>   Command → Specify    0.281  [0.256, 0.301]  ** 
-#>   Correct → Specify    0.280  [0.249, 0.309]  ** 
-#>   Specify → Command    0.263  [0.246, 0.279]  ** 
+#>   Request → Specify      0.619  [0.584, 0.655]  ** 
+#>   Refine → Specify       0.455  [0.413, 0.502]  ** 
+#>   Command → Specify      0.281  [0.256, 0.301]  ** 
+#>   Correct → Specify      0.280  [0.249, 0.309]  ** 
+#>   Specify → Command      0.263  [0.246, 0.279]  ** 
 #>   ... and 40 more significant edges
 #> 
 #> Bootstrap Network  [Transition Network (relative) | directed]

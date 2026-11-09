@@ -272,14 +272,16 @@ With `actor`, a merged sequence must belong entirely to one actor. Every
 other method (the association methods, `"attention"`, `"ngram"`,
 `"gap"`, `"reverse"` and registered estimators) is re-estimated in full
 on resampled rows. A replicate whose estimation fails, or that loses a
-node, is left out of the p-values without a warning, and the bootstrap
+node, is left out of the p-values, with a warning of class
+`nestimate_resample_failed` that counts them, and the bootstrap
 statistics are computed over the remaining replicates; if every
 replicate fails, every p-value is 1.
 
 A network built from an edge list (for example an `mcml` from
 [`build_mcml()`](https://pak.dynasite.org/Nestimate/reference/build_mcml.md)
 with `from` and `to`) has no sequences, so each transition is resampled
-as an independent case, with a warning that points to the alternatives.
+as an independent case, with a warning of class
+`nestimate_edgelist_resampling` that points to the alternatives.
 
 ## Nested data and `actor`
 
@@ -384,13 +386,13 @@ teams <- build_network(group_regulation_long, method = "relative",
                        actor = "Actor", action = "Action", time = "Time",
                        group = "Achiever")
 bootstrap_network(teams, iter = 100, actor = "Group", seed = 1)
-#>   Edge                   High      Low     
+#>   Edge                    High      Low     
 #>   --------------------------------------------
-#>   synthesis→consensus   0.579     0.388   
-#>   cohesion→consensus    0.536     0.451   
-#>   adapt→consensus       0.519     0.458   
-#>   consensus→plan        0.364     0.432   
-#>   discuss→consensus     0.424     0.215   
+#>   synthesis→consensus     0.579     0.388   
+#>   cohesion→consensus      0.536     0.451   
+#>   adapt→consensus         0.519     0.458   
+#>   consensus→plan          0.364     0.432   
+#>   discuss→consensus       0.424     0.215   
 #>   ... and 33 more shared significant edges
 #> 
 #> Grouped Bootstrap  [2 groups | 100 iterations | 95% CI]

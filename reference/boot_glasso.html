@@ -51,7 +51,7 @@ number of pairs compared."><meta property="og:image" content="https://pak.dynasi
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.11</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.12</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -150,7 +150,8 @@ observation and one column per variable, cleaned as in
 <code><a href="build_glasso.html">build_glasso()</a></code>: non-numeric columns and a column named <code>rid</code> are
 set aside; columns with non-syntactic names, all-missing and constant
 columns, and rows with a missing value are dropped, each with a
-message; fewer than 2 variables or 3 complete rows raise an error. A
+message; fewer than 2 variables or 3 complete rows, or no more rows
+than variables, raise an error. A
 square symmetric matrix with matching row and column names is read as a
 correlation or covariance matrix and refused (class
 <code>nestimate_bad_input</code>): it has no observations to resample. Or a
@@ -464,7 +465,7 @@ edge-difference and centrality-difference procedures reproduced here.)</p>
 <span class="r-in"><span><span class="va">boot</span> <span class="op">&lt;-</span> <span class="fu">boot_glasso</span><span class="op">(</span><span class="va">net</span>, iter <span class="op">=</span> <span class="fl">20</span>, cs_iter <span class="op">=</span> <span class="fl">10</span>, seed <span class="op">=</span> <span class="fl">42</span>,</span></span>
 <span class="r-in"><span>  centrality <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"strength"</span>, <span class="st">"expected_influence"</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">boot</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> GLASSO Bootstrap (20 iterations, 10 case-drop per proportion)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> GLASSO Bootstrap (20 iterations, 10 case-drop iterations)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Data: 15 x 4  |  Alpha: 0.05  |  Gamma: 0.50</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Edges: 0/6 significant (CI excludes zero)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Mean inclusion probability: 0.34</span>
@@ -474,7 +475,7 @@ edge-difference and centrality-difference procedures reproduced here.)</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     expected_influence:    0.00 [Unstable]</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Edge differences: 0/15 pairs significantly different</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Timing: 1.1s (bootstrap: 0.7s, case-drop: 0.4s)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Timing: 1.0s (bootstrap: 0.6s, case-drop: 0.3s)</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">boot</span>, type <span class="op">=</span> <span class="st">"edges"</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     edge weight    ci_lower  ci_upper inclusion</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1 A -- B      0 -0.11158199 0.2237159      0.35</span>

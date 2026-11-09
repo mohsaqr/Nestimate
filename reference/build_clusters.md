@@ -243,7 +243,8 @@ print(x, ...)
   covariates' odds ratios (log scale) for each cluster against the
   reference cluster. `"predictors"` needs a fit with `covariates` and a
   logit estimator; with `estimator = "chisq"`, which has no odds ratios,
-  it raises an error.
+  it raises an error that points to
+  [`summary()`](https://rdrr.io/r/base/summary.html) for the tests.
 
 - combined:
 
@@ -258,16 +259,16 @@ A `net_clustering` object.
 [`print()`](https://rdrr.io/r/base/print.html) shows the method,
 dissimilarity and average silhouette width, then one row per cluster
 with its size (count and percentage), mean within-cluster distance and,
-for PAM, its medoid; after a logit covariate analysis it adds a line
-naming the predictors.
-[`summary()`](https://rdrr.io/r/base/summary.html) prints the method,
-dissimilarity and average silhouette width and a per-cluster table of
-sizes and mean within-cluster distances, followed by the covariate
-analysis when there is one, and returns a per-cluster table, or the
-covariate table after a covariate analysis (see the methods' return
-value below). [`plot()`](https://rdrr.io/r/graphics/plot.default.html)
-draws the silhouette widths, a map of the distances, the distance matrix
-or the covariate effects.
+for PAM, its medoid; after a covariate analysis it adds a line naming
+the covariates. [`summary()`](https://rdrr.io/r/base/summary.html)
+prints the method, dissimilarity and average silhouette width and a
+per-cluster table of sizes and mean within-cluster distances, followed
+by the covariate analysis when there is one, and returns a per-cluster
+table, or the covariate table after a covariate analysis (see the
+methods' return value below).
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) draws the
+silhouette widths, a map of the distances, the distance matrix or the
+covariate effects.
 [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
 turns the clustering into one network per cluster (a `netobject_group`),
 and

@@ -29,7 +29,7 @@ pick a name that is not an alias."><meta property="og:image" content="https://pa
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.11</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.12</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -92,7 +92,10 @@ pick a name that is not an alias.</p>
 <dl><dt id="arg-name">name<a class="anchor" aria-label="anchor" href="#arg-name"></a></dt>
 <dd><p>The name the estimator is called by, as <code>method</code> in
 <code><a href="build_network.html">build_network()</a></code>: a single non-empty string. A name already registered
-is replaced.</p></dd>
+is replaced. A name that is a method alias (such as <code>"tna"</code>) is stored
+with a warning of class <code>nestimate_alias_shadowed</code>, because
+<code><a href="build_network.html">build_network()</a></code> resolves the alias to the built-in method and never
+calls the registered function.</p></dd>
 
 
 <dt id="arg-fn">fn<a class="anchor" aria-label="anchor" href="#arg-fn"></a></dt>
@@ -139,6 +142,12 @@ as for a built-in method.</p>
 any other named element is copied onto the <code>netobject</code>, replacing a field
 of the same name. A return value without <code>matrix</code>, <code>nodes</code> or <code>directed</code>
 makes <code><a href="build_network.html">build_network()</a></code> stop with an error.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="note">Note<a class="anchor" aria-label="anchor" href="#note"></a></h2>
+    <p>The <span class="pkg">idiographic</span> package exports a function with the same
+name. With both packages attached, the one attached last masks the
+other; write <code>Nestimate::register_estimator()</code> to call this one.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

@@ -53,7 +53,7 @@ mosaic_analysis()."><meta property="og:image" content="https://pak.dynasite.org/
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.11</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.12</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -241,7 +241,8 @@ of a network, table or matrix; an unknown name raises an error that
 lists the valid ones. The data-frame method takes no <code>style</code> and
 raises an error of class <code>nestimate_bad_input</code> for any argument it
 does not take; the <code>mcml</code> method does the same with
-<code>style = "classic"</code>; the other methods ignore it.</p></dd>
+<code>style = "classic"</code>; the other methods ignore it with a warning of
+class <code>nestimate_ignored_argument</code>.</p></dd>
 
 
 <dt id="arg-xlab-ylab">xlab, ylab<a class="anchor" aria-label="anchor" href="#arg-xlab-ylab"></a></dt>

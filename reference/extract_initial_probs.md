@@ -25,6 +25,9 @@ warning: those values are a placeholder, not an estimate.
 extract_initial_probs(model)
 
 # S3 method for class 'nest_initial_probs'
+print(x, ...)
+
+# S3 method for class 'nest_initial_probs'
 summary(object, ...)
 ```
 
@@ -36,15 +39,21 @@ summary(object, ...)
   holding an `initial` element. Input from which neither initial
   probabilities nor a weight matrix can be read raises an error.
 
-- object:
+- x:
 
-  For the [`summary()`](https://rdrr.io/r/base/summary.html) method: a
+  For the [`print()`](https://rdrr.io/r/base/print.html) method: a
   `nest_initial_probs`.
 
 - ...:
 
   For the [`summary()`](https://rdrr.io/r/base/summary.html) method:
-  ignored.
+  ignored. For the [`print()`](https://rdrr.io/r/base/print.html)
+  method: passed on to the vector print.
+
+- object:
+
+  For the [`summary()`](https://rdrr.io/r/base/summary.html) method: a
+  `nest_initial_probs`.
 
 ## Value
 
@@ -75,6 +84,4 @@ init_probs <- extract_initial_probs(net)
 print(init_probs)
 #>         A         B         C 
 #> 0.6666667 0.3333333 0.0000000 
-#> attr(,"class")
-#> [1] "nest_initial_probs" "numeric"           
 ```

@@ -21,6 +21,12 @@ A data frame with one row per registered estimator, sorted by name, and
 columns `name`, `description` and `directed` (`TRUE` for directed
 networks). With an empty registry it has no rows.
 
+## Note
+
+The idiographic package exports a function with the same name. With both
+packages attached, the one attached last masks the other; write
+`Nestimate::list_estimators()` to call this one.
+
 ## See also
 
 [`register_estimator`](https://pak.dynasite.org/Nestimate/reference/register_estimator.md),

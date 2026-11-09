@@ -60,6 +60,12 @@ its `meta`; without one, a symmetric weight matrix is taken as
 field is read as `TRUE`. Numeric state codes in the stored data of a
 converted tna model are decoded to their labels.
 
+## Note
+
+The idiographic package exports a function with the same name. With both
+packages attached, the one attached last masks the other; write
+`Nestimate::as_netobject()` to call this one.
+
 ## See also
 
 [`validate_netobject`](https://pak.dynasite.org/Nestimate/reference/validate_netobject.md)

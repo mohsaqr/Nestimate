@@ -30,7 +30,12 @@ register_estimator(name, fn, description, directed)
 
   The name the estimator is called by, as `method` in
   [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md):
-  a single non-empty string. A name already registered is replaced.
+  a single non-empty string. A name already registered is replaced. A
+  name that is a method alias (such as `"tna"`) is stored with a warning
+  of class `nestimate_alias_shadowed`, because
+  [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
+  resolves the alias to the built-in method and never calls the
+  registered function.
 
 - fn:
 
@@ -87,6 +92,12 @@ element is copied onto the `netobject`, replacing a field of the same
 name. A return value without `matrix`, `nodes` or `directed` makes
 [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
 stop with an error.
+
+## Note
+
+The idiographic package exports a function with the same name. With both
+packages attached, the one attached last masks the other; write
+`Nestimate::register_estimator()` to call this one.
 
 ## See also
 

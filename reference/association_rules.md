@@ -115,7 +115,9 @@ plot(x, ...)
   recoded positions, so with `"auto"` (default) they raise an error of
   class `nestimate_bad_input`. `"binary"` declares them items, one row
   per transaction; it raises the same error on a data frame with any
-  other value.
+  other value. A list of transactions or a network has no 0/1 columns,
+  so `"binary"` is ignored for them with a warning of class
+  `nestimate_ignored_argument`.
 
 - ...:
 

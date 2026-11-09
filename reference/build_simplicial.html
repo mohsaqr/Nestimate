@@ -59,7 +59,7 @@ in the complex."><meta property="og:image" content="https://pak.dynasite.org/Nes
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.11</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.12</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -206,8 +206,9 @@ distance.</p></dd>
 <dd><p>For <code>type = "pathway"</code> on a <code>tna</code> model or <code>netobject</code>: <code>method</code>
 (<code>"hon"</code>, the default, <code>"hypa"</code> or <code>"mogen"</code>) chooses the higher-order
 model built from it, and the other arguments go to <code><a href="build_hon.html">build_hon()</a></code>,
-<code><a href="build_hypa.html">build_hypa()</a></code> or <code><a href="build_mogen.html">build_mogen()</a></code>. For the <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> and <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code>
-methods: ignored.</p></dd>
+<code><a href="build_hypa.html">build_hypa()</a></code> or <code><a href="build_mogen.html">build_mogen()</a></code>. Any other construction or input does
+not read <code>...</code> and warns with class <code>nestimate_ignored_argument</code> when it
+is given. For the <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> and <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> methods: ignored.</p></dd>
 
 
 <dt id="arg-combined">combined<a class="anchor" aria-label="anchor" href="#arg-combined"></a></dt>
@@ -215,7 +216,9 @@ methods: ignored.</p></dd>
 panels (f-vector, Betti numbers, simplicial degree per node and degree
 by dimension) as one 2 x 2 figure, which needs <span class="pkg">gridExtra</span>;
 <code>FALSE</code> returns the four ggplots in a named list (<code>f_vector</code>, <code>betti</code>,
-<code>degree</code>, <code>degree_heatmap</code>) to print, save or arrange separately.</p></dd>
+<code>degree</code>, <code>degree_heatmap</code>) to print, save or arrange separately. A
+complex without edges (dimension 0) has no simplicial degree to draw
+and raises an error of class <code>nestimate_bad_input</code>.</p></dd>
 
 </dl></div>
     <div class="section level2">

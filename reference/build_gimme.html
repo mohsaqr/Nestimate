@@ -47,7 +47,7 @@ points and fit statistics, which the result carries."><meta property="og:image" 
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.11</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.12</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -126,7 +126,10 @@ points and fit statistics, which the result carries.</p>
 <span>  cfi_cutoff <span class="op">=</span> <span class="fl">0.95</span>,</span>
 <span>  n_excellent <span class="op">=</span> <span class="fl">2L</span>,</span>
 <span>  seed <span class="op">=</span> <span class="cn">NULL</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'net_gimme'</span></span>
+<span><span class="fu"><a href="coefs.html">coefs</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -227,6 +230,14 @@ Default <code>2</code>.</p></dd>
 <dt id="arg-seed">seed<a class="anchor" aria-label="anchor" href="#arg-seed"></a></dt>
 <dd><p>An integer that makes the estimation reproducible; the
 session's own random stream is left as it was. Default <code>NULL</code>.</p></dd>
+
+
+<dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
+<dd><p>For the <code><a href="coefs.html">coefs()</a></code> method: a <code>net_gimme</code> from <code>build_gimme()</code>.</p></dd>
+
+
+<dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
+<dd><p>For the <code><a href="coefs.html">coefs()</a></code> method: passed to <code><a href="https://pak.dynasite.org/idiographic/reference/coefs.html" class="external-link">idiographic::coefs()</a></code>.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -333,6 +344,15 @@ same data – individual-level paths in particular – so numeric results
 are not comparable with Nestimate &lt;= 0.8.5. The returned object also
 gained fields (see <strong>Value</strong>); nothing was removed.</p>
     </div>
+    <div class="section level2">
+    <h2 id="methods">Methods<a class="anchor" aria-label="anchor" href="#methods"></a></h2>
+
+
+<ul><li><p><code><a href="coefs.html">coefs()</a></code> on a <code>build_gimme()</code> result returns idiographic's coefficient
+table, one row per person and path. Nestimate's own <code><a href="coefs.html">coefs()</a></code> generic
+masks idiographic's when both packages are attached; this method makes
+either one give the same table.</p></li>
+</ul></div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
     <p>Gates, K. M., &amp; Molenaar, P. C. M. (2012). Group search algorithm

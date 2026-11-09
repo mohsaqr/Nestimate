@@ -25,7 +25,9 @@ panel per cluster (see the section *Multichannel view of an mcml*). That
 figure is drawn with ggplot2 and takes only `type`, `trim`,
 `state_colors`, `na_color`, `main`, `time_label` (or `xlab`) and the
 mcml options (`normalize`, `na`, `panel`, `expand`, `combine`, `rest`,
-`rest_label`); every other figure is drawn with base graphics.
+`rest_label`); any other argument given with an `mcml` is ignored with a
+warning of class `nestimate_ignored_argument`. Every other figure is
+drawn with base graphics.
 
 The plot describes the sequences; it does not model them. The row order
 of a heatmap comes from `sort` and is a display choice, so blocks of
@@ -202,7 +204,8 @@ print(x, ...)
   (`nrow(x)` values), for the index and distribution views; the heatmap
   ignores it. `NULL` (default) uses the cluster assignments of a
   `net_clustering`, `net_mmm` or `netobject_group` input, and draws one
-  panel otherwise. With `periods`, `group` instead names a column of the
+  panel otherwise. Index panels are titled `"Cluster <label>"`, whatever
+  the grouping. With `periods`, `group` instead names a column of the
   event log (or of the network's metadata) that is constant within
   actor, such as a class or a condition: one panel per value, one row
   per actor, all panels on the same period axis. With an event log it
@@ -242,7 +245,8 @@ print(x, ...)
   grey. Repeats of a state merge into one spell; `cell_border = "white"`
   (TraMineR's `border`) outlines each action so they show as separate,
   equal shares of the period. Setting `fill` without `periods` raises an
-  error of class `nestimate_bad_input`; an `mcml` ignores it.
+  error of class `nestimate_bad_input`; an `mcml` ignores it with a
+  warning.
 
 - actor, action, time, order:
 
@@ -520,7 +524,7 @@ print(x, ...)
   they are not a numbered run (`T1`, `T2`, ...), when one of them is
   called `action`, or when any other column sits beside them; given for
   any other input it raises an error of class `nestimate_bad_input`,
-  except for an `mcml`, which ignores it. Default `NULL`.
+  except for an `mcml`, which ignores it with a warning. Default `NULL`.
 
 - ...:
 

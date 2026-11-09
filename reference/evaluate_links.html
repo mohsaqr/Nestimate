@@ -35,7 +35,7 @@ nothing but known edges."><meta property="og:image" content="https://pak.dynasit
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.11</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.12</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -107,7 +107,9 @@ nothing but known edges.</p>
 <code>to</code> (every row is an edge, whatever its other columns, such as a
 weight, hold), or a matrix whose non-zero cells are edges. Its row
 names name both its rows and its columns (column names are not read),
-so its columns must be in the same order as its rows; without row
+so its columns must be in the same order as its rows (column names
+that differ from the row names raise a warning of class
+<code>nestimate_ignored_argument</code>); without row
 names, the nodes of <code>pred</code> are used. For a directed prediction, pairs
 are matched by <code>from</code> and <code>to</code>, direction included; for an undirected
 one, in either order, so <code>(C, A)</code> matches the listed pair <code>(A, C)</code>.</p></dd>

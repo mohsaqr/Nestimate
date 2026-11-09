@@ -17,8 +17,10 @@ a macro Summary panel and one panel per cluster (see the section
 Multichannel view of an mcml). That figure is drawn with ggplot2 and
 takes only type, trim, state_colors, na_color, main,
 time_label (or xlab) and the mcml options (normalize, na,
-panel, expand, combine, rest, rest_label); every other figure
-is drawn with base graphics.
+panel, expand, combine, rest, rest_label); any other argument
+given with an mcml is ignored with a warning of class
+nestimate_ignored_argument. Every other figure is drawn with base
+graphics.
 The plot describes the sequences; it does not model them. The row order
 of a heatmap comes from sort and is a display choice, so blocks of
 similar rows are a reason to cluster the sequences with
@@ -41,8 +43,10 @@ a macro Summary panel and one panel per cluster (see the section
 Multichannel view of an mcml). That figure is drawn with ggplot2 and
 takes only type, trim, state_colors, na_color, main,
 time_label (or xlab) and the mcml options (normalize, na,
-panel, expand, combine, rest, rest_label); every other figure
-is drawn with base graphics.
+panel, expand, combine, rest, rest_label); any other argument
+given with an mcml is ignored with a warning of class
+nestimate_ignored_argument. Every other figure is drawn with base
+graphics.
 The plot describes the sequences; it does not model them. The row order
 of a heatmap comes from sort and is a display choice, so blocks of
 similar rows are a reason to cluster the sequences with
@@ -55,7 +59,7 @@ what is drawn, never the data."><meta property="og:image" content="https://pak.d
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.11</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.12</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -109,8 +113,10 @@ a macro <code>Summary</code> panel and one panel per cluster (see the section
 <em>Multichannel view of an mcml</em>). That figure is drawn with ggplot2 and
 takes only <code>type</code>, <code>trim</code>, <code>state_colors</code>, <code>na_color</code>, <code>main</code>,
 <code>time_label</code> (or <code>xlab</code>) and the mcml options (<code>normalize</code>, <code>na</code>,
-<code>panel</code>, <code>expand</code>, <code>combine</code>, <code>rest</code>, <code>rest_label</code>); every other figure
-is drawn with base graphics.</p>
+<code>panel</code>, <code>expand</code>, <code>combine</code>, <code>rest</code>, <code>rest_label</code>); any other argument
+given with an <code>mcml</code> is ignored with a warning of class
+<code>nestimate_ignored_argument</code>. Every other figure is drawn with base
+graphics.</p>
 <p>The plot describes the sequences; it does not model them. The row order
 of a heatmap comes from <code>sort</code> and is a display choice, so blocks of
 similar rows are a reason to cluster the sequences with
@@ -267,7 +273,8 @@ must have one leaf per row. Default <code>NULL</code>.</p></dd>
 sequence (<code>nrow(x)</code> values), for the index and distribution views; the
 heatmap ignores it. <code>NULL</code> (default) uses the cluster assignments of a
 <code>net_clustering</code>, <code>net_mmm</code> or <code>netobject_group</code> input, and draws one
-panel otherwise. With <code>periods</code>, <code>group</code> instead names a column of the
+panel otherwise. Index panels are titled
+<code>"Cluster &lt;label&gt;"</code>, whatever the grouping. With <code>periods</code>, <code>group</code> instead names a column of the
 event log (or of the network's metadata) that is constant within
 actor, such as a class or a condition: one panel per value, one row
 per actor, all panels on the same period axis. With an event log it
@@ -306,7 +313,8 @@ there are at most 60 in all). With <code>periods</code>, empty space is white
 unless <code>na_color</code> is given, so it is never confused with a state drawn
 in grey. Repeats of a state merge into one spell; <code>cell_border = "white"</code> (TraMineR's <code>border</code>) outlines each action so they show as
 separate, equal shares of the period. Setting <code>fill</code> without <code>periods</code>
-raises an error of class <code>nestimate_bad_input</code>; an <code>mcml</code> ignores it.</p></dd>
+raises an error of class <code>nestimate_bad_input</code>; an <code>mcml</code> ignores it
+with a warning.</p></dd>
 
 
 <dt id="arg-actor-action-time-order">actor, action, time, order<a class="anchor" aria-label="anchor" href="#arg-actor-action-time-order"></a></dt>
@@ -576,8 +584,8 @@ for a bottom legend, one column for a right legend.</p></dd>
 Needed when they are not a numbered run (<code>T1</code>, <code>T2</code>, ...), when one of
 them is called <code>action</code>, or when any other column sits beside them;
 given for any other input it raises an error of class
-<code>nestimate_bad_input</code>, except for an <code>mcml</code>, which ignores it.
-Default <code>NULL</code>.</p></dd>
+<code>nestimate_bad_input</code>, except for an <code>mcml</code>, which ignores it with a
+warning. Default <code>NULL</code>.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>

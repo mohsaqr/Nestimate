@@ -31,7 +31,7 @@ missing cells, back to itself."><meta property="og:image" content="https://pak.d
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.11</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.12</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -103,7 +103,7 @@ raise an error of class <code>nestimate_bad_input</code>.</p></dd>
 <dt id="arg-state">state<a class="anchor" aria-label="anchor" href="#arg-state"></a></dt>
 <dd><p>The label written into the leading missing cells, a single
 non-empty string. Default <code>"Start"</code>. If the label already occurs in
-<code>data</code>, a warning is given and <code>_1</code>, <code>_2</code>, ... is appended until it is
+<code>data</code>, a warning of class <code>nestimate_state_collision</code> is given and <code>_1</code>, <code>_2</code>, ... is appended until it is
 unique, so the marker is never confused with an observed state.</p></dd>
 
 

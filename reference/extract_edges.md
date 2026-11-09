@@ -73,6 +73,12 @@ one per cluster.
 An edge list is the form most other network tools (igraph, export to
 Gephi or a spreadsheet) take.
 
+## Note
+
+The idiographic package exports a function with the same name. With both
+packages attached, the one attached last masks the other; write
+`Nestimate::extract_edges()` to call this one.
+
 ## See also
 
 [`extract_transition_matrix`](https://pak.dynasite.org/Nestimate/reference/extract_transition_matrix.md)

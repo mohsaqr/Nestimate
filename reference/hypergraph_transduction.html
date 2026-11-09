@@ -15,8 +15,11 @@ distrust. The given labels are not held fixed, so a labelled node can be
 predicted into another class, and a class's scores grow with its number
 of labelled nodes. As xi approaches 1, every node's scores become
 proportional to the same vector, so in the limit every node is assigned
-the same class. On a small hypergraph the default 0.99 can come close
-to that; compare the predictions under a smaller xi."><meta property="og:description" content="hypergraph_transduction() classifies the unlabelled nodes of a
+the same class. The default 0.99 is the value of Zhou et al. (2006) and
+suits large hypergraphs; on a small one it over-smooths. In the example
+below it assigns five of the six nodes to one class, where xi = 0.9
+splits them three and three, so on a small hypergraph pass a smaller
+xi and compare."><meta property="og:description" content="hypergraph_transduction() classifies the unlabelled nodes of a
 hypergraph from a few labelled ones, by the label-spreading framework of
 Zhou et al. (2006). The labels spread over the hypergraph as the scores
 $$F = (1 - \xi) (I - \xi S)^{-1} Y,$$
@@ -32,8 +35,11 @@ distrust. The given labels are not held fixed, so a labelled node can be
 predicted into another class, and a class's scores grow with its number
 of labelled nodes. As xi approaches 1, every node's scores become
 proportional to the same vector, so in the limit every node is assigned
-the same class. On a small hypergraph the default 0.99 can come close
-to that; compare the predictions under a smaller xi."><meta property="og:image" content="https://pak.dynasite.org/Nestimate/logo.svg"></head><body>
+the same class. The default 0.99 is the value of Zhou et al. (2006) and
+suits large hypergraphs; on a small one it over-smooths. In the example
+below it assigns five of the six nodes to one class, where xi = 0.9
+splits them three and three, so on a small hypergraph pass a smaller
+xi and compare."><meta property="og:image" content="https://pak.dynasite.org/Nestimate/logo.svg"></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -41,7 +47,7 @@ to that; compare the predictions under a smaller xi."><meta property="og:image" 
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.11</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.12</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -94,8 +100,11 @@ distrust. The given labels are not held fixed, so a labelled node can be
 predicted into another class, and a class's scores grow with its number
 of labelled nodes. As <code>xi</code> approaches 1, every node's scores become
 proportional to the same vector, so in the limit every node is assigned
-the same class. On a small hypergraph the default <code>0.99</code> can come close
-to that; compare the predictions under a smaller <code>xi</code>.</p>
+the same class. The default <code>0.99</code> is the value of Zhou et al. (2006) and
+suits large hypergraphs; on a small one it over-smooths. In the example
+below it assigns five of the six nodes to one class, where <code>xi = 0.9</code>
+splits them three and three, so on a small hypergraph pass a smaller
+<code>xi</code> and compare.</p>
     </div>
 
     <div class="section level2">
@@ -114,14 +123,9 @@ to that; compare the predictions under a smaller <code>xi</code>.</p>
 <span><span class="co"># S3 method for class 'net_hypergraph_transduction'</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">object</span>, <span class="va">...</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># S3 method for class 'net_hypergraph_transduction'</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span></span>
-<span>  <span class="va">x</span>,</span>
-<span>  row.names <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  optional <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  what <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"predictions"</span>, <span class="st">"scores"</span><span class="op">)</span>,</span>
-<span>  <span class="va">...</span></span>
-<span><span class="op">)</span></span>
+<span><span class="fu">label_predictions</span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">label_scores</span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S3 method for class 'net_hypergraph_transduction'</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
@@ -157,7 +161,8 @@ to <code><a href="hypergraph_laplacian.html">hypergraph_laplacian()</a></code>. 
 
 
 <dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
-<dd><p>For the <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code>, <code><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame()</a></code> and <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> methods: a
+<dd><p>For the <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> and <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> methods and for
+<code>label_predictions()</code> and <code>label_scores()</code>: a
 <code>net_hypergraph_transduction</code> object.</p></dd>
 
 
@@ -168,22 +173,6 @@ to <code><a href="hypergraph_laplacian.html">hypergraph_laplacian()</a></code>. 
 <dt id="arg-object">object<a class="anchor" aria-label="anchor" href="#arg-object"></a></dt>
 <dd><p>For the <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> method: a <code>net_hypergraph_transduction</code>
 object.</p></dd>
-
-
-<dt id="arg-row-names">row.names<a class="anchor" aria-label="anchor" href="#arg-row-names"></a></dt>
-<dd><p>For the <code><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame()</a></code> method: row names for the
-returned data frame. Default <code>NULL</code> keeps the default row numbers.</p></dd>
-
-
-<dt id="arg-optional">optional<a class="anchor" aria-label="anchor" href="#arg-optional"></a></dt>
-<dd><p>For the <code><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame()</a></code> method: ignored; it is there to
-match the <code><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">base::as.data.frame()</a></code> generic.</p></dd>
-
-
-<dt id="arg-what">what<a class="anchor" aria-label="anchor" href="#arg-what"></a></dt>
-<dd><p>For the <code><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame()</a></code> method: the table to return.
-<code>"predictions"</code> (default) gives one row per node; <code>"scores"</code> gives one
-row per node and class.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -216,11 +205,11 @@ winning minus the runner-up score).</p></dd>
 </dl><p>The <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> method returns its input invisibly. The <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>
 method returns a data frame with one row per class: <code>class</code>,
 <code>n_labeled</code>, <code>n_predicted</code> and <code>mean_margin</code> (the mean margin of the
-nodes predicted into the class, <code>NA</code> when there are none). The
-<code><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame()</a></code> method returns, for <code>what = "predictions"</code>, one row
-per node with <code>node</code>, <code>label</code> (<code>NA</code> for an unlabelled node),
-<code>predicted</code>, <code>score</code> and <code>margin</code>, and for <code>what = "scores"</code> one row per
-node and class with <code>node</code>, <code>class</code> and <code>score</code>. The <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> method
+nodes predicted into the class, <code>NA</code> when there are none).
+<code>label_predictions()</code> returns a data frame with one row per node:
+<code>node</code>, <code>label</code> (<code>NA</code> for an unlabelled node), <code>predicted</code>, <code>score</code> and
+<code>margin</code>. <code>label_scores()</code> returns a data frame with one row per node
+and class: <code>node</code>, <code>class</code> and <code>score</code>. The <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> method
 returns the score heatmap as a <code>ggplot</code>, visibly, so <code>plot(x)</code> draws
 it: one row per node, grouped by
 predicted class and ordered by margin within it, one column per class,
@@ -244,19 +233,33 @@ hypergraphs: Clustering, classification, and embedding.
 <span class="r-in"><span>              <span class="st">"m4"</span>, <span class="st">"m4"</span>, <span class="st">"m4"</span>, <span class="st">"m5"</span>, <span class="st">"m5"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">hg</span> <span class="op">&lt;-</span> <span class="fu"><a href="bipartite_groups.html">bipartite_groups</a></span><span class="op">(</span><span class="va">events</span>, player <span class="op">=</span> <span class="st">"person"</span>, group <span class="op">=</span> <span class="st">"meeting"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">tr</span> <span class="op">&lt;-</span> <span class="fu">hypergraph_transduction</span><span class="op">(</span><span class="va">hg</span>, labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>a <span class="op">=</span> <span class="st">"x"</span>, d <span class="op">=</span> <span class="st">"y"</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">tr</span> <span class="op">&lt;-</span> <span class="fu">hypergraph_transduction</span><span class="op">(</span><span class="va">hg</span>, labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>a <span class="op">=</span> <span class="st">"x"</span>, d <span class="op">=</span> <span class="st">"y"</span><span class="op">)</span>, xi <span class="op">=</span> <span class="fl">0.9</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">tr</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Hypergraph transductive label spreading (zhou Laplacian, xi = 0.99)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Hypergraph transductive label spreading (zhou Laplacian, xi = 0.9)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Nodes: 6 (2 labeled) | Classes: x, y</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Predicted: x = 1, y = 5</span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="va">tr</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   node label predicted     score      margin</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1    a     x         x 0.1654808 0.003987167</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2    b  &lt;NA&gt;         y 0.1614936 0.006012833</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3    c  &lt;NA&gt;         y 0.2037821 0.019834793</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4    d     y         y 0.2321154 0.070621782</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5    e  &lt;NA&gt;         y 0.1839473 0.055966489</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6    f  &lt;NA&gt;         y 0.1839473 0.055966489</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Predicted: x = 3, y = 3</span>
+<span class="r-in"><span><span class="fu">label_predictions</span><span class="op">(</span><span class="va">tr</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   node label predicted     score     margin</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1    a     x         x 0.3062500 0.21439413</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2    b  &lt;NA&gt;         x 0.2062500 0.11439413</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3    c  &lt;NA&gt;         x 0.2143304 0.06433035</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4    d     y         y 0.3500000 0.25814413</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5    e  &lt;NA&gt;         y 0.2143304 0.15808035</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6    f  &lt;NA&gt;         y 0.2143304 0.15808035</span>
+<span class="r-in"><span><span class="fu">label_scores</span><span class="op">(</span><span class="va">tr</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    node class      score</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1     a     x 0.30625000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2     b     x 0.20625000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3     c     x 0.21433035</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4     d     x 0.09185587</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5     e     x 0.05625000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6     f     x 0.05625000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7     a     y 0.09185587</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8     b     y 0.09185587</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9     c     y 0.15000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10    d     y 0.35000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11    e     y 0.21433035</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 12    f     y 0.21433035</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

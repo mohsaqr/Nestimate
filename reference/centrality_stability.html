@@ -43,7 +43,7 @@ differences with boot_glasso()."><meta property="og:image" content="https://pak.
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.11</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.12</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -293,7 +293,8 @@ estimates are reported in a warning of class
 long-standing behaviour. When <em>some</em> requested measures do not vary
 across the nodes of the original network (or are undefined on it), they
 are dropped, and the result covers only the retained ones. When <em>every</em>
-requested measure is so, a warning is issued and <em>all</em> requested names
+requested measure is so, a warning of class <code>nestimate_constant_measure</code>
+is issued and <em>all</em> requested names
 are returned with a CS-coefficient of 0 and correlations that are all
 <code>NA</code>. A measure counts as constant when its values span no more than
 the square root of the machine epsilon relative to their size, so

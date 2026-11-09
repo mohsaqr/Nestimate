@@ -47,7 +47,7 @@ of whether a pattern is present in more sequences of one group."><meta property=
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.11</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.12</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -160,7 +160,9 @@ input except a <code>netobject_group</code> needs <code>group</code>. For the <c
 <dd><p>The group of each sequence: the name of a column of a data
 frame or matrix <code>x</code> (that column is then not read as a position), or a
 vector with one label per sequence. Ignored for a <code>netobject_group</code>;
-required otherwise. At least two groups are needed. Default <code>NULL</code>.</p></dd>
+required otherwise. At least two groups are needed. Sequences with a
+missing group are left out of the counts with a warning of class
+<code>nestimate_missing_group</code>. Default <code>NULL</code>.</p></dd>
 
 
 <dt id="arg-sub">sub<a class="anchor" aria-label="anchor" href="#arg-sub"></a></dt>
@@ -182,7 +184,8 @@ reaches it, an error is raised. Default <code>5</code>.</p></dd>
 
 <dt id="arg-iter">iter<a class="anchor" aria-label="anchor" href="#arg-iter"></a></dt>
 <dd><p>The number of permutations for <code>test = "permutation"</code>, a
-positive whole number; ignored otherwise. Default <code>1000</code>.</p></dd>
+positive whole number; ignored otherwise. <code>iter = 1</code> gives a warning
+of class <code>nestimate_undefined_effect_size</code>. Default <code>1000</code>.</p></dd>
 
 
 <dt id="arg-adjust">adjust<a class="anchor" aria-label="anchor" href="#arg-adjust"></a></dt>

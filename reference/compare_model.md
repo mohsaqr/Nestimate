@@ -32,6 +32,9 @@ view per call.
 ``` r
 compare_model(x, ...)
 
+# Default S3 method
+compare_model(x, ...)
+
 # S3 method for class 'netobject'
 compare_model(
   x,
@@ -152,8 +155,8 @@ plot(
 
   `"log1p"`
 
-  :   \\\log(1 + w)\\; defined for \\w \> -1\\. A weight of -1 or below
-      makes the comparison fail with an error.
+  :   \\\log(1 + w)\\; defined for \\w \> -1\\: a weight of -1 or below
+      raises an error of class `nestimate_bad_input`.
 
   `"softmax"`
 

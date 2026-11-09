@@ -63,7 +63,7 @@ stable their edges are."><meta property="og:image" content="https://pak.dynasite
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.11</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.12</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -142,7 +142,7 @@ stable their edges are.</p>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">x</span>, type <span class="op">=</span> <span class="cn">NULL</span>, <span class="va">...</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S3 method for class 'net_cluster_diagnostics'</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="va">x</span>, row.names <span class="op">=</span> <span class="cn">NULL</span>, optional <span class="op">=</span> <span class="cn">FALSE</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">object</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -154,13 +154,13 @@ stable their edges are.</p>
 <code>netobject_group</code> carrying a clustering (built by <code><a href="cluster_network.html">cluster_network()</a></code>
 or by <code><a href="build_network.html">build_network()</a></code> from a <code>net_clustering</code> or <code>net_mmm</code>), or a
 <code>net_mmm_clustering</code>. A <code>netobject_group</code> without a clustering, and any
-other object, raise an error. For the <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code>, <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> and
-<code><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame()</a></code> methods: a <code>net_cluster_diagnostics</code>.</p></dd>
+other object, raise an error. For the <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> and <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code>
+methods: a <code>net_cluster_diagnostics</code>.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
 <dd><p>Not used: an extra argument raises an error, here and in the
-<code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> and <code><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame()</a></code> methods. For <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code>: further
+<code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> and <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> methods. For <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code>: further
 arguments for the clustering's own <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> method, such as <code>combined</code>.</p></dd>
 
 
@@ -181,9 +181,8 @@ clustering also takes <code>"mds"</code>, <code>"heatmap"</code> and <code>"pred
 <code>net_mmm_clustering</code> (see <code><a href="build_mmm.html">build_mmm()</a></code>).</p></dd>
 
 
-<dt id="arg-row-names-optional">row.names, optional<a class="anchor" aria-label="anchor" href="#arg-row-names-optional"></a></dt>
-<dd><p>For <code><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame()</a></code>: accepted for the
-generic and ignored.</p></dd>
+<dt id="arg-object">object<a class="anchor" aria-label="anchor" href="#arg-object"></a></dt>
+<dd><p>For the <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> method: a <code>net_cluster_diagnostics</code>.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -233,8 +232,9 @@ without recomputing anything.</p></dd>
 </dl><p>For <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code>: the input, invisibly. For <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code>: what the
 clustering's own <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> method returns, a <code>ggplot</code> object (invisibly)
 or, for the covariate views with <code>combined = FALSE</code>, a list of
-<code>ggplot</code> objects named by cluster (invisibly). For <code><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame()</a></code>:
-the per-cluster table described under <code>per_cluster</code>.</p>
+<code>ggplot</code> objects named by cluster (invisibly). For <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>:
+the per-cluster table described under <code>per_cluster</code>, a data frame with
+one row per cluster.</p>
     </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
@@ -272,7 +272,7 @@ Guide</em>. Statistical Innovations.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Cluster  N           Mix%   AvePP  Class.Err%</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   1        21 (70.0%)  67.5%  0.943   5.7%</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   2        9 (30.0%)   32.5%  0.952   4.8%</span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="fu">cluster_diagnostics</span><span class="op">(</span><span class="va">fit</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="fu">cluster_diagnostics</span><span class="op">(</span><span class="va">fit</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   cluster size pct  mix_pct     avepp class_err_pct</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1       1   21  70 67.48869 0.9428695      5.713045</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2       2    9  30 32.51131 0.9519734      4.802660</span>

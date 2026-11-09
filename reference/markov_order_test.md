@@ -105,7 +105,8 @@ plot(x, panel = c("both", "ic", "permutation"), combined = TRUE, ...)
 
 - n_cores:
 
-  The number of cores for `parallel = TRUE`. Default `2`.
+  The number of cores for `parallel = TRUE`, a single number of at
+  least 1. Default `2`.
 
 - seed:
 
@@ -146,7 +147,10 @@ plot(x, panel = c("both", "ic", "permutation"), combined = TRUE, ...)
   For the [`plot()`](https://rdrr.io/r/graphics/plot.default.html)
   method: which panels to draw. `"both"` (default), `"ic"` (the fit
   across orders) or `"permutation"` (the permutation nulls); a single
-  panel is returned as a ggplot.
+  panel is returned as a ggplot. When no tested order has a permutation
+  null (every test has 0 degrees of freedom, as for constant sequences),
+  only `"ic"` can be drawn and the other two raise an error of class
+  `nestimate_bad_input`.
 
 - combined:
 

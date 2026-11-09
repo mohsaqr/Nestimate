@@ -33,6 +33,9 @@ state_distribution(x, include_macro = FALSE, ...)
 # S3 method for class 'netobject_group'
 state_distribution(x, ...)
 
+# S3 method for class 'state_freq'
+state_distribution(x, ...)
+
 # Default S3 method
 state_distribution(x, ...)
 ```
@@ -42,9 +45,12 @@ state_distribution(x, ...)
 - x:
 
   A `netobject`, `netobject_group`, `mcml` or `htna` network built from
-  sequences. A network without sequence data raises an error; in a
-  `netobject_group` or `mcml`, groups without it are left out, and an
-  error is raised only when none has any. Other classes raise an error.
+  sequences, or the `state_freq` result of
+  [`plot_state_frequencies()`](https://pak.dynasite.org/Nestimate/reference/plot_state_frequencies.md),
+  whose table is returned as drawn. A network without sequence data
+  raises an error; in a `netobject_group` or `mcml`, groups without it
+  are left out, and an error is raised only when none has any. Other
+  classes raise an error.
 
 - ...:
 

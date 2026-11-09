@@ -39,8 +39,7 @@ print(x, ...)
 # S3 method for class 'net_hypergraph_cluster'
 summary(object, ...)
 
-# S3 method for class 'net_hypergraph_cluster'
-as.data.frame(x, ...)
+node_clusters(x)
 
 # S3 method for class 'net_hypergraph_cluster'
 plot(x, what = c("both", "spectrum", "embedding"), n_values = NULL, ...)
@@ -77,10 +76,9 @@ plot(x, what = c("both", "spectrum", "embedding"), n_values = NULL, ...)
 
 - x:
 
-  For the [`print()`](https://rdrr.io/r/base/print.html),
-  [`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html) and
-  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods: a
-  `net_hypergraph_cluster` object.
+  For the [`print()`](https://rdrr.io/r/base/print.html) and
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods and
+  for `node_clusters()`: a `net_hypergraph_cluster` object.
 
 - ...:
 
@@ -99,7 +97,9 @@ plot(x, what = c("both", "spectrum", "embedding"), n_values = NULL, ...)
   `k` can be read; `"embedding"` places the nodes on the first two
   embedding dimensions, labelled, coloured and shaped by cluster and
   sized by stationary probability, which is the geometry k-means
-  clustered; `"both"` (default) draws the two side by side.
+  clustered (beyond nine clusters the colours repeat and the shape tells
+  the clusters of one colour apart); `"both"` (default) draws the two
+  side by side.
 
 - n_values:
 
@@ -159,11 +159,10 @@ the spectrum and the embedding. The object's fields:
 The [`print()`](https://rdrr.io/r/base/print.html) method returns its
 input invisibly. The [`summary()`](https://rdrr.io/r/base/summary.html)
 method returns a data frame with one row per cluster: `cluster`, `size`
-and `share` (the proportion of nodes). The
-[`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html) method
-returns a data frame with one row per node: `node`, `cluster`, `pi` (the
-node's stationary probability under the Laplacian's walk) and the
-embedding coordinates `dim1` to `dimk`. The
+and `share` (the proportion of nodes). `node_clusters()` returns a data
+frame with one row per node: `node`, `cluster`, `pi` (the node's
+stationary probability under the Laplacian's walk) and the embedding
+coordinates `dim1` to `dimk`. The
 [`plot()`](https://rdrr.io/r/graphics/plot.default.html) method returns
 a `ggplot` for `"spectrum"` or `"embedding"`. For `"both"` it draws the
 two panels and returns the arranged `gtable` invisibly when gridExtra is
@@ -195,7 +194,7 @@ cl
 #>   Nodes: 6 | Hyperedges: 5 | k: 2
 #>   Cluster sizes: Cluster 1 = 3, Cluster 2 = 3
 #>   Eigengap after k: 0.6667
-as.data.frame(cl)
+node_clusters(cl)
 #>   node   cluster        pi       dim1       dim2
 #> 1    a Cluster 1 0.1428571 -0.6575959  0.7533708
 #> 2    b Cluster 1 0.1428571 -0.6575959  0.7533708

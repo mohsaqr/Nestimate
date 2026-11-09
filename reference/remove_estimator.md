@@ -23,6 +23,12 @@ remove_estimator(name)
 `NULL`, invisibly. The entry is removed from the registry as a side
 effect.
 
+## Note
+
+The idiographic package exports a function with the same name. With both
+packages attached, the one attached last masks the other; write
+`Nestimate::remove_estimator()` to call this one.
+
 ## See also
 
 [`register_estimator`](https://pak.dynasite.org/Nestimate/reference/register_estimator.md),

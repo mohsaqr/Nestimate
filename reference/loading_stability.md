@@ -33,6 +33,9 @@ loading_stability(x, iter = 200L, ci_level = 0.05, seed = NULL)
 print(x, digits = 3, ...)
 
 # S3 method for class 'pc_loading_stability'
+summary(object, ...)
+
+# S3 method for class 'pc_loading_stability'
 plot(x, ...)
 ```
 
@@ -72,14 +75,21 @@ plot(x, ...)
 
 - ...:
 
-  For the [`print()`](https://rdrr.io/r/base/print.html) and
+  For the [`print()`](https://rdrr.io/r/base/print.html),
+  [`summary()`](https://rdrr.io/r/base/summary.html) and
   [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods:
   ignored.
+
+- object:
+
+  For the [`summary()`](https://rdrr.io/r/base/summary.html) method: a
+  `pc_loading_stability` object.
 
 ## Value
 
 A `pc_loading_stability` object.
-[`print()`](https://rdrr.io/r/base/print.html) shows the item table;
+[`print()`](https://rdrr.io/r/base/print.html) shows the item table and
+[`summary()`](https://rdrr.io/r/base/summary.html) returns it;
 [`plot()`](https://rdrr.io/r/graphics/plot.default.html) draws each
 item's signed weight with its interval, one panel per cluster. The
 object's fields:
@@ -102,6 +112,10 @@ object's fields:
 For the methods: [`print()`](https://rdrr.io/r/base/print.html) returns
 `x` invisibly, [`plot()`](https://rdrr.io/r/graphics/plot.default.html)
 a `ggplot`.
+
+For the [`summary()`](https://rdrr.io/r/base/summary.html) method: the
+item table, a data frame with one row per item and the columns listed
+under `summary` above.
 
 ## Methods
 

@@ -47,7 +47,7 @@ cluster_network() in one call) to see how the groups differ."><meta property="og
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.11</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.12</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -310,7 +310,7 @@ sequences ordered by cluster; <code>"predictors"</code> draws a forest plot of t
 covariates' odds ratios (log scale) for each cluster against the
 reference cluster. <code>"predictors"</code> needs a fit with <code>covariates</code> and a
 logit estimator; with <code>estimator = "chisq"</code>, which has no odds ratios,
-it raises an error.</p></dd>
+it raises an error that points to <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> for the tests.</p></dd>
 
 
 <dt id="arg-combined">combined<a class="anchor" aria-label="anchor" href="#arg-combined"></a></dt>
@@ -325,8 +325,8 @@ views.</p></dd>
     <p>A <code>net_clustering</code> object. <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> shows the method,
 dissimilarity and average silhouette width, then one row per cluster
 with its size (count and percentage), mean within-cluster distance and,
-for PAM, its medoid; after a logit covariate analysis it adds a line
-naming the predictors. <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> prints the method, dissimilarity and
+for PAM, its medoid; after a covariate analysis it adds a line
+naming the covariates. <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> prints the method, dissimilarity and
 average silhouette width and a per-cluster table of sizes and mean
 within-cluster distances, followed by the covariate analysis when there
 is one, and returns a per-cluster table, or the covariate table after a

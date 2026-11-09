@@ -47,6 +47,12 @@ large `t`), `ci_lower` and `ci_upper` (the 95% Wald interval, `beta`
 plus or minus `qnorm(0.975)` standard errors) and `significant`
 (`p < 0.05`).
 
+## Note
+
+The idiographic package exports a function with the same name. With both
+packages attached, the one attached last masks the other; write
+`Nestimate::coefs()` to call this one.
+
 ## Examples
 
 ``` r

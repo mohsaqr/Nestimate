@@ -57,7 +57,7 @@ which bootstrap_network() does."><meta property="og:image" content="https://pak.
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.11</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.12</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -187,8 +187,8 @@ at least 2. Default <code>1000</code>.</p></dd>
 <dd><p>The proportions of cases to drop, each strictly between
 0 and 1, in any order. Default <code>seq(0.1, 0.9, by = 0.1)</code>.
 A proportion that drops no case of a small sample (<code>n * p &lt; 1</code>) is
-not run (without a warning; its metrics are <code>NA</code>) and counts as not
-passing. For the <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> method of a group result: the one
+not run (its metrics are <code>NA</code>) and counts as not passing, with a
+warning of class <code>nestimate_drop_prop_skipped</code>. For the <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> method of a group result: the one
 proportion to report, which must be one of those the result was built
 with; a value outside them raises an error listing the available ones.
 Default <code>NULL</code> there, the middle proportion of the grid (the lower of
@@ -380,7 +380,7 @@ psychological networks and their accuracy: A tutorial paper.
 <span class="r-in"><span>                      seed <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">es</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Edge-weight Case-dropping Stability</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Cases (rows of $data) : 30</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Cases (resampled)     : 30</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Edges assessed        : 12 (diagonal excluded)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Iterations / prop     : 50</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Correlation method    : spearman</span>
@@ -389,7 +389,7 @@ psychological networks and their accuracy: A tutorial paper.
 <span class="r-out co"><span class="r-pr">#&gt;</span> Model-level reliability across iterations (mean +/- sd per drop):</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   drop_prop      p=0.1        p=0.3        p=0.5      </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   mean|diff|      0.028+- 0.007   0.062+- 0.014   0.095+- 0.018</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   MAD             0.021+- 0.008   0.052+- 0.014   0.085+- 0.023</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   median|diff|    0.021+- 0.008   0.052+- 0.014   0.085+- 0.023</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   cor             0.927+- 0.045   0.820+- 0.078   0.688+- 0.161</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   max|diff|       0.081+- 0.023   0.160+- 0.051   0.241+- 0.056</span>
 <span class="r-in"><span></span></span>

@@ -131,7 +131,9 @@ plot(x, combined = TRUE, ...)
   [`build_hypa()`](https://pak.dynasite.org/Nestimate/reference/build_hypa.md)
   or
   [`build_mogen()`](https://pak.dynasite.org/Nestimate/reference/build_mogen.md).
-  For the [`print()`](https://rdrr.io/r/base/print.html) and
+  Any other construction or input does not read `...` and warns with
+  class `nestimate_ignored_argument` when it is given. For the
+  [`print()`](https://rdrr.io/r/base/print.html) and
   [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods:
   ignored.
 
@@ -142,7 +144,9 @@ plot(x, combined = TRUE, ...)
   numbers, simplicial degree per node and degree by dimension) as one 2
   x 2 figure, which needs gridExtra; `FALSE` returns the four ggplots in
   a named list (`f_vector`, `betti`, `degree`, `degree_heatmap`) to
-  print, save or arrange separately.
+  print, save or arrange separately. A complex without edges
+  (dimension 0) has no simplicial degree to draw and raises an error of
+  class `nestimate_bad_input`.
 
 ## Value
 

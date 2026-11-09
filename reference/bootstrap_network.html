@@ -61,7 +61,7 @@ use permutation()."><meta property="og:image" content="https://pak.dynasite.org/
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.11</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.12</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -351,13 +351,14 @@ With <code>actor</code>, a merged sequence must belong entirely to one actor. Ev
 other method (the association methods, <code>"attention"</code>, <code>"ngram"</code>, <code>"gap"</code>,
 <code>"reverse"</code> and registered estimators) is re-estimated in full on
 resampled rows. A replicate whose estimation fails, or that loses a
-node, is left out of the p-values without a warning, and the bootstrap
+node, is left out of the p-values, with a warning of class
+<code>nestimate_resample_failed</code> that counts them, and the bootstrap
 statistics are computed over the remaining replicates; if every
 replicate fails, every p-value is 1.</p>
 <p>A network built from an edge list (for example an <code>mcml</code> from
 <code><a href="build_mcml.html">build_mcml()</a></code> with <code>from</code> and <code>to</code>) has no sequences, so each
-transition is resampled as an independent case, with a warning that
-points to the alternatives.</p>
+transition is resampled as an independent case, with a warning of class
+<code>nestimate_edgelist_resampling</code> that points to the alternatives.</p>
     </div>
     <div class="section level2">
     <h2 id="nested-data-and-actor">Nested data and <code>actor</code><a class="anchor" aria-label="anchor" href="#nested-data-and-actor"></a></h2>
@@ -459,13 +460,13 @@ assessing rater reliability. <em>Psychological Bulletin</em>, 86(2),
 <span class="r-in"><span>                       actor <span class="op">=</span> <span class="st">"Actor"</span>, action <span class="op">=</span> <span class="st">"Action"</span>, time <span class="op">=</span> <span class="st">"Time"</span>,</span></span>
 <span class="r-in"><span>                       group <span class="op">=</span> <span class="st">"Achiever"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">bootstrap_network</span><span class="op">(</span><span class="va">teams</span>, iter <span class="op">=</span> <span class="fl">100</span>, actor <span class="op">=</span> <span class="st">"Group"</span>, seed <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Edge                   High      Low     </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Edge                    High      Low     </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   --------------------------------------------</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   synthesis→consensus   0.579     0.388   </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   cohesion→consensus    0.536     0.451   </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   adapt→consensus       0.519     0.458   </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   consensus→plan        0.364     0.432   </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   discuss→consensus     0.424     0.215   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   synthesis→consensus     0.579     0.388   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   cohesion→consensus      0.536     0.451   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   adapt→consensus         0.519     0.458   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   consensus→plan          0.364     0.432   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   discuss→consensus       0.424     0.215   </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   ... and 33 more shared significant edges</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Grouped Bootstrap  [2 groups | 100 iterations | 95% CI]</span>

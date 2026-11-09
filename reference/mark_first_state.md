@@ -36,8 +36,9 @@ mark_first_state(data, state = "Start", cols = NULL)
 
   The label written into the leading missing cells, a single non-empty
   string. Default `"Start"`. If the label already occurs in `data`, a
-  warning is given and `_1`, `_2`, ... is appended until it is unique,
-  so the marker is never confused with an observed state.
+  warning of class `nestimate_state_collision` is given and `_1`, `_2`,
+  ... is appended until it is unique, so the marker is never confused
+  with an observed state.
 
 - cols:
 

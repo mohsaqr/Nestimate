@@ -31,7 +31,7 @@ placeholder, not an estimate."><meta property="og:image" content="https://pak.dy
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.11</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.12</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -88,6 +88,9 @@ placeholder, not an estimate.</p>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">extract_initial_probs</span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S3 method for class 'nest_initial_probs'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'nest_initial_probs'</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">object</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -101,12 +104,17 @@ or a list holding an <code>initial</code> element. Input from which neither
 initial probabilities nor a weight matrix can be read raises an error.</p></dd>
 
 
-<dt id="arg-object">object<a class="anchor" aria-label="anchor" href="#arg-object"></a></dt>
-<dd><p>For the <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> method: a <code>nest_initial_probs</code>.</p></dd>
+<dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
+<dd><p>For the <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> method: a <code>nest_initial_probs</code>.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
-<dd><p>For the <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> method: ignored.</p></dd>
+<dd><p>For the <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> method: ignored. For the <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> method:
+passed on to the vector print.</p></dd>
+
+
+<dt id="arg-object">object<a class="anchor" aria-label="anchor" href="#arg-object"></a></dt>
+<dd><p>For the <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> method: a <code>nest_initial_probs</code>.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -132,8 +140,6 @@ then one per cluster, taken as stored in each layer (<code>inits</code>).</p>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">init_probs</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>         A         B         C </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 0.6666667 0.3333333 0.0000000 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"class")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "nest_initial_probs" "numeric"           </span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

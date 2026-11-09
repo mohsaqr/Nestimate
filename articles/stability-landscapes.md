@@ -306,7 +306,7 @@ phase_trend <- landscape_trend(network, along = "phase", states = engagement,
 phase_trend
 ```
 
-    #> Stability landscape along program phase (5-step windows): 3 states, 1 network, 500 resamples
+    #> Stability landscape along programme phase (5-step windows): 3 states, 1 network, 500 resamples
     #> 
     #> Cup depth (log of the expected stay; higher = more stable) at the two ends and its range:
     #>       state first at_first  last at_last  min  max
@@ -337,7 +337,7 @@ cluster_trend <- landscape_trend(cluster_networks, along = "phase",
 cluster_trend
 ```
 
-    #> Stability landscape along program phase (5-step windows): 3 states, 3 networks, 500 resamples
+    #> Stability landscape along programme phase (5-step windows): 3 states, 3 networks, 500 resamples
     #> 
     #> Cup depth (log of the expected stay; higher = more stable) at the two ends and its range:
     #>      group      state first at_first  last at_last  min  max
@@ -389,7 +389,7 @@ occupancy_trend <- landscape_trend(network, along = "phase",
 occupancy_trend
 ```
 
-    #> Stability landscape along program phase (6-step windows): 3 states, 1 network, 500 resamples
+    #> Stability landscape along programme phase (6-step windows): 3 states, 1 network, 500 resamples
     #> 
     #> Cup potential (-log pi; lower = more time in the state) at the two ends and its range:
     #>       state first at_first  last at_last  min  max
@@ -417,7 +417,7 @@ cluster_occupancy <- landscape_trend(cluster_networks, along = "phase",
 cluster_occupancy
 ```
 
-    #> Stability landscape along program phase (6-step windows): 3 states, 3 networks, 500 resamples
+    #> Stability landscape along programme phase (6-step windows): 3 states, 3 networks, 500 resamples
     #> 
     #> Cup potential (-log pi; lower = more time in the state) at the two ends and its range:
     #>      group      state first at_first  last at_last  min  max

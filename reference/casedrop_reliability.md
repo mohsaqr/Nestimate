@@ -101,8 +101,9 @@ plot(
 
   The proportions of cases to drop, each strictly between 0 and 1, in
   any order. Default `seq(0.1, 0.9, by = 0.1)`. A proportion that drops
-  no case of a small sample (`n * p < 1`) is not run (without a warning;
-  its metrics are `NA`) and counts as not passing. For the
+  no case of a small sample (`n * p < 1`) is not run (its metrics are
+  `NA`) and counts as not passing, with a warning of class
+  `nestimate_drop_prop_skipped`. For the
   [`summary()`](https://rdrr.io/r/base/summary.html) method of a group
   result: the one proportion to report, which must be one of those the
   result was built with; a value outside them raises an error listing
@@ -312,7 +313,7 @@ es  <- casedrop_reliability(net, iter = 50, drop_prop = c(0.1, 0.3, 0.5),
                       seed = 1)
 print(es)
 #> Edge-weight Case-dropping Stability
-#>   Cases (rows of $data) : 30
+#>   Cases (resampled)     : 30
 #>   Edges assessed        : 12 (diagonal excluded)
 #>   Iterations / prop     : 50
 #>   Correlation method    : spearman
@@ -321,7 +322,7 @@ print(es)
 #> Model-level reliability across iterations (mean +/- sd per drop):
 #>   drop_prop      p=0.1        p=0.3        p=0.5      
 #>   mean|diff|      0.028+- 0.007   0.062+- 0.014   0.095+- 0.018
-#>   MAD             0.021+- 0.008   0.052+- 0.014   0.085+- 0.023
+#>   median|diff|    0.021+- 0.008   0.052+- 0.014   0.085+- 0.023
 #>   cor             0.927+- 0.045   0.820+- 0.078   0.688+- 0.161
 #>   max|diff|       0.081+- 0.023   0.160+- 0.051   0.241+- 0.056
 ```

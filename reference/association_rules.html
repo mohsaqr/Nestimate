@@ -37,7 +37,7 @@ min_support changes."><meta property="og:image" content="https://pak.dynasite.or
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.11</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.12</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -182,7 +182,9 @@ independence predicts.</p></dd>
 items or recoded positions, so with <code>"auto"</code> (default) they raise an
 error of class <code>nestimate_bad_input</code>. <code>"binary"</code> declares them items,
 one row per transaction; it raises the same error on a data frame with
-any other value.</p></dd>
+any other value. A list of transactions or a network has no 0/1
+columns, so <code>"binary"</code> is ignored for them with a warning of class
+<code>nestimate_ignored_argument</code>.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>

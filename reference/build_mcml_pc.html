@@ -127,7 +127,7 @@ macro_network() extracts it."><meta property="og:image" content="https://pak.dyn
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.11</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.12</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -472,8 +472,11 @@ that backend spells them, and allowed only with <code>weighting = "factor"</code
 (otherwise they raise an error, as does an unnamed one): <code><a href="https://rdrr.io/pkg/lavaan/man/cfa.html" class="external-link">lavaan::cfa()</a></code>
 arguments for <code>"cfa"</code> (<code>estimator = "WLSMV"</code>, <code>missing = "fiml"</code>,
 <code>se = "robust"</code>, ...), <code><a href="https://rdrr.io/r/stats/factanal.html" class="external-link">stats::factanal()</a></code> arguments for <code>"ml"</code>, and
-<code>max_iter</code> / <code>tol</code> for <code>"paf"</code> (other names are not used there);
-<code>"minres"</code> uses none. <code>estimator</code> is lavaan's and raises an error for
+<code>max_iter</code> / <code>tol</code> for <code>"paf"</code>; <code>"minres"</code> uses none. A name the
+backend does not read is dropped with a warning of class
+<code>nestimate_ignored_argument</code>. A <code>"paf"</code> or <code>"minres"</code> extraction that
+stops before converging keeps its last loadings and raises a warning of
+class <code>nestimate_no_converge</code>. <code>estimator</code> is lavaan's and raises an error for
 any other <code>fa_method</code>, since the network estimator is set by <code>method</code>.
 Arguments the backend call sets itself (<code>model</code> and <code>data</code> for <code>"cfa"</code>;
 <code>covmat</code>, <code>n.obs</code>, <code>factors</code>, <code>x</code> and <code>data</code> for <code>"ml"</code>; <code>R</code> for

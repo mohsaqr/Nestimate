@@ -50,6 +50,7 @@ Core functions for building networks from data
   [`plot(`*`<net_mlvar>`*`)`](https://pak.dynasite.org/Nestimate/reference/build_mlvar.md)
   : Build a Multilevel Vector Autoregression (mlVAR) network
 - [`build_gimme()`](https://pak.dynasite.org/Nestimate/reference/build_gimme.md)
+  [`coefs(`*`<net_gimme>`*`)`](https://pak.dynasite.org/Nestimate/reference/build_gimme.md)
   : GIMME: Group Iterative Multiple Model Estimation
 
 ## Bayesian Inference
@@ -122,13 +123,14 @@ Methods for capturing higher-order dependencies
 - [`hypergraph_cluster()`](https://pak.dynasite.org/Nestimate/reference/hypergraph_cluster.md)
   [`print(`*`<net_hypergraph_cluster>`*`)`](https://pak.dynasite.org/Nestimate/reference/hypergraph_cluster.md)
   [`summary(`*`<net_hypergraph_cluster>`*`)`](https://pak.dynasite.org/Nestimate/reference/hypergraph_cluster.md)
-  [`as.data.frame(`*`<net_hypergraph_cluster>`*`)`](https://pak.dynasite.org/Nestimate/reference/hypergraph_cluster.md)
+  [`node_clusters()`](https://pak.dynasite.org/Nestimate/reference/hypergraph_cluster.md)
   [`plot(`*`<net_hypergraph_cluster>`*`)`](https://pak.dynasite.org/Nestimate/reference/hypergraph_cluster.md)
   : Spectral clustering of hypergraph vertices
 - [`hypergraph_transduction()`](https://pak.dynasite.org/Nestimate/reference/hypergraph_transduction.md)
   [`print(`*`<net_hypergraph_transduction>`*`)`](https://pak.dynasite.org/Nestimate/reference/hypergraph_transduction.md)
   [`summary(`*`<net_hypergraph_transduction>`*`)`](https://pak.dynasite.org/Nestimate/reference/hypergraph_transduction.md)
-  [`as.data.frame(`*`<net_hypergraph_transduction>`*`)`](https://pak.dynasite.org/Nestimate/reference/hypergraph_transduction.md)
+  [`label_predictions()`](https://pak.dynasite.org/Nestimate/reference/hypergraph_transduction.md)
+  [`label_scores()`](https://pak.dynasite.org/Nestimate/reference/hypergraph_transduction.md)
   [`plot(`*`<net_hypergraph_transduction>`*`)`](https://pak.dynasite.org/Nestimate/reference/hypergraph_transduction.md)
   : Transductive label spreading on a hypergraph
 - [`hypergraph_laplacian()`](https://pak.dynasite.org/Nestimate/reference/hypergraph_laplacian.md)
@@ -331,6 +333,7 @@ Assess reliability and stability of network estimates
   : Centrality Stability Coefficient (CS-coefficient)
 - [`loading_stability()`](https://pak.dynasite.org/Nestimate/reference/loading_stability.md)
   [`print(`*`<pc_loading_stability>`*`)`](https://pak.dynasite.org/Nestimate/reference/loading_stability.md)
+  [`summary(`*`<pc_loading_stability>`*`)`](https://pak.dynasite.org/Nestimate/reference/loading_stability.md)
   [`plot(`*`<pc_loading_stability>`*`)`](https://pak.dynasite.org/Nestimate/reference/loading_stability.md)
   : Composite-Weight Stability Under Case Resampling
 
@@ -354,7 +357,7 @@ Cluster-based and multilevel network analysis
 - [`cluster_diagnostics()`](https://pak.dynasite.org/Nestimate/reference/cluster_diagnostics.md)
   [`print(`*`<net_cluster_diagnostics>`*`)`](https://pak.dynasite.org/Nestimate/reference/cluster_diagnostics.md)
   [`plot(`*`<net_cluster_diagnostics>`*`)`](https://pak.dynasite.org/Nestimate/reference/cluster_diagnostics.md)
-  [`as.data.frame(`*`<net_cluster_diagnostics>`*`)`](https://pak.dynasite.org/Nestimate/reference/cluster_diagnostics.md)
+  [`summary(`*`<net_cluster_diagnostics>`*`)`](https://pak.dynasite.org/Nestimate/reference/cluster_diagnostics.md)
   : Cluster Diagnostics
 - [`cluster_summary()`](https://pak.dynasite.org/Nestimate/reference/cluster_summary.md)
   : Cluster Summary Statistics
@@ -488,9 +491,11 @@ Helper functions and extractors
 - [`extract_edges()`](https://pak.dynasite.org/Nestimate/reference/extract_edges.md)
   : Extract Edge List with Weights
 - [`extract_initial_probs()`](https://pak.dynasite.org/Nestimate/reference/extract_initial_probs.md)
+  [`print(`*`<nest_initial_probs>`*`)`](https://pak.dynasite.org/Nestimate/reference/extract_initial_probs.md)
   [`summary(`*`<nest_initial_probs>`*`)`](https://pak.dynasite.org/Nestimate/reference/extract_initial_probs.md)
   : Extract Initial Probabilities from Model
 - [`extract_transition_matrix()`](https://pak.dynasite.org/Nestimate/reference/extract_transition_matrix.md)
+  [`print(`*`<nest_transition_matrix>`*`)`](https://pak.dynasite.org/Nestimate/reference/extract_transition_matrix.md)
   [`summary(`*`<nest_transition_matrix>`*`)`](https://pak.dynasite.org/Nestimate/reference/extract_transition_matrix.md)
   : Extract Transition Matrix from Model
 - [`state_colors()`](https://pak.dynasite.org/Nestimate/reference/state_colors.md)
@@ -513,7 +518,6 @@ Sequence visualization, pattern comparison, and association mining
   [`print(`*`<nestimate_facet_list>`*`)`](https://pak.dynasite.org/Nestimate/reference/plot_state_frequencies.md)
   [`print(`*`<state_freq>`*`)`](https://pak.dynasite.org/Nestimate/reference/plot_state_frequencies.md)
   [`plot(`*`<state_freq>`*`)`](https://pak.dynasite.org/Nestimate/reference/plot_state_frequencies.md)
-  [`as.data.frame(`*`<state_freq>`*`)`](https://pak.dynasite.org/Nestimate/reference/plot_state_frequencies.md)
   : Plot State Frequency Distributions
 - [`state_distribution()`](https://pak.dynasite.org/Nestimate/reference/state_distribution.md)
   : Per-Class State Distribution as a Tidy Data Frame

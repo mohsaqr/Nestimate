@@ -47,7 +47,7 @@ and a plot() that draws one view per call."><meta property="og:image" content="h
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.11</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.12</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -110,6 +110,9 @@ and a <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="extern
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">compare_model</span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Default S3 method</span></span>
+<span><span class="fu">compare_model</span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S3 method for class 'netobject'</span></span>
 <span><span class="fu">compare_model</span><span class="op">(</span></span>
@@ -225,8 +228,8 @@ weight at or below 0 raises an error of class
 
 <dt><code>"log1p"</code></dt>
 <dd><p>\(\log(1 + w)\); defined for
-\(w &gt; -1\). A weight of -1 or below makes the comparison
-fail with an error.</p></dd>
+\(w &gt; -1\): a weight of -1 or below raises an error of
+class <code>nestimate_bad_input</code>.</p></dd>
 
 <dt><code>"softmax"</code></dt>
 <dd><p>A numerically stable softmax over all the cells.</p></dd>

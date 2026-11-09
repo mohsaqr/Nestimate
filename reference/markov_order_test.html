@@ -49,7 +49,7 @@ build_mogen() model the longer memory."><meta property="og:image" content="https
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.11</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.12</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -184,7 +184,8 @@ generator they differ from run to run.</p></dd>
 
 
 <dt id="arg-n-cores">n_cores<a class="anchor" aria-label="anchor" href="#arg-n-cores"></a></dt>
-<dd><p>The number of cores for <code>parallel = TRUE</code>. Default <code>2</code>.</p></dd>
+<dd><p>The number of cores for <code>parallel = TRUE</code>, a single
+number of at least 1. Default <code>2</code>.</p></dd>
 
 
 <dt id="arg-seed">seed<a class="anchor" aria-label="anchor" href="#arg-seed"></a></dt>
@@ -222,7 +223,10 @@ used.</p></dd>
 <dt id="arg-panel">panel<a class="anchor" aria-label="anchor" href="#arg-panel"></a></dt>
 <dd><p>For the <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> method: which panels to draw. <code>"both"</code>
 (default), <code>"ic"</code> (the fit across orders) or <code>"permutation"</code> (the
-permutation nulls); a single panel is returned as a ggplot.</p></dd>
+permutation nulls); a single panel is returned as a ggplot. When no
+tested order has a permutation null (every test has 0 degrees of
+freedom, as for constant sequences), only <code>"ic"</code> can be drawn and the
+other two raise an error of class <code>nestimate_bad_input</code>.</p></dd>
 
 
 <dt id="arg-combined">combined<a class="anchor" aria-label="anchor" href="#arg-combined"></a></dt>

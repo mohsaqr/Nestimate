@@ -128,9 +128,6 @@ print(x, digits = 1, max_states = 20L, ...)
 
 # S3 method for class 'state_freq'
 plot(x, ...)
-
-# S3 method for class 'state_freq'
-as.data.frame(x, ...)
 ```
 
 ## Arguments
@@ -140,9 +137,8 @@ as.data.frame(x, ...)
   The object to count: a `netobject`, `netobject_group`, `mcml` or
   `htna` network built from sequences. A network without sequence data
   raises an error; in a `netobject_group` or `mcml`, groups without it
-  are left out. For the [`print()`](https://rdrr.io/r/base/print.html),
-  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) and
-  [`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html) methods
+  are left out. For the [`print()`](https://rdrr.io/r/base/print.html)
+  and [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods
   of the result: the `state_freq` object; for the
   [`print()`](https://rdrr.io/r/base/print.html) methods of a per-panel
   figure: an object of class `nestimate_facet_plot` or
@@ -150,12 +146,12 @@ as.data.frame(x, ...)
 
 - ...:
 
-  Not used by the `netobject`, `netobject_group` and `htna` methods; the
-  `mcml` method raises an error for any argument it does not take. For
-  the [`print()`](https://rdrr.io/r/base/print.html),
-  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) and
-  [`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html) methods
-  of the result: ignored.
+  Not used: the `netobject`, `netobject_group` and `htna` methods ignore
+  an argument they do not take with a warning of class
+  `nestimate_ignored_argument`; the `mcml` method raises an error for
+  it. For the [`print()`](https://rdrr.io/r/base/print.html) and
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods of
+  the result: ignored.
 
 - style:
 
@@ -280,9 +276,11 @@ the share of each state within its group, then draws the chart;
 [`plot()`](https://rdrr.io/r/graphics/plot.default.html) draws the chart
 alone.
 [`state_distribution()`](https://pak.dynasite.org/Nestimate/reference/state_distribution.md)
-gives the same counts from the network, with the full state names and,
-for an `mcml`, without the macro group unless `include_macro = TRUE`.
-The object holds the chart (a `ggplot`; with per-panel legends either a
+of the result returns the table as drawn, one row per group and state;
+[`state_distribution()`](https://pak.dynasite.org/Nestimate/reference/state_distribution.md)
+of the network gives the same counts, with the full state names and, for
+an `mcml`, without the macro group unless `include_macro = TRUE`. The
+object holds the chart (a `ggplot`; with per-panel legends either a
 combined figure, a `gtable` of class `nestimate_facet_plot`, or a list
 of `ggplot`s of class `nestimate_facet_list`), the table (one row per
 group and state, with columns `group`, `state`, `count` and
@@ -313,7 +311,7 @@ if (requireNamespace("ggplot2", quietly = TRUE)) {
   res <- plot_state_frequencies(nw)
   print(res)            # tidy frequency table in the console
   plot(res)             # ggplot chart
-  head(as.data.frame(res))
+  head(state_distribution(res))
 }
 #> State frequencies (style = marimekko, source = netobject_group)
 #>   Total events: 27,533  |  Groups: 3  |  States: 9

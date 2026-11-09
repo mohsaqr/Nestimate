@@ -23,7 +23,7 @@ significant is p &amp;lt; 0.05 for each coefficient on its own."><meta property=
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.11</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.12</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -105,6 +105,12 @@ normal distribution, <code>2 * pnorm(-abs(t))</code>, which stays above zero for
 large <code>t</code>), <code>ci_lower</code> and <code>ci_upper</code> (the 95% Wald interval,
 <code>beta</code> plus or minus <code>qnorm(0.975)</code> standard errors) and <code>significant</code>
 (<code>p &lt; 0.05</code>).</p>
+    </div>
+    <div class="section level2">
+    <h2 id="note">Note<a class="anchor" aria-label="anchor" href="#note"></a></h2>
+    <p>The <span class="pkg">idiographic</span> package exports a function with the same
+name. With both packages attached, the one attached last masks the
+other; write <code>Nestimate::coefs()</code> to call this one.</p>
     </div>
 
     <div class="section level2">

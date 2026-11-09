@@ -43,7 +43,7 @@ selects an order and build_hon() builds a network of variable order."><meta prop
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.11</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.12</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -146,8 +146,9 @@ at least 1 without duplicates. Default <code>2</code>. Order <code>k</code> test
 <code>k + 1</code> states (<code>k</code> transitions), each conditioned on the <code>k</code>-state
 context before its last state. With several orders, one layer is built
 per order, in ascending order whatever the order given; an order with
-no paths (longer than the sequences allow) is dropped without a
-message, and an error is raised when none is left. The network fields
+no paths (longer than the sequences allow) is dropped with a warning
+of class <code>nestimate_ignored_argument</code>, and an error is raised when none
+is left. The network fields
 (<code>weights</code>, <code>edges</code>, <code>adjacency</code>, <code>xi</code>, <code>nodes</code>, <code>meta</code>) describe the
 lowest order built, while <code>scores</code> holds every order.</p></dd>
 

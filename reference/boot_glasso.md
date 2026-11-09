@@ -64,19 +64,20 @@ plot(x, type = "edges", measure = NULL, ...)
   non-numeric columns and a column named `rid` are set aside; columns
   with non-syntactic names, all-missing and constant columns, and rows
   with a missing value are dropped, each with a message; fewer than 2
-  variables or 3 complete rows raise an error. A square symmetric matrix
-  with matching row and column names is read as a correlation or
-  covariance matrix and refused (class `nestimate_bad_input`): it has no
-  observations to resample. Or a `netobject` (or `cograph_network`)
-  built with `method = "glasso"`, whose data are resampled; any `gamma`,
-  `nlambda` or `cor_method` set in its `params` replaces the arguments
-  of the same name, and its `lambda.min.ratio`, `penalize.diagonal` and
-  `refit` are used too, so `original_pcor` is the network's weights. Any
-  other network raises an error. A correlation or covariance matrix is
-  not accepted: a matrix is always read as data, its rows as
-  observations. For the [`print()`](https://rdrr.io/r/base/print.html)
-  and [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods:
-  a `boot_glasso`.
+  variables or 3 complete rows, or no more rows than variables, raise an
+  error. A square symmetric matrix with matching row and column names is
+  read as a correlation or covariance matrix and refused (class
+  `nestimate_bad_input`): it has no observations to resample. Or a
+  `netobject` (or `cograph_network`) built with `method = "glasso"`,
+  whose data are resampled; any `gamma`, `nlambda` or `cor_method` set
+  in its `params` replaces the arguments of the same name, and its
+  `lambda.min.ratio`, `penalize.diagonal` and `refit` are used too, so
+  `original_pcor` is the network's weights. Any other network raises an
+  error. A correlation or covariance matrix is not accepted: a matrix is
+  always read as data, its rows as observations. For the
+  [`print()`](https://rdrr.io/r/base/print.html) and
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods: a
+  `boot_glasso`.
 
 - iter:
 
@@ -407,7 +408,7 @@ net <- build_network(as.data.frame(mat), method = "glasso")
 boot <- boot_glasso(net, iter = 20, cs_iter = 10, seed = 42,
   centrality = c("strength", "expected_influence"))
 print(boot)
-#> GLASSO Bootstrap (20 iterations, 10 case-drop per proportion)
+#> GLASSO Bootstrap (20 iterations, 10 case-drop iterations)
 #>   Data: 15 x 4  |  Alpha: 0.05  |  Gamma: 0.50
 #>   Edges: 0/6 significant (CI excludes zero)
 #>   Mean inclusion probability: 0.34
@@ -417,7 +418,7 @@ print(boot)
 #>     expected_influence:    0.00 [Unstable]
 #> 
 #>   Edge differences: 0/15 pairs significantly different
-#>   Timing: 1.1s (bootstrap: 0.7s, case-drop: 0.4s)
+#>   Timing: 1.0s (bootstrap: 0.6s, case-drop: 0.3s)
 summary(boot, type = "edges")
 #>     edge weight    ci_lower  ci_upper inclusion
 #> 1 A -- B      0 -0.11158199 0.2237159      0.35

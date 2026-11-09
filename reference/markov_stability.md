@@ -106,7 +106,7 @@ plot(
   plot; `FALSE` returns a named list of one-panel plots, one per metric,
   to print or save separately. Ignored for a group, whose
   [`plot()`](https://rdrr.io/r/graphics/plot.default.html) always draws
-  one plot.
+  one plot, with a warning of class `nestimate_ignored_argument`.
 
 ## Value
 

@@ -81,7 +81,9 @@ plot(
   The group of each sequence: the name of a column of a data frame or
   matrix `x` (that column is then not read as a position), or a vector
   with one label per sequence. Ignored for a `netobject_group`; required
-  otherwise. At least two groups are needed. Default `NULL`.
+  otherwise. At least two groups are needed. Sequences with a missing
+  group are left out of the counts with a warning of class
+  `nestimate_missing_group`. Default `NULL`.
 
 - sub:
 
@@ -103,7 +105,8 @@ plot(
 - iter:
 
   The number of permutations for `test = "permutation"`, a positive
-  whole number; ignored otherwise. Default `1000`.
+  whole number; ignored otherwise. `iter = 1` gives a warning of class
+  `nestimate_undefined_effect_size`. Default `1000`.
 
 - adjust:
 

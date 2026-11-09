@@ -1,5 +1,105 @@
 # Changelog
 
+## Nestimate 1.0.12
+
+- New verbs for tables that were reached with
+  [`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html):
+  [`node_clusters()`](https://pak.dynasite.org/Nestimate/reference/hypergraph_cluster.md)
+  for
+  [`hypergraph_cluster()`](https://pak.dynasite.org/Nestimate/reference/hypergraph_cluster.md),
+  [`label_predictions()`](https://pak.dynasite.org/Nestimate/reference/hypergraph_transduction.md)
+  and
+  [`label_scores()`](https://pak.dynasite.org/Nestimate/reference/hypergraph_transduction.md)
+  for
+  [`hypergraph_transduction()`](https://pak.dynasite.org/Nestimate/reference/hypergraph_transduction.md);
+  [`state_distribution()`](https://pak.dynasite.org/Nestimate/reference/state_distribution.md)
+  accepts the result of
+  [`plot_state_frequencies()`](https://pak.dynasite.org/Nestimate/reference/plot_state_frequencies.md),
+  and [`summary()`](https://rdrr.io/r/base/summary.html) of
+  [`cluster_diagnostics()`](https://pak.dynasite.org/Nestimate/reference/cluster_diagnostics.md)
+  returns the per-cluster table. The
+  [`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html) methods
+  still work.
+- New methods:
+  [`coefs()`](https://pak.dynasite.org/Nestimate/reference/coefs.md) for
+  a
+  [`build_gimme()`](https://pak.dynasite.org/Nestimate/reference/build_gimme.md)
+  fit, [`summary()`](https://rdrr.io/r/base/summary.html) for
+  [`loading_stability()`](https://pak.dynasite.org/Nestimate/reference/loading_stability.md),
+  [`print()`](https://rdrr.io/r/base/print.html) for
+  [`extract_transition_matrix()`](https://pak.dynasite.org/Nestimate/reference/extract_transition_matrix.md)
+  and
+  [`extract_initial_probs()`](https://pak.dynasite.org/Nestimate/reference/extract_initial_probs.md),
+  and a
+  [`compare_model()`](https://pak.dynasite.org/Nestimate/reference/compare_model.md)
+  default that names the accepted classes.
+- [`print()`](https://rdrr.io/r/base/print.html) and
+  [`summary()`](https://rdrr.io/r/base/summary.html) of a
+  [`build_mlvar()`](https://pak.dynasite.org/Nestimate/reference/build_mlvar.md)
+  fit work after
+  [`rename_models()`](https://pak.dynasite.org/Nestimate/reference/rename_models.md).
+- Errors on bad input carry class `nestimate_bad_input` and name the
+  argument where a base R or deparsed message was shown before,
+  including [`match.arg()`](https://rdrr.io/r/base/match.arg.html)
+  failures in the higher-order, comparison and NCT verbs.
+- Arguments that were ignored without a word now raise a warning of
+  class `nestimate_ignored_argument` (`...` in
+  [`cooccurrence()`](https://pak.dynasite.org/Nestimate/reference/cooccurrence.md),
+  [`mosaic_plot()`](https://pak.dynasite.org/Nestimate/reference/mosaic_plot.md),
+  [`plot_state_frequencies()`](https://pak.dynasite.org/Nestimate/reference/plot_state_frequencies.md),
+  [`build_simplicial()`](https://pak.dynasite.org/Nestimate/reference/build_simplicial.md),
+  [`build_mcml_pc()`](https://pak.dynasite.org/Nestimate/reference/build_mcml_pc.md);
+  shaping arguments of
+  [`build_mcml()`](https://pak.dynasite.org/Nestimate/reference/build_mcml.md)
+  on an existing `mcml`;
+  [`sequence_plot()`](https://pak.dynasite.org/Nestimate/reference/sequence_plot.md)
+  arguments an `mcml` does not read).
+- New warnings where a result was returned without comment: failed
+  association resamples in
+  [`bootstrap_network()`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.md),
+  a `drop_prop` that drops no case in
+  [`casedrop_reliability()`](https://pak.dynasite.org/Nestimate/reference/casedrop_reliability.md),
+  unconverged factor extraction in
+  [`build_mcml_pc()`](https://pak.dynasite.org/Nestimate/reference/build_mcml_pc.md)
+  and
+  [`loading_stability()`](https://pak.dynasite.org/Nestimate/reference/loading_stability.md),
+  the Katz series fallback in
+  [`predict_links()`](https://pak.dynasite.org/Nestimate/reference/predict_links.md),
+  sequences with a missing group in
+  [`sequence_compare()`](https://pak.dynasite.org/Nestimate/reference/sequence_compare.md),
+  a singular neighbour block in
+  [`predictability()`](https://pak.dynasite.org/Nestimate/reference/predictability.md).
+- Plots that failed now draw or stop with a clear message:
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) of
+  [`hypergraph_cluster()`](https://pak.dynasite.org/Nestimate/reference/hypergraph_cluster.md)
+  with more than nine clusters, of a complex without edges, of
+  [`cluster_choice()`](https://pak.dynasite.org/Nestimate/reference/cluster_choice.md)
+  with nothing swept, of a mixture’s covariates after
+  `estimator = "chisq"`, and
+  [`print()`](https://rdrr.io/r/base/print.html) of a one-measure
+  [`centrality_stability()`](https://pak.dynasite.org/Nestimate/reference/centrality_stability.md)
+  group.
+- Printed text corrected: the interval level in
+  [`print()`](https://rdrr.io/r/base/print.html) of
+  [`bootstrap_network()`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.md)
+  and
+  [`certainty()`](https://pak.dynasite.org/Nestimate/reference/certainty.md)
+  (it always said 95%), edge-label alignment, the
+  [`boot_glasso()`](https://pak.dynasite.org/Nestimate/reference/boot_glasso.md)
+  edge-difference subtitle (the colours were described the wrong way
+  round), the covariate line of clustering prints, the `mcml` layer
+  header, and the permutation note on the smallest attainable p-value.
+- [`hypergraph_transduction()`](https://pak.dynasite.org/Nestimate/reference/hypergraph_transduction.md):
+  the help page says when the default `xi = 0.99` over-smooths, and the
+  example passes `xi = 0.9`.
+- `trajectories` is documented as 15 successive courses of a programme.
+- Help pages of
+  [`coefs()`](https://pak.dynasite.org/Nestimate/reference/coefs.md),
+  [`extract_edges()`](https://pak.dynasite.org/Nestimate/reference/extract_edges.md),
+  [`as_netobject()`](https://pak.dynasite.org/Nestimate/reference/as_netobject.md)
+  and the estimator-registry verbs note that idiographic exports the
+  same names.
+
 ## Nestimate 1.0.11
 
 - Release review: TNA shortcuts keep positional `start`/`end` calls

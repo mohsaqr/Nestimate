@@ -90,7 +90,9 @@ summary(object, ...)
   which uses \\0.9 / \rho(A)\\ for the spectral radius \\\rho(A)\\ of
   the adjacency (`0.1` when it is 0). A value at or above \\1 /
   \rho(A)\\, where the series diverges, is replaced by \\0.9 / \rho(A)\\
-  with a warning.
+  with a warning of class `nestimate_ignored_argument`. If the closed
+  form cannot be solved, the scores are the first six terms of the
+  series and a warning of class `nestimate_no_converge` says so.
 
 - ...:
 

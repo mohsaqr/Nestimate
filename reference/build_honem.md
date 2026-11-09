@@ -74,9 +74,10 @@ plot(x, dims = c(1L, 2L), ...)
 - dims:
 
   For the [`plot()`](https://rdrr.io/r/graphics/plot.default.html)
-  method: the two dimensions to draw. Default `c(1, 2)`. Nodes are
-  labelled when there are at most 50; an embedding with a single
-  dimension draws nothing and says so in a message.
+  method: the two dimensions to draw. Default `c(1, 2)`; a dimension the
+  embedding does not have raises an error. Nodes are labelled when there
+  are at most 50; an embedding with a single dimension draws nothing and
+  says so in a message.
 
 ## Value
 

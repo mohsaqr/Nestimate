@@ -45,7 +45,7 @@ bootstrap_network() can show how far each edge moves under resampling."><meta pr
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.11</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.12</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -353,7 +353,10 @@ included. On an existing <code>mcml</code> they re-estimate the model (macro
 network, within-cluster networks and stored sequences) from the
 sequences it carries, with its original <code>type</code>, <code>method</code> and <code>directed</code>
 unless these are passed; a new <code>clusters</code> does the same under that
-partition, and an unchanged partition returns an equal object. Any
+partition, and an unchanged partition returns an equal object. With
+none of <code>clusters</code>, <code>combine</code> and <code>expand</code> the <code>mcml</code> is returned as
+it is, and a shaping argument passed with it is ignored with a warning
+of class <code>nestimate_ignored_argument</code>. Any
 session split, <code>exclude</code>, <code>trim</code> or <code>end</code> applied at build time is
 already in those sequences, so passing one of them (or <code>actor</code>,
 <code>action</code>, <code>time</code>, <code>order</code>, <code>session</code>, <code>time_threshold</code>, <code>end_by</code>,

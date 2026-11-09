@@ -57,8 +57,8 @@ plot(x, bins = 60L, combined = TRUE, ...)
   [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
   keeps) raises an error, a network resting on one sequence an error of
   class `nestimate_single_sequence`, and networks of different methods
-  with `scale = "none"` a warning. For the
-  [`print()`](https://rdrr.io/r/base/print.html),
+  with `scale = "none"` a warning of class `nestimate_mixed_methods`.
+  For the [`print()`](https://rdrr.io/r/base/print.html),
   [`summary()`](https://rdrr.io/r/base/summary.html) and
   [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods:
   ignored.

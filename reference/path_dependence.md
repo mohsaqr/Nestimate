@@ -68,7 +68,7 @@ plot(x, top = 15L, title = NULL, ...)
   The number of times a context must be observed to be reported, a whole
   number of at least 1. Default `5`. Contexts seen less often give noisy
   KL estimates; when no context reaches `min_count`, `path_dependence()`
-  stops with an error.
+  stops with an error of class `nestimate_bad_input`.
 
 - base:
 

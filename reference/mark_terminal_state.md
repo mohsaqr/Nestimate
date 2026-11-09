@@ -37,8 +37,9 @@ mark_terminal_state(data, state = "End", cols = NULL)
 
   The label written into the trailing missing cells, a single non-empty
   string. Default `"End"`. If the label already occurs in `data`, a
-  warning is given and `_1`, `_2`, ... is appended until it is unique,
-  so the absorbing marker is never confused with an observed state.
+  warning of class `nestimate_state_collision` is given and `_1`, `_2`,
+  ... is appended until it is unique, so the absorbing marker is never
+  confused with an observed state.
 
 - cols:
 

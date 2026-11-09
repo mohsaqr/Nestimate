@@ -43,7 +43,7 @@ bootstrap_network() on its macro network."><meta property="og:image" content="ht
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.11</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.12</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -109,6 +109,9 @@ the macro network: edge-weight intervals for it come from
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">x</span>, digits <span class="op">=</span> <span class="fl">3</span>, <span class="va">...</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S3 method for class 'pc_loading_stability'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">object</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'pc_loading_stability'</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -146,12 +149,17 @@ numeric columns. Default <code>3</code>.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
-<dd><p>For the <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> and <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> methods: ignored.</p></dd>
+<dd><p>For the <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code>, <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> and <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> methods: ignored.</p></dd>
+
+
+<dt id="arg-object">object<a class="anchor" aria-label="anchor" href="#arg-object"></a></dt>
+<dd><p>For the <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> method: a <code>pc_loading_stability</code> object.</p></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A <code>pc_loading_stability</code> object. <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> shows the item table;
+    <p>A <code>pc_loading_stability</code> object. <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> shows the item table
+and <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> returns it;
 <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> draws each item's signed weight with its interval, one panel
 per cluster. The object's fields:</p><dl><dt>summary</dt>
 <dd><p>A data frame with one row per item: <code>node</code>, <code>cluster</code>,
@@ -169,6 +177,8 @@ weights.</p></dd>
 
 </dl><p>For the methods: <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> returns <code>x</code> invisibly, <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> a
 <code>ggplot</code>.</p>
+<p>For the <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> method: the item table, a data frame with one
+row per item and the columns listed under <code>summary</code> above.</p>
     </div>
     <div class="section level2">
     <h2 id="methods">Methods<a class="anchor" aria-label="anchor" href="#methods"></a></h2>

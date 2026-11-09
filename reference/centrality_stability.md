@@ -228,14 +228,14 @@ Measures without variance are handled by two different rules, both
 long-standing behaviour. When *some* requested measures do not vary
 across the nodes of the original network (or are undefined on it), they
 are dropped, and the result covers only the retained ones. When *every*
-requested measure is so, a warning is issued and *all* requested names
-are returned with a CS-coefficient of 0 and correlations that are all
-`NA`. A measure counts as constant when its values span no more than the
-square root of the machine epsilon relative to their size, so
-`"OutStrength"` of a `"relative"` network with `loops = TRUE`, which is
-1 for every node up to rounding error, is dropped rather than correlated
-on that error. The same rule makes a measure constant in a draw an
-undefined correlation.
+requested measure is so, a warning of class `nestimate_constant_measure`
+is issued and *all* requested names are returned with a CS-coefficient
+of 0 and correlations that are all `NA`. A measure counts as constant
+when its values span no more than the square root of the machine epsilon
+relative to their size, so `"OutStrength"` of a `"relative"` network
+with `loops = TRUE`, which is 1 for every node up to rounding error, is
+dropped rather than correlated on that error. The same rule makes a
+measure constant in a draw an undefined correlation.
 
 ## References
 

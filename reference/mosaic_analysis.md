@@ -211,7 +211,7 @@ res <- mosaic_analysis(group_regulation_long, "Course", "Action",
 res
 #> Mosaic analysis: Course x Action
 #>   N = 27533 (filtered from 27533); table 3 x 9
-#>   Chi-square: X2 = 233.560, df = 16, p = 1.199e-40
+#>   Chi-square: X2 = 233.560, df = 16, p < 2.2e-16
 #>   Cramer's V = 0.065 (negligible)
 head(summary(res))
 #>   Course   Action observed expected residual  pct
