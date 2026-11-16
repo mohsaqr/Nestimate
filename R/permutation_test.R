@@ -200,10 +200,14 @@
 #' rather than the 0 the edge table uses.
 #'
 #' @param x The first network: a `netobject` from [build_network()] (a bare
-#'   `cograph_network` is converted to one), a `netobject_group` or `mcml`,
-#'   a `wtna_mixed`, or a [net_edge_betweenness()] result. For the `print()`
-#'   methods: a `net_permutation`, `net_permutation_group` or
-#'   `wtna_perm_mixed`.
+#'   `cograph_network` is converted to one), a `netobject_group` or `mcml`, a
+#'   `wtna_mixed`, or a [net_edge_betweenness()] result. A `tna` model or a
+#'   `group_tna` (package tna) is first rebuilt as a network from its own
+#'   sequences (see [as_netobject()]). `actor` is read from the metadata the
+#'   model keeps (`attr(model$data, "meta")`, kept when the model is built
+#'   from `tna::prepare_data()`); a model without it raises
+#'   `nestimate_actor_missing`. For the `print()` methods: a
+#'   `net_permutation`, `net_permutation_group` or `wtna_perm_mixed`.
 #' @param y The second network, of the same kind as `x`, estimated with the
 #'   same method on the same nodes (their order may differ); other methods
 #'   or nodes raise an error. Default `NULL`: when `x` is a
@@ -405,6 +409,9 @@ permutation <- function(x, y = NULL,
                              nlambda = NULL,
                              seed = NULL,
                              actor = NULL) {
+  # a tna model or group_tna is rebuilt as a Nestimate network (R/tna_input.R)
+  x <- .tna_input(x, "permutation()", need_data = TRUE, actor = actor)
+  if (!is.null(y)) y <- .tna_input(y, "permutation()", need_data = TRUE, actor = actor)
   # Validate `adjust` before any shuffle runs: p.adjust() would otherwise
   # reject a typo only after the whole permutation run.
   .check_permutation_adjust(adjust)

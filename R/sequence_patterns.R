@@ -169,6 +169,10 @@ sequence_patterns <- function(x, type = c("ngram", "gapped", "repeated"),
                               reference = NULL, adjust = "BH", top = NULL,
                               cols = NULL, actor = NULL, action = NULL,
                               time = NULL, ...) {
+  # a group_tna brings its groups, as a netobject_group does
+  if (inherits(x, "group_tna")) {
+    x <- .tna_input(x, "sequence_patterns()", need_data = TRUE)
+  }
   type <- match.arg(type)
   adjust <- match.arg(adjust, stats::p.adjust.methods)
   .sp_check_args(len, gap, min_freq, min_support, start, end, contain)

@@ -37,14 +37,15 @@
 #' which [bootstrap_network()] does.
 #'
 #' @param x The network: a `netobject` or `cograph_network` that carries its
-#'   data, or a `netobject_group` or `mcml`, whose networks (for an `mcml`,
-#'   the macro network and each cluster's) are assessed one by one. A
-#'   network without data raises an error, and one that rests on a single
-#'   sequence, or one-hot data with no actor or session, has no cases to
-#'   drop and raises an error of class `nestimate_single_sequence`. For the
-#'   `print()` and `plot()` methods: the result of
-#'   `casedrop_reliability()` (for `print()`, also the `summary()` of a
-#'   group result).
+#'   data, or a `netobject_group` or `mcml`, whose networks (for an `mcml`, the
+#'   macro network and each cluster's) are assessed one by one. A `tna` model
+#'   or a `group_tna` (package tna) is first rebuilt as a network from its own
+#'   sequences (see [as_netobject()]). A network without data raises an error,
+#'   and one that rests on a single sequence, or one-hot data with no actor or
+#'   session, has no cases to drop and raises an error of class
+#'   `nestimate_single_sequence`. For the `print()` and `plot()` methods: the
+#'   result of `casedrop_reliability()` (for `print()`, also the `summary()` of
+#'   a group result).
 #' @param iter The number of random subsets drawn for each drop proportion,
 #'   at least 2. Default `1000`.
 #' @param drop_prop The proportions of cases to drop, each strictly between
@@ -175,6 +176,8 @@ casedrop_reliability <- function(x,
                            include_diag = FALSE,
                            seed        = NULL,
                            target      = c("auto", "existing", "all")) {
+  # a tna model or group_tna is rebuilt as a Nestimate network (R/tna_input.R)
+  x <- .tna_input(x, "casedrop_reliability()", need_data = TRUE)
   target <- match.arg(target)
 
   # ---- Dispatch for mcml / group inputs ----

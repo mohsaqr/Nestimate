@@ -65,7 +65,7 @@ test_that("as_netobject() is idempotent on a real netobject", {
 })
 
 test_that("as_netobject() errors on an unsupported object", {
-  expect_error(as_netobject(list(1, 2, 3)), "psychnet, cograph_network, or netobject")
+  expect_error(as_netobject(list(1, 2, 3)), class = "nestimate_bad_input")
 })
 
 test_that("validate_netobject() passes a real Nestimate netobject", {

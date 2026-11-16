@@ -34,10 +34,11 @@
 #' [compare_networks()] compares any number of networks with tidy tables
 #' and a `plot()` that draws one view per call.
 #'
-#' @param x The first network: a `netobject`, a `cograph_network` or a
-#'   numeric square matrix, or a `netobject_group` whose members `i` and `j`
-#'   are compared. For the `print()` and `plot()` methods: a
-#'   `net_comparison` object.
+#' @param x The first network: a `netobject`, a `cograph_network` or a numeric
+#'   square matrix, or a `netobject_group` whose members `i` and `j` are
+#'   compared. A `tna` model or a `group_tna` (package tna) is first rebuilt as
+#'   a network from its own sequences (see [as_netobject()]). For the `print()`
+#'   and `plot()` methods: a `net_comparison` object.
 #' @param y The second network, in the same forms (not used for a
 #'   `netobject_group`). The two must hold the same nodes and have no missing
 #'   weights. Named inputs are aligned by node name, so the node order may
@@ -153,6 +154,10 @@ compare_model <- function(x, ...) UseMethod("compare_model")
 #' @rdname compare_model
 #' @export
 compare_model.default <- function(x, ...) {
+  # a tna model, a group_tna or a bare cograph_network: convert, dispatch again
+  if (.is_foreign_network(x)) {
+    return(compare_model(.native_network(x, "compare_model()"), ...))
+  }
   stop(errorCondition(
     paste0("`compare_model()` expects a netobject, cograph_network, ",
            "netobject_group or numeric matrix. Got: ",
@@ -228,6 +233,7 @@ compare_model.netobject_group <- function(x, i = 1L, j = 2L, scaling = "none",
 
 # `fn` is the calling verb, named in the error for an unsupported object.
 .weights_of <- function(z, label_unnamed = TRUE, fn = "compare_model") {
+  z <- .tna_input(z, paste0(fn, "()"))
   if (is.matrix(z)) {
     .assert("A weight matrix must be square" = nrow(z) == ncol(z),
             "A weight matrix must be numeric" = is.numeric(z))

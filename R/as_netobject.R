@@ -28,11 +28,32 @@
 #' field is read as `TRUE`. Numeric state codes in the stored data of a
 #' converted tna model are decoded to their labels.
 #'
-#' @param x The network to convert: a `psychnet` object, a `cograph_network`
-#'   or a `netobject`. Any other object raises an error.
+#' For a `tna` model (package tna), the network is rebuilt with
+#' [build_network()] from the sequences the model carries, with the method
+#' and the parameters stored in its attributes (`type`, `params`), and used
+#' only when the rebuilt weights equal the model's own. It then behaves as
+#' any network built from those sequences, in the resampling verbs too. A
+#' model that cannot be reproduced that way (scaled weights, no sequence
+#' data, or a type or parameter [build_network()] does not reproduce)
+#' becomes a network of its weights without sequence data: verbs that only
+#' read weights accept it, and verbs that resample or read sequences raise
+#' an error of class `nestimate_tna_unrebuilt` that names the reason. A
+#' `group_tna` gives a `netobject_group`, one network per group, named as
+#' the groups are. The covariates the model keeps become the network's
+#' metadata: `actor` is read from the metadata the model keeps
+#' (`attr(model$data, "meta")`, kept when the model is built from
+#' `tna::prepare_data()`); a model without it raises
+#' `nestimate_actor_missing`. Every verb
+#' that takes a network applies this conversion itself, so calling
+#' `as_netobject()` first is not needed.
+#'
+#' @param x The network to convert: a `psychnet` object, a `cograph_network`,
+#'   a `netobject`, or a `tna` model or `group_tna` (package tna). Any other
+#'   object raises an error.
 #' @return A `netobject` (class `c("netobject", "cograph_network")`), read by
 #'   the same verbs as one from [build_network()]; [validate_netobject()]
-#'   checks its structure.
+#'   checks its structure. For a `group_tna`: a `netobject_group`, a named
+#'   list with one such `netobject` per group.
 #' @seealso \code{\link{validate_netobject}}
 #' @examples
 #' net <- build_cor(data.frame(a = rnorm(50), b = rnorm(50), c = rnorm(50)))
@@ -77,8 +98,11 @@ as_netobject.cograph_network <- function(x) {
 #' @rdname as_netobject
 #' @export
 as_netobject.default <- function(x) {
+  # a tna model -> netobject, a group_tna -> netobject_group (R/tna_input.R)
+  if (.is_tna(x) || inherits(x, "group_tna")) return(.tna_input(x))
   stop(errorCondition(paste0(
-    "as_netobject() needs a psychnet, cograph_network, or netobject; got <",
+    "as_netobject() needs a psychnet, cograph_network, netobject, tna model ",
+    "or group_tna; got <",
     paste(class(x), collapse = "/"), ">."),
     class = "nestimate_bad_input", call = NULL))
 }

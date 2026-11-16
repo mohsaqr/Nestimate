@@ -32,7 +32,11 @@
 #' @param x A `netobject` or `htna` network (relative, frequency or
 #'   co-occurrence, with its sequences), a `netobject_group`, a three-way
 #'   `table` or array (rows x columns x actors), or a data frame (with `var1`,
-#'   `var2` and `actor`).
+#'   `var2` and `actor`). A `tna` model or a `group_tna` (package tna) is first
+#'   rebuilt as a network from its own sequences (see [as_netobject()]).
+#'   `actor` is read from the metadata the model keeps (`attr(model$data,
+#'   "meta")`, kept when the model is built from `tna::prepare_data()`); a
+#'   model without it raises `nestimate_actor_missing`.
 #' @param method The tests to run, any of `"chisq"`, `"rao_scott"`,
 #'   `"donner_klar"`, `"cmh"`, `"gee"` and `"glmm"`. Default: all six.
 #' @param actor The actor column(s), as in [permutation()]: for a network
@@ -105,6 +109,12 @@ mosaic_test <- function(x, ...) UseMethod("mosaic_test")
 #' @rdname mosaic_test
 #' @export
 mosaic_test.default <- function(x, ...) {
+  # a tna model, a group_tna or a bare cograph_network: convert, dispatch again
+  if (.is_foreign_network(x)) {
+    x <- .native_network(x, "mosaic_test()", need_data = TRUE,
+                         actor = list(...)[["actor"]])
+    return(mosaic_test(x, ...))
+  }
   stop(errorCondition(sprintf(paste0(
     "mosaic_test() takes a network, a netobject_group, a three-way table ",
     "or a data frame, not an object of class %s."),

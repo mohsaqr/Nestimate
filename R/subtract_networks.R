@@ -18,11 +18,12 @@
 #' of object, keeping, by default, only the credible differences.
 #'
 #' @param x,y The two networks: `netobject`s, `cograph_network`s or square
-#'   numeric matrices. They must have the same number of nodes, with the
-#'   same labels in the same order, or an error is raised; any other kind of
-#'   object raises an error too. A matrix without dimnames is labelled `V1`,
-#'   `V2`, ..., so it matches only a network with those labels. The
-#'   difference is directed when `x` is a directed
+#'   numeric matrices. A `tna` model (package tna) is first rebuilt as a
+#'   network from its own sequences (see [as_netobject()]). They must have the
+#'   same number of nodes, with the same labels in the same order, or an error
+#'   is raised; any other kind of object raises an error too. A matrix without
+#'   dimnames is labelled `V1`, `V2`, ..., so it matches only a network with
+#'   those labels. The difference is directed when `x` is a directed
 #'   `netobject`; when `x` is not a `netobject`, it is directed when `x`'s
 #'   weights are not symmetric. For the `print()` method: `x` is the
 #'   `netdifference` object.
@@ -49,6 +50,9 @@
 #' subtract_networks(net_edge_betweenness(a), net_edge_betweenness(b))
 #' @export
 subtract_networks <- function(x, y) {
+  # a tna model or group_tna is rebuilt as a Nestimate network (R/tna_input.R)
+  x <- .tna_input(x, "subtract_networks()")
+  y <- .tna_input(y, "subtract_networks()")
   wx <- .weights_of(x, fn = "subtract_networks")
   wy <- .weights_of(y, fn = "subtract_networks")
   if (!identical(dim(wx), dim(wy))) {

@@ -65,15 +65,16 @@
 #' `mean_threshold` and `bound_threshold` are then on the betweenness
 #' scale.
 #'
-#' @param x The first network: a `netobject`
-#'   estimated with `"relative"` or `"frequency"` or one of their aliases, a
-#'   `netobject_group`, or a `net_edge_betweenness` object. A bare
-#'   `cograph_network` is recounted from the sequences it carries, and used
-#'   only when they reproduce its weights; otherwise, and for an `mcml`, an
-#'   error of class `nestimate_bad_input` is raised. Both networks must use
-#'   the same method and hold the same nodes; any other method raises an
-#'   error, because the model needs transition counts. For the `print()` and `plot()` methods:
-#'   a `net_bayes`, or for `print()` a `net_bayes_group`.
+#' @param x The first network: a `netobject` estimated with `"relative"` or
+#'   `"frequency"` or one of their aliases, a `netobject_group`, or a
+#'   `net_edge_betweenness` object. A bare `cograph_network` is recounted from
+#'   the sequences it carries, and used only when they reproduce its weights;
+#'   otherwise, and for an `mcml`, an error of class `nestimate_bad_input` is
+#'   raised. Both networks must use the same method and hold the same nodes;
+#'   any other method raises an error, because the model needs transition
+#'   counts. A `tna` model or a `group_tna` (package tna) is first rebuilt as a
+#'   network from its own sequences (see [as_netobject()]). For the `print()`
+#'   and `plot()` methods: a `net_bayes`, or for `print()` a `net_bayes_group`.
 #' @param y The second network, of the same kind as `x`. Default `NULL`:
 #'   with a `netobject_group` as `x`, every pair of its groups is compared.
 #'   With two `netobject_group`s, the groups sharing a name are compared,
@@ -185,6 +186,9 @@ bayes_compare <- function(x, y = NULL,
                           mean_threshold = 0.01,
                           bound_threshold = 0.001,
                           seed = NULL) {
+  # a tna model or group_tna is rebuilt as a Nestimate network (R/tna_input.R)
+  x <- .tna_input(x, "bayes_compare()", need_data = TRUE)
+  if (!is.null(y)) y <- .tna_input(y, "bayes_compare()", need_data = TRUE)
 
   # ---- mcml: refused. Its layers (macro + one per cluster) hold different
   # states and carry no transition counts, so no comparison can run. ----

@@ -104,16 +104,20 @@ utils::globalVariables(c(
 #' exchange labels. One column runs exactly the one-level scheme above.
 #'
 #' @param x The sequences: a `netobject_group` (from [build_network()] with
-#'   `group`, or from a clustering), whose groups are compared; a
-#'   `netobject`, `tna` model or `cograph_network` built from sequences; a
-#'   wide data frame with one row per sequence and one column per position,
-#'   whose position columns are named as a numbered run, as in
-#'   [build_network()] (any column beside them other than the `group`
-#'   column raises an error of class `nestimate_bad_input`); or a character
-#'   matrix with one row per sequence and one column per position, whatever
-#'   its column names. A numeric or logical matrix of only 0 and 1, and
-#'   one-hot or association networks, raise `nestimate_bad_input`. Every
-#'   input except a `netobject_group` needs `group`. For the `print()` and
+#'   `group`, or from a clustering), whose groups are compared; a `netobject`,
+#'   `tna` model or `cograph_network` built from sequences; a wide data frame
+#'   with one row per sequence and one column per position, whose position
+#'   columns are named as a numbered run, as in [build_network()] (any column
+#'   beside them other than the `group` column raises an error of class
+#'   `nestimate_bad_input`); or a character matrix with one row per sequence
+#'   and one column per position, whatever its column names. A numeric or
+#'   logical matrix of only 0 and 1, and one-hot or association networks, raise
+#'   `nestimate_bad_input`. Every input except a `netobject_group` needs
+#'   `group`. A `group_tna` (package tna) is read as the group of networks it
+#'   converts to (see [as_netobject()]). For a tna model or `group_tna`,
+#'   `actor` is read from the metadata the model keeps (`attr(model$data,
+#'   "meta")`, kept when the model is built from `tna::prepare_data()`); a
+#'   model without it raises `nestimate_actor_missing`. For the `print()` and
 #'   `plot()` methods: a `net_sequence_comparison`.
 #' @param group The group of each sequence: the name of a column of a data
 #'   frame or matrix `x` (that column is then not read as a position), or a
@@ -235,6 +239,10 @@ sequence_compare <- function(x, group = NULL, sub = 3:5,
   test <- match.arg(test)
   .check_permutation_block(actor, paired = FALSE)
   use_actor <- !is.null(actor) && identical(test, "permutation")
+  if (use_actor && (.is_tna(x) || inherits(x, "group_tna"))) {
+    # rebuilt with the metadata the model keeps, where `actor` is read
+    x <- .tna_input(x, "sequence_compare()", need_data = TRUE, actor = actor)
+  }
   if (!is.null(actor) && !use_actor) {
     warning(warningCondition(
       sprintf(paste0("`actor` is used only by test = \"permutation\" and is ",
@@ -460,6 +468,11 @@ sequence_compare <- function(x, group = NULL, sub = 3:5,
 # `seq_mat`, returned as `actor`) are resolved only when `actor_ids` is TRUE.
 #' @noRd
 .cs_parse_input <- function(x, group, actor = NULL, actor_ids = FALSE) {
+  # a group_tna is read as the group of networks it converts to; a single
+  # tna model has its own branch below
+  if (inherits(x, "group_tna")) {
+    x <- .tna_input(x, "sequence_compare()", need_data = TRUE)
+  }
   # netobject_group: each element has $data
   if (inherits(x, "netobject_group")) {
     .refuse_onehot_network(x, "sequence_compare()")

@@ -58,12 +58,14 @@
 #'   transition weights, a `tna` model, a numeric transition matrix, or wide
 #'   sequence data (a data frame or a character matrix, one row per sequence)
 #'   that holds a numbered run of positions (T1, T2, ...), from which a
-#'   relative transition network is built; other columns are set aside with
-#'   a message. For a frame without such a run, build the network with
-#'   [build_network()] (`state_cols =` or `action =`) and pass that. A `netobject_group` gives one result per group. An association
-#'   network (`cor`, `pcor`, `glasso`, `ising`, `mgm`) or a matrix with
-#'   negative entries raises an error of class `nestimate_not_markov`. For the
-#'   `print()` and `plot()` methods: a `transition_entropy()` result;
+#'   relative transition network is built; other columns are set aside with a
+#'   message. For a frame without such a run, build the network with
+#'   [build_network()] (`state_cols =` or `action =`) and pass that. A
+#'   `netobject_group` gives one result per group. An association network
+#'   (`cor`, `pcor`, `glasso`, `ising`, `mgm`) or a matrix with negative
+#'   entries raises an error of class `nestimate_not_markov`. A `group_tna`
+#'   (package tna) gives one result per group, as a `netobject_group` does. For
+#'   the `print()` and `plot()` methods: a `transition_entropy()` result;
 #'   `print()` also takes a group result or the result of `summary()`.
 #' @param base The logarithm base, which sets the unit: `2` (default) for
 #'   bits, `exp(1)` for nats, `10` for hartleys. Any positive number other
@@ -169,6 +171,8 @@
 #'
 #' @export
 transition_entropy <- function(x, base = 2, normalize = TRUE) {
+  # a single tna model is read by .mpt_extract_P(); a group needs networks
+  if (inherits(x, "group_tna")) x <- .tna_input(x, "transition_entropy()")
   if (inherits(x, "netobject_group")) {
     out <- lapply(x, function(net) {
       transition_entropy(net, base = base, normalize = normalize)

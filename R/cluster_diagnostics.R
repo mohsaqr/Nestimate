@@ -115,6 +115,10 @@ cluster_diagnostics <- function(x, ...) {
 
 #' @export
 cluster_diagnostics.default <- function(x, ...) {
+  # a tna model, a group_tna or a bare cograph_network: convert, dispatch again
+  if (.is_foreign_network(x)) {
+    return(cluster_diagnostics(.native_network(x, "cluster_diagnostics()"), ...))
+  }
   .cluster_diag_check_unused_dots(...)
   stop(errorCondition(paste0("cluster_diagnostics() has no method for class '",
        paste(class(x), collapse = "/"), "'. Supported inputs: ",

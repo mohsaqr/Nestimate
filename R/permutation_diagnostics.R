@@ -34,14 +34,16 @@
 #'     actor-level test cannot reject anything.}
 #' }
 #'
-#' @param x The networks to compare: a `netobject_group`, whose every pair
-#'   of groups is diagnosed, or a `netobject`, compared with `y`. An `mcml`,
-#'   whose layers hold different states, raises an error of class
-#'   `nestimate_bad_input`. Only
-#'   the transition methods
-#'   `"relative"`, `"frequency"` and `"co_occurrence"` are supported; any
-#'   other method, association networks and `wtna` among them, raises an
-#'   error of class `nestimate_actor_unsupported`.
+#' @param x The networks to compare: a `netobject_group`, whose every pair of
+#'   groups is diagnosed, or a `netobject`, compared with `y`. An `mcml`, whose
+#'   layers hold different states, raises an error of class
+#'   `nestimate_bad_input`. Only the transition methods `"relative"`,
+#'   `"frequency"` and `"co_occurrence"` are supported; any other method,
+#'   association networks and `wtna` among them, raises an error of class
+#'   `nestimate_actor_unsupported`. A `tna` model or `group_tna` (package tna)
+#'   is read through the metadata it keeps (`attr(model$data, "meta")`, kept
+#'   when the model is built from `tna::prepare_data()`); one without metadata
+#'   raises an error of class `nestimate_actor_missing`.
 #' @param y The `netobject` to compare with when `x` is a `netobject`.
 #'   Default `NULL`, as it must stay when `x` is a group.
 #' @param actor The column identifying the actor each sequence belongs to,
@@ -140,6 +142,14 @@ permutation_diagnostics <- function(x, y = NULL, actor, iter = 1000L,
       is.numeric(alpha) && length(alpha) == 1L && alpha > 0 && alpha < 1
   )
   iter <- as.integer(iter)
+
+  # a tna model is rebuilt with the metadata it keeps, where `actor` is read
+  x <- .tna_input(x, "permutation_diagnostics()", need_data = TRUE,
+                  actor = actor)
+  if (!is.null(y)) {
+    y <- .tna_input(y, "permutation_diagnostics()", need_data = TRUE,
+                    actor = actor)
+  }
 
   if (inherits(x, "mcml") || inherits(y, "mcml")) {
     .stop_mcml_input("permutation_diagnostics()",

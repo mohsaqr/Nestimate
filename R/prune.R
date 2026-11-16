@@ -219,10 +219,12 @@
 #' deliberate difference from `tna::prune()`, which prunes self-loops like
 #' any other edge.
 #'
-#' @param x The network: a `netobject` or a `netobject_group`. Another class
-#'   raises an error. A network whose pruning is active raises an error of
-#'   class `nestimate_bad_input`; after [net_deprune()] it can be pruned
-#'   again with other settings, which replaces its pruning record.
+#' @param x The network: a `netobject` or a `netobject_group`. A `tna` model or
+#'   a `group_tna` (package tna) is first rebuilt as a network from its own
+#'   sequences (see [as_netobject()]). Another class raises an error. A network
+#'   whose pruning is active raises an error of class `nestimate_bad_input`;
+#'   after [net_deprune()] it can be pruned again with other settings, which
+#'   replaces its pruning record.
 #' @param method The pruning method: `"threshold"` (default), `"lowest"`,
 #'   `"disparity"` or `"bootstrap"` (see *Methods*).
 #' @param threshold For `method = "threshold"`: the largest weight that is
@@ -367,6 +369,11 @@ net_prune.netobject_group <- function(x, method = "threshold", threshold = 0.1,
 #' @export
 net_prune.default <- function(x, method = "threshold", threshold = 0.1,
                               lowest = 0.05, level = 0.5, boot = NULL, ...) {
+  # a tna model, a group_tna or a bare cograph_network: convert, dispatch again
+  if (.is_foreign_network(x)) {
+    return(net_prune(.native_network(x, "net_prune()"), method = method, threshold = threshold,
+                     lowest = lowest, level = level, boot = boot, ...))
+  }
   stop(errorCondition(
     paste0(
       "net_prune() requires a 'netobject' or 'netobject_group'; got '",
@@ -429,6 +436,10 @@ net_deprune.netobject_group <- function(x, ...) {
 #' @rdname net_deprune
 #' @export
 net_deprune.default <- function(x, ...) {
+  # a tna model, a group_tna or a bare cograph_network: convert, dispatch again
+  if (.is_foreign_network(x)) {
+    return(net_deprune(.native_network(x, "net_deprune()"), ...))
+  }
   stop(errorCondition(
     "net_deprune() requires a pruned 'netobject' or 'netobject_group'.",
     class = "nestimate_bad_input", call = NULL))
@@ -487,6 +498,10 @@ net_reprune.netobject_group <- function(x, ...) {
 #' @rdname net_reprune
 #' @export
 net_reprune.default <- function(x, ...) {
+  # a tna model, a group_tna or a bare cograph_network: convert, dispatch again
+  if (.is_foreign_network(x)) {
+    return(net_reprune(.native_network(x, "net_reprune()"), ...))
+  }
   stop(errorCondition(
     "net_reprune() requires a depruned 'netobject' or 'netobject_group'.",
     class = "nestimate_bad_input", call = NULL))
@@ -552,6 +567,10 @@ net_pruning_details.netobject_group <- function(x, ...) {
 #' @rdname net_pruning_details
 #' @export
 net_pruning_details.default <- function(x, ...) {
+  # a tna model, a group_tna or a bare cograph_network: convert, dispatch again
+  if (.is_foreign_network(x)) {
+    return(net_pruning_details(.native_network(x, "net_pruning_details()"), ...))
+  }
   stop(errorCondition(
     paste0(
       "net_pruning_details() requires a pruned 'netobject' or ",

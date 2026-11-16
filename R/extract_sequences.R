@@ -16,13 +16,14 @@
 #' the result records them, so it can be passed to another sequence verb
 #' without `cols` again (not when `meta = TRUE` adds covariate columns).
 #'
-#' @param x The sequence data: a `nestimate_data` object from [prepare()];
-#'   a long event log (set `action`); a wide data frame or character
-#'   matrix; or a `netobject`, `netobject_group`, `cograph_network` or `tna`
-#'   model built from sequence data. A network estimated with an
-#'   association method (`cor`, `pcor`, `glasso`, `ising`, `mgm`) or from
-#'   one-hot codes, a network built from a matrix (it holds no sequences),
-#'   and any other input raise an error of class `nestimate_bad_input`.
+#' @param x The sequence data: a `nestimate_data` object from [prepare()]; a
+#'   long event log (set `action`); a wide data frame or character matrix; or a
+#'   `netobject`, `netobject_group`, `cograph_network` or `tna` model built
+#'   from sequence data. A `group_tna` (package tna) is read as the group of
+#'   networks it converts to (see [as_netobject()]). A network estimated with
+#'   an association method (`cor`, `pcor`, `glasso`, `ising`, `mgm`) or from
+#'   one-hot codes, a network built from a matrix (it holds no sequences), and
+#'   any other input raise an error of class `nestimate_bad_input`.
 #' @param cols The state columns of a wide data frame; the other columns
 #'   are the sequences' covariates. Default `NULL`: the frame must be a
 #'   single column or hold its positions as a numbered run of names (a
@@ -99,6 +100,11 @@ extract_sequences <- function(x, cols = NULL, actor = NULL, action = NULL,
 
 .as_sequences <- function(x, cols = NULL, actor = NULL, action = NULL,
                           time = NULL, exclude = NULL, ...) {
+  # a group_tna is read as the group of networks it converts to; a single
+  # tna model has its own branch below
+  if (inherits(x, "group_tna")) {
+    x <- .tna_input(x, "Reading sequences", need_data = TRUE)
+  }
   if (is.data.frame(x) && !inherits(x, "nestimate_data")) {
     .check_declared_columns(x, "Reading sequences", cols = cols, actor = actor,
                             action = action, time = time)

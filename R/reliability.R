@@ -38,18 +38,18 @@
 #' as a correlation that is undefined because one half's weights are all
 #' equal.
 #'
-#' @param ... The networks: one or more `netobject`s from
-#'   [build_network()]. A `netobject_group` is split into its networks,
-#'   named by group; an `mcml` is converted with
-#'   \code{\link[=as_tna]{as_tna()}} first, and a bare `cograph_network`
-#'   is read as a `netobject`. Each network is named by its argument name
-#'   or, failing that, its method; repeated names get a suffix (`"_1"`,
-#'   `"_2"`, ...). A network without its sequence data (which
-#'   [build_network()] keeps) raises an error, a
-#'   network resting on one sequence an error of class
-#'   `nestimate_single_sequence`, and networks of different methods with
-#'   `scale = "none"` a warning of class `nestimate_mixed_methods`. For the `print()`, `summary()` and
-#'   `plot()` methods: ignored.
+#' @param ... The networks: one or more `netobject`s from [build_network()]. A
+#'   `netobject_group` is split into its networks, named by group; an `mcml` is
+#'   converted with \code{\link[=as_tna]{as_tna()}} first, and a bare
+#'   `cograph_network` is read as a `netobject`. Each network is named by its
+#'   argument name or, failing that, its method; repeated names get a suffix
+#'   (`"_1"`, `"_2"`, ...). A `tna` model or a `group_tna` (package tna) is
+#'   first rebuilt as a network from its own sequences (see [as_netobject()]).
+#'   A network without its sequence data (which [build_network()] keeps) raises
+#'   an error, a network resting on one sequence an error of class
+#'   `nestimate_single_sequence`, and networks of different methods with `scale
+#'   = "none"` a warning of class `nestimate_mixed_methods`. For the `print()`,
+#'   `summary()` and `plot()` methods: ignored.
 #' @param iter The number of split-half iterations, at least 2. Default
 #'   `1000`.
 #' @param split The share of the sequences that goes to the first half, the
@@ -126,6 +126,7 @@ network_reliability <- function(..., iter = 1000L, split = 0.5,
   flat <- lapply(seq_along(dots), function(i) {
     obj <- dots[[i]]
     nm <- names(dots)[i]
+    obj <- .tna_input(obj, "network_reliability()", need_data = TRUE)
     if (inherits(obj, "mcml")) obj <- as_tna(obj)
     if (inherits(obj, "cograph_network")) obj <- .as_netobject(obj)
     if (inherits(obj, "netobject_group")) {

@@ -60,10 +60,11 @@
 #'
 #' @param x The network: a `netobject` from [build_network()], a bare
 #'   `cograph_network` (converted to one), or a `netobject_group` or `mcml`,
-#'   each of whose networks is assessed. Any other object, or a network
-#'   built without its data, raises an error. For the `print()` methods: a
-#'   `net_stability` or `net_stability_group`; for the `plot()` method: a
-#'   `net_stability`.
+#'   each of whose networks is assessed. A `tna` model or a `group_tna`
+#'   (package tna) is first rebuilt as a network from its own sequences (see
+#'   [as_netobject()]). Any other object, or a network built without its data,
+#'   raises an error. For the `print()` methods: a `net_stability` or
+#'   `net_stability_group`; for the `plot()` method: a `net_stability`.
 #' @param measures The centrality measures to assess. The default is
 #'   `"InStrength"`, `"OutStrength"` and `"Betweenness"`; `NULL` takes
 #'   [net_centrality()]'s default (`"InStrength"`, `"Betweenness"`,
@@ -179,6 +180,8 @@ centrality_stability <- function(x,
                                  invert = TRUE,
                                  normalize_diffusion = TRUE,
                                  seed = NULL) {
+  # a tna model or group_tna is rebuilt as a Nestimate network (R/tna_input.R)
+  x <- .tna_input(x, "centrality_stability()", need_data = TRUE)
 
   # ---- Input validation ----
   measures <- .resolve_measures(measures)   # "all" -> every built-in measure

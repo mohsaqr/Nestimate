@@ -216,19 +216,20 @@
 #' The deterministic columns agree with `tna::markov_order()` (tna 1.4.1
 #' or later).
 #'
-#' @param data The sequences: a data frame with one row per sequence and
-#'   one column per position, a list of character vectors (one per
-#'   sequence), a sequence `netobject` or `netobject_group` built with its
-#'   data, or a [prepare()] result (its sequence data is used). A data
-#'   frame is read whole, so it must hold only positions: one column, or
-#'   columns named as a numbered run (`T1`, `T2`, ...); anything else, such
-#'   as an id column beside the positions, a column named `action`, or
-#'   columns holding only 0 and 1, raises an error of class
-#'   `nestimate_bad_input`, and the positions are then declared with
-#'   [build_network()] (`state_cols`, or `action` for an event log) and the
-#'   network passed instead. A one-hot or association network raises the
-#'   same error. Sequences are split at missing values: no window spans an
-#'   `NA`, and pieces with fewer than two states are dropped.
+#' @param data The sequences: a data frame with one row per sequence and one
+#'   column per position, a list of character vectors (one per sequence), a
+#'   sequence `netobject` or `netobject_group` built with its data, or a
+#'   [prepare()] result (its sequence data is used). A data frame is read
+#'   whole, so it must hold only positions: one column, or columns named as a
+#'   numbered run (`T1`, `T2`, ...); anything else, such as an id column beside
+#'   the positions, a column named `action`, or columns holding only 0 and 1,
+#'   raises an error of class `nestimate_bad_input`, and the positions are then
+#'   declared with [build_network()] (`state_cols`, or `action` for an event
+#'   log) and the network passed instead. A one-hot or association network
+#'   raises the same error. Sequences are split at missing values: no window
+#'   spans an `NA`, and pieces with fewer than two states are dropped. A `tna`
+#'   model (package tna) or a bare `cograph_network` gives the sequences it
+#'   carries, and a `group_tna` one result per group.
 #' @param max_order The highest order to test, at least 1. Default `3`. It
 #'   is lowered, with a message, to one less than the length of the longest
 #'   sequence.
@@ -311,6 +312,11 @@
 markov_order_test <- function(data, max_order = 3L, n_perm = 500L, alpha = 0.05,
                                parallel = FALSE, n_cores = 2L, seed = NULL,
                                dof = c("paths", "observed")) {
+  # a tna model gives its decoded sequences, a group_tna or a bare
+  # cograph_network its network: read as a plain list, the fields of the
+  # object were taken for sequences
+  data <- if (.is_tna(data)) .coerce_sequence_input(data) else
+    .native_network(data, "markov_order_test()", need_data = TRUE)
   dof <- match.arg(dof)
   .refuse_onehot_network(data, "markov_order_test()")
   if (is.data.frame(data)) {

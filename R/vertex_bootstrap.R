@@ -49,10 +49,11 @@
 #' total weight is 0. `NA` replicates are left out of the bootstrap mean,
 #' standard deviation and quantiles.
 #'
-#' @param x The network: a `netobject` (from [build_network()] or any
-#'   builder), a `cograph_network`, or a square numeric weight matrix, with
-#'   at least 3 nodes. Other input raises an error. For the `print()` and
-#'   `plot()` methods: a `net_vertex_bootstrap` result.
+#' @param x The network: a `netobject` (from [build_network()] or any builder),
+#'   a `cograph_network`, or a square numeric weight matrix, with at least 3
+#'   nodes. A `tna` model (package tna) is first rebuilt as a network from its
+#'   own sequences (see [as_netobject()]). Other input raises an error. For the
+#'   `print()` and `plot()` methods: a `net_vertex_bootstrap` result.
 #' @param iter The number of bootstrap replicates, at least 2. Default
 #'   `1000`.
 #' @param ci_level The significance level of the confidence intervals, not
@@ -130,6 +131,8 @@ vertex_bootstrap <- function(x,
                              statistic_fn = NULL,
                              directed = NULL,
                              seed = NULL) {
+  # a tna model or group_tna is rebuilt as a Nestimate network (R/tna_input.R)
+  x <- .tna_input(x, "vertex_bootstrap()")
   ci_method <- match.arg(ci_method)
   .assert(
     is.numeric(iter), length(iter) == 1, iter >= 2,
@@ -438,14 +441,15 @@ plot.net_vertex_bootstrap <- function(x, bins = 30, ...) {
 #' data of both networks are available, [permutation()] and [nct()] compare
 #' them edge by edge.
 #'
-#' @param x,y The two networks: `netobject`s, `cograph_network`s, square
-#'   weight matrices, or `net_vertex_bootstrap` results computed beforehand.
-#'   A precomputed result is used as it is, so `iter`, `statistics`,
-#'   `statistic_fn` and `directed` do not apply to it. The two must cover
-#'   the same statistics: a mismatch, such as a directed network's
-#'   `reciprocity` against an undirected network, or two precomputed results
-#'   with different `statistics`, raises an error rather than comparing a
-#'   subset. For the `print()` and `plot()` methods, `x` is a
+#' @param x,y The two networks: `netobject`s, `cograph_network`s, square weight
+#'   matrices, or `net_vertex_bootstrap` results computed beforehand. A
+#'   precomputed result is used as it is, so `iter`, `statistics`,
+#'   `statistic_fn` and `directed` do not apply to it. The two must cover the
+#'   same statistics: a mismatch, such as a directed network's `reciprocity`
+#'   against an undirected network, or two precomputed results with different
+#'   `statistics`, raises an error rather than comparing a subset. A `tna`
+#'   model (package tna) is first rebuilt as a network from its own sequences
+#'   (see [as_netobject()]). For the `print()` and `plot()` methods, `x` is a
 #'   `net_vertex_comparison` result.
 #' @param ci_level The significance level of the normal-approximation
 #'   intervals for the differences: `0.05` (default) gives 95% intervals. It
@@ -517,6 +521,9 @@ vertex_compare <- function(x, y,
                            directed = NULL,
                            seed = NULL,
                            labels = c("x", "y")) {
+  # a tna model or group_tna is rebuilt as a Nestimate network (R/tna_input.R)
+  x <- .tna_input(x, "vertex_compare()")
+  y <- .tna_input(y, "vertex_compare()")
   .assert(is.character(labels), length(labels) == 2, all(nzchar(labels)))
 
   if (!is.null(seed)) {

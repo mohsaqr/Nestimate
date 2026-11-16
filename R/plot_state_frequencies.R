@@ -415,8 +415,10 @@
 #'
 #' @param x The object to draw: a `netobject`, `netobject_group`, `mcml` or
 #'   `htna` network, a contingency `table` (two-way, or three-way with the
-#'   clusters as the third dimension), a numeric count `matrix`, or a
-#'   data frame in long form (see `x_var`, `y_var` and `weight`).
+#'   clusters as the third dimension), a numeric count `matrix`, or a data
+#'   frame in long form (see `x_var`, `y_var` and `weight`). A `tna` model or a
+#'   `group_tna` (package tna) is first rebuilt as a network from its own
+#'   sequences (see [as_netobject()]).
 #' @param x_var,y_var,weight For a data frame: the column whose levels form
 #'   the mosaic's columns (each as wide as its total `weight`), the column
 #'   whose levels are stacked within each column (in proportion to their
@@ -571,6 +573,12 @@ mosaic_plot <- function(x, ...) UseMethod("mosaic_plot")
 #' @export
 #' @rdname mosaic_plot
 mosaic_plot.default <- function(x, ...) {
+  # a tna model, a group_tna or a bare cograph_network: convert, dispatch again
+  if (.is_foreign_network(x)) {
+    x <- .native_network(x, "mosaic_plot()", need_data = TRUE,
+                         actor = list(...)[["actor"]])
+    return(mosaic_plot(x, ...))
+  }
   stop(errorCondition(paste0("mosaic_plot: no method for class ",
        paste(class(x), collapse = "/"), ".\n",
        "Supported: netobject, netobject_group, mcml, htna, table, matrix, ",
@@ -2232,12 +2240,13 @@ knit_print.nestimate_facet_list <- function(x, ...) {
 #' [mosaic_plot()] shows which cells of a `netobject_group`'s
 #' group-by-state table depart from independence.
 #'
-#' @param x The object to count: a `netobject`, `netobject_group`, `mcml`
-#'   or `htna` network built from sequences. A network without sequence
-#'   data raises an error; in a `netobject_group` or `mcml`, groups without
-#'   it are left out. For the `print()` and `plot()`
-#'   methods of the result: the `state_freq` object;
-#'   for the `print()` methods of a per-panel figure: an object of class
+#' @param x The object to count: a `netobject`, `netobject_group`, `mcml` or
+#'   `htna` network built from sequences. A `tna` model or a `group_tna`
+#'   (package tna) is first rebuilt as a network from its own sequences (see
+#'   [as_netobject()]). A network without sequence data raises an error; in a
+#'   `netobject_group` or `mcml`, groups without it are left out. For the
+#'   `print()` and `plot()` methods of the result: the `state_freq` object; for
+#'   the `print()` methods of a per-panel figure: an object of class
 #'   `nestimate_facet_plot` or `nestimate_facet_list`.
 #' @param style The chart. `"marimekko"` (default) draws treemaps, or the
 #'   cluster marimekko for an `mcml` (see Description); `"bars"` draws
@@ -2457,6 +2466,11 @@ plot_state_frequencies.netobject_group <- function(x,
 #' @export
 #' @rdname plot_state_frequencies
 plot_state_frequencies.default <- function(x, ...) {
+  # a tna model, a group_tna or a bare cograph_network: convert, dispatch again
+  if (.is_foreign_network(x)) {
+    x <- .native_network(x, "plot_state_frequencies()", need_data = TRUE)
+    return(plot_state_frequencies(x, ...))
+  }
   cls <- paste(class(x), collapse = "/")
   stop(errorCondition(
     paste0(
@@ -2616,12 +2630,13 @@ plot_state_frequencies.default <- function(x, ...) {
 #' counterpart of [state_frequencies()], which counts the states of raw
 #' sequence data.
 #'
-#' @param x A `netobject`, `netobject_group`, `mcml` or `htna` network
-#'   built from sequences, or the `state_freq` result of
-#'   [plot_state_frequencies()], whose table is returned as drawn. A network without sequence data raises an error;
-#'   in a `netobject_group` or `mcml`, groups without it are left out, and
-#'   an error is raised only when none has any. Other classes raise an
-#'   error.
+#' @param x A `netobject`, `netobject_group`, `mcml` or `htna` network built
+#'   from sequences, or the `state_freq` result of [plot_state_frequencies()],
+#'   whose table is returned as drawn. A `tna` model or a `group_tna` (package
+#'   tna) is first rebuilt as a network from its own sequences (see
+#'   [as_netobject()]). A network without sequence data raises an error; in a
+#'   `netobject_group` or `mcml`, groups without it are left out, and an error
+#'   is raised only when none has any. Other classes raise an error.
 #' @param include_macro For an `mcml`: whether to add a `"macro"` group in
 #'   front, holding the state counts over all clusters. Default `FALSE`.
 #' @param ... Not used. The `mcml` method raises an error for any argument
@@ -2686,6 +2701,10 @@ state_distribution.state_freq <- function(x, ...) x$table
 #' @export
 #' @rdname state_distribution
 state_distribution.default <- function(x, ...) {
+  # a tna model, a group_tna or a bare cograph_network: convert, dispatch again
+  if (.is_foreign_network(x)) {
+    return(state_distribution(.native_network(x, "state_distribution()", need_data = TRUE), ...))
+  }
   cls <- paste(class(x), collapse = "/")
   stop(errorCondition(
     paste0(

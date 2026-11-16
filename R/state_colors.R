@@ -58,6 +58,10 @@ set_state_colors <- function(x, colors) UseMethod("set_state_colors")
 #' @rdname set_state_colors
 #' @export
 set_state_colors.default <- function(x, colors) {
+  # a tna model, a group_tna or a bare cograph_network: convert, dispatch again
+  if (.is_foreign_network(x)) {
+    return(set_state_colors(.native_network(x, "set_state_colors()"), colors))
+  }
   stop(errorCondition(
     paste0(
       "`set_state_colors()` needs a netobject, netobject_group, mcml or ",
@@ -116,8 +120,9 @@ set_state_colors.netobject_group <- function(x, colors) {
 #' with [set_state_colors()] plus the defaults filled in for every other
 #' state, so the table shows what the figures use.
 #'
-#' @param x A `netobject`, `netobject_group`, `mcml` or `htna`; any other
-#'   object raises an error.
+#' @param x A `netobject`, `netobject_group`, `mcml` or `htna`. A `tna` model
+#'   or a `group_tna` (package tna) is first rebuilt as a network from its own
+#'   sequences (see [as_netobject()]). Any other object raises an error.
 #' @param ... Not used.
 #' @return A data frame with one row per colour key the object carries
 #'   (for a `netobject_group`, the states of all its networks): `state` (the
@@ -135,6 +140,10 @@ state_colors <- function(x, ...) UseMethod("state_colors")
 #' @rdname state_colors
 #' @export
 state_colors.default <- function(x, ...) {
+  # a tna model, a group_tna or a bare cograph_network: convert, dispatch again
+  if (.is_foreign_network(x)) {
+    return(state_colors(.native_network(x, "state_colors()"), ...))
+  }
   stop(errorCondition(
     paste0(
       "`state_colors()` needs a netobject, netobject_group, mcml or htna; ",

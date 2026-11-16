@@ -100,15 +100,16 @@
 #' [markov_order_test()]; `path_dependence()` breaks that decision down by
 #' context.
 #'
-#' @param x The sequences: a wide data frame or matrix (one row per
-#'   sequence, one column per time step), or a `netobject` built from
-#'   sequences, whose stored data are read. A data frame needs position
-#'   columns named as a numbered run (`T1`, `T2`, ...); any other frame, a
-#'   one-hot network and an association network raise an error of class
-#'   `nestimate_bad_input`, and a network without its data stops
-#'   `path_dependence()`. Paths that touch a missing cell are left out. For
-#'   the `print()` methods: a `net_path_dependence` object or its
-#'   `summary()`; for the `plot()` method: a `net_path_dependence` object.
+#' @param x The sequences: a wide data frame or matrix (one row per sequence,
+#'   one column per time step), or a `netobject` built from sequences, whose
+#'   stored data are read. A data frame needs position columns named as a
+#'   numbered run (`T1`, `T2`, ...); any other frame, a one-hot network and an
+#'   association network raise an error of class `nestimate_bad_input`, and a
+#'   network without its data stops `path_dependence()`. Paths that touch a
+#'   missing cell are left out. A `tna` model (package tna) or a bare
+#'   `cograph_network` gives the sequences it carries. For the `print()`
+#'   methods: a `net_path_dependence` object or its `summary()`; for the
+#'   `plot()` method: a `net_path_dependence` object.
 #' @param order The length k of the conditioning context, a whole number of
 #'   at least 2; a non-integer value is an error, not truncated. Default
 #'   `2`, which compares a two-state history with the last state alone; `3`
@@ -201,6 +202,9 @@ path_dependence <- function(x, order = 2L, min_count = 5L, base = 2) {
     is.numeric(base), length(base) == 1L, base > 0, base != 1
   )
 
+  # a tna model or a bare cograph_network carries integer-coded states
+  x <- if (.is_tna(x)) .coerce_sequence_input(x) else
+    .native_network(x, "path_dependence()", need_data = TRUE)
   .refuse_onehot_network(x, "path_dependence()")
   .refuse_binary_matrix(x, "path_dependence()")
   if (is.data.frame(x)) {

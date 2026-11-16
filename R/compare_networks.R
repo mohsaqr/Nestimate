@@ -508,7 +508,11 @@ compare_networks <- function(...,
   if (inherits(obj, "psychnet") || inherits(obj, "cograph_network")) {
     return(as_netobject(obj))
   }
-  if (inherits(obj, "tna")) return(.cn_from_tna(obj))
+  # the shared converter (R/tna_input.R), limited to the model types this
+  # function has rebuilt since it first took tna models
+  if (inherits(obj, "tna")) {
+    return(.tna_to_netobject(obj, types = .tna_types_basic))
+  }
   if (is.matrix(obj) && is.numeric(obj)) {
     if (nrow(obj) != ncol(obj)) {
       .cn_stop(sprintf("Network %s: matrix must be square (got %d x %d).",
@@ -527,35 +531,6 @@ compare_networks <- function(...,
                   ">. Accepted: netobject, netobject_group, cograph_network, ",
                   "psychnet, mcml, tna, group_tna, square numeric matrix."),
            "bad_input")
-}
-
-# A tna object: rebuild through build_network() when its sequence data is
-# available so permutation/Bayesian tests are possible; otherwise wrap the
-# weights.
-.cn_from_tna <- function(x) {
-  W <- x$weights
-  labels <- x$labels %||% rownames(W)
-  if (is.null(rownames(W))) dimnames(W) <- list(labels, labels)
-  type <- attr(x, "type") %||% ""
-  method <- switch(type, relative = "relative", frequency = "frequency",
-                   `co-occurrence` = "co_occurrence", NULL)
-  unscaled <- length(attr(x, "scaling") %||% character(0)) == 0L
-  seq_data <- x$data
-  if (!is.null(method) && unscaled && is.matrix(seq_data)) {
-    alphabet <- attr(seq_data, "labels") %||% attr(seq_data, "alphabet") %||% labels
-    df <- as.data.frame(matrix(alphabet[as.integer(seq_data)],
-                               nrow = nrow(seq_data)),
-                        stringsAsFactors = FALSE)
-    net <- build_network(df, method = method,
-                         params = list(alphabet = labels))
-    if (identical(dim(net$weights), dim(W)) &&
-        isTRUE(all.equal(unname(net$weights[labels, labels]), unname(W),
-                         tolerance = 1e-8))) {
-      return(net)
-    }
-  }
-  .wrap_netobject(W, method = if (is.null(method)) "tna" else method,
-                  directed = TRUE, inits = x$inits)
 }
 
 .cn_validate_matrices <- function(mats, names) {

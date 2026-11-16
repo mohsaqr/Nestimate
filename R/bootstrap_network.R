@@ -103,15 +103,20 @@
 #' students gave intervals about a quarter wider than resampling sessions,
 #' and fewer significant edges (18 against 22).
 #'
-#' @param x The network: a `netobject` that carries its data (any network
-#'   from [build_network()]), or a `cograph_network`, which is converted
-#'   first. A `netobject_group` or `mcml` bootstraps every network it holds
-#'   (for an `mcml`, the macro network and each cluster's), and a
-#'   `wtna_mixed` bootstraps both of its components (see *Value*). A
-#'   network without its data raises an error, and one that rests on a
-#'   single sequence, or one-hot data with no actor or session, has nothing
-#'   to resample and raises an error of class `nestimate_single_sequence`.
-#'   For the `print()` methods: the result of `bootstrap_network()`.
+#' @param x The network: a `netobject` that carries its data (any network from
+#'   [build_network()]), or a `cograph_network`, which is converted first. A
+#'   `netobject_group` or `mcml` bootstraps every network it holds (for an
+#'   `mcml`, the macro network and each cluster's), and a `wtna_mixed`
+#'   bootstraps both of its components (see *Value*). A `tna` model or a
+#'   `group_tna` (package tna) is first rebuilt as a network from its own
+#'   sequences (see [as_netobject()]). `actor` is read from the metadata the
+#'   model keeps (`attr(model$data, "meta")`, kept when the model is built
+#'   from `tna::prepare_data()`); a model without it raises
+#'   `nestimate_actor_missing`. A network without its data raises an error,
+#'   and one that rests on a single sequence, or one-hot data with no actor or
+#'   session, has nothing to resample and raises an error of class
+#'   `nestimate_single_sequence`. For the `print()` methods: the result of
+#'   `bootstrap_network()`.
 #' @param iter The number of bootstrap replicates, at least 2. Default
 #'   `1000`.
 #' @param ci_level The significance level, between 0 and 1: the confidence
@@ -262,6 +267,8 @@ bootstrap_network <- function(x,
                               boundary = c("inclusive", "strict"),
                               ci_method = c("percentile", "basic"),
                               actor = NULL) {
+  # a tna model or group_tna is rebuilt as a Nestimate network (R/tna_input.R)
+  x <- .tna_input(x, "bootstrap_network()", need_data = TRUE, actor = actor)
   boundary <- match.arg(boundary)
   ci_method <- match.arg(ci_method)
 

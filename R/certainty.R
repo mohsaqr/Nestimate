@@ -49,11 +49,12 @@
 #' @param x The network: a `netobject` built with [build_network()] using
 #'   `method = "relative"` (or its aliases `"tna"`, `"transition"`), without
 #'   `scaling`, or a `netobject_group` of such networks, each handled on its
-#'   own. A bare `cograph_network` is recounted from the sequences it
-#'   carries, and used only when they reproduce its weights; otherwise, and
-#'   for an `mcml`, an error of class `nestimate_bad_input` is raised.
-#'   Another method or a scaled network raises an error.
-#'   For the `print()` method: a `net_certainty` object.
+#'   own. A bare `cograph_network` is recounted from the sequences it carries,
+#'   and used only when they reproduce its weights; otherwise, and for an
+#'   `mcml`, an error of class `nestimate_bad_input` is raised. A `tna` model
+#'   or a `group_tna` (package tna) is first rebuilt as a network from its own
+#'   sequences (see [as_netobject()]). Another method or a scaled network
+#'   raises an error. For the `print()` method: a `net_certainty` object.
 #' @param prior The Dirichlet concentration added to every cell of the count
 #'   matrix, zero cells and self-loops included; a positive number. Default
 #'   `0.5`, the Jeffreys prior.
@@ -115,6 +116,8 @@ certainty <- function(x,
                       inference = c("stability", "threshold"),
                       consistency_range = c(0.75, 1.25),
                       edge_threshold = NULL) {
+  # a tna model or group_tna is rebuilt as a Nestimate network (R/tna_input.R)
+  x <- .tna_input(x, "certainty()", need_data = TRUE)
   inference <- match.arg(inference)
 
   # ---- netobject_group dispatch ----

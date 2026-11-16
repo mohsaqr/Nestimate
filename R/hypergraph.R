@@ -24,10 +24,11 @@
 #'
 #' @param net The network: a `netobject`, bare `cograph_network`,
 #'   `simplicial_complex` (its edges are read as ties of weight 1 and the
-#'   cliques are found again up to `max_size`), or a numeric or logical adjacency or weight
-#'   matrix (nodes are named `V1`, `V2`, ... when it has no row names). A
-#'   tie counts in either direction, so a directed network is symmetrised,
-#'   and self-loops are ignored.
+#'   cliques are found again up to `max_size`), or a numeric or logical
+#'   adjacency or weight matrix (nodes are named `V1`, `V2`, ... when it has no
+#'   row names). A tie counts in either direction, so a directed network is
+#'   symmetrised, and self-loops are ignored. A `tna` model (package tna) is
+#'   first rebuilt as a network from its own sequences (see [as_netobject()]).
 #' @param p The probability that each clique of 3 or more nodes becomes a
 #'   hyperedge, a number in `[0, 1]`; each clique is kept or dropped
 #'   independently. Default `1` (every clique is kept). Pairwise edges are
@@ -119,6 +120,8 @@ build_hypergraph <- function(net,
                               max_size = 3L,
                               threshold = 0,
                               seed = NULL) {
+  # a tna model or group_tna is rebuilt as a Nestimate network (R/tna_input.R)
+  net <- .tna_input(net, "build_hypergraph()")
   method <- match.arg(method)
   if (method == "vr" || method == "rips") {
     stop(errorCondition(

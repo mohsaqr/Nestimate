@@ -347,8 +347,9 @@ centrality <- function(x, ...) {
 #' same diffusion; use `normalize_diffusion = FALSE` there.
 #'
 #' @param x The network: a `netobject`, `netobject_group`, `mcml` or
-#'   `cograph_network`. For the `plot()` methods: the result of
-#'   `net_centrality()`.
+#'   `cograph_network`. A `tna` model or a `group_tna` (package tna) is first
+#'   rebuilt as a network from its own sequences (see [as_netobject()]). For
+#'   the `plot()` methods: the result of `net_centrality()`.
 #' @param measures The measures to compute. The default is `"InStrength"`,
 #'   `"Betweenness"` and `"Diffusion"`; `"all"` computes every built-in one:
 #'   `"OutStrength"` and `"InStrength"` (sum of outgoing or incoming weights),
@@ -413,6 +414,8 @@ net_centrality <- function(x, measures = NULL, loops = FALSE,
                             normalize = FALSE, invert = TRUE,
                             normalize_diffusion = TRUE,
                             centrality_fn = NULL, ...) {
+  # a tna model or group_tna is rebuilt as a Nestimate network (R/tna_input.R)
+  x <- .tna_input(x, "net_centrality()")
   if (isFALSE(loops)) {
     message("centralities computed excluding loops (diagonal). ",
             "Pass `loops = TRUE` to include self-transitions.")
@@ -1010,8 +1013,10 @@ plot.net_centrality_group <- function(x, reorder = TRUE, ncol = 3L,
 #' `igraph::edge_betweenness()` for that edge; the function is named
 #' differently to avoid masking either.
 #'
-#' @param x A `netobject` or `netobject_group`; any other input raises an
-#'   error. For the `plot()` method: a `net_edge_betweenness` network.
+#' @param x A `netobject` or `netobject_group`. A `tna` model or a `group_tna`
+#'   (package tna) is first rebuilt as a network from its own sequences (see
+#'   [as_netobject()]). Any other input raises an error. For the `plot()`
+#'   method: a `net_edge_betweenness` network.
 #' @param invert Whether to turn weights into distances by `1 / weight`
 #'   before finding shortest paths, which suits probability and frequency
 #'   networks. With `FALSE`, the weight itself is the distance; use it when
@@ -1086,6 +1091,10 @@ net_edge_betweenness.netobject_group <- function(x, invert = TRUE, ...) {
 #' @rdname net_edge_betweenness
 #' @export
 net_edge_betweenness.default <- function(x, invert = TRUE, ...) {
+  # a tna model, a group_tna or a bare cograph_network: convert, dispatch again
+  if (.is_foreign_network(x)) {
+    return(net_edge_betweenness(.native_network(x, "net_edge_betweenness()"), invert = invert, ...))
+  }
   stop(errorCondition(
     paste0(
       "net_edge_betweenness() requires a 'netobject' or 'netobject_group'; ",
