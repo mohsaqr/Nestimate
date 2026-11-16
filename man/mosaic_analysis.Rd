@@ -199,7 +199,10 @@ a few clusters with enough rows each; both variables must vary within
 clusters, and clusters with fewer than two rows are left out
 (\code{clusters} counts those that inform the test). Residual: summed
 observed minus expected over the square root of the summed
-hypergeometric variances.}
+hypergeometric variances. This tests conditional association, whereas
+Rao-Scott and GEE test marginal association; the null hypotheses can
+differ. Stratification does not correct arbitrary serial dependence
+among observations within an actor.}
 \item{\code{"gee"}}{Marginal model for \code{var2} given \code{var1} with an identity
 link and independence working correlation; Wald chi-square with the
 cluster-robust (sandwich) covariance for equal distributions of
@@ -217,12 +220,15 @@ standard error.}
 counts with random intercepts for cluster-by-\code{var1} and
 cluster-by-\code{var2} at every level of \code{actor}, so several columns
 give nested random effects (outermost first); Wald chi-square on the
-interaction. Fitted by \code{lme4::glmer(nAGQ = 0)}; needs lme4, and a
+interaction. Fitted by \code{lme4::glmer(nAGQ = 0)}, a faster, less exact
+approximation than the default Laplace fit; needs lme4, and a
 failed fit raises an error of class \code{nestimate_bad_input}. With an
 empty cell the Wald test loses power (its interaction term runs to
 minus infinity). Residual: observed minus expected count under
 independence, over its cluster-robust standard error (the
-GLMM supplies the test, the residual is model-free); with about 10
+GLMM supplies the test, the residual is model-free). With several
+actor levels, this standard error clusters at the outermost level;
+it is undefined with fewer than two outer actors. With about 10
 actors this standard error is small and 7 to 8\% of null cells
 pass 1.96.}
 }

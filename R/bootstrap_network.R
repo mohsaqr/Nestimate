@@ -92,12 +92,16 @@
 #' students, other teams), resample actors. A drawn actor brings all of
 #' their sequences, so a replicate can contain an actor twice or not at
 #' all. The design effect, not the ICC alone, decides how much this
-#' matters: with m transitions per actor, Kish gives `1 + (m - 1) * ICC`,
-#' so a small ICC over many transitions per actor still widens the
-#' intervals. In one data set of sessions nested in students, the ICC was
-#' about 0.01 and the design effect about 1.5; resampling students gave
-#' intervals about a quarter wider than resampling sessions, and fewer
-#' significant edges (18 against 22).
+#' matters: Kish's approximation `1 + (m - 1) * ICC` for clusters of m
+#' equally informative units grows with the cluster size, so a small ICC
+#' over large clusters still widens the intervals. In one data set of
+#' sessions nested in students, the transitions of one student correlated
+#' at about 0.01, yet with about 59 transitions per student (size-weighted
+#' mean) the Rao-Scott design effect of the transition table was about 1.5
+#' ([mosaic_test()]). The printed values, which take the sequence as the
+#' unit, were an ICC of 0.05 and a design effect of 1.24; resampling
+#' students gave intervals about a quarter wider than resampling sessions,
+#' and fewer significant edges (18 against 22).
 #'
 #' @param x The network: a `netobject` that carries its data (any network
 #'   from [build_network()]), or a `cograph_network`, which is converted

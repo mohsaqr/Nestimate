@@ -325,11 +325,18 @@ sessions were shuffled (23\% of replicates had at least one significant
 edge after Benjamini-Hochberg correction), against 4.6\% (0.5\%) when
 whole students were shuffled. When the groups vary within the same
 actors (pre- and post-test sessions of the same students), \code{actor}
-shuffles the labels within each actor; the plain test is also valid
-there (5.1\% against 5.0\% in the same data). Whether nesting matters is
-decided by the design effect, not by the ICC alone: in that data set the
-ICC was about 0.01, yet with about 59 transitions per student the design
-effect was about 1.5.
+shuffles the labels within each actor; the plain test gave similar size
+in that simulation (5.1\% against 5.0\%). This does not establish validity
+for other within-actor designs: the permitted shuffles must respect the
+assignment mechanism or exchangeability under the null. Whether nesting
+matters is decided by the design effect, not by the ICC alone: in that
+data set the transitions of one student correlated at about 0.01, yet
+with about 59 transitions per student (size-weighted mean) the Rao-Scott
+design effect of the transition table was about 1.5 (\code{\link[=mosaic_test]{mosaic_test()}}).
+The printed ICC is a different quantity, the correlation between the
+sequences of one actor (0.05 in that data set, with a printed design
+effect of 1.24 for the bootstrap), so Kish's approximation with it
+counts sequences per actor, not transitions.
 
 \code{actor} is available for transition networks built from sequences
 (\code{"relative"}, \code{"frequency"}, \code{"co_occurrence"}). On one-hot data the
