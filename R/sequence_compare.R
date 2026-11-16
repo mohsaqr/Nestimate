@@ -241,15 +241,20 @@ sequence_compare <- function(x, group = NULL, sub = 3:5,
                      "ignored with test = \"%s\"."), test),
       class = "nestimate_ignored_argument", call = NULL))
   }
+  positive_whole <- function(z, scalar = TRUE) {
+    is.numeric(z) && length(z) >= 1L && (!scalar || length(z) == 1L) &&
+      all(is.finite(z)) && all(z >= 1 & z <= .Machine$integer.max) &&
+      all(z == floor(z))
+  }
+  .assert(
+    "`sub` must be one or more pattern lengths of 1 or more" =
+      positive_whole(sub, scalar = FALSE),
+    "`min_freq` must be a whole number of 1 or more" = positive_whole(min_freq),
+    "`iter` must be a whole number of 1 or more" = positive_whole(iter)
+  )
   min_freq <- as.integer(min_freq)
   iter <- as.integer(iter)
   sub <- as.integer(sub)
-  .assert(
-    "`sub` must be one or more pattern lengths of 1 or more" =
-      length(sub) >= 1L && all(sub >= 1L),
-    "`min_freq` must be a whole number of 1 or more" = all(min_freq >= 1L),
-    "`iter` must be a whole number of 1 or more" = all(iter >= 1L)
-  )
   if (identical(test, "permutation") && isTRUE(all(iter < 2L))) {
     warning(warningCondition(
       "`iter = 1` gives no effect size (NA): it needs at least two permutations.",
@@ -273,6 +278,7 @@ sequence_compare <- function(x, group = NULL, sub = 3:5,
   .assert("Need at least 2 groups" = n_groups >= 2L)
 
   n <- nrow(seq_mat)
+  labelled <- which(!is.na(group_vec))
   p <- ncol(seq_mat)
   sub <- sub[sub <= p]
   .assert("No valid pattern lengths (sub > sequence length)" = length(sub) >= 1L)
@@ -365,7 +371,9 @@ sequence_compare <- function(x, group = NULL, sub = 3:5,
       # patterns-by-groups table in memory, not iter of them.
       for (it in seq_len(iter)) {
         perm_group <- if (is.null(design)) {
-          group_vec[sample(n)]
+          shuffled <- group_vec
+          shuffled[labelled] <- group_vec[labelled[sample.int(length(labelled))]]
+          shuffled
         } else if (nested) {
           .nested_permute(design)
         } else {

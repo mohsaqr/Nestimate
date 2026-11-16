@@ -38,7 +38,7 @@
 
 # Fixtures were written on macOS arm64; Linux differs in the last bits of doubles
 # (~1e-15 relative), so doubles compare to 1e-10. Integers, labels and layout stay exact.
-test_that("actor = NULL reproduces Nestimate 1.0.12 exactly", {
+test_that("actor = NULL preserves released outputs for labelled sequences", {
   fx <- readRDS(test_path("fixtures", "sequence-compare-default-1.0.12.rds"))
   net2 <- build_network(group_regulation_long, method = "relative",
                         actor = "Actor", action = "Action", time = "Time",
@@ -68,7 +68,12 @@ test_that("actor = NULL reproduces Nestimate 1.0.12 exactly", {
 
   expect_equal(r1, fx$r1, tolerance = 1e-10)
   expect_equal(r2, fx$r2, tolerance = 1e-10)
-  expect_equal(r3, fx$r3, tolerance = 1e-10)
+  # The old fixture shuffled NA labels into observed groups. The corrected
+  # null must instead equal an analysis that excludes the unlabelled row.
+  set.seed(3)
+  labelled <- sequence_compare(wide[!is.na(wide$grp), ], group = "grp",
+                               sub = 2L, min_freq = 1L, iter = 40L)
+  expect_equal(r3, labelled, tolerance = 1e-10)
   expect_equal(r4, fx$r4, tolerance = 1e-10)
   expect_identical(r5, fx$r5)
   expect_null(r1$params$actor)

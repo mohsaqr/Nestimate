@@ -236,6 +236,13 @@ mosaic_test.data.frame <- function(x, var1, var2, actor,
 #' @noRd
 .mosaic_test_run <- function(counts, levels, predictor, method, level,
                              var_names) {
+  .assert(
+    "`counts` must be a numeric array of three dimensions" =
+      is.array(counts) && is.numeric(counts) && length(dim(counts)) == 3L,
+    "`counts` must hold finite, non-negative whole numbers" =
+      all(is.finite(counts)) && all(counts >= 0) &&
+      all(abs(counts - round(counts)) <= 1e-8)
+  )
   .assert("`method` must name tests from mosaic_test()'s list" =
             is.character(method) && length(method) >= 1L &&
             all(method %in% .mosaic_test_methods) && !anyDuplicated(method))

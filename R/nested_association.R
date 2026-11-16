@@ -424,12 +424,8 @@
 # Wald X2 tests the (R - 1)(C - 1) interaction terms. Fitted with nAGQ = 0
 # (fixed effects from the penalised IRLS step): the default two-stage fit
 # failed to converge in 268 s on 200 teams x 81 cells, nAGQ = 0 took 3 s.
-# Residuals come from the independence model (same random effects, no
-# interaction): sum_k (n_ijk - mu_ijk) / sqrt(sum_k mu_ijk), the Pearson
-# residual given each cluster's own row and column effects. Per-cell
-# interaction z-values are not used: one empty cell sends its effect to
-# -Inf with a huge standard error, and under sum-to-zero coding that error
-# enters every cell's contrast (all |z| < 0.6 at a Wald X2 of 9410).
+# Residuals use pooled independence contrasts and a model-free sandwich
+# variance, clustering influences at the outermost actor level.
 #' @noRd
 .nest_glmm <- function(n, levels) {
   if (!requireNamespace("lme4", quietly = TRUE)) {
@@ -493,7 +489,13 @@
   psi <- matrix(e, R * C, K) -
     (rep(ni, times = C) / N) * g[rep(seq_len(C), each = R), , drop = FALSE]
   num <- rowSums(matrix(e, R * C, K))
-  v <- rowSums((psi - rowMeans(psi))^2) * K / (K - 1)
+  # Inner actors in the same outer unit are dependent. Sum their influences
+  # before squaring, preserving the cross-products within each outer unit.
+  outer_psi <- t(rowsum(t(psi), as.character(levels[[1L]]), reorder = FALSE))
+  n_outer <- ncol(outer_psi)
+  v <- if (n_outer > 1L) {
+    rowSums((outer_psi - rowMeans(outer_psi))^2) * n_outer / (n_outer - 1)
+  } else rep(NA_real_, R * C)
   list(residuals = matrix(.nest_safe_div(num, sqrt(v)), R, C),
        statistic = wald, df = df,
        p_value = stats::pchisq(wald, df, lower.tail = FALSE))
