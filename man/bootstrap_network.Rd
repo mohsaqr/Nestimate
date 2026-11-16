@@ -40,7 +40,9 @@ bootstrap_network(
 from \code{\link[=build_network]{build_network()}}), or a \code{cograph_network}, which is converted
 first. A \code{netobject_group} or \code{mcml} bootstraps every network it holds
 (for an \code{mcml}, the macro network and each cluster's), and a
-\code{wtna_mixed} bootstraps both of its components (see \emph{Value}). A
+\code{wtna_mixed} bootstraps both of its components (see \emph{Value}).
+A \code{tna} model or a \code{group_tna} (package tna) is first rebuilt as a network from its own sequences (see \code{\link[=as_netobject]{as_netobject()}}). \code{actor} is read from the metadata the model keeps (\code{attr(model$data, "meta")}, kept when the model is built from \code{tna::prepare_data()}); a model without it raises \code{nestimate_actor_missing}.
+A
 network without its data raises an error, and one that rests on a
 single sequence, or one-hot data with no actor or session, has nothing
 to resample and raises an error of class \code{nestimate_single_sequence}.

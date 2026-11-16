@@ -26,7 +26,8 @@ build_hypergraph(
 cliques are found again up to \code{max_size}), or a numeric or logical adjacency or weight
 matrix (nodes are named \code{V1}, \code{V2}, ... when it has no row names). A
 tie counts in either direction, so a directed network is symmetrised,
-and self-loops are ignored.}
+and self-loops are ignored.
+A \code{tna} model (package tna) is first rebuilt as a network from its own sequences (see \code{\link[=as_netobject]{as_netobject()}}).}
 
 \item{p}{The probability that each clique of 3 or more nodes becomes a
 hyperedge, a number in \verb{[0, 1]}; each clique is kept or dropped

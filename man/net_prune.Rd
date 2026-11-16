@@ -48,7 +48,9 @@ net_prune(
 )
 }
 \arguments{
-\item{x}{The network: a \code{netobject} or a \code{netobject_group}. Another class
+\item{x}{The network: a \code{netobject} or a \code{netobject_group}.
+A \code{tna} model or a \code{group_tna} (package tna) is first rebuilt as a network from its own sequences (see \code{\link[=as_netobject]{as_netobject()}}).
+Another class
 raises an error. A network whose pruning is active raises an error of
 class \code{nestimate_bad_input}; after \code{\link[=net_deprune]{net_deprune()}} it can be pruned
 again with other settings, which replaces its pruning record.}

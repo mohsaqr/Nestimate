@@ -38,7 +38,9 @@ permutation(
 \arguments{
 \item{x}{The first network: a \code{netobject} from \code{\link[=build_network]{build_network()}} (a bare
 \code{cograph_network} is converted to one), a \code{netobject_group} or \code{mcml},
-a \code{wtna_mixed}, or a \code{\link[=net_edge_betweenness]{net_edge_betweenness()}} result. For the \code{print()}
+a \code{wtna_mixed}, or a \code{\link[=net_edge_betweenness]{net_edge_betweenness()}} result.
+A \code{tna} model or a \code{group_tna} (package tna) is first rebuilt as a network from its own sequences (see \code{\link[=as_netobject]{as_netobject()}}). \code{actor} is read from the metadata the model keeps (\code{attr(model$data, "meta")}, kept when the model is built from \code{tna::prepare_data()}); a model without it raises \code{nestimate_actor_missing}.
+For the \code{print()}
 methods: a \code{net_permutation}, \code{net_permutation_group} or
 \code{wtna_perm_mixed}.}
 

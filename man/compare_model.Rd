@@ -64,7 +64,9 @@ compare_model(x, ...)
 \arguments{
 \item{x}{The first network: a \code{netobject}, a \code{cograph_network} or a
 numeric square matrix, or a \code{netobject_group} whose members \code{i} and \code{j}
-are compared. For the \code{print()} and \code{plot()} methods: a
+are compared.
+A \code{tna} model or a \code{group_tna} (package tna) is first rebuilt as a network from its own sequences (see \code{\link[=as_netobject]{as_netobject()}}).
+For the \code{print()} and \code{plot()} methods: a
 \code{net_comparison} object.}
 
 \item{...}{Not used.}

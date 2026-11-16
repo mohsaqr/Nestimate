@@ -40,7 +40,8 @@ columns holding only 0 and 1, raises an error of class
 \code{\link[=build_network]{build_network()}} (\code{state_cols}, or \code{action} for an event log) and the
 network passed instead. A one-hot or association network raises the
 same error. Sequences are split at missing values: no window spans an
-\code{NA}, and pieces with fewer than two states are dropped.}
+\code{NA}, and pieces with fewer than two states are dropped.
+A \code{tna} model (package tna) or a bare \code{cograph_network} gives the sequences it carries, and a \code{group_tna} one result per group.}
 
 \item{max_order}{The highest order to test, at least 1. Default \code{3}. It
 is lowered, with a message, to one less than the length of the longest

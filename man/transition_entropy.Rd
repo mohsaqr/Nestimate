@@ -36,7 +36,9 @@ relative transition network is built; other columns are set aside with
 a message. For a frame without such a run, build the network with
 \code{\link[=build_network]{build_network()}} (\verb{state_cols =} or \verb{action =}) and pass that. A \code{netobject_group} gives one result per group. An association
 network (\code{cor}, \code{pcor}, \code{glasso}, \code{ising}, \code{mgm}) or a matrix with
-negative entries raises an error of class \code{nestimate_not_markov}. For the
+negative entries raises an error of class \code{nestimate_not_markov}.
+A \code{group_tna} (package tna) gives one result per group, as a \code{netobject_group} does.
+For the
 \code{print()} and \code{plot()} methods: a \code{transition_entropy()} result;
 \code{print()} also takes a group result or the result of \code{summary()}.}
 

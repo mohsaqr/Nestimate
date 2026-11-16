@@ -28,7 +28,9 @@ named by group; an \code{mcml} is converted with
 \code{\link[=as_tna]{as_tna()}} first, and a bare \code{cograph_network}
 is read as a \code{netobject}. Each network is named by its argument name
 or, failing that, its method; repeated names get a suffix (\code{"_1"},
-\code{"_2"}, ...). A network without its sequence data (which
+\code{"_2"}, ...).
+A \code{tna} model or a \code{group_tna} (package tna) is first rebuilt as a network from its own sequences (see \code{\link[=as_netobject]{as_netobject()}}).
+A network without its sequence data (which
 \code{\link[=build_network]{build_network()}} keeps) raises an error, a
 network resting on one sequence an error of class
 \code{nestimate_single_sequence}, and networks of different methods with

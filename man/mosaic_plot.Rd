@@ -132,7 +132,8 @@ mosaic_plot(x, ...)
 \item{x}{The object to draw: a \code{netobject}, \code{netobject_group}, \code{mcml} or
 \code{htna} network, a contingency \code{table} (two-way, or three-way with the
 clusters as the third dimension), a numeric count \code{matrix}, or a
-data frame in long form (see \code{x_var}, \code{y_var} and \code{weight}).}
+data frame in long form (see \code{x_var}, \code{y_var} and \code{weight}).
+A \code{tna} model or a \code{group_tna} (package tna) is first rebuilt as a network from its own sequences (see \code{\link[=as_netobject]{as_netobject()}}).}
 
 \item{...}{With \code{style = "flat"}: styling arguments for the flat mosaic
 of a network, table or matrix; an unknown name raises an error that

@@ -27,7 +27,9 @@ state_distribution(x, ...)
 \arguments{
 \item{x}{A \code{netobject}, \code{netobject_group}, \code{mcml} or \code{htna} network
 built from sequences, or the \code{state_freq} result of
-\code{\link[=plot_state_frequencies]{plot_state_frequencies()}}, whose table is returned as drawn. A network without sequence data raises an error;
+\code{\link[=plot_state_frequencies]{plot_state_frequencies()}}, whose table is returned as drawn.
+A \code{tna} model or a \code{group_tna} (package tna) is first rebuilt as a network from its own sequences (see \code{\link[=as_netobject]{as_netobject()}}).
+A network without sequence data raises an error;
 in a \code{netobject_group} or \code{mcml}, groups without it are left out, and
 an error is raised only when none has any. Other classes raise an
 error.}

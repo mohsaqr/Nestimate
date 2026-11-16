@@ -25,7 +25,9 @@ sequences, whose stored data are read. A data frame needs position
 columns named as a numbered run (\code{T1}, \code{T2}, ...); any other frame, a
 one-hot network and an association network raise an error of class
 \code{nestimate_bad_input}, and a network without its data stops
-\code{path_dependence()}. Paths that touch a missing cell are left out. For
+\code{path_dependence()}. Paths that touch a missing cell are left out.
+A \code{tna} model (package tna) or a bare \code{cograph_network} gives the sequences it carries.
+For
 the \code{print()} methods: a \code{net_path_dependence} object or its
 \code{summary()}; for the \code{plot()} method: a \code{net_path_dependence} object.}
 

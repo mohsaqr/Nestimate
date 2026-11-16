@@ -19,8 +19,9 @@ net_edge_betweenness(x, invert = TRUE, ...)
 \method{plot}{net_edge_betweenness}(x, style = c("bar", "forest", "delta"), top_n = NULL, labels = TRUE, ...)
 }
 \arguments{
-\item{x}{A \code{netobject} or \code{netobject_group}; any other input raises an
-error. For the \code{plot()} method: a \code{net_edge_betweenness} network.}
+\item{x}{A \code{netobject} or \code{netobject_group}. A \code{tna} model or a \code{group_tna}
+(package tna) is first rebuilt as a network from its own sequences (see
+\code{\link[=as_netobject]{as_netobject()}}). Any other input raises an error. For the \code{plot()} method: a \code{net_edge_betweenness} network.}
 
 \item{invert}{Whether to turn weights into distances by \code{1 / weight}
 before finding shortest paths, which suits probability and frequency

@@ -19,13 +19,15 @@ as_netobject(x)
 \method{as_netobject}{default}(x)
 }
 \arguments{
-\item{x}{The network to convert: a \code{psychnet} object, a \code{cograph_network}
-or a \code{netobject}. Any other object raises an error.}
+\item{x}{The network to convert: a \code{psychnet} object, a \code{cograph_network},
+a \code{netobject}, or a \code{tna} model or \code{group_tna} (package tna). Any other
+object raises an error.}
 }
 \value{
 A \code{netobject} (class \code{c("netobject", "cograph_network")}), read by
 the same verbs as one from \code{\link[=build_network]{build_network()}}; \code{\link[=validate_netobject]{validate_netobject()}}
-checks its structure.
+checks its structure. For a \code{group_tna}: a \code{netobject_group}, a named
+list with one such \code{netobject} per group.
 }
 \description{
 \code{as_netobject()} converts a \pkg{psychnets} result (class
@@ -49,6 +51,21 @@ its \code{meta}; without one, a symmetric weight matrix is taken as
 \code{"co_occurrence"} and any other as \code{"relative"}. A missing \code{directed}
 field is read as \code{TRUE}. Numeric state codes in the stored data of a
 converted tna model are decoded to their labels.
+
+For a \code{tna} model (package tna), the network is rebuilt with
+\code{\link[=build_network]{build_network()}} from the sequences the model carries, with the method
+and the parameters stored in its attributes (\code{type}, \code{params}), and used
+only when the rebuilt weights equal the model's own. It then behaves as
+any network built from those sequences, in the resampling verbs too. A
+model that cannot be reproduced that way (scaled weights, no sequence
+data, or a type or parameter \code{\link[=build_network]{build_network()}} does not reproduce)
+becomes a network of its weights without sequence data: verbs that only
+read weights accept it, and verbs that resample or read sequences raise
+an error of class \code{nestimate_tna_unrebuilt} that names the reason. A
+\code{group_tna} gives a \code{netobject_group}, one network per group, named as
+the groups are. The covariates the model keeps become the network's metadata: \code{actor} is read from the metadata the model keeps (\code{attr(model$data, "meta")}, kept when the model is built from \code{tna::prepare_data()}); a model without it raises \code{nestimate_actor_missing}. Every verb
+that takes a network applies this conversion itself, so calling
+\code{as_netobject()} first is not needed.
 }
 \note{
 The \pkg{idiographic} package exports a function with the same

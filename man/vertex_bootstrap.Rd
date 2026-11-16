@@ -27,7 +27,9 @@ vertex_bootstrap(
 \arguments{
 \item{x}{The network: a \code{netobject} (from \code{\link[=build_network]{build_network()}} or any
 builder), a \code{cograph_network}, or a square numeric weight matrix, with
-at least 3 nodes. Other input raises an error. For the \code{print()} and
+at least 3 nodes.
+A \code{tna} model (package tna) is first rebuilt as a network from its own sequences (see \code{\link[=as_netobject]{as_netobject()}}).
+Other input raises an error. For the \code{print()} and
 \code{plot()} methods: a \code{net_vertex_bootstrap} result.}
 
 \item{iter}{The number of bootstrap replicates, at least 2. Default

@@ -86,7 +86,8 @@ stacked and labelled by group.}
 stores none, those of its first component model), with the hard
 assignments as groups.}
 \item{tna}{A \code{tna} model; its integer-coded sequences are decoded to
-their state labels.}
+their state labels. A \code{group_tna} is drawn as the group of networks
+it converts to (see \code{\link[=as_netobject]{as_netobject()}}), one panel per group.}
 \item{mcml}{From \code{\link[=build_mcml]{build_mcml()}}, built from sequences (an \code{mcml}
 built from a matrix carries none and raises an error). It gives
 the multichannel figure: one panel per cluster plus a macro

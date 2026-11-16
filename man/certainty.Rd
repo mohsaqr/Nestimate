@@ -23,6 +23,7 @@ certainty(
 own. A bare \code{cograph_network} is recounted from the sequences it
 carries, and used only when they reproduce its weights; otherwise, and
 for an \code{mcml}, an error of class \code{nestimate_bad_input} is raised.
+A \code{tna} model or a \code{group_tna} (package tna) is first rebuilt as a network from its own sequences (see \code{\link[=as_netobject]{as_netobject()}}).
 Another method or a scaled network raises an error.
 For the \code{print()} method: a \code{net_certainty} object.}
 

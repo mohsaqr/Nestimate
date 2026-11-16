@@ -22,8 +22,9 @@ state_colors(x, ...)
 \method{state_colors}{netobject_group}(x, ...)
 }
 \arguments{
-\item{x}{A \code{netobject}, \code{netobject_group}, \code{mcml} or \code{htna}; any other
-object raises an error.}
+\item{x}{A \code{netobject}, \code{netobject_group}, \code{mcml} or \code{htna}. A \code{tna} model
+or a \code{group_tna} (package tna) is first rebuilt as a network from its own
+sequences (see \code{\link[=as_netobject]{as_netobject()}}). Any other object raises an error.}
 
 \item{...}{Not used.}
 }

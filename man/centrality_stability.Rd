@@ -38,7 +38,9 @@ centrality_stability(
 \arguments{
 \item{x}{The network: a \code{netobject} from \code{\link[=build_network]{build_network()}}, a bare
 \code{cograph_network} (converted to one), or a \code{netobject_group} or \code{mcml},
-each of whose networks is assessed. Any other object, or a network
+each of whose networks is assessed.
+A \code{tna} model or a \code{group_tna} (package tna) is first rebuilt as a network from its own sequences (see \code{\link[=as_netobject]{as_netobject()}}).
+Any other object, or a network
 built without its data, raises an error. For the \code{print()} methods: a
 \code{net_stability} or \code{net_stability_group}; for the \code{plot()} method: a
 \code{net_stability}.}

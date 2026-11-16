@@ -18,7 +18,9 @@ extract_sequences(
 \item{x}{The sequence data: a \code{nestimate_data} object from \code{\link[=prepare]{prepare()}};
 a long event log (set \code{action}); a wide data frame or character
 matrix; or a \code{netobject}, \code{netobject_group}, \code{cograph_network} or \code{tna}
-model built from sequence data. A network estimated with an
+model built from sequence data.
+A \code{group_tna} (package tna) is read as the group of networks it converts to (see \code{\link[=as_netobject]{as_netobject()}}).
+A network estimated with an
 association method (\code{cor}, \code{pcor}, \code{glasso}, \code{ising}, \code{mgm}) or from
 one-hot codes, a network built from a matrix (it holds no sequences),
 and any other input raise an error of class \code{nestimate_bad_input}.}

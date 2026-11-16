@@ -22,7 +22,8 @@ whose layers hold different states, raises an error of class
 the transition methods
 \code{"relative"}, \code{"frequency"} and \code{"co_occurrence"} are supported; any
 other method, association networks and \code{wtna} among them, raises an
-error of class \code{nestimate_actor_unsupported}.}
+error of class \code{nestimate_actor_unsupported}.
+For a \code{tna} model or \code{group_tna} (package tna), \code{actor} is read from the metadata the model keeps (\code{attr(model$data, "meta")}, kept when the model is built from \code{tna::prepare_data()}); a model without it raises \code{nestimate_actor_missing}.}
 
 \item{y}{The \code{netobject} to compare with when \code{x} is a \code{netobject}.
 Default \code{NULL}, as it must stay when \code{x} is a group.}

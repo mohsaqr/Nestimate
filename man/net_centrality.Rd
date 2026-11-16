@@ -44,7 +44,9 @@ net_centrality(
 }
 \arguments{
 \item{x}{The network: a \code{netobject}, \code{netobject_group}, \code{mcml} or
-\code{cograph_network}. For the \code{plot()} methods: the result of
+\code{cograph_network}.
+A \code{tna} model or a \code{group_tna} (package tna) is first rebuilt as a network from its own sequences (see \code{\link[=as_netobject]{as_netobject()}}).
+For the \code{plot()} methods: the result of
 \code{net_centrality()}.}
 
 \item{measures}{The measures to compute. The default is \code{"InStrength"},

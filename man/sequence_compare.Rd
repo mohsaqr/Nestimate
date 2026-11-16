@@ -43,7 +43,9 @@ column raises an error of class \code{nestimate_bad_input}); or a character
 matrix with one row per sequence and one column per position, whatever
 its column names. A numeric or logical matrix of only 0 and 1, and
 one-hot or association networks, raise \code{nestimate_bad_input}. Every
-input except a \code{netobject_group} needs \code{group}. For the \code{print()} and
+input except a \code{netobject_group} needs \code{group}.
+A \code{group_tna} (package tna) is read as the group of networks it converts to (see \code{\link[=as_netobject]{as_netobject()}}). \code{actor} is read from the metadata the model keeps (\code{attr(model$data, "meta")}, kept when the model is built from \code{tna::prepare_data()}); a model without it raises \code{nestimate_actor_missing}.
+For the \code{print()} and
 \code{plot()} methods: a \code{net_sequence_comparison}.}
 
 \item{group}{The group of each sequence: the name of a column of a data

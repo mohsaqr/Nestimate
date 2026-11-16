@@ -38,7 +38,9 @@ estimated with \code{"relative"} or \code{"frequency"} or one of their aliases, 
 only when they reproduce its weights; otherwise, and for an \code{mcml}, an
 error of class \code{nestimate_bad_input} is raised. Both networks must use
 the same method and hold the same nodes; any other method raises an
-error, because the model needs transition counts. For the \code{print()} and \code{plot()} methods:
+error, because the model needs transition counts.
+A \code{tna} model or a \code{group_tna} (package tna) is first rebuilt as a network from its own sequences (see \code{\link[=as_netobject]{as_netobject()}}).
+For the \code{print()} and \code{plot()} methods:
 a \code{net_bayes}, or for \code{print()} a \code{net_bayes_group}.}
 
 \item{y}{The second network, of the same kind as \code{x}. Default \code{NULL}:

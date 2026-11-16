@@ -11,7 +11,9 @@ subtract_networks(x, y)
 }
 \arguments{
 \item{x, y}{The two networks: \code{netobject}s, \code{cograph_network}s or square
-numeric matrices. They must have the same number of nodes, with the
+numeric matrices.
+A \code{tna} model (package tna) is first rebuilt as a network from its own sequences (see \code{\link[=as_netobject]{as_netobject()}}).
+They must have the same number of nodes, with the
 same labels in the same order, or an error is raised; any other kind of
 object raises an error too. A matrix without dimnames is labelled \code{V1},
 \code{V2}, ..., so it matches only a network with those labels. The

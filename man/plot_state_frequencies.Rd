@@ -104,7 +104,9 @@ plot_state_frequencies(x, ...)
 }
 \arguments{
 \item{x}{The object to count: a \code{netobject}, \code{netobject_group}, \code{mcml}
-or \code{htna} network built from sequences. A network without sequence
+or \code{htna} network built from sequences.
+A \code{tna} model or a \code{group_tna} (package tna) is first rebuilt as a network from its own sequences (see \code{\link[=as_netobject]{as_netobject()}}).
+A network without sequence
 data raises an error; in a \code{netobject_group} or \code{mcml}, groups without
 it are left out. For the \code{print()} and \code{plot()}
 methods of the result: the \code{state_freq} object;

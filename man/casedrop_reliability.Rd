@@ -44,7 +44,9 @@ casedrop_reliability(
 \arguments{
 \item{x}{The network: a \code{netobject} or \code{cograph_network} that carries its
 data, or a \code{netobject_group} or \code{mcml}, whose networks (for an \code{mcml},
-the macro network and each cluster's) are assessed one by one. A
+the macro network and each cluster's) are assessed one by one.
+A \code{tna} model or a \code{group_tna} (package tna) is first rebuilt as a network from its own sequences (see \code{\link[=as_netobject]{as_netobject()}}).
+A
 network without data raises an error, and one that rests on a single
 sequence, or one-hot data with no actor or session, has no cases to
 drop and raises an error of class \code{nestimate_single_sequence}. For the

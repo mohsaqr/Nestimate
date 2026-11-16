@@ -62,7 +62,8 @@ mosaic_test(x, ...)
 \item{x}{A \code{netobject} or \code{htna} network (relative, frequency or
 co-occurrence, with its sequences), a \code{netobject_group}, a three-way
 \code{table} or array (rows x columns x actors), or a data frame (with \code{var1},
-\code{var2} and \code{actor}).}
+\code{var2} and \code{actor}).
+A \code{tna} model or a \code{group_tna} (package tna) is first rebuilt as a network from its own sequences (see \code{\link[=as_netobject]{as_netobject()}}). \code{actor} is read from the metadata the model keeps (\code{attr(model$data, "meta")}, kept when the model is built from \code{tna::prepare_data()}); a model without it raises \code{nestimate_actor_missing}.}
 
 \item{...}{Not used; a name given here raises an error of class
 \code{nestimate_bad_input}.}
