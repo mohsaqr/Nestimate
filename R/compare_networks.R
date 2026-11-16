@@ -90,8 +90,10 @@
 #'   difference scale, for the Bayesian test. It adds `bayes_p_rope` and a
 #'   `bayes_decision` of `"different"`, `"equivalent"` or `"undecided"` to
 #'   the edge table. Default `NULL` (none).
-#' @param seed An integer that makes the tests reproducible. Pair `i` uses
-#'   `seed + i`, so each pair's result does not depend on the others.
+#' @param seed An integer that makes the tests reproducible. It is passed
+#'   unchanged to the test of every pair, so `test = "permutation"` gives
+#'   the p-values of [permutation()] called with the same `seed`, and
+#'   likewise for [bayes_compare()] and [vertex_compare()].
 #'   Default `NULL`.
 #' @param actor The column identifying the actor each sequence belongs to
 #'   (such as `"student_id"` when sessions are nested in students, or
@@ -174,6 +176,8 @@
 #'   `network`, `metric`, `value`;
 #' * `differences`: one `netdifference` object per pair (from
 #'   [subtract_networks()]);
+#' * `permutations`: with `test = "permutation"`, the [permutation()] result
+#'   of each pair, named by pair;
 #' * the settings `scaling`, `reference`, `measures`, `test`, `iter`,
 #'   `alpha`, `adjust`, `paired`, `rope` and `actor`, with `directed` (one
 #'   logical per network), `n_networks` and `n_pairs`.
@@ -304,8 +308,8 @@ compare_networks <- function(...,
 
   pairs <- .cn_pairs(net_names, reference)
   pair_rows <- split(pairs, seq_len(nrow(pairs)))
-  seeds <- if (is.null(seed)) rep(list(NULL), nrow(pairs)) else
-    as.list(seed + seq_len(nrow(pairs)))
+  # every pair gets `seed` itself, as permutation() does for its own pairs
+  seeds <- rep(list(seed), nrow(pairs))
 
   if (length(test) > 0L) {
     .cn_check_test_support(nets, pairs, test)
@@ -792,6 +796,8 @@ compare_networks <- function(...,
       data.frame(perm_effect = .cn_cells(r$effect_size, node_labels, keep),
                  perm_p = .cn_cells(r$p_values, node_labels, keep))
     }, pair_rows, runs))
+    result$permutations <- stats::setNames(
+      runs, vapply(pair_rows, function(pr) pr$pair, character(1L)))
     edges$perm_effect <- edge_add$perm_effect
     edges$perm_p <- edge_add$perm_p
     edges$perm_sig <- edges$perm_p < alpha

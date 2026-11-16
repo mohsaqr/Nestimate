@@ -12,7 +12,7 @@ test_that("actor is passed to permutation() and reported as Nesting rows", {
   nets <- .cn_actor_nets()
   cmp <- compare_networks(nets, test = "permutation", iter = 99L, seed = 1,
                           actor = "Group")
-  ref <- permutation(nets[[1]], nets[[2]], iter = 99L, seed = 2,
+  ref <- permutation(nets[[1]], nets[[2]], iter = 99L, seed = 1,
                      actor = "Group")
   g <- global_differences(cmp, digits = 10)
   nesting <- g[g$category == "Nesting", ]

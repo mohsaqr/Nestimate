@@ -115,8 +115,10 @@ difference scale, for the Bayesian test. It adds \code{bayes_p_rope} and a
 \code{bayes_decision} of \code{"different"}, \code{"equivalent"} or \code{"undecided"} to
 the edge table. Default \code{NULL} (none).}
 
-\item{seed}{An integer that makes the tests reproducible. Pair \code{i} uses
-\code{seed + i}, so each pair's result does not depend on the others.
+\item{seed}{An integer that makes the tests reproducible. It is passed
+unchanged to the test of every pair, so \code{test = "permutation"} gives
+the p-values of \code{\link[=permutation]{permutation()}} called with the same \code{seed}, and
+likewise for \code{\link[=bayes_compare]{bayes_compare()}} and \code{\link[=vertex_compare]{vertex_compare()}}.
 Default \code{NULL}.}
 
 \item{actor}{The column identifying the actor each sequence belongs to
@@ -145,7 +147,9 @@ in printed values. Default \code{2}.}
 
 \item{type}{For the \code{plot()} method: the view to draw, one per call.
 \code{"networks"} (default) draws each network once with \code{cograph::splot()};
-\code{"difference"} draws the signed difference network of each pair;
+\code{"difference"} draws the signed difference network of each pair; with
+\code{test = "permutation"} it is the graph of that pair's \code{\link[=permutation]{permutation()}}
+result (significant differences, starred);
 \code{"edges"} is a ranked dumbbell of the largest edge differences, and
 \code{"nodes"} the same for the centralities; \code{"global"} shows the 22
 comparison metrics as points, plus the inference rows with their
@@ -214,6 +218,8 @@ categories, and the inference rows): \code{pair}, \code{network_a}, \code{networ
 \code{network}, \code{metric}, \code{value};
 \item \code{differences}: one \code{netdifference} object per pair (from
 \code{\link[=subtract_networks]{subtract_networks()}});
+\item \code{permutations}: with \code{test = "permutation"}, the \code{\link[=permutation]{permutation()}} result
+of each pair, named by pair;
 \item the settings \code{scaling}, \code{reference}, \code{measures}, \code{test}, \code{iter},
 \code{alpha}, \code{adjust}, \code{paired}, \code{rope} and \code{actor}, with \code{directed} (one
 logical per network), \code{n_networks} and \code{n_pairs}.
@@ -324,7 +330,8 @@ plotted quantity is always \code{diff = a - b}. Colour never carries the sign
 alone: a solid line and a circular marker repeat "\code{a} higher", a dashed
 line and a square marker repeat "\code{b} higher", and the printed value
 carries its sign. When \code{test} was run, evidence is shown by opacity and a
-starred (edge and node views) or annotated (inference view) label: a
+starred (edge and node views; \verb{**} for p below 0.01, \verb{***} below 0.001,
+as on the graph of \code{\link[=permutation]{permutation()}}) or annotated (inference view) label: a
 non-significant difference is faded, never deleted.
 }
 

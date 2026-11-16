@@ -358,8 +358,8 @@ test_that("permutation backend: columns, equivalence with permutation(), M/S", {
   expect_true(all(ci$edges$perm_p > 0 & ci$edges$perm_p <= 1))
   expect_equal(ci$edges$sig, ci$edges$perm_p < 0.05)
   expect_equal(unique(ci$edges$evidence), "permutation")
-  # pair 1 uses seed + 1
-  direct <- permutation(f$early, f$late, iter = 60, seed = 11,
+  # every pair uses `seed` itself
+  direct <- permutation(f$early, f$late, iter = 60, seed = 10,
                         measures = c("InStrength", "OutStrength", "Betweenness"))
   expect_equal(ci$edges$perm_p, as.vector(t(direct$p_values)), tolerance = 1e-12)
   expect_equal(ci$edges$perm_effect, as.vector(t(direct$effect_size)),
@@ -396,7 +396,7 @@ test_that("Bayesian backend: CI brackets the posterior difference, ROPE decision
   expect_true(all(levels(e$bayes_decision) == c("different", "equivalent", "undecided")))
   expect_equal(e$sig, e$bayes_sig)
   expect_equal(unique(e$evidence), "bayes")
-  direct <- bayes_compare(f$early, f$late, draws = 400, ci = 0.95, seed = 6)
+  direct <- bayes_compare(f$early, f$late, draws = 400, ci = 0.95, seed = 5)
   expect_equal(e$bayes_ci_lower, as.vector(t(direct$ci_lower)), tolerance = 1e-12)
   expect_equal(e$bayes_pd, as.vector(t(direct$p_difference)), tolerance = 1e-12)
 })
@@ -416,7 +416,7 @@ test_that("bootstrap backend appends structural rows with CIs", {
   expect_true(all(boot$boot_ci_upper >= boot$value - 1e-8))
   expect_true(all(is.na(g$boot_p[g$category != "Structure (bootstrap)"])))
   direct <- vertex_compare(f$early, f$late, iter = 50, ci_level = 0.05,
-                           seed = 3, labels = c("early", "late"))
+                           seed = 2, labels = c("early", "late"))
   expect_equal(boot$value, direct$summary$diff, tolerance = 1e-12)
 })
 
@@ -648,4 +648,70 @@ test_that("inference and global views encode magnitude as a bar, not a bare dot"
                                 "Dissimilarities")),
                c(1, 1, 1, 0, 0))
   expect_silent(ggplot2::ggplot_build(plot(cmp, type = "global")))
+})
+
+# test = "permutation" is permutation(): same seed, same result -------------
+test_that("test = 'permutation' reproduces permutation() with the same seed", {
+  nets <- build_network(group_regulation_long, method = "relative",
+                        actor = "Actor", action = "Action", time = "Time",
+                        group = "Course")
+  cmp <- compare_networks(nets, test = "permutation", iter = 40, seed = 4,
+                          adjust = "fdr")
+  direct <- permutation(nets, iter = 40, seed = 4, adjust = "fdr",
+                        measures = c("InStrength", "OutStrength", "Betweenness"))
+  expect_identical(names(cmp$permutations), names(direct))
+  expect_identical(lapply(cmp$permutations, `[[`, "p_values"),
+                   lapply(unclass(direct), `[[`, "p_values"))
+  expect_identical(lapply(cmp$permutations, `[[`, "diff_sig"),
+                   lapply(unclass(direct), `[[`, "diff_sig"))
+  # the edge table carries those p-values, pair by pair
+  expect_identical(cmp$edges$perm_p,
+                   unlist(lapply(unclass(direct),
+                                 function(r) as.vector(t(r$p_values))),
+                          use.names = FALSE))
+  # the same count of significant edges as the raw test
+  expect_identical(sum(cmp$edges$sig),
+                   sum(vapply(unclass(direct),
+                              function(r) sum(r$p_values < r$alpha),
+                              integer(1L))))
+  expect_null(compare_networks(nets)$permutations)
+})
+
+test_that("the difference view draws the pair's permutation result", {
+  skip_on_cran()
+  skip_if_not_installed("cograph")
+  nets <- build_network(group_regulation_long, method = "relative",
+                        actor = "Actor", action = "Action", time = "Time",
+                        group = "Achiever")
+  cmp <- compare_networks(nets, test = "permutation", iter = 40, seed = 1)
+  drawn <- NULL
+  local_mocked_bindings(
+    splot = function(x, ...) { drawn <<- x; invisible(NULL) },
+    .package = "cograph")
+  pdf(NULL); on.exit(dev.off(), add = TRUE)
+  plot(cmp, type = "difference")
+  expect_s3_class(drawn, "net_permutation")
+  expect_identical(drawn$p_values, cmp$permutations[[1L]]$p_values)
+})
+
+test_that("starred labels are graded by p-value, as on the permutation graph", {
+  d <- data.frame(sig = c(TRUE, TRUE, TRUE, FALSE, NA, TRUE),
+                  perm_p = c(0.0005, 0.005, 0.03, 0.2, NA, 0.08))
+  # the last row: significant at a looser alpha, so one star
+  expect_identical(.cn_stars(d), c("***", "**", "*", "", "", "*"))
+  names(d)[2L] <- "bayes_p"
+  expect_identical(.cn_stars(d), c("***", "**", "*", "", "", "*"))
+
+  skip_on_cran()
+  nets <- build_network(group_regulation_long, method = "relative",
+                        actor = "Actor", action = "Action", time = "Time",
+                        group = "Achiever")
+  cmp <- compare_networks(nets, test = "permutation", iter = 200, seed = 1)
+  built <- ggplot2::ggplot_build(plot(cmp, type = "edges", top_n = 81))
+  labels <- unlist(lapply(built$data, `[[`, "label"))
+  stars <- sub("^[^*]*", "", labels[!is.na(labels)])
+  p <- cmp$permutations[[1L]]$p_values
+  expect_identical(sum(stars == "***"), sum(p < 0.001))
+  expect_identical(sum(stars == "**"), sum(p >= 0.001 & p < 0.01))
+  expect_identical(sum(stars == "*"), sum(p >= 0.01 & p < 0.05))
 })

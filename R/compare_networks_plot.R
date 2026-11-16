@@ -103,6 +103,17 @@
 
 .cn_has_evidence <- function(d) "sig" %in% names(d) && !all(is.na(d$sig))
 
+# Stars of the significant rows, graded as on the permutation graph
+# (cograph: *** p < 0.001, ** p < 0.01, otherwise *). A row that is not
+# significant at the comparison's alpha gets none.
+.cn_stars <- function(d) {
+  p <- if ("perm_p" %in% names(d)) d$perm_p else
+    if ("bayes_p" %in% names(d)) d$bayes_p else rep(NA_real_, nrow(d))
+  stars <- ifelse(!is.na(p) & p < 0.001, "***",
+                  ifelse(!is.na(p) & p < 0.01, "**", "*"))
+  ifelse(!is.na(d$sig) & d$sig, stars, "")
+}
+
 .cn_evidence_caption <- function(x) {
   if (identical(x$test, "none")) return(NULL)
   sprintf("Evidence: %s, iter = %d, alpha = %s%s. Non-significant results are faded, never removed.",
@@ -120,7 +131,9 @@
 #' @rdname compare_networks
 #' @param type For the `plot()` method: the view to draw, one per call.
 #'   `"networks"` (default) draws each network once with `cograph::splot()`;
-#'   `"difference"` draws the signed difference network of each pair;
+#'   `"difference"` draws the signed difference network of each pair; with
+#'   `test = "permutation"` it is the graph of that pair's [permutation()]
+#'   result (significant differences, starred);
 #'   `"edges"` is a ranked dumbbell of the largest edge differences, and
 #'   `"nodes"` the same for the centralities; `"global"` shows the 22
 #'   comparison metrics as points, plus the inference rows with their
@@ -172,7 +185,8 @@
 #' alone: a solid line and a circular marker repeat "`a` higher", a dashed
 #' line and a square marker repeat "`b` higher", and the printed value
 #' carries its sign. When `test` was run, evidence is shown by opacity and a
-#' starred (edge and node views) or annotated (inference view) label: a
+#' starred (edge and node views; `**` for p below 0.01, `***` below 0.001,
+#' as on the graph of [permutation()]) or annotated (inference view) label: a
 #' non-significant difference is faded, never deleted.
 #' @export
 plot.net_network_comparison <- function(x,
@@ -268,7 +282,8 @@ plot.net_network_comparison <- function(x,
     ggplot2::labs(x = x_label, y = NULL, title = title,
                   subtitle = if (evidence && labels) {
                     paste0(subtitle, if (is.null(subtitle)) "" else "; ",
-                           "a starred value is significant")
+                           "starred values are significant ",
+                           "(** p < 0.01, *** p < 0.001)")
                   } else subtitle,
                   caption = .cn_evidence_caption(x)) +
     .cn_theme()
@@ -283,7 +298,7 @@ plot.net_network_comparison <- function(x,
   }
   if (labels) {
     d$lab <- paste0(.cn_fmt(d$diff, digits, signed = TRUE),
-                    if (evidence) ifelse(!is.na(d$sig) & d$sig, "*", "") else "")
+                    if (evidence) .cn_stars(d) else "")
     p <- p + ggplot2::geom_text(
       data = d,
       ggplot2::aes(x = pmax(.data$weight_a, .data$weight_b),
@@ -716,7 +731,10 @@ plot.net_network_comparison <- function(x,
   pr <- x$pairs[x$pairs$pair == pr_name, ]
   ttl <- sprintf("%s - %s", pr$network_a, pr$network_b)
   if (requireNamespace("cograph", quietly = TRUE)) {
-    cograph::splot(x$differences[[pr_name]], title = ttl,
+    # With a permutation test, draw the stored permutation() result itself,
+    # so this graph and splot(permutation(a, b)) cannot disagree.
+    cograph::splot(x$permutations[[pr_name]] %||% x$differences[[pr_name]],
+                   title = ttl,
                    edge_positive_color = .cn_col_a,
                    edge_negative_color = .cn_col_b, ...)
   } else {

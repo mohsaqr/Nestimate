@@ -72,8 +72,10 @@ test_that("actor = NULL and one actor column reproduce the frozen outputs", {
     strip_boot(bootstrap_network(net[[1]], iter = 50, seed = 4,
                                  actor = "Group")),
     ref$boot_group, tolerance = 1e-10)
+  # The fixture was written when pair 1 ran with seed + 1 (here 6); the pair
+  # now runs with `seed` itself, as permutation() does.
   expect_equal(
-    unclass(compare_networks(net, test = "permutation", iter = 50, seed = 5,
+    unclass(compare_networks(net, test = "permutation", iter = 50, seed = 6,
                              actor = "Group"))[c("edges", "global")],
     ref$cmp_group, tolerance = 1e-10)
 })
