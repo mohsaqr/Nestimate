@@ -1,3 +1,7 @@
+# Nestimate 1.0.18
+
+* A pruned tna model converts to its full network in every function, `as_netobject()` included, with a warning of class `nestimate_tna_pruned`: Nestimate reads the model's data, which pruning leaves unchanged. In 1.0.17 the functions that read weights only (`as_netobject()`, `net_centrality()`) took the pruned weights.
+
 # Nestimate 1.0.17
 
 * A pruned tna model is resampled from its sequences as the full model, as tna does (pruning hides edges and leaves the data unchanged); it was refused. Functions that read weights only see the pruned weights.
