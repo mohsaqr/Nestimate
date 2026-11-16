@@ -1,3 +1,7 @@
+# Nestimate 1.0.17
+
+* A pruned tna model is resampled from its sequences as the full model, as tna does (pruning hides edges and leaves the data unchanged); it was refused. Functions that read weights only see the pruned weights.
+
 # Nestimate 1.0.16
 
 * `tna` models and `group_tna` objects (package tna) are accepted by every function that takes a network or sequences, through one conversion: the model is rebuilt from its own sequences and used only when the rebuilt weights equal its own. This adds `permutation()`, `permutation_diagnostics()`, `bootstrap_network()`, `bayes_compare()`, `vertex_compare()`, `mosaic_test()`, `mosaic_plot()`, `plot_state_frequencies()`, `state_distribution()`, `centrality_stability()`, `casedrop_reliability()`, `network_reliability()`, `net_centrality()`, `net_prune()`, `subtract_networks()` and others; `sequence_compare()`, `sequence_patterns()`, `sequence_plot()` and `transition_entropy()` now also take a `group_tna`. `as_netobject()` returns the converted network.
