@@ -61,7 +61,9 @@ model that cannot be reproduced that way (scaled weights, no sequence
 data, or a type or parameter \code{\link[=build_network]{build_network()}} does not reproduce)
 becomes a network of its weights without sequence data: verbs that only
 read weights accept it, and verbs that resample or read sequences raise
-an error of class \code{nestimate_tna_unrebuilt} that names the reason. A
+an error of class \code{nestimate_tna_unrebuilt} that names the reason. A pruned
+model keeps its data, so resampling uses the full model, as tna does;
+functions that read weights only see the pruned weights. A
 \code{group_tna} gives a \code{netobject_group}, one network per group, named as
 the groups are. The covariates the model keeps become the network's metadata: \code{actor} is read from the metadata the model keeps (\code{attr(model$data, "meta")}, kept when the model is built from \code{tna::prepare_data()}); a model without it raises \code{nestimate_actor_missing}. Every verb
 that takes a network applies this conversion itself, so calling

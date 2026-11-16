@@ -292,3 +292,25 @@ test_that("models from the tna package give the netobject results", {
   expect_error(bootstrap_network(scaled, iter = 10),
                class = "nestimate_tna_unrebuilt")
 })
+
+test_that("a pruned tna model resamples as the full model; weights stay pruned", {
+  f <- .tna_fixture()
+  full <- .fake_tna(f$wide)
+  pruned <- full
+  pruned$weights[pruned$weights < 0.05] <- 0
+  attr(pruned, "pruning") <- list(weights = pruned$weights,
+                                  original = full$weights, active = TRUE)
+  expect_false(isTRUE(all.equal(pruned$weights, full$weights)))
+  # verbs that resample or read sequences use the model's data
+  expect_equal(bootstrap_network(pruned, iter = 30, seed = 1)$ci_lower,
+               bootstrap_network(full, iter = 30, seed = 1)$ci_lower,
+               tolerance = 1e-12)
+  # verbs that read weights see the model as pruned
+  expect_equal(unname(as_netobject(pruned)$weights), unname(pruned$weights),
+               tolerance = 1e-12)
+  # a pruning record that does not match the sequences is not trusted
+  wrong <- pruned
+  attr(wrong, "pruning")$original[1L, 2L] <- 0.9
+  expect_error(bootstrap_network(wrong, iter = 10),
+               class = "nestimate_tna_unrebuilt")
+})

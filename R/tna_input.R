@@ -71,6 +71,14 @@
   }
   labels <- x$labels %||% rownames(W)
   if (is.null(rownames(W))) dimnames(W) <- list(labels, labels)
+  # Pruning hides edges of the model without touching its data (tna keeps the
+  # full weights in the pruning record and resamples from the sequences), so
+  # a pruned model is checked against its full weights.
+  pruning <- attr(x, "pruning")
+  pruned <- is.list(pruning) && isTRUE(pruning$active) &&
+    is.matrix(pruning$original) && identical(dim(pruning$original), dim(W))
+  W_full <- if (pruned) pruning$original else W
+  if (is.null(rownames(W_full))) dimnames(W_full) <- list(labels, labels)
   type <- attr(x, "type") %||% ""
   method <- if (type %in% types) unname(.tna_types[type]) else NULL
   scaling <- attr(x, "scaling") %||% character(0)
@@ -102,7 +110,7 @@
       reason <- paste0("build_network() could not rebuild it: ", net)
     } else if (!identical(dim(net$weights), dim(W)) ||
                !isTRUE(all.equal(unname(net$weights[labels, labels]),
-                                 unname(W), tolerance = 1e-8))) {
+                                 unname(W_full), tolerance = 1e-8))) {
       reason <- "the weights rebuilt from its sequences differ from its own"
     } else {
       # The covariates tna keeps beside the sequences (one row per sequence:
@@ -112,12 +120,24 @@
           nrow(meta) == nrow(net$data)) {
         net$metadata <- meta
       }
-      return(list(net = net, reason = NULL))
+      # `shown`: the pruned weights, for the verbs that read weights only
+      shown <- if (pruned) {
+        .wrap_netobject(W, method = method, directed = TRUE, inits = x$inits)
+      }
+      return(list(net = net, reason = NULL, shown = shown))
     }
   }
   list(net = .wrap_netobject(W, method = method %||% "tna", directed = TRUE,
                              inits = x$inits),
        reason = reason)
+}
+
+# The network a caller gets from a rebuilt model: the full network with its
+# sequences when it resamples or reads them, the pruned weights when it reads
+# weights only (as the model shows them).
+#' @noRd
+.tna_built_net <- function(built, need_data) {
+  if (!need_data && !is.null(built$shown)) built$shown else built$net
 }
 
 #' @noRd
@@ -141,7 +161,7 @@
   if (need_data && !is.null(built$reason)) {
     .stop_tna_unrebuilt(built$reason, what)
   }
-  built$net
+  .tna_built_net(built, need_data)
 }
 
 # A group_tna as a netobject_group: one network per group, named as the
@@ -162,7 +182,7 @@
     if (need_data && !is.null(built$reason)) {
       .stop_tna_unrebuilt(built$reason, what, member = nm)
     }
-    built$net
+    .tna_built_net(built, need_data)
   }, members, group_names)
   attributes(nets) <- NULL
   names(nets) <- group_names
