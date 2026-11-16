@@ -38,8 +38,8 @@
 #' becomes a network of its weights without sequence data: verbs that only
 #' read weights accept it, and verbs that resample or read sequences raise
 #' an error of class `nestimate_tna_unrebuilt` that names the reason. A pruned
-#' model keeps its data, so resampling uses the full model, as tna does;
-#' functions that read weights only see the pruned weights. A
+#' model keeps its data, and Nestimate reads the data: it converts to the
+#' full network, with a warning of class `nestimate_tna_pruned`. A
 #' `group_tna` gives a `netobject_group`, one network per group, named as
 #' the groups are. The covariates the model keeps become the network's
 #' metadata: `actor` is read from the metadata the model keeps
@@ -101,7 +101,7 @@ as_netobject.cograph_network <- function(x) {
 #' @export
 as_netobject.default <- function(x) {
   # a tna model -> netobject, a group_tna -> netobject_group (R/tna_input.R)
-  if (.is_tna(x) || inherits(x, "group_tna")) return(.tna_input(x))
+  if (.is_tna(x) || inherits(x, "group_tna")) return(.tna_input(x, "as_netobject()"))
   stop(errorCondition(paste0(
     "as_netobject() needs a psychnet, cograph_network, netobject, tna model ",
     "or group_tna; got <",

@@ -72,8 +72,9 @@
   labels <- x$labels %||% rownames(W)
   if (is.null(rownames(W))) dimnames(W) <- list(labels, labels)
   # Pruning hides edges of the model without touching its data (tna keeps the
-  # full weights in the pruning record and resamples from the sequences), so
-  # a pruned model is checked against its full weights.
+  # full weights in the pruning record and resamples from the sequences).
+  # Nestimate reads the data, so a pruned model is checked against its full
+  # weights and converts to the full network.
   pruning <- attr(x, "pruning")
   pruned <- is.list(pruning) && isTRUE(pruning$active) &&
     is.matrix(pruning$original) && identical(dim(pruning$original), dim(W))
@@ -120,24 +121,30 @@
           nrow(meta) == nrow(net$data)) {
         net$metadata <- meta
       }
-      # `shown`: the pruned weights, for the verbs that read weights only
-      shown <- if (pruned) {
-        .wrap_netobject(W, method = method, directed = TRUE, inits = x$inits)
-      }
-      return(list(net = net, reason = NULL, shown = shown))
+      return(list(net = net, reason = NULL, pruned = pruned))
     }
   }
   list(net = .wrap_netobject(W, method = method %||% "tna", directed = TRUE,
                              inits = x$inits),
-       reason = reason)
+       reason = reason, pruned = FALSE)
 }
 
-# The network a caller gets from a rebuilt model: the full network with its
-# sequences when it resamples or reads them, the pruned weights when it reads
-# weights only (as the model shows them).
+# A pruned model converts to its full network: say so, once per call.
 #' @noRd
-.tna_built_net <- function(built, need_data) {
-  if (!need_data && !is.null(built$shown)) built$shown else built$net
+.warn_tna_pruned <- function(what = NULL, members = NULL) {
+  which <- if (is.null(members)) {
+    "the tna model is pruned"
+  } else if (length(members) == 1L) {
+    sprintf("the tna model of group '%s' is pruned", members)
+  } else {
+    sprintf("the tna models of groups %s are pruned",
+            paste0("'", members, "'", collapse = ", "))
+  }
+  warning(warningCondition(sprintf(paste0(
+    "%s: %s. Pruning hides edges and leaves the data unchanged, so the full ",
+    "network, rebuilt from the sequences, is used."),
+    what %||% "Converting a tna model", which),
+    class = "nestimate_tna_pruned", call = NULL))
 }
 
 #' @noRd
@@ -161,7 +168,8 @@
   if (need_data && !is.null(built$reason)) {
     .stop_tna_unrebuilt(built$reason, what)
   }
-  .tna_built_net(built, need_data)
+  if (isTRUE(built$pruned)) .warn_tna_pruned(what)
+  built$net
 }
 
 # A group_tna as a netobject_group: one network per group, named as the
@@ -172,7 +180,7 @@
                                      types = names(.tna_types)) {
   members <- unclass(x)
   group_names <- names(members) %||% paste0("Group ", seq_along(members))
-  nets <- Map(function(member, nm) {
+  built_all <- Map(function(member, nm) {
     if (!.is_tna(member)) {
       stop(errorCondition(sprintf(
         "Group '%s' of the group_tna is not a tna model.", nm),
@@ -182,8 +190,13 @@
     if (need_data && !is.null(built$reason)) {
       .stop_tna_unrebuilt(built$reason, what, member = nm)
     }
-    .tna_built_net(built, need_data)
+    built
   }, members, group_names)
+  was_pruned <- vapply(built_all, function(b) isTRUE(b$pruned), logical(1L))
+  if (any(was_pruned)) {
+    .warn_tna_pruned(what, members = group_names[was_pruned])
+  }
+  nets <- lapply(built_all, `[[`, "net")
   attributes(nets) <- NULL
   names(nets) <- group_names
   label <- attr(x, "label")

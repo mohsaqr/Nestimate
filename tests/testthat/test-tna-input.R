@@ -293,7 +293,7 @@ test_that("models from the tna package give the netobject results", {
                class = "nestimate_tna_unrebuilt")
 })
 
-test_that("a pruned tna model resamples as the full model; weights stay pruned", {
+test_that("a pruned tna model converts to its full network, with a warning", {
   f <- .tna_fixture()
   full <- .fake_tna(f$wide)
   pruned <- full
@@ -301,13 +301,26 @@ test_that("a pruned tna model resamples as the full model; weights stay pruned",
   attr(pruned, "pruning") <- list(weights = pruned$weights,
                                   original = full$weights, active = TRUE)
   expect_false(isTRUE(all.equal(pruned$weights, full$weights)))
-  # verbs that resample or read sequences use the model's data
-  expect_equal(bootstrap_network(pruned, iter = 30, seed = 1)$ci_lower,
+  expect_warning(net <- as_netobject(pruned), class = "nestimate_tna_pruned")
+  expect_equal(net$weights, as_netobject(full)$weights, tolerance = 1e-12)
+  expect_true(is.data.frame(net$data))
+  # every verb reads the data, so its result is the full model's
+  expect_warning(boot <- bootstrap_network(pruned, iter = 30, seed = 1),
+                 class = "nestimate_tna_pruned")
+  expect_equal(boot$ci_lower,
                bootstrap_network(full, iter = 30, seed = 1)$ci_lower,
                tolerance = 1e-12)
-  # verbs that read weights see the model as pruned
-  expect_equal(unname(as_netobject(pruned)$weights), unname(pruned$weights),
-               tolerance = 1e-12)
+  expect_warning(cent <- net_centrality(pruned),
+                 class = "nestimate_tna_pruned")
+  expect_equal(cent, net_centrality(full), tolerance = 1e-12)
+  # a group: one warning that names the pruned groups
+  models <- .fake_group_tna(f$wide, f$half)
+  low <- models$Low
+  attr(low, "pruning") <- list(weights = low$weights, original = low$weights,
+                               active = TRUE)
+  models$Low <- low
+  expect_warning(as_netobject(models), regexp = "'Low'",
+                 class = "nestimate_tna_pruned")
   # a pruning record that does not match the sequences is not trusted
   wrong <- pruned
   attr(wrong, "pruning")$original[1L, 2L] <- 0.9

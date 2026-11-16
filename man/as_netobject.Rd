@@ -62,8 +62,8 @@ data, or a type or parameter \code{\link[=build_network]{build_network()}} does 
 becomes a network of its weights without sequence data: verbs that only
 read weights accept it, and verbs that resample or read sequences raise
 an error of class \code{nestimate_tna_unrebuilt} that names the reason. A pruned
-model keeps its data, so resampling uses the full model, as tna does;
-functions that read weights only see the pruned weights. A
+model keeps its data, and Nestimate reads the data: it converts to the
+full network, with a warning of class \code{nestimate_tna_pruned}. A
 \code{group_tna} gives a \code{netobject_group}, one network per group, named as
 the groups are. The covariates the model keeps become the network's metadata: \code{actor} is read from the metadata the model keeps (\code{attr(model$data, "meta")}, kept when the model is built from \code{tna::prepare_data()}); a model without it raises \code{nestimate_actor_missing}. Every verb
 that takes a network applies this conversion itself, so calling
