@@ -36,6 +36,8 @@
 
 # ---- default unchanged: identical to the released 1.0.12 ----
 
+# Fixtures were written on macOS arm64; Linux differs in the last bits of doubles
+# (~1e-15 relative), so doubles compare to 1e-10. Integers, labels and layout stay exact.
 test_that("actor = NULL reproduces Nestimate 1.0.12 exactly", {
   fx <- readRDS(test_path("fixtures", "sequence-compare-default-1.0.12.rds"))
   net2 <- build_network(group_regulation_long, method = "relative",
@@ -64,10 +66,10 @@ test_that("actor = NULL reproduces Nestimate 1.0.12 exactly", {
   r4 <- sequence_compare(net2, sub = 2L, test = "chisq")
   r5 <- sequence_compare(net3, sub = 2L, test = "none")
 
-  expect_identical(r1, fx$r1)
-  expect_identical(r2, fx$r2)
-  expect_identical(r3, fx$r3)
-  expect_identical(r4, fx$r4)
+  expect_equal(r1, fx$r1, tolerance = 1e-10)
+  expect_equal(r2, fx$r2, tolerance = 1e-10)
+  expect_equal(r3, fx$r3, tolerance = 1e-10)
+  expect_equal(r4, fx$r4, tolerance = 1e-10)
   expect_identical(r5, fx$r5)
   expect_null(r1$params$actor)
 })

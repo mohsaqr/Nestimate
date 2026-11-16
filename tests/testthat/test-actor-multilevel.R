@@ -38,6 +38,8 @@ testthat::skip_on_cran()
 
 # ---- one level and the default are unchanged ----
 
+# Fixtures were written on macOS arm64; Linux differs in the last bits of doubles
+# (~1e-15 relative), so doubles compare to 1e-10. Integers, labels and layout stay exact.
 test_that("actor = NULL and one actor column reproduce the frozen outputs", {
   ref <- readRDS(test_path("fixtures", "actor-onelevel-reference.rds"))
   strip_perm <- function(r) r[setdiff(names(r), c("x", "y"))]
@@ -48,32 +50,32 @@ test_that("actor = NULL and one actor column reproduce the frozen outputs", {
   d$Half <- ifelse(as.integer(factor(d$Actor)) %% 2L == 0L, "A", "B")
   net_w <- build_network(d, method = "relative", actor = "Actor",
                          action = "Action", time = "Time", group = "Half")
-  expect_identical(strip_perm(permutation(net, iter = 50, seed = 1)[[1]]),
-                   ref$perm_null)
-  expect_identical(
+  expect_equal(strip_perm(permutation(net, iter = 50, seed = 1)[[1]]),
+                   ref$perm_null, tolerance = 1e-10)
+  expect_equal(
     strip_perm(permutation(net, iter = 50, seed = 1, actor = "Group")[[1]]),
-    ref$perm_group)
-  expect_identical(
+    ref$perm_group, tolerance = 1e-10)
+  expect_equal(
     strip_perm(permutation(net_w, iter = 50, seed = 2, actor = "Group")[[1]]),
-    ref$perm_within)
-  expect_identical(local({
+    ref$perm_within, tolerance = 1e-10)
+  expect_equal(local({
     set.seed(3)
     sequence_compare(net, sub = 2, iter = 50)
-  }), ref$seqcmp_null)
-  expect_identical(local({
+  }), ref$seqcmp_null, tolerance = 1e-10)
+  expect_equal(local({
     set.seed(3)
     sequence_compare(net, sub = 2, iter = 50, actor = "Group")
-  }), ref$seqcmp_group)
-  expect_identical(strip_boot(bootstrap_network(net[[1]], iter = 50, seed = 4)),
-                   ref$boot_null)
-  expect_identical(
+  }), ref$seqcmp_group, tolerance = 1e-10)
+  expect_equal(strip_boot(bootstrap_network(net[[1]], iter = 50, seed = 4)),
+                   ref$boot_null, tolerance = 1e-10)
+  expect_equal(
     strip_boot(bootstrap_network(net[[1]], iter = 50, seed = 4,
                                  actor = "Group")),
-    ref$boot_group)
-  expect_identical(
+    ref$boot_group, tolerance = 1e-10)
+  expect_equal(
     unclass(compare_networks(net, test = "permutation", iter = 50, seed = 5,
                              actor = "Group"))[c("edges", "global")],
-    ref$cmp_group)
+    ref$cmp_group, tolerance = 1e-10)
 })
 
 

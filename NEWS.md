@@ -1,3 +1,7 @@
+# Nestimate 1.0.14
+
+* Tests: the frozen-output checks of the new nested-data tests compare doubles to 1e-10, so they pass on Linux as well as macOS.
+
 # Nestimate 1.0.13
 
 * Mosaics can account for nested data. `mosaic_plot(x, nested = TRUE)` (networks, `netobject_group`, three-way tables) draws residuals that allow for counts nested in actors and puts the overall test in the subtitle; `actor =`, as in `permutation()`, names the actor column (each sequence by default; several columns for nested levels). `nested_method` chooses the test: `"rao_scott"` (default), `"donner_klar"`, `"cmh"`, `"gee"` or `"glmm"`. `mosaic_analysis()` takes the same `nested`, `nested_method` and `actor`; its `stats` table gains `df2`, `clusters`, `design_effect` and `icc`. New `mosaic_test()` returns Pearson's test and the five nested tests side by side as a tidy data frame (one row per test, or one row per cell with `level = "cells"`); a test the design cannot support gets a row with the reason in `note`. Rao-Scott reproduces `survey::svychisq()`, the GEE `geepack::geeglm()`, CMH `stats::mantelhaen.test()` and Donner-Klar `aod::donner()`. `report = TRUE` (in both `mosaic_plot()` and `mosaic_analysis()`) adds the overall test, nested or Pearson's, as the plot subtitle and prints it as a one-row table. `nested = FALSE` and `report = FALSE` are the defaults, so existing calls draw what they drew before.
