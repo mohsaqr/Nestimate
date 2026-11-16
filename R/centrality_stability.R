@@ -109,6 +109,31 @@
 #'   Default `NULL`. The session's own random stream is left as it was; a
 #'   group's networks
 #'   are each started from the same seed.
+#' @param actor The column identifying the actor each sequence belongs to
+#'   (for example `"student_id"` for sessions nested in students), looked up
+#'   in the network's metadata or its wide sequence data, as in
+#'   [bootstrap_network()]. With it, whole actors are dropped; see *Nested
+#'   data and `actor`*. Several column names, outermost first, are nested
+#'   levels, of which the outermost is dropped. Default `NULL`: sequences
+#'   are dropped one by one. Available for transition networks (relative,
+#'   frequency, co-occurrence).
+#'
+#' @section Nested data and \code{actor}:
+#' Case-dropping treats the cases it drops as independent. When the
+#' sequences are nested in actors (several sessions per student), the
+#' remaining sequences of an actor stand in for the dropped ones, and the
+#' CS-coefficient overstates the stability. With `actor`, a case is an
+#' actor: `drop_prop` is the proportion of actors dropped, and all sequences
+#' of a dropped actor leave together, as in `tna::estimate_cs(actor = )`.
+#' A proportion that drops no actor (`n * p < 1`, likely with few actors)
+#' is not run and counts as not reaching `threshold`, with a warning of
+#' class `nestimate_drop_prop_skipped`; one actor may remain. With one
+#' sequence per actor, and proportions that drop at least one and leave at
+#' least two, the result is that of `actor = NULL`. A
+#' column that is absent or has missing values raises
+#' `nestimate_actor_missing`, fewer than two actors `nestimate_bad_actor`,
+#' and a network that is not a transition network
+#' `nestimate_actor_unsupported`.
 #'
 #' @return A `net_stability` object. `print()` shows the CS-coefficient of
 #'   each measure; `summary()` returns one row per measure and drop
@@ -132,6 +157,8 @@
 #'     without variance under *Details*).}
 #'   \item{drop_prop, threshold, certainty, iter, method}{The settings
 #'     used.}
+#'   \item{actor, n_actors}{With `actor` only: the actor column(s) and the
+#'     number of actors cases were dropped from.}
 #' }
 #'
 #' @examples
@@ -179,9 +206,12 @@ centrality_stability <- function(x,
                                  normalize = FALSE,
                                  invert = TRUE,
                                  normalize_diffusion = TRUE,
-                                 seed = NULL) {
+                                 seed = NULL,
+                                 actor = NULL) {
   # a tna model or group_tna is rebuilt as a Nestimate network (R/tna_input.R)
-  x <- .tna_input(x, "centrality_stability()", need_data = TRUE)
+  x <- .tna_input(x, "centrality_stability()", need_data = TRUE,
+                  actor = actor)
+  .check_permutation_block(actor, paired = FALSE)
 
   # ---- Input validation ----
   measures <- .resolve_measures(measures)   # "all" -> every built-in measure
@@ -196,7 +226,7 @@ centrality_stability <- function(x,
                            centrality_fn = centrality_fn, loops = loops,
                            normalize = normalize, invert = invert,
                            normalize_diffusion = normalize_diffusion,
-                           seed = seed)
+                           seed = seed, actor = actor)
     })
     class(out) <- c("net_stability_group", "list")
     return(out)
@@ -256,6 +286,7 @@ centrality_stability <- function(x,
   is_relative <- .counts_are_relative(net_method, x$params)
   scaling <- x$scaling
   thresh <- x$threshold
+  if (!is_transition) .stop_block_unsupported(actor, net_method)
 
   # ---- Original centralities ----
   orig_cents <- .compute_centralities(
@@ -297,8 +328,10 @@ centrality_stability <- function(x,
   # ---- Pre-compute for transitions ----
   if (is_transition) {
     transition_data <- .resampling_transition_data(x$data, x$metadata, x$params)
-    trans_2d <- .precompute_per_sequence(transition_data, net_method, x$params,
-                                         states)
+    # with `actor`, one row per actor: whole actors are dropped
+    trans_2d <- .actor_count_units(
+      x, .precompute_per_sequence(transition_data, net_method, x$params,
+                                  states), actor)
     n_seq <- nrow(trans_2d)
   } else {
     data <- x$data
@@ -372,10 +405,28 @@ centrality_stability <- function(x,
   failed$total <- 0L
   # Loop kept on purpose: the proportions draw from one random stream in
   # order and fill pre-allocated matrices in place.
+  # With `actor`, the rule of casedrop_reliability() and tna::estimate_cs():
+  # a proportion that drops no actor is not run (its correlations stay NA and
+  # it counts as not reaching the threshold), and one actor may remain.
+  if (!is.null(actor)) {
+    not_run <- drop_prop[floor(n_seq * drop_prop) == 0L]
+    if (length(not_run) > 0L) {
+      warning(warningCondition(sprintf(paste0(
+        "centrality_stability(): drop_prop = %s drops no actor out of %d, ",
+        "so it was not run; it counts as not reaching the threshold."),
+        paste(not_run, collapse = ", "), n_seq),
+        class = "nestimate_drop_prop_skipped", call = NULL))
+    }
+  }
   for (p_idx in seq_len(n_prop)) {
     prop <- drop_prop[p_idx]
-    n_keep <- n_seq - floor(n_seq * prop)
-    if (n_keep < 2L) next # nocov
+    n_drop <- floor(n_seq * prop)
+    n_keep <- n_seq - n_drop
+    if (is.null(actor)) {
+      if (n_keep < 2L) next # nocov
+    } else if (n_drop == 0L) {
+      next
+    }
 
     # vapply: each iteration returns correlation vector (one per measure)
     corr_mat <- vapply(seq_len(iter), function(i) {
@@ -433,6 +484,10 @@ centrality_stability <- function(x,
     iter = iter,
     method = method
   )
+  if (!is.null(actor)) {
+    result$actor <- actor
+    result$n_actors <- n_seq
+  }
   class(result) <- "net_stability"
   result
 }
@@ -594,6 +649,10 @@ print.net_stability <- function(x, ...) {
               x$iter, format(x$threshold)))
   cat(sprintf("  Drop proportions: %s\n",
               paste(x$drop_prop, collapse = ", ")))
+  if (!is.null(x$actor)) {
+    cat(sprintf("  Cases dropped   : whole actors (%s, %d actors)\n",
+                x$actor[[1L]], x$n_actors))
+  }
   cat("\n  CS-coefficients:\n")
   cat(sprintf("    %-15s  %.2f\n", names(x$cs), x$cs), sep = "")
   invisible(x)

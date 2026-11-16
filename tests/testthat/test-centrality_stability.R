@@ -313,3 +313,100 @@ test_that("a measure constant up to rounding is dropped, not correlated", {
                              seed = 1)
   expect_identical(names(st$cs), "InStrength")
 })
+
+
+# ---- actor: whole actors are dropped ----
+
+# Every actor holds the same three sequences, so a subset of whole actors
+# gives the full network exactly, and a subset of single sequences does not.
+.cs_identical_actors <- function(n_actor = 6L) {
+  one <- data.frame(
+    T1 = c("A", "B", "C"), T2 = c("B", "C", "A"), T3 = c("C", "A", "D"),
+    T4 = c("D", "D", "B"), T5 = c("A", "C", "C"), T6 = c("C", "B", "A"),
+    stringsAsFactors = FALSE)
+  seqs <- do.call(rbind, replicate(n_actor, one, simplify = FALSE))
+  seqs$student <- rep(paste0("s", seq_len(n_actor)), each = nrow(one))
+  seqs$session <- paste0("c", seq_len(nrow(seqs)))
+  seqs
+}
+
+.cs_actor_net <- function(...) {
+  build_network(.cs_identical_actors(...), method = "relative",
+                state_cols = paste0("T", 1:6))
+}
+
+test_that("actor drops whole actors: identical actors reproduce the network", {
+  net <- .cs_actor_net()
+  by_actor <- centrality_stability(net, measures = "InStrength", iter = 30L,
+                                   drop_prop = c(0.3, 0.5), seed = 1,
+                                   actor = "student")
+  by_sequence <- centrality_stability(net, measures = "InStrength",
+                                      iter = 30L, drop_prop = c(0.3, 0.5),
+                                      seed = 1)
+  expect_equal(as.vector(by_actor$correlations$InStrength), rep(1, 60))
+  expect_true(any(by_sequence$correlations$InStrength < 1 - 1e-8))
+  expect_equal(unname(by_actor$cs), 0.5)
+  expect_identical(by_actor$actor, "student")
+  expect_identical(by_actor$n_actors, 6L)
+  expect_output(print(by_actor), "whole actors \\(student, 6 actors\\)")
+})
+
+test_that("one sequence per actor gives the result of actor = NULL", {
+  net <- .cs_actor_net()
+  by_actor <- centrality_stability(net, measures = "InStrength", iter = 20L,
+                                   drop_prop = c(0.2, 0.5), seed = 3,
+                                   actor = "session")
+  plain <- centrality_stability(net, measures = "InStrength", iter = 20L,
+                                drop_prop = c(0.2, 0.5), seed = 3)
+  expect_identical(by_actor$correlations, plain$correlations)
+  expect_identical(by_actor$cs, plain$cs)
+  # without actor the result carries no actor fields
+  expect_false(any(c("actor", "n_actors") %in% names(plain)))
+})
+
+test_that("actor units sum the sequences of each actor", {
+  net <- .cs_actor_net(4L)
+  per_sequence <- .precompute_per_sequence(
+    .resampling_transition_data(net$data, net$metadata, net$params),
+    "relative", net$params, net$nodes$label)
+  units <- .actor_count_units(net, per_sequence, "student")
+  expect_identical(nrow(units), 4L)
+  expect_equal(colSums(units), colSums(per_sequence))
+  expect_equal(unname(units[1L, ]), unname(colSums(per_sequence[1:3, ])))
+  expect_identical(.actor_count_units(net, per_sequence, NULL), per_sequence)
+})
+
+test_that("actor errors are classed", {
+  net <- .cs_actor_net()
+  expect_error(centrality_stability(net, iter = 5L, actor = "nobody"),
+               class = "nestimate_actor_missing")
+  expect_error(centrality_stability(net, iter = 5L, actor = 1L),
+               class = "nestimate_bad_actor")
+  one <- .cs_identical_actors()
+  one$student <- "s1"
+  one_net <- build_network(one, method = "relative",
+                           state_cols = paste0("T", 1:6))
+  expect_error(centrality_stability(one_net, iter = 5L, actor = "student"),
+               class = "nestimate_bad_actor")
+  set.seed(5)
+  df <- as.data.frame(matrix(rpois(100 * 5, 10), nrow = 100))
+  colnames(df) <- paste0("V", 1:5)
+  expect_error(
+    centrality_stability(build_network(df, method = "cor"), iter = 5L,
+                         actor = "V1"),
+    class = "nestimate_actor_unsupported")
+})
+
+test_that("with actor, a proportion that drops no actor is not run", {
+  net <- .cs_actor_net(6L)
+  expect_warning(
+    cs <- centrality_stability(net, measures = "InStrength", iter = 10L,
+                               drop_prop = c(0.1, 0.5, 0.9), seed = 1,
+                               actor = "student"),
+    class = "nestimate_drop_prop_skipped")
+  corr <- cs$correlations$InStrength
+  expect_true(all(is.na(corr[, 1L])))      # floor(6 * 0.1) = 0 actors
+  expect_equal(corr[, 2L], rep(1, 10))     # 3 actors remain
+  expect_equal(corr[, 3L], rep(1, 10))     # 1 actor remains: still run
+  expect_equal(unname(cs$cs), 0.9)
+})

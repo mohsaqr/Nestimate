@@ -20,7 +20,8 @@ casedrop_reliability(
   method = c("spearman", "pearson", "kendall"),
   include_diag = FALSE,
   seed = NULL,
-  target = c("auto", "existing", "all")
+  target = c("auto", "existing", "all"),
+  actor = NULL
 )
 
 \method{print}{net_casedrop_reliability}(x, digits = 3, ...)
@@ -96,6 +97,15 @@ zeros included, so edges that appear once cases are dropped count.
 transition networks, where an absent transition cannot appear in a
 subset, and \code{"all"} otherwise. \code{include_diag} applies to either.}
 
+\item{actor}{The column identifying the actor each sequence belongs to
+(for example \code{"student_id"} for sessions nested in students), looked up
+in the network's metadata or its wide sequence data, as in
+\code{\link[=bootstrap_network]{bootstrap_network()}}. With it, whole actors are dropped; see \emph{Nested
+data and \code{actor}}. Several column names, outermost first, are nested
+levels, of which the outermost is dropped. Default \code{NULL}: sequences
+are dropped one by one. Available for transition networks (relative,
+frequency, co-occurrence).}
+
 \item{digits}{For the \code{print()} method of a single result: the decimal
 places of the metric table. Default \code{3}.}
 
@@ -142,7 +152,9 @@ per drop proportion.}
 \item{\code{drop_prop}, \code{threshold}, \code{certainty}, \code{iter}, \code{method},
 \code{include_diag}}{The settings used.}
 \item{\code{n_cases}}{The number of cases resampled from: sequences for a
-transition network, rows of the data otherwise.}
+transition network (actors with \code{actor}), rows of the data
+otherwise.}
+\item{\code{actor}}{With \code{actor} only: the actor column(s).}
 \item{\code{n_edges}}{The number of cells compared, set by \code{target} and
 \code{include_diag}.}
 }
@@ -219,12 +231,22 @@ networks and scaled or thresholded networks compare all cells, because a
 zero original weight can become non-zero once cases are dropped; set
 \code{target = "existing"} to compare only the original edges there.
 
-Case-dropping drops cases at random, so it treats them as independent
-units. When the cases are nested in actors (several sessions per
-person), the remaining cases of an actor stand in for the dropped ones,
-and the CS-coefficient overstates the stability; drop whole actors
-instead (for example with \code{tna::estimate_cs(actor = )}).
 }
+\section{Nested data and \code{actor}}{
+
+Case-dropping drops cases at random, so it treats them as independent
+units. When the sequences are nested in actors (several sessions per
+person), the remaining sequences of an actor stand in for the dropped
+ones, and the CS-coefficient overstates the stability. With \code{actor}, a
+case is an actor: \code{drop_prop} is the proportion of actors dropped, and
+all sequences of a dropped actor leave together, as in
+\code{tna::estimate_cs(actor = )}. With one sequence per actor the result is
+that of \code{actor = NULL}. A column that is absent or has missing values
+raises \code{nestimate_actor_missing}, fewer than two actors
+\code{nestimate_bad_actor}, and a network that is not a transition network
+\code{nestimate_actor_unsupported}.
+}
+
 \examples{
 set.seed(1)
 seqs <- data.frame(

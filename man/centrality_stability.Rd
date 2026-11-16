@@ -22,7 +22,8 @@ centrality_stability(
   normalize = FALSE,
   invert = TRUE,
   normalize_diffusion = TRUE,
-  seed = NULL
+  seed = NULL,
+  actor = NULL
 )
 
 \method{print}{net_stability}(x, ...)
@@ -101,6 +102,15 @@ Default \code{NULL}. The session's own random stream is left as it was; a
 group's networks
 are each started from the same seed.}
 
+\item{actor}{The column identifying the actor each sequence belongs to
+(for example \code{"student_id"} for sessions nested in students), looked up
+in the network's metadata or its wide sequence data, as in
+\code{\link[=bootstrap_network]{bootstrap_network()}}. With it, whole actors are dropped; see \emph{Nested
+data and \code{actor}}. Several column names, outermost first, are nested
+levels, of which the outermost is dropped. Default \code{NULL}: sequences
+are dropped one by one. Available for transition networks (relative,
+frequency, co-occurrence).}
+
 \item{...}{For the \code{print()}, \code{summary()} and \code{plot()} methods: not
 used.}
 
@@ -130,6 +140,8 @@ retained measure.}
 without variance under \emph{Details}).}
 \item{drop_prop, threshold, certainty, iter, method}{The settings
 used.}
+\item{actor, n_actors}{With \code{actor} only: the actor column(s) and the
+number of actors cases were dropped from.}
 }
 }
 \description{
@@ -188,6 +200,24 @@ the square root of the machine epsilon relative to their size, so
 on that error. The same rule makes a measure constant in a draw an
 undefined correlation.
 }
+\section{Nested data and \code{actor}}{
+
+Case-dropping treats the cases it drops as independent. When the
+sequences are nested in actors (several sessions per student), the
+remaining sequences of an actor stand in for the dropped ones, and the
+CS-coefficient overstates the stability. With \code{actor}, a case is an
+actor: \code{drop_prop} is the proportion of actors dropped, and all sequences
+of a dropped actor leave together, as in \code{tna::estimate_cs(actor = )}.
+A proportion that drops no actor (\code{n * p < 1}, likely with few actors)
+is not run and counts as not reaching \code{threshold}, with a warning of
+class \code{nestimate_drop_prop_skipped}; one actor may remain. With one
+sequence per actor, and proportions that drop at least one and leave at
+least two, the result is that of \code{actor = NULL}. A column that is absent or has missing values
+raises \code{nestimate_actor_missing}, fewer than two actors
+\code{nestimate_bad_actor}, and a network that is not a transition network
+\code{nestimate_actor_unsupported}.
+}
+
 \examples{
 seqs <- data.frame(
   T1 = c("plan", "code", "debug", "plan", "test", "code"),

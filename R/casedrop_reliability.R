@@ -80,6 +80,14 @@
 #'   `"auto"` (default) uses `"existing"` for unscaled and unthresholded
 #'   transition networks, where an absent transition cannot appear in a
 #'   subset, and `"all"` otherwise. `include_diag` applies to either.
+#' @param actor The column identifying the actor each sequence belongs to
+#'   (for example `"student_id"` for sessions nested in students), looked up
+#'   in the network's metadata or its wide sequence data, as in
+#'   [bootstrap_network()]. With it, whole actors are dropped; see *Nested
+#'   data and `actor`*. Several column names, outermost first, are nested
+#'   levels, of which the outermost is dropped. Default `NULL`: sequences
+#'   are dropped one by one. Available for transition networks (relative,
+#'   frequency, co-occurrence).
 #'
 #' @return A `net_casedrop_reliability` object. `print()` shows the
 #'   CS-coefficient and the mean and standard deviation of each metric at
@@ -110,7 +118,9 @@
 #'   \item{`drop_prop`, `threshold`, `certainty`, `iter`, `method`,
 #'     `include_diag`}{The settings used.}
 #'   \item{`n_cases`}{The number of cases resampled from: sequences for a
-#'     transition network, rows of the data otherwise.}
+#'     transition network (actors with `actor`), rows of the data
+#'     otherwise.}
+#'   \item{`actor`}{With `actor` only: the actor column(s).}
 #'   \item{`n_edges`}{The number of cells compared, set by `target` and
 #'     `include_diag`.}
 #' }
@@ -140,11 +150,18 @@
 #' zero original weight can become non-zero once cases are dropped; set
 #' `target = "existing"` to compare only the original edges there.
 #'
+#' @section Nested data and \code{actor}:
 #' Case-dropping drops cases at random, so it treats them as independent
-#' units. When the cases are nested in actors (several sessions per
-#' person), the remaining cases of an actor stand in for the dropped ones,
-#' and the CS-coefficient overstates the stability; drop whole actors
-#' instead (for example with `tna::estimate_cs(actor = )`).
+#' units. When the sequences are nested in actors (several sessions per
+#' person), the remaining sequences of an actor stand in for the dropped
+#' ones, and the CS-coefficient overstates the stability. With `actor`, a
+#' case is an actor: `drop_prop` is the proportion of actors dropped, and
+#' all sequences of a dropped actor leave together, as in
+#' `tna::estimate_cs(actor = )`. With one sequence per actor the result is
+#' that of `actor = NULL`. A column that is absent or has missing values
+#' raises `nestimate_actor_missing`, fewer than two actors
+#' `nestimate_bad_actor`, and a network that is not a transition network
+#' `nestimate_actor_unsupported`.
 #'
 #' @seealso [centrality_stability()], [bootstrap_network()].
 #'
@@ -175,10 +192,13 @@ casedrop_reliability <- function(x,
                            method      = c("spearman", "pearson", "kendall"),
                            include_diag = FALSE,
                            seed        = NULL,
-                           target      = c("auto", "existing", "all")) {
+                           target      = c("auto", "existing", "all"),
+                           actor       = NULL) {
   # a tna model or group_tna is rebuilt as a Nestimate network (R/tna_input.R)
-  x <- .tna_input(x, "casedrop_reliability()", need_data = TRUE)
+  x <- .tna_input(x, "casedrop_reliability()", need_data = TRUE,
+                  actor = actor)
   target <- match.arg(target)
+  .check_permutation_block(actor, paired = FALSE)
 
   # ---- Dispatch for mcml / group inputs ----
   if (inherits(x, "mcml")) x <- as_tna(x)
@@ -188,7 +208,7 @@ casedrop_reliability <- function(x,
       casedrop_reliability(net, iter = iter, drop_prop = drop_prop,
                      threshold = threshold, certainty = certainty,
                      method = method, include_diag = include_diag,
-                     seed = seed, target = target)
+                     seed = seed, target = target, actor = actor)
     })
     class(out) <- c("net_casedrop_reliability_group", "list")
     return(out)
@@ -235,6 +255,7 @@ casedrop_reliability <- function(x,
   is_relative   <- .counts_are_relative(net_method, x$params)
   scaling <- x$scaling
   thresh  <- x$threshold
+  if (!is_transition) .stop_block_unsupported(actor, net_method)
 
   # Original edge vector (flattened)
   idx_mask <- if (include_diag) {
@@ -285,8 +306,10 @@ casedrop_reliability <- function(x,
   # ---- Build-matrix closure: transition fast path or association slow path ----
   if (is_transition) {
     transition_data <- .resampling_transition_data(x$data, x$metadata, x$params)
-    trans_2d <- .precompute_per_sequence(transition_data, net_method, x$params,
-                                         states)
+    # with `actor`, one row per actor: whole actors are dropped
+    trans_2d <- .actor_count_units(
+      x, .precompute_per_sequence(transition_data, net_method, x$params,
+                                  states), actor)
     n_cases  <- nrow(trans_2d)
 
     build_matrix <- function(idx) {
@@ -403,23 +426,22 @@ casedrop_reliability <- function(x,
   # ---- CS-coefficient: max drop_prop where corr certainty-fraction >= threshold ----
   cs <- .calculate_cs(metrics$correlation, threshold, certainty, drop_prop)
 
-  structure(
-    list(
-      cs            = cs,
-      summary       = summary_df,
-      metrics       = metrics,
-      correlations  = metrics$correlation,
-      drop_prop     = drop_prop,
-      threshold     = threshold,
-      certainty     = certainty,
-      iter          = iter,
-      method        = method,
-      include_diag  = include_diag,
-      n_cases       = n_cases,
-      n_edges       = length(orig_edges)
-    ),
-    class = "net_casedrop_reliability", target = target
+  result <- list(
+    cs            = cs,
+    summary       = summary_df,
+    metrics       = metrics,
+    correlations  = metrics$correlation,
+    drop_prop     = drop_prop,
+    threshold     = threshold,
+    certainty     = certainty,
+    iter          = iter,
+    method        = method,
+    include_diag  = include_diag,
+    n_cases       = n_cases,
+    n_edges       = length(orig_edges)
   )
+  if (!is.null(actor)) result$actor <- actor
+  structure(result, class = "net_casedrop_reliability", target = target)
 }
 
 # One row per metric and drop proportion. Failed resamples are NA in
@@ -480,7 +502,9 @@ casedrop_reliability <- function(x,
 #' @export
 print.net_casedrop_reliability <- function(x, digits = 3, ...) {
   cat(sprintf("Edge-weight Case-dropping Stability\n"))
-  cat(sprintf("  Cases (resampled)     : %d\n", x$n_cases))
+  cat(sprintf("  Cases (resampled)     : %d%s\n", x$n_cases,
+              if (is.null(x$actor)) "" else
+                sprintf(" actors (%s)", x$actor[[1L]])))
   cat(sprintf("  Edges assessed        : %d%s\n", x$n_edges,
               if (!x$include_diag) " (diagonal excluded)" else ""))
   cat(sprintf("  Iterations / prop     : %d\n", x$iter))

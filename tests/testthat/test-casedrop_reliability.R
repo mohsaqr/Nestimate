@@ -265,3 +265,61 @@ test_that("casedrop CS does not depend on the order of drop_prop", {
   expect_equal(a$cs, max(c(0, passing)))
   expect_equal(b$cs, a$cs)
 })
+
+
+# ---- actor: whole actors are dropped ----
+
+# Every actor holds the same three sequences, so a subset of whole actors
+# gives the full network exactly, and a subset of single sequences does not.
+.cd_actor_net <- function(n_actor = 6L) {
+  one <- data.frame(
+    T1 = c("A", "B", "C"), T2 = c("B", "C", "A"), T3 = c("C", "A", "D"),
+    T4 = c("D", "D", "B"), T5 = c("A", "C", "C"), T6 = c("C", "B", "A"),
+    stringsAsFactors = FALSE)
+  seqs <- do.call(rbind, replicate(n_actor, one, simplify = FALSE))
+  seqs$student <- rep(paste0("s", seq_len(n_actor)), each = nrow(one))
+  seqs$session <- paste0("c", seq_len(nrow(seqs)))
+  build_network(seqs, method = "relative", state_cols = paste0("T", 1:6))
+}
+
+test_that("actor drops whole actors: identical actors reproduce the network", {
+  net <- .cd_actor_net()
+  by_actor <- casedrop_reliability(net, iter = 30L, drop_prop = c(0.3, 0.5),
+                                   seed = 1, actor = "student")
+  by_sequence <- casedrop_reliability(net, iter = 30L,
+                                      drop_prop = c(0.3, 0.5), seed = 1)
+  expect_equal(as.vector(by_actor$metrics$max_abs_dev), rep(0, 60))
+  expect_equal(as.vector(by_actor$correlations), rep(1, 60))
+  expect_true(any(by_sequence$metrics$max_abs_dev > 1e-8))
+  expect_equal(by_actor$cs, 0.5)
+  expect_identical(by_actor$n_cases, 6L)
+  expect_identical(by_sequence$n_cases, 18L)
+  expect_identical(by_actor$actor, "student")
+  expect_output(print(by_actor), "6 actors \\(student\\)")
+})
+
+test_that("one sequence per actor gives the result of actor = NULL", {
+  net <- .cd_actor_net()
+  by_actor <- casedrop_reliability(net, iter = 20L, drop_prop = c(0.2, 0.5),
+                                   seed = 3, actor = "session")
+  plain <- casedrop_reliability(net, iter = 20L, drop_prop = c(0.2, 0.5),
+                                seed = 3)
+  expect_identical(by_actor$metrics, plain$metrics)
+  expect_identical(by_actor$cs, plain$cs)
+  expect_false("actor" %in% names(plain))
+})
+
+test_that("actor errors are classed", {
+  net <- .cd_actor_net()
+  expect_error(casedrop_reliability(net, iter = 5L, actor = "nobody"),
+               class = "nestimate_actor_missing")
+  expect_error(casedrop_reliability(net, iter = 5L, actor = NA_character_),
+               class = "nestimate_bad_actor")
+  set.seed(5)
+  df <- as.data.frame(matrix(rnorm(100 * 5), nrow = 100))
+  colnames(df) <- paste0("V", 1:5)
+  expect_error(
+    casedrop_reliability(build_network(df, method = "cor"), iter = 5L,
+                         actor = "V1"),
+    class = "nestimate_actor_unsupported")
+})

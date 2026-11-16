@@ -1994,3 +1994,28 @@ summary.wtna_perm_mixed <- function(object, ...) {
   }
   invisible(NULL)
 }
+
+#' Case-dropping units: one row of counts per actor
+#'
+#' With `actor`, case-dropping drops whole actors, so the per-sequence counts
+#' are summed within the outermost actor level (as the cluster bootstrap in
+#' `bootstrap_network()` does); every level is checked. Without `actor` the
+#' per-sequence counts are returned as they came.
+#' @noRd
+.actor_count_units <- function(net, trans_2d, actor) {
+  if (is.null(actor)) return(trans_2d)
+  if (length(actor) > 1L) {
+    .check_actor_levels(lapply(actor, function(col) {
+      .permutation_block_ids(net, col, nrow(trans_2d), "x")
+    }), actor)
+  }
+  ids <- .permutation_block_ids(net, actor[[1L]], nrow(trans_2d), "x")
+  units <- rowsum(trans_2d, ids, reorder = FALSE)
+  if (nrow(units) < 2L) {
+    stop(errorCondition(
+      sprintf("`actor = \"%s\"` has %d actor; case-dropping needs at least 2.",
+              actor[[1L]], nrow(units)),
+      class = "nestimate_bad_actor", call = NULL))
+  }
+  units
+}
