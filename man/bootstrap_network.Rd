@@ -91,12 +91,17 @@ limits (for example below 0 for a transition probability close to 0).}
 (for example \code{"student_id"} for sessions nested in students, \code{"Group"}
 for students nested in teams), looked up in the network's metadata or
 its wide sequence data. With it, whole actors are resampled; see
-\emph{Nested data and \code{actor}}. Default \code{NULL}: sequences are resampled one
+\emph{Nested data and \code{actor}}. Several column names, outermost first (such
+as \code{c("Group", "Student")}), are nested levels, of which the outermost
+is resampled; the reported number of actors, ICC and design effect are
+those of the outermost level, and levels that are not nested outermost
+first raise an error of class \code{nestimate_bad_actor}. Default \code{NULL}:
+sequences are resampled one
 by one. It is available for sequence-based transition networks
 (\code{"relative"}, \code{"frequency"}, \code{"co_occurrence"}); a method outside the
 fast path (see \emph{Details}) raises an error of class
-\code{nestimate_actor_unsupported}. A value that is not a single column
-name, or that names fewer than two actors, raises an error of class
+\code{nestimate_actor_unsupported}. A value that is not one or more distinct
+column names, or whose outermost column names fewer than two actors, raises an error of class
 \code{nestimate_bad_actor}; a column that is absent or has missing values,
 one of class \code{nestimate_actor_missing}; and ids that do not give one
 actor per sequence, one of class \code{nestimate_actor_misaligned}.}
@@ -136,8 +141,9 @@ network \code{\link[=net_prune]{net_prune()}} returns keeps every self-loop.)}
 \item{method, params, iter, ci_level, inference, ci_method}{The
 bootstrap settings.}
 \item{consistency_range, edge_threshold}{The test settings.}
-\item{actor, n_actors}{The \code{actor} column and its number of actors;
-\code{NULL} without \code{actor}.}
+\item{actor, n_actors}{The \code{actor} column (or columns, outermost first)
+and the number of actors resampled (at the outermost level); \code{NULL}
+without \code{actor}.}
 \item{clustering}{Only with \code{actor}: a one-row data frame of
 \code{n_sequences}, \code{n_actors}, \code{icc}, \code{icc_ci_lower}, \code{icc_ci_upper} and
 \code{deff_edges}.}
@@ -225,6 +231,15 @@ the cluster bootstrap that resamples at the top level only (Davison &
 Hinkley, 1997, section 3.8; Field & Welsh, 2007). The number of
 sequences per replicate then varies with the actors drawn.
 
+Several columns, outermost first (\code{actor = c("Group", "Student")}, students
+within teams), name nested levels. Every column is checked, but only the
+outermost level is resampled: whole teams, each with all its students
+and sessions. Resampling inside the drawn clusters as well (students
+within teams) adds their variation a second time and overstates the
+variance (Davison & Hinkley, 1997, section 3.8). The ICC and design
+effect are then those of the outermost level, and \code{print()} names it as
+the resampled level.
+
 With \code{actor}, the result also reports the nesting effect. The ICC
 is the proportion of the total variance that lies between actors (Shrout
 & Fleiss, 1979); an ICC close to 0 indicates little evidence of a nesting
@@ -235,6 +250,18 @@ of the edge weights over actor-level replicates divided by their variance
 over sequence-level replicates drawn in the same run, reported as the
 median over edges. \code{actor} is available for transition networks
 (\code{"relative"}, \code{"frequency"}, \code{"co_occurrence"}).
+
+When to set \code{actor}: resampling sequences describes the variability
+of these actors' sequences; to generalise to other actors (other
+students, other teams), resample actors. A drawn actor brings all of
+their sequences, so a replicate can contain an actor twice or not at
+all. The design effect, not the ICC alone, decides how much this
+matters: with m transitions per actor, Kish gives \code{1 + (m - 1) * ICC},
+so a small ICC over many transitions per actor still widens the
+intervals. In one data set of sessions nested in students, the ICC was
+about 0.01 and the design effect about 1.5; resampling students gave
+intervals about a quarter wider than resampling sessions, and fewer
+significant edges (18 against 22).
 }
 
 \examples{

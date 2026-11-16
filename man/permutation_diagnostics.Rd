@@ -29,8 +29,11 @@ Default \code{NULL}, as it must stay when \code{x} is a group.}
 
 \item{actor}{The column identifying the actor each sequence belongs to,
 as in \code{\link[=permutation]{permutation()}}, looked up in the networks' metadata or sequence
-data. A column not found, or one with missing values, raises an error
-of class \code{nestimate_actor_missing}. Required.}
+data. Several column names, outermost first (\code{c("Group", "Student")}),
+are nested levels, shuffled as \code{\link[=permutation]{permutation()}} describes; the ICC is
+then that of the innermost level. A column not found, or one with
+missing values, raises an error of class \code{nestimate_actor_missing}.
+Required.}
 
 \item{iter}{The number of permutations for each of the two tests, at
 least 2. Default \code{1000}.}
@@ -54,7 +57,8 @@ for two networks).}
 \item{n_sequences, n_actors}{The sequences and distinct actors in the
 pair.}
 \item{design}{\code{"between"} (every actor in one group), \code{"within"}
-(every actor in both groups) or \code{"mixed"}.}
+(every actor in both groups) or \code{"mixed"}; with several \code{actor}
+levels, one \code{"<level>: <design> (<n> actors)"} entry per level.}
 \item{icc, icc_ci_lower, icc_ci_upper}{How alike the sequences of one
 actor are: the jackknife bias-corrected ICC, as printed by
 \code{\link[=permutation]{permutation()}}, with a 95\% interval; with fewer than 3 actors the

@@ -333,11 +333,64 @@
 #' bold in its actor's colour.
 #'
 #' The residuals describe where the counts depart from independence; they
-#' are not tests of single cells, and transitions taken from the same
-#' sequence are not independent draws. To test edges or group differences,
-#' use [permutation()]; for a chi-square or Fisher test with
+#' are not tests of single cells. The default residuals treat every
+#' transition or state as an independent draw, but those of one sequence
+#' (or one student, or one team) are not. With `nested = TRUE` the
+#' residuals allow for that nesting; `report = TRUE` adds the overall test
+#' as the subtitle and prints it; see *Nested data*. To test edges or group
+#' differences, use [permutation()]; for a chi-square or Fisher test with
 #' Cram\enc{é}{e}r's V on two variables of a data frame, use
 #' [mosaic_analysis()].
+#'
+#' @section Nested data:
+#' A network's counts are summed over sequences. With `nested = TRUE`
+#' the counts are taken sequence by sequence (as the network counted them),
+#' summed within the actors named by `actor` (each sequence on its own
+#' by default), and `nested_method` reads the table of each actor.
+#' With `report = TRUE` the subtitle names the test, its statistic, degrees
+#' of freedom and p-value, the number of actors, and the design effect or
+#' intracluster correlation where the method gives one. For a network,
+#' the source state is treated as the predictor and the target as the
+#' response; for a `netobject_group`, the group is the predictor and the
+#' state the response. The `nested_method` choices:
+#' \describe{
+#'   \item{`"rao_scott"` (default)}{Rao-Scott second-order corrected
+#'     chi-square, an F statistic on fractional degrees of freedom (as
+#'     `survey::svychisq()`); any cluster sizes. Residual: the standardised
+#'     residual divided by the square root of the cell's design effect. With
+#'     one observation per actor it equals the default asymptotic residual,
+#'     so it corrects only as much as the data are clustered.}
+#'   \item{`"donner_klar"`}{Pearson's chi-square divided by the
+#'     cluster-size inflation factor `1 + (m - 1) * rho`. Needs one variable
+#'     that is constant within every cluster, as the group of a
+#'     `netobject_group`; a single network raises an error.}
+#'   \item{`"cmh"`}{Generalised Cochran-Mantel-Haenszel test with each
+#'     cluster as a stratum; both variables must vary within clusters, so a
+#'     `netobject_group` raises an error.}
+#'   \item{`"gee"`}{Wald chi-square of a marginal model (identity link,
+#'     independence working correlation) with the cluster-robust
+#'     covariance; refused when that covariance is rank-deficient, and
+#'     liberal unless the actors are many relative to the degrees of
+#'     freedom. Residual: conditional minus pooled share, over its
+#'     cluster-robust standard error.}
+#'   \item{`"glmm"`}{Wald chi-square on the interaction of a log-linear
+#'     Poisson mixed model with cluster random effects at every level of
+#'     `actor`; needs lme4. Residual: observed minus expected count under
+#'     independence, over its cluster-robust standard error.}
+#' }
+#' The methods are described in full under *Nested data* in
+#' [mosaic_analysis()]. `nested = TRUE` needs per-sequence counts: a
+#' network built with `method = "relative"`, `"frequency"` or
+#' `"co_occurrence"` that keeps its sequence data, or a `netobject_group`
+#' whose groups keep theirs. Other networks, and per-sequence counts that
+#' do not add up to the drawn table, raise an error of class
+#' `nestimate_bad_input`. An `mcml` takes no `nested`. A `table` or
+#' `matrix` (or a plain array) takes it as a three-way table, rows x columns x actors (e.g.
+#' `table(var1, var2, actor)`); the mosaic draws the table summed over
+#' actors. A three-way table without `nested = TRUE`, or a two-way table
+#' with it, raises an error.
+#' Residuals a method leaves undefined are drawn at 0. For the tests as a
+#' table, all methods side by side, use [mosaic_test()].
 #'
 #' @details
 #' A mosaic needs counts. A network whose weights are whole numbers
@@ -361,7 +414,8 @@
 #' the two packages can be attached together.
 #'
 #' @param x The object to draw: a `netobject`, `netobject_group`, `mcml` or
-#'   `htna` network, a contingency `table`, a numeric count `matrix`, or a
+#'   `htna` network, a contingency `table` (two-way, or three-way with the
+#'   clusters as the third dimension), a numeric count `matrix`, or a
 #'   data frame in long form (see `x_var`, `y_var` and `weight`).
 #' @param x_var,y_var,weight For a data frame: the column whose levels form
 #'   the mosaic's columns (each as wide as its total `weight`), the column
@@ -406,7 +460,32 @@
 #'   gets 0. It does not rely on large expected counts, so it suits sparse
 #'   tables. `"asymptotic"` gives the adjusted residuals of
 #'   [stats::chisq.test()], `(O - E) / sqrt(E (1 - p_row) (1 - p_col))`, as
-#'   vcd and tna do.
+#'   vcd and tna do. Used when `nested = FALSE`; given with `nested = TRUE`
+#'   it is ignored with a warning of class `nestimate_ignored_argument`.
+#' @param nested Whether the counts are nested in actors (transitions in
+#'   sequences, sequences in students or teams) and the residuals should
+#'   allow for it. Default `FALSE`: every count is an independent draw, as
+#'   before. `TRUE` draws the residuals of `nested_method`; see *Nested
+#'   data*.
+#' @param report Whether to report the overall test: `TRUE` adds it as the
+#'   plot subtitle and prints it as a one-row data frame with the columns
+#'   of [mosaic_test()] but `note`. The test is `nested_method` with
+#'   `nested = TRUE`, Pearson's chi-square otherwise. Default `FALSE`. Not
+#'   available for an `mcml`.
+#' @param nested_method With `nested = TRUE`, the method: `"rao_scott"`
+#'   (default), `"donner_klar"`, `"cmh"`, `"gee"` or `"glmm"`; see *Nested
+#'   data*. A method that cannot run on the design raises an error of class
+#'   `nestimate_bad_input`.
+#' @param actor With `nested = TRUE`, on a network or `netobject_group`:
+#'   `NULL` (default) makes every sequence its own actor; the name of a
+#'   column of the network's metadata (such as `"Actor"` or a team column,
+#'   as `actor` in [permutation()] and [bootstrap_network()]) pools the
+#'   sequences that share its value; several names give nested levels,
+#'   outermost first, which `"glmm"` models level by level and the other
+#'   methods reduce to the outermost. A name that is not a column raises an
+#'   error of class `nestimate_actor_missing`. `nested_method` and `actor`
+#'   given with `nested = FALSE` are ignored with a warning of class
+#'   `nestimate_ignored_argument`.
 #' @param n_perm The number of shuffles for `residuals = "permutation"`, at
 #'   least 2. Default `500`; use 1000 or more for stable values in the
 #'   tails.
@@ -450,6 +529,25 @@
 #' Friendly, M. (1994). Mosaic displays for multi-way contingency tables.
 #' \emph{Journal of the American Statistical Association}, 89(425),
 #' 190--200. \doi{10.1080/01621459.1994.10476460}
+#'
+#' Rao, J. N. K., & Scott, A. J. (1984). On chi-squared tests for multiway
+#' contingency tables with cell proportions estimated from survey data.
+#' \emph{The Annals of Statistics}, 12(1), 46--60.
+#' \doi{10.1214/aos/1176346391}
+#'
+#' Donner, A., & Klar, N. (1994). Methods for comparing event rates in
+#' intervention studies when the unit of allocation is a cluster.
+#' \emph{American Journal of Epidemiology}, 140(3), 279--289.
+#' \doi{10.1093/oxfordjournals.aje.a117247}
+#'
+#' Landis, J. R., Heyman, E. R., & Koch, G. G. (1978). Average partial
+#' association in three-way contingency tables: A review and discussion of
+#' alternative tests. \emph{International Statistical Review}, 46(3),
+#' 237--254. \doi{10.2307/1402373}
+#'
+#' Liang, K.-Y., & Zeger, S. L. (1986). Longitudinal data analysis using
+#' generalized linear models. \emph{Biometrika}, 73(1), 13--22.
+#' \doi{10.1093/biomet/73.1.13}
 #' @export
 #' @examples
 #' data(group_regulation_long, package = "Nestimate")
@@ -457,6 +555,9 @@
 #'                      format = "long", actor = "Actor", action = "Action",
 #'                      order = "Time")
 #' mosaic_plot(net, seed = 1)
+#'
+#' # Transitions are nested in students' sequences, students in teams:
+#' mosaic_plot(net, nested = TRUE, actor = "Group", report = TRUE)
 #'
 #' # A tidy data frame: columns by group, segments by state
 #' df <- data.frame(
@@ -490,13 +591,23 @@ mosaic_plot.netobject <- function(x,
                                   seed = NULL,
                                   values = FALSE,
                                   style = c("classic", "flat"),
-                                  ...) {
+                                  ...,
+                                  nested = FALSE,
+                                  nested_method = c("rao_scott",
+                                                    "donner_klar", "cmh",
+                                                    "gee", "glmm"),
+                                  actor = NULL,
+                                  report = FALSE) {
+  method <- .resolve_nesting(nested, match.arg(nested_method),
+                             !missing(residuals), !missing(nested_method),
+                             actor)
   .mosaic_plot_impl(x, source_class = "netobject",
                     xlab = xlab, ylab = ylab, range = range,
                     top_angle = top_angle, left_angle = left_angle,
                     residuals = match.arg(residuals),
                     n_perm = n_perm, seed = seed, values = values,
-                    style = match.arg(style), ...)
+                    style = match.arg(style), nested_method = method,
+                    actor = actor, report = report, ...)
 }
 
 #' @export
@@ -512,13 +623,22 @@ mosaic_plot.htna <- function(x,
                              seed = NULL,
                              values = FALSE,
                              style = c("classic", "flat"),
-                             ...) {
+                             ...,
+                             nested = FALSE,
+                             nested_method = c("rao_scott", "donner_klar",
+                                               "cmh", "gee", "glmm"),
+                             actor = NULL,
+                             report = FALSE) {
+  method <- .resolve_nesting(nested, match.arg(nested_method),
+                             !missing(residuals), !missing(nested_method),
+                             actor)
   .mosaic_plot_impl(x, source_class = "htna",
                     xlab = xlab, ylab = ylab, range = range,
                     top_angle = top_angle, left_angle = left_angle,
                     residuals = match.arg(residuals),
                     n_perm = n_perm, seed = seed, values = values,
-                    style = match.arg(style), ...)
+                    style = match.arg(style), nested_method = method,
+                    actor = actor, report = report, ...)
 }
 
 #' @export
@@ -606,13 +726,25 @@ mosaic_plot.netobject_group <- function(x,
                                         ncol = 2L,
                                         values = FALSE,
                                         style = c("classic", "flat"),
-                                        ...) {
+                                        ...,
+                                        nested = FALSE,
+                                        nested_method = c("rao_scott",
+                                                          "donner_klar",
+                                                          "cmh", "gee",
+                                                          "glmm"),
+                                        actor = NULL,
+                                        report = FALSE) {
+  method <- .resolve_nesting(nested, match.arg(nested_method),
+                             !missing(residuals), !missing(nested_method),
+                             actor)
   .mosaic_plot_impl(x, source_class = "netobject_group",
                     xlab = xlab, ylab = ylab, range = range,
                     top_angle = top_angle, left_angle = left_angle,
                     residuals = match.arg(residuals),
                     n_perm = n_perm, seed = seed, ncol = ncol,
-                    values = values, style = match.arg(style), ...)
+                    values = values, style = match.arg(style),
+                    nested_method = method, actor = actor,
+                    report = report, ...)
 }
 
 #' @export
@@ -628,17 +760,52 @@ mosaic_plot.table <- function(x,
                               seed = NULL,
                               values = FALSE,
                               style = c("classic", "flat"),
-                              ...) {
-  .mosaic_plot_tab(x, xlab = xlab, ylab = ylab, range = range,
+                              ...,
+                              nested = FALSE,
+                              nested_method = c("rao_scott", "donner_klar",
+                                                "cmh", "gee", "glmm"),
+                              report = FALSE) {
+  method <- .resolve_nesting(nested, match.arg(nested_method),
+                             !missing(residuals), !missing(nested_method),
+                             actor = NULL)
+  residuals <- match.arg(residuals)
+  # A three-way table is rows x columns x actors: the mosaic draws the
+  # pooled two-way table, nested = TRUE reads the actors.
+  counts <- if (length(dim(x)) == 3L) unclass(x) else NULL
+  tab <- if (is.null(counts)) x else as.table(rowSums(counts, dims = 2L))
+  if (!is.null(method) && is.null(counts)) {
+    stop(errorCondition(paste0(
+      "nested = TRUE needs the counts of each actor: pass a three-way ",
+      "table (rows x columns x actors), e.g. table(var1, var2, actor)."),
+      class = "nestimate_bad_input", call = NULL))
+  }
+  if (is.null(method) && !is.null(counts)) {
+    stop(errorCondition(paste0(
+      "A three-way table is read as rows x columns x actors and needs ",
+      "nested = TRUE; pass a two-way table otherwise."),
+      class = "nestimate_bad_input", call = NULL))
+  }
+  fit <- .mosaic_fit_report(tab, method, report, counts = counts)
+  .mosaic_plot_tab(tab, xlab = xlab, ylab = ylab, range = range,
                    top_angle = top_angle, left_angle = left_angle,
-                   residuals = match.arg(residuals),
+                   residuals = residuals,
                    n_perm = n_perm, seed = seed, values = values,
-                   style = match.arg(style), ...)
+                   style = match.arg(style), stdres = fit$stdres,
+                   subtitle = fit$subtitle, ...)
 }
 
 #' @export
 #' @rdname mosaic_plot
 mosaic_plot.matrix <- function(x, ...) mosaic_plot.table(as.table(x), ...)
+
+#' @export
+#' @rdname mosaic_plot
+mosaic_plot.array <- function(x, ...) {
+  # Only a three-way array (rows x columns x actors) is read as a table;
+  # any other array keeps the default's "no method" error.
+  if (length(dim(x)) != 3L) return(mosaic_plot.default(x, ...))
+  mosaic_plot.table(as.table(x), ...)
+}
 
 #' @export
 #' @rdname mosaic_plot
@@ -675,12 +842,29 @@ mosaic_plot.data.frame <- function(x,
                               residuals = "permutation",
                               n_perm = 500L, seed = NULL,
                               ncol = 2L, values = FALSE,
-                              style = c("classic", "flat"), ...) {
+                              style = c("classic", "flat"),
+                              nested_method = NULL, actor = NULL,
+                              report = FALSE, ...) {
   style  <- match.arg(style)
   .mosaic_reject_df_args(style, ...)
   panels <- .mosaic_panels(x, source_class, level)
   xlab <- xlab %||% panels$xlab_default
   ylab <- ylab %||% panels$ylab_default
+
+  # nested = TRUE: count every actor's table and fit the method once;
+  # report = TRUE: the test line for the subtitle, the row printed.
+  nested <- NULL
+  if (!is.null(nested_method) || isTRUE(report)) {
+    tab <- panels$tabs[[1L]]
+    arr <- if (is.null(nested_method)) NULL else
+      .mosaic_cluster_array(x, source_class, actor, tab)
+    nested <- .mosaic_fit_report(tab, nested_method, report,
+                                 counts = arr$counts, levels = arr$levels,
+                                 predictor = arr$predictor %||% "rows")
+  } else {
+    .assert("`report` must be TRUE or FALSE" =
+              is.logical(report) && length(report) == 1L && !is.na(report))
+  }
 
   # mcml level="clusters" is the only multi-panel case: one mosaic per
   # cluster, faceted into a single ggplot with one shared fill legend.
@@ -707,7 +891,8 @@ mosaic_plot.data.frame <- function(x,
                           residuals = residuals,
                           n_perm = n_perm, seed = seed,
                           axis_groups = ag, values = values,
-                          style = style, ...)
+                          style = style, stdres = nested$stdres,
+                          subtitle = nested$subtitle, ...)
     if (!is.null(panels$titles)) p + ggplot2::ggtitle(panels$titles[[i]]) else p
   })
 
@@ -1136,7 +1321,7 @@ mosaic_plot.data.frame <- function(x,
 }
 
 .mosaic_rect_data <- function(tab, residuals = "permutation",
-                              n_perm = 500L, seed = NULL) {
+                              n_perm = 500L, seed = NULL, stdres = NULL) {
   n <- nrow(tab); m <- ncol(tab)
   if (n < 1L || m < 1L) {
     stop(errorCondition(
@@ -1163,7 +1348,12 @@ mosaic_plot.data.frame <- function(x,
   row_labels <- rownames(tab) %||% as.character(seq_len(n))
   col_labels <- colnames(tab) %||% as.character(seq_len(m))
 
-  stdres <- if (identical(residuals, "permutation")) {
+  # `stdres` given: residuals computed upstream (the clustered methods).
+  stdres <- if (!is.null(stdres)) {
+    .assert("precomputed residuals must match the table shape" =
+              identical(dim(stdres), dim(tab)))
+    stdres
+  } else if (identical(residuals, "permutation")) {
     .mosaic_perm_stdres(tab, n_perm = n_perm, seed = seed)
   } else {
     suppressWarnings(stats::chisq.test(tab))$stdres
@@ -1203,10 +1393,13 @@ mosaic_plot.data.frame <- function(x,
                              top_angle = NULL, left_angle = NULL,
                              residuals = "permutation", n_perm = 500L,
                              seed = NULL, axis_groups = NULL,
-                             values = FALSE, style = "classic", ...) {
+                             values = FALSE, style = "classic",
+                             stdres = NULL, subtitle = NULL, ...) {
   .mosaic_reject_df_args(style, ...)
   d <- .mosaic_rect_data(tab, residuals = residuals,
-                         n_perm = n_perm, seed = seed)
+                         n_perm = n_perm, seed = seed, stdres = stdres)
+  legend_name <- if (is.null(stdres)) "Standardized\nresidual" else
+    "Cluster-adjusted\nresidual"
   # "flat" routes to the ported Saqrmisc renderer: white gutters, theme_void,
   # in-tile labels. `values = TRUE` maps to in-tile standardized residuals,
   # unless the caller passes an explicit `tile_label` via `...`.
@@ -1222,10 +1415,17 @@ mosaic_plot.data.frame <- function(x,
     if (is.null(dots$tile_label)) {
       dots$tile_label <- if (isTRUE(values)) "residual" else "none"
     }
+    # Only a nested fill gets its own legend title; an explicit
+    # legend_title (NULL included) is kept as given.
+    if (!is.null(stdres) && !"legend_title" %in% names(dots)) {
+      dots$legend_title <- legend_name
+    }
     .mosaic_flat_check_args(names(dots))
-    return(do.call(.mosaic_flat_draw,
-                   c(list(res = attr(d, "stdres"), tab = tab, range = range),
-                     dots)))
+    p <- do.call(.mosaic_flat_draw,
+                 c(list(res = attr(d, "stdres"), tab = tab, range = range),
+                   dots))
+    if (!is.null(subtitle)) p <- p + ggplot2::labs(subtitle = subtitle)
+    return(p)
   }
   # Classic style reads nothing from `...`.
   .warn_ignored_dots("mosaic_plot(style = \"classic\")", ...)
@@ -1245,7 +1445,7 @@ mosaic_plot.data.frame <- function(x,
     ggplot2::geom_rect(color = "black", linewidth = 0.4,
                        show.legend = TRUE) +
     ggplot2::scale_fill_gradient2(
-      name   = "Standardized\nresidual",
+      name   = legend_name,
       oob    = scales::oob_squish,
       low    = "#D33F6A",
       high   = "#4A6FE3",
@@ -1294,6 +1494,8 @@ mosaic_plot.data.frame <- function(x,
       values = c(`TRUE` = "white", `FALSE` = "grey20"), guide = "none"
     )
   }
+  # Added only when reported, so default plots carry no subtitle entry.
+  if (!is.null(subtitle)) p <- p + ggplot2::labs(subtitle = subtitle)
   p
 }
 

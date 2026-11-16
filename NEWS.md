@@ -1,3 +1,13 @@
+# Nestimate 1.0.13
+
+* Mosaics can account for nested data. `mosaic_plot(x, nested = TRUE)` (networks, `netobject_group`, three-way tables) draws residuals that allow for counts nested in actors and puts the overall test in the subtitle; `actor =`, as in `permutation()`, names the actor column (each sequence by default; several columns for nested levels). `nested_method` chooses the test: `"rao_scott"` (default), `"donner_klar"`, `"cmh"`, `"gee"` or `"glmm"`. `mosaic_analysis()` takes the same `nested`, `nested_method` and `actor`; its `stats` table gains `df2`, `clusters`, `design_effect` and `icc`. New `mosaic_test()` returns Pearson's test and the five nested tests side by side as a tidy data frame (one row per test, or one row per cell with `level = "cells"`); a test the design cannot support gets a row with the reason in `note`. Rao-Scott reproduces `survey::svychisq()`, the GEE `geepack::geeglm()`, CMH `stats::mantelhaen.test()` and Donner-Klar `aod::donner()`. `report = TRUE` (in both `mosaic_plot()` and `mosaic_analysis()`) adds the overall test, nested or Pearson's, as the plot subtitle and prints it as a one-row table. `nested = FALSE` and `report = FALSE` are the defaults, so existing calls draw what they drew before.
+
+* `sequence_compare()` gains `actor`: the permutation test of each pattern reassigns whole actors (or, for actors with sequences in several groups, shuffles within them), as `permutation()` does. Default unchanged.
+
+* `actor` accepts nested levels, outermost first (e.g. `actor = c("Group", "User")`), in `permutation()`, `permutation_diagnostics()`, `compare_networks()`, `sequence_compare()` and `bootstrap_network()`. Permutation tests reassign units at the level where the group label is constant, within the units above it; the bootstrap resamples the outermost level. One-level and default calls are unchanged.
+
+* Help pages of `permutation()`, `bootstrap_network()` and `compare_networks()` describe when `actor` changes the result. The nested-data article covers the nested mosaics, `mosaic_test()`, `sequence_compare(actor =)` and `bootstrap_network(actor =)`.
+
 # Nestimate 1.0.12
 
 * New verbs for tables that were reached with `as.data.frame()`: `node_clusters()` for `hypergraph_cluster()`, `label_predictions()` and `label_scores()` for `hypergraph_transduction()`; `state_distribution()` accepts the result of `plot_state_frequencies()`, and `summary()` of `cluster_diagnostics()` returns the per-cluster table. The `as.data.frame()` methods still work.

@@ -86,7 +86,7 @@ test_that("bad block inputs raise classed errors", {
   net <- .sim_boot_nested(seed = 6)
   expect_error(bootstrap_network(net, iter = 10L, actor = "nope"),
                class = "nestimate_actor_missing")
-  expect_error(bootstrap_network(net, iter = 10L, actor = c("a", "b")),
+  expect_error(bootstrap_network(net, iter = 10L, actor = c("a", "a")),
                class = "nestimate_bad_actor")
   net_one <- net
   net_one$metadata$one <- 1L

@@ -104,9 +104,12 @@ looked up in the network's metadata (such as \code{"student_id"} when
 sessions are nested in students, or \code{"Group"} for students nested in
 teams) and then in its wide sequence data. Whole actors are then
 shuffled, and the ICC and design effect are reported; see the sections
-\emph{Nested data and actor} and \emph{ICC and design effect}. Default \code{NULL}:
-sequences are shuffled one by one. A value that is not one column name,
-or \code{actor} with \code{paired = TRUE}, raises an error of class
+\emph{Nested data and actor} and \emph{ICC and design effect}. Several column
+names, outermost first, are nested levels (such as
+\code{c("Group", "Student")}): labels are shuffled at the level where they
+are assigned, within the units above it. Default \code{NULL}:
+sequences are shuffled one by one. A value that is not one or more
+distinct column names, or \code{actor} with \code{paired = TRUE}, raises an error of class
 \code{nestimate_bad_actor}; a column that is absent or has missing values,
 \code{nestimate_actor_missing}; a column whose values do not give one id per
 sequence (or, with \code{concat}, that joins rows of different actors),
@@ -156,15 +159,24 @@ method.}
 \item{edge_betweenness}{For edge-betweenness input: the \code{invert}
 setting and the source method used.}
 \item{iter, alpha, paired, adjust}{The settings used.}
-\item{actor}{The \code{actor} column name, or \code{NULL}.}
-\item{n_actors}{The number of distinct actors, or \code{NULL}.}
+\item{actor}{The \code{actor} column name (or names, outermost first), or
+\code{NULL}.}
+\item{n_actors}{The number of distinct actors (with several levels, at
+the innermost level), or \code{NULL}.}
+\item{actor_levels}{Only with several \code{actor} levels: one row per
+level, with \code{level} (the column), \code{n_actors} (the units at that
+level), \code{n_pure} and \code{n_crossed} (the units the shuffle met at that
+level, inside crossed units of the level above, that sit in one group
+or in both) and \code{design} (\code{"between"}, \code{"within"}, \code{"mixed"}, or
+\code{"not opened"} when no unit above was crossed).}
 \item{null_sd}{The SD of each edge's shuffled differences (the
 effect-size denominator), as a matrix.}
 \item{null_sd_m}{The SD of the global statistic M over the shuffles.
 Absent for edge-betweenness input.}
 \item{clustering}{Only with \code{actor}: a one-row data frame with
 \code{n_sequences}, \code{n_actors}, \code{design} (\code{"between"}, \code{"within"} or
-\code{"mixed"}), \code{icc} with \code{icc_ci_lower} and \code{icc_ci_upper} (how alike
+\code{"mixed"}; with several levels, one \code{"<level>: <design> (<n> actors)"}
+entry per level), \code{icc} (at the innermost level) with \code{icc_ci_lower} and \code{icc_ci_upper} (how alike
 the sequences of one actor are), \code{deff_edges} (the median design
 effect over edges), \code{deff_global} (the design effect for M) and
 \code{min_p}, the smallest attainable p-value.}
@@ -281,6 +293,44 @@ do. With few actors there are few distinct ways to shuffle them, and a
 warning of class \code{nestimate_few_actors} is raised when no p-value could
 fall below \code{alpha}.
 
+Several columns, outermost first (\code{actor = c("Group", "Student")}, students
+within teams), name nested levels; the unit at each level is the
+combination of its column with the ones before it. A level that adds no
+units below the one before it (the levels given innermost first) raises
+an error of class \code{nestimate_bad_actor}. A column whose ids repeat across
+the units of the next column (a class code reused in every team) cannot
+be told apart from a correctly nested one, so the order of the columns is
+the caller's statement of the design. The labels are then
+shuffled at the level where they are assigned, within the units above it
+(Anderson & ter Braak, 2003; Good, 2005): teams whose sequences are all in
+one group move as wholes among such teams, exactly as with one column; a
+team with sequences in both groups is opened, and inside it the students
+all in one group exchange labels with each other (never with students of
+another team), while a student in both groups is opened in turn, down to
+the last column, inside which single sequences exchange labels. Set the
+levels whenever the groups are assigned below the top level (students of
+one team in different conditions): \code{actor = "Group"} alone would then
+shuffle single sequences within each team and treat the sessions of one
+student as independent. The number of distinct arrangements, the
+\code{nestimate_few_actors} check and \code{min_p} follow the whole scheme. One
+column, or \code{NULL}, runs exactly the scheme described above.
+
+When to set \code{actor}: when the groups are made of different actors (high-
+versus low-achieving students, each student in one group), set it.
+Shuffling single sequences then treats the sequences of one actor as
+independent, and the test is too liberal. In one data set of sessions
+nested in students, two groups of different students with no true
+difference had 11.7\% of edges significant at \code{alpha = 0.05} when
+sessions were shuffled (23\% of replicates had at least one significant
+edge after Benjamini-Hochberg correction), against 4.6\% (0.5\%) when
+whole students were shuffled. When the groups vary within the same
+actors (pre- and post-test sessions of the same students), \code{actor}
+shuffles the labels within each actor; the plain test is also valid
+there (5.1\% against 5.0\% in the same data). Whether nesting matters is
+decided by the design effect, not by the ICC alone: in that data set the
+ICC was about 0.01, yet with about 59 transitions per student the design
+effect was about 1.5.
+
 \code{actor} is available for transition networks built from sequences
 (\code{"relative"}, \code{"frequency"}, \code{"co_occurrence"}). On one-hot data the
 actor column is held per row rather than per unit, so the call raises an
@@ -299,12 +349,15 @@ close to 0 indicates little evidence of a nesting effect. It is the
 one-way ANOVA ICC of each sequence's transition shares within each
 group, averaged over edges weighted by edge frequency and jackknife
 bias-corrected, with a 95\% interval from the leave-one-actor-out
-jackknife (Efron & Tibshirani, 1993).}
+jackknife (Efron & Tibshirani, 1993). With several \code{actor} levels it
+is computed at the innermost level (the finest actor, such as the
+student within a team), and \code{print()} says so.}
 \item{Design effect}{The ratio of the variance of an estimate under the
 clustered design to its variance had the units been sampled
 independently (Kish, 1965). Here it is the variance of the shuffled
 differences when whole actors are moved, divided by the variance when
-single sequences are moved, both drawn in the same run, reported as
+single sequences are moved (with several levels: under the whole
+nested scheme), both drawn in the same run, reported as
 the median over edges and for the global statistic M. For equal
 numbers of sequences per actor m, Kish gives the approximation
 \code{1 + (m - 1) * ICC}.}
@@ -327,7 +380,11 @@ Line 3: the edges present in either network and how many differ at
 ICC with its interval, whether actors sit in one group (\code{between}), in
 both (\code{within}) or either (\code{mixed}), and the design effects. With \code{actor},
 when no p-value can fall below \code{alpha} (too few actors, or too small an
-\code{iter}), a last line says so.
+\code{iter}), a last line says so. With several \code{actor} levels, line 2
+names the levels (\code{Actor: Group > Student (nested)}), and line 5 is
+replaced by two: the design at every level, with its number of actors
+(\verb{Design: Group: mixed (200 actors), Student: between (2000 actors)}), and
+the ICC at the innermost level.
 }
 
 \examples{

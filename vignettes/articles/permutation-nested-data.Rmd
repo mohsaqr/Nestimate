@@ -13,8 +13,11 @@ of 10, and the achievement level is given to the team, not to the
 student. A comparison of High and Low is therefore a comparison of teams.
 The students are nested in teams. The permutation test treats each
 student's sequence as an independent unit, so a nesting effect, teammates
-behaving alike, would enter the comparison. This tutorial runs the
-comparison, checks for a nesting effect, and shows how to report it.
+behaving alike, would enter the comparison. The arguments for nested data
+are `actor` in `permutation()`, `sequence_compare()` and
+`bootstrap_network()`, and `nested` with `actor` in `mosaic_plot()`,
+`mosaic_analysis()` and `mosaic_test()`. Their defaults treat every
+sequence as an independent unit.
 
 ```{r data}
 achievers <- build_network(group_regulation_long, method = "relative",
@@ -40,11 +43,11 @@ transition, whether the High minus Low difference is larger than the
 reassignments produce: 42 of 78 transitions are. The global test asks
 whether the two networks differ at all, with two statistics: M, the sum
 of all absolute edge differences, and S, the largest one. (These letters
-follow `permutation()`'s convention; in the Network Comparison Test of
-van Borkulo et al., 2023, and in `nct()`, M is the largest edge difference
-and S the difference in global strength.) Both have
-p = 0.000999, the smallest value 1,000 reassignments can give: no
-reassignment produced a difference as large as the observed one.
+follow `permutation()`'s convention; in the Network Comparison Test and
+in `nct()`, M is the largest edge difference and S the difference in
+global strength.) Both have p = 0.000999, the smallest value 1,000
+reassignments can give: no reassignment produced a difference as large as
+the observed one.
 
 The test assumes that any student could have been in either group. In
 this design only whole teams could, so the next step accounts for the
@@ -73,18 +76,17 @@ from each other as sequences from different teams: the observations are
 close to independent, and an analysis that ignores the nesting gives
 nearly the same results as one that accounts for it. Accounting for
 nesting becomes necessary when the ICC is not negligible, and more so
-when units are large, because the design effect grows with both:
-approximately 1 + (m − 1) × ICC for units of size m (Kish, 1965). A
-commonly cited rule of thumb is that design effects below 2 do not lead
-to seriously misleading inferences (Muthén & Satorra, 1995). Here the
-ICC is −0.002 and the design effect 1.03, so accounting for the nesting
-was not necessary, and the results with and without it were almost the
-same.
+when units are large, because the design effect grows with both: Kish's
+approximation is 1 + (m − 1) × ICC for units of size m. A commonly cited
+rule of thumb is that design effects below 2 do not lead to seriously
+misleading inferences. Here the ICC is −0.002 and the design effect 1.03,
+so accounting for the nesting was not necessary, and the results with and
+without it were almost the same.
 
 ## The nesting diagnostics
 
 The intraclass correlation (ICC) is the proportion of the total variance
-that lies between units rather than within them (Shrout & Fleiss, 1979):
+that lies between units rather than within them:
 
 $$\text{ICC} = \frac{\sigma^2_{\text{between}}}{\sigma^2_{\text{between}} + \sigma^2_{\text{within}}}.$$
 
@@ -97,13 +99,13 @@ transitions that is, for example, `plan` to `monitor`; the one-way ANOVA
 ICC of that share across teams is computed within High and within Low.
 The transition ICCs are averaged with weights equal to transition
 frequency. The 95% interval comes from the jackknife, leaving out one
-team at a time (Efron & Tibshirani, 1993).
+team at a time.
 
 The design effect is the ratio of the variance of an estimate under the
-nested design to its variance had the units been sampled independently
-(Kish, 1965). Here it is the variance of the reassigned differences when
-whole teams move, divided by the variance when single students move. A
-value of 1 means both reassignments give the same chance variation.
+nested design to its variance had the units been sampled independently.
+Here it is the variance of the reassigned differences when whole teams
+move, divided by the variance when single students move. A value of 1
+means both reassignments give the same chance variation.
 
 `permutation_diagnostics()` runs the ordinary and the team-level test on
 the same data and reports both with these two quantities, one row per
@@ -152,6 +154,75 @@ the finite number of reassignments, not from the nesting. The ICC
 indicates little evidence of a nesting effect, and the High–Low
 difference does not depend on the nesting of students in teams.
 
+## Mosaic plots of nested counts
+
+`mosaic_plot()` computes the residuals of a group-by-action table. With
+`nested = TRUE` the counts are taken team by team (`actor = "Group"`), and
+the residuals allow for the dependence of actions within a team.
+`nested_method` selects the method: `"rao_scott"` (default),
+`"donner_klar"`, `"cmh"`, `"gee"` or `"glmm"`. `report = TRUE` prints the
+overall test and adds it to the plot as a subtitle.
+
+```{r mosaic-default, fig.width = 7, fig.height = 6}
+mosaic_plot(achievers, seed = 1, left_angle = 0)
+```
+
+```{r mosaic-nested, fig.width = 7, fig.height = 6}
+mosaic_plot(achievers, nested = TRUE, actor = "Group", report = TRUE,
+            left_angle = 0)
+```
+
+```{r mosaic-donner-klar, fig.width = 7, fig.height = 6}
+mosaic_plot(achievers, nested = TRUE, nested_method = "donner_klar",
+            actor = "Group", report = TRUE, left_angle = 0)
+```
+
+The subtitle and the printed row give the test statistic, its degrees of
+freedom, the p-value, the number of teams, and the design effect or the
+intracluster correlation where the method estimates one.
+
+## Tests of association for nested counts
+
+```{r mosaic-test}
+mosaic_test(achievers, actor = "Group")
+```
+
+`mosaic_test()` returns one row per test: Pearson's chi-square on the
+pooled counts and the five tests for nested counts. A test that the design
+does not admit returns `NA` with the reason in `note`. The
+Cochran-Mantel-Haenszel test stratifies by team, and the achievement level
+is constant within each team. `method` selects tests, and
+`level = "cells"` returns the residual of every cell.
+
+```{r mosaic-test-cells}
+head(mosaic_test(achievers, method = "rao_scott", actor = "Group",
+                 level = "cells"))
+```
+
+## Sequence patterns
+
+```{r patterns}
+set.seed(1)
+sequence_compare(achievers, sub = 2:3, iter = 1000, actor = "Group")
+```
+
+With `actor = "Group"`, the permutation test of each pattern reassigns
+whole teams. The header reports the actor column, the number of actors and
+the design: `between` when each team belongs to one group, `within` when
+every team has sequences in both groups, `mixed` otherwise.
+
+## Bootstrap
+
+```{r bootstrap}
+pooled <- build_network(group_regulation_long, method = "relative",
+                        actor = "Actor", action = "Action", time = "Time")
+bootstrap_network(pooled, iter = 1000, seed = 1, actor = "Group")
+```
+
+With `actor = "Group"`, `bootstrap_network()` resamples whole teams, and a
+resampled team contributes all of its sequences. The output adds the
+intracluster correlation and the design effect of the edges.
+
 ## Reporting
 
 > Because the data were nested (students in teams; with repeated
@@ -159,49 +230,29 @@ difference does not depend on the nesting of students in teams.
 > a permutation test that accounted for the nesting: in each of 1,000
 > permutations, whole teams rather than single sequences were reassigned
 > between the groups, so that sequences from the same team stayed
-> together (Good, 2005). Units that belonged to one group were reassigned
-> as a whole, and units that contributed to both groups, as in a
-> repeated-measures design, had their sequences reassigned within the
-> unit. The nesting effect was quantified with the intraclass correlation
-> (ICC; Shrout & Fleiss, 1979) and the design effect, the ratio of the
-> variance under the nested design to the variance under independent
-> sampling (Kish, 1965). The ICC indicated little evidence of a nesting
-> effect (ICC = −0.002, 95% CI −0.006 to 0.002; design effect 1.03 across
-> 200 teams). The networks of high and low achievers differed overall
-> (M = 2.61, p < .001), and 42 of 78 transitions differed at p < .05.
+> together. Units that belonged to one group were reassigned as a whole,
+> and units that contributed to both groups, as in a repeated-measures
+> design, had their sequences reassigned within the unit. The nesting
+> effect was quantified with the intraclass correlation (ICC) and the
+> design effect, the ratio of the variance under the nested design to
+> the variance under independent sampling (ICC = −0.002, 95% CI −0.006 to
+> 0.002; design effect 1.03 across 200 teams). The networks of high and
+> low achievers differed overall (M = 2.61, p < .001), and 42 of 78
+> transitions differed at p < .05.
 
-## When to use which
+## Arguments for nested data
 
-- `permutation()`: one sequence per student, with no grouping above the
-  student.
-- `permutation(actor = )`: several sequences per student, or students in
-  teams, classes or other units. It handles units in one group, units in
-  both groups, and mixtures, and reports the ICC and design effect.
-- `paired = TRUE`: exactly one sequence per student in each of two
-  conditions.
-- `permutation_diagnostics()`: to show next to each other what the
-  ordinary and the team-level test conclude.
-- `actor` applies to transition networks (`relative`, `frequency`,
-  `co_occurrence`). Correlation networks do not keep the unit
-  identifiers after estimation.
+| Function | Argument | Effect |
+|---|---|---|
+| `permutation()` | `actor` | Reassigns whole actors when each actor belongs to one group; reassigns sequences within each actor that has sequences in both groups |
+| `permutation_diagnostics()` | `actor` | Reports the test with and without the actor-level reassignment, with the ICC and the design effect |
+| `sequence_compare()` | `actor` | The reassignment scheme of `permutation()`, applied to the test of each pattern |
+| `bootstrap_network()` | `actor` | Resamples whole actors |
+| `mosaic_plot()`, `mosaic_analysis()` | `nested`, `nested_method`, `actor`, `report` | Residuals and overall test from the counts of each actor |
+| `mosaic_test()` | `method`, `actor`, `level` | Pearson's test and the five nested tests in one table |
 
-## References
-
-Kish, L. (1965). *Survey Sampling*. Wiley.
-
-Muthén, B. O., & Satorra, A. (1995). Complex sample data in structural
-equation modeling. *Sociological Methodology*, 25, 267–316.
-
-Shrout, P. E., & Fleiss, J. L. (1979). Intraclass correlations: Uses in
-assessing rater reliability. *Psychological Bulletin*, 86(2), 420–428.
-
-van Borkulo, C. D., van Bork, R., Boschloo, L., Kossakowski, J. J.,
-Tio, P., Schoevers, R. A., Borsboom, D., & Waldorp, L. J. (2023).
-Comparing network structures on three aspects: A permutation test.
-*Psychological Methods*, 28(6), 1273–1285.
-
-Efron, B., & Tibshirani, R. J. (1993). *An Introduction to the
-Bootstrap*. Chapman & Hall.
-
-Good, P. (2005). *Permutation, Parametric, and Bootstrap Tests of
-Hypotheses* (3rd ed.). Springer.
+The design effect is the ratio of the variance of an estimate under the
+nested design to its variance under independent sampling. Kish's
+approximation is 1 + (m − 1) × ICC for m observations per actor. `actor`
+applies to transition networks (`relative`, `frequency`,
+`co_occurrence`).

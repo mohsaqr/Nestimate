@@ -156,8 +156,8 @@ test_that("unsupported or missing block inputs raise classed errors", {
   n1 <- build_network(d, method = "cor")
   expect_error(permutation_diagnostics(n1, n1, actor = "id", iter = 10L),
                class = "nestimate_actor_unsupported")
-  expect_error(permutation_diagnostics(net, actor = c("a", "b")),
-               "single column name")
+  expect_error(permutation_diagnostics(net, actor = c("a", "a")),
+               "distinct column names")
 })
 
 test_that("permutation_diagnostics refuses an mcml with a classed error", {

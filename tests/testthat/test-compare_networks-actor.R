@@ -36,8 +36,8 @@ test_that("actor needs the permutation backend", {
   expect_error(compare_networks(.cn_actor_nets(), actor = "Group"),
                class = "nestimate_compare_actor_needs_permutation")
   expect_error(compare_networks(.cn_actor_nets(), test = "permutation",
-                                actor = c("a", "b")),
-               "single column name")
+                                actor = c("a", "a")),
+               "distinct column names")
 })
 
 test_that("the global view and summary accept the Nesting rows", {

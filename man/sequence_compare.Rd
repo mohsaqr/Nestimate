@@ -14,7 +14,8 @@ sequence_compare(
   min_freq = 5L,
   test = c("permutation", "chisq", "none"),
   iter = 1000L,
-  adjust = "fdr"
+  adjust = "fdr",
+  actor = NULL
 )
 
 \method{print}{net_sequence_comparison}(x, ...)
@@ -71,6 +72,25 @@ of class \code{nestimate_undefined_effect_size}. Default \code{1000}.}
 (\code{"holm"}, \code{"hochberg"}, \code{"hommel"}, \code{"bonferroni"}, \code{"BH"}, \code{"BY"},
 \code{"fdr"} or \code{"none"}). Default \code{"fdr"} (Benjamini-Hochberg).}
 
+\item{actor}{The column identifying the actor each sequence belongs to,
+or several columns for nested levels, outermost first
+(\code{c("Group", "Student")}); see \emph{Nested data and actor}. With several
+levels, labels are shuffled at the level where they are assigned,
+within the units above it, and \code{n_actors} counts the innermost level.
+For a \code{netobject_group}, \code{netobject} or \code{tna} model the columns are
+looked up in the network's \verb{$metadata} (for example the \code{Group} column
+kept by \code{\link[=build_network]{build_network()}} when students are nested in teams); for a
+data frame or matrix \code{x}, they are columns of \code{x}, which are then not
+read as positions. Only used with \code{test = "permutation"}; with
+\code{"chisq"} or \code{"none"} it is ignored with a warning of class
+\code{nestimate_ignored_argument}. Duplicated, missing or empty names, and
+levels that are not nested outermost first (a level that adds no units
+below the one before it), raise an error of class
+\code{nestimate_bad_actor}; a column that is absent or has missing values,
+\code{nestimate_actor_missing}; a column that does not give one id per
+sequence, \code{nestimate_actor_misaligned}. Default \code{NULL}: every sequence
+is shuffled on its own.}
+
 \item{...}{Not used.}
 
 \item{object}{For the \code{summary()} method: a \code{net_sequence_comparison}.}
@@ -120,7 +140,17 @@ was run, and by descending largest absolute residual otherwise.}
 \item{n_patterns}{The number of rows of the pattern table: the
 patterns that reach \code{min_freq} in every group.}
 \item{params}{The settings used: \code{sub} (after dropping lengths longer
-than the sequences), \code{min_freq}, \code{test}, \code{iter} and \code{adjust}.}
+than the sequences), \code{min_freq}, \code{test}, \code{iter} and \code{adjust}; with
+\code{actor} and \code{test = "permutation"} also \code{actor} (the column name),
+\code{n_actors} (the number of distinct actors among the sequences with a
+group) and \code{design} (\code{"between"} when every actor lies in one group,
+\code{"within"} when every actor lies in several, \code{"mixed"} otherwise).
+With several \code{actor} levels, \code{n_actors} counts the innermost level,
+\code{design} reads \code{"<level>: <design> (<n> actors)"} for every level,
+and \code{actor_levels} is a data frame with one row per level: \code{level},
+\code{n_actors}, \code{n_pure} and \code{n_crossed} (the units the shuffle met at
+that level, inside crossed units above, in one group or in several)
+and \code{design} (\code{"not opened"} when no unit above was crossed).}
 }
 }
 \description{
@@ -188,6 +218,39 @@ only.}
 The p-values are adjusted once across all patterns of all lengths, with
 \code{\link[stats:p.adjust]{stats::p.adjust()}}.
 }
+\section{Nested data and \code{actor}}{
+
+The permutation test treats every sequence as exchangeable. When several
+sequences come from the same actor (sessions of one student, students of
+one team), they resemble each other, and shuffling single sequences
+understates how much the pattern counts vary by chance: when the groups
+are made of different actors, the test then rejects too often. \code{actor}
+names the column identifying the actor of each sequence, and the shuffle
+respects it, as in \code{\link[=permutation]{permutation()}} (Good, 2005; Anderson & ter Braak,
+2003): an actor whose sequences all lie in one group keeps them together
+and moves as a whole, its group label shuffled among the other such
+actors; an actor with sequences in several groups (a within-actor design,
+such as pre and post sessions of each student) has its labels shuffled
+among its own sequences only, so it keeps its number of sequences in each
+group. Mixed designs combine the two. Use it whenever the groups are made
+of different actors; for groups within actors it costs little. The
+observed counts, proportions and residuals do not change; only the
+p-values and effect sizes do. Sequences with a missing group keep it.
+With few actors there are few distinct ways to shuffle them, and a
+warning of class \code{nestimate_few_actors} is raised when no p-value could
+fall below 0.05.
+
+Several columns, outermost first (\code{actor = c("Group", "Student")}), are
+nested levels, the unit at each level being the combination of its column
+with the ones before it. The labels are then shuffled at the level where
+they are assigned, within the units above it, as in \code{\link[=permutation]{permutation()}}: units
+whose sequences all lie in one group exchange their labels with the other
+such units of the same parent (all top-level units at the first level),
+each moving whole; a unit with sequences in several groups is opened at
+the next level, and inside such a unit of the last level single sequences
+exchange labels. One column runs exactly the one-level scheme above.
+}
+
 \section{Plot styles}{
 
 \code{plot()} draws the standardised residuals of the top \code{top_n} patterns,
@@ -219,9 +282,25 @@ seqs <- data.frame(
 grp <- rep(c("X", "Y"), 30)
 net <- build_network(seqs, method = "relative")
 res <- sequence_compare(net, group = grp, sub = 2:3, test = "chisq")
+\donttest{
+# Students are nested in teams, and Achiever is a team-level label:
+# shuffle whole teams, not single students
+net <- build_network(group_regulation_long, method = "relative",
+                     actor = "Actor", action = "Action", time = "Time",
+                     group = "Achiever")
+set.seed(1)
+sequence_compare(net, sub = 2, iter = 100, actor = "Group")
+}
 
 }
 \references{
+Anderson, M. J., & ter Braak, C. J. F. (2003). Permutation tests for
+multi-factorial analysis of variance. \emph{Journal of Statistical
+Computation and Simulation}, 73(2), 85-113. (the \code{actor} shuffle)
+
+Good, P. (2005). \emph{Permutation, Parametric, and Bootstrap Tests of
+Hypotheses} (3rd ed.). Springer. (the \code{actor} shuffle)
+
 Haberman, S. J. (1973). The analysis of residuals in cross-classified
 tables. \emph{Biometrics}, 29(1), 205--220. (standardised residuals)
 

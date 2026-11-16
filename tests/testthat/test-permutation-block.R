@@ -164,7 +164,7 @@ test_that("bad block arguments raise classed errors", {
   net <- .nested_net(seed = 7)
   expect_error(permutation(net, iter = 10L, actor = "nope"),
                class = "nestimate_actor_missing")
-  expect_error(permutation(net, iter = 10L, actor = c("a", "b")),
+  expect_error(permutation(net, iter = 10L, actor = c("a", "a")),
                class = "nestimate_bad_actor")
   expect_error(permutation(net, iter = 10L, actor = 1),
                class = "nestimate_bad_actor")

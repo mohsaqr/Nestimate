@@ -72,6 +72,37 @@ utils::globalVariables(c(
 #' The p-values are adjusted once across all patterns of all lengths, with
 #' [stats::p.adjust()].
 #'
+#' @section Nested data and \code{actor}:
+#' The permutation test treats every sequence as exchangeable. When several
+#' sequences come from the same actor (sessions of one student, students of
+#' one team), they resemble each other, and shuffling single sequences
+#' understates how much the pattern counts vary by chance: when the groups
+#' are made of different actors, the test then rejects too often. `actor`
+#' names the column identifying the actor of each sequence, and the shuffle
+#' respects it, as in [permutation()] (Good, 2005; Anderson & ter Braak,
+#' 2003): an actor whose sequences all lie in one group keeps them together
+#' and moves as a whole, its group label shuffled among the other such
+#' actors; an actor with sequences in several groups (a within-actor design,
+#' such as pre and post sessions of each student) has its labels shuffled
+#' among its own sequences only, so it keeps its number of sequences in each
+#' group. Mixed designs combine the two. Use it whenever the groups are made
+#' of different actors; for groups within actors it costs little. The
+#' observed counts, proportions and residuals do not change; only the
+#' p-values and effect sizes do. Sequences with a missing group keep it.
+#' With few actors there are few distinct ways to shuffle them, and a
+#' warning of class `nestimate_few_actors` is raised when no p-value could
+#' fall below 0.05.
+#'
+#' Several columns, outermost first (`actor = c("Group", "Student")`), are
+#' nested levels, the unit at each level being the combination of its column
+#' with the ones before it. The labels are then shuffled at the level where
+#' they are assigned, within the units above it, as in [permutation()]: units
+#' whose sequences all lie in one group exchange their labels with the other
+#' such units of the same parent (all top-level units at the first level),
+#' each moving whole; a unit with sequences in several groups is opened at
+#' the next level, and inside such a unit of the last level single sequences
+#' exchange labels. One column runs exactly the one-level scheme above.
+#'
 #' @param x The sequences: a `netobject_group` (from [build_network()] with
 #'   `group`, or from a clustering), whose groups are compared; a
 #'   `netobject`, `tna` model or `cograph_network` built from sequences; a
@@ -104,6 +135,24 @@ utils::globalVariables(c(
 #' @param adjust The p-value adjustment, any method of [stats::p.adjust()]
 #'   (`"holm"`, `"hochberg"`, `"hommel"`, `"bonferroni"`, `"BH"`, `"BY"`,
 #'   `"fdr"` or `"none"`). Default `"fdr"` (Benjamini-Hochberg).
+#' @param actor The column identifying the actor each sequence belongs to,
+#'   or several columns for nested levels, outermost first
+#'   (`c("Group", "Student")`); see *Nested data and actor*. With several
+#'   levels, labels are shuffled at the level where they are assigned,
+#'   within the units above it, and `n_actors` counts the innermost level.
+#'   For a `netobject_group`, `netobject` or `tna` model the columns are
+#'   looked up in the network's `$metadata` (for example the `Group` column
+#'   kept by [build_network()] when students are nested in teams); for a
+#'   data frame or matrix `x`, they are columns of `x`, which are then not
+#'   read as positions. Only used with `test = "permutation"`; with
+#'   `"chisq"` or `"none"` it is ignored with a warning of class
+#'   `nestimate_ignored_argument`. Duplicated, missing or empty names, and
+#'   levels that are not nested outermost first (a level that adds no units
+#'   below the one before it), raise an error of class
+#'   `nestimate_bad_actor`; a column that is absent or has missing values,
+#'   `nestimate_actor_missing`; a column that does not give one id per
+#'   sequence, `nestimate_actor_misaligned`. Default `NULL`: every sequence
+#'   is shuffled on its own.
 #'
 #' @return A `net_sequence_comparison` object. `print()` shows the numbers
 #'   of patterns and groups, the settings and the first 10 rows of the
@@ -126,10 +175,27 @@ utils::globalVariables(c(
 #'   \item{n_patterns}{The number of rows of the pattern table: the
 #'     patterns that reach `min_freq` in every group.}
 #'   \item{params}{The settings used: `sub` (after dropping lengths longer
-#'     than the sequences), `min_freq`, `test`, `iter` and `adjust`.}
+#'     than the sequences), `min_freq`, `test`, `iter` and `adjust`; with
+#'     `actor` and `test = "permutation"` also `actor` (the column name),
+#'     `n_actors` (the number of distinct actors among the sequences with a
+#'     group) and `design` (`"between"` when every actor lies in one group,
+#'     `"within"` when every actor lies in several, `"mixed"` otherwise).
+#'     With several `actor` levels, `n_actors` counts the innermost level,
+#'     `design` reads `"<level>: <design> (<n> actors)"` for every level,
+#'     and `actor_levels` is a data frame with one row per level: `level`,
+#'     `n_actors`, `n_pure` and `n_crossed` (the units the shuffle met at
+#'     that level, inside crossed units above, in one group or in several)
+#'     and `design` (`"not opened"` when no unit above was crossed).}
 #' }
 #'
 #' @references
+#' Anderson, M. J., & ter Braak, C. J. F. (2003). Permutation tests for
+#' multi-factorial analysis of variance. \emph{Journal of Statistical
+#' Computation and Simulation}, 73(2), 85-113. (the `actor` shuffle)
+#'
+#' Good, P. (2005). \emph{Permutation, Parametric, and Bootstrap Tests of
+#' Hypotheses} (3rd ed.). Springer. (the `actor` shuffle)
+#'
 #' Haberman, S. J. (1973). The analysis of residuals in cross-classified
 #' tables. \emph{Biometrics}, 29(1), 205--220. (standardised residuals)
 #'
@@ -148,6 +214,15 @@ utils::globalVariables(c(
 #' grp <- rep(c("X", "Y"), 30)
 #' net <- build_network(seqs, method = "relative")
 #' res <- sequence_compare(net, group = grp, sub = 2:3, test = "chisq")
+#' \donttest{
+#' # Students are nested in teams, and Achiever is a team-level label:
+#' # shuffle whole teams, not single students
+#' net <- build_network(group_regulation_long, method = "relative",
+#'                      actor = "Actor", action = "Action", time = "Time",
+#'                      group = "Achiever")
+#' set.seed(1)
+#' sequence_compare(net, sub = 2, iter = 100, actor = "Group")
+#' }
 #'
 #' @importFrom data.table data.table rbindlist setDT setorderv
 #' @importFrom stats p.adjust sd chisq.test
@@ -155,9 +230,17 @@ utils::globalVariables(c(
 sequence_compare <- function(x, group = NULL, sub = 3:5,
                              min_freq = 5L,
                              test = c("permutation", "chisq", "none"),
-                             iter = 1000L, adjust = "fdr") {
+                             iter = 1000L, adjust = "fdr", actor = NULL) {
 
   test <- match.arg(test)
+  .check_permutation_block(actor, paired = FALSE)
+  use_actor <- !is.null(actor) && identical(test, "permutation")
+  if (!is.null(actor) && !use_actor) {
+    warning(warningCondition(
+      sprintf(paste0("`actor` is used only by test = \"permutation\" and is ",
+                     "ignored with test = \"%s\"."), test),
+      class = "nestimate_ignored_argument", call = NULL))
+  }
   min_freq <- as.integer(min_freq)
   iter <- as.integer(iter)
   sub <- as.integer(sub)
@@ -175,7 +258,7 @@ sequence_compare <- function(x, group = NULL, sub = 3:5,
   adjust <- match.arg(adjust, stats::p.adjust.methods)
 
   # ---- Extract sequences and group labels ----
-  parsed <- .cs_parse_input(x, group)
+  parsed <- .cs_parse_input(x, group, actor = actor, actor_ids = use_actor)
   seq_mat <- parsed$seq_mat
   group_vec <- parsed$group
   n_no_group <- sum(is.na(group_vec))
@@ -195,6 +278,16 @@ sequence_compare <- function(x, group = NULL, sub = 3:5,
   .assert("No valid pattern lengths (sub > sequence length)" = length(sub) >= 1L)
 
   pat_list <- .cs_extract_patterns(seq_mat, sub)
+
+  # Blocked scheme (see the Nested data section): built once, only with actor
+  # Several actor columns are nested levels (.nested_design() in
+  # R/permutation_test.R); one column keeps the one-level scheme and its draws.
+  nested <- use_actor && length(actor) > 1L
+  design <- if (nested) {
+    .nested_design(parsed$actor, group_vec, actor, alpha = 0.05)
+  } else if (use_actor) {
+    .cs_actor_design(parsed$actor, group_vec, actor, alpha = 0.05)
+  }
 
   group_idx <- lapply(groups, function(g) which(group_vec == g))
   names(group_idx) <- groups
@@ -271,7 +364,13 @@ sequence_compare <- function(x, group = NULL, sub = 3:5,
       # A loop on purpose: one permutation at a time keeps a single
       # patterns-by-groups table in memory, not iter of them.
       for (it in seq_len(iter)) {
-        perm_group <- group_vec[sample(n)]
+        perm_group <- if (is.null(design)) {
+          group_vec[sample(n)]
+        } else if (nested) {
+          .nested_permute(design)
+        } else {
+          .cs_actor_permute(design)
+        }
         perm_idx <- lapply(groups, function(g) which(perm_group == g))
         perm_counts_all <- vapply(seq_along(groups), function(gi) {
           vals <- pat_mat[, perm_idx[[gi]], drop = FALSE]
@@ -326,20 +425,33 @@ sequence_compare <- function(x, group = NULL, sub = 3:5,
   }
   rownames(results) <- NULL
 
+  params <- list(sub = sub, min_freq = min_freq,
+                 test = test, iter = iter, adjust = adjust)
+  if (nested) {
+    params <- c(params, list(actor = actor, n_actors = design$n_blocks,
+                             design = design$design_label,
+                             actor_levels = design$levels))
+  } else if (!is.null(design)) {
+    params <- c(params, list(actor = actor, n_actors = design$n_actors,
+                             design = design$design))
+  }
+
   structure(list(
     patterns   = as.data.frame(results, stringsAsFactors = FALSE),
     groups     = groups,
     n_patterns = nrow(results),
-    params     = list(sub = sub, min_freq = min_freq,
-                      test = test, iter = iter, adjust = adjust)
+    params     = params
   ), class = "net_sequence_comparison")
 }
 
 
 # ---- Input parsing ----
 
+# `actor` names the actor column, set aside from the positions of a data
+# frame or matrix whenever it is given; the ids themselves (one per row of
+# `seq_mat`, returned as `actor`) are resolved only when `actor_ids` is TRUE.
 #' @noRd
-.cs_parse_input <- function(x, group) {
+.cs_parse_input <- function(x, group, actor = NULL, actor_ids = FALSE) {
   # netobject_group: each element has $data
   if (inherits(x, "netobject_group")) {
     .refuse_onehot_network(x, "sequence_compare()")
@@ -361,10 +473,21 @@ sequence_compare <- function(x, group = NULL, sub = 3:5,
     })
     seq_mat <- do.call(rbind, mats)
     group_vec <- rep(group_names, vapply(mats, nrow, integer(1)))
-    return(list(seq_mat = seq_mat, group = group_vec))
+    group_ids <- function(col) {
+      unlist(lapply(seq_along(x), function(i) {
+        .permutation_block_ids(x[[i]], col, nrow(mats[[i]]),
+                               sprintf("group '%s'", group_names[i]))
+      }), use.names = FALSE)
+    }
+    # several actor columns (nested levels): one id vector per level
+    ids <- if (actor_ids) {
+      if (length(actor) == 1L) group_ids(actor) else lapply(actor, group_ids)
+    }
+    return(list(seq_mat = seq_mat, group = group_vec, actor = ids))
   }
 
   # netobject or tna: extract $data
+  drop_actor <- FALSE
   if (inherits(x, "tna") || inherits(x, "netobject") ||
       inherits(x, "cograph_network")) {
     .refuse_onehot_network(x, "sequence_compare()")
@@ -374,14 +497,31 @@ sequence_compare <- function(x, group = NULL, sub = 3:5,
                           class = "nestimate_bad_input", call = NULL))
     }
     seq_mat <- as.matrix(as.data.frame(d, stringsAsFactors = FALSE))
+    ids <- if (actor_ids) {
+      if (length(actor) == 1L) {
+        .permutation_block_ids(x, actor, nrow(seq_mat), "x")
+      } else {
+        lapply(actor, function(col) {
+          .permutation_block_ids(x, col, nrow(seq_mat), "x")
+        })
+      }
+    }
   } else if (is.data.frame(x) || is.matrix(x)) {
+    # read first, so an absent actor column is named as such
+    ids <- if (actor_ids) {
+      if (length(actor) == 1L) .cs_frame_actor_ids(x, actor) else
+        lapply(actor, function(col) .cs_frame_actor_ids(x, col))
+    }
     if (is.data.frame(x)) {
       taken <- if (is.character(group) && length(group) == 1L) group
-      .refuse_undeclared_roles(x, "sequence_compare()", taken = taken,
+      .refuse_undeclared_roles(x, "sequence_compare()",
+                               taken = c(taken, actor),
                                via_network = TRUE, whole_frame = TRUE)
     }
     .refuse_binary_matrix(x, "sequence_compare()")
     seq_mat <- as.matrix(as.data.frame(x, stringsAsFactors = FALSE))
+    # the actor column is set aside after the group is read, which may be it
+    drop_actor <- !is.null(actor) && any(actor %in% colnames(seq_mat))
   } else {
     stop(errorCondition(
       "x must be a netobject_group, netobject, tna, data.frame, or matrix.",
@@ -400,8 +540,111 @@ sequence_compare <- function(x, group = NULL, sub = 3:5,
     .assert("'group' length must match nrow(x)" = length(group) == nrow(seq_mat))
     group_vec <- as.character(group)
   }
+  if (drop_actor && any(actor %in% colnames(seq_mat))) {
+    seq_mat <- seq_mat[, !colnames(seq_mat) %in% actor, drop = FALSE]
+  }
 
-  list(seq_mat = seq_mat, group = group_vec)
+  list(seq_mat = seq_mat, group = group_vec, actor = ids)
+}
+
+# The actor id of every row of a data frame or matrix `x`, from its column
+# `actor`, as character.
+#' @noRd
+.cs_frame_actor_ids <- function(x, actor) {
+  if (!actor %in% colnames(x)) {
+    stop(errorCondition(
+      sprintf("`actor = \"%s\"` is not a column of x.", actor),
+      class = "nestimate_actor_missing", call = NULL))
+  }
+  ids <- if (is.data.frame(x)) x[[actor]] else x[, actor]
+  if (anyNA(ids)) {
+    stop(errorCondition(
+      sprintf("`actor = \"%s\"` has %d missing values in x.",
+              actor, sum(is.na(ids))),
+      class = "nestimate_actor_missing", call = NULL))
+  }
+  as.character(ids)
+}
+
+
+# ---- Blocked (actor-level) permutation for two or more groups ----
+
+# The multi-group analogue of .block_design() in R/permutation_test.R. Rows
+# with a missing group take no part and keep NA. An actor whose sequences
+# all lie in one group is "pure": the pure actors' labels are shuffled among
+# them, each actor keeping its sequences together. An actor with sequences in
+# several groups is "crossed": its labels are shuffled among its own rows, so
+# it keeps its number of sequences per group. Warns when the scheme has too
+# few distinct arrangements for any p-value to fall below `alpha`.
+#' @noRd
+.cs_actor_design <- function(actor_ids, group_vec, actor, alpha = 0.05,
+                             warn = TRUE) {
+  used <- which(!is.na(group_vec))
+  ids <- actor_ids[used]
+  grp <- group_vec[used]
+  n_labels <- tapply(grp, ids, function(g) length(unique(g)))
+  is_pure <- n_labels == 1L
+  pure <- names(n_labels)[is_pure]
+  crossed <- names(n_labels)[!is_pure]
+
+  pure_rows <- used[ids %in% pure]
+  first_label <- tapply(grp, ids, function(g) g[[1L]])
+  pure_label <- unname(first_label[pure])
+  crossed_rows <- used[ids %in% crossed]
+  crossed_block <- actor_ids[crossed_rows]
+
+  # log number of distinct label arrangements: a multinomial coefficient over
+  # the pure actors' labels, and one over each crossed actor's rows
+  log_multinomial <- function(labels) {
+    lfactorial(length(labels)) - sum(lfactorial(table(labels)))
+  }
+  log_arrangements <- log_multinomial(pure_label) +
+    sum(vapply(split(group_vec[crossed_rows], crossed_block),
+               log_multinomial, numeric(1L)))
+  if (warn && log_arrangements < log(1 / alpha)) {
+    warning(warningCondition(
+      sprintf(paste0("`actor = \"%s\"` allows only %d distinct permutations, ",
+                     "so no p-value can fall below %.3g (alpha = %g). ",
+                     "More actors are needed for this test to detect anything."),
+              actor, as.integer(round(exp(log_arrangements))),
+              exp(-log_arrangements), alpha),
+      class = "nestimate_few_actors", call = NULL))
+  }
+
+  list(
+    group = group_vec,
+    pure_rows = pure_rows,
+    pure_index = match(actor_ids[pure_rows], pure),
+    pure_label = pure_label,
+    crossed_rows = crossed_rows,
+    crossed_block = crossed_block,
+    crossed_sorted = crossed_rows[order(crossed_block)],
+    n_actors = length(n_labels),
+    n_pure = length(pure),
+    n_crossed = length(crossed),
+    design = if (length(crossed) == 0L) "between"
+             else if (length(pure) == 0L) "within" else "mixed",
+    log_arrangements = log_arrangements
+  )
+}
+
+# One blocked permutation of the group labels, as a vector aligned with the
+# rows (NA where the group is missing).
+#' @noRd
+.cs_actor_permute <- function(design) {
+  perm_group <- design$group
+  if (length(design$pure_label) > 1L) {
+    shuffled <- design$pure_label[sample.int(length(design$pure_label))]
+    perm_group[design$pure_rows] <- shuffled[design$pure_index]
+  }
+  if (length(design$crossed_rows) > 0L) {
+    # rows grouped by actor in random within-actor order receive the
+    # actor-grouped original labels: a uniform shuffle inside each actor
+    target <- design$crossed_rows[order(design$crossed_block,
+                                        stats::runif(length(design$crossed_rows)))]
+    perm_group[target] <- design$group[design$crossed_sorted]
+  }
+  perm_group
 }
 
 
@@ -481,6 +724,12 @@ print.net_sequence_comparison <- function(x, ...) {
   if (identical(test, "permutation")) {
     cat(sprintf("  |  permutation: %d iter (%s)",
                 x$params$iter, x$params$adjust))
+    if (length(x$params$actor) == 1L) {
+      cat(sprintf(", actor: %s (%d actors, %s)", x$params$actor,
+                  x$params$n_actors, x$params$design))
+    } else if (length(x$params$actor) > 1L) {
+      cat(sprintf(", actor: %s", x$params$design))
+    }
   } else if (identical(test, "chisq")) {
     cat(sprintf("  |  chi-square  (%s)", x$params$adjust))
   }

@@ -16,7 +16,11 @@ mosaic_analysis(
   percentage_base = c("total", "row", "column"),
   tile_label = c("count", "percent", "residual", "category", "none"),
   title = "",
-  ...
+  ...,
+  nested = FALSE,
+  nested_method = c("rao_scott", "donner_klar", "cmh", "gee", "glmm"),
+  actor = NULL,
+  report = FALSE
 )
 
 \method{plot}{mosaic_analysis}(x, ...)
@@ -27,8 +31,8 @@ mosaic_analysis(
 }
 \arguments{
 \item{data}{A data frame holding the two variables. Rows missing either
-of them are left out; a \code{var1} or \code{var2} that is not a column of \code{data},
-or no complete rows, raises an error.}
+of them (or an \code{actor} column) are left out; a \code{var1} or \code{var2} that
+is not a column of \code{data}, or no complete rows, raises an error.}
 
 \item{var1}{The name of the first variable, drawn as the mosaic's columns
 (column width is its marginal share).}
@@ -44,8 +48,9 @@ two categories of either variable remain, an error is raised.}
 chi-square test, or \code{"fisher"} for Fisher's exact test: exact for a
 2 x 2 table, and otherwise with a p-value simulated from 10,000 tables
 (so it changes with the random seed and cannot fall below 1/10,001).
-Cramer's V and the residuals always come
-from the chi-square statistic.}
+Cramer's V and the residuals come from the chi-square statistic. Used
+when \code{nested = FALSE}; given with \code{nested = TRUE} it is ignored with a
+warning of class \code{nestimate_ignored_argument}.}
 
 \item{percentage_base}{What the \code{pct} column and the \code{"percent"} tile
 label are a percentage of: \code{"total"} (default) the whole table, \code{"row"}
@@ -68,6 +73,27 @@ angle. Any other name raises an error. For the \code{plot()} method: the
 same styling and \code{title}, overriding what the fit stored; for the
 \code{print()} and \code{summary()} methods: ignored.}
 
+\item{nested}{Whether the rows are nested in actors and the test should
+allow for it. Default \code{FALSE}: every row is independent, as before.
+\code{TRUE} reports \code{nested_method} and needs \code{actor}; see \emph{Nested data}.}
+
+\item{nested_method}{With \code{nested = TRUE}, the test: \code{"rao_scott"}
+(default), \code{"donner_klar"}, \code{"cmh"}, \code{"gee"} or \code{"glmm"}. A test that
+cannot run on the design raises an error of class
+\code{nestimate_bad_input}; \code{"glmm"} without lme4 raises one of class
+\code{nestimate_missing_package}.}
+
+\item{actor}{With \code{nested = TRUE} (required then): the name of the
+column whose values identify the actors, or several names for nested
+levels, outermost first (e.g. \code{c("Group", "Actor")}). \code{nested_method}
+and \code{actor} given with \code{nested = FALSE} are ignored with a warning of
+class \code{nestimate_ignored_argument}.}
+
+\item{report}{Whether to report the test: \code{TRUE} draws it as the plot
+subtitle and prints it as a one-row data frame with the columns of
+\code{\link[=mosaic_test]{mosaic_test()}} but \code{note}. Default \code{FALSE}. The test is always in
+the \code{stats} table and in \code{print()}.}
+
 \item{x}{For the \code{plot()} and \code{print()} methods: a \code{mosaic_analysis}.}
 
 \item{object}{For the \code{summary()} method: a \code{mosaic_analysis}.}
@@ -85,13 +111,20 @@ object is a list with:
 draw it.}
 \item{counts}{A data frame with one row per (\code{var1}, \code{var2}) cell: the
 two variables (named after them), \code{observed}, \code{expected}, \code{residual}
-(the standardised residual) and \code{pct} (on \code{percentage_base});
-\code{expected} and \code{residual} are rounded to 3 decimals, \code{pct} to 2.}
-\item{stats}{A one-row data frame: \code{test}, \code{statistic}, \code{df},
-\code{p_value}, \code{cramers_v}, \code{effect_size} and \code{n}, rounded (\code{statistic}
-and \code{cramers_v} to 3 decimals, \code{p_value} to 4 significant digits).
-\code{statistic} and \code{df} are \code{NA} for Fisher's test.}
-\item{test}{The \code{htest} object of the test reported.}
+(the standardised residual, or the nested test's residual, \code{NA}
+where it is undefined and drawn at 0) and \code{pct} (on
+\code{percentage_base}); \code{expected} and \code{residual} are rounded to 3
+decimals, \code{pct} to 2.}
+\item{stats}{A one-row data frame: \code{test}, \code{statistic}, \code{df}, \code{df2},
+\code{p_value}, \code{cramers_v}, \code{effect_size}, \code{n}, \code{clusters},
+\code{design_effect} and \code{icc}, rounded (\code{statistic} and \code{cramers_v} to 3
+decimals, \code{p_value} to 4 significant digits). \code{statistic} and \code{df}
+are \code{NA} for Fisher's test. \code{df2} (the denominator degrees of freedom
+of the Rao-Scott F), \code{clusters}, \code{design_effect} and \code{icc} are \code{NA}
+where the test has none.}
+\item{test}{The \code{htest} object of the test reported; \code{NULL} for a
+nested test.}
+\item{actor}{The \code{actor} column names, or \code{NULL}.}
 \item{cramers_v, effect_size}{Cramer's V, unrounded, and its label.}
 \item{table}{The filtered contingency table.}
 \item{removed}{The dropped categories, as a list with \code{var1} and
@@ -99,8 +132,9 @@ and \code{cramers_v} to 3 decimals, \code{p_value} to 4 significant digits).
 \item{n_original, n_filtered}{The number of complete rows before and
 after the sparse categories are dropped.}
 \item{vars}{The two variable names, as \code{c(var1 = , var2 = )}.}
-\item{plot_parts, plot_args}{The residual matrix, the table and the
-styling, kept so \code{plot()} can redraw without testing again.}
+\item{plot_parts, plot_args}{The residual matrix, the table, the test
+line drawn as the subtitle with \code{report = TRUE}, and the styling,
+kept so \code{plot()} can redraw without testing again.}
 }
 }
 \description{
@@ -125,6 +159,80 @@ residuals, roughly standard normal under independence, so one beyond
 about +-2 marks a cell that holds more (or fewer) rows than independence
 predicts; with many cells, some pass that line by chance.
 }
+\section{Nested data}{
+
+Pearson's test treats every row as an independent observation. When rows
+are nested in actors (events within students, students within classes),
+rows of one actor resemble each other and the test is too liberal. Set
+\code{nested = TRUE} and name the actor column(s) in \code{actor} (as in
+\code{\link[=permutation]{permutation()}}). The test is then \code{nested_method}, one of five that
+allow for the nesting; each gives a test and its own residual per cell,
+which fills the mosaic.
+\describe{
+\item{\code{"rao_scott"} (default)}{Rao-Scott second-order corrected chi-square,
+reported as an F statistic on fractional degrees of freedom (the
+default of \code{survey::svychisq()}, which it reproduces for an
+unweighted cluster sample). Works for any cluster sizes and when both
+variables vary within clusters. \code{design_effect} is the mean
+generalised design effect; 1 means the clustering costs nothing.
+Residual: the standardised residual divided by the square root of
+the cell's design effect (cluster-robust over simple-random-sampling
+variance of \verb{p_ij - p_i. p_.j}); with one row per cluster it is
+\code{chisq.test()}'s, and it is \code{NA} where the cell's design effect is
+zero. With empty cells the design effects are those of the estimable
+contrasts. The test is liberal with few actors when one variable is
+constant within actors: in simulations of 3 x 4 tables its type I
+error at alpha = 0.05 was 0.22 with 10 actors, 0.10 with 30 and 0.06
+with 100.}
+\item{\code{"donner_klar"}}{Pearson's chi-square divided, group by group, by
+the inflation factor \code{1 + (m - 1) * rho} (its weighted form for
+unequal cluster sizes), where \code{rho} is the ANOVA intracluster
+correlation of \code{var2}, pooled within the levels of the other
+variable. For designs where one variable is constant within each
+cluster, as in a cluster-randomised trial; otherwise an error is
+raised. \code{icc} is \code{rho}; a negative estimate is reported and used as
+0. Residual: the standardised residual divided by the square root of
+its group's factor.}
+\item{\code{"cmh"}}{Generalised Cochran-Mantel-Haenszel test with each
+cluster as a stratum: is there an association within clusters? Suits
+a few clusters with enough rows each; both variables must vary within
+clusters, and clusters with fewer than two rows are left out
+(\code{clusters} counts those that inform the test). Residual: summed
+observed minus expected over the square root of the summed
+hypergeometric variances.}
+\item{\code{"gee"}}{Marginal model for \code{var2} given \code{var1} with an identity
+link and independence working correlation; Wald chi-square with the
+cluster-robust (sandwich) covariance for equal distributions of
+\code{var2} across \code{var1}, on \code{(rows - 1) (columns - 1)} degrees of
+freedom. When the covariance has lower rank (fewer actors than
+degrees of freedom, or cells that never occur) the test would depend
+on the order of rows and columns, and an error of class
+\code{nestimate_bad_input} is raised. The Wald test is liberal unless the
+actors are many relative to the degrees of freedom: in simulations
+of 3 x 4 tables its type I error at alpha = 0.05 was 0.28 with 30
+actors and 0.11 with 100. Residual: the share of \code{var2} within the
+level of \code{var1} minus the pooled share, over its cluster-robust
+standard error.}
+\item{\code{"glmm"}}{Log-linear Poisson mixed model of the cluster-by-cell
+counts with random intercepts for cluster-by-\code{var1} and
+cluster-by-\code{var2} at every level of \code{actor}, so several columns
+give nested random effects (outermost first); Wald chi-square on the
+interaction. Fitted by \code{lme4::glmer(nAGQ = 0)}; needs lme4, and a
+failed fit raises an error of class \code{nestimate_bad_input}. With an
+empty cell the Wald test loses power (its interaction term runs to
+minus infinity). Residual: observed minus expected count under
+independence, over its cluster-robust standard error (the
+GLMM supplies the test, the residual is model-free); with about 10
+actors this standard error is small and 7 to 8\% of null cells
+pass 1.96.}
+}
+With several \code{actor} columns, the four other tests use the outermost
+(the first), which carries the dependence of every level below it.
+Cramer's V is the pooled-table effect
+size whatever the test: the clustering changes the uncertainty, not the
+size of the association.
+}
+
 \section{Methods}{
 
 \itemize{
@@ -144,13 +252,41 @@ res
 head(summary(res))
 \donttest{
 plot(res, tile_label = "percent")
+
+# Actions are nested in students: Rao-Scott test by student
+nested <- mosaic_analysis(group_regulation_long, "Course", "Action",
+                          nested = TRUE, actor = "Actor")
+nested
 }
 }
 \references{
 Cohen, J. (1988). \emph{Statistical power analysis for the behavioral
 sciences} (2nd ed.). Lawrence Erlbaum.
+
+Rao, J. N. K., & Scott, A. J. (1984). On chi-squared tests for multiway
+contingency tables with cell proportions estimated from survey data.
+\emph{The Annals of Statistics}, 12(1), 46--60.
+\doi{10.1214/aos/1176346391}
+
+Donner, A., & Klar, N. (1994). Methods for comparing event rates in
+intervention studies when the unit of allocation is a cluster.
+\emph{American Journal of Epidemiology}, 140(3), 279--289.
+\doi{10.1093/oxfordjournals.aje.a117247}
+
+Landis, J. R., Heyman, E. R., & Koch, G. G. (1978). Average partial
+association in three-way contingency tables: A review and discussion of
+alternative tests. \emph{International Statistical Review}, 46(3),
+237--254. \doi{10.2307/1402373}
+
+Liang, K.-Y., & Zeger, S. L. (1986). Longitudinal data analysis using
+generalized linear models. \emph{Biometrika}, 73(1), 13--22.
+\doi{10.1093/biomet/73.1.13}
+
+Agresti, A. (2013). \emph{Categorical data analysis} (3rd ed.), chapter
+13. Wiley.
 }
 \seealso{
 \code{\link{mosaic_plot}} for the network/table mosaic (which also
-accepts \code{style = "flat"}).
+accepts \code{style = "flat"}); \code{\link{mosaic_test}} for every
+test, clustered or not, side by side in one table.
 }

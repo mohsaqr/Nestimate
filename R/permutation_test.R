@@ -64,6 +64,44 @@
 #' warning of class `nestimate_few_actors` is raised when no p-value could
 #' fall below `alpha`.
 #'
+#' Several columns, outermost first (`actor = c("Group", "Student")`, students
+#' within teams), name nested levels; the unit at each level is the
+#' combination of its column with the ones before it. A level that adds no
+#' units below the one before it (the levels given innermost first) raises
+#' an error of class `nestimate_bad_actor`. A column whose ids repeat across
+#' the units of the next column (a class code reused in every team) cannot
+#' be told apart from a correctly nested one, so the order of the columns is
+#' the caller's statement of the design. The labels are then
+#' shuffled at the level where they are assigned, within the units above it
+#' (Anderson & ter Braak, 2003; Good, 2005): teams whose sequences are all in
+#' one group move as wholes among such teams, exactly as with one column; a
+#' team with sequences in both groups is opened, and inside it the students
+#' all in one group exchange labels with each other (never with students of
+#' another team), while a student in both groups is opened in turn, down to
+#' the last column, inside which single sequences exchange labels. Set the
+#' levels whenever the groups are assigned below the top level (students of
+#' one team in different conditions): `actor = "Group"` alone would then
+#' shuffle single sequences within each team and treat the sessions of one
+#' student as independent. The number of distinct arrangements, the
+#' `nestimate_few_actors` check and `min_p` follow the whole scheme. One
+#' column, or `NULL`, runs exactly the scheme described above.
+#'
+#' When to set `actor`: when the groups are made of different actors (high-
+#' versus low-achieving students, each student in one group), set it.
+#' Shuffling single sequences then treats the sequences of one actor as
+#' independent, and the test is too liberal. In one data set of sessions
+#' nested in students, two groups of different students with no true
+#' difference had 11.7% of edges significant at `alpha = 0.05` when
+#' sessions were shuffled (23% of replicates had at least one significant
+#' edge after Benjamini-Hochberg correction), against 4.6% (0.5%) when
+#' whole students were shuffled. When the groups vary within the same
+#' actors (pre- and post-test sessions of the same students), `actor`
+#' shuffles the labels within each actor; the plain test is also valid
+#' there (5.1% against 5.0% in the same data). Whether nesting matters is
+#' decided by the design effect, not by the ICC alone: in that data set the
+#' ICC was about 0.01, yet with about 59 transitions per student the design
+#' effect was about 1.5.
+#'
 #' `actor` is available for transition networks built from sequences
 #' (`"relative"`, `"frequency"`, `"co_occurrence"`). On one-hot data the
 #' actor column is held per row rather than per unit, so the call raises an
@@ -80,12 +118,15 @@
 #'     one-way ANOVA ICC of each sequence's transition shares within each
 #'     group, averaged over edges weighted by edge frequency and jackknife
 #'     bias-corrected, with a 95% interval from the leave-one-actor-out
-#'     jackknife (Efron & Tibshirani, 1993).}
+#'     jackknife (Efron & Tibshirani, 1993). With several `actor` levels it
+#'     is computed at the innermost level (the finest actor, such as the
+#'     student within a team), and `print()` says so.}
 #'   \item{Design effect}{The ratio of the variance of an estimate under the
 #'     clustered design to its variance had the units been sampled
 #'     independently (Kish, 1965). Here it is the variance of the shuffled
 #'     differences when whole actors are moved, divided by the variance when
-#'     single sequences are moved, both drawn in the same run, reported as
+#'     single sequences are moved (with several levels: under the whole
+#'     nested scheme), both drawn in the same run, reported as
 #'     the median over edges and for the global statistic M. For equal
 #'     numbers of sequences per actor m, Kish gives the approximation
 #'     `1 + (m - 1) * ICC`.}
@@ -106,7 +147,11 @@
 #' ICC with its interval, whether actors sit in one group (`between`), in
 #' both (`within`) or either (`mixed`), and the design effects. With `actor`,
 #' when no p-value can fall below `alpha` (too few actors, or too small an
-#' `iter`), a last line says so.
+#' `iter`), a last line says so. With several `actor` levels, line 2
+#' names the levels (`Actor: Group > Student (nested)`), and line 5 is
+#' replaced by two: the design at every level, with its number of actors
+#' (`Design: Group: mixed (200 actors), Student: between (2000 actors)`), and
+#' the ICC at the innermost level.
 #'
 #' @details
 #' For transition methods, per-sequence count matrices are computed once and
@@ -206,9 +251,12 @@
 #'   sessions are nested in students, or `"Group"` for students nested in
 #'   teams) and then in its wide sequence data. Whole actors are then
 #'   shuffled, and the ICC and design effect are reported; see the sections
-#'   *Nested data and actor* and *ICC and design effect*. Default `NULL`:
-#'   sequences are shuffled one by one. A value that is not one column name,
-#'   or `actor` with `paired = TRUE`, raises an error of class
+#'   *Nested data and actor* and *ICC and design effect*. Several column
+#'   names, outermost first, are nested levels (such as
+#'   `c("Group", "Student")`): labels are shuffled at the level where they
+#'   are assigned, within the units above it. Default `NULL`:
+#'   sequences are shuffled one by one. A value that is not one or more
+#'   distinct column names, or `actor` with `paired = TRUE`, raises an error of class
 #'   `nestimate_bad_actor`; a column that is absent or has missing values,
 #'   `nestimate_actor_missing`; a column whose values do not give one id per
 #'   sequence (or, with `concat`, that joins rows of different actors),
@@ -252,15 +300,24 @@
 #'   \item{edge_betweenness}{For edge-betweenness input: the `invert`
 #'     setting and the source method used.}
 #'   \item{iter, alpha, paired, adjust}{The settings used.}
-#'   \item{actor}{The `actor` column name, or `NULL`.}
-#'   \item{n_actors}{The number of distinct actors, or `NULL`.}
+#'   \item{actor}{The `actor` column name (or names, outermost first), or
+#'     `NULL`.}
+#'   \item{n_actors}{The number of distinct actors (with several levels, at
+#'     the innermost level), or `NULL`.}
+#'   \item{actor_levels}{Only with several `actor` levels: one row per
+#'     level, with `level` (the column), `n_actors` (the units at that
+#'     level), `n_pure` and `n_crossed` (the units the shuffle met at that
+#'     level, inside crossed units of the level above, that sit in one group
+#'     or in both) and `design` (`"between"`, `"within"`, `"mixed"`, or
+#'     `"not opened"` when no unit above was crossed).}
 #'   \item{null_sd}{The SD of each edge's shuffled differences (the
 #'     effect-size denominator), as a matrix.}
 #'   \item{null_sd_m}{The SD of the global statistic M over the shuffles.
 #'     Absent for edge-betweenness input.}
 #'   \item{clustering}{Only with `actor`: a one-row data frame with
 #'     `n_sequences`, `n_actors`, `design` (`"between"`, `"within"` or
-#'     `"mixed"`), `icc` with `icc_ci_lower` and `icc_ci_upper` (how alike
+#'     `"mixed"`; with several levels, one `"<level>: <design> (<n> actors)"`
+#'     entry per level), `icc` (at the innermost level) with `icc_ci_lower` and `icc_ci_upper` (how alike
 #'     the sequences of one actor are), `deff_edges` (the median design
 #'     effect over edges), `deff_global` (the design effect for M) and
 #'     `min_p`, the smallest attainable p-value.}
@@ -615,6 +672,7 @@ permutation <- function(x, y = NULL,
     clus <- .build_permutation_clustering(perm_result, summary_df, nodes, iter)
     result$clustering <- clus$overall
     result$clustering_edges <- clus$edges
+    if (!is.null(clus$levels)) result$actor_levels <- clus$levels
   }
 
   # ---- Centrality permutation block (tna-parity) ----
@@ -1024,6 +1082,7 @@ permutation <- function(x, y = NULL,
     clus <- .build_permutation_clustering(perm_result, summary_df, nodes, iter)
     result$clustering <- clus$overall
     result$clustering_edges <- clus$edges
+    if (!is.null(clus$levels)) result$actor_levels <- clus$levels
   }
   class(result) <- "net_permutation"
   result
@@ -1075,14 +1134,29 @@ permutation <- function(x, y = NULL,
   pooled <- rbind(trans_x, trans_y)
   n_total <- n_x + n_y
 
-  # Blocked design: whole persons/teams move together (see ?permutation)
-  block_ids <- if (is.null(block)) NULL else
-    c(.permutation_block_ids(x, block, n_x, "x"),
-      .permutation_block_ids(y, block, n_y, "y"))
-  design <- if (is.null(block)) NULL else .block_design(
-    block_ids = block_ids, is_x = rep(c(TRUE, FALSE), c(n_x, n_y)),
-    block = block, alpha = alpha
-  )
+  # Blocked design: whole persons/teams move together (see ?permutation).
+  # Several actor columns are nested levels (.nested_design()); one column
+  # keeps the one-level scheme and its random draws.
+  nested <- length(block) > 1L
+  if (nested) {
+    level_ids <- lapply(block, function(col) {
+      c(.permutation_block_ids(x, col, n_x, "x"),
+        .permutation_block_ids(y, col, n_y, "y"))
+    })
+    design <- .nested_design(level_ids,
+                             label = rep(c(TRUE, FALSE), c(n_x, n_y)),
+                             block = block, alpha = alpha)
+    # the ICC is taken at the innermost (finest) level
+    block_ids <- design$innermost_ids
+  } else {
+    block_ids <- if (is.null(block)) NULL else
+      c(.permutation_block_ids(x, block, n_x, "x"),
+        .permutation_block_ids(y, block, n_y, "y"))
+    design <- if (is.null(block)) NULL else .block_design(
+      block_ids = block_ids, is_x = rep(c(TRUE, FALSE), c(n_x, n_y)),
+      block = block, alpha = alpha
+    )
+  }
   if (!is.null(design)) {
     # unblocked reference null, drawn alongside, gives the design effect
     ref_sum <- numeric(nbins)
@@ -1127,7 +1201,8 @@ permutation <- function(x, y = NULL,
       counts_y <- colSums(pooled[idx_y, , drop = FALSE])
     } else if (!is.null(design)) {
       # Blocked: reassign whole blocks / shuffle within crossed blocks
-      perm_is_x <- .block_permute(design)
+      perm_is_x <- if (nested) .nested_permute(design) else
+        .block_permute(design)
       counts_x <- colSums(pooled[perm_is_x, , drop = FALSE])
       counts_y <- colSums(pooled[!perm_is_x, , drop = FALSE])
     } else {
@@ -1191,7 +1266,7 @@ permutation <- function(x, y = NULL,
     out$clustering <- list(
       design = design,
       n_sequences = n_total,
-      icc = .block_icc(pooled, block_ids, ifelse(design$is_x, "x", "y")),
+      icc = .block_icc(pooled, block_ids, rep(c("x", "y"), c(n_x, n_y))),
       ref_sd = sqrt(pmax(ref_sumsq / iter - ref_mean^2, 0)),
       ref_m_sd = sqrt(max(ref_m_sumsq / iter - (ref_m_sum / iter)^2, 0))
     )
@@ -1211,10 +1286,12 @@ permutation <- function(x, y = NULL,
 #' @noRd
 .check_permutation_block <- function(block, paired) {
   if (is.null(block)) return(invisible(NULL))
-  if (!is.character(block) || length(block) != 1L || is.na(block) ||
-      !nzchar(block)) {
-    stop(errorCondition("`actor` must be a single column name or NULL.",
-                        class = "nestimate_bad_actor", call = NULL))
+  if (!is.character(block) || length(block) < 1L || anyNA(block) ||
+      !all(nzchar(block)) || anyDuplicated(block) > 0L) {
+    stop(errorCondition(
+      paste0("`actor` must be NULL, one column name, or several distinct ",
+             "column names (nested levels, outermost first)."),
+      class = "nestimate_bad_actor", call = NULL))
   }
   if (isTRUE(paired)) {
     stop(errorCondition(
@@ -1350,6 +1427,143 @@ permutation <- function(x, y = NULL,
 }
 
 
+#' Precompute the restricted permutation scheme for nested actor levels
+#'
+#' `level_ids` holds one id vector per actor column, outermost first; the
+#' unit at level j is the combination of the first j columns (a student of
+#' one team). `label` is the group of every row: logical for two networks,
+#' character for [sequence_compare()]; rows with an `NA` label take no part.
+#' The scheme permutes at the level where the label is assigned, within the
+#' units above it (Anderson & ter Braak, 2003; Good, 2005): at level j,
+#' inside one unit of level j - 1 (all rows at the top), units whose rows
+#' carry one label ("pure") exchange labels among themselves, each moving
+#' whole; units carrying several ("crossed") are opened at level j + 1, and
+#' inside a crossed unit of the last level single rows exchange labels.
+#' With one level this is the scheme of `.block_design()`, which keeps
+#' serving one level so that its random draws stay as they were.
+#'
+#' Returns the exchange sets flattened into units (`unit_set`, `unit_label`)
+#' and rows (`rows`, `row_unit`), the per-level design table `levels`, its
+#' one-line `design_label`, the log number of distinct arrangements (the
+#' sum over exchange sets of the log multinomial coefficient of their
+#' labels), and warns (`nestimate_few_actors`) when too few arrangements
+#' exist for any p-value to fall below `alpha`.
+#' @noRd
+.nested_design <- function(level_ids, label, block, alpha, warn = TRUE) {
+  .check_actor_levels(level_ids, block)
+  n_levels <- length(level_ids)
+  used <- which(!is.na(label))
+  comp <- Reduce(function(acc, ids) paste(acc, ids, sep = "\x1f"),
+                 lapply(level_ids, as.character), accumulate = TRUE)
+
+  # Exchange sets of the rows `rows` (one unit of level j - 1), and the
+  # numbers of pure and crossed units met at each level below it.
+  open_level <- function(rows, j) {
+    ids <- comp[[j]][rows]
+    lab <- label[rows]
+    n_lab <- tapply(lab, ids, function(g) length(unique(g)))
+    first <- tapply(lab, ids, function(g) g[[1L]])
+    pure <- names(n_lab)[n_lab == 1L]
+    crossed <- names(n_lab)[n_lab > 1L]
+    in_pure <- ids %in% pure
+    pure_set <- list(rows = rows[in_pure],
+                     unit = match(ids[in_pure], pure),
+                     label = unname(first[pure]))
+    met <- data.frame(level = j, n_pure = length(pure),
+                      n_crossed = length(crossed))
+    below <- lapply(split(rows, ids)[crossed], function(r) {
+      if (j < n_levels) return(open_level(r, j + 1L))
+      list(sets = list(list(rows = r, unit = seq_along(r), label = label[r])),
+           met = NULL)
+    })
+    list(sets = c(if (length(pure) > 0L) list(pure_set),
+                  unlist(lapply(below, `[[`, "sets"), recursive = FALSE,
+                         use.names = FALSE)),
+         met = do.call(rbind, c(list(met), lapply(below, `[[`, "met"))))
+  }
+  tree <- if (length(used) > 0L) open_level(used, 1L) else
+    list(sets = list(), met = data.frame(level = integer(0), n_pure = integer(0),
+                                         n_crossed = integer(0)))
+  sets <- tree$sets
+
+  # flatten: units listed set by set, so `unit_set` is sorted
+  n_units <- vapply(sets, function(s) length(s$label), integer(1L))
+  offset <- cumsum(c(0L, n_units))[seq_along(sets)]
+  unit_set <- rep(seq_along(sets), n_units)
+  unit_label <- c(label[0L], unlist(lapply(sets, `[[`, "label"),
+                                    use.names = FALSE))
+  rows <- as.integer(unlist(lapply(sets, `[[`, "rows"), use.names = FALSE))
+  row_unit <- as.integer(unlist(Map(function(s, o) s$unit + o, sets, offset),
+                                use.names = FALSE))
+  stopifnot("every labelled row lies in exactly one exchange unit" =
+              length(rows) == length(used) && setequal(rows, used))
+
+  log_multinomial <- function(labels) {
+    lfactorial(length(labels)) - sum(lfactorial(table(labels)))
+  }
+  log_arrangements <- sum(vapply(sets, function(s) log_multinomial(s$label),
+                                 numeric(1L)))
+  if (warn && log_arrangements < log(1 / alpha)) {
+    warning(warningCondition(
+      sprintf(paste0("`actor = c(%s)` allows only %.0f distinct permutations, ",
+                     "so no p-value can fall below %.3g (alpha = %g). ",
+                     "More actors are needed at the level where the groups ",
+                     "differ for this test to detect anything."),
+              paste0("\"", block, "\"", collapse = ", "),
+              round(exp(log_arrangements)), exp(-log_arrangements), alpha),
+      class = "nestimate_few_actors", call = NULL))
+  }
+
+  met <- tree$met
+  per_level <- function(col) {
+    vapply(seq_len(n_levels), function(j) sum(met[[col]][met$level == j]),
+           numeric(1L))
+  }
+  n_pure <- as.integer(per_level("n_pure"))
+  n_crossed <- as.integer(per_level("n_crossed"))
+  n_actors <- vapply(comp, function(ids) length(unique(ids[used])), integer(1L))
+  design <- ifelse(n_pure + n_crossed == 0L, "not opened",
+                   ifelse(n_crossed == 0L, "between",
+                          ifelse(n_pure == 0L, "within", "mixed")))
+  levels <- data.frame(level = block, n_actors = n_actors,
+                       n_pure = n_pure, n_crossed = n_crossed,
+                       design = design, stringsAsFactors = FALSE)
+
+  list(
+    nested = TRUE,
+    label = label,
+    rows = rows,
+    row_unit = row_unit,
+    unit_set = unit_set,
+    unit_label = unit_label,
+    n_blocks = n_actors[[n_levels]],
+    innermost_ids = comp[[n_levels]],
+    levels = levels,
+    design_label = paste(sprintf("%s: %s (%d actors)", block, design, n_actors),
+                         collapse = ", "),
+    log_arrangements = log_arrangements
+  )
+}
+
+#' One restricted permutation of the labels under a `.nested_design()`
+#'
+#' Units ordered by exchange set, in random order within each set, receive
+#' the set-ordered labels: a uniform shuffle inside every exchange set.
+#' Returns the label vector, `NA` where the label is missing.
+#' @noRd
+.nested_permute <- function(design) {
+  perm <- design$label
+  n_units <- length(design$unit_set)
+  if (n_units > 1L) {
+    target <- order(design$unit_set, stats::runif(n_units))
+    shuffled <- design$unit_label
+    shuffled[target] <- design$unit_label
+    perm[design$rows] <- shuffled[design$row_unit]
+  }
+  perm
+}
+
+
 #' Tidy clustering diagnostics of a blocked permutation
 #'
 #' Design effect = blocked null variance / unblocked null variance, per edge
@@ -1376,8 +1590,9 @@ permutation <- function(x, y = NULL,
   overall <- data.frame(
     n_sequences = clus$n_sequences,
     n_actors = design$n_blocks,
-    design = if (design$n_crossed == 0L) "between"
-             else if (design$n_pure == 0L) "within" else "mixed",
+    design = design$design_label %||%
+      (if (design$n_crossed == 0L) "between"
+       else if (design$n_pure == 0L) "within" else "mixed"),
     icc = clus$icc$estimate,
     icc_ci_lower = clus$icc$ci[1L], icc_ci_upper = clus$icc$ci[2L],
     deff_edges = stats::median(edges$deff[is.finite(edges$deff)]),
@@ -1385,7 +1600,7 @@ permutation <- function(x, y = NULL,
     min_p = max(exp(-design$log_arrangements), 1 / (iter + 1)),
     stringsAsFactors = FALSE
   )
-  list(overall = overall, edges = edges)
+  list(overall = overall, edges = edges, levels = design$levels)
 }
 
 
@@ -1631,8 +1846,10 @@ print.net_permutation <- function(x, ...) {
   cat(sprintf("  Iterations: %d  |  Alpha: %.2f",
               x$iter, x$alpha))
   if (x$paired) cat("  |  Paired")
-  if (!is.null(x$actor)) {
+  if (length(x$actor) == 1L) {
     cat(sprintf("  |  Actor: %s (%d actors)", x$actor, x$n_actors))
+  } else if (length(x$actor) > 1L) {
+    cat(sprintf("  |  Actor: %s (nested)", paste(x$actor, collapse = " > ")))
   }
   if (x$adjust != "none") cat(sprintf("  |  Adjust: %s", x$adjust))
   cat("\n")
@@ -1653,19 +1870,33 @@ print.net_permutation <- function(x, ...) {
   }
   if (!is.null(x$clustering)) {
     cl <- x$clustering
-    cat(sprintf("  Nesting in %s: %s  |  %s design\n", x$actor,
-                .format_icc(cl$icc, cl$icc_ci_lower, cl$icc_ci_upper),
-                cl$design))
+    if (length(x$actor) == 1L) {
+      cat(sprintf("  Nesting in %s: %s  |  %s design\n", x$actor,
+                  .format_icc(cl$icc, cl$icc_ci_lower, cl$icc_ci_upper,
+                            cl$n_sequences, cl$n_actors),
+                  cl$design))
+    } else {
+      cat(sprintf("  Design: %s\n", cl$design))
+      cat(sprintf("  Nesting in %s (innermost level): %s\n",
+                  x$actor[[length(x$actor)]],
+                  .format_icc(cl$icc, cl$icc_ci_lower, cl$icc_ci_upper,
+                            cl$n_sequences, cl$n_actors)))
+    }
     cat(sprintf(paste0("  Design effect (1 = nesting does not matter): ",
                        "edges %.2f  |  global %.2f\n"),
                 cl$deff_edges, cl$deff_global))
     if (cl$min_p > x$alpha) {
       # min_p is the larger of two floors: name the one that binds.
       iter_binds <- isTRUE(all.equal(cl$min_p, 1 / (x$iter + 1)))
-      cat(sprintf("  Note: with %d %s no p-value can fall below %s\n",
-                  if (iter_binds) x$iter else cl$n_actors,
-                  if (iter_binds) "iterations" else "actors",
-                  format(cl$min_p, digits = 3)))
+      if (iter_binds || length(x$actor) == 1L) {
+        cat(sprintf("  Note: with %d %s no p-value can fall below %s\n",
+                    if (iter_binds) x$iter else cl$n_actors,
+                    if (iter_binds) "iterations" else "actors",
+                    format(cl$min_p, digits = 3)))
+      } else {
+        cat(sprintf(paste0("  Note: these nested actors allow no p-value ",
+                           "below %s\n"), format(cl$min_p, digits = 3)))
+      }
     }
   }
 
@@ -1722,4 +1953,30 @@ summary.wtna_perm_mixed <- function(object, ...) {
     transition = summary(object$transition),
     cooccurrence = summary(object$cooccurrence)
   )
+}
+
+#' Refuse nested actor levels in the wrong order
+#'
+#' Level j is the combination of the first j actor columns. When it has no
+#' more units than level j - 1, the inner column adds nothing below the outer
+#' one: the levels are given innermost first, or one level is redundant.
+#' Either way the scheme would shuffle the wrong units (a reversed order was
+#' found to reject 24% of null edges), so it is an error.
+#' @noRd
+.check_actor_levels <- function(level_ids, block) {
+  if (length(level_ids) < 2L) return(invisible(NULL))
+  keys <- Reduce(function(acc, ids) paste(acc, ids, sep = "\x1f"),
+                 lapply(level_ids, as.character), accumulate = TRUE)
+  n_units <- vapply(keys, function(k) length(unique(k)), integer(1L))
+  flat <- which(n_units[-1L] <= n_units[-length(n_units)])
+  if (length(flat) > 0L) {
+    j <- flat[[1L]] + 1L
+    stop(errorCondition(sprintf(paste0(
+      "`actor` level \"%s\" adds no units below \"%s\" (%d units at both ",
+      "levels). Give the levels outermost first, each nested in the one ",
+      "before it, and leave out a level that does not split the one above."),
+      block[[j]], block[[j - 1L]], n_units[[j]]),
+      class = "nestimate_bad_actor", call = NULL))
+  }
+  invisible(NULL)
 }

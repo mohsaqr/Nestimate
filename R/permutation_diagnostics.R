@@ -46,8 +46,11 @@
 #'   Default `NULL`, as it must stay when `x` is a group.
 #' @param actor The column identifying the actor each sequence belongs to,
 #'   as in [permutation()], looked up in the networks' metadata or sequence
-#'   data. A column not found, or one with missing values, raises an error
-#'   of class `nestimate_actor_missing`. Required.
+#'   data. Several column names, outermost first (`c("Group", "Student")`),
+#'   are nested levels, shuffled as [permutation()] describes; the ICC is
+#'   then that of the innermost level. A column not found, or one with
+#'   missing values, raises an error of class `nestimate_actor_missing`.
+#'   Required.
 #' @param iter The number of permutations for each of the two tests, at
 #'   least 2. Default `1000`.
 #' @param alpha The significance level that counts an edge as significant,
@@ -66,7 +69,8 @@
 #'   \item{n_sequences, n_actors}{The sequences and distinct actors in the
 #'     pair.}
 #'   \item{design}{`"between"` (every actor in one group), `"within"`
-#'     (every actor in both groups) or `"mixed"`.}
+#'     (every actor in both groups) or `"mixed"`; with several `actor`
+#'     levels, one `"<level>: <design> (<n> actors)"` entry per level.}
 #'   \item{icc, icc_ci_lower, icc_ci_upper}{How alike the sequences of one
 #'     actor are: the jackknife bias-corrected ICC, as printed by
 #'     [permutation()], with a 95% interval; with fewer than 3 actors the
@@ -127,8 +131,9 @@ permutation_diagnostics <- function(x, y = NULL, actor, iter = 1000L,
                                     seed = NULL) {
   level <- match.arg(level)
   .assert(
-    "`actor` must be a single column name" =
-      is.character(actor) && length(actor) == 1L && !is.na(actor) && nzchar(actor),
+    "`actor` must be one or more distinct column names" =
+      is.character(actor) && length(actor) >= 1L && !anyNA(actor) &&
+      all(nzchar(actor)) && anyDuplicated(actor) == 0L,
     "`iter` must be a single integer >= 2" =
       is.numeric(iter) && length(iter) == 1L && iter >= 2,
     "`alpha` must be in (0, 1)" =
@@ -224,8 +229,20 @@ permutation_diagnostics <- function(x, y = NULL, actor, iter = 1000L,
 
 #' ICC text for print methods: value with interval, or why it is missing
 #' @noRd
-.format_icc <- function(icc, lower, upper) {
-  if (is.na(icc)) return("ICC not estimable (no variation between actors)")
+.format_icc <- function(icc, lower, upper, n_sequences = NA_integer_,
+                        n_actors = NA_integer_) {
+  # The reason follows .anova_icc_cols(): fewer than two actors, no actor
+  # with a second sequence, or no variation in the transition shares.
+  if (is.na(icc)) {
+    why <- if (isTRUE(n_actors < 2L)) {
+      "fewer than two actors"
+    } else if (isTRUE(n_sequences <= n_actors)) {
+      "one sequence per actor: the ICC needs actors with two or more sequences"
+    } else {
+      "no variation in the transition shares"
+    }
+    return(sprintf("ICC not estimable (%s)", why))
+  }
   if (is.na(lower) || is.na(upper)) {
     return(sprintf("ICC = %.3f (interval needs at least 3 actors)", icc))
   }

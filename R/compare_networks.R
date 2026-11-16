@@ -98,9 +98,18 @@
 #'   `"Group"` for students nested in teams). It is passed to [permutation()],
 #'   which then shuffles whole actors; see its sections *Nested data and
 #'   actor* and *ICC and design effect*. The ICC and design effects are added
-#'   to the global table under the category `"Nesting"`. It needs
+#'   to the global table under the category `"Nesting"`. Set it when the
+#'   networks come from groups made of different actors (each student in
+#'   one group): shuffling single sequences is then too liberal. When the
+#'   groups vary within the same actors (pre- and post-test sessions of the
+#'   same students), `actor` shuffles within each actor and the plain test
+#'   is also valid; see *Nested data and actor* in [permutation()]. It needs
 #'   `test = "permutation"`, otherwise an error of class
-#'   `nestimate_compare_actor_needs_permutation` is raised. Default `NULL`.
+#'   `nestimate_compare_actor_needs_permutation` is raised. Several column
+#'   names, outermost first (`c("Group", "Student")`), are nested levels:
+#'   labels are shuffled at the level where they are assigned, within the
+#'   units above it, and the ICC is that of the innermost level. Default
+#'   `NULL`.
 #'
 #' @details
 #' **Cells.** Every cell of the weight matrix is a row of the edge table,
@@ -256,9 +265,10 @@ compare_networks <- function(...,
       is.null(rope) || (is.numeric(rope) && length(rope) == 1L && rope > 0),
     "`seed` must be NULL or a single number" =
       is.null(seed) || (is.numeric(seed) && length(seed) == 1L),
-    "`actor` must be NULL or a single column name" =
-      is.null(actor) || (is.character(actor) && length(actor) == 1L &&
-                           !is.na(actor) && nzchar(actor))
+    "`actor` must be NULL or one or more distinct column names" =
+      is.null(actor) || (is.character(actor) && length(actor) >= 1L &&
+                           !anyNA(actor) && all(nzchar(actor)) &&
+                           anyDuplicated(actor) == 0L)
   )
   test <- match.arg(test, c("none", "permutation", "bayes", "bootstrap"),
                     several.ok = TRUE)
@@ -907,7 +917,8 @@ compare_networks <- function(...,
   test_txt <- if (identical(x$test, "none")) "descriptive" else
     sprintf("%s, iter = %d, alpha = %s, adjust = %s%s",
             paste(x$test, collapse = " + "), x$iter, format(x$alpha), x$adjust,
-            if (is.null(x$actor)) "" else sprintf(", actor = %s", x$actor))
+            if (is.null(x$actor)) "" else
+              sprintf(", actor = %s", paste(x$actor, collapse = " > ")))
   net_lines <- vapply(names(x$networks), function(nm) {
     sprintf("%s (%d nodes, %s)", nm, nrow(x$matrices[[nm]]),
             if (x$directed[[nm]]) "directed" else "undirected")

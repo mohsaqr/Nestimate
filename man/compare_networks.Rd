@@ -124,9 +124,18 @@ Default \code{NULL}.}
 \code{"Group"} for students nested in teams). It is passed to \code{\link[=permutation]{permutation()}},
 which then shuffles whole actors; see its sections \emph{Nested data and
 actor} and \emph{ICC and design effect}. The ICC and design effects are added
-to the global table under the category \code{"Nesting"}. It needs
+to the global table under the category \code{"Nesting"}. Set it when the
+networks come from groups made of different actors (each student in
+one group): shuffling single sequences is then too liberal. When the
+groups vary within the same actors (pre- and post-test sessions of the
+same students), \code{actor} shuffles within each actor and the plain test
+is also valid; see \emph{Nested data and actor} in \code{\link[=permutation]{permutation()}}. It needs
 \code{test = "permutation"}, otherwise an error of class
-\code{nestimate_compare_actor_needs_permutation} is raised. Default \code{NULL}.}
+\code{nestimate_compare_actor_needs_permutation} is raised. Several column
+names, outermost first (\code{c("Group", "Student")}), are nested levels:
+labels are shuffled at the level where they are assigned, within the
+units above it, and the ICC is that of the innermost level. Default
+\code{NULL}.}
 
 \item{x}{For the \code{print()} and \code{plot()} methods: a
 \code{net_network_comparison} object.}

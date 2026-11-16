@@ -67,6 +67,15 @@
 #' Hinkley, 1997, section 3.8; Field & Welsh, 2007). The number of
 #' sequences per replicate then varies with the actors drawn.
 #'
+#' Several columns, outermost first (`actor = c("Group", "Student")`, students
+#' within teams), name nested levels. Every column is checked, but only the
+#' outermost level is resampled: whole teams, each with all its students
+#' and sessions. Resampling inside the drawn clusters as well (students
+#' within teams) adds their variation a second time and overstates the
+#' variance (Davison & Hinkley, 1997, section 3.8). The ICC and design
+#' effect are then those of the outermost level, and `print()` names it as
+#' the resampled level.
+#'
 #' With \code{actor}, the result also reports the nesting effect. The ICC
 #' is the proportion of the total variance that lies between actors (Shrout
 #' & Fleiss, 1979); an ICC close to 0 indicates little evidence of a nesting
@@ -77,6 +86,18 @@
 #' over sequence-level replicates drawn in the same run, reported as the
 #' median over edges. \code{actor} is available for transition networks
 #' (\code{"relative"}, \code{"frequency"}, \code{"co_occurrence"}).
+#'
+#' When to set \code{actor}: resampling sequences describes the variability
+#' of these actors' sequences; to generalise to other actors (other
+#' students, other teams), resample actors. A drawn actor brings all of
+#' their sequences, so a replicate can contain an actor twice or not at
+#' all. The design effect, not the ICC alone, decides how much this
+#' matters: with m transitions per actor, Kish gives `1 + (m - 1) * ICC`,
+#' so a small ICC over many transitions per actor still widens the
+#' intervals. In one data set of sessions nested in students, the ICC was
+#' about 0.01 and the design effect about 1.5; resampling students gave
+#' intervals about a quarter wider than resampling sessions, and fewer
+#' significant edges (18 against 22).
 #'
 #' @param x The network: a `netobject` that carries its data (any network
 #'   from [build_network()]), or a `cograph_network`, which is converted
@@ -124,12 +145,17 @@
 #'   (for example `"student_id"` for sessions nested in students, `"Group"`
 #'   for students nested in teams), looked up in the network's metadata or
 #'   its wide sequence data. With it, whole actors are resampled; see
-#'   *Nested data and `actor`*. Default `NULL`: sequences are resampled one
+#'   *Nested data and `actor`*. Several column names, outermost first (such
+#'   as `c("Group", "Student")`), are nested levels, of which the outermost
+#'   is resampled; the reported number of actors, ICC and design effect are
+#'   those of the outermost level, and levels that are not nested outermost
+#'   first raise an error of class `nestimate_bad_actor`. Default `NULL`:
+#'   sequences are resampled one
 #'   by one. It is available for sequence-based transition networks
 #'   (`"relative"`, `"frequency"`, `"co_occurrence"`); a method outside the
 #'   fast path (see *Details*) raises an error of class
-#'   `nestimate_actor_unsupported`. A value that is not a single column
-#'   name, or that names fewer than two actors, raises an error of class
+#'   `nestimate_actor_unsupported`. A value that is not one or more distinct
+#'   column names, or whose outermost column names fewer than two actors, raises an error of class
 #'   `nestimate_bad_actor`; a column that is absent or has missing values,
 #'   one of class `nestimate_actor_missing`; and ids that do not give one
 #'   actor per sequence, one of class `nestimate_actor_misaligned`.
@@ -163,8 +189,9 @@
 #'   \item{method, params, iter, ci_level, inference, ci_method}{The
 #'     bootstrap settings.}
 #'   \item{consistency_range, edge_threshold}{The test settings.}
-#'   \item{actor, n_actors}{The `actor` column and its number of actors;
-#'     `NULL` without `actor`.}
+#'   \item{actor, n_actors}{The `actor` column (or columns, outermost first)
+#'     and the number of actors resampled (at the outermost level); `NULL`
+#'     without `actor`.}
 #'   \item{clustering}{Only with `actor`: a one-row data frame of
 #'     `n_sequences`, `n_actors`, `icc`, `icc_ci_lower`, `icc_ci_upper` and
 #'     `deff_edges`.}
@@ -363,15 +390,23 @@ bootstrap_network <- function(x,
     transition_data <- .resampling_transition_data(data, x$metadata, params)
     trans_2d <- .precompute_per_sequence(transition_data, count_method, params,
                                          states)
+    # Several actor columns are nested levels: every level is checked, and
+    # only the outermost is resampled (Davison & Hinkley, 1997, section 3.8:
+    # resampling inside the clusters as well overstates the variance).
+    if (length(actor) > 1L) {
+      .check_actor_levels(lapply(actor, function(col) {
+        .permutation_block_ids(x, col, nrow(trans_2d), "x")
+      }), actor)
+    }
     block_ids <- if (is.null(actor)) NULL else
-      .permutation_block_ids(x, actor, nrow(trans_2d), "x")
+      .permutation_block_ids(x, actor[[1L]], nrow(trans_2d), "x")
     # Cluster bootstrap: resample whole units (summed counts), top level only
     units <- if (is.null(block_ids)) trans_2d else
       rowsum(trans_2d, block_ids, reorder = FALSE)
     if (!is.null(block_ids) && nrow(units) < 2L) {
       stop(errorCondition(
         sprintf("`actor = \"%s\"` has %d actor; resampling needs at least 2.",
-                actor, nrow(units)),
+                actor[[1L]], nrow(units)),
         class = "nestimate_bad_actor", call = NULL))
     }
     boot_matrices <- .bootstrap_counts(
@@ -1164,9 +1199,17 @@ print.net_bootstrap <- function(x, ...) {
   cat("\n")
   if (!is.null(x$clustering)) {
     cl <- x$clustering
-    cat(sprintf("  Actor      : %s (%d actors)\n", x$actor, cl$n_actors))
+    if (length(x$actor) == 1L) {
+      cat(sprintf("  Actor      : %s (%d actors)\n", x$actor, cl$n_actors))
+    } else {
+      cat(sprintf(paste0("  Actor      : %s (nested); resampled: %s ",
+                         "(%d actors, outermost level)\n"),
+                  paste(x$actor, collapse = " > "), x$actor[[1L]],
+                  cl$n_actors))
+    }
     cat(sprintf("  Nesting    : %s  |  Design effect (edges) = %.2f\n",
-                .format_icc(cl$icc, cl$icc_ci_lower, cl$icc_ci_upper),
+                .format_icc(cl$icc, cl$icc_ci_lower, cl$icc_ci_upper,
+                            cl$n_sequences, cl$n_actors),
                 cl$deff_edges))
   }
 
@@ -1261,7 +1304,7 @@ print.net_bootstrap_group <- function(x, ...) {
               nm, grp_stats["sig", nm], sig_word, grp_stats["total", nm]),
       if (!is.null(cl)) {
         sprintf("  |  %s: %d actors, ICC %.3f, design effect %.2f",
-                x[[nm]]$actor, cl$n_actors, cl$icc, cl$deff_edges)
+                x[[nm]]$actor[[1L]], cl$n_actors, cl$icc, cl$deff_edges)
       },
       "\n")
   }, character(1L))

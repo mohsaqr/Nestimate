@@ -9,6 +9,7 @@
 \alias{mosaic_plot.netobject_group}
 \alias{mosaic_plot.table}
 \alias{mosaic_plot.matrix}
+\alias{mosaic_plot.array}
 \alias{mosaic_plot.data.frame}
 \title{Mosaic Plot of a Network's Transition or Co-occurrence Counts}
 \usage{
@@ -28,7 +29,11 @@ mosaic_plot(x, ...)
   seed = NULL,
   values = FALSE,
   style = c("classic", "flat"),
-  ...
+  ...,
+  nested = FALSE,
+  nested_method = c("rao_scott", "donner_klar", "cmh", "gee", "glmm"),
+  actor = NULL,
+  report = FALSE
 )
 
 \method{mosaic_plot}{htna}(
@@ -43,7 +48,11 @@ mosaic_plot(x, ...)
   seed = NULL,
   values = FALSE,
   style = c("classic", "flat"),
-  ...
+  ...,
+  nested = FALSE,
+  nested_method = c("rao_scott", "donner_klar", "cmh", "gee", "glmm"),
+  actor = NULL,
+  report = FALSE
 )
 
 \method{mosaic_plot}{mcml}(
@@ -76,7 +85,11 @@ mosaic_plot(x, ...)
   ncol = 2L,
   values = FALSE,
   style = c("classic", "flat"),
-  ...
+  ...,
+  nested = FALSE,
+  nested_method = c("rao_scott", "donner_klar", "cmh", "gee", "glmm"),
+  actor = NULL,
+  report = FALSE
 )
 
 \method{mosaic_plot}{table}(
@@ -91,10 +104,15 @@ mosaic_plot(x, ...)
   seed = NULL,
   values = FALSE,
   style = c("classic", "flat"),
-  ...
+  ...,
+  nested = FALSE,
+  nested_method = c("rao_scott", "donner_klar", "cmh", "gee", "glmm"),
+  report = FALSE
 )
 
 \method{mosaic_plot}{matrix}(x, ...)
+
+\method{mosaic_plot}{array}(x, ...)
 
 \method{mosaic_plot}{data.frame}(
   x,
@@ -112,7 +130,8 @@ mosaic_plot(x, ...)
 }
 \arguments{
 \item{x}{The object to draw: a \code{netobject}, \code{netobject_group}, \code{mcml} or
-\code{htna} network, a contingency \code{table}, a numeric count \code{matrix}, or a
+\code{htna} network, a contingency \code{table} (two-way, or three-way with the
+clusters as the third dimension), a numeric count \code{matrix}, or a
 data frame in long form (see \code{x_var}, \code{y_var} and \code{weight}).}
 
 \item{...}{With \code{style = "flat"}: styling arguments for the flat mosaic
@@ -146,7 +165,8 @@ other \code{n_perm} times, which keeps both margins, and gives each cell
 gets 0. It does not rely on large expected counts, so it suits sparse
 tables. \code{"asymptotic"} gives the adjusted residuals of
 \code{\link[stats:chisq.test]{stats::chisq.test()}}, \code{(O - E) / sqrt(E (1 - p_row) (1 - p_col))}, as
-vcd and tna do.}
+vcd and tna do. Used when \code{nested = FALSE}; given with \code{nested = TRUE}
+it is ignored with a warning of class \code{nestimate_ignored_argument}.}
 
 \item{n_perm}{The number of shuffles for \code{residuals = "permutation"}, at
 least 2. Default \code{500}; use 1000 or more for stable values in the
@@ -172,6 +192,34 @@ and its styling arguments (\code{tile_label}, \code{col_label_side},
 go in \code{...}. An \code{mcml} with \code{level = "clusters"} and more than one
 panel is drawn classic, with a message; an \code{htna} drawn flat loses its
 actor-coloured labels, with a warning.}
+
+\item{nested}{Whether the counts are nested in actors (transitions in
+sequences, sequences in students or teams) and the residuals should
+allow for it. Default \code{FALSE}: every count is an independent draw, as
+before. \code{TRUE} draws the residuals of \code{nested_method}; see \emph{Nested
+data}.}
+
+\item{nested_method}{With \code{nested = TRUE}, the method: \code{"rao_scott"}
+(default), \code{"donner_klar"}, \code{"cmh"}, \code{"gee"} or \code{"glmm"}; see \emph{Nested
+data}. A method that cannot run on the design raises an error of class
+\code{nestimate_bad_input}.}
+
+\item{actor}{With \code{nested = TRUE}, on a network or \code{netobject_group}:
+\code{NULL} (default) makes every sequence its own actor; the name of a
+column of the network's metadata (such as \code{"Actor"} or a team column,
+as \code{actor} in \code{\link[=permutation]{permutation()}} and \code{\link[=bootstrap_network]{bootstrap_network()}}) pools the
+sequences that share its value; several names give nested levels,
+outermost first, which \code{"glmm"} models level by level and the other
+methods reduce to the outermost. A name that is not a column raises an
+error of class \code{nestimate_actor_missing}. \code{nested_method} and \code{actor}
+given with \code{nested = FALSE} are ignored with a warning of class
+\code{nestimate_ignored_argument}.}
+
+\item{report}{Whether to report the overall test: \code{TRUE} adds it as the
+plot subtitle and prints it as a one-row data frame with the columns
+of \code{\link[=mosaic_test]{mosaic_test()}} but \code{note}. The test is \code{nested_method} with
+\code{nested = TRUE}, Pearson's chi-square otherwise. Default \code{FALSE}. Not
+available for an \code{mcml}.}
 
 \item{level}{For an \code{mcml}: \code{"macro"} (default) draws one mosaic of the
 cluster-by-cluster counts; \code{"clusters"} draws one mosaic per cluster,
@@ -236,9 +284,12 @@ network has its states ordered by actor, with each state's label set in
 bold in its actor's colour.
 
 The residuals describe where the counts depart from independence; they
-are not tests of single cells, and transitions taken from the same
-sequence are not independent draws. To test edges or group differences,
-use \code{\link[=permutation]{permutation()}}; for a chi-square or Fisher test with
+are not tests of single cells. The default residuals treat every
+transition or state as an independent draw, but those of one sequence
+(or one student, or one team) are not. With \code{nested = TRUE} the
+residuals allow for that nesting; \code{report = TRUE} adds the overall test
+as the subtitle and prints it; see \emph{Nested data}. To test edges or group
+differences, use \code{\link[=permutation]{permutation()}}; for a chi-square or Fisher test with
 Cram\enc{é}{e}r's V on two variables of a data frame, use
 \code{\link[=mosaic_analysis]{mosaic_analysis()}}.
 }
@@ -263,12 +314,67 @@ and every tile is drawn at 0. The geometry and the asymptotic
 residuals follow \code{tna::plot_mosaic()}; the function has its own name so
 the two packages can be attached together.
 }
+\section{Nested data}{
+
+A network's counts are summed over sequences. With \code{nested = TRUE}
+the counts are taken sequence by sequence (as the network counted them),
+summed within the actors named by \code{actor} (each sequence on its own
+by default), and \code{nested_method} reads the table of each actor.
+With \code{report = TRUE} the subtitle names the test, its statistic, degrees
+of freedom and p-value, the number of actors, and the design effect or
+intracluster correlation where the method gives one. For a network,
+the source state is treated as the predictor and the target as the
+response; for a \code{netobject_group}, the group is the predictor and the
+state the response. The \code{nested_method} choices:
+\describe{
+\item{\code{"rao_scott"} (default)}{Rao-Scott second-order corrected
+chi-square, an F statistic on fractional degrees of freedom (as
+\code{survey::svychisq()}); any cluster sizes. Residual: the standardised
+residual divided by the square root of the cell's design effect. With
+one observation per actor it equals the default asymptotic residual,
+so it corrects only as much as the data are clustered.}
+\item{\code{"donner_klar"}}{Pearson's chi-square divided by the
+cluster-size inflation factor \code{1 + (m - 1) * rho}. Needs one variable
+that is constant within every cluster, as the group of a
+\code{netobject_group}; a single network raises an error.}
+\item{\code{"cmh"}}{Generalised Cochran-Mantel-Haenszel test with each
+cluster as a stratum; both variables must vary within clusters, so a
+\code{netobject_group} raises an error.}
+\item{\code{"gee"}}{Wald chi-square of a marginal model (identity link,
+independence working correlation) with the cluster-robust
+covariance; refused when that covariance is rank-deficient, and
+liberal unless the actors are many relative to the degrees of
+freedom. Residual: conditional minus pooled share, over its
+cluster-robust standard error.}
+\item{\code{"glmm"}}{Wald chi-square on the interaction of a log-linear
+Poisson mixed model with cluster random effects at every level of
+\code{actor}; needs lme4. Residual: observed minus expected count under
+independence, over its cluster-robust standard error.}
+}
+The methods are described in full under \emph{Nested data} in
+\code{\link[=mosaic_analysis]{mosaic_analysis()}}. \code{nested = TRUE} needs per-sequence counts: a
+network built with \code{method = "relative"}, \code{"frequency"} or
+\code{"co_occurrence"} that keeps its sequence data, or a \code{netobject_group}
+whose groups keep theirs. Other networks, and per-sequence counts that
+do not add up to the drawn table, raise an error of class
+\code{nestimate_bad_input}. An \code{mcml} takes no \code{nested}. A \code{table} or
+\code{matrix} (or a plain array) takes it as a three-way table, rows x columns x actors (e.g.
+\code{table(var1, var2, actor)}); the mosaic draws the table summed over
+actors. A three-way table without \code{nested = TRUE}, or a two-way table
+with it, raises an error.
+Residuals a method leaves undefined are drawn at 0. For the tests as a
+table, all methods side by side, use \code{\link[=mosaic_test]{mosaic_test()}}.
+}
+
 \examples{
 data(group_regulation_long, package = "Nestimate")
 net <- build_network(group_regulation_long, method = "frequency",
                      format = "long", actor = "Actor", action = "Action",
                      order = "Time")
 mosaic_plot(net, seed = 1)
+
+# Transitions are nested in students' sequences, students in teams:
+mosaic_plot(net, nested = TRUE, actor = "Group", report = TRUE)
 
 # A tidy data frame: columns by group, segments by state
 df <- data.frame(
@@ -282,4 +388,23 @@ mosaic_plot(df, x_var = "group", y_var = "state", weight = "count")
 Friendly, M. (1994). Mosaic displays for multi-way contingency tables.
 \emph{Journal of the American Statistical Association}, 89(425),
 190--200. \doi{10.1080/01621459.1994.10476460}
+
+Rao, J. N. K., & Scott, A. J. (1984). On chi-squared tests for multiway
+contingency tables with cell proportions estimated from survey data.
+\emph{The Annals of Statistics}, 12(1), 46--60.
+\doi{10.1214/aos/1176346391}
+
+Donner, A., & Klar, N. (1994). Methods for comparing event rates in
+intervention studies when the unit of allocation is a cluster.
+\emph{American Journal of Epidemiology}, 140(3), 279--289.
+\doi{10.1093/oxfordjournals.aje.a117247}
+
+Landis, J. R., Heyman, E. R., & Koch, G. G. (1978). Average partial
+association in three-way contingency tables: A review and discussion of
+alternative tests. \emph{International Statistical Review}, 46(3),
+237--254. \doi{10.2307/1402373}
+
+Liang, K.-Y., & Zeger, S. L. (1986). Longitudinal data analysis using
+generalized linear models. \emph{Biometrika}, 73(1), 13--22.
+\doi{10.1093/biomet/73.1.13}
 }
