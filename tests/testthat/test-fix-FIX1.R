@@ -266,19 +266,29 @@ test_that("A07-F06: .estimator_mgm auto-detect no longer crashes on NA && short-
   set.seed(1); n <- 300
   k <- sample(1:4, n, TRUE); k[7] <- NA
   dat0 <- data.frame(V1 = rnorm(n), K = as.numeric(k))
-  msg <- tryCatch(.estimator_mgm(dat0), error = function(e) conditionMessage(e))
-  # the specific cryptic && NA crash must be gone
-  expect_false(grepl("missing value where TRUE/FALSE needed", msg))
+  # The cryptic `&&` NA crash must be gone. Whether the fit then succeeds
+  # depends on psychnets: 0.5.2 (the declared minimum) cannot fit a
+  # two-variable MGM (glmnet needs two predictors), later versions can.
+  expect_warning(
+    r_na <- tryCatch(.estimator_mgm(dat0), error = function(e) e),
+    "auto-detected as CATEGORICAL")
+  if (inherits(r_na, "error")) {
+    expect_no_match(conditionMessage(r_na),
+                    "missing value where TRUE/FALSE needed", fixed = TRUE)
+  } else {
+    expect_identical(unname(r_na$type), c("g", "c"))
+    expect_true(all(is.finite(r_na$matrix)))
+  }
 
   # clean data still classifies correctly (no regression in auto-detect)
   r_cont <- .estimator_mgm(
     data.frame(V1 = rnorm(200), V2 = rnorm(200), V3 = rnorm(200))
   )
   expect_identical(unname(r_cont$type), rep("g", 3))
-  r_mix <- .estimator_mgm(
+  expect_warning(r_mix <- .estimator_mgm(
     data.frame(V1 = rnorm(200), V2 = rnorm(200),
                G = sample(1:3, 200, TRUE))
-  )
+  ), "auto-detected as CATEGORICAL")
   expect_identical(unname(r_mix$type), c("g", "g", "c"))
 
   # bundled directed sequence network sanity (group_regulation_long) — the
