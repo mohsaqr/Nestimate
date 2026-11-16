@@ -1,3 +1,10 @@
+# Nestimate 1.0.16
+
+* `tna` models and `group_tna` objects (package tna) are accepted by every function that takes a network or sequences, through one conversion: the model is rebuilt from its own sequences and used only when the rebuilt weights equal its own. This adds `permutation()`, `permutation_diagnostics()`, `bootstrap_network()`, `bayes_compare()`, `vertex_compare()`, `mosaic_test()`, `mosaic_plot()`, `plot_state_frequencies()`, `state_distribution()`, `centrality_stability()`, `casedrop_reliability()`, `network_reliability()`, `net_centrality()`, `net_prune()`, `subtract_networks()` and others; `sequence_compare()`, `sequence_patterns()`, `sequence_plot()` and `transition_entropy()` now also take a `group_tna`. `as_netobject()` returns the converted network.
+* `actor` on a tna model is read from the metadata the model keeps (`attr(model$data, "meta")`, tna 1.4.0 or later, built from `tna::prepare_data()`); a model without it raises `nestimate_actor_missing`.
+* A tna model that cannot be rebuilt (scaled weights, for instance) is used for its weights only; functions that resample or read sequences raise `nestimate_tna_unrebuilt` with the reason.
+* `markov_order_test()` on a tna model read the object's fields as sequences and returned wrong counts; it now reads the model's sequences. `path_dependence()` on a tna-derived `cograph_network` reports state names instead of integer codes.
+
 # Nestimate 1.0.15
 
 * `compare_networks(test = "permutation")` gives the result of `permutation()` with the same `seed`: the seed is passed unchanged to every pair (it was `seed + i`), so seeded results differ from 1.0.14. The same holds for `test = "bayes"` and `test = "bootstrap"`. The `permutation()` result of each pair is returned in `$permutations`.
