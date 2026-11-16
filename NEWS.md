@@ -1,3 +1,13 @@
+# Nestimate 1.0.15
+
+* `compare_networks(test = "permutation")` gives the result of `permutation()` with the same `seed`: the seed is passed unchanged to every pair (it was `seed + i`), so seeded results differ from 1.0.14. The same holds for `test = "bayes"` and `test = "bootstrap"`. The `permutation()` result of each pair is returned in `$permutations`.
+* `plot(type = "difference")` of a comparison run with `test = "permutation"` draws that result (significant differences, starred) instead of the untested difference.
+* The edge and node views of `compare_networks()` grade their stars by p-value (`***` below 0.001, `**` below 0.01), as the permutation graph does.
+* `sequence_compare()` leaves sequences with a missing group out of the null shuffles as well as the counts; p-values change when group labels are missing. `sub`, `min_freq` and `iter` must be whole numbers (fractions were truncated).
+* GLMM mosaic residuals with several `actor` levels cluster their variance at the outermost level, as the other nested methods do.
+* `mosaic_test()` validates the count array for `method = "chisq"` too.
+* Help: units of the ICC and design effect in the worked example, exchangeability under `actor`, the conditional null of Cochran-Mantel-Haenszel, the approximate GLMM fit.
+
 # Nestimate 1.0.14
 
 * Tests: the frozen-output checks of the new nested-data tests compare doubles to 1e-10, so they pass on Linux as well as macOS.
