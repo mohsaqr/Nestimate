@@ -1,3 +1,7 @@
+# Nestimate 1.0.19
+
+* `centrality_stability()` and `casedrop_reliability()` take `actor`: for sequences nested in actors (several sessions per student), whole actors are dropped with all their sequences, and `drop_prop` is the proportion of actors, as in `tna::estimate_cs(actor = )`. Dropping single sequences of such data overstates the CS-coefficient. Results without `actor` are unchanged.
+
 # Nestimate 1.0.18
 
 * A pruned tna model converts to its full network in every function, `as_netobject()` included, with a warning of class `nestimate_tna_pruned`: Nestimate reads the model's data, which pruning leaves unchanged. In 1.0.17 the functions that read weights only (`as_netobject()`, `net_centrality()`) took the pruned weights.
