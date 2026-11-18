@@ -1,0 +1,54 @@
+Registered S3 methods overwritten by 'Nestimate':
+  method            from       
+  plot.net_mlvar    idiographic
+  print.net_mlvar   idiographic
+  summary.net_mlvar idiographic
+
+> sequences <- read.csv("../data/sequences.csv")
+
+> network <- build_network(sequences, method = "relative")
+
+> stability <- centrality_stability(network, measures = c("InStrength", "OutStrength", "Betweenness"),
++                                   iter = 200, seed = 1)
+
+> stability
+Centrality Stability (200 iterations, threshold = 0.7)
+  Drop proportions: 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9
+
+  CS-coefficients:
+    InStrength       0.90
+    OutStrength      0.90
+    Betweenness      0.90
+
+> result <- subset(transform(summary(stability), drop = paste0(measure, ", dropping ", drop_prop)),
++                  select = c(drop, mean_cor, sd_cor, prop_above))
+
+> result
+                        drop  mean_cor       sd_cor prop_above
+1   InStrength, dropping 0.1 0.9997860 0.0001595638       1.00
+2   InStrength, dropping 0.2 0.9995112 0.0003578665       1.00
+3   InStrength, dropping 0.3 0.9991143 0.0005905805       1.00
+4   InStrength, dropping 0.4 0.9987039 0.0008728070       1.00
+5   InStrength, dropping 0.5 0.9981074 0.0010690673       1.00
+6   InStrength, dropping 0.6 0.9970809 0.0018591274       1.00
+7   InStrength, dropping 0.7 0.9955075 0.0027706454       1.00
+8   InStrength, dropping 0.8 0.9915987 0.0062642976       1.00
+9   InStrength, dropping 0.9 0.9837442 0.0128178531       1.00
+10 OutStrength, dropping 0.1 0.9994201 0.0004404378       1.00
+11 OutStrength, dropping 0.2 0.9988331 0.0007416659       1.00
+12 OutStrength, dropping 0.3 0.9976970 0.0016458616       1.00
+13 OutStrength, dropping 0.4 0.9966881 0.0020433007       1.00
+14 OutStrength, dropping 0.5 0.9952075 0.0029872867       1.00
+15 OutStrength, dropping 0.6 0.9920059 0.0050276389       1.00
+16 OutStrength, dropping 0.7 0.9882924 0.0074396018       1.00
+17 OutStrength, dropping 0.8 0.9803483 0.0129075792       1.00
+18 OutStrength, dropping 0.9 0.9372181 0.1410830881       0.98
+19 Betweenness, dropping 0.1 0.9899591 0.0165135145       1.00
+20 Betweenness, dropping 0.2 0.9834686 0.0194745041       1.00
+21 Betweenness, dropping 0.3 0.9833598 0.0204122708       1.00
+22 Betweenness, dropping 0.4 0.9783141 0.0214573652       1.00
+23 Betweenness, dropping 0.5 0.9800975 0.0214877335       1.00
+24 Betweenness, dropping 0.6 0.9758729 0.0237916872       1.00
+25 Betweenness, dropping 0.7 0.9728386 0.0229984880       1.00
+26 Betweenness, dropping 0.8 0.9646405 0.0289407869       1.00
+27 Betweenness, dropping 0.9 0.9337827 0.0631806659       0.99

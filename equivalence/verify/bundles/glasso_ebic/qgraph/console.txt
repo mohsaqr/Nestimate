@@ -1,0 +1,33 @@
+
+> library(qgraph)
+
+> strategies <- read.csv("../data/srl_strategies.csv")
+
+> fit <- EBICglasso(cor(strategies), n = nrow(strategies), gamma = 0.5, returnAllResults = TRUE)
+
+> fit$lambda[which.min(fit$ebic)]
+[1] 0.1318548
+
+> network <- fit$optnet
+
+> pairs <- which(upper.tri(network) & network != 0, arr.ind = TRUE)
+
+> result <- data.frame(quantity = paste(colnames(network)[pairs[, "row"]], "--",
++                                       colnames(network)[pairs[, "col"]]),
++                      kind = "partial correlation", value = network[pairs])
+
+> result
+                      quantity                kind      value
+1       Planning -- Monitoring partial correlation 0.22901861
+2       Planning -- Evaluating partial correlation 0.12953763
+3     Monitoring -- Evaluating partial correlation 0.30049762
+4    Monitoring -- Elaboration partial correlation 0.03881845
+5   Evaluating -- Organization partial correlation 0.15443128
+6  Elaboration -- Organization partial correlation 0.26232453
+7     Elaboration -- Rehearsal partial correlation 0.15760206
+8    Organization -- Rehearsal partial correlation 0.15232840
+9        Planning -- Time_Mgmt partial correlation 0.13034650
+10   Help_Seeking -- Time_Mgmt partial correlation 0.06512061
+11    Evaluating -- Effort_Reg partial correlation 0.09309598
+12  Help_Seeking -- Effort_Reg partial correlation 0.01956135
+13     Time_Mgmt -- Effort_Reg partial correlation 0.32491515

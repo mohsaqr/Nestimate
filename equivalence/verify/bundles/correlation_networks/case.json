@@ -1,0 +1,1149 @@
+{
+  "schema": "prova.verification-case/1",
+  "title": "Correlation and partial correlation networks",
+  "description": "Pearson correlation and partial correlation networks of nine continuous scores (250 students). Base R computes the partial correlations from the inverse of the correlation matrix; corpcor computes both matrices with its own routines at zero shrinkage.",
+  "covers": [
+    "build_network()",
+    "build_cor()",
+    "build_pcor()"
+  ],
+  "generator": "Nestimate equivalence/verify/export-bundles.R",
+  "created_at": "2026-11-18",
+  "sides": [
+    {
+      "id": "nestimate",
+      "name": "Nestimate",
+      "version": "1.0.20",
+      "primary": true,
+      "source": "live",
+      "run_at": "2026-11-18",
+      "platform": "R version 4.6.2 (2026-10-29), aarch64-apple-darwin23"
+    },
+    {
+      "id": "stats",
+      "name": "stats (base R)",
+      "version": "4.6.2",
+      "authority": "open-source",
+      "source": "live",
+      "run_at": "2026-11-18",
+      "platform": "R version 4.6.2 (2026-10-29), aarch64-apple-darwin23"
+    },
+    {
+      "id": "corpcor",
+      "name": "corpcor",
+      "version": "1.6.10",
+      "authority": "open-source",
+      "source": "live",
+      "run_at": "2026-11-18",
+      "platform": "R version 4.6.2 (2026-10-29), aarch64-apple-darwin23"
+    }
+  ],
+  "sections": [
+    {
+      "id": "code",
+      "title": "Code",
+      "items": [
+        {
+          "side": "nestimate",
+          "path": "nestimate/script.R",
+          "bytes": 393,
+          "sha256": "c612cc2a6f2fb657a01fd70718914a208378452c96a5000ce972dd6528d7a8f3",
+          "label": "Script",
+          "type": "code",
+          "language": "r",
+          "run": {
+            "engine": "r",
+            "result": "result",
+            "reads": [
+              "data/srl_strategies.csv"
+            ]
+          }
+        },
+        {
+          "side": "stats",
+          "path": "stats/script.R",
+          "bytes": 526,
+          "sha256": "4e7d180f24ff13ee6adb6784bb3caaeaf3f1fec1c10b591cca14b8f89e257470",
+          "label": "Script",
+          "type": "code",
+          "language": "r",
+          "run": {
+            "engine": "r",
+            "result": "result",
+            "reads": [
+              "data/srl_strategies.csv"
+            ]
+          }
+        },
+        {
+          "side": "corpcor",
+          "path": "corpcor/script.R",
+          "bytes": 588,
+          "sha256": "04791664bdcba22c96165c81a177ed7f3783e6cd7c83839f027f77d14310ea16",
+          "label": "Script",
+          "type": "code",
+          "language": "r",
+          "run": {
+            "engine": "r",
+            "result": "result",
+            "reads": [
+              "data/srl_strategies.csv"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "output",
+      "title": "Raw output",
+      "items": [
+        {
+          "side": "nestimate",
+          "path": "nestimate/console.txt",
+          "bytes": 8309,
+          "sha256": "06bf95c72233216650c487460fa787c0a04756ab213019a4bd0864692082a5c5",
+          "label": "R console",
+          "type": "text"
+        },
+        {
+          "side": "stats",
+          "path": "stats/console.txt",
+          "bytes": 4642,
+          "sha256": "d1cd8a7df13d76a3fbccbac24f4b3968239caab877f0b848662e8d41f48c09a8",
+          "label": "R console",
+          "type": "text"
+        },
+        {
+          "side": "corpcor",
+          "path": "corpcor/console.txt",
+          "bytes": 4704,
+          "sha256": "a7cffdc6c6499c56ea8239bd9c1c3a3db549bd7e0d3497526c6c1ca45f717417",
+          "label": "R console",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "id": "data",
+      "title": "Data",
+      "items": [
+        {
+          "path": "data/srl_strategies.csv",
+          "bytes": 6467,
+          "sha256": "c112926eb699da1fe5212971aff08ac45eca970ad90feea4e81dcad186990ca9",
+          "label": "Self-regulated learning scores"
+        }
+      ]
+    }
+  ],
+  "comparisons": [
+    {
+      "quantity": "cor: Monitoring -- Evaluating",
+      "kind": "cor",
+      "values": {
+        "nestimate": 0.485011925546253,
+        "stats": 0.485011925546253,
+        "corpcor": 0.485011925546243
+      },
+      "difference": 9.93649607039515e-15,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "cor: Time_Mgmt -- Effort_Reg",
+      "kind": "cor",
+      "values": {
+        "nestimate": 0.466737721856978,
+        "stats": 0.466737721856978,
+        "corpcor": 0.466737721856973
+      },
+      "difference": 5.60662627435704e-15,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "cor: Elaboration -- Organization",
+      "kind": "cor",
+      "values": {
+        "nestimate": 0.432342812017852,
+        "stats": 0.432342812017852,
+        "corpcor": 0.432342812017847
+      },
+      "difference": 4.49640324973188e-15,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "cor: Planning -- Monitoring",
+      "kind": "cor",
+      "values": {
+        "nestimate": 0.422603681430789,
+        "stats": 0.422603681430789,
+        "corpcor": 0.422603681430782
+      },
+      "difference": 6.38378239159465e-15,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "cor: Planning -- Evaluating",
+      "kind": "cor",
+      "values": {
+        "nestimate": 0.357905285900455,
+        "stats": 0.357905285900455,
+        "corpcor": 0.35790528590045
+      },
+      "difference": 5.10702591327572e-15,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "cor: Elaboration -- Rehearsal",
+      "kind": "cor",
+      "values": {
+        "nestimate": 0.341254975681655,
+        "stats": 0.341254975681655,
+        "corpcor": 0.341254975681651
+      },
+      "difference": 3.33066907387547e-15,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "cor: Organization -- Rehearsal",
+      "kind": "cor",
+      "values": {
+        "nestimate": 0.338866771663006,
+        "stats": 0.338866771663006,
+        "corpcor": 0.338866771663004
+      },
+      "difference": 1.72084568816899e-15,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "cor: Evaluating -- Organization",
+      "kind": "cor",
+      "values": {
+        "nestimate": 0.31316025023539,
+        "stats": 0.31316025023539,
+        "corpcor": 0.313160250235386
+      },
+      "difference": 4.10782519111308e-15,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "cor: Planning -- Time_Mgmt",
+      "kind": "cor",
+      "values": {
+        "nestimate": 0.285198903909087,
+        "stats": 0.285198903909087,
+        "corpcor": 0.285198903909084
+      },
+      "difference": 2.83106871279415e-15,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "cor: Evaluating -- Effort_Reg",
+      "kind": "cor",
+      "values": {
+        "nestimate": 0.250092811122157,
+        "stats": 0.250092811122157,
+        "corpcor": 0.250092811122153
+      },
+      "difference": 3.44169137633799e-15,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "cor: Help_Seeking -- Time_Mgmt",
+      "kind": "cor",
+      "values": {
+        "nestimate": 0.208525421761785,
+        "stats": 0.208525421761785,
+        "corpcor": 0.208525421761783
+      },
+      "difference": 1.83186799063151e-15,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "cor: Monitoring -- Elaboration",
+      "kind": "cor",
+      "values": {
+        "nestimate": 0.195481517300342,
+        "stats": 0.195481517300342,
+        "corpcor": 0.195481517300338
+      },
+      "difference": 3.71924713249427e-15,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "cor: Help_Seeking -- Effort_Reg",
+      "kind": "cor",
+      "values": {
+        "nestimate": 0.176003638947754,
+        "stats": 0.176003638947754,
+        "corpcor": 0.176003638947752
+      },
+      "difference": 1.49880108324396e-15,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "cor: Organization -- Effort_Reg",
+      "kind": "cor",
+      "values": {
+        "nestimate": 0.134852921871979,
+        "stats": 0.134852921871979,
+        "corpcor": 0.134852921871978
+      },
+      "difference": 1.13797860024079e-15,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "cor: Monitoring -- Rehearsal",
+      "kind": "cor",
+      "values": {
+        "nestimate": 0.132076741888711,
+        "stats": 0.132076741888711,
+        "corpcor": 0.132076741888709
+      },
+      "difference": 1.58206781009085e-15,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "cor: Rehearsal -- Help_Seeking",
+      "kind": "cor",
+      "values": {
+        "nestimate": -0.130222780163803,
+        "stats": -0.130222780163803,
+        "corpcor": -0.130222780163803
+      },
+      "difference": 6.93889390390723e-16,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "cor: Organization -- Help_Seeking",
+      "kind": "cor",
+      "values": {
+        "nestimate": 0.123233145618795,
+        "stats": 0.123233145618795,
+        "corpcor": 0.123233145618795
+      },
+      "difference": 6.52256026967279e-16,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "cor: Monitoring -- Help_Seeking",
+      "kind": "cor",
+      "values": {
+        "nestimate": -0.116067656910058,
+        "stats": -0.116067656910058,
+        "corpcor": -0.116067656910057
+      },
+      "difference": 1.47104550762833e-15,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "cor: Planning -- Help_Seeking",
+      "kind": "cor",
+      "values": {
+        "nestimate": -0.108110671237441,
+        "stats": -0.108110671237441,
+        "corpcor": -0.108110671237441
+      },
+      "difference": 6.66133814775094e-16,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "cor: Rehearsal -- Time_Mgmt",
+      "kind": "cor",
+      "values": {
+        "nestimate": -0.106441808438355,
+        "stats": -0.106441808438355,
+        "corpcor": -0.106441808438354
+      },
+      "difference": 9.0205620750794e-16,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "cor: Planning -- Elaboration",
+      "kind": "cor",
+      "values": {
+        "nestimate": -0.095763708581296,
+        "stats": -0.095763708581296,
+        "corpcor": -0.0957637085812948
+      },
+      "difference": 1.23512311489549e-15,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "cor: Organization -- Time_Mgmt",
+      "kind": "cor",
+      "values": {
+        "nestimate": 0.0849491502204845,
+        "stats": 0.0849491502204845,
+        "corpcor": 0.0849491502204837
+      },
+      "difference": 7.07767178198537e-16,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "cor: Planning -- Organization",
+      "kind": "cor",
+      "values": {
+        "nestimate": -0.0828855752710624,
+        "stats": -0.0828855752710624,
+        "corpcor": -0.0828855752710618
+      },
+      "difference": 6.38378239159465e-16,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "cor: Evaluating -- Time_Mgmt",
+      "kind": "cor",
+      "values": {
+        "nestimate": 0.0791935790637374,
+        "stats": 0.0791935790637374,
+        "corpcor": 0.0791935790637363
+      },
+      "difference": 1.19348975147204e-15,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "cor: Evaluating -- Elaboration",
+      "kind": "cor",
+      "values": {
+        "nestimate": 0.0769549119490622,
+        "stats": 0.0769549119490622,
+        "corpcor": 0.0769549119490608
+      },
+      "difference": 1.41553435639707e-15,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "cor: Evaluating -- Rehearsal",
+      "kind": "cor",
+      "values": {
+        "nestimate": 0.0760422349347973,
+        "stats": 0.0760422349347973,
+        "corpcor": 0.0760422349347964
+      },
+      "difference": 9.15933995315754e-16,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "cor: Elaboration -- Effort_Reg",
+      "kind": "cor",
+      "values": {
+        "nestimate": 0.049838942266039,
+        "stats": 0.049838942266039,
+        "corpcor": 0.0498389422660384
+      },
+      "difference": 6.17561557447743e-16,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "cor: Elaboration -- Time_Mgmt",
+      "kind": "cor",
+      "values": {
+        "nestimate": -0.0327020821714214,
+        "stats": -0.0327020821714214,
+        "corpcor": -0.0327020821714209
+      },
+      "difference": 4.85722573273506e-16,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "cor: Rehearsal -- Effort_Reg",
+      "kind": "cor",
+      "values": {
+        "nestimate": 0.0288638279667998,
+        "stats": 0.0288638279667998,
+        "corpcor": 0.0288638279667997
+      },
+      "difference": 1.76941794549634e-16,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "cor: Monitoring -- Organization",
+      "kind": "cor",
+      "values": {
+        "nestimate": 0.0283087075449219,
+        "stats": 0.0283087075449219,
+        "corpcor": 0.0283087075449215
+      },
+      "difference": 3.67761376907083e-16,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "cor: Evaluating -- Help_Seeking",
+      "kind": "cor",
+      "values": {
+        "nestimate": 0.0231384389966157,
+        "stats": 0.0231384389966157,
+        "corpcor": 0.0231384389966154
+      },
+      "difference": 2.94902990916057e-16,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "cor: Planning -- Rehearsal",
+      "kind": "cor",
+      "values": {
+        "nestimate": -0.0187246849946172,
+        "stats": -0.0187246849946172,
+        "corpcor": -0.0187246849946171
+      },
+      "difference": 1.04083408558608e-16,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "cor: Monitoring -- Time_Mgmt",
+      "kind": "cor",
+      "values": {
+        "nestimate": 0.0152041919542565,
+        "stats": 0.0152041919542565,
+        "corpcor": 0.0152041919542563
+      },
+      "difference": 2.1163626406917e-16,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "cor: Planning -- Effort_Reg",
+      "kind": "cor",
+      "values": {
+        "nestimate": -0.0102929059359353,
+        "stats": -0.0102929059359353,
+        "corpcor": -0.0102929059359352
+      },
+      "difference": 8.67361737988404e-17,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "cor: Monitoring -- Effort_Reg",
+      "kind": "cor",
+      "values": {
+        "nestimate": -0.00826497305103293,
+        "stats": -0.00826497305103293,
+        "corpcor": -0.00826497305103281
+      },
+      "difference": 1.23165366794353e-16,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "cor: Elaboration -- Help_Seeking",
+      "kind": "cor",
+      "values": {
+        "nestimate": 0.0075320281475838,
+        "stats": 0.0075320281475838,
+        "corpcor": 0.00753202814758374
+      },
+      "difference": 5.46437894932694e-17,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "pcor: Time_Mgmt -- Effort_Reg",
+      "kind": "pcor",
+      "values": {
+        "nestimate": 0.501818979881053,
+        "stats": 0.501818979881053,
+        "corpcor": 0.501818979881054
+      },
+      "difference": 2.22044604925031e-16,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "pcor: Monitoring -- Evaluating",
+      "kind": "pcor",
+      "values": {
+        "nestimate": 0.432134389028896,
+        "stats": 0.432134389028896,
+        "corpcor": 0.432134389028896
+      },
+      "difference": 6.10622663543836e-16,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "pcor: Evaluating -- Organization",
+      "kind": "pcor",
+      "values": {
+        "nestimate": 0.406045085287637,
+        "stats": 0.406045085287637,
+        "corpcor": 0.406045085287637
+      },
+      "difference": 1.11022302462516e-16,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "pcor: Planning -- Time_Mgmt",
+      "kind": "pcor",
+      "values": {
+        "nestimate": 0.397077760276169,
+        "stats": 0.397077760276169,
+        "corpcor": 0.39707776027617
+      },
+      "difference": 1.16573417585641e-15,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "pcor: Elaboration -- Organization",
+      "kind": "pcor",
+      "values": {
+        "nestimate": 0.379979312319727,
+        "stats": 0.379979312319727,
+        "corpcor": 0.379979312319728
+      },
+      "difference": 9.99200722162641e-16,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "pcor: Evaluating -- Effort_Reg",
+      "kind": "pcor",
+      "values": {
+        "nestimate": 0.330098716350459,
+        "stats": 0.330098716350459,
+        "corpcor": 0.33009871635046
+      },
+      "difference": 1.0547118733939e-15,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "pcor: Planning -- Evaluating",
+      "kind": "pcor",
+      "values": {
+        "nestimate": 0.283191306747482,
+        "stats": 0.283191306747482,
+        "corpcor": 0.283191306747482
+      },
+      "difference": 3.88578058618805e-16,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "pcor: Monitoring -- Elaboration",
+      "kind": "pcor",
+      "values": {
+        "nestimate": 0.273586526259007,
+        "stats": 0.273586526259007,
+        "corpcor": 0.273586526259007
+      },
+      "difference": 5.55111512312578e-17,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "pcor: Organization -- Rehearsal",
+      "kind": "pcor",
+      "values": {
+        "nestimate": 0.273505358787702,
+        "stats": 0.273505358787702,
+        "corpcor": 0.273505358787703
+      },
+      "difference": 5.55111512312578e-16,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "pcor: Planning -- Monitoring",
+      "kind": "pcor",
+      "values": {
+        "nestimate": 0.268402492210076,
+        "stats": 0.268402492210076,
+        "corpcor": 0.268402492210075
+      },
+      "difference": 3.88578058618805e-16,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "pcor: Planning -- Effort_Reg",
+      "kind": "pcor",
+      "values": {
+        "nestimate": -0.235100242322018,
+        "stats": -0.235100242322018,
+        "corpcor": -0.235100242322018
+      },
+      "difference": 4.9960036108132e-16,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "pcor: Monitoring -- Organization",
+      "kind": "pcor",
+      "values": {
+        "nestimate": -0.21277815791929,
+        "stats": -0.21277815791929,
+        "corpcor": -0.212778157919289
+      },
+      "difference": 2.22044604925031e-16,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "pcor: Evaluating -- Time_Mgmt",
+      "kind": "pcor",
+      "values": {
+        "nestimate": -0.207120798698033,
+        "stats": -0.207120798698033,
+        "corpcor": -0.207120798698034
+      },
+      "difference": 6.93889390390723e-16,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "pcor: Elaboration -- Rehearsal",
+      "kind": "pcor",
+      "values": {
+        "nestimate": 0.180583792676049,
+        "stats": 0.180583792676049,
+        "corpcor": 0.180583792676049
+      },
+      "difference": 4.9960036108132e-16,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "pcor: Help_Seeking -- Time_Mgmt",
+      "kind": "pcor",
+      "values": {
+        "nestimate": 0.161150933092455,
+        "stats": 0.161150933092455,
+        "corpcor": 0.161150933092455
+      },
+      "difference": 2.77555756156289e-16,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "pcor: Organization -- Time_Mgmt",
+      "kind": "pcor",
+      "values": {
+        "nestimate": 0.157554905820963,
+        "stats": 0.157554905820963,
+        "corpcor": 0.157554905820964
+      },
+      "difference": 7.49400541621981e-16,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "pcor: Evaluating -- Elaboration",
+      "kind": "pcor",
+      "values": {
+        "nestimate": -0.156087901203489,
+        "stats": -0.156087901203489,
+        "corpcor": -0.156087901203489
+      },
+      "difference": 2.4980018054066e-16,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "pcor: Planning -- Organization",
+      "kind": "pcor",
+      "values": {
+        "nestimate": -0.146481863799356,
+        "stats": -0.146481863799356,
+        "corpcor": -0.146481863799356
+      },
+      "difference": 7.21644966006352e-16,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "pcor: Rehearsal -- Help_Seeking",
+      "kind": "pcor",
+      "values": {
+        "nestimate": -0.143570959959799,
+        "stats": -0.143570959959799,
+        "corpcor": -0.143570959959799
+      },
+      "difference": 5.55111512312578e-17,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "pcor: Rehearsal -- Time_Mgmt",
+      "kind": "pcor",
+      "values": {
+        "nestimate": -0.13694125711353,
+        "stats": -0.13694125711353,
+        "corpcor": -0.13694125711353
+      },
+      "difference": 1.11022302462516e-16,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "pcor: Planning -- Help_Seeking",
+      "kind": "pcor",
+      "values": {
+        "nestimate": -0.121425256596547,
+        "stats": -0.121425256596547,
+        "corpcor": -0.121425256596547
+      },
+      "difference": 2.4980018054066e-16,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "pcor: Planning -- Elaboration",
+      "kind": "pcor",
+      "values": {
+        "nestimate": -0.103295766974388,
+        "stats": -0.103295766974388,
+        "corpcor": -0.103295766974388
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "pcor: Organization -- Help_Seeking",
+      "kind": "pcor",
+      "values": {
+        "nestimate": 0.101878407922091,
+        "stats": 0.101878407922091,
+        "corpcor": 0.101878407922091
+      },
+      "difference": 5.55111512312578e-17,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "pcor: Monitoring -- Effort_Reg",
+      "kind": "pcor",
+      "values": {
+        "nestimate": -0.0992081983581358,
+        "stats": -0.0992081983581358,
+        "corpcor": -0.0992081983581363
+      },
+      "difference": 4.9960036108132e-16,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "pcor: Evaluating -- Rehearsal",
+      "kind": "pcor",
+      "values": {
+        "nestimate": -0.0978623548144733,
+        "stats": -0.0978623548144733,
+        "corpcor": -0.097862354814474
+      },
+      "difference": 7.07767178198537e-16,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "pcor: Rehearsal -- Effort_Reg",
+      "kind": "pcor",
+      "values": {
+        "nestimate": 0.0955523310550307,
+        "stats": 0.0955523310550307,
+        "corpcor": 0.0955523310550308
+      },
+      "difference": 1.80411241501588e-16,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "pcor: Monitoring -- Rehearsal",
+      "kind": "pcor",
+      "values": {
+        "nestimate": 0.0954080914186298,
+        "stats": 0.0954080914186298,
+        "corpcor": 0.0954080914186298
+      },
+      "difference": 1.38777878078145e-17,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "pcor: Organization -- Effort_Reg",
+      "kind": "pcor",
+      "values": {
+        "nestimate": -0.0922207053122796,
+        "stats": -0.0922207053122796,
+        "corpcor": -0.0922207053122803
+      },
+      "difference": 6.93889390390723e-16,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "pcor: Monitoring -- Help_Seeking",
+      "kind": "pcor",
+      "values": {
+        "nestimate": -0.0542414191474428,
+        "stats": -0.0542414191474428,
+        "corpcor": -0.0542414191474432
+      },
+      "difference": 4.16333634234434e-16,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "pcor: Help_Seeking -- Effort_Reg",
+      "kind": "pcor",
+      "values": {
+        "nestimate": 0.0511990122512033,
+        "stats": 0.0511990122512032,
+        "corpcor": 0.0511990122512026
+      },
+      "difference": 6.59194920871187e-16,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "pcor: Elaboration -- Effort_Reg",
+      "kind": "pcor",
+      "values": {
+        "nestimate": 0.0486103418713566,
+        "stats": 0.0486103418713566,
+        "corpcor": 0.048610341871357
+      },
+      "difference": 4.30211422042248e-16,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "pcor: Planning -- Rehearsal",
+      "kind": "pcor",
+      "values": {
+        "nestimate": 0.0462830459734977,
+        "stats": 0.0462830459734977,
+        "corpcor": 0.0462830459734982
+      },
+      "difference": 4.92661467177413e-16,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "pcor: Evaluating -- Help_Seeking",
+      "kind": "pcor",
+      "values": {
+        "nestimate": 0.0386393257601336,
+        "stats": 0.0386393257601336,
+        "corpcor": 0.0386393257601341
+      },
+      "difference": 4.57966997657877e-16,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "pcor: Elaboration -- Time_Mgmt",
+      "kind": "pcor",
+      "values": {
+        "nestimate": -0.0305511558408682,
+        "stats": -0.0305511558408682,
+        "corpcor": -0.0305511558408685
+      },
+      "difference": 2.84494650060196e-16,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "pcor: Monitoring -- Time_Mgmt",
+      "kind": "pcor",
+      "values": {
+        "nestimate": -0.00749665497953934,
+        "stats": -0.00749665497953933,
+        "corpcor": -0.00749665497953945
+      },
+      "difference": 1.196959198424e-16,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "pcor: Elaboration -- Help_Seeking",
+      "kind": "pcor",
+      "values": {
+        "nestimate": 0.00449609081085412,
+        "stats": 0.00449609081085412,
+        "corpcor": 0.00449609081085409
+      },
+      "difference": 3.38271077815477e-17,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    }
+  ]
+}

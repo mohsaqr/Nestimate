@@ -1,0 +1,193 @@
+
+> library(tna)
+'tna' package version 1.3.1
+------------------------------------------------------
+  Tikka, S., López-Pernas, S., and Saqr, M. (2025). 
+  tna: An R Package for Transition Network Analysis.
+  Applied Psychological Measurement.
+  https://doi.org/10.1177/01466216251348840
+------------------------------------------------------
+Please type 'citation("tna")' for more citation information.
+See the package website at https://sonsoles.me/tna/
+
+
+> group_a <- read.csv("../data/sequences.csv")
+
+> group_b <- read.csv("../data/sequences_b.csv")
+
+> model_a <- tna(group_a)
+
+> model_b <- tna(group_b)
+
+> set.seed(1)
+
+> test <- permutation_test(model_a, model_b, iter = 200)
+
+> as.data.frame(test$edges$stats)
+                  edge_name     diff_true  effect_size    p_value
+1            adapt -> adapt  0.0000000000          NaN 1.00000000
+2         cohesion -> adapt  0.0034722222  0.971649513 0.71144279
+3        consensus -> adapt -0.0020685536 -0.789726963 0.40298507
+4       coregulate -> adapt  0.0007122507  0.054134525 0.95024876
+5          discuss -> adapt -0.0123857624 -1.393500447 0.18407960
+6          emotion -> adapt  0.0085653105  1.946007702 0.06965174
+7          monitor -> adapt -0.0044556536 -0.378160066 0.77611940
+8             plan -> adapt  0.0011389253  0.561640211 0.65671642
+9        synthesis -> adapt  0.0439560440  0.860657152 0.38805970
+10        adapt -> cohesion  0.0804525456  0.928019435 0.33333333
+11     cohesion -> cohesion  0.0051388889  0.284670684 0.79104478
+12    consensus -> cohesion  0.0106029403  1.807814009 0.08457711
+13   coregulate -> cohesion  0.0051282051  0.303198811 0.76119403
+14      discuss -> cohesion -0.0059523810 -0.440721143 0.66666667
+15      emotion -> cohesion  0.0256959315  0.840262324 0.39800995
+16      monitor -> cohesion -0.0181588903 -0.850999905 0.40298507
+17         plan -> cohesion -0.0035465269 -0.403093887 0.71144279
+18    synthesis -> cohesion -0.0439560440 -1.737294810 0.10945274
+19       adapt -> consensus  0.1062225016  0.998762037 0.34328358
+20    cohesion -> consensus  0.0418434343  1.026205306 0.28855721
+21   consensus -> consensus  0.0089246453  0.714538415 0.52238806
+22  coregulate -> consensus  0.0002849003  0.011659681 1.00000000
+23     discuss -> consensus  0.0199013949  0.762854465 0.44776119
+24     emotion -> consensus -0.0235546039 -0.696705792 0.48756219
+25     monitor -> consensus  0.0483396385  1.211993071 0.20398010
+26        plan -> consensus  0.0115845347  0.568590473 0.58208955
+27   synthesis -> consensus -0.0109890110 -0.162513986 0.88557214
+28      adapt -> coregulate  0.0000000000          NaN 1.00000000
+29   cohesion -> coregulate  0.0281313131  1.175236231 0.27363184
+30  consensus -> coregulate -0.0112313848 -0.727798402 0.48258706
+31 coregulate -> coregulate  0.0079772080  0.873807090 0.37810945
+32    discuss -> coregulate -0.0120250120 -0.805428721 0.42786070
+33    emotion -> coregulate -0.0149892934 -1.655289861 0.11442786
+34    monitor -> coregulate -0.0075662043 -0.352038519 0.76616915
+35       plan -> coregulate -0.0000904325 -0.011291201 0.98009950
+36  synthesis -> coregulate  0.0000000000  0.000000000 1.00000000
+37         adapt -> discuss -0.0194846009 -0.465863834 0.79601990
+38      cohesion -> discuss -0.0262752525 -1.776939178 0.07960199
+39     consensus -> discuss -0.0105571353 -0.537499663 0.61194030
+40    coregulate -> discuss -0.0209401709 -0.537656280 0.60199005
+41       discuss -> discuss -0.0072751323 -0.321964678 0.79104478
+42       emotion -> discuss  0.0107066381  0.512255391 0.55223881
+43       monitor -> discuss -0.0092475830 -0.192791177 0.86567164
+44          plan -> discuss  0.0123866317  1.039719784 0.28358209
+45     synthesis -> discuss -0.0219780220 -1.051434386 0.32835821
+46         adapt -> emotion -0.1747328724 -2.105662740 0.05970149
+47      cohesion -> emotion -0.0057449495 -0.225764868 0.80597015
+48     consensus -> emotion  0.0159144876  1.484851236 0.15920398
+49    coregulate -> emotion  0.0004273504  0.012280779 1.00000000
+50       discuss -> emotion  0.0023448773  0.138650557 0.90547264
+51       emotion -> emotion -0.0107066381 -0.747426513 0.44776119
+52       monitor -> emotion  0.0221101303  0.824898992 0.42786070
+53          plan -> emotion  0.0131048493  0.743430010 0.49751244
+54     synthesis -> emotion -0.0219780220 -0.631932344 0.50248756
+55         adapt -> monitor  0.0307982401  0.741596878 0.40796020
+56      cohesion -> monitor -0.0044570707 -0.406063260 0.59701493
+57     consensus -> monitor -0.0120119020 -1.478309678 0.17910448
+58    coregulate -> monitor -0.0001424501 -0.005693572 1.00000000
+59       discuss -> monitor -0.0060125060 -0.804053139 0.46268657
+60       emotion -> monitor -0.0278372591 -2.274742716 0.02985075
+61       monitor -> monitor  0.0225304750  1.533516709 0.11442786
+62          plan -> monitor  0.0043512451  0.371763561 0.67164179
+63     synthesis -> monitor  0.0000000000          NaN 1.00000000
+64            adapt -> plan -0.0232558140 -0.922464542 0.74626866
+65         cohesion -> plan -0.0452525253 -1.464170782 0.12935323
+66        consensus -> plan -0.0002033742 -0.010186064 0.98507463
+67       coregulate -> plan  0.0135327635  0.352398806 0.74129353
+68          discuss -> plan  0.0105218855  1.430863373 0.17910448
+69          emotion -> plan  0.0278372591  1.487732027 0.12437811
+70          monitor -> plan -0.0391761244 -0.901709160 0.40298507
+71             plan -> plan -0.0412110092 -1.799823946 0.08457711
+72        synthesis -> plan  0.0549450549  1.147419550 0.25870647
+73       adapt -> synthesis  0.0000000000          NaN 1.00000000
+74    cohesion -> synthesis  0.0031439394  0.406645773 0.78606965
+75   consensus -> synthesis  0.0006302767  0.161293396 0.90049751
+76  coregulate -> synthesis -0.0069800570 -0.676023255 0.59701493
+77     discuss -> synthesis  0.0108826359  0.660683111 0.53233831
+78     emotion -> synthesis  0.0042826552  0.982031812 0.39800995
+79     monitor -> synthesis -0.0143757881 -0.839368829 0.46268657
+80        plan -> synthesis  0.0022817824  0.974673223 0.37810945
+81   synthesis -> synthesis  0.0000000000          NaN 1.00000000
+
+> tested <- which(model_a$weights != 0 | model_b$weights != 0, arr.ind = TRUE)
+
+> result <- data.frame(edge = paste(model_a$labels[tested[, "row"]], "->", model_a$labels[tested[, "col"]]),
++                      weight_x = model_a$weights[tested], weight_y = model_b$weights[tested],
++                      diff = test$edges$diffs_true[tested])
+
+> result
+                       edge    weight_x    weight_y          diff
+1         cohesion -> adapt 0.003472222 0.000000000  0.0034722222
+2        consensus -> adapt 0.002814259 0.004882812 -0.0020685536
+3       coregulate -> adapt 0.019230769 0.018518519  0.0007122507
+4          discuss -> adapt 0.016835017 0.029220779 -0.0123857624
+5          emotion -> adapt 0.008565310 0.000000000  0.0085653105
+6          monitor -> adapt 0.010928962 0.015384615 -0.0044556536
+7             plan -> adapt 0.002285714 0.001146789  0.0011389253
+8        synthesis -> adapt 0.153846154 0.109890110  0.0439560440
+9         adapt -> cohesion 0.243243243 0.162790698  0.0804525456
+10     cohesion -> cohesion 0.045138889 0.040000000  0.0051388889
+11    consensus -> cohesion 0.027204503 0.016601562  0.0106029403
+12   coregulate -> cohesion 0.038461538 0.033333333  0.0051282051
+13      discuss -> cohesion 0.060606061 0.066558442 -0.0059523810
+14      emotion -> cohesion 0.336188437 0.310492505  0.0256959315
+15      monitor -> cohesion 0.038251366 0.056410256 -0.0181588903
+16         plan -> cohesion 0.030857143 0.034403670 -0.0035465269
+17    synthesis -> cohesion 0.010989011 0.054945055 -0.0439560440
+18       adapt -> consensus 0.594594595 0.488372093  0.1062225016
+19    cohesion -> consensus 0.576388889 0.534545455  0.0418434343
+20   consensus -> consensus 0.091932458 0.083007812  0.0089246453
+21  coregulate -> consensus 0.107692308 0.107407407  0.0002849003
+22     discuss -> consensus 0.420875421 0.400974026  0.0199013949
+23     emotion -> consensus 0.336188437 0.359743041 -0.0235546039
+24     monitor -> consensus 0.202185792 0.153846154  0.0483396385
+25        plan -> consensus 0.299428571 0.287844037  0.0115845347
+26   synthesis -> consensus 0.615384615 0.626373626 -0.0109890110
+27   cohesion -> coregulate 0.097222222 0.069090909  0.0281313131
+28  consensus -> coregulate 0.154784240 0.166015625 -0.0112313848
+29 coregulate -> coregulate 0.015384615 0.007407407  0.0079772080
+30    discuss -> coregulate 0.072390572 0.084415584 -0.0120250120
+31    emotion -> coregulate 0.010706638 0.025695931 -0.0149892934
+32    monitor -> coregulate 0.043715847 0.051282051 -0.0075662043
+33       plan -> coregulate 0.026285714 0.026376147 -0.0000904325
+34  synthesis -> coregulate 0.010989011 0.010989011  0.0000000000
+35         adapt -> discuss 0.027027027 0.046511628 -0.0194846009
+36      cohesion -> discuss 0.017361111 0.043636364 -0.0262752525
+37     consensus -> discuss 0.233583490 0.244140625 -0.0105571353
+38    coregulate -> discuss 0.234615385 0.255555556 -0.0209401709
+39       discuss -> discuss 0.159932660 0.167207792 -0.0072751323
+40       emotion -> discuss 0.124197002 0.113490364  0.0107066381
+41       monitor -> discuss 0.349726776 0.358974359 -0.0092475830
+42          plan -> discuss 0.066285714 0.053899083  0.0123866317
+43     synthesis -> discuss 0.010989011 0.032967033 -0.0219780220
+44         adapt -> emotion 0.081081081 0.255813953 -0.1747328724
+45      cohesion -> emotion 0.121527778 0.127272727 -0.0057449495
+46     consensus -> emotion 0.088180113 0.072265625  0.0159144876
+47    coregulate -> emotion 0.211538462 0.211111111  0.0004273504
+48       discuss -> emotion 0.111111111 0.108766234  0.0023448773
+49       emotion -> emotion 0.049250535 0.059957173 -0.0107066381
+50       monitor -> emotion 0.109289617 0.087179487  0.0221101303
+51          plan -> emotion 0.190857143 0.177752294  0.0131048493
+52     synthesis -> emotion 0.043956044 0.065934066 -0.0219780220
+53         adapt -> monitor 0.054054054 0.023255814  0.0307982401
+54      cohesion -> monitor 0.017361111 0.021818182 -0.0044570707
+55     consensus -> monitor 0.030956848 0.042968750 -0.0120119020
+56    coregulate -> monitor 0.096153846 0.096296296 -0.0001424501
+57       discuss -> monitor 0.013468013 0.019480519 -0.0060125060
+58       emotion -> monitor 0.019271949 0.047109208 -0.0278372591
+59       monitor -> monitor 0.032786885 0.010256410  0.0225304750
+60          plan -> monitor 0.068571429 0.064220183  0.0043512451
+61            adapt -> plan 0.000000000 0.023255814 -0.0232558140
+62         cohesion -> plan 0.111111111 0.156363636 -0.0452525253
+63        consensus -> plan 0.362101313 0.362304688 -0.0002033742
+64       coregulate -> plan 0.265384615 0.251851852  0.0135327635
+65          discuss -> plan 0.021885522 0.011363636  0.0105218855
+66          emotion -> plan 0.109207709 0.081370450  0.0278372591
+67          monitor -> plan 0.196721311 0.235897436 -0.0391761244
+68             plan -> plan 0.312000000 0.353211009 -0.0412110092
+69        synthesis -> plan 0.153846154 0.098901099  0.0549450549
+70    cohesion -> synthesis 0.010416667 0.007272727  0.0031439394
+71   consensus -> synthesis 0.008442777 0.007812500  0.0006302767
+72  coregulate -> synthesis 0.011538462 0.018518519 -0.0069800570
+73     discuss -> synthesis 0.122895623 0.112012987  0.0108826359
+74     emotion -> synthesis 0.006423983 0.002141328  0.0042826552
+75     monitor -> synthesis 0.016393443 0.030769231 -0.0143757881
+76        plan -> synthesis 0.003428571 0.001146789  0.0022817824

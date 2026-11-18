@@ -1,0 +1,485 @@
+Registered S3 methods overwritten by 'Nestimate':
+  method            from       
+  plot.net_mlvar    idiographic
+  print.net_mlvar   idiographic
+  summary.net_mlvar idiographic
+
+> sequences <- read.csv("../data/sequences.csv")
+
+> relative <- extract_edges(build_network(sequences, method = "relative"), include_self = TRUE)
+
+> frequency <- extract_edges(build_network(sequences, method = "frequency"), include_self = TRUE)
+
+> attention <- extract_edges(build_network(sequences, method = "attention"), include_self = TRUE)
+
+> result <- rbind(transform(relative, kind = "relative"),
++                 transform(frequency, kind = "frequency"),
++                 transform(attention, kind = "attention"))
+
+> result <- transform(result, quantity = paste0(kind, ": ", from, " -> ", to), value = weight)
+
+> result
+          from         to       weight      kind
+1    synthesis  consensus 6.153846e-01  relative
+2        adapt  consensus 5.945946e-01  relative
+3     cohesion  consensus 5.763889e-01  relative
+4      discuss  consensus 4.208754e-01  relative
+5    consensus       plan 3.621013e-01  relative
+6      monitor    discuss 3.497268e-01  relative
+7      emotion   cohesion 3.361884e-01  relative
+8      emotion  consensus 3.361884e-01  relative
+9         plan       plan 3.120000e-01  relative
+10        plan  consensus 2.994286e-01  relative
+11  coregulate       plan 2.653846e-01  relative
+12       adapt   cohesion 2.432432e-01  relative
+13  coregulate    discuss 2.346154e-01  relative
+14   consensus    discuss 2.335835e-01  relative
+15  coregulate    emotion 2.115385e-01  relative
+16     monitor  consensus 2.021858e-01  relative
+17     monitor       plan 1.967213e-01  relative
+18        plan    emotion 1.908571e-01  relative
+19     discuss    discuss 1.599327e-01  relative
+20   consensus coregulate 1.547842e-01  relative
+21   synthesis      adapt 1.538462e-01  relative
+22   synthesis       plan 1.538462e-01  relative
+23     emotion    discuss 1.241970e-01  relative
+24     discuss  synthesis 1.228956e-01  relative
+25    cohesion    emotion 1.215278e-01  relative
+26     discuss    emotion 1.111111e-01  relative
+27    cohesion       plan 1.111111e-01  relative
+28     monitor    emotion 1.092896e-01  relative
+29     emotion       plan 1.092077e-01  relative
+30  coregulate  consensus 1.076923e-01  relative
+31    cohesion coregulate 9.722222e-02  relative
+32  coregulate    monitor 9.615385e-02  relative
+33   consensus  consensus 9.193246e-02  relative
+34   consensus    emotion 8.818011e-02  relative
+35       adapt    emotion 8.108108e-02  relative
+36     discuss coregulate 7.239057e-02  relative
+37        plan    monitor 6.857143e-02  relative
+38        plan    discuss 6.628571e-02  relative
+39     discuss   cohesion 6.060606e-02  relative
+40       adapt    monitor 5.405405e-02  relative
+41     emotion    emotion 4.925054e-02  relative
+42    cohesion   cohesion 4.513889e-02  relative
+43   synthesis    emotion 4.395604e-02  relative
+44     monitor coregulate 4.371585e-02  relative
+45  coregulate   cohesion 3.846154e-02  relative
+46     monitor   cohesion 3.825137e-02  relative
+47     monitor    monitor 3.278689e-02  relative
+48   consensus    monitor 3.095685e-02  relative
+49        plan   cohesion 3.085714e-02  relative
+50   consensus   cohesion 2.720450e-02  relative
+51       adapt    discuss 2.702703e-02  relative
+52        plan coregulate 2.628571e-02  relative
+53     discuss       plan 2.188552e-02  relative
+54     emotion    monitor 1.927195e-02  relative
+55  coregulate      adapt 1.923077e-02  relative
+56    cohesion    discuss 1.736111e-02  relative
+57    cohesion    monitor 1.736111e-02  relative
+58     discuss      adapt 1.683502e-02  relative
+59     monitor  synthesis 1.639344e-02  relative
+60  coregulate coregulate 1.538462e-02  relative
+61     discuss    monitor 1.346801e-02  relative
+62  coregulate  synthesis 1.153846e-02  relative
+63   synthesis   cohesion 1.098901e-02  relative
+64   synthesis coregulate 1.098901e-02  relative
+65   synthesis    discuss 1.098901e-02  relative
+66     monitor      adapt 1.092896e-02  relative
+67     emotion coregulate 1.070664e-02  relative
+68    cohesion  synthesis 1.041667e-02  relative
+69     emotion      adapt 8.565310e-03  relative
+70   consensus  synthesis 8.442777e-03  relative
+71     emotion  synthesis 6.423983e-03  relative
+72    cohesion      adapt 3.472222e-03  relative
+73        plan  synthesis 3.428571e-03  relative
+74   consensus      adapt 2.814259e-03  relative
+75        plan      adapt 2.285714e-03  relative
+76   consensus       plan 3.860000e+02 frequency
+77        plan       plan 2.730000e+02 frequency
+78        plan  consensus 2.620000e+02 frequency
+79     discuss  consensus 2.500000e+02 frequency
+80   consensus    discuss 2.490000e+02 frequency
+81        plan    emotion 1.670000e+02 frequency
+82    cohesion  consensus 1.660000e+02 frequency
+83   consensus coregulate 1.650000e+02 frequency
+84     emotion   cohesion 1.570000e+02 frequency
+85     emotion  consensus 1.570000e+02 frequency
+86   consensus  consensus 9.800000e+01 frequency
+87     discuss    discuss 9.500000e+01 frequency
+88   consensus    emotion 9.400000e+01 frequency
+89     discuss  synthesis 7.300000e+01 frequency
+90  coregulate       plan 6.900000e+01 frequency
+91     discuss    emotion 6.600000e+01 frequency
+92     monitor    discuss 6.400000e+01 frequency
+93  coregulate    discuss 6.100000e+01 frequency
+94        plan    monitor 6.000000e+01 frequency
+95     emotion    discuss 5.800000e+01 frequency
+96        plan    discuss 5.800000e+01 frequency
+97   synthesis  consensus 5.600000e+01 frequency
+98  coregulate    emotion 5.500000e+01 frequency
+99     emotion       plan 5.100000e+01 frequency
+100    discuss coregulate 4.300000e+01 frequency
+101    monitor  consensus 3.700000e+01 frequency
+102    discuss   cohesion 3.600000e+01 frequency
+103    monitor       plan 3.600000e+01 frequency
+104   cohesion    emotion 3.500000e+01 frequency
+105  consensus    monitor 3.300000e+01 frequency
+106   cohesion       plan 3.200000e+01 frequency
+107  consensus   cohesion 2.900000e+01 frequency
+108 coregulate  consensus 2.800000e+01 frequency
+109   cohesion coregulate 2.800000e+01 frequency
+110       plan   cohesion 2.700000e+01 frequency
+111 coregulate    monitor 2.500000e+01 frequency
+112       plan coregulate 2.300000e+01 frequency
+113    emotion    emotion 2.300000e+01 frequency
+114      adapt  consensus 2.200000e+01 frequency
+115    monitor    emotion 2.000000e+01 frequency
+116  synthesis      adapt 1.400000e+01 frequency
+117  synthesis       plan 1.400000e+01 frequency
+118   cohesion   cohesion 1.300000e+01 frequency
+119    discuss       plan 1.300000e+01 frequency
+120    discuss      adapt 1.000000e+01 frequency
+121 coregulate   cohesion 1.000000e+01 frequency
+122      adapt   cohesion 9.000000e+00 frequency
+123    emotion    monitor 9.000000e+00 frequency
+124  consensus  synthesis 9.000000e+00 frequency
+125    monitor coregulate 8.000000e+00 frequency
+126    discuss    monitor 8.000000e+00 frequency
+127    monitor   cohesion 7.000000e+00 frequency
+128    monitor    monitor 6.000000e+00 frequency
+129 coregulate      adapt 5.000000e+00 frequency
+130    emotion coregulate 5.000000e+00 frequency
+131   cohesion    discuss 5.000000e+00 frequency
+132   cohesion    monitor 5.000000e+00 frequency
+133    emotion      adapt 4.000000e+00 frequency
+134 coregulate coregulate 4.000000e+00 frequency
+135  synthesis    emotion 4.000000e+00 frequency
+136  consensus      adapt 3.000000e+00 frequency
+137      adapt    emotion 3.000000e+00 frequency
+138   cohesion  synthesis 3.000000e+00 frequency
+139 coregulate  synthesis 3.000000e+00 frequency
+140    emotion  synthesis 3.000000e+00 frequency
+141    monitor  synthesis 3.000000e+00 frequency
+142       plan  synthesis 3.000000e+00 frequency
+143    monitor      adapt 2.000000e+00 frequency
+144       plan      adapt 2.000000e+00 frequency
+145      adapt    monitor 2.000000e+00 frequency
+146   cohesion      adapt 1.000000e+00 frequency
+147  synthesis   cohesion 1.000000e+00 frequency
+148  synthesis coregulate 1.000000e+00 frequency
+149      adapt    discuss 1.000000e+00 frequency
+150  synthesis    discuss 1.000000e+00 frequency
+151  consensus       plan 1.856751e+02 attention
+152       plan       plan 1.421107e+02 attention
+153       plan  consensus 1.394797e+02 attention
+154    discuss  consensus 1.233045e+02 attention
+155  consensus    discuss 1.210802e+02 attention
+156  consensus  consensus 9.365345e+01 attention
+157    emotion  consensus 8.438181e+01 attention
+158       plan    emotion 8.082135e+01 attention
+159   cohesion  consensus 7.311947e+01 attention
+160  consensus coregulate 7.272716e+01 attention
+161    emotion   cohesion 6.311085e+01 attention
+162  consensus    emotion 6.239178e+01 attention
+163    discuss    discuss 5.440077e+01 attention
+164       plan    discuss 4.644430e+01 attention
+165    emotion       plan 3.891418e+01 attention
+166    discuss    emotion 3.600346e+01 attention
+167 coregulate       plan 3.459001e+01 attention
+168    emotion    discuss 3.345848e+01 attention
+169    discuss  synthesis 3.013695e+01 attention
+170       plan    monitor 3.001285e+01 attention
+171 coregulate    discuss 2.905124e+01 attention
+172    discuss       plan 2.841258e+01 attention
+173    monitor    discuss 2.838479e+01 attention
+174   cohesion       plan 2.629022e+01 attention
+175 coregulate    emotion 2.595608e+01 attention
+176  synthesis  consensus 2.442079e+01 attention
+177    monitor  consensus 2.441643e+01 attention
+178  consensus   cohesion 2.440203e+01 attention
+179 coregulate  consensus 2.388457e+01 attention
+180    discuss coregulate 2.387809e+01 attention
+181       plan   cohesion 2.276255e+01 attention
+182    monitor       plan 2.177505e+01 attention
+183  consensus    monitor 2.078835e+01 attention
+184    discuss   cohesion 2.027908e+01 attention
+185       plan coregulate 2.003747e+01 attention
+186   cohesion    emotion 1.918353e+01 attention
+187    emotion    emotion 1.887637e+01 attention
+188   cohesion coregulate 1.418449e+01 attention
+189   cohesion    discuss 1.315564e+01 attention
+190    monitor    emotion 1.082447e+01 attention
+191 coregulate    monitor 1.071493e+01 attention
+192  synthesis       plan 1.002255e+01 attention
+193  consensus  synthesis 1.001437e+01 attention
+194      adapt  consensus 9.825140e+00 attention
+195 coregulate   cohesion 9.378151e+00 attention
+196    emotion coregulate 9.357697e+00 attention
+197   cohesion   cohesion 8.954499e+00 attention
+198    discuss    monitor 6.562149e+00 attention
+199    discuss      adapt 6.187876e+00 attention
+200    monitor coregulate 5.991560e+00 attention
+201    emotion    monitor 5.955190e+00 attention
+202  synthesis      adapt 5.344657e+00 attention
+203    monitor   cohesion 4.836670e+00 attention
+204 coregulate coregulate 4.738791e+00 attention
+205  synthesis    emotion 3.882357e+00 attention
+206      adapt   cohesion 3.716784e+00 attention
+207   cohesion    monitor 3.541981e+00 attention
+208       plan  synthesis 3.526209e+00 attention
+209  consensus      adapt 3.201918e+00 attention
+210    monitor    monitor 3.198803e+00 attention
+211  synthesis    discuss 3.180272e+00 attention
+212    emotion  synthesis 2.981501e+00 attention
+213 coregulate      adapt 2.734024e+00 attention
+214   cohesion  synthesis 2.615087e+00 attention
+215 coregulate  synthesis 2.566323e+00 attention
+216      adapt    discuss 2.028815e+00 attention
+217    emotion      adapt 1.938405e+00 attention
+218    monitor  synthesis 1.937948e+00 attention
+219  synthesis coregulate 1.845932e+00 attention
+220      adapt       plan 1.685714e+00 attention
+221       plan      adapt 1.591462e+00 attention
+222      adapt    emotion 1.444315e+00 attention
+223  synthesis   cohesion 1.207979e+00 attention
+224      adapt coregulate 1.154224e+00 attention
+225    monitor      adapt 9.805305e-01 attention
+226  synthesis    monitor 7.831380e-01 attention
+227   cohesion      adapt 7.670652e-01 attention
+228      adapt    monitor 7.661327e-01 attention
+229      adapt  synthesis 2.309169e-01 attention
+230      adapt      adapt 1.719666e-01 attention
+231  synthesis  synthesis 1.282377e-01 attention
+                               quantity        value
+1      relative: synthesis -> consensus 6.153846e-01
+2          relative: adapt -> consensus 5.945946e-01
+3       relative: cohesion -> consensus 5.763889e-01
+4        relative: discuss -> consensus 4.208754e-01
+5           relative: consensus -> plan 3.621013e-01
+6          relative: monitor -> discuss 3.497268e-01
+7         relative: emotion -> cohesion 3.361884e-01
+8        relative: emotion -> consensus 3.361884e-01
+9                relative: plan -> plan 3.120000e-01
+10          relative: plan -> consensus 2.994286e-01
+11         relative: coregulate -> plan 2.653846e-01
+12          relative: adapt -> cohesion 2.432432e-01
+13      relative: coregulate -> discuss 2.346154e-01
+14       relative: consensus -> discuss 2.335835e-01
+15      relative: coregulate -> emotion 2.115385e-01
+16       relative: monitor -> consensus 2.021858e-01
+17            relative: monitor -> plan 1.967213e-01
+18            relative: plan -> emotion 1.908571e-01
+19         relative: discuss -> discuss 1.599327e-01
+20    relative: consensus -> coregulate 1.547842e-01
+21         relative: synthesis -> adapt 1.538462e-01
+22          relative: synthesis -> plan 1.538462e-01
+23         relative: emotion -> discuss 1.241970e-01
+24       relative: discuss -> synthesis 1.228956e-01
+25        relative: cohesion -> emotion 1.215278e-01
+26         relative: discuss -> emotion 1.111111e-01
+27           relative: cohesion -> plan 1.111111e-01
+28         relative: monitor -> emotion 1.092896e-01
+29            relative: emotion -> plan 1.092077e-01
+30    relative: coregulate -> consensus 1.076923e-01
+31     relative: cohesion -> coregulate 9.722222e-02
+32      relative: coregulate -> monitor 9.615385e-02
+33     relative: consensus -> consensus 9.193246e-02
+34       relative: consensus -> emotion 8.818011e-02
+35           relative: adapt -> emotion 8.108108e-02
+36      relative: discuss -> coregulate 7.239057e-02
+37            relative: plan -> monitor 6.857143e-02
+38            relative: plan -> discuss 6.628571e-02
+39        relative: discuss -> cohesion 6.060606e-02
+40           relative: adapt -> monitor 5.405405e-02
+41         relative: emotion -> emotion 4.925054e-02
+42       relative: cohesion -> cohesion 4.513889e-02
+43       relative: synthesis -> emotion 4.395604e-02
+44      relative: monitor -> coregulate 4.371585e-02
+45     relative: coregulate -> cohesion 3.846154e-02
+46        relative: monitor -> cohesion 3.825137e-02
+47         relative: monitor -> monitor 3.278689e-02
+48       relative: consensus -> monitor 3.095685e-02
+49           relative: plan -> cohesion 3.085714e-02
+50      relative: consensus -> cohesion 2.720450e-02
+51           relative: adapt -> discuss 2.702703e-02
+52         relative: plan -> coregulate 2.628571e-02
+53            relative: discuss -> plan 2.188552e-02
+54         relative: emotion -> monitor 1.927195e-02
+55        relative: coregulate -> adapt 1.923077e-02
+56        relative: cohesion -> discuss 1.736111e-02
+57        relative: cohesion -> monitor 1.736111e-02
+58           relative: discuss -> adapt 1.683502e-02
+59       relative: monitor -> synthesis 1.639344e-02
+60   relative: coregulate -> coregulate 1.538462e-02
+61         relative: discuss -> monitor 1.346801e-02
+62    relative: coregulate -> synthesis 1.153846e-02
+63      relative: synthesis -> cohesion 1.098901e-02
+64    relative: synthesis -> coregulate 1.098901e-02
+65       relative: synthesis -> discuss 1.098901e-02
+66           relative: monitor -> adapt 1.092896e-02
+67      relative: emotion -> coregulate 1.070664e-02
+68      relative: cohesion -> synthesis 1.041667e-02
+69           relative: emotion -> adapt 8.565310e-03
+70     relative: consensus -> synthesis 8.442777e-03
+71       relative: emotion -> synthesis 6.423983e-03
+72          relative: cohesion -> adapt 3.472222e-03
+73          relative: plan -> synthesis 3.428571e-03
+74         relative: consensus -> adapt 2.814259e-03
+75              relative: plan -> adapt 2.285714e-03
+76         frequency: consensus -> plan 3.860000e+02
+77              frequency: plan -> plan 2.730000e+02
+78         frequency: plan -> consensus 2.620000e+02
+79      frequency: discuss -> consensus 2.500000e+02
+80      frequency: consensus -> discuss 2.490000e+02
+81           frequency: plan -> emotion 1.670000e+02
+82     frequency: cohesion -> consensus 1.660000e+02
+83   frequency: consensus -> coregulate 1.650000e+02
+84       frequency: emotion -> cohesion 1.570000e+02
+85      frequency: emotion -> consensus 1.570000e+02
+86    frequency: consensus -> consensus 9.800000e+01
+87        frequency: discuss -> discuss 9.500000e+01
+88      frequency: consensus -> emotion 9.400000e+01
+89      frequency: discuss -> synthesis 7.300000e+01
+90        frequency: coregulate -> plan 6.900000e+01
+91        frequency: discuss -> emotion 6.600000e+01
+92        frequency: monitor -> discuss 6.400000e+01
+93     frequency: coregulate -> discuss 6.100000e+01
+94           frequency: plan -> monitor 6.000000e+01
+95        frequency: emotion -> discuss 5.800000e+01
+96           frequency: plan -> discuss 5.800000e+01
+97    frequency: synthesis -> consensus 5.600000e+01
+98     frequency: coregulate -> emotion 5.500000e+01
+99           frequency: emotion -> plan 5.100000e+01
+100    frequency: discuss -> coregulate 4.300000e+01
+101     frequency: monitor -> consensus 3.700000e+01
+102      frequency: discuss -> cohesion 3.600000e+01
+103          frequency: monitor -> plan 3.600000e+01
+104      frequency: cohesion -> emotion 3.500000e+01
+105     frequency: consensus -> monitor 3.300000e+01
+106         frequency: cohesion -> plan 3.200000e+01
+107    frequency: consensus -> cohesion 2.900000e+01
+108  frequency: coregulate -> consensus 2.800000e+01
+109   frequency: cohesion -> coregulate 2.800000e+01
+110         frequency: plan -> cohesion 2.700000e+01
+111    frequency: coregulate -> monitor 2.500000e+01
+112       frequency: plan -> coregulate 2.300000e+01
+113       frequency: emotion -> emotion 2.300000e+01
+114       frequency: adapt -> consensus 2.200000e+01
+115       frequency: monitor -> emotion 2.000000e+01
+116       frequency: synthesis -> adapt 1.400000e+01
+117        frequency: synthesis -> plan 1.400000e+01
+118     frequency: cohesion -> cohesion 1.300000e+01
+119          frequency: discuss -> plan 1.300000e+01
+120         frequency: discuss -> adapt 1.000000e+01
+121   frequency: coregulate -> cohesion 1.000000e+01
+122        frequency: adapt -> cohesion 9.000000e+00
+123       frequency: emotion -> monitor 9.000000e+00
+124   frequency: consensus -> synthesis 9.000000e+00
+125    frequency: monitor -> coregulate 8.000000e+00
+126       frequency: discuss -> monitor 8.000000e+00
+127      frequency: monitor -> cohesion 7.000000e+00
+128       frequency: monitor -> monitor 6.000000e+00
+129      frequency: coregulate -> adapt 5.000000e+00
+130    frequency: emotion -> coregulate 5.000000e+00
+131      frequency: cohesion -> discuss 5.000000e+00
+132      frequency: cohesion -> monitor 5.000000e+00
+133         frequency: emotion -> adapt 4.000000e+00
+134 frequency: coregulate -> coregulate 4.000000e+00
+135     frequency: synthesis -> emotion 4.000000e+00
+136       frequency: consensus -> adapt 3.000000e+00
+137         frequency: adapt -> emotion 3.000000e+00
+138    frequency: cohesion -> synthesis 3.000000e+00
+139  frequency: coregulate -> synthesis 3.000000e+00
+140     frequency: emotion -> synthesis 3.000000e+00
+141     frequency: monitor -> synthesis 3.000000e+00
+142        frequency: plan -> synthesis 3.000000e+00
+143         frequency: monitor -> adapt 2.000000e+00
+144            frequency: plan -> adapt 2.000000e+00
+145         frequency: adapt -> monitor 2.000000e+00
+146        frequency: cohesion -> adapt 1.000000e+00
+147    frequency: synthesis -> cohesion 1.000000e+00
+148  frequency: synthesis -> coregulate 1.000000e+00
+149         frequency: adapt -> discuss 1.000000e+00
+150     frequency: synthesis -> discuss 1.000000e+00
+151        attention: consensus -> plan 1.856751e+02
+152             attention: plan -> plan 1.421107e+02
+153        attention: plan -> consensus 1.394797e+02
+154     attention: discuss -> consensus 1.233045e+02
+155     attention: consensus -> discuss 1.210802e+02
+156   attention: consensus -> consensus 9.365345e+01
+157     attention: emotion -> consensus 8.438181e+01
+158          attention: plan -> emotion 8.082135e+01
+159    attention: cohesion -> consensus 7.311947e+01
+160  attention: consensus -> coregulate 7.272716e+01
+161      attention: emotion -> cohesion 6.311085e+01
+162     attention: consensus -> emotion 6.239178e+01
+163       attention: discuss -> discuss 5.440077e+01
+164          attention: plan -> discuss 4.644430e+01
+165          attention: emotion -> plan 3.891418e+01
+166       attention: discuss -> emotion 3.600346e+01
+167       attention: coregulate -> plan 3.459001e+01
+168       attention: emotion -> discuss 3.345848e+01
+169     attention: discuss -> synthesis 3.013695e+01
+170          attention: plan -> monitor 3.001285e+01
+171    attention: coregulate -> discuss 2.905124e+01
+172          attention: discuss -> plan 2.841258e+01
+173       attention: monitor -> discuss 2.838479e+01
+174         attention: cohesion -> plan 2.629022e+01
+175    attention: coregulate -> emotion 2.595608e+01
+176   attention: synthesis -> consensus 2.442079e+01
+177     attention: monitor -> consensus 2.441643e+01
+178    attention: consensus -> cohesion 2.440203e+01
+179  attention: coregulate -> consensus 2.388457e+01
+180    attention: discuss -> coregulate 2.387809e+01
+181         attention: plan -> cohesion 2.276255e+01
+182          attention: monitor -> plan 2.177505e+01
+183     attention: consensus -> monitor 2.078835e+01
+184      attention: discuss -> cohesion 2.027908e+01
+185       attention: plan -> coregulate 2.003747e+01
+186      attention: cohesion -> emotion 1.918353e+01
+187       attention: emotion -> emotion 1.887637e+01
+188   attention: cohesion -> coregulate 1.418449e+01
+189      attention: cohesion -> discuss 1.315564e+01
+190       attention: monitor -> emotion 1.082447e+01
+191    attention: coregulate -> monitor 1.071493e+01
+192        attention: synthesis -> plan 1.002255e+01
+193   attention: consensus -> synthesis 1.001437e+01
+194       attention: adapt -> consensus 9.825140e+00
+195   attention: coregulate -> cohesion 9.378151e+00
+196    attention: emotion -> coregulate 9.357697e+00
+197     attention: cohesion -> cohesion 8.954499e+00
+198       attention: discuss -> monitor 6.562149e+00
+199         attention: discuss -> adapt 6.187876e+00
+200    attention: monitor -> coregulate 5.991560e+00
+201       attention: emotion -> monitor 5.955190e+00
+202       attention: synthesis -> adapt 5.344657e+00
+203      attention: monitor -> cohesion 4.836670e+00
+204 attention: coregulate -> coregulate 4.738791e+00
+205     attention: synthesis -> emotion 3.882357e+00
+206        attention: adapt -> cohesion 3.716784e+00
+207      attention: cohesion -> monitor 3.541981e+00
+208        attention: plan -> synthesis 3.526209e+00
+209       attention: consensus -> adapt 3.201918e+00
+210       attention: monitor -> monitor 3.198803e+00
+211     attention: synthesis -> discuss 3.180272e+00
+212     attention: emotion -> synthesis 2.981501e+00
+213      attention: coregulate -> adapt 2.734024e+00
+214    attention: cohesion -> synthesis 2.615087e+00
+215  attention: coregulate -> synthesis 2.566323e+00
+216         attention: adapt -> discuss 2.028815e+00
+217         attention: emotion -> adapt 1.938405e+00
+218     attention: monitor -> synthesis 1.937948e+00
+219  attention: synthesis -> coregulate 1.845932e+00
+220            attention: adapt -> plan 1.685714e+00
+221            attention: plan -> adapt 1.591462e+00
+222         attention: adapt -> emotion 1.444315e+00
+223    attention: synthesis -> cohesion 1.207979e+00
+224      attention: adapt -> coregulate 1.154224e+00
+225         attention: monitor -> adapt 9.805305e-01
+226     attention: synthesis -> monitor 7.831380e-01
+227        attention: cohesion -> adapt 7.670652e-01
+228         attention: adapt -> monitor 7.661327e-01
+229       attention: adapt -> synthesis 2.309169e-01
+230           attention: adapt -> adapt 1.719666e-01
+231   attention: synthesis -> synthesis 1.282377e-01

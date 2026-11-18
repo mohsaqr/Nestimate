@@ -1,0 +1,52 @@
+
+> library(glasso)
+
+> strategies <- read.csv("../data/srl_strategies.csv")
+
+> S <- cor(strategies)
+
+> n <- nrow(strategies)
+
+> p <- ncol(S)
+
+> largest <- max(abs(S[upper.tri(S)]))
+
+> penalties <- exp(seq(log(0.01 * largest), log(largest), length.out = 100))
+
+> path <- glassopath(S, rholist = penalties, thr = 1e-10, maxit = 1e5, penalize.diagonal = FALSE,
++                    trace = 0)
+
+> ebic <- apply(path$wi, 3, function(K) {
++   edges <- sum(K[lower.tri(K)] != 0)
++   loglik <- n / 2 * (log(det(K)) - sum(diag(K %*% S)))
++   -2 * loglik + edges * log(n) + 4 * edges * 0.5 * log(p)
++ })
+
+> penalties[which.min(ebic)]
+[1] 0.1318548
+
+> network <- -cov2cor(path$wi[, , which.min(ebic)])
+
+> dimnames(network) <- dimnames(S)
+
+> pairs <- which(upper.tri(network) & network != 0, arr.ind = TRUE)
+
+> result <- data.frame(quantity = paste(colnames(network)[pairs[, "row"]], "--",
++                                       colnames(network)[pairs[, "col"]]),
++                      kind = "partial correlation", value = network[pairs])
+
+> result
+                      quantity                kind      value
+1       Planning -- Monitoring partial correlation 0.22901956
+2       Planning -- Evaluating partial correlation 0.12953713
+3     Monitoring -- Evaluating partial correlation 0.30049760
+4    Monitoring -- Elaboration partial correlation 0.03881840
+5   Evaluating -- Organization partial correlation 0.15443128
+6  Elaboration -- Organization partial correlation 0.26232453
+7     Elaboration -- Rehearsal partial correlation 0.15760205
+8    Organization -- Rehearsal partial correlation 0.15232840
+9        Planning -- Time_Mgmt partial correlation 0.13034666
+10   Help_Seeking -- Time_Mgmt partial correlation 0.06512061
+11    Evaluating -- Effort_Reg partial correlation 0.09309598
+12  Help_Seeking -- Effort_Reg partial correlation 0.01956134
+13     Time_Mgmt -- Effort_Reg partial correlation 0.32491514

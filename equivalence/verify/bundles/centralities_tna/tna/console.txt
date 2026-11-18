@@ -1,0 +1,30 @@
+
+> library(tna)
+'tna' package version 1.3.1
+------------------------------------------------------
+  Tikka, S., López-Pernas, S., and Saqr, M. (2025). 
+  tna: An R Package for Transition Network Analysis.
+  Applied Psychological Measurement.
+  https://doi.org/10.1177/01466216251348840
+------------------------------------------------------
+Please type 'citation("tna")' for more citation information.
+See the package website at https://sonsoles.me/tna/
+
+
+> sequences <- read.csv("../data/sequences.csv")
+
+> model <- tna(sequences)
+
+> result <- as.data.frame(centralities(model, measures = c("BetweennessRSP", "Diffusion", "Clustering")))
+
+> result
+       state BetweennessRSP Diffusion Clustering
+1      adapt              1  5.814191  0.4244821
+2   cohesion             27  5.419932  0.3453642
+3  consensus            125  4.961018  0.1426756
+4 coregulate             28  5.501923  0.3276554
+5    discuss             62  4.941984  0.2798275
+6    emotion             49  5.444105  0.3102537
+7    monitor             11  5.394688  0.3213792
+8       plan             70  4.031600  0.2990474
+9  synthesis              9  5.669910  0.4678268

@@ -1,0 +1,41 @@
+
+> library(tna)
+'tna' package version 1.3.1
+------------------------------------------------------
+  Tikka, S., López-Pernas, S., and Saqr, M. (2025). 
+  tna: An R Package for Transition Network Analysis.
+  Applied Psychological Measurement.
+  https://doi.org/10.1177/01466216251348840
+------------------------------------------------------
+Please type 'citation("tna")' for more citation information.
+See the package website at https://sonsoles.me/tna/
+
+
+> sequences <- read.csv("../data/sequences.csv")
+
+> model <- tna(sequences)
+
+> result <- as.data.frame(centralities(model, measures = c("OutStrength", "InStrength", "ClosenessIn",
++                                                          "ClosenessOut", "Closeness", "Betweenness")))
+
+> result
+       state OutStrength InStrength ClosenessIn ClosenessOut  Closeness
+1      adapt   1.0000000  0.2179784 0.007079434   0.01500945 0.02752302
+2   cohesion   0.9548611  0.7858013 0.014558726   0.01218422 0.02900537
+3  consensus   0.9080675  3.1527386 0.039500374   0.01239509 0.04071580
+4 coregulate   0.9846154  0.4160942 0.014212061   0.01453566 0.01989267
+5    discuss   0.8400673  1.0637855 0.022642676   0.01260472 0.03109877
+6    emotion   0.9507495  0.9575413 0.015709507   0.01169640 0.02601275
+7    monitor   0.9672131  0.2998372 0.007326178   0.01350212 0.02091596
+8       plan   0.6880000  1.2202577 0.027922293   0.01151897 0.02831496
+9  synthesis   1.0000000  0.1795395 0.009675469   0.01533124 0.02782764
+  Betweenness
+1           1
+2           0
+3          30
+4           5
+5          14
+6           5
+7           0
+8           4
+9           7

@@ -1,0 +1,3081 @@
+{
+  "schema": "prova.verification-case/1",
+  "title": "Permutation test: observed edge differences",
+  "description": "Two groups of 300 sequences compared edge by edge. Compared here: the two networks and their observed differences, which involve no randomness. The p-values and effect sizes are NOT compared: the two programs draw their permutations differently (tna permutes the sequences, Nestimate permutes precomputed per-sequence counts), so under one seed they are two Monte Carlo estimates of the same quantity, not the same numbers. Both are printed in the raw output.",
+  "covers": [
+    "permutation()",
+    "build_network()"
+  ],
+  "generator": "Nestimate equivalence/verify/export-bundles.R",
+  "created_at": "2026-11-18",
+  "sides": [
+    {
+      "id": "nestimate",
+      "name": "Nestimate",
+      "version": "1.0.20",
+      "primary": true,
+      "source": "live",
+      "run_at": "2026-11-18",
+      "platform": "R version 4.6.2 (2026-10-29), aarch64-apple-darwin23"
+    },
+    {
+      "id": "tna",
+      "name": "tna",
+      "version": "1.3.1",
+      "authority": "open-source",
+      "source": "live",
+      "run_at": "2026-11-18",
+      "platform": "R version 4.6.2 (2026-10-29), aarch64-apple-darwin23"
+    }
+  ],
+  "sections": [
+    {
+      "id": "code",
+      "title": "Code",
+      "items": [
+        {
+          "side": "nestimate",
+          "path": "nestimate/script.R",
+          "bytes": 423,
+          "sha256": "889b373b63b91d8f0b77a66cbc7d31142ccd4cf34315bc668ffb7dc68c811600",
+          "label": "Script",
+          "type": "code",
+          "language": "r",
+          "run": {
+            "engine": "r",
+            "result": "result",
+            "key": "edge",
+            "reads": [
+              "data/sequences.csv",
+              "data/sequences_b.csv"
+            ]
+          }
+        },
+        {
+          "side": "tna",
+          "path": "tna/script.R",
+          "bytes": 595,
+          "sha256": "82ca79f2c89098167baecc9bdbc08e5ad2ec87f4cd29822b59f5180ab278a3fb",
+          "label": "Script",
+          "type": "code",
+          "language": "r",
+          "run": {
+            "engine": "r",
+            "result": "result",
+            "key": "edge",
+            "reads": [
+              "data/sequences.csv",
+              "data/sequences_b.csv"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "output",
+      "title": "Raw output",
+      "items": [
+        {
+          "side": "nestimate",
+          "path": "nestimate/console.txt",
+          "bytes": 13329,
+          "sha256": "60e14a2c65d96da08a126eb55f09b42594506b215a980401396118b5cc6f7525",
+          "label": "R console",
+          "type": "text"
+        },
+        {
+          "side": "tna",
+          "path": "tna/console.txt",
+          "bytes": 11566,
+          "sha256": "f5f98110db6dec5b7cc0e5ad4179240e00304a30b3679150f34ee2c5c628546d",
+          "label": "R console",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "id": "data",
+      "title": "Data",
+      "items": [
+        {
+          "path": "data/sequences.csv",
+          "bytes": 53418,
+          "sha256": "b21ae6f146e4d5c48701ada7818a275471ebe908c7894d2e7a042bed7bae1e68",
+          "label": "Sequences (group A)"
+        },
+        {
+          "path": "data/sequences_b.csv",
+          "bytes": 53271,
+          "sha256": "63b5d104e807ed9832ffb90e61fde0bc557654a6371c09b4841d256bd925fd78",
+          "label": "Sequences (group B)"
+        }
+      ]
+    }
+  ],
+  "comparisons": [
+    {
+      "quantity": "weight_x: adapt -> cohesion",
+      "kind": "weight_x",
+      "values": {
+        "nestimate": 0.243243243243243,
+        "tna": 0.243243243243243
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_x: adapt -> consensus",
+      "kind": "weight_x",
+      "values": {
+        "nestimate": 0.594594594594595,
+        "tna": 0.594594594594595
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_x: adapt -> discuss",
+      "kind": "weight_x",
+      "values": {
+        "nestimate": 0.027027027027027,
+        "tna": 0.027027027027027
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_x: adapt -> emotion",
+      "kind": "weight_x",
+      "values": {
+        "nestimate": 0.0810810810810811,
+        "tna": 0.0810810810810811
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_x: adapt -> monitor",
+      "kind": "weight_x",
+      "values": {
+        "nestimate": 0.0540540540540541,
+        "tna": 0.0540540540540541
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_x: adapt -> plan",
+      "kind": "weight_x",
+      "values": {
+        "nestimate": 0,
+        "tna": 0
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_x: cohesion -> adapt",
+      "kind": "weight_x",
+      "values": {
+        "nestimate": 0.00347222222222222,
+        "tna": 0.00347222222222222
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_x: cohesion -> cohesion",
+      "kind": "weight_x",
+      "values": {
+        "nestimate": 0.0451388888888889,
+        "tna": 0.0451388888888889
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_x: cohesion -> consensus",
+      "kind": "weight_x",
+      "values": {
+        "nestimate": 0.576388888888889,
+        "tna": 0.576388888888889
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_x: cohesion -> coregulate",
+      "kind": "weight_x",
+      "values": {
+        "nestimate": 0.0972222222222222,
+        "tna": 0.0972222222222222
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_x: cohesion -> discuss",
+      "kind": "weight_x",
+      "values": {
+        "nestimate": 0.0173611111111111,
+        "tna": 0.0173611111111111
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_x: cohesion -> emotion",
+      "kind": "weight_x",
+      "values": {
+        "nestimate": 0.121527777777778,
+        "tna": 0.121527777777778
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_x: cohesion -> monitor",
+      "kind": "weight_x",
+      "values": {
+        "nestimate": 0.0173611111111111,
+        "tna": 0.0173611111111111
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_x: cohesion -> plan",
+      "kind": "weight_x",
+      "values": {
+        "nestimate": 0.111111111111111,
+        "tna": 0.111111111111111
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_x: cohesion -> synthesis",
+      "kind": "weight_x",
+      "values": {
+        "nestimate": 0.0104166666666667,
+        "tna": 0.0104166666666667
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_x: consensus -> adapt",
+      "kind": "weight_x",
+      "values": {
+        "nestimate": 0.00281425891181989,
+        "tna": 0.00281425891181989
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_x: consensus -> cohesion",
+      "kind": "weight_x",
+      "values": {
+        "nestimate": 0.0272045028142589,
+        "tna": 0.0272045028142589
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_x: consensus -> consensus",
+      "kind": "weight_x",
+      "values": {
+        "nestimate": 0.0919324577861163,
+        "tna": 0.0919324577861163
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_x: consensus -> coregulate",
+      "kind": "weight_x",
+      "values": {
+        "nestimate": 0.154784240150094,
+        "tna": 0.154784240150094
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_x: consensus -> discuss",
+      "kind": "weight_x",
+      "values": {
+        "nestimate": 0.233583489681051,
+        "tna": 0.233583489681051
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_x: consensus -> emotion",
+      "kind": "weight_x",
+      "values": {
+        "nestimate": 0.0881801125703565,
+        "tna": 0.0881801125703565
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_x: consensus -> monitor",
+      "kind": "weight_x",
+      "values": {
+        "nestimate": 0.0309568480300188,
+        "tna": 0.0309568480300188
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_x: consensus -> plan",
+      "kind": "weight_x",
+      "values": {
+        "nestimate": 0.362101313320826,
+        "tna": 0.362101313320826
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_x: consensus -> synthesis",
+      "kind": "weight_x",
+      "values": {
+        "nestimate": 0.00844277673545966,
+        "tna": 0.00844277673545966
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_x: coregulate -> adapt",
+      "kind": "weight_x",
+      "values": {
+        "nestimate": 0.0192307692307692,
+        "tna": 0.0192307692307692
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_x: coregulate -> cohesion",
+      "kind": "weight_x",
+      "values": {
+        "nestimate": 0.0384615384615385,
+        "tna": 0.0384615384615385
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_x: coregulate -> consensus",
+      "kind": "weight_x",
+      "values": {
+        "nestimate": 0.107692307692308,
+        "tna": 0.107692307692308
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_x: coregulate -> coregulate",
+      "kind": "weight_x",
+      "values": {
+        "nestimate": 0.0153846153846154,
+        "tna": 0.0153846153846154
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_x: coregulate -> discuss",
+      "kind": "weight_x",
+      "values": {
+        "nestimate": 0.234615384615385,
+        "tna": 0.234615384615385
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_x: coregulate -> emotion",
+      "kind": "weight_x",
+      "values": {
+        "nestimate": 0.211538461538462,
+        "tna": 0.211538461538462
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_x: coregulate -> monitor",
+      "kind": "weight_x",
+      "values": {
+        "nestimate": 0.0961538461538462,
+        "tna": 0.0961538461538462
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_x: coregulate -> plan",
+      "kind": "weight_x",
+      "values": {
+        "nestimate": 0.265384615384615,
+        "tna": 0.265384615384615
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_x: coregulate -> synthesis",
+      "kind": "weight_x",
+      "values": {
+        "nestimate": 0.0115384615384615,
+        "tna": 0.0115384615384615
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_x: discuss -> adapt",
+      "kind": "weight_x",
+      "values": {
+        "nestimate": 0.0168350168350168,
+        "tna": 0.0168350168350168
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_x: discuss -> cohesion",
+      "kind": "weight_x",
+      "values": {
+        "nestimate": 0.0606060606060606,
+        "tna": 0.0606060606060606
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_x: discuss -> consensus",
+      "kind": "weight_x",
+      "values": {
+        "nestimate": 0.420875420875421,
+        "tna": 0.420875420875421
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_x: discuss -> coregulate",
+      "kind": "weight_x",
+      "values": {
+        "nestimate": 0.0723905723905724,
+        "tna": 0.0723905723905724
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_x: discuss -> discuss",
+      "kind": "weight_x",
+      "values": {
+        "nestimate": 0.15993265993266,
+        "tna": 0.15993265993266
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_x: discuss -> emotion",
+      "kind": "weight_x",
+      "values": {
+        "nestimate": 0.111111111111111,
+        "tna": 0.111111111111111
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_x: discuss -> monitor",
+      "kind": "weight_x",
+      "values": {
+        "nestimate": 0.0134680134680135,
+        "tna": 0.0134680134680135
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_x: discuss -> plan",
+      "kind": "weight_x",
+      "values": {
+        "nestimate": 0.0218855218855219,
+        "tna": 0.0218855218855219
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_x: discuss -> synthesis",
+      "kind": "weight_x",
+      "values": {
+        "nestimate": 0.122895622895623,
+        "tna": 0.122895622895623
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_x: emotion -> adapt",
+      "kind": "weight_x",
+      "values": {
+        "nestimate": 0.00856531049250535,
+        "tna": 0.00856531049250535
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_x: emotion -> cohesion",
+      "kind": "weight_x",
+      "values": {
+        "nestimate": 0.336188436830835,
+        "tna": 0.336188436830835
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_x: emotion -> consensus",
+      "kind": "weight_x",
+      "values": {
+        "nestimate": 0.336188436830835,
+        "tna": 0.336188436830835
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_x: emotion -> coregulate",
+      "kind": "weight_x",
+      "values": {
+        "nestimate": 0.0107066381156317,
+        "tna": 0.0107066381156317
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_x: emotion -> discuss",
+      "kind": "weight_x",
+      "values": {
+        "nestimate": 0.124197002141328,
+        "tna": 0.124197002141328
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_x: emotion -> emotion",
+      "kind": "weight_x",
+      "values": {
+        "nestimate": 0.0492505353319058,
+        "tna": 0.0492505353319058
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_x: emotion -> monitor",
+      "kind": "weight_x",
+      "values": {
+        "nestimate": 0.019271948608137,
+        "tna": 0.019271948608137
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_x: emotion -> plan",
+      "kind": "weight_x",
+      "values": {
+        "nestimate": 0.109207708779443,
+        "tna": 0.109207708779443
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_x: emotion -> synthesis",
+      "kind": "weight_x",
+      "values": {
+        "nestimate": 0.00642398286937901,
+        "tna": 0.00642398286937901
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_x: monitor -> adapt",
+      "kind": "weight_x",
+      "values": {
+        "nestimate": 0.0109289617486339,
+        "tna": 0.0109289617486339
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_x: monitor -> cohesion",
+      "kind": "weight_x",
+      "values": {
+        "nestimate": 0.0382513661202186,
+        "tna": 0.0382513661202186
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_x: monitor -> consensus",
+      "kind": "weight_x",
+      "values": {
+        "nestimate": 0.202185792349727,
+        "tna": 0.202185792349727
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_x: monitor -> coregulate",
+      "kind": "weight_x",
+      "values": {
+        "nestimate": 0.0437158469945355,
+        "tna": 0.0437158469945355
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_x: monitor -> discuss",
+      "kind": "weight_x",
+      "values": {
+        "nestimate": 0.349726775956284,
+        "tna": 0.349726775956284
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_x: monitor -> emotion",
+      "kind": "weight_x",
+      "values": {
+        "nestimate": 0.109289617486339,
+        "tna": 0.109289617486339
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_x: monitor -> monitor",
+      "kind": "weight_x",
+      "values": {
+        "nestimate": 0.0327868852459016,
+        "tna": 0.0327868852459016
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_x: monitor -> plan",
+      "kind": "weight_x",
+      "values": {
+        "nestimate": 0.19672131147541,
+        "tna": 0.19672131147541
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_x: monitor -> synthesis",
+      "kind": "weight_x",
+      "values": {
+        "nestimate": 0.0163934426229508,
+        "tna": 0.0163934426229508
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_x: plan -> adapt",
+      "kind": "weight_x",
+      "values": {
+        "nestimate": 0.00228571428571429,
+        "tna": 0.00228571428571429
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_x: plan -> cohesion",
+      "kind": "weight_x",
+      "values": {
+        "nestimate": 0.0308571428571429,
+        "tna": 0.0308571428571429
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_x: plan -> consensus",
+      "kind": "weight_x",
+      "values": {
+        "nestimate": 0.299428571428571,
+        "tna": 0.299428571428571
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_x: plan -> coregulate",
+      "kind": "weight_x",
+      "values": {
+        "nestimate": 0.0262857142857143,
+        "tna": 0.0262857142857143
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_x: plan -> discuss",
+      "kind": "weight_x",
+      "values": {
+        "nestimate": 0.0662857142857143,
+        "tna": 0.0662857142857143
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_x: plan -> emotion",
+      "kind": "weight_x",
+      "values": {
+        "nestimate": 0.190857142857143,
+        "tna": 0.190857142857143
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_x: plan -> monitor",
+      "kind": "weight_x",
+      "values": {
+        "nestimate": 0.0685714285714286,
+        "tna": 0.0685714285714286
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_x: plan -> plan",
+      "kind": "weight_x",
+      "values": {
+        "nestimate": 0.312,
+        "tna": 0.312
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_x: plan -> synthesis",
+      "kind": "weight_x",
+      "values": {
+        "nestimate": 0.00342857142857143,
+        "tna": 0.00342857142857143
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_x: synthesis -> adapt",
+      "kind": "weight_x",
+      "values": {
+        "nestimate": 0.153846153846154,
+        "tna": 0.153846153846154
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_x: synthesis -> cohesion",
+      "kind": "weight_x",
+      "values": {
+        "nestimate": 0.010989010989011,
+        "tna": 0.010989010989011
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_x: synthesis -> consensus",
+      "kind": "weight_x",
+      "values": {
+        "nestimate": 0.615384615384615,
+        "tna": 0.615384615384615
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_x: synthesis -> coregulate",
+      "kind": "weight_x",
+      "values": {
+        "nestimate": 0.010989010989011,
+        "tna": 0.010989010989011
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_x: synthesis -> discuss",
+      "kind": "weight_x",
+      "values": {
+        "nestimate": 0.010989010989011,
+        "tna": 0.010989010989011
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_x: synthesis -> emotion",
+      "kind": "weight_x",
+      "values": {
+        "nestimate": 0.043956043956044,
+        "tna": 0.043956043956044
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_x: synthesis -> plan",
+      "kind": "weight_x",
+      "values": {
+        "nestimate": 0.153846153846154,
+        "tna": 0.153846153846154
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_y: adapt -> cohesion",
+      "kind": "weight_y",
+      "values": {
+        "nestimate": 0.162790697674419,
+        "tna": 0.162790697674419
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_y: adapt -> consensus",
+      "kind": "weight_y",
+      "values": {
+        "nestimate": 0.488372093023256,
+        "tna": 0.488372093023256
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_y: adapt -> discuss",
+      "kind": "weight_y",
+      "values": {
+        "nestimate": 0.0465116279069767,
+        "tna": 0.0465116279069767
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_y: adapt -> emotion",
+      "kind": "weight_y",
+      "values": {
+        "nestimate": 0.255813953488372,
+        "tna": 0.255813953488372
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_y: adapt -> monitor",
+      "kind": "weight_y",
+      "values": {
+        "nestimate": 0.0232558139534884,
+        "tna": 0.0232558139534884
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_y: adapt -> plan",
+      "kind": "weight_y",
+      "values": {
+        "nestimate": 0.0232558139534884,
+        "tna": 0.0232558139534884
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_y: cohesion -> adapt",
+      "kind": "weight_y",
+      "values": {
+        "nestimate": 0,
+        "tna": 0
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_y: cohesion -> cohesion",
+      "kind": "weight_y",
+      "values": {
+        "nestimate": 0.04,
+        "tna": 0.04
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_y: cohesion -> consensus",
+      "kind": "weight_y",
+      "values": {
+        "nestimate": 0.534545454545455,
+        "tna": 0.534545454545455
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_y: cohesion -> coregulate",
+      "kind": "weight_y",
+      "values": {
+        "nestimate": 0.0690909090909091,
+        "tna": 0.0690909090909091
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_y: cohesion -> discuss",
+      "kind": "weight_y",
+      "values": {
+        "nestimate": 0.0436363636363636,
+        "tna": 0.0436363636363636
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_y: cohesion -> emotion",
+      "kind": "weight_y",
+      "values": {
+        "nestimate": 0.127272727272727,
+        "tna": 0.127272727272727
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_y: cohesion -> monitor",
+      "kind": "weight_y",
+      "values": {
+        "nestimate": 0.0218181818181818,
+        "tna": 0.0218181818181818
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_y: cohesion -> plan",
+      "kind": "weight_y",
+      "values": {
+        "nestimate": 0.156363636363636,
+        "tna": 0.156363636363636
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_y: cohesion -> synthesis",
+      "kind": "weight_y",
+      "values": {
+        "nestimate": 0.00727272727272727,
+        "tna": 0.00727272727272727
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_y: consensus -> adapt",
+      "kind": "weight_y",
+      "values": {
+        "nestimate": 0.0048828125,
+        "tna": 0.0048828125
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_y: consensus -> cohesion",
+      "kind": "weight_y",
+      "values": {
+        "nestimate": 0.0166015625,
+        "tna": 0.0166015625
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_y: consensus -> consensus",
+      "kind": "weight_y",
+      "values": {
+        "nestimate": 0.0830078125,
+        "tna": 0.0830078125
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_y: consensus -> coregulate",
+      "kind": "weight_y",
+      "values": {
+        "nestimate": 0.166015625,
+        "tna": 0.166015625
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_y: consensus -> discuss",
+      "kind": "weight_y",
+      "values": {
+        "nestimate": 0.244140625,
+        "tna": 0.244140625
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_y: consensus -> emotion",
+      "kind": "weight_y",
+      "values": {
+        "nestimate": 0.072265625,
+        "tna": 0.072265625
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_y: consensus -> monitor",
+      "kind": "weight_y",
+      "values": {
+        "nestimate": 0.04296875,
+        "tna": 0.04296875
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_y: consensus -> plan",
+      "kind": "weight_y",
+      "values": {
+        "nestimate": 0.3623046875,
+        "tna": 0.3623046875
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_y: consensus -> synthesis",
+      "kind": "weight_y",
+      "values": {
+        "nestimate": 0.0078125,
+        "tna": 0.0078125
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_y: coregulate -> adapt",
+      "kind": "weight_y",
+      "values": {
+        "nestimate": 0.0185185185185185,
+        "tna": 0.0185185185185185
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_y: coregulate -> cohesion",
+      "kind": "weight_y",
+      "values": {
+        "nestimate": 0.0333333333333333,
+        "tna": 0.0333333333333333
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_y: coregulate -> consensus",
+      "kind": "weight_y",
+      "values": {
+        "nestimate": 0.107407407407407,
+        "tna": 0.107407407407407
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_y: coregulate -> coregulate",
+      "kind": "weight_y",
+      "values": {
+        "nestimate": 0.00740740740740741,
+        "tna": 0.00740740740740741
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_y: coregulate -> discuss",
+      "kind": "weight_y",
+      "values": {
+        "nestimate": 0.255555555555556,
+        "tna": 0.255555555555556
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_y: coregulate -> emotion",
+      "kind": "weight_y",
+      "values": {
+        "nestimate": 0.211111111111111,
+        "tna": 0.211111111111111
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_y: coregulate -> monitor",
+      "kind": "weight_y",
+      "values": {
+        "nestimate": 0.0962962962962963,
+        "tna": 0.0962962962962963
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_y: coregulate -> plan",
+      "kind": "weight_y",
+      "values": {
+        "nestimate": 0.251851851851852,
+        "tna": 0.251851851851852
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_y: coregulate -> synthesis",
+      "kind": "weight_y",
+      "values": {
+        "nestimate": 0.0185185185185185,
+        "tna": 0.0185185185185185
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_y: discuss -> adapt",
+      "kind": "weight_y",
+      "values": {
+        "nestimate": 0.0292207792207792,
+        "tna": 0.0292207792207792
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_y: discuss -> cohesion",
+      "kind": "weight_y",
+      "values": {
+        "nestimate": 0.0665584415584416,
+        "tna": 0.0665584415584416
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_y: discuss -> consensus",
+      "kind": "weight_y",
+      "values": {
+        "nestimate": 0.400974025974026,
+        "tna": 0.400974025974026
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_y: discuss -> coregulate",
+      "kind": "weight_y",
+      "values": {
+        "nestimate": 0.0844155844155844,
+        "tna": 0.0844155844155844
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_y: discuss -> discuss",
+      "kind": "weight_y",
+      "values": {
+        "nestimate": 0.167207792207792,
+        "tna": 0.167207792207792
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_y: discuss -> emotion",
+      "kind": "weight_y",
+      "values": {
+        "nestimate": 0.108766233766234,
+        "tna": 0.108766233766234
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_y: discuss -> monitor",
+      "kind": "weight_y",
+      "values": {
+        "nestimate": 0.0194805194805195,
+        "tna": 0.0194805194805195
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_y: discuss -> plan",
+      "kind": "weight_y",
+      "values": {
+        "nestimate": 0.0113636363636364,
+        "tna": 0.0113636363636364
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_y: discuss -> synthesis",
+      "kind": "weight_y",
+      "values": {
+        "nestimate": 0.112012987012987,
+        "tna": 0.112012987012987
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_y: emotion -> adapt",
+      "kind": "weight_y",
+      "values": {
+        "nestimate": 0,
+        "tna": 0
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_y: emotion -> cohesion",
+      "kind": "weight_y",
+      "values": {
+        "nestimate": 0.310492505353319,
+        "tna": 0.310492505353319
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_y: emotion -> consensus",
+      "kind": "weight_y",
+      "values": {
+        "nestimate": 0.359743040685225,
+        "tna": 0.359743040685225
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_y: emotion -> coregulate",
+      "kind": "weight_y",
+      "values": {
+        "nestimate": 0.0256959314775161,
+        "tna": 0.0256959314775161
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_y: emotion -> discuss",
+      "kind": "weight_y",
+      "values": {
+        "nestimate": 0.113490364025696,
+        "tna": 0.113490364025696
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_y: emotion -> emotion",
+      "kind": "weight_y",
+      "values": {
+        "nestimate": 0.0599571734475375,
+        "tna": 0.0599571734475375
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_y: emotion -> monitor",
+      "kind": "weight_y",
+      "values": {
+        "nestimate": 0.0471092077087794,
+        "tna": 0.0471092077087794
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_y: emotion -> plan",
+      "kind": "weight_y",
+      "values": {
+        "nestimate": 0.0813704496788009,
+        "tna": 0.0813704496788009
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_y: emotion -> synthesis",
+      "kind": "weight_y",
+      "values": {
+        "nestimate": 0.00214132762312634,
+        "tna": 0.00214132762312634
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_y: monitor -> adapt",
+      "kind": "weight_y",
+      "values": {
+        "nestimate": 0.0153846153846154,
+        "tna": 0.0153846153846154
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_y: monitor -> cohesion",
+      "kind": "weight_y",
+      "values": {
+        "nestimate": 0.0564102564102564,
+        "tna": 0.0564102564102564
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_y: monitor -> consensus",
+      "kind": "weight_y",
+      "values": {
+        "nestimate": 0.153846153846154,
+        "tna": 0.153846153846154
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_y: monitor -> coregulate",
+      "kind": "weight_y",
+      "values": {
+        "nestimate": 0.0512820512820513,
+        "tna": 0.0512820512820513
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_y: monitor -> discuss",
+      "kind": "weight_y",
+      "values": {
+        "nestimate": 0.358974358974359,
+        "tna": 0.358974358974359
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_y: monitor -> emotion",
+      "kind": "weight_y",
+      "values": {
+        "nestimate": 0.0871794871794872,
+        "tna": 0.0871794871794872
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_y: monitor -> monitor",
+      "kind": "weight_y",
+      "values": {
+        "nestimate": 0.0102564102564103,
+        "tna": 0.0102564102564103
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_y: monitor -> plan",
+      "kind": "weight_y",
+      "values": {
+        "nestimate": 0.235897435897436,
+        "tna": 0.235897435897436
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_y: monitor -> synthesis",
+      "kind": "weight_y",
+      "values": {
+        "nestimate": 0.0307692307692308,
+        "tna": 0.0307692307692308
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_y: plan -> adapt",
+      "kind": "weight_y",
+      "values": {
+        "nestimate": 0.00114678899082569,
+        "tna": 0.00114678899082569
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_y: plan -> cohesion",
+      "kind": "weight_y",
+      "values": {
+        "nestimate": 0.0344036697247706,
+        "tna": 0.0344036697247706
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_y: plan -> consensus",
+      "kind": "weight_y",
+      "values": {
+        "nestimate": 0.287844036697248,
+        "tna": 0.287844036697248
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_y: plan -> coregulate",
+      "kind": "weight_y",
+      "values": {
+        "nestimate": 0.0263761467889908,
+        "tna": 0.0263761467889908
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_y: plan -> discuss",
+      "kind": "weight_y",
+      "values": {
+        "nestimate": 0.0538990825688073,
+        "tna": 0.0538990825688073
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_y: plan -> emotion",
+      "kind": "weight_y",
+      "values": {
+        "nestimate": 0.177752293577982,
+        "tna": 0.177752293577982
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_y: plan -> monitor",
+      "kind": "weight_y",
+      "values": {
+        "nestimate": 0.0642201834862385,
+        "tna": 0.0642201834862385
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_y: plan -> plan",
+      "kind": "weight_y",
+      "values": {
+        "nestimate": 0.353211009174312,
+        "tna": 0.353211009174312
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_y: plan -> synthesis",
+      "kind": "weight_y",
+      "values": {
+        "nestimate": 0.00114678899082569,
+        "tna": 0.00114678899082569
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_y: synthesis -> adapt",
+      "kind": "weight_y",
+      "values": {
+        "nestimate": 0.10989010989011,
+        "tna": 0.10989010989011
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_y: synthesis -> cohesion",
+      "kind": "weight_y",
+      "values": {
+        "nestimate": 0.0549450549450549,
+        "tna": 0.0549450549450549
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_y: synthesis -> consensus",
+      "kind": "weight_y",
+      "values": {
+        "nestimate": 0.626373626373626,
+        "tna": 0.626373626373626
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_y: synthesis -> coregulate",
+      "kind": "weight_y",
+      "values": {
+        "nestimate": 0.010989010989011,
+        "tna": 0.010989010989011
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_y: synthesis -> discuss",
+      "kind": "weight_y",
+      "values": {
+        "nestimate": 0.032967032967033,
+        "tna": 0.032967032967033
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_y: synthesis -> emotion",
+      "kind": "weight_y",
+      "values": {
+        "nestimate": 0.0659340659340659,
+        "tna": 0.0659340659340659
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "weight_y: synthesis -> plan",
+      "kind": "weight_y",
+      "values": {
+        "nestimate": 0.0989010989010989,
+        "tna": 0.0989010989010989
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "diff: adapt -> cohesion",
+      "kind": "diff",
+      "values": {
+        "nestimate": 0.0804525455688246,
+        "tna": 0.0804525455688246
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "diff: adapt -> consensus",
+      "kind": "diff",
+      "values": {
+        "nestimate": 0.106222501571339,
+        "tna": 0.106222501571339
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "diff: adapt -> discuss",
+      "kind": "diff",
+      "values": {
+        "nestimate": -0.0194846008799497,
+        "tna": -0.0194846008799497
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "diff: adapt -> emotion",
+      "kind": "diff",
+      "values": {
+        "nestimate": -0.174732872407291,
+        "tna": -0.174732872407291
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "diff: adapt -> monitor",
+      "kind": "diff",
+      "values": {
+        "nestimate": 0.0307982401005657,
+        "tna": 0.0307982401005657
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "diff: adapt -> plan",
+      "kind": "diff",
+      "values": {
+        "nestimate": -0.0232558139534884,
+        "tna": -0.0232558139534884
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "diff: cohesion -> adapt",
+      "kind": "diff",
+      "values": {
+        "nestimate": 0.00347222222222222,
+        "tna": 0.00347222222222222
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "diff: cohesion -> cohesion",
+      "kind": "diff",
+      "values": {
+        "nestimate": 0.00513888888888889,
+        "tna": 0.00513888888888889
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "diff: cohesion -> consensus",
+      "kind": "diff",
+      "values": {
+        "nestimate": 0.0418434343434343,
+        "tna": 0.0418434343434343
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "diff: cohesion -> coregulate",
+      "kind": "diff",
+      "values": {
+        "nestimate": 0.0281313131313131,
+        "tna": 0.0281313131313131
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "diff: cohesion -> discuss",
+      "kind": "diff",
+      "values": {
+        "nestimate": -0.0262752525252525,
+        "tna": -0.0262752525252525
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "diff: cohesion -> emotion",
+      "kind": "diff",
+      "values": {
+        "nestimate": -0.00574494949494948,
+        "tna": -0.00574494949494948
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "diff: cohesion -> monitor",
+      "kind": "diff",
+      "values": {
+        "nestimate": -0.00445707070707071,
+        "tna": -0.00445707070707071
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "diff: cohesion -> plan",
+      "kind": "diff",
+      "values": {
+        "nestimate": -0.0452525252525253,
+        "tna": -0.0452525252525253
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "diff: cohesion -> synthesis",
+      "kind": "diff",
+      "values": {
+        "nestimate": 0.00314393939393939,
+        "tna": 0.00314393939393939
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "diff: consensus -> adapt",
+      "kind": "diff",
+      "values": {
+        "nestimate": -0.00206855358818011,
+        "tna": -0.00206855358818011
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "diff: consensus -> cohesion",
+      "kind": "diff",
+      "values": {
+        "nestimate": 0.0106029403142589,
+        "tna": 0.0106029403142589
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "diff: consensus -> consensus",
+      "kind": "diff",
+      "values": {
+        "nestimate": 0.00892464528611632,
+        "tna": 0.00892464528611632
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "diff: consensus -> coregulate",
+      "kind": "diff",
+      "values": {
+        "nestimate": -0.0112313848499062,
+        "tna": -0.0112313848499062
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "diff: consensus -> discuss",
+      "kind": "diff",
+      "values": {
+        "nestimate": -0.0105571353189493,
+        "tna": -0.0105571353189493
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "diff: consensus -> emotion",
+      "kind": "diff",
+      "values": {
+        "nestimate": 0.0159144875703565,
+        "tna": 0.0159144875703565
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "diff: consensus -> monitor",
+      "kind": "diff",
+      "values": {
+        "nestimate": -0.0120119019699812,
+        "tna": -0.0120119019699812
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "diff: consensus -> plan",
+      "kind": "diff",
+      "values": {
+        "nestimate": -0.000203374179174487,
+        "tna": -0.000203374179174487
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "diff: consensus -> synthesis",
+      "kind": "diff",
+      "values": {
+        "nestimate": 0.000630276735459663,
+        "tna": 0.000630276735459663
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "diff: coregulate -> adapt",
+      "kind": "diff",
+      "values": {
+        "nestimate": 0.000712250712250714,
+        "tna": 0.000712250712250714
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "diff: coregulate -> cohesion",
+      "kind": "diff",
+      "values": {
+        "nestimate": 0.00512820512820513,
+        "tna": 0.00512820512820513
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "diff: coregulate -> consensus",
+      "kind": "diff",
+      "values": {
+        "nestimate": 0.000284900284900289,
+        "tna": 0.000284900284900289
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "diff: coregulate -> coregulate",
+      "kind": "diff",
+      "values": {
+        "nestimate": 0.00797720797720798,
+        "tna": 0.00797720797720798
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "diff: coregulate -> discuss",
+      "kind": "diff",
+      "values": {
+        "nestimate": -0.0209401709401709,
+        "tna": -0.0209401709401709
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "diff: coregulate -> emotion",
+      "kind": "diff",
+      "values": {
+        "nestimate": 0.000427350427350426,
+        "tna": 0.000427350427350426
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "diff: coregulate -> monitor",
+      "kind": "diff",
+      "values": {
+        "nestimate": -0.000142450142450137,
+        "tna": -0.000142450142450137
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "diff: coregulate -> plan",
+      "kind": "diff",
+      "values": {
+        "nestimate": 0.0135327635327636,
+        "tna": 0.0135327635327636
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "diff: coregulate -> synthesis",
+      "kind": "diff",
+      "values": {
+        "nestimate": -0.00698005698005698,
+        "tna": -0.00698005698005698
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "diff: discuss -> adapt",
+      "kind": "diff",
+      "values": {
+        "nestimate": -0.0123857623857624,
+        "tna": -0.0123857623857624
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "diff: discuss -> cohesion",
+      "kind": "diff",
+      "values": {
+        "nestimate": -0.00595238095238095,
+        "tna": -0.00595238095238095
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "diff: discuss -> consensus",
+      "kind": "diff",
+      "values": {
+        "nestimate": 0.0199013949013949,
+        "tna": 0.0199013949013949
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "diff: discuss -> coregulate",
+      "kind": "diff",
+      "values": {
+        "nestimate": -0.012025012025012,
+        "tna": -0.012025012025012
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "diff: discuss -> discuss",
+      "kind": "diff",
+      "values": {
+        "nestimate": -0.00727513227513227,
+        "tna": -0.00727513227513227
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "diff: discuss -> emotion",
+      "kind": "diff",
+      "values": {
+        "nestimate": 0.00234487734487734,
+        "tna": 0.00234487734487734
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "diff: discuss -> monitor",
+      "kind": "diff",
+      "values": {
+        "nestimate": -0.00601250601250601,
+        "tna": -0.00601250601250601
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "diff: discuss -> plan",
+      "kind": "diff",
+      "values": {
+        "nestimate": 0.0105218855218855,
+        "tna": 0.0105218855218855
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "diff: discuss -> synthesis",
+      "kind": "diff",
+      "values": {
+        "nestimate": 0.0108826358826359,
+        "tna": 0.0108826358826359
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "diff: emotion -> adapt",
+      "kind": "diff",
+      "values": {
+        "nestimate": 0.00856531049250535,
+        "tna": 0.00856531049250535
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "diff: emotion -> cohesion",
+      "kind": "diff",
+      "values": {
+        "nestimate": 0.025695931477516,
+        "tna": 0.025695931477516
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "diff: emotion -> consensus",
+      "kind": "diff",
+      "values": {
+        "nestimate": -0.0235546038543897,
+        "tna": -0.0235546038543897
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "diff: emotion -> coregulate",
+      "kind": "diff",
+      "values": {
+        "nestimate": -0.0149892933618844,
+        "tna": -0.0149892933618844
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "diff: emotion -> discuss",
+      "kind": "diff",
+      "values": {
+        "nestimate": 0.0107066381156317,
+        "tna": 0.0107066381156317
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "diff: emotion -> emotion",
+      "kind": "diff",
+      "values": {
+        "nestimate": -0.0107066381156317,
+        "tna": -0.0107066381156317
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "diff: emotion -> monitor",
+      "kind": "diff",
+      "values": {
+        "nestimate": -0.0278372591006424,
+        "tna": -0.0278372591006424
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "diff: emotion -> plan",
+      "kind": "diff",
+      "values": {
+        "nestimate": 0.0278372591006424,
+        "tna": 0.0278372591006424
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "diff: emotion -> synthesis",
+      "kind": "diff",
+      "values": {
+        "nestimate": 0.00428265524625268,
+        "tna": 0.00428265524625268
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "diff: monitor -> adapt",
+      "kind": "diff",
+      "values": {
+        "nestimate": -0.00445565363598151,
+        "tna": -0.00445565363598151
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "diff: monitor -> cohesion",
+      "kind": "diff",
+      "values": {
+        "nestimate": -0.0181588902900378,
+        "tna": -0.0181588902900378
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "diff: monitor -> consensus",
+      "kind": "diff",
+      "values": {
+        "nestimate": 0.0483396385035729,
+        "tna": 0.0483396385035729
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "diff: monitor -> coregulate",
+      "kind": "diff",
+      "values": {
+        "nestimate": -0.00756620428751576,
+        "tna": -0.00756620428751576
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "diff: monitor -> discuss",
+      "kind": "diff",
+      "values": {
+        "nestimate": -0.00924758301807482,
+        "tna": -0.00924758301807482
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "diff: monitor -> emotion",
+      "kind": "diff",
+      "values": {
+        "nestimate": 0.0221101303068516,
+        "tna": 0.0221101303068516
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "diff: monitor -> monitor",
+      "kind": "diff",
+      "values": {
+        "nestimate": 0.0225304749894914,
+        "tna": 0.0225304749894914
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "diff: monitor -> plan",
+      "kind": "diff",
+      "values": {
+        "nestimate": -0.0391761244220261,
+        "tna": -0.0391761244220261
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "diff: monitor -> synthesis",
+      "kind": "diff",
+      "values": {
+        "nestimate": -0.01437578814628,
+        "tna": -0.01437578814628
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "diff: plan -> adapt",
+      "kind": "diff",
+      "values": {
+        "nestimate": 0.0011389252948886,
+        "tna": 0.0011389252948886
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "diff: plan -> cohesion",
+      "kind": "diff",
+      "values": {
+        "nestimate": -0.00354652686762779,
+        "tna": -0.00354652686762779
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "diff: plan -> consensus",
+      "kind": "diff",
+      "values": {
+        "nestimate": 0.0115845347313237,
+        "tna": 0.0115845347313237
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "diff: plan -> coregulate",
+      "kind": "diff",
+      "values": {
+        "nestimate": -9.04325032765399e-05,
+        "tna": -9.04325032765399e-05
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "diff: plan -> discuss",
+      "kind": "diff",
+      "values": {
+        "nestimate": 0.0123866317169069,
+        "tna": 0.0123866317169069
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "diff: plan -> emotion",
+      "kind": "diff",
+      "values": {
+        "nestimate": 0.0131048492791612,
+        "tna": 0.0131048492791612
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "diff: plan -> monitor",
+      "kind": "diff",
+      "values": {
+        "nestimate": 0.00435124508519004,
+        "tna": 0.00435124508519004
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "diff: plan -> plan",
+      "kind": "diff",
+      "values": {
+        "nestimate": -0.0412110091743119,
+        "tna": -0.0412110091743119
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "diff: plan -> synthesis",
+      "kind": "diff",
+      "values": {
+        "nestimate": 0.00228178243774574,
+        "tna": 0.00228178243774574
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "diff: synthesis -> adapt",
+      "kind": "diff",
+      "values": {
+        "nestimate": 0.043956043956044,
+        "tna": 0.043956043956044
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "diff: synthesis -> cohesion",
+      "kind": "diff",
+      "values": {
+        "nestimate": -0.043956043956044,
+        "tna": -0.043956043956044
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "diff: synthesis -> consensus",
+      "kind": "diff",
+      "values": {
+        "nestimate": -0.0109890109890109,
+        "tna": -0.0109890109890109
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "diff: synthesis -> coregulate",
+      "kind": "diff",
+      "values": {
+        "nestimate": 0,
+        "tna": 0
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "diff: synthesis -> discuss",
+      "kind": "diff",
+      "values": {
+        "nestimate": -0.021978021978022,
+        "tna": -0.021978021978022
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "diff: synthesis -> emotion",
+      "kind": "diff",
+      "values": {
+        "nestimate": -0.021978021978022,
+        "tna": -0.021978021978022
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "diff: synthesis -> plan",
+      "kind": "diff",
+      "values": {
+        "nestimate": 0.054945054945055,
+        "tna": 0.054945054945055
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    }
+  ]
+}

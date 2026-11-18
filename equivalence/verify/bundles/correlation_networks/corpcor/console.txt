@@ -1,0 +1,91 @@
+
+> library(corpcor)
+
+> strategies <- read.csv("../data/srl_strategies.csv")
+
+> correlation <- cor.shrink(strategies, lambda = 0, verbose = FALSE)
+
+> partial <- pcor.shrink(strategies, lambda = 0, verbose = FALSE)
+
+> pairs <- which(upper.tri(correlation), arr.ind = TRUE)
+
+> labels <- paste(colnames(correlation)[pairs[, "row"]], "--", colnames(correlation)[pairs[, "col"]])
+
+> result <- data.frame(quantity = c(paste0("cor: ", labels), paste0("pcor: ", labels)),
++                      kind = rep(c("cor", "pcor"), each = nrow(pairs)),
++                      value = c(correlation[pairs], partial[pairs]))
+
+> result
+                             quantity kind        value
+1         cor: Planning -- Monitoring  cor  0.422603681
+2         cor: Planning -- Evaluating  cor  0.357905286
+3       cor: Monitoring -- Evaluating  cor  0.485011926
+4        cor: Planning -- Elaboration  cor -0.095763709
+5      cor: Monitoring -- Elaboration  cor  0.195481517
+6      cor: Evaluating -- Elaboration  cor  0.076954912
+7       cor: Planning -- Organization  cor -0.082885575
+8     cor: Monitoring -- Organization  cor  0.028308708
+9     cor: Evaluating -- Organization  cor  0.313160250
+10   cor: Elaboration -- Organization  cor  0.432342812
+11         cor: Planning -- Rehearsal  cor -0.018724685
+12       cor: Monitoring -- Rehearsal  cor  0.132076742
+13       cor: Evaluating -- Rehearsal  cor  0.076042235
+14      cor: Elaboration -- Rehearsal  cor  0.341254976
+15     cor: Organization -- Rehearsal  cor  0.338866772
+16      cor: Planning -- Help_Seeking  cor -0.108110671
+17    cor: Monitoring -- Help_Seeking  cor -0.116067657
+18    cor: Evaluating -- Help_Seeking  cor  0.023138439
+19   cor: Elaboration -- Help_Seeking  cor  0.007532028
+20  cor: Organization -- Help_Seeking  cor  0.123233146
+21     cor: Rehearsal -- Help_Seeking  cor -0.130222780
+22         cor: Planning -- Time_Mgmt  cor  0.285198904
+23       cor: Monitoring -- Time_Mgmt  cor  0.015204192
+24       cor: Evaluating -- Time_Mgmt  cor  0.079193579
+25      cor: Elaboration -- Time_Mgmt  cor -0.032702082
+26     cor: Organization -- Time_Mgmt  cor  0.084949150
+27        cor: Rehearsal -- Time_Mgmt  cor -0.106441808
+28     cor: Help_Seeking -- Time_Mgmt  cor  0.208525422
+29        cor: Planning -- Effort_Reg  cor -0.010292906
+30      cor: Monitoring -- Effort_Reg  cor -0.008264973
+31      cor: Evaluating -- Effort_Reg  cor  0.250092811
+32     cor: Elaboration -- Effort_Reg  cor  0.049838942
+33    cor: Organization -- Effort_Reg  cor  0.134852922
+34       cor: Rehearsal -- Effort_Reg  cor  0.028863828
+35    cor: Help_Seeking -- Effort_Reg  cor  0.176003639
+36       cor: Time_Mgmt -- Effort_Reg  cor  0.466737722
+37       pcor: Planning -- Monitoring pcor  0.268402492
+38       pcor: Planning -- Evaluating pcor  0.283191307
+39     pcor: Monitoring -- Evaluating pcor  0.432134389
+40      pcor: Planning -- Elaboration pcor -0.103295767
+41    pcor: Monitoring -- Elaboration pcor  0.273586526
+42    pcor: Evaluating -- Elaboration pcor -0.156087901
+43     pcor: Planning -- Organization pcor -0.146481864
+44   pcor: Monitoring -- Organization pcor -0.212778158
+45   pcor: Evaluating -- Organization pcor  0.406045085
+46  pcor: Elaboration -- Organization pcor  0.379979312
+47        pcor: Planning -- Rehearsal pcor  0.046283046
+48      pcor: Monitoring -- Rehearsal pcor  0.095408091
+49      pcor: Evaluating -- Rehearsal pcor -0.097862355
+50     pcor: Elaboration -- Rehearsal pcor  0.180583793
+51    pcor: Organization -- Rehearsal pcor  0.273505359
+52     pcor: Planning -- Help_Seeking pcor -0.121425257
+53   pcor: Monitoring -- Help_Seeking pcor -0.054241419
+54   pcor: Evaluating -- Help_Seeking pcor  0.038639326
+55  pcor: Elaboration -- Help_Seeking pcor  0.004496091
+56 pcor: Organization -- Help_Seeking pcor  0.101878408
+57    pcor: Rehearsal -- Help_Seeking pcor -0.143570960
+58        pcor: Planning -- Time_Mgmt pcor  0.397077760
+59      pcor: Monitoring -- Time_Mgmt pcor -0.007496655
+60      pcor: Evaluating -- Time_Mgmt pcor -0.207120799
+61     pcor: Elaboration -- Time_Mgmt pcor -0.030551156
+62    pcor: Organization -- Time_Mgmt pcor  0.157554906
+63       pcor: Rehearsal -- Time_Mgmt pcor -0.136941257
+64    pcor: Help_Seeking -- Time_Mgmt pcor  0.161150933
+65       pcor: Planning -- Effort_Reg pcor -0.235100242
+66     pcor: Monitoring -- Effort_Reg pcor -0.099208198
+67     pcor: Evaluating -- Effort_Reg pcor  0.330098716
+68    pcor: Elaboration -- Effort_Reg pcor  0.048610342
+69   pcor: Organization -- Effort_Reg pcor -0.092220705
+70      pcor: Rehearsal -- Effort_Reg pcor  0.095552331
+71   pcor: Help_Seeking -- Effort_Reg pcor  0.051199012
+72      pcor: Time_Mgmt -- Effort_Reg pcor  0.501818980

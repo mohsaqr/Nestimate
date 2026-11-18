@@ -1,0 +1,464 @@
+{
+  "schema": "prova.verification-case/1",
+  "title": "Centralities only tna also computes",
+  "description": "Randomised shortest path betweenness, diffusion and weighted clustering of the same network. The installed tna returns diffusion on its raw scale, so Nestimate is asked for the raw scale too (normalize_diffusion = FALSE; its default is the 0 to 1 scale).",
+  "covers": [
+    "net_centrality()"
+  ],
+  "variant": {
+    "of": "centralities",
+    "option": "measures",
+    "value": "BetweennessRSP, Diffusion, Clustering"
+  },
+  "generator": "Nestimate equivalence/verify/export-bundles.R",
+  "created_at": "2026-11-18",
+  "sides": [
+    {
+      "id": "nestimate",
+      "name": "Nestimate",
+      "version": "1.0.20",
+      "primary": true,
+      "source": "live",
+      "run_at": "2026-11-18",
+      "platform": "R version 4.6.2 (2026-10-29), aarch64-apple-darwin23"
+    },
+    {
+      "id": "tna",
+      "name": "tna",
+      "version": "1.3.1",
+      "authority": "open-source",
+      "source": "live",
+      "run_at": "2026-11-18",
+      "platform": "R version 4.6.2 (2026-10-29), aarch64-apple-darwin23"
+    }
+  ],
+  "sections": [
+    {
+      "id": "code",
+      "title": "Code",
+      "items": [
+        {
+          "side": "nestimate",
+          "path": "nestimate/script.R",
+          "bytes": 277,
+          "sha256": "befe127d799a68f5814d9f64f4e2832526e451ed597ad3376835515bf5ee6a63",
+          "label": "Script",
+          "type": "code",
+          "language": "r",
+          "run": {
+            "engine": "r",
+            "result": "result",
+            "key": "state",
+            "reads": [
+              "data/sequences.csv"
+            ]
+          }
+        },
+        {
+          "side": "tna",
+          "path": "tna/script.R",
+          "bytes": 195,
+          "sha256": "a9125ebc0c6cc5f773274d10b398c70a4295383b2ecfb80b3f305a309c9f9a74",
+          "label": "Script",
+          "type": "code",
+          "language": "r",
+          "run": {
+            "engine": "r",
+            "result": "result",
+            "key": "state",
+            "reads": [
+              "data/sequences.csv"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "output",
+      "title": "Raw output",
+      "items": [
+        {
+          "side": "nestimate",
+          "path": "nestimate/console.txt",
+          "bytes": 1129,
+          "sha256": "82fb3d9ecc82727b959266b185403f79258eef468531324ed491e35c4b22ffa0",
+          "label": "R console",
+          "type": "text"
+        },
+        {
+          "side": "tna",
+          "path": "tna/console.txt",
+          "bytes": 1140,
+          "sha256": "b3e3a78e73c46e92d147b1f4d40e61a5572250a67dbe53bc73342960af6d78d1",
+          "label": "R console",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "id": "data",
+      "title": "Data",
+      "items": [
+        {
+          "path": "data/sequences.csv",
+          "bytes": 53418,
+          "sha256": "b21ae6f146e4d5c48701ada7818a275471ebe908c7894d2e7a042bed7bae1e68",
+          "label": "Sequences (group A)"
+        }
+      ]
+    }
+  ],
+  "comparisons": [
+    {
+      "quantity": "BetweennessRSP: adapt",
+      "kind": "BetweennessRSP",
+      "values": {
+        "nestimate": 1,
+        "tna": 1
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "BetweennessRSP: cohesion",
+      "kind": "BetweennessRSP",
+      "values": {
+        "nestimate": 27,
+        "tna": 27
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "BetweennessRSP: consensus",
+      "kind": "BetweennessRSP",
+      "values": {
+        "nestimate": 125,
+        "tna": 125
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "BetweennessRSP: coregulate",
+      "kind": "BetweennessRSP",
+      "values": {
+        "nestimate": 28,
+        "tna": 28
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "BetweennessRSP: discuss",
+      "kind": "BetweennessRSP",
+      "values": {
+        "nestimate": 62,
+        "tna": 62
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "BetweennessRSP: emotion",
+      "kind": "BetweennessRSP",
+      "values": {
+        "nestimate": 49,
+        "tna": 49
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "BetweennessRSP: monitor",
+      "kind": "BetweennessRSP",
+      "values": {
+        "nestimate": 11,
+        "tna": 11
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "BetweennessRSP: plan",
+      "kind": "BetweennessRSP",
+      "values": {
+        "nestimate": 70,
+        "tna": 70
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "BetweennessRSP: synthesis",
+      "kind": "BetweennessRSP",
+      "values": {
+        "nestimate": 9,
+        "tna": 9
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "Diffusion: adapt",
+      "kind": "Diffusion",
+      "values": {
+        "nestimate": 5.81419071949679,
+        "tna": 5.81419071949679
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "Diffusion: cohesion",
+      "kind": "Diffusion",
+      "values": {
+        "nestimate": 5.41993223120229,
+        "tna": 5.41993223120229
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "Diffusion: consensus",
+      "kind": "Diffusion",
+      "values": {
+        "nestimate": 4.96101758153829,
+        "tna": 4.96101758153829
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "Diffusion: coregulate",
+      "kind": "Diffusion",
+      "values": {
+        "nestimate": 5.50192262875783,
+        "tna": 5.50192262875783
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "Diffusion: discuss",
+      "kind": "Diffusion",
+      "values": {
+        "nestimate": 4.94198440556307,
+        "tna": 4.94198440556307
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "Diffusion: emotion",
+      "kind": "Diffusion",
+      "values": {
+        "nestimate": 5.44410480746601,
+        "tna": 5.44410480746601
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "Diffusion: monitor",
+      "kind": "Diffusion",
+      "values": {
+        "nestimate": 5.39468841780237,
+        "tna": 5.39468841780237
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "Diffusion: plan",
+      "kind": "Diffusion",
+      "values": {
+        "nestimate": 4.0315997926618,
+        "tna": 4.0315997926618
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "Diffusion: synthesis",
+      "kind": "Diffusion",
+      "values": {
+        "nestimate": 5.66990963911805,
+        "tna": 5.66990963911805
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "Clustering: adapt",
+      "kind": "Clustering",
+      "values": {
+        "nestimate": 0.424482126083579,
+        "tna": 0.424482126083579
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "Clustering: cohesion",
+      "kind": "Clustering",
+      "values": {
+        "nestimate": 0.345364249777423,
+        "tna": 0.345364249777423
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "Clustering: consensus",
+      "kind": "Clustering",
+      "values": {
+        "nestimate": 0.142675565655168,
+        "tna": 0.142675565655168
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "Clustering: coregulate",
+      "kind": "Clustering",
+      "values": {
+        "nestimate": 0.327655412492252,
+        "tna": 0.327655412492252
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "Clustering: discuss",
+      "kind": "Clustering",
+      "values": {
+        "nestimate": 0.279827464782466,
+        "tna": 0.279827464782466
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "Clustering: emotion",
+      "kind": "Clustering",
+      "values": {
+        "nestimate": 0.310253667963034,
+        "tna": 0.310253667963034
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "Clustering: monitor",
+      "kind": "Clustering",
+      "values": {
+        "nestimate": 0.32137919691991,
+        "tna": 0.32137919691991
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "Clustering: plan",
+      "kind": "Clustering",
+      "values": {
+        "nestimate": 0.299047404431897,
+        "tna": 0.299047404431897
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "Clustering: synthesis",
+      "kind": "Clustering",
+      "values": {
+        "nestimate": 0.467826779944283,
+        "tna": 0.467826779944283
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    }
+  ]
+}

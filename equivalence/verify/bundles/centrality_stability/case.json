@@ -1,0 +1,1161 @@
+{
+  "schema": "prova.verification-case/1",
+  "title": "Case-dropping stability of centralities",
+  "description": "Sequences are dropped in proportions 0.1 to 0.9, 200 times each, seed 1 on both sides, and the centralities of each reduced network are correlated with the original ones. Compared: the mean and standard deviation of those correlations and the proportion at or above 0.7, per measure and proportion. The CS coefficient is a function of the last. Agreement at this tolerance requires both programs to drop the same sequences from the same random stream.",
+  "covers": [
+    "centrality_stability()"
+  ],
+  "generator": "Nestimate equivalence/verify/export-bundles.R",
+  "created_at": "2026-11-18",
+  "sides": [
+    {
+      "id": "nestimate",
+      "name": "Nestimate",
+      "version": "1.0.20",
+      "primary": true,
+      "source": "live",
+      "run_at": "2026-11-18",
+      "platform": "R version 4.6.2 (2026-10-29), aarch64-apple-darwin23"
+    },
+    {
+      "id": "tna",
+      "name": "tna",
+      "version": "1.3.1",
+      "authority": "open-source",
+      "source": "live",
+      "run_at": "2026-11-18",
+      "platform": "R version 4.6.2 (2026-10-29), aarch64-apple-darwin23"
+    }
+  ],
+  "sections": [
+    {
+      "id": "code",
+      "title": "Code",
+      "items": [
+        {
+          "side": "nestimate",
+          "path": "nestimate/script.R",
+          "bytes": 460,
+          "sha256": "a6908b8cf3f1e6d04521ffa389c92210059f16ce43e1433457cdc79439d46867",
+          "label": "Script",
+          "type": "code",
+          "language": "r",
+          "run": {
+            "engine": "r",
+            "result": "result",
+            "key": "drop",
+            "reads": [
+              "data/sequences.csv"
+            ]
+          }
+        },
+        {
+          "side": "tna",
+          "path": "tna/script.R",
+          "bytes": 565,
+          "sha256": "0aefb87ceedec9fbdaaa963602af0c4b48297d98ccc6d6e43d0bc3b5aee481e6",
+          "label": "Script",
+          "type": "code",
+          "language": "r",
+          "run": {
+            "engine": "r",
+            "result": "result",
+            "key": "drop",
+            "reads": [
+              "data/sequences.csv"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "output",
+      "title": "Raw output",
+      "items": [
+        {
+          "side": "nestimate",
+          "path": "nestimate/console.txt",
+          "bytes": 2622,
+          "sha256": "c7fd8a20bcc8d1e3da82f72db38e9af2f236f152ccebe70d37dacd532d803df8",
+          "label": "R console",
+          "type": "text"
+        },
+        {
+          "side": "tna",
+          "path": "tna/console.txt",
+          "bytes": 2912,
+          "sha256": "e89b71f3d94f20b6474354ba9b3403ed92d7bcb991e6e238955039b559810bcc",
+          "label": "R console",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "id": "data",
+      "title": "Data",
+      "items": [
+        {
+          "path": "data/sequences.csv",
+          "bytes": 53418,
+          "sha256": "b21ae6f146e4d5c48701ada7818a275471ebe908c7894d2e7a042bed7bae1e68",
+          "label": "Sequences (group A)"
+        }
+      ]
+    }
+  ],
+  "comparisons": [
+    {
+      "quantity": "mean_cor: InStrength, dropping 0.1",
+      "kind": "mean_cor",
+      "values": {
+        "nestimate": 0.999786012057229,
+        "tna": 0.999786012057229
+      },
+      "difference": 5.55111512312578e-16,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "mean_cor: InStrength, dropping 0.2",
+      "kind": "mean_cor",
+      "values": {
+        "nestimate": 0.999511201174607,
+        "tna": 0.999511201174606
+      },
+      "difference": 4.44089209850063e-16,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "mean_cor: InStrength, dropping 0.3",
+      "kind": "mean_cor",
+      "values": {
+        "nestimate": 0.999114317004978,
+        "tna": 0.999114317004978
+      },
+      "difference": 1.11022302462516e-16,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "mean_cor: InStrength, dropping 0.4",
+      "kind": "mean_cor",
+      "values": {
+        "nestimate": 0.998703938958954,
+        "tna": 0.998703938958953
+      },
+      "difference": 6.66133814775094e-16,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "mean_cor: InStrength, dropping 0.5",
+      "kind": "mean_cor",
+      "values": {
+        "nestimate": 0.998107386636469,
+        "tna": 0.998107386636469
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "mean_cor: InStrength, dropping 0.6",
+      "kind": "mean_cor",
+      "values": {
+        "nestimate": 0.997080896020333,
+        "tna": 0.997080896020333
+      },
+      "difference": 1.11022302462516e-16,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "mean_cor: InStrength, dropping 0.7",
+      "kind": "mean_cor",
+      "values": {
+        "nestimate": 0.995507524640296,
+        "tna": 0.995507524640295
+      },
+      "difference": 2.22044604925031e-16,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "mean_cor: InStrength, dropping 0.8",
+      "kind": "mean_cor",
+      "values": {
+        "nestimate": 0.991598703460915,
+        "tna": 0.991598703460916
+      },
+      "difference": 8.88178419700125e-16,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "mean_cor: InStrength, dropping 0.9",
+      "kind": "mean_cor",
+      "values": {
+        "nestimate": 0.983744200810106,
+        "tna": 0.983744200810107
+      },
+      "difference": 6.66133814775094e-16,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "mean_cor: OutStrength, dropping 0.1",
+      "kind": "mean_cor",
+      "values": {
+        "nestimate": 0.999420136623189,
+        "tna": 0.999420136623189
+      },
+      "difference": 4.44089209850063e-16,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "mean_cor: OutStrength, dropping 0.2",
+      "kind": "mean_cor",
+      "values": {
+        "nestimate": 0.998833056737915,
+        "tna": 0.998833056737915
+      },
+      "difference": 5.55111512312578e-16,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "mean_cor: OutStrength, dropping 0.3",
+      "kind": "mean_cor",
+      "values": {
+        "nestimate": 0.997697037680293,
+        "tna": 0.997697037680293
+      },
+      "difference": 2.22044604925031e-16,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "mean_cor: OutStrength, dropping 0.4",
+      "kind": "mean_cor",
+      "values": {
+        "nestimate": 0.996688125260327,
+        "tna": 0.996688125260327
+      },
+      "difference": 1.11022302462516e-16,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "mean_cor: OutStrength, dropping 0.5",
+      "kind": "mean_cor",
+      "values": {
+        "nestimate": 0.995207528517722,
+        "tna": 0.995207528517722
+      },
+      "difference": 2.22044604925031e-16,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "mean_cor: OutStrength, dropping 0.6",
+      "kind": "mean_cor",
+      "values": {
+        "nestimate": 0.992005851775164,
+        "tna": 0.992005851775164
+      },
+      "difference": 1.11022302462516e-16,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "mean_cor: OutStrength, dropping 0.7",
+      "kind": "mean_cor",
+      "values": {
+        "nestimate": 0.988292431708483,
+        "tna": 0.988292431708483
+      },
+      "difference": 4.44089209850063e-16,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "mean_cor: OutStrength, dropping 0.8",
+      "kind": "mean_cor",
+      "values": {
+        "nestimate": 0.980348308751312,
+        "tna": 0.980348308751312
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "mean_cor: OutStrength, dropping 0.9",
+      "kind": "mean_cor",
+      "values": {
+        "nestimate": 0.937218126066681,
+        "tna": 0.937218126066681
+      },
+      "difference": 2.22044604925031e-16,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "mean_cor: Betweenness, dropping 0.1",
+      "kind": "mean_cor",
+      "values": {
+        "nestimate": 0.989959112518866,
+        "tna": 0.989959112518866
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "mean_cor: Betweenness, dropping 0.2",
+      "kind": "mean_cor",
+      "values": {
+        "nestimate": 0.983468626932269,
+        "tna": 0.983468626932269
+      },
+      "difference": 2.22044604925031e-16,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "mean_cor: Betweenness, dropping 0.3",
+      "kind": "mean_cor",
+      "values": {
+        "nestimate": 0.983359784285623,
+        "tna": 0.983359784285623
+      },
+      "difference": 3.33066907387547e-16,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "mean_cor: Betweenness, dropping 0.4",
+      "kind": "mean_cor",
+      "values": {
+        "nestimate": 0.978314117051484,
+        "tna": 0.978314117051484
+      },
+      "difference": 1.11022302462516e-16,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "mean_cor: Betweenness, dropping 0.5",
+      "kind": "mean_cor",
+      "values": {
+        "nestimate": 0.980097492472013,
+        "tna": 0.980097492472013
+      },
+      "difference": 2.22044604925031e-16,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "mean_cor: Betweenness, dropping 0.6",
+      "kind": "mean_cor",
+      "values": {
+        "nestimate": 0.975872948615062,
+        "tna": 0.975872948615063
+      },
+      "difference": 2.22044604925031e-16,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "mean_cor: Betweenness, dropping 0.7",
+      "kind": "mean_cor",
+      "values": {
+        "nestimate": 0.97283862478512,
+        "tna": 0.972838624785119
+      },
+      "difference": 3.33066907387547e-16,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "mean_cor: Betweenness, dropping 0.8",
+      "kind": "mean_cor",
+      "values": {
+        "nestimate": 0.96464051086879,
+        "tna": 0.96464051086879
+      },
+      "difference": 2.22044604925031e-16,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "mean_cor: Betweenness, dropping 0.9",
+      "kind": "mean_cor",
+      "values": {
+        "nestimate": 0.933782651941696,
+        "tna": 0.933782651941695
+      },
+      "difference": 6.66133814775094e-16,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "sd_cor: InStrength, dropping 0.1",
+      "kind": "sd_cor",
+      "values": {
+        "nestimate": 0.000159563803316175,
+        "tna": 0.000159563803316173
+      },
+      "difference": 2.05998412772246e-18,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "sd_cor: InStrength, dropping 0.2",
+      "kind": "sd_cor",
+      "values": {
+        "nestimate": 0.000357866511226966,
+        "tna": 0.000357866511226963
+      },
+      "difference": 2.60208521396521e-18,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "sd_cor: InStrength, dropping 0.3",
+      "kind": "sd_cor",
+      "values": {
+        "nestimate": 0.000590580499487943,
+        "tna": 0.000590580499487941
+      },
+      "difference": 1.84314369322536e-18,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "sd_cor: InStrength, dropping 0.4",
+      "kind": "sd_cor",
+      "values": {
+        "nestimate": 0.000872806968796227,
+        "tna": 0.000872806968796239
+      },
+      "difference": 1.16009632455949e-17,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "sd_cor: InStrength, dropping 0.5",
+      "kind": "sd_cor",
+      "values": {
+        "nestimate": 0.0010690673239732,
+        "tna": 0.0010690673239732
+      },
+      "difference": 8.02309607639273e-18,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "sd_cor: InStrength, dropping 0.6",
+      "kind": "sd_cor",
+      "values": {
+        "nestimate": 0.00185912737644242,
+        "tna": 0.00185912737644243
+      },
+      "difference": 4.98732999343332e-18,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "sd_cor: InStrength, dropping 0.7",
+      "kind": "sd_cor",
+      "values": {
+        "nestimate": 0.002770645353152,
+        "tna": 0.00277064535315201
+      },
+      "difference": 5.20417042793042e-18,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "sd_cor: InStrength, dropping 0.8",
+      "kind": "sd_cor",
+      "values": {
+        "nestimate": 0.00626429760713396,
+        "tna": 0.00626429760713396
+      },
+      "difference": 1.73472347597681e-18,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "sd_cor: InStrength, dropping 0.9",
+      "kind": "sd_cor",
+      "values": {
+        "nestimate": 0.0128178531308029,
+        "tna": 0.0128178531308029
+      },
+      "difference": 3.46944695195361e-18,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "sd_cor: OutStrength, dropping 0.1",
+      "kind": "sd_cor",
+      "values": {
+        "nestimate": 0.000440437760209344,
+        "tna": 0.000440437760209327
+      },
+      "difference": 1.68051336735253e-17,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "sd_cor: OutStrength, dropping 0.2",
+      "kind": "sd_cor",
+      "values": {
+        "nestimate": 0.000741665866354198,
+        "tna": 0.00074166586635419
+      },
+      "difference": 8.23993651088983e-18,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "sd_cor: OutStrength, dropping 0.3",
+      "kind": "sd_cor",
+      "values": {
+        "nestimate": 0.00164586161584119,
+        "tna": 0.00164586161584119
+      },
+      "difference": 1.51788304147971e-18,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "sd_cor: OutStrength, dropping 0.4",
+      "kind": "sd_cor",
+      "values": {
+        "nestimate": 0.00204330066399236,
+        "tna": 0.00204330066399236
+      },
+      "difference": 4.33680868994202e-19,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "sd_cor: OutStrength, dropping 0.5",
+      "kind": "sd_cor",
+      "values": {
+        "nestimate": 0.00298728674086825,
+        "tna": 0.00298728674086825
+      },
+      "difference": 1.73472347597681e-18,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "sd_cor: OutStrength, dropping 0.6",
+      "kind": "sd_cor",
+      "values": {
+        "nestimate": 0.00502763892418221,
+        "tna": 0.00502763892418222
+      },
+      "difference": 7.80625564189563e-18,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "sd_cor: OutStrength, dropping 0.7",
+      "kind": "sd_cor",
+      "values": {
+        "nestimate": 0.00743960179803293,
+        "tna": 0.00743960179803293
+      },
+      "difference": 4.33680868994202e-18,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "sd_cor: OutStrength, dropping 0.8",
+      "kind": "sd_cor",
+      "values": {
+        "nestimate": 0.0129075791511492,
+        "tna": 0.0129075791511492
+      },
+      "difference": 5.20417042793042e-18,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "sd_cor: OutStrength, dropping 0.9",
+      "kind": "sd_cor",
+      "values": {
+        "nestimate": 0.141083088113795,
+        "tna": 0.141083088113795
+      },
+      "difference": 2.77555756156289e-17,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "sd_cor: Betweenness, dropping 0.1",
+      "kind": "sd_cor",
+      "values": {
+        "nestimate": 0.0165135145128184,
+        "tna": 0.0165135145128184
+      },
+      "difference": 3.46944695195361e-18,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "sd_cor: Betweenness, dropping 0.2",
+      "kind": "sd_cor",
+      "values": {
+        "nestimate": 0.0194745041225336,
+        "tna": 0.0194745041225336
+      },
+      "difference": 6.93889390390723e-18,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "sd_cor: Betweenness, dropping 0.3",
+      "kind": "sd_cor",
+      "values": {
+        "nestimate": 0.0204122708490781,
+        "tna": 0.0204122708490781
+      },
+      "difference": 1.04083408558608e-17,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "sd_cor: Betweenness, dropping 0.4",
+      "kind": "sd_cor",
+      "values": {
+        "nestimate": 0.02145736515183,
+        "tna": 0.02145736515183
+      },
+      "difference": 3.46944695195361e-18,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "sd_cor: Betweenness, dropping 0.5",
+      "kind": "sd_cor",
+      "values": {
+        "nestimate": 0.0214877335208498,
+        "tna": 0.0214877335208498
+      },
+      "difference": 1.04083408558608e-17,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "sd_cor: Betweenness, dropping 0.6",
+      "kind": "sd_cor",
+      "values": {
+        "nestimate": 0.0237916871861053,
+        "tna": 0.0237916871861053
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "sd_cor: Betweenness, dropping 0.7",
+      "kind": "sd_cor",
+      "values": {
+        "nestimate": 0.0229984879982213,
+        "tna": 0.0229984879982213
+      },
+      "difference": 1.04083408558608e-17,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "sd_cor: Betweenness, dropping 0.8",
+      "kind": "sd_cor",
+      "values": {
+        "nestimate": 0.0289407869318688,
+        "tna": 0.0289407869318688
+      },
+      "difference": 1.04083408558608e-17,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "sd_cor: Betweenness, dropping 0.9",
+      "kind": "sd_cor",
+      "values": {
+        "nestimate": 0.0631806658696478,
+        "tna": 0.0631806658696478
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "prop_above: InStrength, dropping 0.1",
+      "kind": "prop_above",
+      "values": {
+        "nestimate": 1,
+        "tna": 1
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "prop_above: InStrength, dropping 0.2",
+      "kind": "prop_above",
+      "values": {
+        "nestimate": 1,
+        "tna": 1
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "prop_above: InStrength, dropping 0.3",
+      "kind": "prop_above",
+      "values": {
+        "nestimate": 1,
+        "tna": 1
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "prop_above: InStrength, dropping 0.4",
+      "kind": "prop_above",
+      "values": {
+        "nestimate": 1,
+        "tna": 1
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "prop_above: InStrength, dropping 0.5",
+      "kind": "prop_above",
+      "values": {
+        "nestimate": 1,
+        "tna": 1
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "prop_above: InStrength, dropping 0.6",
+      "kind": "prop_above",
+      "values": {
+        "nestimate": 1,
+        "tna": 1
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "prop_above: InStrength, dropping 0.7",
+      "kind": "prop_above",
+      "values": {
+        "nestimate": 1,
+        "tna": 1
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "prop_above: InStrength, dropping 0.8",
+      "kind": "prop_above",
+      "values": {
+        "nestimate": 1,
+        "tna": 1
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "prop_above: InStrength, dropping 0.9",
+      "kind": "prop_above",
+      "values": {
+        "nestimate": 1,
+        "tna": 1
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "prop_above: OutStrength, dropping 0.1",
+      "kind": "prop_above",
+      "values": {
+        "nestimate": 1,
+        "tna": 1
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "prop_above: OutStrength, dropping 0.2",
+      "kind": "prop_above",
+      "values": {
+        "nestimate": 1,
+        "tna": 1
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "prop_above: OutStrength, dropping 0.3",
+      "kind": "prop_above",
+      "values": {
+        "nestimate": 1,
+        "tna": 1
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "prop_above: OutStrength, dropping 0.4",
+      "kind": "prop_above",
+      "values": {
+        "nestimate": 1,
+        "tna": 1
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "prop_above: OutStrength, dropping 0.5",
+      "kind": "prop_above",
+      "values": {
+        "nestimate": 1,
+        "tna": 1
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "prop_above: OutStrength, dropping 0.6",
+      "kind": "prop_above",
+      "values": {
+        "nestimate": 1,
+        "tna": 1
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "prop_above: OutStrength, dropping 0.7",
+      "kind": "prop_above",
+      "values": {
+        "nestimate": 1,
+        "tna": 1
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "prop_above: OutStrength, dropping 0.8",
+      "kind": "prop_above",
+      "values": {
+        "nestimate": 1,
+        "tna": 1
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "prop_above: OutStrength, dropping 0.9",
+      "kind": "prop_above",
+      "values": {
+        "nestimate": 0.98,
+        "tna": 0.98
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "prop_above: Betweenness, dropping 0.1",
+      "kind": "prop_above",
+      "values": {
+        "nestimate": 1,
+        "tna": 1
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "prop_above: Betweenness, dropping 0.2",
+      "kind": "prop_above",
+      "values": {
+        "nestimate": 1,
+        "tna": 1
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "prop_above: Betweenness, dropping 0.3",
+      "kind": "prop_above",
+      "values": {
+        "nestimate": 1,
+        "tna": 1
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "prop_above: Betweenness, dropping 0.4",
+      "kind": "prop_above",
+      "values": {
+        "nestimate": 1,
+        "tna": 1
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "prop_above: Betweenness, dropping 0.5",
+      "kind": "prop_above",
+      "values": {
+        "nestimate": 1,
+        "tna": 1
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "prop_above: Betweenness, dropping 0.6",
+      "kind": "prop_above",
+      "values": {
+        "nestimate": 1,
+        "tna": 1
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "prop_above: Betweenness, dropping 0.7",
+      "kind": "prop_above",
+      "values": {
+        "nestimate": 1,
+        "tna": 1
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "prop_above: Betweenness, dropping 0.8",
+      "kind": "prop_above",
+      "values": {
+        "nestimate": 1,
+        "tna": 1
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "prop_above: Betweenness, dropping 0.9",
+      "kind": "prop_above",
+      "values": {
+        "nestimate": 0.99,
+        "tna": 0.99
+      },
+      "difference": 0,
+      "measure": "absolute",
+      "tolerance": 1e-10,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    }
+  ]
+}

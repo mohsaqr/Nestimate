@@ -1,0 +1,25 @@
+Registered S3 methods overwritten by 'Nestimate':
+  method            from       
+  plot.net_mlvar    idiographic
+  print.net_mlvar   idiographic
+  summary.net_mlvar idiographic
+
+> sequences <- read.csv("../data/sequences.csv")
+
+> network <- build_network(sequences, method = "relative")
+
+> result <- net_centrality(network, measures = c("BetweennessRSP", "Diffusion", "Clustering"),
++                          normalize_diffusion = FALSE)
+centralities computed excluding loops (diagonal). Pass `loops = TRUE` to include self-transitions.
+
+> result
+                state BetweennessRSP Diffusion Clustering
+adapt           adapt              1  5.814191  0.4244821
+cohesion     cohesion             27  5.419932  0.3453642
+consensus   consensus            125  4.961018  0.1426756
+coregulate coregulate             28  5.501923  0.3276554
+discuss       discuss             62  4.941984  0.2798275
+emotion       emotion             49  5.444105  0.3102537
+monitor       monitor             11  5.394688  0.3213792
+plan             plan             70  4.031600  0.2990474
+synthesis   synthesis              9  5.669910  0.4678268

@@ -1,0 +1,322 @@
+{
+  "schema": "prova.verification-case/1",
+  "title": "Regularised partial correlation network (EBICglasso)",
+  "description": "Graphical lasso network of nine continuous scores with the penalty chosen by EBIC (gamma 0.5, 100 penalties). Nestimate uses its own pure R solver. qgraph::EBICglasso() runs the glasso package at its default convergence threshold of 1e-4, which is why the tolerance is 1e-4. The third side repeats the EBIC selection by hand on glasso::glassopath() solved to 1e-10. Only non-zero edges are listed, so a difference in which edges are kept would show as missing.",
+  "covers": [
+    "build_network()",
+    "build_glasso()"
+  ],
+  "generator": "Nestimate equivalence/verify/export-bundles.R",
+  "created_at": "2026-11-18",
+  "sides": [
+    {
+      "id": "nestimate",
+      "name": "Nestimate",
+      "version": "1.0.20",
+      "primary": true,
+      "source": "live",
+      "run_at": "2026-11-18",
+      "platform": "R version 4.6.2 (2026-10-29), aarch64-apple-darwin23"
+    },
+    {
+      "id": "qgraph",
+      "name": "qgraph",
+      "version": "1.10.1",
+      "authority": "open-source",
+      "source": "live",
+      "run_at": "2026-11-18",
+      "platform": "R version 4.6.2 (2026-10-29), aarch64-apple-darwin23"
+    },
+    {
+      "id": "glasso",
+      "name": "glasso",
+      "version": "1.11",
+      "authority": "open-source",
+      "source": "live",
+      "run_at": "2026-11-18",
+      "platform": "R version 4.6.2 (2026-10-29), aarch64-apple-darwin23"
+    }
+  ],
+  "sections": [
+    {
+      "id": "code",
+      "title": "Code",
+      "items": [
+        {
+          "side": "nestimate",
+          "path": "nestimate/script.R",
+          "bytes": 287,
+          "sha256": "d0a94c1c8113f2ab8f65e315d6d812b02b2d2daf98645b804d2d93cb18f0c4e0",
+          "label": "Script",
+          "type": "code",
+          "language": "r",
+          "run": {
+            "engine": "r",
+            "result": "result",
+            "reads": [
+              "data/srl_strategies.csv"
+            ]
+          }
+        },
+        {
+          "side": "qgraph",
+          "path": "qgraph/script.R",
+          "bytes": 519,
+          "sha256": "770244260b249175a6b951e43257c0f051c9bf939f2afe1b9c2a35321ec85a1e",
+          "label": "Script",
+          "type": "code",
+          "language": "r",
+          "run": {
+            "engine": "r",
+            "result": "result",
+            "reads": [
+              "data/srl_strategies.csv"
+            ]
+          }
+        },
+        {
+          "side": "glasso",
+          "path": "glasso/script.R",
+          "bytes": 967,
+          "sha256": "fd2974c0878e024560645d257492ff624d401ac06cab82926e5ace7d0515a41d",
+          "label": "Script",
+          "type": "code",
+          "language": "r",
+          "run": {
+            "engine": "r",
+            "result": "result",
+            "reads": [
+              "data/srl_strategies.csv"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "output",
+      "title": "Raw output",
+      "items": [
+        {
+          "side": "nestimate",
+          "path": "nestimate/console.txt",
+          "bytes": 4438,
+          "sha256": "9321216a90af56a402636292875abe53b8e12732bf843bc6cfed355d2eedb8a7",
+          "label": "R console",
+          "type": "text"
+        },
+        {
+          "side": "qgraph",
+          "path": "qgraph/console.txt",
+          "bytes": 1429,
+          "sha256": "38f305591f5c94a451cb0abb02749ed28791f9f0a9e25ba9475ce03f1ccd9cac",
+          "label": "R console",
+          "type": "text"
+        },
+        {
+          "side": "glasso",
+          "path": "glasso/console.txt",
+          "bytes": 1908,
+          "sha256": "bc8640ac722adf91bbe7d0dce1f2e890b041871dadc32c2c593630b158b3e756",
+          "label": "R console",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "id": "data",
+      "title": "Data",
+      "items": [
+        {
+          "path": "data/srl_strategies.csv",
+          "bytes": 6467,
+          "sha256": "c112926eb699da1fe5212971aff08ac45eca970ad90feea4e81dcad186990ca9",
+          "label": "Self-regulated learning scores"
+        }
+      ]
+    }
+  ],
+  "comparisons": [
+    {
+      "quantity": "Time_Mgmt -- Effort_Reg",
+      "kind": "partial correlation",
+      "values": {
+        "nestimate": 0.324915141442701,
+        "qgraph": 0.324915147224107,
+        "glasso": 0.324915141442405
+      },
+      "difference": 5.78170217258034e-09,
+      "measure": "absolute",
+      "tolerance": 0.0001,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "Monitoring -- Evaluating",
+      "kind": "partial correlation",
+      "values": {
+        "nestimate": 0.300497601545973,
+        "qgraph": 0.300497622673419,
+        "glasso": 0.300497601539449
+      },
+      "difference": 2.1133969685394e-08,
+      "measure": "absolute",
+      "tolerance": 0.0001,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "Elaboration -- Organization",
+      "kind": "partial correlation",
+      "values": {
+        "nestimate": 0.262324527760556,
+        "qgraph": 0.262324533786615,
+        "glasso": 0.262324527753193
+      },
+      "difference": 6.03342192873058e-09,
+      "measure": "absolute",
+      "tolerance": 0.0001,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "Planning -- Monitoring",
+      "kind": "partial correlation",
+      "values": {
+        "nestimate": 0.229019560250022,
+        "qgraph": 0.229018614318967,
+        "glasso": 0.229019560281699
+      },
+      "difference": 9.45962732507022e-07,
+      "measure": "absolute",
+      "tolerance": 0.0001,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "Elaboration -- Rehearsal",
+      "kind": "partial correlation",
+      "values": {
+        "nestimate": 0.157602048786906,
+        "qgraph": 0.157602056127814,
+        "glasso": 0.157602048787943
+      },
+      "difference": 7.34090851994829e-09,
+      "measure": "absolute",
+      "tolerance": 0.0001,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "Evaluating -- Organization",
+      "kind": "partial correlation",
+      "values": {
+        "nestimate": 0.154431279483272,
+        "qgraph": 0.154431282791181,
+        "glasso": 0.154431279502531
+      },
+      "difference": 3.30790889124799e-09,
+      "measure": "absolute",
+      "tolerance": 0.0001,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "Organization -- Rehearsal",
+      "kind": "partial correlation",
+      "values": {
+        "nestimate": 0.152328401505916,
+        "qgraph": 0.152328399068508,
+        "glasso": 0.152328401509117
+      },
+      "difference": 2.44060957554915e-09,
+      "measure": "absolute",
+      "tolerance": 0.0001,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "Planning -- Time_Mgmt",
+      "kind": "partial correlation",
+      "values": {
+        "nestimate": 0.13034666294683,
+        "qgraph": 0.130346496301947,
+        "glasso": 0.13034666298471
+      },
+      "difference": 1.66682763313997e-07,
+      "measure": "absolute",
+      "tolerance": 0.0001,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "Planning -- Evaluating",
+      "kind": "partial correlation",
+      "values": {
+        "nestimate": 0.129537126542044,
+        "qgraph": 0.12953763013779,
+        "glasso": 0.129537126542077
+      },
+      "difference": 5.03595745965368e-07,
+      "measure": "absolute",
+      "tolerance": 0.0001,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "Evaluating -- Effort_Reg",
+      "kind": "partial correlation",
+      "values": {
+        "nestimate": 0.0930959771025487,
+        "qgraph": 0.0930959776602414,
+        "glasso": 0.0930959771233708
+      },
+      "difference": 5.57692697578105e-10,
+      "measure": "absolute",
+      "tolerance": 0.0001,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "Help_Seeking -- Time_Mgmt",
+      "kind": "partial correlation",
+      "values": {
+        "nestimate": 0.0651206148813043,
+        "qgraph": 0.0651206142464545,
+        "glasso": 0.065120614881494
+      },
+      "difference": 6.35039520968661e-10,
+      "measure": "absolute",
+      "tolerance": 0.0001,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "Monitoring -- Elaboration",
+      "kind": "partial correlation",
+      "values": {
+        "nestimate": 0.0388184048569048,
+        "qgraph": 0.0388184525598797,
+        "glasso": 0.0388184048708147
+      },
+      "difference": 4.77029749382241e-08,
+      "measure": "absolute",
+      "tolerance": 0.0001,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    },
+    {
+      "quantity": "Help_Seeking -- Effort_Reg",
+      "kind": "partial correlation",
+      "values": {
+        "nestimate": 0.0195613441206973,
+        "qgraph": 0.0195613457141313,
+        "glasso": 0.0195613441211223
+      },
+      "difference": 1.5934340617807e-09,
+      "measure": "absolute",
+      "tolerance": 0.0001,
+      "rule": "largest difference between any two sides",
+      "status": "agree"
+    }
+  ]
+}
