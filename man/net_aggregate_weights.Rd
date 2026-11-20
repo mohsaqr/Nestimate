@@ -2,7 +2,7 @@
 % Please edit documentation in R/mcml.R
 \name{net_aggregate_weights}
 \alias{net_aggregate_weights}
-\title{Aggregate Edge Weights}
+\title{Aggregate edge weights into one value}
 \usage{
 net_aggregate_weights(w, method = "sum", n_possible = NULL)
 }

@@ -3,7 +3,7 @@
 \name{hypergraph_measures}
 \alias{hypergraph_measures}
 \alias{print.hypergraph_measures}
-\title{Structural measures for a hypergraph}
+\title{Compute the structural measures of a hypergraph}
 \usage{
 hypergraph_measures(hg)
 

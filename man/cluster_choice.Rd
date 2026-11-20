@@ -5,7 +5,7 @@
 \alias{print.cluster_choice}
 \alias{summary.cluster_choice}
 \alias{plot.cluster_choice}
-\title{Compare Clusterings Across k, Dissimilarity and Method}
+\title{Compare clusterings across k, dissimilarities and methods}
 \usage{
 cluster_choice(
   data,

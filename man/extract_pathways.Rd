@@ -2,7 +2,7 @@
 % Please edit documentation in R/extract_pathways.R
 \name{extract_pathways}
 \alias{extract_pathways}
-\title{Cut an Event Log into Pathways}
+\title{Cut an event log into pathways}
 \usage{
 extract_pathways(
   data,

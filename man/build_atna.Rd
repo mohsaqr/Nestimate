@@ -2,7 +2,7 @@
 % Please edit documentation in R/estimate_network.R
 \name{build_atna}
 \alias{build_atna}
-\title{Build an Attention-Weighted Transition Network (ATNA)}
+\title{Estimate an attention-weighted transition network}
 \usage{
 build_atna(
   data,
@@ -12,14 +12,19 @@ build_atna(
   action = NULL,
   time = NULL,
   session = NULL,
-  ...
+  ...,
+  group = NULL,
+  state_cols = NULL,
+  time_threshold = 900,
+  scaling = NULL,
+  threshold = 0,
+  params = list()
 )
 }
 \arguments{
 \item{data}{The sequences: a data frame with one row per sequence and one
 column per position, or an event log (one row per event, with \code{action}
-set). Column roles are declared as in \code{\link[=build_network]{build_network()}}.
-One-hot data and matrices are refused.}
+set). One-hot data and matrices are refused.}
 
 \item{start}{A start state put before every sequence, so the network
 shows where sequences begin. \code{FALSE} (default) adds none, \code{TRUE} adds
@@ -47,9 +52,39 @@ Default \code{NULL}.}
 \item{session}{The column identifying sessions in an event log; each
 session is its own sequence, also without \code{actor}. Default \code{NULL}.}
 
-\item{...}{Further arguments for \code{\link[=build_network]{build_network()}}, such as \code{group},
-\code{params}, \code{scaling}, \code{threshold} or \code{state_cols}. \code{method} cannot be
-given: it is always \code{"attention"} (error of class \code{nestimate_bad_input}).}
+\item{...}{Further arguments for \code{\link[=build_network]{build_network()}}, such as \code{labels},
+\code{metadata_cols} or \code{timezone}. \code{method} cannot be given: it is always
+\code{"attention"} (error of class \code{nestimate_bad_input}).}
+
+\item{group}{A column to split the data by: one network is estimated per
+value and the result is a \code{netobject_group}. Default \code{NULL}.}
+
+\item{state_cols}{The columns of a wide table that are sequence
+positions; every other column goes to the network's metadata. Declared
+columns are positions even when they hold only 0 and 1. With nothing
+declared, the position columns must be named as a numbered run (\code{T1},
+\code{T2}, ... or \code{1}, \code{2}, ...), and any other frame raises an error of
+class \code{nestimate_bad_input}. Default \code{NULL}.}
+
+\item{time_threshold}{The longest gap, in seconds, between two events of
+the same sequence in an event log; a longer gap starts a new sequence.
+\code{FALSE} turns the split off, so each actor (or actor-session) is one
+sequence. Default \code{900}.}
+
+\item{scaling}{Rescaling applied to the weights after estimation, in the
+order given: \code{"minmax"} maps the non-zero weights into (0, 1],
+\code{"max"} divides by the largest absolute weight, \code{"rank"} replaces the
+non-zero weights by their ranks, and \code{"normalize"} makes each row's
+absolute weights sum to 1. Zero weights stay zero under every option.
+Combine them as in \code{c("rank", "minmax")}. Default \code{NULL} (none).}
+
+\item{threshold}{Weights whose absolute value is below this are set to
+zero. Default \code{0} (none).}
+
+\item{params}{Settings for the estimator, as a named list: \code{lambda},
+\code{direction}, \code{duration}, \code{time_matrix} and \code{decay}, as described above.
+The network stores them, so \code{\link[=bootstrap_network]{bootstrap_network()}} and the other
+resampling verbs re-estimate with the same settings. Default \code{list()}.}
 }
 \value{
 A \code{netobject} (a \code{netobject_group} with \code{group}), exactly as
@@ -79,7 +114,26 @@ to 1. Check how far they move under resampling with
 \examples{
 net <- build_atna(trajectories)
 net
+
+slow_decay <- build_atna(trajectories, params = list(lambda = 2),
+                         scaling = "normalize")
+slow_decay
+}
+\references{
+Saqr, M., L\enc{ó}{o}pez-Pernas, S., T\enc{ö}{o}rm\enc{ä}{a}nen, T.,
+Kaliisa, R., Misiejuk, K., & Tikka, S. (2025). Transition network
+analysis: A novel framework for modeling, visualizing, and identifying the
+temporal patterns of learners and learning processes. In
+\emph{Proceedings of the 15th International Learning Analytics and
+Knowledge Conference (LAK25)} (pp. 351--361). ACM.
+\doi{10.1145/3706468.3706513}
+
+Tikka, S., L\enc{ó}{o}pez-Pernas, S., & Saqr, M. (2025). tna: An R
+package for transition network analysis. \emph{Applied Psychological
+Measurement}. \doi{10.1177/01466216251348840}
 }
 \seealso{
-\code{\link{build_network}}
+\code{\link[=build_network]{build_network()}} for every method; \code{\link[=build_tna]{build_tna()}},
+\code{\link[=build_ftna]{build_ftna()}} and \code{\link[=build_cna]{build_cna()}} for the other transition networks;
+\code{\link[=bootstrap_network]{bootstrap_network()}} and \code{\link[=permutation]{permutation()}} for inference.
 }

@@ -5,7 +5,7 @@
 \alias{summary.net_landscape_surface}
 \alias{print.net_landscape_surface}
 \alias{plot.net_landscape_surface}
-\title{Stability Landscape Across a Stability Measure}
+\title{Trace a stability landscape across a sequence measure}
 \usage{
 landscape_surface(
   x,
@@ -27,7 +27,7 @@ landscape_surface(
 \code{\link[=build_network]{build_network()}} with method \code{"relative"} or \code{"frequency"} (or a bare
 \code{cograph_network} of one), a grouped one (\code{netobject_group}), a \code{tna}
 model or a \code{group_tna} (one landscape per group), or a wide sequence data frame or matrix. A network must count one-step transitions (a
-windowed one raises an error) and carry its
+window wider than one position raises an error) and carry its
 sequences; a network of another method (for example \code{"glasso"}) raises
 an error of class \code{nestimate_not_markov}. For the \code{print()} and \code{plot()}
 methods: a \code{net_landscape_surface} object.}

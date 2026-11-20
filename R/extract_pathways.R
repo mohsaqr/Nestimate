@@ -15,7 +15,7 @@
 
 utils::globalVariables(c("..pid", "..pos"))
 
-#' Cut an Event Log into Pathways
+#' Cut an event log into pathways
 #'
 #' @description
 #' `extract_pathways()` cuts a long event log into pathways, runs of

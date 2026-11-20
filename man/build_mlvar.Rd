@@ -5,7 +5,7 @@
 \alias{print.net_mlvar}
 \alias{summary.net_mlvar}
 \alias{plot.net_mlvar}
-\title{Build a Multilevel Vector Autoregression (mlVAR) network}
+\title{Estimate multilevel vector autoregression networks}
 \usage{
 build_mlvar(
   data,

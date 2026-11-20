@@ -1,4 +1,4 @@
-#' The session behind each sequence
+#' Identify the session behind each sequence
 #'
 #' @description
 #' `session_ids()` names every sequence of a network, or of a clustering

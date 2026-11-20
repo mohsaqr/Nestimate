@@ -1,6 +1,6 @@
 # ---- Link Prediction for Network Objects ----
 
-#' Predict Missing or Future Links in a Network
+#' Predict missing or future links in a network
 #'
 #' @description
 #' `predict_links()` scores every pair of nodes for how strongly the
@@ -498,7 +498,7 @@ predict_links <- function(x,
 
 # ---- Evaluation ----
 
-#' Evaluate Link Predictions Against Known Edges
+#' Evaluate link predictions against known edges
 #'
 #' @description
 #' `evaluate_links()` measures how well each index of a [predict_links()]

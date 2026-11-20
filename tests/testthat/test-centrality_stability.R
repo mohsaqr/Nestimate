@@ -66,7 +66,8 @@ test_that("centrality.netobject returns correct directed defaults (L163-177)", {
     V3 = c("C","A","C","B","A","C")
   )
   net <- build_network(seqs, method = "relative")
-  c1 <- net_centrality(net)
+  # every state is visited in turn, so Diffusion is constant and warns
+  c1 <- expect_warnings_of_class(net_centrality(net), "nestimate_constant_measure")
   expect_true(is.data.frame(c1))
   expect_s3_class(c1, "net_centrality")
   expect_equal(nrow(c1), 3)
@@ -74,7 +75,8 @@ test_that("centrality.netobject returns correct directed defaults (L163-177)", {
   expect_identical(setdiff(names(c1), "state"),
                    c("InStrength", "Betweenness", "Diffusion"))
   # measures = "all" expands to every built-in measure
-  c_all <- net_centrality(net, measures = "all")
+  c_all <- expect_warnings_of_class(net_centrality(net, measures = "all"),
+                                   "nestimate_constant_measure")
   expect_true(all(c("InStrength", "OutStrength", "Betweenness",
                     "BetweennessRSP", "Diffusion", "Clustering") %in%
                     names(c_all)))
@@ -102,7 +104,7 @@ test_that("centrality.netobject_group returns list of data frames (L185-188)", {
     grp = c("X","X","X","Y","Y","Y")
   )
   nets <- build_network(seqs, method = "relative", group = "grp")
-  c3 <- net_centrality(nets)
+  c3 <- expect_warnings_of_class(net_centrality(nets), "nestimate_constant_measure")
   expect_true(is.list(c3))
   expect_s3_class(c3, "net_centrality_group")
   expect_equal(length(c3), 2)
@@ -150,9 +152,9 @@ test_that("net_centrality plots work for single and grouped outputs", {
     grp = c("X","X","X","Y","Y","Y")
   )
   net <- build_network(seqs[1:3], method = "relative")
-  cent <- suppressMessages(net_centrality(
+  cent <- expect_warnings_of_class(suppressMessages(net_centrality(
     net, measures = c("InStrength", "OutStrength", "Diffusion")
-  ))
+  )), "nestimate_constant_measure")
   expect_s3_class(plot(cent), "ggplot")
   expect_s3_class(plot(cent, type = "line"), "ggplot")
   expect_s3_class(plot(cent, type = "profile"), "ggplot")  # back-compat alias
@@ -160,9 +162,9 @@ test_that("net_centrality plots work for single and grouped outputs", {
   expect_s3_class(plot(cent, type = "bar", drop_zero = TRUE), "ggplot")
 
   nets <- build_network(seqs, method = "relative", group = "grp")
-  cents <- suppressMessages(net_centrality(
+  cents <- expect_warnings_of_class(suppressMessages(net_centrality(
     nets, measures = c("InStrength", "OutStrength", "Diffusion")
-  ))
+  )), "nestimate_constant_measure")
   expect_s3_class(plot(cents), "ggplot")
   expect_s3_class(plot(cents, type = "line"), "ggplot")
   expect_s3_class(plot(cents, type = "profile"), "ggplot")  # back-compat alias

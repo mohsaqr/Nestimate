@@ -8,7 +8,7 @@
 \alias{global_differences}
 \alias{network_metrics}
 \alias{print.net_table}
-\title{Tables of a network comparison}
+\title{Tabulate the results of a network comparison}
 \usage{
 \method{summary}{net_network_comparison}(object, pair = NULL, digits = 2L, ...)
 
@@ -79,11 +79,16 @@ inference rows and columns.
 \code{\link[=compare_networks]{compare_networks()}} describes every column under \emph{Details} and \emph{Value}.
 }
 \description{
-\code{summary()}, \code{edge_differences()}, \code{node_differences()},
-\code{global_differences()} and \code{network_metrics()} return the tables of a
-comparison made with \code{\link[=compare_networks]{compare_networks()}}: one row per pair, per pair and
-cell, per pair, node and measure, per pair and metric, and per network
-and structural metric. Each is a data frame with no row names, numeric
+\code{edge_differences()} and its sibling verbs return the tables of a \code{\link[=compare_networks]{compare_networks()}} result:
+\itemize{
+\item \code{summary()}: one row per pair;
+\item \code{edge_differences()}: one row per pair and cell;
+\item \code{node_differences()}: one row per pair, node and measure;
+\item \code{global_differences()}: one row per pair and metric;
+\item \code{network_metrics()}: one row per network and structural metric.
+}
+
+Each is a data frame with no row names, numeric
 columns rounded to \code{digits} decimals and p-value and
 probability-of-direction columns left unrounded.
 All but \code{network_metrics()} select pairs with the same \code{pair} argument as

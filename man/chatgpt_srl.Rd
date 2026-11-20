@@ -3,7 +3,7 @@
 \docType{data}
 \name{chatgpt_srl}
 \alias{chatgpt_srl}
-\title{ChatGPT Self-Regulated Learning Scale Scores}
+\title{ChatGPT scores on self-regulated learning scales}
 \format{
 A data frame with 1,000 rows and 5 columns, one row per
 response; each column is the numeric mean of one scale's items (13
@@ -28,8 +28,9 @@ LLM-generated survey responses. \emph{Computers in Human Behavior},
 chatgpt_srl
 }
 \description{
-Scores on five self-regulated learning (SRL) scales for 1,000 responses
-that ChatGPT generated to a validated SRL questionnaire. The data are
+\code{chatgpt_srl} is a dataset of the scores on five self-regulated learning
+(SRL) scales of 1,000 responses that ChatGPT generated to a validated SRL
+questionnaire, one row per response and one column per scale. The data are
 part of a larger set comparing the responses of seven large language
 models with human norms.
 }

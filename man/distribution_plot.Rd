@@ -2,7 +2,7 @@
 % Please edit documentation in R/distribution_plot.R
 \name{distribution_plot}
 \alias{distribution_plot}
-\title{State Distribution Plot Over Time}
+\title{Draw a state distribution plot}
 \usage{
 distribution_plot(
   x,

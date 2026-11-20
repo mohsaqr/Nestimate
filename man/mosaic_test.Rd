@@ -9,7 +9,7 @@
 \alias{mosaic_test.array}
 \alias{mosaic_test.table}
 \alias{mosaic_test.data.frame}
-\title{Association tests for a mosaic, with and without clustering}
+\title{Test the association of a mosaic with and without clustering}
 \usage{
 mosaic_test(x, ...)
 
@@ -67,8 +67,11 @@ sequences), a \code{netobject_group}, a three-way
 mirrored cells and the pairs of a sequence share its positions, so its
 counts are not independent and the tests would not hold their level
 (under independence Pearson's test rejected 200 of 200 simulated tables
-at 0.05). \code{\link[=mosaic_plot]{mosaic_plot()}} still draws it.
-A \code{tna} model or a \code{group_tna} (package tna) is first rebuilt as a network from its own sequences (see \code{\link[=as_netobject]{as_netobject()}}). \code{actor} is read from the metadata the model keeps (\code{attr(model$data, "meta")}, kept when the model is built from \code{tna::prepare_data()}); a model without it raises \code{nestimate_actor_missing}.}
+at 0.05). \code{\link[=mosaic_plot]{mosaic_plot()}} still draws it. A \code{tna} model or a
+\code{group_tna} (package tna) is first rebuilt as a network from its own
+sequences (see \code{\link[=as_netobject]{as_netobject()}}).
+\code{actor} is read from the metadata the model keeps (\code{attr(model$data, "meta")}, kept when the model is built from \code{tna::prepare_data()}); a
+model without it raises \code{nestimate_actor_missing}.}
 
 \item{...}{Not used; a name given here raises an error of class
 \code{nestimate_bad_input}.}

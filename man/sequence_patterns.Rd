@@ -2,7 +2,7 @@
 % Please edit documentation in R/sequence_patterns.R
 \name{sequence_patterns}
 \alias{sequence_patterns}
-\title{Discover Sequential Patterns}
+\title{Discover sequential patterns}
 \usage{
 sequence_patterns(
   x,
@@ -54,14 +54,10 @@ with, one of them at least; wildcards do not count. Default \code{NULL}
 Default \code{NULL} (any).}
 
 \item{pattern}{A template to search for instead of discovering all
-patterns, such as \code{"discuss->*->consensus"}: each \code{*} is one position
-holding any state (\verb{**} is two). Every concrete instance is returned
-as its own row (\code{"discuss->plan->consensus"}, ...). States are joined
+patterns. Each \code{*} stands for one position holding any state (\verb{**} for two), so \code{"A->*->B"} finds every three-state pattern from \code{A} to \code{B}, each concrete instance as its own row. States are joined
 by \code{"->"} (spaces around it are allowed), and a template may mix fixed
 states and wildcards or hold no wildcard at all. \code{type}, \code{len} and
-\code{gap} are then ignored. An empty template, or one with an empty step
-such as \code{"A->->B"} or a leading or trailing \code{"->"}, raises an error of
-class \code{nestimate_bad_input}. Default \code{NULL}.}
+\code{gap} are then ignored. A template with an empty step, such as \code{"A->->B"}, raises \code{nestimate_bad_input}. Default \code{NULL}.}
 
 \item{group}{The grouping of the sequences for the group test: the name
 of a column stored with them (a covariate of a wide data frame or long
@@ -91,8 +87,7 @@ first in the output order. Default \code{NULL} (all).}
 \code{\link[=extract_sequences]{extract_sequences()}}. Default \code{NULL}.}
 
 \item{actor, action, time}{The actor, action and timestamp columns of a
-long event log, as in \code{\link[=extract_sequences]{extract_sequences()}}: setting \code{action} declares
-\code{x} an event log. Default \code{NULL}.}
+long event log; setting \code{action} marks \code{x} as one. Default \code{NULL}.}
 
 \item{...}{Further arguments passed to \code{\link[=prepare]{prepare()}} for a long event log,
 such as \code{time_threshold} or \code{order}.}

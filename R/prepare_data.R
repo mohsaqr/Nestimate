@@ -1,4 +1,4 @@
-#' Prepare Event Log Data for Network Estimation
+#' Prepare an event log for network estimation
 #'
 #' @description
 #' `prepare()` turns an event log (one row per event: the action, and
@@ -54,10 +54,7 @@
 #'   `nestimate_bad_input`. With `FALSE` (default), text is matched to the
 #'   date layouts first and read as a Unix timestamp only when it matches
 #'   none. A numeric `time` column is always read as Unix timestamps.
-#' @param unix_time_unit The unit of Unix timestamps: `"seconds"` (default),
-#'   `"milliseconds"` or `"microseconds"`. A numeric `time` column that gives
-#'   dates after the year 2500 raises a warning of class
-#'   `nestimate_time_unit`, the usual sign of the wrong unit.
+#' @param unix_time_unit The unit of numeric timestamps. Default `"seconds"`; also `"milliseconds"` or `"microseconds"`. Dates after the year 2500, the usual sign of the wrong unit, raise the warning `nestimate_time_unit`.
 #' @param timezone The Olson time zone (see [OlsonNames()]) in which
 #'   timestamps without zone information are read and Unix timestamps are
 #'   expressed. Timestamps that end in `Z`, `UTC`, `GMT` or a numeric offset

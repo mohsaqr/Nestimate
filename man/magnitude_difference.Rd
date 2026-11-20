@@ -4,7 +4,7 @@
 \alias{magnitude_difference}
 \alias{print.magnitude_difference}
 \alias{plot.magnitude_difference}
-\title{Magnitude difference between the frequency and probability views}
+\title{Measure how far frequency and probability networks disagree}
 \usage{
 magnitude_difference(
   data,
@@ -63,11 +63,12 @@ raised.}
 object.}
 
 \item{...}{For the \code{plot()} method: further settings of the drawing.
-\code{"stacked"} takes \code{threshold} (the magnitude marked "small" in the
-colour key, default 10\% of the largest), \code{r_inner},
-\code{r_outer}, \code{gap_rad}, \code{label_offset}, \code{label_size} and
-\code{src_label_size}; \code{"circular"} takes \code{self_loops} (default \code{TRUE}),
-\code{label_offset} and \code{edge_curve}. The \code{print()} method ignores it.}
+\itemize{
+\item \code{"stacked"}: \code{threshold} (the magnitude marked "small" in the colour key, default 10\% of the largest), the radii \code{r_inner}, \code{r_outer} and \code{gap_rad}, and the labels \code{label_offset}, \code{label_size} and \code{src_label_size};
+\item \code{"circular"}: \code{self_loops} (default \code{TRUE}), \code{label_offset} and \code{edge_curve}.
+}
+
+The \code{print()} method ignores it.}
 
 \item{type}{For the \code{plot()} method: the kind of plot. \code{"stacked"}
 (default) is a polar portrait with one sector per source state and one

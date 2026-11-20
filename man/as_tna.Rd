@@ -4,7 +4,7 @@
 \alias{as_tna}
 \alias{as_tna.mcml}
 \alias{as_tna.default}
-\title{Promote the Layers of an mcml to Networks}
+\title{Convert the layers of an MCML model to a group of networks}
 \usage{
 as_tna(x, ...)
 
@@ -41,7 +41,10 @@ counts (\code{type} \code{"raw"}, \code{"frequency"} or \code{"cooccurrence"}) a
 aggregates of \code{\link[=cluster_summary]{cluster_summary()}}. An undirected \code{mcml} (\code{type = "cooccurrence"} or \code{directed = FALSE}) also records
 \code{params$symmetrize = TRUE}, and one built from a weighted edge list
 carries the edge weights in its data, so the resampling verbs recount
-each layer as it was fitted. With
+each layer as it was fitted. An \code{mcml} built with a \code{method} other
+than \code{"sum"} records it as \code{params$aggregation}, so
+\code{\link[=bootstrap_network]{bootstrap_network()}} combines the transitions of each resample the
+same way. With
 \code{expand}, the \code{macro} element is the mixed-resolution network of
 \code{\link[=macro_network]{macro_network()}} instead of the fully collapsed one. The default
 method returns a \code{tna} model unchanged and raises an error for any

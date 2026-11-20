@@ -2,7 +2,7 @@
 % Please edit documentation in R/simplicial.R
 \name{euler_characteristic}
 \alias{euler_characteristic}
-\title{Euler Characteristic}
+\title{Compute the Euler characteristic of a simplicial complex}
 \usage{
 euler_characteristic(sc)
 }

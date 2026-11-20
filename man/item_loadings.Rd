@@ -3,7 +3,7 @@
 \name{item_loadings}
 \alias{item_loadings}
 \alias{item_loadings.mcml_pc}
-\title{Item Diagnostics From a Psychometric MCML Fit}
+\title{Tabulate the item loadings of a psychometric MCML fit}
 \usage{
 item_loadings(x, ...)
 

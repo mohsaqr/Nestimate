@@ -2,7 +2,7 @@
 % Please edit documentation in R/data_conversion.R
 \name{long_to_wide}
 \alias{long_to_wide}
-\title{Convert Long Format to Wide Sequences}
+\title{Convert long event data to wide sequences}
 \usage{
 long_to_wide(
   data,

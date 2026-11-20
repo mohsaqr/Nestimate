@@ -8,7 +8,7 @@
 \alias{print.summary.net_mpt}
 \alias{plot.net_mpt}
 \alias{plot.net_mpt_group}
-\title{Mean First Passage Times}
+\title{Compute the mean first passage times of a Markov chain}
 \usage{
 passage_time(x, states = NULL, normalize = TRUE)
 

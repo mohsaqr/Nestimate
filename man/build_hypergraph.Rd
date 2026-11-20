@@ -4,7 +4,7 @@
 \alias{build_hypergraph}
 \alias{print.net_hypergraph}
 \alias{summary.net_hypergraph}
-\title{Higher-order hypergraph from a network's clique structure}
+\title{Build a hypergraph from a network's cliques}
 \usage{
 build_hypergraph(
   net,
@@ -23,11 +23,11 @@ build_hypergraph(
 \arguments{
 \item{net}{The network: a \code{netobject}, bare \code{cograph_network},
 \code{simplicial_complex} (its edges are read as ties of weight 1 and the
-cliques are found again up to \code{max_size}), or a numeric or logical adjacency or weight
-matrix (nodes are named \code{V1}, \code{V2}, ... when it has no row names). A
-tie counts in either direction, so a directed network is symmetrised,
-and self-loops are ignored.
-A \code{tna} model (package tna) is first rebuilt as a network from its own sequences (see \code{\link[=as_netobject]{as_netobject()}}).}
+cliques are found again up to \code{max_size}), or a numeric or logical
+adjacency or weight matrix (nodes are named \code{V1}, \code{V2}, ... when it has no
+row names). A tie counts in either direction, so a directed network is
+symmetrised, and self-loops are ignored. A \code{tna} model (package tna) is
+first rebuilt as a network from its own sequences (see \code{\link[=as_netobject]{as_netobject()}}).}
 
 \item{p}{The probability that each clique of 3 or more nodes becomes a
 hyperedge, a number in \verb{[0, 1]}; each clique is kept or dropped
@@ -91,9 +91,7 @@ cliques to hyperedges: every set of 3 to \code{max_size} nodes that are all
 tied to each other becomes a hyperedge, kept with probability \code{p}, and
 the pairwise edges can be kept as hyperedges of size 2. It takes a
 \code{netobject}, a bare \code{cograph_network}, a \code{simplicial_complex} or an
-adjacency or weight matrix, and returns a \code{net_hypergraph}, the input of
-the hypergraph verbs such as \code{\link[=hypergraph_measures]{hypergraph_measures()}},
-\code{\link[=hypergraph_centrality]{hypergraph_centrality()}} and \code{\link[=clique_expansion]{clique_expansion()}}.
+adjacency or weight matrix, and returns a \code{net_hypergraph}, the input of \code{\link[=hypergraph_measures]{hypergraph_measures()}} and the other hypergraph verbs.
 
 A hyperedge built this way records that every pair of its nodes is tied
 in the thresholded network; a pairwise network cannot show whether those

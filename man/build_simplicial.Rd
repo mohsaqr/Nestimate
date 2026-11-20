@@ -4,7 +4,7 @@
 \alias{build_simplicial}
 \alias{print.simplicial_complex}
 \alias{plot.simplicial_complex}
-\title{Build a Simplicial Complex}
+\title{Build a simplicial complex}
 \usage{
 build_simplicial(
   x,
@@ -39,11 +39,7 @@ weights are never edges. Default \code{0}. Ignored for \code{"vr"}, which uses
 \code{max_scale}, and for \code{"pathway"}.}
 
 \item{max_dim}{The highest simplex dimension built (a k-simplex has k + 1
-nodes), a non-negative whole number. Default \code{10}. When a larger clique
-is cut at this dimension, the clique or Vietoris-Rips complex is marked
-truncated; \code{\link[=betti_numbers]{betti_numbers()}} then warns with class
-\code{nestimate_truncated_complex}, as does \code{\link[=persistent_homology]{persistent_homology()}} on a
-Vietoris-Rips complex. A pathway with more than \code{max_dim + 1} distinct
+nodes), a non-negative whole number. Default \code{10}. A larger clique is cut at this dimension and the complex is marked truncated; its top Betti number is then unreliable, and \code{\link[=betti_numbers]{betti_numbers()}} warns with \code{nestimate_truncated_complex}. A pathway with more than \code{max_dim + 1} distinct
 states is cut to its faces of that size, without the truncated mark.}
 
 \item{max_pathways}{For \code{type = "pathway"}, how many pathways to keep:
@@ -67,9 +63,7 @@ distance.}
 \item{...}{For \code{type = "pathway"} on a \code{tna} model or \code{netobject}: \code{method}
 (\code{"hon"}, the default, \code{"hypa"} or \code{"mogen"}) chooses the higher-order
 model built from it, and the other arguments go to \code{\link[=build_hon]{build_hon()}},
-\code{\link[=build_hypa]{build_hypa()}} or \code{\link[=build_mogen]{build_mogen()}}. Any other construction or input does
-not read \code{...} and warns with class \code{nestimate_ignored_argument} when it
-is given. For the \code{print()} and \code{plot()} methods: ignored.}
+\code{\link[=build_hypa]{build_hypa()}} or \code{\link[=build_mogen]{build_mogen()}}. Other constructions ignore \code{...} with a warning. For the \code{print()} and \code{plot()} methods: ignored.}
 
 \item{combined}{For the \code{plot()} method: \code{TRUE} (default) draws the four
 panels (f-vector, Betti numbers, simplicial degree per node and degree

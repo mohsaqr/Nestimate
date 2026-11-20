@@ -5,7 +5,7 @@
 \alias{print.mcml_pc}
 \alias{summary.mcml_pc}
 \alias{plot.mcml_pc}
-\title{Multi-Cluster Multi-Level Aggregation for Psychometric Networks}
+\title{Build an MCML model of a psychometric network}
 \usage{
 build_mcml_pc(
   x,
@@ -156,7 +156,11 @@ total.}
 \item{cor_method}{The correlation used when estimating from raw data:
 \code{"pearson"} (default), \code{"spearman"} or \code{"polychoric"} (needs
 \pkg{lavaan}; see Details). For a network, the correlation it was
-estimated with, unless given.}
+estimated with, unless given. A network estimated with another
+correlation (such as \code{"kendall"}) is read as it is when nothing is
+re-estimated, that is with \code{within = "subnetwork"} and any \code{weighting}
+but \code{"factor"}; otherwise it raises an error of class
+\code{nestimate_bad_input} unless \code{cor_method} is given.}
 
 \item{signed}{Whether reverse-keyed items are flipped in the cluster
 scores (see Details). Default \code{TRUE}.}
@@ -356,9 +360,7 @@ them without arrowheads.
 
 \itemize{
 \item \code{plot()} draws the macro (cluster-level) weights as a heatmap in the
-package's diverging palette, with each weight printed in its tile. For
-the two-layer network drawing use \code{cograph::plot_mcml()}, which accepts
-\code{mcml_pc} objects and draws them undirected.
+package's diverging palette, with each weight printed in its tile. \code{cograph::plot_mcml()} draws both layers as undirected networks.
 }
 }
 
@@ -399,8 +401,5 @@ Epskamp, S., & Fried, E. I. (2018). A tutorial on regularized partial
 correlation networks. \emph{Psychological Methods}, 23(4), 617-634.
 }
 \seealso{
-\code{\link{build_mcml}} for transition networks,
-\code{\link{loading_stability}} for composite-weight stability,
-\code{\link{bootstrap_network}} and \code{\link{vertex_bootstrap}}
-for uncertainty on the macro network.
+\code{\link[=build_mcml]{build_mcml()}} for transition networks; \code{\link[=loading_stability]{loading_stability()}} for the stability of the composite weights; \code{\link[=bootstrap_network]{bootstrap_network()}} and \code{\link[=vertex_bootstrap]{vertex_bootstrap()}} for the uncertainty of the macro network.
 }

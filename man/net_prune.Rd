@@ -5,7 +5,7 @@
 \alias{net_prune.netobject}
 \alias{net_prune.netobject_group}
 \alias{net_prune.default}
-\title{Prune a Network's Edges}
+\title{Prune weak or non-significant edges from a network}
 \usage{
 net_prune(
   x,
@@ -48,12 +48,12 @@ net_prune(
 )
 }
 \arguments{
-\item{x}{The network: a \code{netobject} or a \code{netobject_group}.
-A \code{tna} model or a \code{group_tna} (package tna) is first rebuilt as a network from its own sequences (see \code{\link[=as_netobject]{as_netobject()}}).
-Another class
-raises an error. A network whose pruning is active raises an error of
-class \code{nestimate_bad_input}; after \code{\link[=net_deprune]{net_deprune()}} it can be pruned
-again with other settings, which replaces its pruning record.}
+\item{x}{The network: a \code{netobject} or a \code{netobject_group}. A \code{tna} model or
+a \code{group_tna} (package tna) is first rebuilt as a network from its own
+sequences (see \code{\link[=as_netobject]{as_netobject()}}). Another class raises an error. A network
+whose pruning is active raises an error of class \code{nestimate_bad_input};
+after \code{\link[=net_deprune]{net_deprune()}} it can be pruned again with other settings, which
+replaces its pruning record.}
 
 \item{method}{The pruning method: \code{"threshold"} (default), \code{"lowest"},
 \code{"disparity"} or \code{"bootstrap"} (see \emph{Methods}).}
@@ -82,8 +82,7 @@ or its data differ), a single \code{net_bootstrap} for a group, or a group boots
 missing one of the networks raises an error of class
 \code{nestimate_bad_input}.}
 
-\item{...}{For \code{method = "bootstrap"} with \code{boot = NULL}: arguments
-passed to \code{\link[=bootstrap_network]{bootstrap_network()}}, such as \code{iter}. Ignored otherwise.}
+\item{...}{Arguments for \code{\link[=bootstrap_network]{bootstrap_network()}}, such as \code{iter}, when \code{method = "bootstrap"} and \code{boot = NULL}; ignored otherwise.}
 }
 \value{
 The input, of the same class, with the pruned weights, its edge

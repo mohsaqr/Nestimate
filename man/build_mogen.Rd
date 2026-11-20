@@ -5,7 +5,7 @@
 \alias{print.net_mogen}
 \alias{summary.net_mogen}
 \alias{plot.net_mogen}
-\title{Build Multi-Order Generative Model (MOGen)}
+\title{Fit a multi-order generative model to sequences}
 \usage{
 build_mogen(
   data,

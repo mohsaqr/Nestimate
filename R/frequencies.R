@@ -7,7 +7,7 @@
 # the function's own title with the header's and duplicating the
 # description.
 
-#' Build a Transition Frequency Matrix
+#' Count the transitions between states in sequences
 #'
 #' @description
 #' `frequencies()` counts how often each state is followed by each other
@@ -142,7 +142,7 @@ summary.nest_transition_counts <- function(object, ...) {
 }
 
 
-#' Convert Sequence Data to Different Formats
+#' Convert sequence data to counts, one-hot codes or transitions
 #'
 #' @description
 #' `convert_sequence_format()` turns wide or long sequence data into one of

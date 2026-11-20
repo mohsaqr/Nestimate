@@ -1,6 +1,6 @@
 # ---- MCML for Partial-Correlation / Psychometric Networks (EXPERIMENTAL) ----
 
-#' Multi-Cluster Multi-Level Aggregation for Psychometric Networks
+#' Build an MCML model of a psychometric network
 #'
 #' @description
 #' `build_mcml_pc()` collapses a psychometric network whose nodes are assigned
@@ -221,7 +221,11 @@
 #' @param cor_method The correlation used when estimating from raw data:
 #'   `"pearson"` (default), `"spearman"` or `"polychoric"` (needs
 #'   \pkg{lavaan}; see Details). For a network, the correlation it was
-#'   estimated with, unless given.
+#'   estimated with, unless given. A network estimated with another
+#'   correlation (such as `"kendall"`) is read as it is when nothing is
+#'   re-estimated, that is with `within = "subnetwork"` and any `weighting`
+#'   but `"factor"`; otherwise it raises an error of class
+#'   `nestimate_bad_input` unless `cor_method` is given.
 #' @param signed Whether reverse-keyed items are flipped in the cluster
 #'   scores (see Details). Default `TRUE`.
 #' @param fa_method The extraction method for `weighting = "factor"`; ignored
@@ -320,10 +324,7 @@
 #' Epskamp, S., & Fried, E. I. (2018). A tutorial on regularized partial
 #' correlation networks. \emph{Psychological Methods}, 23(4), 617-634.
 #'
-#' @seealso \code{\link{build_mcml}} for transition networks,
-#'   \code{\link{loading_stability}} for composite-weight stability,
-#'   \code{\link{bootstrap_network}} and \code{\link{vertex_bootstrap}}
-#'   for uncertainty on the macro network.
+#' @seealso [build_mcml()] for transition networks; [loading_stability()] for the stability of the composite weights; [bootstrap_network()] and [vertex_bootstrap()] for the uncertainty of the macro network.
 #'
 #' @examples
 #' set.seed(1)
@@ -459,6 +460,7 @@ build_mcml_pc <- function(x,
   pc_methods <- c("pcor", "glasso", "cor")
   method_given <- !missing(method)
   method <- match.arg(method)
+  net_cor_method <- NULL
 
   # ---- Resolve input: node-level network, raw data, estimator ----
   if (inherits(x, c("netobject", "cograph_network"))) {
@@ -471,19 +473,9 @@ build_mcml_pc <- function(x,
       method <- net_method
     }
     # The clusters are re-estimated, and resampled, with the correlation the
-    # node network was estimated with, unless another one is asked for.
+    # node network was estimated with, unless another one is asked for (see
+    # below, once it is known whether anything is re-estimated).
     net_cor_method <- .param_get(x$params, "cor_method")
-    if (!cor_method_given && !is.null(net_cor_method)) {
-      if (!net_cor_method %in% eval(formals(build_mcml_pc)$cor_method)) {
-        stop(errorCondition(
-          sprintf(paste0(
-            "The network was estimated with cor_method = \"%s\", which ",
-            "build_mcml_pc() does not support. Pass `cor_method` explicitly."),
-            net_cor_method),
-          class = "nestimate_bad_input", call = NULL))
-      }
-      cor_method <- net_cor_method
-    }
     if (isTRUE(x$directed)) {
       stop(errorCondition(
         paste0(
@@ -546,6 +538,27 @@ build_mcml_pc <- function(x,
   if (within == "reestimate" && !has_data) {
     within <- "subnetwork"
   }
+  # A network's own correlation is used wherever one is estimated: the
+  # within-cluster networks of within = "reestimate" and the factor
+  # extraction of weighting = "factor" (the score paths correlate the
+  # cluster scores by Pearson, and the descriptive paths average or slice
+  # the network's weights). Only those paths need a supported correlation.
+  if (!cor_method_given && !is.null(net_cor_method)) {
+    estimates_cor <- within == "reestimate" ||
+      (aggregation == "composite" && identical(weighting, "factor"))
+    if (estimates_cor &&
+        !net_cor_method %in% eval(formals(build_mcml_pc)$cor_method)) {
+      stop(errorCondition(
+        sprintf(paste0(
+          "The network was estimated with cor_method = \"%s\", which ",
+          "build_mcml_pc() does not support for re-estimating ",
+          "correlations (within = \"reestimate\" or weighting = \"factor\"). ",
+          "Pass `cor_method` explicitly, or use within = \"subnetwork\"."),
+          net_cor_method),
+        class = "nestimate_bad_input", call = NULL))
+    }
+    cor_method <- net_cor_method
+  }
 
   # ---- Normalize cluster membership ----
   members <- .pc_normalize_clusters(clusters, node_labels)
@@ -568,16 +581,20 @@ build_mcml_pc <- function(x,
   }
   misfit_items <- loadings_df$node[loadings_df$misfit]
   if (length(misfit_items) > 0) {
-    warning("Item(s) more strongly connected to another cluster than ",
-            "their own (possible misassignment): ",
-            paste(misfit_items, collapse = ", "),
-            ". See item_loadings(fit, misfit = TRUE).", call. = FALSE)
+    warning(warningCondition(paste0(
+      "Item(s) more strongly connected to another cluster than ",
+      "their own (possible misassignment): ",
+      paste(misfit_items, collapse = ", "),
+      ". See item_loadings(fit, misfit = TRUE)."),
+      class = "nestimate_item_misfit", call = NULL))
   }
   flipped_items <- loadings_df$node[loadings_df$sign < 0]
   if (signed && length(flipped_items) > 0 && aggregation == "composite") {
-    warning("Reverse-keyed item(s) flipped in composites: ",
-            paste(flipped_items, collapse = ", "),
-            ". See item_loadings() (column sign).", call. = FALSE)
+    warning(warningCondition(paste0(
+      "Reverse-keyed item(s) flipped in composites: ",
+      paste(flipped_items, collapse = ", "),
+      ". See item_loadings() (column sign)."),
+      class = "nestimate_reverse_keyed", call = NULL))
   }
 
   # ---- Macro network ----
@@ -914,12 +931,11 @@ build_mcml_pc <- function(x,
 }
 
 
-#' Composite-Weight Stability Under Case Resampling
+#' Bootstrap the item weights of a psychometric MCML fit
 #'
 #' @description
 #' `loading_stability()` bootstraps the item weights of a [build_mcml_pc()]
-#' fit and returns a `pc_loading_stability` object with each item's observed
-#' signed weight, its bootstrap mean and standard deviation, a percentile
+#' fit and returns, for each item, its observed signed weight, its bootstrap mean and standard deviation, a percentile
 #' interval and how often its sign flipped. Each replicate resamples the rows
 #' of the raw data with replacement, re-estimates the node-level network
 #' with the fit's estimator (`cor`, `pcor` or `glasso`; any other node-level
@@ -1211,9 +1227,7 @@ summary.mcml_pc <- function(object, ...) {
 #' @rdname build_mcml_pc
 #' @section Methods:
 #' * `plot()` draws the macro (cluster-level) weights as a heatmap in the
-#'   package's diverging palette, with each weight printed in its tile. For
-#'   the two-layer network drawing use `cograph::plot_mcml()`, which accepts
-#'   `mcml_pc` objects and draws them undirected.
+#'   package's diverging palette, with each weight printed in its tile. `cograph::plot_mcml()` draws both layers as undirected networks.
 #' @export
 plot.mcml_pc <- function(x, digits = 2, ...) {
   W <- x$macro$weights
@@ -1243,7 +1257,7 @@ plot.mcml_pc <- function(x, digits = 2, ...) {
 }
 
 
-#' Item Diagnostics From a Psychometric MCML Fit
+#' Tabulate the item loadings of a psychometric MCML fit
 #'
 #' @description
 #' `item_loadings()` returns the item table behind a [build_mcml_pc()] fit:
@@ -1327,7 +1341,7 @@ item_loadings.mcml_pc <- function(x, misfit = NULL, ...) {
 }
 
 
-#' Cluster Scores From a Psychometric MCML Fit
+#' Compute cluster scores from a psychometric MCML fit
 #'
 #' @description
 #' `composites()` returns the per-observation cluster scores that the macro
@@ -1393,7 +1407,7 @@ composites.mcml_pc <- function(x, ...) {
 }
 
 
-#' Promote a psychometric MCML result to a network group
+#' Convert a psychometric MCML fit to a group of networks
 #'
 #' @description
 #' `as_networks()` gathers the cluster-level (macro) network and the
@@ -1415,9 +1429,7 @@ composites.mcml_pc <- function(x, ...) {
 #'   or a `netobject_group`, which is returned unchanged. Any other object
 #'   raises an error.
 #'
-#' @return A `netobject_group`, read by `print()`, `summary()` and
-#'   [net_centrality()] and drawn by `cograph::splot()`: a named list whose
-#'   first element, `macro`, is the cluster-level network, followed by one
+#' @return A `netobject_group`, which [net_centrality()] and `cograph::splot()` read as any group of networks: a named list whose first element, `macro`, is the cluster-level network, followed by one
 #'   netobject per cluster with more than one member. A singleton cluster has no within-cluster network
 #'   and is left out, with a warning naming it.
 #'
@@ -1570,9 +1582,11 @@ as_networks.default <- function(x) {
               .pc_fa_loadings(data[, nodes, drop = FALSE], fa_method,
                               cor_method, fa_args),
               error = function(e) {
-                warning("Factor extraction (", fa_method, ") failed for ",
-                        "cluster '", cl, "' (", conditionMessage(e),
-                        "); falling back to \"pca\".", call. = FALSE)
+                warning(warningCondition(paste0(
+                  "Factor extraction (", fa_method, ") failed for ",
+                  "cluster '", cl, "' (", conditionMessage(e),
+                  "); falling back to \"pca\"."),
+                  class = "nestimate_fa_fallback", call = NULL))
                 .pc_first_pc(data[, nodes, drop = FALSE], cl)
               }
             )

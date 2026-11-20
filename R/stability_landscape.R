@@ -68,6 +68,24 @@ utils::globalVariables(c("u", "y", "ymin", "ymax", "label", "state", "group", "v
   pi[1L] * P[1L, 2L] - pi[2L] * P[2L, 1L]
 }
 
+# Whether a network's window, if it has one, counts one-step transitions.
+# The window the data records wins, as in .sequence_window(); otherwise the
+# declared one, whose width defaults to 2 and span to 1 there.
+#' @noRd
+.ls_one_step_window <- function(data, params) {
+  windowed <- isTRUE(attr(data, "windowed")) ||
+    !is.null(.param_get(params, "window_size")) ||
+    !is.null(.param_get(params, "window_span")) ||
+    isTRUE(.param_get(params, "windowed"))
+  if (!windowed) return(TRUE)
+  recorded <- isTRUE(attr(data, "windowed"))
+  size <- if (recorded) attr(data, "window_size") else NULL
+  span <- if (recorded) attr(data, "window_span") else NULL
+  size <- size %||% .param_get(params, "window_size", 2L)
+  span <- span %||% .param_get(params, "window_span", 1L)
+  identical(as.integer(size), 1L) && identical(as.integer(span), 1L)
+}
+
 #' @noRd
 # Replay sequence preparation before counting or selecting bootstrap units.
 .ls_sequences <- function(x, cols = NULL) {
@@ -91,11 +109,10 @@ utils::globalVariables(c("u", "y", "ymin", "ymax", "label", "state", "group", "v
   params <- x$params %||% list()
   # A cup's depth is the log expected stay in steps, from one-step
   # transitions; a windowed network counts transitions between blocks of
-  # positions, whose self-transitions are not stays.
-  if (isTRUE(attr(x$data, "windowed")) ||
-      !is.null(.param_get(params, "window_size")) ||
-      !is.null(.param_get(params, "window_span")) ||
-      isTRUE(.param_get(params, "windowed"))) {
+  # positions, whose self-transitions are not stays. Blocks of one position
+  # (width 1, span 1) are the positions themselves, so those counts are the
+  # one-step ones.
+  if (!.ls_one_step_window(x$data, params)) {
     .ls_bad(paste(
       "Landscapes need one-step transitions; this network counts them",
       "between windows of positions (`params$window_size`). Build it",
@@ -241,7 +258,7 @@ utils::globalVariables(c("u", "y", "ymin", "ymax", "label", "state", "group", "v
        n_sequences = nrow(states_mat), n_transitions = sum(pooled))
 }
 
-#' Stability Landscape of a Transition Network
+#' Estimate the stability landscape of a transition network
 #'
 #' @description
 #' `stability_landscape()` estimates the ball-in-cup landscape (Scheffer et
@@ -297,7 +314,7 @@ utils::globalVariables(c("u", "y", "ymin", "ymax", "label", "state", "group", "v
 #'   [build_network()] of a [build_clusters()] result), a `tna` model or a `group_tna` (one landscape
 #'   per group), or a
 #'   wide sequence data frame or matrix. A network must count one-step transitions (a
-#'   windowed one raises an error) and carry its sequences;
+#'   window wider than one position raises an error) and carry its sequences;
 #'   a network of another method (for example `"glasso"`) raises an error of
 #'   class `nestimate_not_markov`. For the `print()` and `plot()` methods: a
 #'   `net_landscape` object.
@@ -606,7 +623,7 @@ plot.net_landscape <- function(x, ...) {
   do.call(rbind, rows)
 }
 
-#' Stability Landscape Across a Stability Measure
+#' Trace a stability landscape across a sequence measure
 #'
 #' @description
 #' `landscape_surface()` traces the cups of [stability_landscape()] over a
@@ -649,7 +666,7 @@ plot.net_landscape <- function(x, ...) {
 #'   [build_network()] with method `"relative"` or `"frequency"` (or a bare
 #'   `cograph_network` of one), a grouped one (`netobject_group`), a `tna`
 #'   model or a `group_tna` (one landscape per group), or a wide sequence data frame or matrix. A network must count one-step transitions (a
-#'   windowed one raises an error) and carry its
+#'   window wider than one position raises an error) and carry its
 #'   sequences; a network of another method (for example `"glasso"`) raises
 #'   an error of class `nestimate_not_markov`. For the `print()` and `plot()`
 #'   methods: a `net_landscape_surface` object.
@@ -1007,7 +1024,7 @@ plot.net_landscape_surface <- function(x, max_stay = 50, theta = 10, phi = 30,
     n_used = length(keep))
 }
 
-#' Stability Landscape Along the Programme or a Covariate
+#' Trace a stability landscape along time or a covariate
 #'
 #' @description
 #' `landscape_trend()` traces the landscape of [stability_landscape()] along
@@ -1070,7 +1087,7 @@ plot.net_landscape_surface <- function(x, max_stay = 50, theta = 10, phi = 30,
 #'   network's metadata, which [build_network()] fills with the numeric
 #'   columns of a wide data frame, or from a data frame's columns beside the
 #'   positions. A network must count one-step transitions (a
-#'   windowed one raises an error) and carry its sequences; a network of another
+#'   window wider than one position raises an error) and carry its sequences; a network of another
 #'   method (for example `"glasso"`) raises an error of class
 #'   `nestimate_not_markov`. For the `print()` and `plot()` methods: a
 #'   `net_landscape_trend` object.

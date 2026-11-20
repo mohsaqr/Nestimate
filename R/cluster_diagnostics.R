@@ -17,7 +17,7 @@
 #  - .plot_mmm_posterior() / .plot_covariate_forest() if a method needs them
 # ==============================================================================
 
-#' Cluster Diagnostics
+#' Collect the quality measures of a clustering
 #'
 #' @description
 #' `cluster_diagnostics()` collects the quality measures of a clustering in

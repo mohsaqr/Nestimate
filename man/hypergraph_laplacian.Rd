@@ -2,16 +2,12 @@
 % Please edit documentation in R/hypergraph_laplacian.R
 \name{hypergraph_laplacian}
 \alias{hypergraph_laplacian}
-\title{Normalised hypergraph Laplacian}
+\title{Compute the normalised Laplacian of a hypergraph}
 \usage{
 hypergraph_laplacian(hg, type = c("zhou", "random_walk"), edge_weights = NULL)
 }
 \arguments{
-\item{hg}{The hypergraph: a \code{net_hypergraph} from \code{\link[=build_hypergraph]{build_hypergraph()}} or
-\code{\link[=bipartite_groups]{bipartite_groups()}}, with at least two nodes and one hyperedge. A
-hypergraph that is not connected has no unique stationary distribution
-and raises an error of class \code{nestimate_hypergraph_disconnected};
-analyse its components separately.}
+\item{hg}{A hypergraph, from \code{\link[=build_hypergraph]{build_hypergraph()}} or \code{\link[=bipartite_groups]{bipartite_groups()}}, with at least two nodes and one hyperedge. Raises \code{nestimate_hypergraph_disconnected} when the hypergraph is not connected, since it then has no unique stationary distribution; analyse its components separately.}
 
 \item{type}{The Laplacian. \code{"zhou"} (default) is the Zhou et al. (2006)
 Laplacian on the binary incidence pattern; \code{"random_walk"} is the
@@ -33,8 +29,7 @@ A symmetric numeric matrix with one row and one column per node
 }
 \description{
 \code{hypergraph_laplacian()} computes the normalised Laplacian of a hypergraph
-and returns it as a symmetric node-by-node matrix, the operator that
-\code{\link[=hypergraph_cluster]{hypergraph_cluster()}} and \code{\link[=hypergraph_transduction]{hypergraph_transduction()}} are built on. It
+and returns it as a symmetric node-by-node matrix. \code{\link[=hypergraph_cluster]{hypergraph_cluster()}} and \code{\link[=hypergraph_transduction]{hypergraph_transduction()}} are built on it. It
 comes in two forms. \code{type = "zhou"} is the Laplacian of Zhou, Huang and
 Sch\enc{ö}{o}lkopf (2006), computed on the binary incidence pattern, so
 the values in the incidence cells play no part. \code{type = "random_walk"} is

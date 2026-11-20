@@ -172,7 +172,7 @@
 
 # ---- Exported verbs ----
 
-#' Prune a Network's Edges
+#' Prune weak or non-significant edges from a network
 #'
 #' @description
 #' `net_prune()` removes weak or non-significant edges from a network and
@@ -261,8 +261,7 @@
 #'   or its data differ), a single `net_bootstrap` for a group, or a group bootstrap
 #'   missing one of the networks raises an error of class
 #'   `nestimate_bad_input`.
-#' @param ... For `method = "bootstrap"` with `boot = NULL`: arguments
-#'   passed to [bootstrap_network()], such as `iter`. Ignored otherwise.
+#' @param ... Arguments for [bootstrap_network()], such as `iter`, when `method = "bootstrap"` and `boot = NULL`; ignored otherwise.
 #'
 #' @return The input, of the same class, with the pruned weights, its edge
 #'   table and edge count updated to them, and the `"pruning"` attribute
@@ -397,7 +396,7 @@ net_prune.default <- function(x, method = "threshold", threshold = 0.1,
 }
 
 
-#' Undo Network Pruning
+#' Undo the pruning of a network
 #'
 #' @description
 #' `net_deprune()` restores the weights a network had before
@@ -460,7 +459,7 @@ net_deprune.default <- function(x, ...) {
 }
 
 
-#' Re-apply Network Pruning
+#' Re-apply the pruning of a network
 #'
 #' @description
 #' `net_reprune()` re-applies a pruning that [net_deprune()] undid, without
@@ -522,7 +521,7 @@ net_reprune.default <- function(x, ...) {
 }
 
 
-#' Report Network Pruning Details
+#' List the edges a pruning removed
 #'
 #' @description
 #' `net_pruning_details()` lists the edges that [net_prune()] removed from a

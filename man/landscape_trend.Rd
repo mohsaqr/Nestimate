@@ -5,7 +5,7 @@
 \alias{summary.net_landscape_trend}
 \alias{print.net_landscape_trend}
 \alias{plot.net_landscape_trend}
-\title{Stability Landscape Along the Programme or a Covariate}
+\title{Trace a stability landscape along time or a covariate}
 \usage{
 landscape_trend(
   x,
@@ -35,7 +35,7 @@ model or a \code{group_tna} (one landscape per group), or a wide sequence data f
 network's metadata, which \code{\link[=build_network]{build_network()}} fills with the numeric
 columns of a wide data frame, or from a data frame's columns beside the
 positions. A network must count one-step transitions (a
-windowed one raises an error) and carry its sequences; a network of another
+window wider than one position raises an error) and carry its sequences; a network of another
 method (for example \code{"glasso"}) raises an error of class
 \code{nestimate_not_markov}. For the \code{print()} and \code{plot()} methods: a
 \code{net_landscape_trend} object.}

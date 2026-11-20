@@ -2,7 +2,7 @@
 # Node-level, hyperedge-level, and global statistics for a net_hypergraph.
 # All measures are fast matrix operations on the incidence matrix B.
 
-#' Structural measures for a hypergraph
+#' Compute the structural measures of a hypergraph
 #'
 #' @description
 #' `hypergraph_measures()` computes the structural statistics of a

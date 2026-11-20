@@ -4,7 +4,7 @@
 \alias{persistent_homology}
 \alias{print.persistent_homology}
 \alias{plot.persistent_homology}
-\title{Persistent Homology}
+\title{Compute the persistent homology of a network}
 \usage{
 persistent_homology(
   x,

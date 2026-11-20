@@ -2,7 +2,7 @@
 % Please edit documentation in R/estimator_registry.R
 \name{remove_estimator}
 \alias{remove_estimator}
-\title{Remove a Registered Estimator}
+\title{Remove a registered estimator}
 \usage{
 remove_estimator(name)
 }

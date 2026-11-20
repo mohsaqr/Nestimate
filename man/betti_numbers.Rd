@@ -2,7 +2,7 @@
 % Please edit documentation in R/simplicial.R
 \name{betti_numbers}
 \alias{betti_numbers}
-\title{Betti Numbers}
+\title{Count the holes of a simplicial complex}
 \usage{
 betti_numbers(sc)
 }

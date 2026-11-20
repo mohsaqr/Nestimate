@@ -9,7 +9,7 @@
 
 utils::globalVariables(c("network", "feature", "value"))
 
-#' Tidy Topological Features for One or Many Networks
+#' Tabulate the topological features of one or many networks
 #'
 #' @description
 #' `simplicial_features()` builds a simplicial complex for each network with
@@ -39,9 +39,7 @@ utils::globalVariables(c("network", "feature", "value"))
 #'   be finite and not negative. `type = "vr"` and `type = "pathway"` ignore
 #'   it, although the `threshold` column still records it.
 #' @param max_dim The highest simplex dimension built, a whole number of at
-#'   least 1 (a fractional value is truncated). Default `4`. When a network holds a larger clique, the complex
-#'   is truncated and [betti_numbers()] warns with class
-#'   `nestimate_truncated_complex`; the warning concerns the Betti number of
+#'   least 1 (a fractional value is truncated). Default `4`. When a network holds a larger clique, the complex is truncated and raises the warning `nestimate_truncated_complex`, which concerns the Betti number of
 #'   dimension `max_dim`, so it affects `b1` only when `max_dim = 1`.
 #' @param normalize Whether to divide the simplex counts (`d1` onwards and
 #'   `higher_order`) by the number of nodes, so networks of different size

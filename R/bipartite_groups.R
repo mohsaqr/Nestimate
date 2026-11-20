@@ -3,7 +3,7 @@
 # becomes a net_hypergraph where each group is a hyperedge spanning all
 # players that appeared in it.
 
-#' Build a Hypergraph from Group Memberships
+#' Build a hypergraph from group memberships
 #'
 #' @description
 #' `bipartite_groups()` builds a hypergraph from long-format membership
@@ -65,9 +65,7 @@
 #' edges AB, AC, BC. This avoids information loss when group interactions are
 #' the primary unit of analysis (Perc et al. 2013).
 #'
-#' Unlike [build_hypergraph()] (which derives hyperedges from a network's
-#' clique structure), `bipartite_groups()` takes group memberships
-#' directly. The two functions are complementary:
+#' `bipartite_groups()` takes group memberships as observed, while [build_hypergraph()] infers groups from the cliques of a network. The two functions are complementary:
 #' \itemize{
 #'   \item `bipartite_groups()` - when group membership is observed
 #'     (sessions, transactions, co-authorships).

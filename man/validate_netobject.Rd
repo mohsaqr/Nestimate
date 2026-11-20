@@ -2,7 +2,7 @@
 % Please edit documentation in R/as_netobject.R
 \name{validate_netobject}
 \alias{validate_netobject}
-\title{Validate a netobject / cograph_network against the shared schema}
+\title{Validate the structure of a network object}
 \usage{
 validate_netobject(x)
 }

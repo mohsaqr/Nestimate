@@ -11,7 +11,7 @@
 # because a k x k aggregate cannot be disaggregated after the fact.
 # ==============================================================================
 
-#' Cluster-Level Network, With One Cluster Expanded
+#' Build the cluster-level network with chosen clusters expanded
 #'
 #' @description
 #' `macro_network()` returns the cluster-level (macro) network of an `mcml`,

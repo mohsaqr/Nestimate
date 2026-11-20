@@ -2,7 +2,7 @@
 % Please edit documentation in R/co_occurrence.R
 \name{cooccurrence}
 \alias{cooccurrence}
-\title{Build a Co-occurrence Network}
+\title{Build a co-occurrence network of items in transactions}
 \usage{
 cooccurrence(
   data,
@@ -47,10 +47,7 @@ for a list.}
 \item{by}{The column that defines the transactions of a long table: each
 of its values is one transaction, holding the distinct \code{field} values of
 its rows (for example \code{"paper_id"} or \code{"session_id"}). Default \code{NULL},
-where items co-occur within the same row. It needs a single \code{field}
-column (several raise an error of class \code{nestimate_bad_input}). Ignored,
-with a warning of class \code{nestimate_ignored_argument}, when \code{sep} is
-set, which reads \code{field} as delimited.}
+where items co-occur within the same row. It needs a single \code{field} column. Ignored, with a warning, when \code{sep} is set, since \code{sep} reads \code{field} as delimited.}
 
 \item{sep}{The separator that splits delimited \code{field} values, such as
 \code{";"} or \code{","}, matched literally; the split values are trimmed. Default
@@ -102,8 +99,7 @@ in an undirected network, directed cells with \code{similarity = "relative"}. Ed
 few more may remain, and the diagonal is not affected. Default \code{NULL}
 (all edges).}
 
-\item{...}{Not used; an argument given here is ignored with a warning of
-class \code{nestimate_ignored_argument}.}
+\item{...}{Not used; an argument given here is ignored with a warning.}
 
 \item{format}{How 0/1 columns are read. Columns of only 0 and 1 (or
 \code{TRUE} and \code{FALSE}) could be items or recoded positions, so with

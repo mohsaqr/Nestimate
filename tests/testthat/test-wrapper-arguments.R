@@ -42,6 +42,74 @@ test_that("association wrappers name actor (and level where it applies)", {
                                  threshold = 0.1))
 })
 
+test_that("wrappers name the shaping arguments and match build_network()", {
+  shaping <- c("group", "scaling", "threshold", "params")
+  for (fn in list(build_tna, build_ftna, build_atna, build_cna, build_cor,
+                  build_pcor, build_glasso, build_ising)) {
+    expect_true(all(shaping %in% names(formals(fn))))
+  }
+  for (fn in list(build_tna, build_ftna, build_cna)) {
+    expect_true(all(c("codes", "state_cols", "time_threshold") %in%
+                      names(formals(fn))))
+  }
+  g <- group_regulation_long
+  expect_identical(
+    build_tna(g, actor = "Actor", action = "Action", time = "Time",
+              group = "Course", threshold = 0.05, time_threshold = 600),
+    build_network(g, method = "relative", actor = "Actor", action = "Action",
+                  time = "Time", group = "Course", threshold = 0.05,
+                  time_threshold = 600))
+  seqs <- data.frame(first = c("A", "B", "A"), second = c("B", "A", "B"),
+                     note = c("x", "y", "z"))
+  expect_identical(
+    build_ftna(seqs, state_cols = c("first", "second"), scaling = "minmax"),
+    build_network(seqs, method = "frequency",
+                  state_cols = c("first", "second"), scaling = "minmax"))
+  expect_identical(build_atna(trajectories, params = list(lambda = 2)),
+                   build_network(trajectories, method = "attention",
+                                 params = list(lambda = 2)))
+  expect_identical(
+    build_pcor(srl_strategies, params = list(cor_method = "spearman")),
+    build_network(srl_strategies, method = "pcor",
+                  params = list(cor_method = "spearman")))
+})
+
+test_that("a wrapper passes on only the arguments its caller set", {
+  local_mocked_bindings(build_network = function(...) ...names())
+  expect_identical(build_tna(trajectories), c("data", "method"))
+  expect_identical(build_tna(trajectories, scaling = "max", labels = NULL),
+                   c("data", "method", "scaling", "labels"))
+  expect_identical(build_glasso(srl_strategies, params = list(gamma = 1)),
+                   c("data", "method", "params"))
+  # Through another function's `...`, with the value in the outer caller.
+  outer <- function() {
+    cut_off <- 0.1
+    inner(trajectories, threshold = cut_off)
+  }
+  inner <- function(d, ...) build_cna(d, ...)
+  expect_identical(outer(), c("data", "method", "threshold"))
+  local_mocked_bindings(build_network = function(...) list(...)$threshold)
+  expect_identical(outer(), 0.1)
+})
+
+test_that("unnamed extras still reach build_network() after the column roles", {
+  d <- data.frame(id = c("u", "u"), act = c("B", "A"), ord = c(2L, 1L))
+  expect_identical(
+    build_ftna(d, FALSE, FALSE, "id", "act", NULL, NULL, "ord"),
+    build_network(d, method = "frequency", actor = "id", action = "act",
+                  order = "ord"))
+})
+
+test_that("an argument forwarded from a missing one errors as in build_network()", {
+  seqs <- data.frame(T1 = c("A", "B"), T2 = c("B", "A"))
+  wrapped <- function(d, cutoff) build_ftna(d, threshold = cutoff)
+  direct <- function(d, cutoff) {
+    build_network(d, method = "frequency", threshold = cutoff)
+  }
+  expect_error(direct(seqs), "cutoff")
+  expect_error(wrapped(seqs), "cutoff")
+})
+
 test_that("a wrapper refuses `method` with a classed error", {
   expect_error(build_tna(trajectories, method = "frequency"),
                class = "nestimate_bad_input")

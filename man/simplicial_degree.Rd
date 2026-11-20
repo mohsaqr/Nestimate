@@ -2,7 +2,7 @@
 % Please edit documentation in R/simplicial.R
 \name{simplicial_degree}
 \alias{simplicial_degree}
-\title{Simplicial Degree}
+\title{Count the simplices that contain each node}
 \usage{
 simplicial_degree(sc, normalized = FALSE)
 }

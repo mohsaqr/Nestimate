@@ -6,7 +6,7 @@
 \alias{net_edge_betweenness.netobject_group}
 \alias{net_edge_betweenness.default}
 \alias{plot.net_edge_betweenness}
-\title{Edge Betweenness Network}
+\title{Weight a network's edges by their betweenness}
 \usage{
 net_edge_betweenness(x, invert = TRUE, ...)
 
@@ -21,7 +21,8 @@ net_edge_betweenness(x, invert = TRUE, ...)
 \arguments{
 \item{x}{A \code{netobject} or \code{netobject_group}. A \code{tna} model or a \code{group_tna}
 (package tna) is first rebuilt as a network from its own sequences (see
-\code{\link[=as_netobject]{as_netobject()}}). Any other input raises an error. For the \code{plot()} method: a \code{net_edge_betweenness} network.}
+\code{\link[=as_netobject]{as_netobject()}}). Any other input raises an error. For the \code{plot()}
+method: a \code{net_edge_betweenness} network.}
 
 \item{invert}{Whether to turn weights into distances by \code{1 / weight}
 before finding shortest paths, which suits probability and frequency

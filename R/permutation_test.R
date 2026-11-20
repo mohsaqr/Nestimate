@@ -1,6 +1,6 @@
 # ---- Permutation Test for Network Comparison ----
 
-#' Permutation Test for Network Comparison
+#' Test whether two networks differ by permutation
 #'
 #' @description
 #' `permutation()` tests whether two networks differ more than chance would
@@ -109,12 +109,7 @@
 #' effect of 1.24 for the bootstrap), so Kish's approximation with it
 #' counts sequences per actor, not transitions.
 #'
-#' `actor` is available for transition networks built from sequences
-#' (`"relative"`, `"frequency"`, `"co_occurrence"`). On one-hot data the
-#' actor column is held per row rather than per unit, so the call raises an
-#' error of class `nestimate_actor_misaligned`. The other methods, association networks (`"cor"`,
-#' `"pcor"`, `"glasso"`, ...) among them, do not keep row identifiers after
-#' estimation and raise an error of class `nestimate_actor_unsupported`.
+#' `actor` works for the transition networks built from sequences: `"relative"`, `"frequency"` and `"co_occurrence"`. The other methods keep no row identifiers after estimation, and with them `actor` raises `nestimate_actor_unsupported`; one-hot data, which hold the actor per row, raise `nestimate_actor_misaligned`.
 #'
 #' @section ICC and design effect:
 #' With `actor`, `print()` also reports:
@@ -202,15 +197,13 @@
 #' differences do not vary gets an effect size of `NaN` or `Inf`, as there,
 #' rather than the 0 the edge table uses.
 #'
-#' @param x The first network: a `netobject` from [build_network()] (a bare
-#'   `cograph_network` is converted to one), a `netobject_group` or `mcml`, a
-#'   `wtna_mixed`, or a [net_edge_betweenness()] result. A `tna` model or a
-#'   `group_tna` (package tna) is first rebuilt as a network from its own
-#'   sequences (see [as_netobject()]). `actor` is read from the metadata the
-#'   model keeps (`attr(model$data, "meta")`, kept when the model is built
-#'   from `tna::prepare_data()`); a model without it raises
-#'   `nestimate_actor_missing`. For the `print()` methods: a
-#'   `net_permutation`, `net_permutation_group` or `wtna_perm_mixed`.
+#' @param x The first network:
+#' * a `netobject` from [build_network()], or a bare `cograph_network`;
+#' * a `netobject_group`, an `mcml` or a `wtna_mixed`;
+#' * a [net_edge_betweenness()] result;
+#' * a `tna` model or `group_tna`, rebuilt as a network from its own sequences (see [as_netobject()]). Raises `nestimate_actor_missing` when `actor` is given and the model keeps no metadata; models built with `tna::prepare_data()` keep it.
+#' 
+#' For the `print()` methods: a `permutation()` result.
 #' @param y The second network, of the same kind as `x`, estimated with the
 #'   same method on the same nodes (their order may differ); other methods
 #'   or nodes raise an error. Default `NULL`: when `x` is a
@@ -270,13 +263,7 @@
 #'   names, outermost first, are nested levels (such as
 #'   `c("Group", "Student")`): labels are shuffled at the level where they
 #'   are assigned, within the units above it. Default `NULL`:
-#'   sequences are shuffled one by one. A value that is not one or more
-#'   distinct column names, or `actor` with `paired = TRUE`, raises an error of class
-#'   `nestimate_bad_actor`; a column that is absent or has missing values,
-#'   `nestimate_actor_missing`; a column whose values do not give one id per
-#'   sequence (or, with `concat`, that joins rows of different actors),
-#'   `nestimate_actor_misaligned`; a method other than the transition
-#'   methods, `nestimate_actor_unsupported`.
+#'   sequences are shuffled one by one. Raises `nestimate_actor_missing` when the column is absent or incomplete, and `nestimate_actor_misaligned` when it does not give one actor per sequence.
 #'
 #' @return A `net_permutation` object. `print()` shows the settings, the
 #'   number of edges tested and significant, the global test and, with

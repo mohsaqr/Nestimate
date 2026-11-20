@@ -2,7 +2,7 @@
 % Please edit documentation in R/outcome_model.R
 \name{effects_table}
 \alias{effects_table}
-\title{Effect Table of a Fitted Outcome Model}
+\title{Tabulate the effects of an outcome model}
 \usage{
 effects_table(
   x,

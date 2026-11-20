@@ -1,4 +1,4 @@
-#' Estimate a Network (Deprecated)
+#' Estimate a network (deprecated)
 #'
 #' @description
 #' `estimate_network()` is deprecated: use [build_network()] instead. It
@@ -56,7 +56,30 @@ estimate_network <- function(data,
   }
 }
 
-#' Build a Transition Network (TNA)
+# Calls build_network() from a wrapper with only the arguments the caller set,
+# each passed by name and evaluated in the wrapper's frame, plus the wrapper's
+# `...` in its place, so unnamed extras bind to build_network()'s formals as
+# they always did. build_network() treats a shaping argument the caller set
+# (`scaling`, `threshold`, `params`, `start`, `end`) as an override when it
+# rebuilds the networks of a clustering, so a wrapper must not pass its own
+# defaults on. "Set" is read from the matched call, as build_network() reads
+# it: an argument forwarded from a caller that left it missing is still set,
+# and evaluating it raises the same error a direct call raises.
+.forward_to_build_network <- function(wrapper, method, dot_names) {
+  wrapper_env <- parent.frame()
+  .refuse_method_arg(wrapper, method, dot_names)
+  wrapper_call <- match.call(sys.function(sys.parent()),
+                             sys.call(sys.parent()), expand.dots = FALSE,
+                             envir = parent.frame(2L))
+  given <- setdiff(names(wrapper_call)[-1L], c("data", "...", ""))
+  forwarded <- c(list(quote(build_network), data = quote(data),
+                      method = method),
+                 stats::setNames(lapply(given, as.name), given),
+                 list(quote(...)))
+  eval(as.call(forwarded), wrapper_env)
+}
+
+#' Estimate a transition network
 #'
 #' @description
 #' `build_tna()` estimates a transition network (TNA): the probability that
@@ -72,9 +95,9 @@ estimate_network <- function(data,
 #' @inheritParams build_network
 #' @param data The sequences: a data frame with one row per sequence and one
 #'   column per position, an event log (one row per event, with `action`
-#'   set), one-hot code columns (declared with `codes` or
-#'   `format = "onehot"`), or a square matrix of transition counts or
-#'   weights, which is row-normalised (every row needs a positive sum).
+#'   set), one-hot code columns (declared with `codes`), or a square matrix
+#'   of transition counts or weights, which is row-normalised (every row
+#'   needs a positive sum).
 #' @param actor The column naming who each row belongs to (a person, a
 #'   team). In an event log, each actor's events form a sequence, split
 #'   further by `session` or `time_threshold`. Default `NULL`.
@@ -84,28 +107,60 @@ estimate_network <- function(data,
 #' @param end An end state put after each sequence's last observed state,
 #'   so the network shows where sequences stop; it has no outgoing edges.
 #'   `FALSE` (default), `TRUE` (`"End"`) or a single string, as `start`.
-#' @param ... Further arguments for [build_network()], such as `group`,
-#'   `params`, `scaling`, `threshold` or `state_cols`. `method` cannot be
-#'   given: it is always `"relative"` (error of class `nestimate_bad_input`).
+#' @param state_cols The columns of a wide table that are sequence
+#'   positions; every other column goes to the network's metadata. Declared
+#'   columns are positions even when they hold only 0 and 1. With nothing
+#'   declared, the position columns must be named as a numbered run (`T1`,
+#'   `T2`, ... or `1`, `2`, ...), and any other frame raises an error of
+#'   class `nestimate_bad_input`. Default `NULL`.
+#' @param threshold Weights whose absolute value is below this are set to
+#'   zero. Default `0` (none).
+#' @param params Settings for the estimator, as a named list. Transitions
+#'   are counted with tna's `weighted` and `concat` options, and
+#'   `window_size` (with `window_span`, or `windowed = TRUE` for a size of 2)
+#'   counts them between consecutive non-overlapping blocks of that many
+#'   positions. The network keeps these settings, and the resampling verbs
+#'   such as [bootstrap_network()] re-estimate with them. Default `list()`.
+#' @param ... Further arguments for [build_network()], such as `labels`,
+#'   `metadata_cols` or `timezone`. `method` cannot be given: it is always
+#'   `"relative"` (error of class `nestimate_bad_input`).
 #' @return A `netobject` (a `netobject_group` with `group`), exactly as
 #'   [build_network()] returns it: print it for an overview, read the edges
 #'   with [extract_edges()] and the weights with
 #'   [extract_transition_matrix()], and draw it with `cograph::splot()`.
-#' @seealso \code{\link{build_network}}
+#' @references
+#' Saqr, M., L\enc{ó}{o}pez-Pernas, S., T\enc{ö}{o}rm\enc{ä}{a}nen, T.,
+#' Kaliisa, R., Misiejuk, K., & Tikka, S. (2025). Transition network
+#' analysis: A novel framework for modeling, visualizing, and identifying the
+#' temporal patterns of learners and learning processes. In
+#' \emph{Proceedings of the 15th International Learning Analytics and
+#' Knowledge Conference (LAK25)} (pp. 351--361). ACM.
+#' \doi{10.1145/3706468.3706513}
+#'
+#' Tikka, S., L\enc{ó}{o}pez-Pernas, S., & Saqr, M. (2025). tna: An R
+#' package for transition network analysis. \emph{Applied Psychological
+#' Measurement}. \doi{10.1177/01466216251348840}
+#' @seealso [build_network()] for every method; [build_ftna()],
+#'   [build_atna()] and [build_cna()] for the other transition networks;
+#'   [bootstrap_network()] and [permutation()] for inference.
 #' @examples
 #' net <- build_tna(trajectories)
 #' net
+#'
+#' by_course <- build_tna(group_regulation_long, actor = "Actor",
+#'                        action = "Action", time = "Time",
+#'                        group = "Course", threshold = 0.05)
+#' by_course
 #' @export
 build_tna <- function(data, start = FALSE, end = FALSE,
                       actor = NULL, action = NULL, time = NULL,
-                      session = NULL, ...) {
-  .refuse_method_arg("build_tna", "relative", ...names())
-  build_network(data, method = "relative", actor = actor, action = action,
-                time = time, session = session, start = start, end = end,
-                ...)
+                      session = NULL, ..., group = NULL, codes = NULL,
+                      state_cols = NULL, time_threshold = 900,
+                      scaling = NULL, threshold = 0, params = list()) {
+  .forward_to_build_network("build_tna", "relative", ...names())
 }
 
-#' Build a Frequency Transition Network (FTNA)
+#' Estimate a frequency transition network
 #'
 #' @description
 #' `build_ftna()` estimates a frequency transition network (FTNA): how many
@@ -118,43 +173,52 @@ build_tna <- function(data, start = FALSE, end = FALSE,
 #' within one network; for transition probabilities use [build_tna()]. Check
 #' how far the counts move under resampling with [bootstrap_network()].
 #'
+#' @inheritParams build_tna
 #' @inheritParams build_network
 #' @param data The sequences: a data frame with one row per sequence and one
 #'   column per position, an event log (one row per event, with `action`
-#'   set), one-hot code columns, or a square matrix of transition
-#'   counts (non-negative whole numbers). Column roles are declared as in
-#'   [build_network()].
-#' @param actor The column naming who each row belongs to (a person, a
-#'   team). In an event log, each actor's events form a sequence, split
-#'   further by `session` or `time_threshold`. Default `NULL`.
-#' @param start A start state put before every sequence, so the network
-#'   shows where sequences begin. `FALSE` (default) adds none, `TRUE` adds
-#'   one labelled `"Start"`, a single string adds one with that label.
-#' @param end An end state put after each sequence's last observed state,
-#'   so the network shows where sequences stop; it has no outgoing edges.
-#'   `FALSE` (default), `TRUE` (`"End"`) or a single string, as `start`.
-#' @param ... Further arguments for [build_network()], such as `group`,
-#'   `params`, `scaling`, `threshold` or `state_cols`. `method` cannot be
-#'   given: it is always `"frequency"` (error of class `nestimate_bad_input`).
+#'   set), one-hot code columns (declared with `codes`), or a square matrix
+#'   of transition counts (non-negative whole numbers).
+#' @param ... Further arguments for [build_network()], such as `labels`,
+#'   `metadata_cols` or `timezone`. `method` cannot be given: it is always
+#'   `"frequency"` (error of class `nestimate_bad_input`).
 #' @return A `netobject` (a `netobject_group` with `group`), exactly as
 #'   [build_network()] returns it: print it for an overview, read the edges
 #'   with [extract_edges()] and the weights with
 #'   [extract_transition_matrix()], and draw it with `cograph::splot()`.
-#' @seealso \code{\link{build_network}}
+#' @references
+#' Saqr, M., L\enc{ó}{o}pez-Pernas, S., T\enc{ö}{o}rm\enc{ä}{a}nen, T.,
+#' Kaliisa, R., Misiejuk, K., & Tikka, S. (2025). Transition network
+#' analysis: A novel framework for modeling, visualizing, and identifying the
+#' temporal patterns of learners and learning processes. In
+#' \emph{Proceedings of the 15th International Learning Analytics and
+#' Knowledge Conference (LAK25)} (pp. 351--361). ACM.
+#' \doi{10.1145/3706468.3706513}
+#'
+#' Tikka, S., L\enc{ó}{o}pez-Pernas, S., & Saqr, M. (2025). tna: An R
+#' package for transition network analysis. \emph{Applied Psychological
+#' Measurement}. \doi{10.1177/01466216251348840}
+#' @seealso [build_network()] for every method; [build_tna()],
+#'   [build_atna()] and [build_cna()] for the other transition networks;
+#'   [bootstrap_network()] and [permutation()] for inference.
 #' @examples
 #' net <- build_ftna(trajectories)
 #' net
+#'
+#' by_achiever <- build_ftna(group_regulation_long, actor = "Actor",
+#'                           action = "Action", time = "Time",
+#'                           group = "Achiever", scaling = "minmax")
+#' by_achiever
 #' @export
 build_ftna <- function(data, start = FALSE, end = FALSE,
                        actor = NULL, action = NULL, time = NULL,
-                       session = NULL, ...) {
-  .refuse_method_arg("build_ftna", "frequency", ...names())
-  build_network(data, method = "frequency", actor = actor, action = action,
-                time = time, session = session, start = start, end = end,
-                ...)
+                       session = NULL, ..., group = NULL, codes = NULL,
+                       state_cols = NULL, time_threshold = 900,
+                       scaling = NULL, threshold = 0, params = list()) {
+  .forward_to_build_network("build_ftna", "frequency", ...names())
 }
 
-#' Build an Attention-Weighted Transition Network (ATNA)
+#' Estimate an attention-weighted transition network
 #'
 #' @description
 #' `build_atna()` estimates an attention-weighted transition network (ATNA):
@@ -175,95 +239,113 @@ build_ftna <- function(data, start = FALSE, end = FALSE,
 #' to 1. Check how far they move under resampling with
 #' [bootstrap_network()].
 #'
+#' @inheritParams build_tna
 #' @inheritParams build_network
 #' @param data The sequences: a data frame with one row per sequence and one
 #'   column per position, or an event log (one row per event, with `action`
-#'   set). Column roles are declared as in [build_network()].
-#'   One-hot data and matrices are refused.
-#' @param actor The column naming who each row belongs to (a person, a
-#'   team). In an event log, each actor's events form a sequence, split
-#'   further by `session` or `time_threshold`. Default `NULL`.
-#' @param start A start state put before every sequence, so the network
-#'   shows where sequences begin. `FALSE` (default) adds none, `TRUE` adds
-#'   one labelled `"Start"`, a single string adds one with that label.
-#' @param end An end state put after each sequence's last observed state,
-#'   so the network shows where sequences stop; it has no outgoing edges.
-#'   `FALSE` (default), `TRUE` (`"End"`) or a single string, as `start`.
-#' @param ... Further arguments for [build_network()], such as `group`,
-#'   `params`, `scaling`, `threshold` or `state_cols`. `method` cannot be
-#'   given: it is always `"attention"` (error of class `nestimate_bad_input`).
+#'   set). One-hot data and matrices are refused.
+#' @param params Settings for the estimator, as a named list: `lambda`,
+#'   `direction`, `duration`, `time_matrix` and `decay`, as described above.
+#'   The network stores them, so [bootstrap_network()] and the other
+#'   resampling verbs re-estimate with the same settings. Default `list()`.
+#' @param ... Further arguments for [build_network()], such as `labels`,
+#'   `metadata_cols` or `timezone`. `method` cannot be given: it is always
+#'   `"attention"` (error of class `nestimate_bad_input`).
 #' @return A `netobject` (a `netobject_group` with `group`), exactly as
 #'   [build_network()] returns it: print it for an overview, read the edges
 #'   with [extract_edges()] and the weights with
 #'   [extract_transition_matrix()], and draw it with `cograph::splot()`.
-#' @seealso \code{\link{build_network}}
+#' @references
+#' Saqr, M., L\enc{ó}{o}pez-Pernas, S., T\enc{ö}{o}rm\enc{ä}{a}nen, T.,
+#' Kaliisa, R., Misiejuk, K., & Tikka, S. (2025). Transition network
+#' analysis: A novel framework for modeling, visualizing, and identifying the
+#' temporal patterns of learners and learning processes. In
+#' \emph{Proceedings of the 15th International Learning Analytics and
+#' Knowledge Conference (LAK25)} (pp. 351--361). ACM.
+#' \doi{10.1145/3706468.3706513}
+#'
+#' Tikka, S., L\enc{ó}{o}pez-Pernas, S., & Saqr, M. (2025). tna: An R
+#' package for transition network analysis. \emph{Applied Psychological
+#' Measurement}. \doi{10.1177/01466216251348840}
+#' @seealso [build_network()] for every method; [build_tna()],
+#'   [build_ftna()] and [build_cna()] for the other transition networks;
+#'   [bootstrap_network()] and [permutation()] for inference.
 #' @examples
 #' net <- build_atna(trajectories)
 #' net
+#'
+#' slow_decay <- build_atna(trajectories, params = list(lambda = 2),
+#'                          scaling = "normalize")
+#' slow_decay
 #' @export
 build_atna <- function(data, start = FALSE, end = FALSE,
                        actor = NULL, action = NULL, time = NULL,
-                       session = NULL, ...) {
-  .refuse_method_arg("build_atna", "attention", ...names())
-  build_network(data, method = "attention", actor = actor, action = action,
-                time = time, session = session, start = start, end = end,
-                ...)
+                       session = NULL, ..., group = NULL, state_cols = NULL,
+                       time_threshold = 900, scaling = NULL, threshold = 0,
+                       params = list()) {
+  .forward_to_build_network("build_atna", "attention", ...names())
 }
 
-#' Build a Co-occurrence Network (CNA)
+#' Estimate a co-occurrence network from sequences
 #'
 #' @description
 #' `build_cna()` estimates an undirected co-occurrence network (CNA): for
 #' every pair of positions in a sequence where both are observed, the two
 #' states count as co-occurring once, in either order. It is
 #' [build_network()] with `method = "co_occurrence"`, and takes sequences in
-#' a wide table, an event log, one-hot codes (declared with `codes` or
-#' `format = "onehot"`, and counted in windows as [wtna()] does) or a square
-#' matrix of counts.
+#' a wide table, an event log, one-hot codes (declared with `codes`, and
+#' counted in windows as [wtna()] does) or a square matrix of counts.
 #'
 #' An edge counts how often two states occur together within sequences
 #' (over pairs of positions, so a sequence can add to one edge several
 #' times), not which came first; for order, use [build_tna()]. Check how
 #' far the counts move under resampling with [bootstrap_network()].
 #'
+#' @inheritParams build_tna
 #' @inheritParams build_network
 #' @param data The sequences: a data frame with one row per sequence and one
 #'   column per position, an event log (one row per event, with `action`
-#'   set), one-hot code columns, or a square matrix of
-#'   co-occurrence counts (non-negative whole numbers). Column roles are
-#'   declared as in [build_network()].
-#' @param actor The column naming who each row belongs to (a person, a
-#'   team). In an event log, each actor's events form a sequence, split
-#'   further by `session` or `time_threshold`. Default `NULL`.
-#' @param start A start state put before every sequence, so the network
-#'   shows where sequences begin. `FALSE` (default) adds none, `TRUE` adds
-#'   one labelled `"Start"`, a single string adds one with that label.
-#' @param end An end state put after each sequence's last observed state,
-#'   so the network shows where sequences stop; it has no outgoing edges.
-#'   `FALSE` (default), `TRUE` (`"End"`) or a single string, as `start`.
-#' @param ... Further arguments for [build_network()], such as `group`,
-#'   `params`, `scaling`, `threshold` or `state_cols`. `method` cannot be
-#'   given: it is always `"co_occurrence"` (error of class `nestimate_bad_input`).
+#'   set), one-hot code columns (declared with `codes`), or a square matrix
+#'   of co-occurrence counts (non-negative whole numbers).
+#' @param ... Further arguments for [build_network()], such as `labels`,
+#'   `metadata_cols` or `timezone`. `method` cannot be given: it is always
+#'   `"co_occurrence"` (error of class `nestimate_bad_input`).
 #' @return A `netobject` (a `netobject_group` with `group`), exactly as
 #'   [build_network()] returns it: print it for an overview, read the edges
 #'   with [extract_edges()] and the weights with
 #'   [extract_transition_matrix()], and draw it with `cograph::splot()`.
-#' @seealso \code{\link{build_network}}, \code{\link{cooccurrence}} for
-#'   delimited-field, bipartite, and other non-sequence co-occurrence formats.
+#' @references
+#' Saqr, M., L\enc{ó}{o}pez-Pernas, S., T\enc{ö}{o}rm\enc{ä}{a}nen, T.,
+#' Kaliisa, R., Misiejuk, K., & Tikka, S. (2025). Transition network
+#' analysis: A novel framework for modeling, visualizing, and identifying the
+#' temporal patterns of learners and learning processes. In
+#' \emph{Proceedings of the 15th International Learning Analytics and
+#' Knowledge Conference (LAK25)} (pp. 351--361). ACM.
+#' \doi{10.1145/3706468.3706513}
+#'
+#' Tikka, S., L\enc{ó}{o}pez-Pernas, S., & Saqr, M. (2025). tna: An R
+#' package for transition network analysis. \emph{Applied Psychological
+#' Measurement}. \doi{10.1177/01466216251348840}
+#' @seealso [build_network()] for every method; [build_tna()],
+#'   [build_ftna()] and [build_atna()] for the directed transition
+#'   networks; [cooccurrence()] for delimited-field, bipartite and other
+#'   non-sequence co-occurrence data; [bootstrap_network()] for inference.
 #' @examples
 #' net <- build_cna(trajectories)
 #' net
+#'
+#' scaled <- build_cna(trajectories, scaling = "max", threshold = 0.1)
+#' scaled
 #' @export
 build_cna <- function(data, start = FALSE, end = FALSE,
                       actor = NULL, action = NULL, time = NULL,
-                      session = NULL, ...) {
-  .refuse_method_arg("build_cna", "co_occurrence", ...names())
-  build_network(data, method = "co_occurrence", actor = actor, action = action,
-                time = time, session = session, start = start, end = end,
-                ...)
+                      session = NULL, ..., group = NULL, codes = NULL,
+                      state_cols = NULL, time_threshold = 900,
+                      scaling = NULL, threshold = 0, params = list()) {
+  .forward_to_build_network("build_cna", "co_occurrence", ...names())
 }
 
-#' Build a Correlation Network
+#' Estimate a correlation network
 #'
 #' @description
 #' `build_cor()` estimates a correlation network: an undirected graph of
@@ -294,24 +376,50 @@ build_cna <- function(data, start = FALSE, end = FALSE,
 #'   estimates the network of person means, `"within"` the network of
 #'   deviations from them, and `"both"` returns the two as a
 #'   `netobject_ml`. Default `NULL` (no decomposition).
-#' @param ... Further arguments for [build_network()], such as `params`
-#'   (`cor_method`, `n`), `threshold`, `scaling` or `group`. `method` cannot
-#'   be given: it is always `"cor"` (error of class `nestimate_bad_input`).
+#' @param group A column to split the data by: one network is estimated per
+#'   value and the result is a `netobject_group`. Default `NULL`.
+#' @param threshold Weights whose absolute value is below this are set to
+#'   zero. Default `0` (none).
+#' @param params Settings for the estimator, as a named list: `cor_method`
+#'   (`"pearson"`, the default, `"spearman"` or `"kendall"`) and `n`, the
+#'   sample size when `data` is a correlation or covariance matrix. The
+#'   network stores them, so [bootstrap_network()] re-estimates with the
+#'   same settings. Default `list()`.
+#' @param ... Further arguments for [build_network()], such as `labels` or
+#'   `predictability`. `method` cannot be given: it is always `"cor"` (error
+#'   of class `nestimate_bad_input`).
+#' @inheritParams build_network
 #' @return A `netobject` (a `netobject_group` with `group`, a `netobject_ml`
 #'   with `level = "both"`), exactly as [build_network()] returns it: print
 #'   it for an overview, read the edges with [extract_edges()], and draw it
 #'   with `cograph::splot()`.
-#' @seealso \code{\link{build_network}}
+#' @references
+#' Epskamp, S., & Fried, E. I. (2018). A tutorial on regularized partial
+#' correlation networks. \emph{Psychological Methods}, 23(4), 617--634.
+#' \doi{10.1037/met0000167}
+#'
+#' Saqr, M., Beck, E., & L\enc{ó}{o}pez-Pernas, S. (2024). Psychological
+#' networks: A modern approach to analysis of learning and complex learning
+#' processes. In M. Saqr & S. L\enc{ó}{o}pez-Pernas (Eds.), \emph{Learning
+#' Analytics Methods and Tutorials: A Practical Guide Using R}. Springer.
+#' \doi{10.1007/978-3-031-54464-4_19}
+#' @seealso [build_network()] for every method; [build_pcor()],
+#'   [build_glasso()] and [build_ising()] for the other association
+#'   networks; [bootstrap_network()] and [nct()] for inference.
 #' @examples
-#' data(srl_strategies)
 #' net <- build_cor(srl_strategies)
+#' net
+#'
+#' ranked <- build_cor(srl_strategies, threshold = 0.2,
+#'                     params = list(cor_method = "spearman"))
+#' ranked
 #' @export
-build_cor <- function(data, actor = NULL, level = NULL, ...) {
-  .refuse_method_arg("build_cor", "cor", ...names())
-  build_network(data, method = "cor", actor = actor, level = level, ...)
+build_cor <- function(data, actor = NULL, level = NULL, ..., group = NULL,
+                      scaling = NULL, threshold = 0, params = list()) {
+  .forward_to_build_network("build_cor", "cor", ...names())
 }
 
-#' Build a Partial Correlation Network
+#' Estimate a partial correlation network
 #'
 #' @description
 #' `build_pcor()` estimates a partial correlation network: an undirected
@@ -345,24 +453,40 @@ build_cor <- function(data, actor = NULL, level = NULL, ...) {
 #'   estimates the network of person means, `"within"` the network of
 #'   deviations from them, and `"both"` returns the two as a
 #'   `netobject_ml`. Default `NULL` (no decomposition).
-#' @param ... Further arguments for [build_network()], such as `params`
-#'   (`cor_method`, `n`), `threshold`, `scaling` or `group`. `method` cannot
-#'   be given: it is always `"pcor"` (error of class `nestimate_bad_input`).
+#' @param ... Further arguments for [build_network()], such as `labels` or
+#'   `predictability`. `method` cannot be given: it is always `"pcor"`
+#'   (error of class `nestimate_bad_input`).
+#' @inheritParams build_cor
 #' @return A `netobject` (a `netobject_group` with `group`, a `netobject_ml`
 #'   with `level = "both"`), exactly as [build_network()] returns it: print
 #'   it for an overview, read the edges with [extract_edges()], and draw it
 #'   with `cograph::splot()`.
-#' @seealso \code{\link{build_network}}
+#' @references
+#' Epskamp, S., & Fried, E. I. (2018). A tutorial on regularized partial
+#' correlation networks. \emph{Psychological Methods}, 23(4), 617--634.
+#' \doi{10.1037/met0000167}
+#'
+#' Saqr, M., Beck, E., & L\enc{ó}{o}pez-Pernas, S. (2024). Psychological
+#' networks: A modern approach to analysis of learning and complex learning
+#' processes. In M. Saqr & S. L\enc{ó}{o}pez-Pernas (Eds.), \emph{Learning
+#' Analytics Methods and Tutorials: A Practical Guide Using R}. Springer.
+#' \doi{10.1007/978-3-031-54464-4_19}
+#' @seealso [build_network()] for every method; [build_cor()],
+#'   [build_glasso()] and [build_ising()] for the other association
+#'   networks; [bootstrap_network()] and [nct()] for inference.
 #' @examples
-#' data(srl_strategies)
 #' net <- build_pcor(srl_strategies)
+#' net
+#'
+#' by_size <- build_pcor(srl_strategies, scaling = "max", threshold = 0.1)
+#' by_size
 #' @export
-build_pcor <- function(data, actor = NULL, level = NULL, ...) {
-  .refuse_method_arg("build_pcor", "pcor", ...names())
-  build_network(data, method = "pcor", actor = actor, level = level, ...)
+build_pcor <- function(data, actor = NULL, level = NULL, ..., group = NULL,
+                       scaling = NULL, threshold = 0, params = list()) {
+  .forward_to_build_network("build_pcor", "pcor", ...names())
 }
 
-#' Build a Graphical Lasso Network (EBICglasso)
+#' Estimate a graphical lasso network
 #'
 #' @description
 #' `build_glasso()` estimates a regularised partial correlation network with
@@ -397,10 +521,16 @@ build_pcor <- function(data, actor = NULL, level = NULL, ...) {
 #'   estimates the network of person means, `"within"` the network of
 #'   deviations from them, and `"both"` returns the two as a
 #'   `netobject_ml`. Default `NULL` (no decomposition).
-#' @param ... Further arguments for [build_network()], such as `params`
-#'   (`gamma`, `nlambda`, `refit`, `n` and the others above), `threshold`,
-#'   `scaling` or `group`. `method` cannot be given: it is always
-#'   `"glasso"` (error of class `nestimate_bad_input`).
+#' @param params Settings for the estimator, as a named list: `gamma`,
+#'   `nlambda`, `lambda.min.ratio`, `penalize.diagonal`, `refit` and
+#'   `cor_method`, as described above, and `n`, the sample size when `data`
+#'   is a correlation or covariance matrix. The network stores them, so
+#'   [bootstrap_network()] re-estimates with the same settings. Default
+#'   `list()`.
+#' @param ... Further arguments for [build_network()], such as `labels` or
+#'   `predictability`. `method` cannot be given: it is always `"glasso"`
+#'   (error of class `nestimate_bad_input`).
+#' @inheritParams build_cor
 #' @return A `netobject` (a `netobject_group` with `group`, a `netobject_ml`
 #'   with `level = "both"`), exactly as [build_network()] returns it: print
 #'   it for an overview, read the edges with [extract_edges()], and draw it
@@ -413,17 +543,23 @@ build_pcor <- function(data, actor = NULL, level = NULL, ...) {
 #' Foygel, R., & Drton, M. (2010). Extended Bayesian information criteria
 #' for Gaussian graphical models. \emph{Advances in Neural Information
 #' Processing Systems}, 23, 604--612.
-#' @seealso \code{\link{build_network}}
+#' @seealso [build_network()] for every method; [build_cor()],
+#'   [build_pcor()] and [build_ising()] for the other association networks;
+#'   [boot_glasso()] and [nct()] for inference.
 #' @examples
-#' data(srl_strategies)
 #' net <- build_glasso(srl_strategies)
+#' net
+#'
+#' sparser <- build_glasso(srl_strategies, params = list(gamma = 0.75))
+#' sparser
 #' @export
-build_glasso <- function(data, actor = NULL, level = NULL, ...) {
-  .refuse_method_arg("build_glasso", "glasso", ...names())
-  build_network(data, method = "glasso", actor = actor, level = level, ...)
+build_glasso <- function(data, actor = NULL, level = NULL, ...,
+                         group = NULL, scaling = NULL, threshold = 0,
+                         params = list()) {
+  .forward_to_build_network("build_glasso", "glasso", ...names())
 }
 
-#' Build an Ising Network
+#' Estimate an Ising network
 #'
 #' @description
 #' `build_ising()` estimates an Ising network for binary (0/1) variables:
@@ -449,10 +585,14 @@ build_glasso <- function(data, actor = NULL, level = NULL, ...) {
 #'   error.
 #' @param actor An id column naming whose observation each row is; it is
 #'   set aside, not modelled. Default `NULL`.
-#' @param ... Further arguments for [build_network()], such as `params`
-#'   (`gamma`, `nlambda`, `rule`), `threshold`, `scaling` or `group`.
-#'   `method` cannot be given: it is always `"ising"` (error of class
-#'   `nestimate_bad_input`).
+#' @param params Settings for the estimator, as a named list: `gamma`,
+#'   `nlambda` and `rule`, as described above. The network stores them, so
+#'   [bootstrap_network()] re-estimates with the same settings. Default
+#'   `list()`.
+#' @param ... Further arguments for [build_network()], such as `labels` or
+#'   `predictability`. `method` cannot be given: it is always `"ising"`
+#'   (error of class `nestimate_bad_input`).
+#' @inheritParams build_cor
 #' @return A `netobject` (a `netobject_group` with `group`), exactly as
 #'   [build_network()] returns it: print it for an overview, read the edges
 #'   with [extract_edges()], and draw it with `cograph::splot()`.
@@ -461,17 +601,20 @@ build_glasso <- function(data, actor = NULL, level = NULL, ...) {
 #' L., Schoevers, R. A., & Waldorp, L. J. (2014). A new method for
 #' constructing networks from binary data. \emph{Scientific Reports}, 4,
 #' 5918. \doi{10.1038/srep05918}
-#' @seealso \code{\link{build_network}}
+#' @seealso [build_network()] for every method; [build_cor()],
+#'   [build_pcor()] and [build_glasso()] for the other association
+#'   networks; [bootstrap_network()] and [nct()] for inference.
 #' @examples
 #' if (requireNamespace("glmnet", quietly = TRUE)) {
 #'   set.seed(1)
 #'   bin_data <- data.frame(matrix(rbinom(200, 1, 0.5), ncol = 5))
-#'   net <- build_ising(bin_data)
+#'   net <- build_ising(bin_data, params = list(rule = "OR"))
+#'   net
 #' }
 #' @export
-build_ising <- function(data, actor = NULL, ...) {
-  .refuse_method_arg("build_ising", "ising", ...names())
-  build_network(data, method = "ising", actor = actor, ...)
+build_ising <- function(data, actor = NULL, ..., group = NULL,
+                        scaling = NULL, threshold = 0, params = list()) {
+  .forward_to_build_network("build_ising", "ising", ...names())
 }
 
 

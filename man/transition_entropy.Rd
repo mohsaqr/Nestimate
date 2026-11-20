@@ -9,7 +9,7 @@
 \alias{summary.net_transition_entropy}
 \alias{print.summary.net_transition_entropy}
 \alias{plot.net_transition_entropy}
-\title{Transition Entropy of a Markov Chain}
+\title{Compute the transition entropy of a Markov chain}
 \usage{
 transition_entropy(x, base = 2, normalize = TRUE)
 
@@ -32,14 +32,14 @@ transition_entropy(x, base = 2, normalize = TRUE)
 transition weights, a \code{tna} model, a numeric transition matrix, or wide
 sequence data (a data frame or a character matrix, one row per sequence)
 that holds a numbered run of positions (T1, T2, ...), from which a
-relative transition network is built; other columns are set aside with
-a message. For a frame without such a run, build the network with
-\code{\link[=build_network]{build_network()}} (\verb{state_cols =} or \verb{action =}) and pass that. A \code{netobject_group} gives one result per group. An association
-network (\code{cor}, \code{pcor}, \code{glasso}, \code{ising}, \code{mgm}) or a matrix with
-negative entries raises an error of class \code{nestimate_not_markov}.
-A \code{group_tna} (package tna) gives one result per group, as a \code{netobject_group} does.
-For the
-\code{print()} and \code{plot()} methods: a \code{transition_entropy()} result;
+relative transition network is built; other columns are set aside with a
+message. For a frame without such a run, build the network with
+\code{\link[=build_network]{build_network()}} (\verb{state_cols =} or \verb{action =}) and pass that. A
+\code{netobject_group} gives one result per group. An association network
+(\code{cor}, \code{pcor}, \code{glasso}, \code{ising}, \code{mgm}) or a matrix with negative
+entries raises an error of class \code{nestimate_not_markov}. A \code{group_tna}
+(package tna) gives one result per group, as a \code{netobject_group} does. For
+the \code{print()} and \code{plot()} methods: a \code{transition_entropy()} result;
 \code{print()} also takes a group result or the result of \code{summary()}.}
 
 \item{base}{The logarithm base, which sets the unit: \code{2} (default) for
@@ -88,8 +88,7 @@ entropy rate \eqn{h(P)} and a dotted line at the ceiling \eqn{\log_b n}
 (uniform branching). The \code{print()} methods return their input
 invisibly. The object's fields:
 \describe{
-\item{row_entropy}{Named numeric vector of length \eqn{n}: each state's
-branching entropy \eqn{H(P_{i\cdot}) = -\sum_j P_{ij} \log_b P_{ij}}.}
+\item{row_entropy}{Named numeric vector, one value per state: its branching entropy \deqn{H(P_{i\cdot}) = -\sum_j P_{ij} \log_b P_{ij}.}}
 \item{row_entropy_norm}{\code{row_entropy} divided by the ceiling
 \eqn{\log_b n}, in \eqn{[0, 1]}; all zeros when \eqn{n = 1}.}
 \item{stationary}{Named numeric vector: the stationary distribution

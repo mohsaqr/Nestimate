@@ -8,7 +8,7 @@
 \alias{summary.net_permutation_group}
 \alias{print.wtna_perm_mixed}
 \alias{summary.wtna_perm_mixed}
-\title{Permutation Test for Network Comparison}
+\title{Test whether two networks differ by permutation}
 \usage{
 permutation(
   x,
@@ -36,13 +36,15 @@ permutation(
 \method{summary}{wtna_perm_mixed}(object, ...)
 }
 \arguments{
-\item{x}{The first network: a \code{netobject} from \code{\link[=build_network]{build_network()}} (a bare
-\code{cograph_network} is converted to one), a \code{netobject_group} or \code{mcml},
-a \code{wtna_mixed}, or a \code{\link[=net_edge_betweenness]{net_edge_betweenness()}} result.
-A \code{tna} model or a \code{group_tna} (package tna) is first rebuilt as a network from its own sequences (see \code{\link[=as_netobject]{as_netobject()}}). \code{actor} is read from the metadata the model keeps (\code{attr(model$data, "meta")}, kept when the model is built from \code{tna::prepare_data()}); a model without it raises \code{nestimate_actor_missing}.
-For the \code{print()}
-methods: a \code{net_permutation}, \code{net_permutation_group} or
-\code{wtna_perm_mixed}.}
+\item{x}{The first network:
+\itemize{
+\item a \code{netobject} from \code{\link[=build_network]{build_network()}}, or a bare \code{cograph_network};
+\item a \code{netobject_group}, an \code{mcml} or a \code{wtna_mixed};
+\item a \code{\link[=net_edge_betweenness]{net_edge_betweenness()}} result;
+\item a \code{tna} model or \code{group_tna}, rebuilt as a network from its own sequences (see \code{\link[=as_netobject]{as_netobject()}}). Raises \code{nestimate_actor_missing} when \code{actor} is given and the model keeps no metadata; models built with \code{tna::prepare_data()} keep it.
+}
+
+For the \code{print()} methods: a \code{permutation()} result.}
 
 \item{y}{The second network, of the same kind as \code{x}, estimated with the
 same method on the same nodes (their order may differ); other methods
@@ -111,13 +113,7 @@ shuffled, and the ICC and design effect are reported; see the sections
 names, outermost first, are nested levels (such as
 \code{c("Group", "Student")}): labels are shuffled at the level where they
 are assigned, within the units above it. Default \code{NULL}:
-sequences are shuffled one by one. A value that is not one or more
-distinct column names, or \code{actor} with \code{paired = TRUE}, raises an error of class
-\code{nestimate_bad_actor}; a column that is absent or has missing values,
-\code{nestimate_actor_missing}; a column whose values do not give one id per
-sequence (or, with \code{concat}, that joins rows of different actors),
-\code{nestimate_actor_misaligned}; a method other than the transition
-methods, \code{nestimate_actor_unsupported}.}
+sequences are shuffled one by one. Raises \code{nestimate_actor_missing} when the column is absent or incomplete, and \code{nestimate_actor_misaligned} when it does not give one actor per sequence.}
 
 \item{...}{For the \code{print()} and \code{summary()} methods: not used.}
 
@@ -347,12 +343,7 @@ sequences of one actor (0.05 in that data set, with a printed design
 effect of 1.24 for the bootstrap), so Kish's approximation with it
 counts sequences per actor, not transitions.
 
-\code{actor} is available for transition networks built from sequences
-(\code{"relative"}, \code{"frequency"}, \code{"co_occurrence"}). On one-hot data the
-actor column is held per row rather than per unit, so the call raises an
-error of class \code{nestimate_actor_misaligned}. The other methods, association networks (\code{"cor"},
-\code{"pcor"}, \code{"glasso"}, ...) among them, do not keep row identifiers after
-estimation and raise an error of class \code{nestimate_actor_unsupported}.
+\code{actor} works for the transition networks built from sequences: \code{"relative"}, \code{"frequency"} and \code{"co_occurrence"}. The other methods keep no row identifiers after estimation, and with them \code{actor} raises \code{nestimate_actor_unsupported}; one-hot data, which hold the actor per row, raise \code{nestimate_actor_misaligned}.
 }
 
 \section{ICC and design effect}{

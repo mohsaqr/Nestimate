@@ -127,7 +127,7 @@ print.mcml_layer <- function(x, ...) {
 # 1. Edge Weight Aggregation
 # ==============================================================================
 
-#' Aggregate Edge Weights
+#' Aggregate edge weights into one value
 #'
 #' @description
 #' `net_aggregate_weights()` reduces a vector of edge weights to one number:
@@ -222,7 +222,7 @@ net_aggregate_weights <- function(w, method = "sum", n_possible = NULL) {
 # 2. Cluster Summary (Between/Within Aggregates)
 # ==============================================================================
 
-#' Cluster Summary Statistics
+#' Aggregate a network's weights to clusters of nodes
 #'
 #' @description
 #' `cluster_summary()` aggregates a node-level weight matrix to clusters of
@@ -798,7 +798,7 @@ cluster_summary <- function(x,
 # ==============================================================================
 
 
-#' Build MCML from Raw Transition Data
+#' Build an MCML model of cluster and within-cluster transitions
 #'
 #' @description
 #' `build_mcml()` builds a Multi-Cluster Multi-Level (MCML) model from
@@ -983,9 +983,7 @@ cluster_summary <- function(x,
 #'   `action`, `time`, `order`, `session`, `time_threshold`, `end_by`,
 #'   `labels`, `from`, `to`, `weight`, `cols`) with a re-partition raises an
 #'   error, as does passing `clusters` together with `combine` or `expand`.
-#'   An `mcml` built from a matrix, from an edge list (it keeps only the
-#'   within-cluster edges) or with `compute_within = FALSE` raises an error
-#'   of class `nestimate_mcml_no_sequences`. [sequence_plot()] takes the
+#'   Raises `nestimate_mcml_no_sequences` on an `mcml` that keeps no sequences, such as one built from a matrix or an edge list. [sequence_plot()] takes the
 #'   same two arguments as display options: its `combine` draws what it
 #'   draws for `build_mcml(x, combine = )`, while its `expand` opens
 #'   clusters in the Summary panel only and keeps one panel per cluster.
@@ -2274,18 +2272,19 @@ build_mcml <- function(x,
 
   # Extract the counted pairs for all rows: consecutive columns
   # (col[t], col[t+1]), or the block pairs of a windowed sequence
+  # (a windowed frame of one window per sequence has none: character(0))
   col_pairs <- .mcml_sequence_pairs(df)
-  pairs <- lapply(seq_len(nrow(col_pairs)), function(p) {
-    data.frame(from = as.character(df[[col_pairs[p, 1L]]]),
-               to = as.character(df[[col_pairs[p, 2L]]]),
-               stringsAsFactors = FALSE)
-  })
-  pairs <- as.data.frame(data.table::rbindlist(pairs))
+  column_states <- function(cols) {
+    as.character(unlist(lapply(cols, function(j) as.character(df[[j]])),
+                        use.names = FALSE))
+  }
+  pair_from <- column_states(col_pairs[, 1L])
+  pair_to <- column_states(col_pairs[, 2L])
 
   # Remove NA pairs
-  valid <- !is.na(pairs$from) & !is.na(pairs$to)
-  from_vals <- pairs$from[valid]
-  to_vals <- pairs$to[valid]
+  valid <- !is.na(pair_from) & !is.na(pair_to)
+  from_vals <- pair_from[valid]
+  to_vals <- pair_to[valid]
   weights <- rep(1, length(from_vals))
 
   observed_nodes <- as.character(unlist(df, use.names = FALSE))
@@ -2404,7 +2403,7 @@ build_mcml <- function(x,
   raw_weights # nocov
 }
 
-#' Promote the Layers of an mcml to Networks
+#' Convert the layers of an MCML model to a group of networks
 #'
 #' @description
 #' `as_tna()` turns an `mcml` object into a `netobject_group`: one network
@@ -2447,7 +2446,10 @@ build_mcml <- function(x,
 #'   "cooccurrence"` or `directed = FALSE`) also records
 #'   `params$symmetrize = TRUE`, and one built from a weighted edge list
 #'   carries the edge weights in its data, so the resampling verbs recount
-#'   each layer as it was fitted. With
+#'   each layer as it was fitted. An `mcml` built with a `method` other
+#'   than `"sum"` records it as `params$aggregation`, so
+#'   [bootstrap_network()] combines the transitions of each resample the
+#'   same way. With
 #'   `expand`, the `macro` element is the mixed-resolution network of
 #'   [macro_network()] instead of the fully collapsed one. The default
 #'   method returns a `tna` model unchanged and raises an error for any
@@ -2522,11 +2524,20 @@ as_tna.mcml <- function(x, expand = NULL, ...) {
   meta_type <- x$meta$type
   net_method <- if (identical(meta_type, "tna")) "relative" else "frequency"
   directed <- if (!is.null(x$meta$directed)) x$meta$directed else TRUE
+  # How the fit combined the transitions of one pair of clusters (or states):
+  # a resample combines its own rows the same way. "density" divides the
+  # macro sums by n_i * n_j and leaves the within-cluster sums undivided.
+  aggregation <- x$meta$method %||% "sum"
+  sizes <- vapply(x$cluster_members %||% list(), length, integer(1L))
+  macro_possible <- if (identical(aggregation, "density") &&
+                        length(sizes) > 0L) outer(sizes, sizes)
 
   # Macro
   if (is.null(expand)) {
     macro_net <- .mcml_layer_netobject(x$macro, method = net_method,
-                                       directed = directed)
+                                       directed = directed,
+                                       aggregation = aggregation,
+                                       n_possible = macro_possible)
   }
 
   # Per-cluster. Every cluster is kept. A zero-sum row is a legitimate sink
@@ -2538,7 +2549,9 @@ as_tna.mcml <- function(x, expand = NULL, ...) {
   cluster_nets <- if (!is.null(x$clusters)) {
     nets <- lapply(names(x$clusters), function(cl) {
       .mcml_layer_netobject(x$clusters[[cl]], method = net_method,
-                            directed = directed)
+                            directed = directed,
+                            aggregation = if (identical(aggregation, "density"))
+                              "sum" else aggregation)
     })
     names(nets) <- names(x$clusters)
     nets
@@ -2558,12 +2571,19 @@ as_tna.mcml <- function(x, expand = NULL, ...) {
 #' layer's data: `symmetrize` when the stored weights are (W + t(W)) / 2 of
 #' the counts W (an undirected fit), and `row_weight` naming the column that
 #' holds each edge-list row's weight, so a resample sums the weights of the
-#' rows it draws, as the fit does.
+#' rows it draws, as the fit does. A fit that combined the weights of a pair
+#' other than by their sum records it as `aggregation` (with `n_possible`,
+#' the number of possible state pairs per cell, for the macro "density"), so
+#' bootstrap_network() combines each resample's rows the same way.
 #' @param layer An mcml layer (weights, inits, data).
 #' @param method,directed As recorded by as_tna.mcml().
+#' @param aggregation The fit's `method` (see net_aggregate_weights()).
+#' @param n_possible For "density": a cluster-by-cluster matrix of the
+#'   possible state pairs, or NULL.
 #' @return A netobject.
 #' @noRd
-.mcml_layer_netobject <- function(layer, method, directed) {
+.mcml_layer_netobject <- function(layer, method, directed,
+                                  aggregation = "sum", n_possible = NULL) {
   data <- layer$data
   params <- list()
   if (!isTRUE(directed)) params$symmetrize <- TRUE
@@ -2572,6 +2592,10 @@ as_tna.mcml <- function(x, expand = NULL, ...) {
     data$weight <- row_weight
     params$cols <- c("from", "to")
     params$row_weight <- "weight"
+  }
+  if (!identical(aggregation, "sum")) {
+    params$aggregation <- aggregation
+    params$n_possible <- n_possible
   }
   .wrap_netobject(layer$weights, data = data, method = method,
                   directed = directed, inits = layer$inits, params = params)
@@ -2673,7 +2697,7 @@ as_tna.default <- function(x, ...) {
 # as_htna -- Full node-level network grouped by cluster (for cograph::plot_htna)
 # ==============================================================================
 
-#' Build a grouped node-level network (htna) from data and a clustering
+#' Build a node-level network with clusters as node groups
 #'
 #' @description
 #' `as_htna()` builds the full node-level network from the original data
@@ -2687,9 +2711,7 @@ as_tna.default <- function(x, ...) {
 #' often the data), or a fitted `net_mmm`.
 #'
 #' The result is an ordinary `netobject`, so the inference verbs apply to it
-#' ([bootstrap_network()], [net_centrality()], [permutation()]), and
-#' cograph draws it as a grouped network:
-#' `cograph::plot_htna(as_htna(data, clusters))`.
+#' ([bootstrap_network()], [net_centrality()], [permutation()]), and `cograph::plot_htna()` draws it as a grouped network.
 #'
 #' @param x The data, in any form [build_network()] accepts (a sequence data
 #'   frame, an event log, an edge list, a transition matrix, a `netobject`

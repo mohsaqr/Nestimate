@@ -3,7 +3,7 @@
 # per-actor endpoint summary, or (b) a chain with an extra absorbing
 # state representing dropout / course-end / censoring.
 
-#' Tidy per-actor endpoint summary of a wide-format sequence dataset
+#' Tabulate the first and last states of each sequence
 #'
 #' @description
 #' `actor_endpoints()` returns one row per sequence (actor) of a
@@ -101,7 +101,7 @@ actor_endpoints <- function(data, cols = NULL) {
 }
 
 
-#' Mark leading-NA cells with an explicit state label
+#' Fill leading missing cells with a start state
 #'
 #' @description
 #' `mark_first_state()` fills every missing cell before each sequence's
@@ -125,9 +125,7 @@ actor_endpoints <- function(data, cols = NULL) {
 #'   numbered run of positions (`T1`, `T2`, ...); other columns beside them
 #'   raise an error of class `nestimate_bad_input`.
 #' @param state The label written into the leading missing cells, a single
-#'   non-empty string. Default `"Start"`. If the label already occurs in
-#'   `data`, a warning of class `nestimate_state_collision` is given and `_1`, `_2`, ... is appended until it is
-#'   unique, so the marker is never confused with an observed state.
+#'   non-empty string. Default `"Start"`. A label that already occurs in `data` is made unique with a suffix (`_1`, `_2`, ...) and raises the warning `nestimate_state_collision`, so the marker is never confused with an observed state.
 #' @param cols The columns holding the positions, in order; only they are
 #'   returned. A name not in `data` raises an error of class
 #'   `nestimate_bad_input`. Default `NULL` (every column).
@@ -180,7 +178,7 @@ mark_first_state <- function(data, state = "Start", cols = NULL) {
   .mark_positions(out)
 }
 
-#' Mark terminal-NA cells with an explicit state label
+#' Fill trailing missing cells with an end state
 #'
 #' @description
 #' `mark_terminal_state()` fills every missing cell after each sequence's
@@ -215,10 +213,7 @@ mark_first_state <- function(data, state = "Start", cols = NULL) {
 #'   numbered run of positions (`T1`, `T2`, ...); other columns beside them
 #'   raise an error of class `nestimate_bad_input`.
 #' @param state The label written into the trailing missing cells, a single
-#'   non-empty string. Default `"End"`. If the label already occurs in
-#'   `data`, a warning of class `nestimate_state_collision` is given and `_1`, `_2`, ... is appended until it is
-#'   unique, so the absorbing marker is never confused with an observed
-#'   state.
+#'   non-empty string. Default `"End"`. A label that already occurs in `data` is made unique with a suffix (`_1`, `_2`, ...) and raises the warning `nestimate_state_collision`, so the absorbing marker is never confused with an observed state.
 #' @param cols The columns holding the positions, in order; only they are
 #'   returned. A name not in `data` raises an error of class
 #'   `nestimate_bad_input`. Default `NULL` (every column).

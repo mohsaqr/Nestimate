@@ -3,7 +3,7 @@
 \name{prepare}
 \alias{prepare}
 \alias{print.nestimate_data}
-\title{Prepare Event Log Data for Network Estimation}
+\title{Prepare an event log for network estimation}
 \usage{
 prepare(
   data,
@@ -75,10 +75,7 @@ value that is not a number then raises an error of class
 date layouts first and read as a Unix timestamp only when it matches
 none. A numeric \code{time} column is always read as Unix timestamps.}
 
-\item{unix_time_unit}{The unit of Unix timestamps: \code{"seconds"} (default),
-\code{"milliseconds"} or \code{"microseconds"}. A numeric \code{time} column that gives
-dates after the year 2500 raises a warning of class
-\code{nestimate_time_unit}, the usual sign of the wrong unit.}
+\item{unix_time_unit}{The unit of numeric timestamps. Default \code{"seconds"}; also \code{"milliseconds"} or \code{"microseconds"}. Dates after the year 2500, the usual sign of the wrong unit, raise the warning \code{nestimate_time_unit}.}
 
 \item{timezone}{The Olson time zone (see \code{\link[=OlsonNames]{OlsonNames()}}) in which
 timestamps without zone information are read and Unix timestamps are

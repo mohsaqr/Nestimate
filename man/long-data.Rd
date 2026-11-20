@@ -5,7 +5,7 @@
 \alias{long-data}
 \alias{ai_long}
 \alias{human_long}
-\title{Human-AI Vibe Coding Interaction Data (Long Format)}
+\title{Coded turns of human-AI vibe coding sessions}
 \format{
 Two data frames with the same 9 columns:
 \describe{
@@ -49,7 +49,7 @@ An object of class \code{data.frame} with 8551 rows and 9 columns.
 }
 \source{
 Saqr, M. (2026). Human-AI vibe coding interaction study.
-\url{https://saqr.me/blog/2026/human-ai-interaction-cograph/}
+\href{https://saqr.me/blog/2026/human-ai-interaction-cograph/}{saqr.me}
 }
 \usage{
 human_long
@@ -57,12 +57,12 @@ human_long
 ai_long
 }
 \description{
-Coded turns from 429 human-AI pair-programming ("vibe coding") sessions
-across 34 projects, held between 5 February and 8 March 2026, in long
-format with one row per code. \code{human_long} holds the codes of the human
-turns and \code{ai_long} those of the AI turns (428 of the sessions have AI
-turns). The two data frames share their columns and their sessions, and
-interleave on \code{order_in_session}.
+\code{human_long} and \code{ai_long} are a coded dataset of the turns of 429
+human-AI pair-programming ("vibe coding") sessions across 34 projects,
+held between 5 February and 8 March 2026: \code{human_long} has the codes of
+the human turns and \code{ai_long} those of the AI turns (428 of the sessions
+have AI turns). Both are in long format, one row per code; they share
+their columns and their sessions, and interleave on \code{order_in_session}.
 }
 \examples{
 net <- build_network(human_long, method = "tna",

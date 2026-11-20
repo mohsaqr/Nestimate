@@ -309,7 +309,7 @@
 # (.geom_fit_label moved to R/plot-utils.R alongside other shared helpers)
 # ------------------------------------------------------------------------------
 
-#' Mosaic Plot of a Network's Transition or Co-occurrence Counts
+#' Draw a mosaic plot of transition or co-occurrence counts
 #'
 #' @description
 #' `mosaic_plot()` draws a mosaic display of a contingency table and fills
@@ -537,11 +537,7 @@
 #'   actor-coloured labels, with a warning.
 #' @param ... With `style = "flat"`: styling arguments for the flat mosaic
 #'   of a network, table or matrix; an unknown name raises an error that
-#'   lists the valid ones. The data-frame method takes no `style` and
-#'   raises an error of class `nestimate_bad_input` for any argument it
-#'   does not take; the `mcml` method does the same with
-#'   `style = "classic"`; the other methods ignore it with a warning of
-#'   class `nestimate_ignored_argument`.
+#'   lists the valid ones. Raises `nestimate_bad_input` when the data-frame method, or the `mcml` method with `style = "classic"`, gets an argument it does not take; the other methods ignore such an argument with a warning.
 #'
 #' @return A `ggplot` object, one rectangle per cell (empty cells are left
 #'   out of the flat and data-frame mosaics), filled by the standardised
@@ -2422,7 +2418,7 @@ knit_print.nestimate_facet_list <- function(x, ...) {
 # Generic + methods (exported)
 # ------------------------------------------------------------------------------
 
-#' Plot State Frequency Distributions
+#' Plot state frequencies as treemaps or bars
 #'
 #' @description
 #' `plot_state_frequencies()` counts how often each state occurs in the
@@ -2825,7 +2821,7 @@ plot_state_frequencies.default <- function(x, ...) {
 # state_distribution(): public tidy frequency extractor
 # ------------------------------------------------------------------------------
 
-#' Per-Class State Distribution as a Tidy Data Frame
+#' Tabulate the state distribution of each group
 #'
 #' @description
 #' `state_distribution()` counts how often each state occurs in the
@@ -2838,9 +2834,7 @@ plot_state_frequencies.default <- function(x, ...) {
 #' `mcml` one per cluster, with the node labels it was given in place of
 #' the raw codes. Missing and empty cells are not counted.
 #'
-#' The table is the one behind [plot_state_frequencies()], and the per-group
-#' counterpart of [state_frequencies()], which counts the states of raw
-#' sequence data.
+#' This is the table that [plot_state_frequencies()] draws. To count the states of raw sequence data, use [state_frequencies()] instead.
 #'
 #' @param x A `netobject`, `netobject_group`, `mcml` or `htna` network built
 #'   from sequences, or the `state_freq` result of [plot_state_frequencies()],

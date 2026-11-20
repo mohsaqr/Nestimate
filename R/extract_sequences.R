@@ -1,4 +1,4 @@
-#' Extract Sequences in Wide Format
+#' Extract sequences in wide format
 #'
 #' @description
 #' `extract_sequences()` returns the sequences behind a Nestimate input as a

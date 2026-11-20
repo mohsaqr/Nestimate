@@ -82,7 +82,7 @@ utils::globalVariables(c(
   out
 }
 
-#' Magnitude difference between the frequency and probability views
+#' Measure how far frequency and probability networks disagree
 #'
 #' @description
 #' `magnitude_difference()` measures, edge by edge, how far the two usual
@@ -249,11 +249,11 @@ magnitude_difference <- function(data, actor = NULL, action = NULL,
 #' @param x For the `print()` and `plot()` methods: a `magnitude_difference`
 #'   object.
 #' @param ... For the `plot()` method: further settings of the drawing.
-#'   `"stacked"` takes `threshold` (the magnitude marked "small" in the
-#'   colour key, default 10% of the largest), `r_inner`,
-#'   `r_outer`, `gap_rad`, `label_offset`, `label_size` and
-#'   `src_label_size`; `"circular"` takes `self_loops` (default `TRUE`),
-#'   `label_offset` and `edge_curve`. The `print()` method ignores it.
+#'   
+#' * `"stacked"`: `threshold` (the magnitude marked "small" in the colour key, default 10% of the largest), the radii `r_inner`, `r_outer` and `gap_rad`, and the labels `label_offset`, `label_size` and `src_label_size`;
+#' * `"circular"`: `self_loops` (default `TRUE`), `label_offset` and `edge_curve`.
+#' 
+#'  The `print()` method ignores it.
 #' @param type For the `plot()` method: the kind of plot. `"stacked"`
 #'   (default) is a polar portrait with one sector per source state and one
 #'   wedge per edge, grey up to the smaller of the two scaled weights and

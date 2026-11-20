@@ -1098,7 +1098,7 @@
 # Main entry point
 # ---------------------------------------------------------------------------
 
-#' Build a Higher-Order Network (HON)
+#' Build a higher-order network from sequences
 #'
 #' @description
 #' `build_hon()` builds a higher-order network from sequences with the

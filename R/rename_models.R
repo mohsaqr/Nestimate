@@ -12,7 +12,7 @@
 # to each constituent of a `netobject_group` as a model (one fitted
 # network), reserving "group" for the dispatch class.
 
-#' Rename the models of a `netobject_group`
+#' Rename the networks of a network group
 #'
 #' @description
 #' `rename_models()` replaces the names of the networks in a

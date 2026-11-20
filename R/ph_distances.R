@@ -8,7 +8,7 @@
 # Bottleneck distance
 # =========================================================================
 
-#' Bottleneck Distance Between Persistence Diagrams
+#' Compute the bottleneck distance between persistence diagrams
 #'
 #' @description
 #' `bottleneck_distance()` returns the bottleneck distance between two
@@ -33,11 +33,7 @@
 #' the candidate costs (every pairwise \eqn{L_\infty} distance and every
 #' diagonal projection), checking each with a Kuhn bipartite matching.
 #'
-#' Essential classes (`death = Inf` in VR mode, `death = 0` with
-#' `birth > 0` in clique mode, as [persistence_landscape()] reads them; a
-#' `(0, 0)` pair is a zero-length finite point) are matched one-to-one within
-#' each
-#' dimension by their sorted births. When the two diagrams have different
+#' Essential classes are matched one-to-one within each dimension by their sorted births. A class is essential when it never dies: death `Inf` in a Vietoris-Rips filtration, or death 0 with a positive birth in a clique filtration, as in [persistence_landscape()]. A `(0, 0)` pair is a finite point of length zero. When the two diagrams have different
 #' numbers of essential classes in a dimension, the distance for that
 #' dimension is `Inf`.
 #'
@@ -250,7 +246,7 @@ bottleneck_distance <- function(d1, d2, dimension = NULL,
 # Persistence landscapes (Bubenik 2015)
 # =========================================================================
 
-#' Persistence Landscape
+#' Compute the persistence landscape of a persistence diagram
 #'
 #' @description
 #' `persistence_landscape()` computes the persistence landscape (Bubenik

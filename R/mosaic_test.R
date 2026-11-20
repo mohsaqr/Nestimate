@@ -3,7 +3,7 @@
 .mosaic_test_methods <- c("chisq", "rao_scott", "donner_klar", "cmh", "gee",
                           "glmm")
 
-#' Association tests for a mosaic, with and without clustering
+#' Test the association of a mosaic with and without clustering
 #'
 #' @description
 #' `mosaic_test()` runs the tests behind [mosaic_plot()] and

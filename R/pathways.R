@@ -1,6 +1,6 @@
 # ---- Pathway Extraction for Higher-Order Visualization ----
 
-#' Extract Pathways from Higher-Order Network Objects
+#' Extract pathways from a higher-order network
 #'
 #' @description
 #' `pathways()` turns a higher-order result into pathway strings in arrow
@@ -32,12 +32,12 @@
 #' probabilities, scores or tests behind them; those stay in the source
 #' object (for a MOGen, [mogen_transitions()] gives them per order).
 #'
-#' @param x The object to read: a `net_hon`, `net_hypa` or `net_mogen` (from
-#'   [build_hon()], [build_hypa()] or [build_mogen()]), a `netobject` built
-#'   from sequences, a `net_association_rules` (from [association_rules()])
-#'   or a `net_link_prediction` (from [predict_links()]). A `netobject` of an
-#'   association method (whose rows are variables) or a one-hot `netobject`
-#'   raises an error of class `nestimate_bad_input`; a network without its
+#' @param x The object to read:
+#' * a [build_hon()], [build_hypa()] or [build_mogen()] result;
+#' * a `netobject` built from sequences;
+#' * an [association_rules()] or [predict_links()] result.
+#' 
+#' A `netobject` of an association method, or a one-hot one, raises `nestimate_bad_input`; a network without its
 #'   sequences stops `pathways()`.
 #' @param ... For the `netobject` method: passed to the `pathways()` method of
 #'   the HON or HYPA built from it, so `min_count`, `min_prob`, `top` and

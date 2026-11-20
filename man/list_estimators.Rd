@@ -2,7 +2,7 @@
 % Please edit documentation in R/estimator_registry.R
 \name{list_estimators}
 \alias{list_estimators}
-\title{List All Registered Estimators}
+\title{List the registered estimators}
 \usage{
 list_estimators()
 }

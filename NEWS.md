@@ -3,7 +3,8 @@
 ## New features
 
 * `build_network(method = "latency")` builds a reply network weighted by reply
-  speed (Templeton et al. 2022); the resampling verbs refuse it.
+  speed (Templeton et al. 2022) from an event log with a time for every event;
+  the resampling verbs refuse it.
 * `tna` and `group_tna` models are accepted wherever a network or sequences are.
 * `actor` drops whole actors in `centrality_stability()` and
   `casedrop_reliability()`, and takes nested levels in `permutation()` and others.
@@ -33,11 +34,15 @@
   for declared `state_cols`.
 * One-hot data: overlapping windows match `tna::import_onehot()`, and
   `association_rules()`, `build_clusters()` and `build_mmm()` read its windows.
-* `wtna(method = "cooccurrence", type = "relative")` is directed.
+* `wtna(method = "cooccurrence", type = "relative")` is directed, and
+  `params = list(type = "relative")` on a co-occurrence network of sequences
+  normalises its rows too; clustering a one-hot network keeps its settings.
 * Resampling verbs resample `wtna()` data by unit, honour windows, markers,
   `concat` and scaling, and resample Ising networks and `mcml` fits by counts.
 * `centrality_stability()` and `casedrop_reliability()` count failed subsets as
-  below `threshold`; `casedrop_reliability()` gains `target`.
+  below `threshold`; `casedrop_reliability()` gains `target`, whose default
+  compares only the existing edges of an unscaled transition network
+  (`target = "all"` gives the earlier values).
 * `permutation()` corrects glasso shuffles, `adjust`, pooling and paired one-hot
   actors; `compare_networks()` passes `seed` unchanged.
 * `sequence_compare()`: effect sizes and unadjusted p-values no longer depend
@@ -46,28 +51,39 @@
 * `boot_glasso()` uses the network's glasso settings and threshold; its
   difference tests count ties in both tails.
 * `summary()`, `compare_model()`, `compare_networks()` and `network_reliability()`
-  correct edge counts, distances and directedness.
+  correct edge counts, distances and directedness; out-strength is the row sum
+  and in-strength the column sum (0.9.24 swapped their spreads), and
+  `compare_model()` gives `NA` rather than `Inf` or `NaN` ratios at zero weights.
 * `subtract_networks()` is directed when either input or the difference is.
 * Centrality: `BetweennessRSP`, betweenness ties and min-max normalisation are
-  corrected; `extract_edges()` keeps negative edges and lists undirected ones once.
+  corrected; `extract_edges()` keeps negative edges, drops zero-weight cells and
+  lists undirected ones once.
 * `net_prune()` prunes undirected networks by pair; `method = "disparity"` uses
   positive edges only and removes negative ones.
 * `build_mlvar()` temporal edges run from predictor to outcome.
 * `build_mmm()`, `build_clusters()` and `cluster_diagnostics()` correct the
-  classification error, covariate fits and information criteria.
+  classification error, covariate fits and information criteria; a sequence
+  whose first state is missing adds no initial-state term to `build_mmm()`.
 * `build_network()` of a `build_mmm()` fit rebuilds with the source settings.
 * `build_mcml()`, `build_mcml_pc()` and `cluster_summary()` correct input
   reading, density weights, within totals and the correlation used.
+  `bootstrap_network()` of an `mcml` combined by a mean, maximum, density or
+  another non-sum `method` combines each resample the same way; the other
+  resampling verbs refuse such a fit.
 * Entropy: `entropy_bayes()` recounts relative and scaled networks,
   `entropy_trajectory()` windows run through time, and `base` must exceed 1.
 * `passage_time()`, `chain_structure()` and `markov_stability()` correct
   unreachable targets, absorption and recurrence times.
-* `build_mogen()` and `markov_order_test()` gain `dof = "paths"`, and
+* `build_mogen()` and `markov_order_test()` gain `dof = "paths"`, now the
+  default (`dof = "observed"` gives the earlier values), and
   `build_mogen(criterion = "lrt")` tests from the first-order model.
 * `markov_order_test()` splits sequences at missing values and reads `tna` models.
 * `build_hon(method = "hon")` follows pyHON, and `build_hypa()` uses a
-  strength-preserving null with `p_adjust = "none"` by default.
-* `hypergraph_centrality()` defaults to `type = "clique"`; it and
+  strength-preserving null, also scores paths that never occur, and uses
+  `p_adjust = "none"` by default; the earlier null flagged anomalies in
+  first-order data.
+* `hypergraph_centrality()` defaults to `type = "clique"`, and `type = "Z"` or
+  `"H"` refuse hypergraphs with mixed hyperedge sizes; it and
   `hypergraph_laplacian()` treat non-positive weights as non-membership.
 * `q_analysis()`, `persistent_homology()`, `betti_numbers()` and
   `bottleneck_distance()` are corrected.
@@ -77,7 +93,9 @@
   `mosaic_analysis()` drops Yates' correction from Cramér's V.
 * Missing values end runs in `build_hon()`, `build_mogen()` and `path_counts()`,
   and factors are read by label.
-* `nct()` treats tiny weights as no edge; MGM leaves `actor` out.
+* `nct()` treats tiny weights as no edge, and `$structure` (the largest edge
+  difference) and `$strength` hold what 0.9.24 stored the other way round in
+  `$M` and `$S`; MGM leaves `actor` out.
 * `outcome_model()` uses t limits and, with `select = "split"`, splits whole
   groups; `loading_stability()` replays the fit's options.
 * `sequence_plot()` and `distribution_plot()`: a fractional `trim` keeps the
@@ -88,6 +106,10 @@
 
 * Column names give no role: declare `action`, `actor`, `time`, `state_cols`,
   `metadata_cols` or `cols`; one-hot data needs `format = "onehot"` or `codes`.
+* The `build_*()` shortcuts (`build_tna()`, `build_cor()` and the others) take
+  `group`, `scaling`, `threshold` and `params` as named arguments; the
+  sequence ones also take `state_cols`, `time_threshold` and, where they read
+  one-hot data, `codes`.
 * `build_mcml()` gains `from`, `to`, `weight` and `cols`; `cooccurrence()` and
   `association_rules()` gain `format = "binary"`.
 * Sequence verbs refuse one-hot and association networks; resampling verbs

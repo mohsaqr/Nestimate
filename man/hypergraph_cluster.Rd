@@ -6,7 +6,7 @@
 \alias{summary.net_hypergraph_cluster}
 \alias{node_clusters}
 \alias{plot.net_hypergraph_cluster}
-\title{Spectral clustering of hypergraph vertices}
+\title{Cluster the nodes of a hypergraph spectrally}
 \usage{
 hypergraph_cluster(
   hg,
@@ -42,8 +42,7 @@ best. Default \code{25}.}
 \item{seed}{A whole number that makes the k-means starts reproducible.
 The session's own random stream is left as it was. Default \code{NULL}.}
 
-\item{x}{For the \code{print()} and \code{plot()} methods and for
-\code{node_clusters()}: a \code{net_hypergraph_cluster} object.}
+\item{x}{For \code{print()}, \code{plot()} and \code{node_clusters()}: a result of \code{hypergraph_cluster()}.}
 
 \item{...}{For the methods: ignored.}
 

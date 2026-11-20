@@ -3,7 +3,7 @@
 \name{sequence_plot}
 \alias{sequence_plot}
 \alias{print.mcml_sequence_plot}
-\title{Sequence Plot (heatmap, index, or distribution)}
+\title{Draw a sequence index plot, heatmap or distribution plot}
 \usage{
 sequence_plot(
   x,

@@ -28,7 +28,7 @@
 }
 
 
-#' Two-variable mosaic analysis (chi-square test + flat mosaic)
+#' Test and draw the association of two categorical variables
 #'
 #' @description
 #' `mosaic_analysis()` tests the association between two categorical columns
@@ -152,10 +152,7 @@
 #'   allow for it. Default `FALSE`: every row is independent, as before.
 #'   `TRUE` reports `nested_method` and needs `actor`; see *Nested data*.
 #' @param nested_method With `nested = TRUE`, the test: `"rao_scott"`
-#'   (default), `"donner_klar"`, `"cmh"`, `"gee"` or `"glmm"`. A test that
-#'   cannot run on the design raises an error of class
-#'   `nestimate_bad_input`; `"glmm"` without lme4 raises one of class
-#'   `nestimate_missing_package`.
+#'   (default), `"donner_klar"`, `"cmh"`, `"gee"` or `"glmm"`. A test that cannot run on the design raises `nestimate_bad_input`; `"glmm"` needs the lme4 package.
 #' @param actor With `nested = TRUE` (required then): the name of the
 #'   column whose values identify the actors, or several names for nested
 #'   levels, outermost first (e.g. `c("Group", "Actor")`). `nested_method`
@@ -171,13 +168,13 @@
 #' @param tile_label What to print inside each tile: `"count"` (default),
 #'   `"percent"`, `"residual"`, `"category"` (the `var2` level) or `"none"`.
 #' @param title The plot title. Default `""` (none).
-#' @param ... Further styling for the flat mosaic: `col_label_side`,
-#'   `row_label_side`, `col_label_angle`, `row_label_angle`, `show_legend`,
-#'   `legend_position`, `legend_size`, `legend_title`, `label_size`,
-#'   `range`, `palette`, `min_label_h` and `min_label_w` (and `pct_base`,
-#'   which overrides `percentage_base` in the plot only; the `pct` column
-#'   always follows `percentage_base`). The fill is the
-#'   ColorBrewer RdBu ramp unless `palette` is given. Column labels turn
+#' @param ... Further styling for the flat mosaic:
+#' * labels: `col_label_side`, `row_label_side`, `col_label_angle`, `row_label_angle`, `label_size`, `min_label_h` and `min_label_w`;
+#' * legend: `show_legend`, `legend_position`, `legend_size` and `legend_title`;
+#' * fill: `range` and `palette` (default the ColorBrewer RdBu ramp);
+#' * `pct_base`, which overrides `percentage_base` in the plot only.
+#' 
+#'  Column labels turn
 #'   vertical when there are more than 6 columns; `col_label_angle` sets an
 #'   angle. Any other name raises an error. For the `plot()` method: the
 #'   same styling and `title`, overriding what the fit stored; for the

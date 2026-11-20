@@ -4,7 +4,7 @@
 \alias{rename_models}
 \alias{rename_models.netobject_group}
 \alias{rename_models.default}
-\title{Rename the models of a \code{netobject_group}}
+\title{Rename the networks of a network group}
 \usage{
 rename_models(x, new_names)
 

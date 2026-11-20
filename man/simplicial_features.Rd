@@ -2,7 +2,7 @@
 % Please edit documentation in R/simplicial_features.R
 \name{simplicial_features}
 \alias{simplicial_features}
-\title{Tidy Topological Features for One or Many Networks}
+\title{Tabulate the topological features of one or many networks}
 \usage{
 simplicial_features(
   x,
@@ -27,9 +27,7 @@ be finite and not negative. \code{type = "vr"} and \code{type = "pathway"} ignor
 it, although the \code{threshold} column still records it.}
 
 \item{max_dim}{The highest simplex dimension built, a whole number of at
-least 1 (a fractional value is truncated). Default \code{4}. When a network holds a larger clique, the complex
-is truncated and \code{\link[=betti_numbers]{betti_numbers()}} warns with class
-\code{nestimate_truncated_complex}; the warning concerns the Betti number of
+least 1 (a fractional value is truncated). Default \code{4}. When a network holds a larger clique, the complex is truncated and raises the warning \code{nestimate_truncated_complex}, which concerns the Betti number of
 dimension \code{max_dim}, so it affects \code{b1} only when \code{max_dim = 1}.}
 
 \item{normalize}{Whether to divide the simplex counts (\code{d1} onwards and

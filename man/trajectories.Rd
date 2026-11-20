@@ -3,7 +3,7 @@
 \docType{data}
 \name{trajectories}
 \alias{trajectories}
-\title{Student Engagement Trajectories}
+\title{Student engagement trajectories}
 \format{
 A character matrix with 138 rows and 15 columns named \code{"1"} to
 \code{"15"}, the courses in the order they were taken. Each entry is \code{"Active"}, \code{"Average"},
@@ -15,9 +15,10 @@ right-censored sequence verbs (\code{\link[=actor_endpoints]{actor_endpoints()}}
 trajectories
 }
 \description{
-Wide-format sequences of student engagement over the 15 successive
-courses of a programme, one row per student and one column per course. The
-states are \code{"Active"}, \code{"Average"} and \code{"Disengaged"}. A missing value
+\code{trajectories} is a dataset of the engagement states (\code{"Active"},
+\code{"Average"} and \code{"Disengaged"}) of 138 students over the 15 successive
+courses of a programme. It is in wide format, one row per student and one
+column per course. A missing value
 occurs only as a run at the end of a row, which marks drop-out; two rows
 are missing throughout.
 }

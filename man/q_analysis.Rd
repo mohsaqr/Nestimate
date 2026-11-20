@@ -4,7 +4,7 @@
 \alias{q_analysis}
 \alias{print.q_analysis}
 \alias{plot.q_analysis}
-\title{Q-Analysis}
+\title{Describe the q-connectivity of a simplicial complex}
 \usage{
 q_analysis(sc)
 

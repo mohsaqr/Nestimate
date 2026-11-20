@@ -1,6 +1,6 @@
 # ---- Co-occurrence Network Construction ----
 
-#' Build a Co-occurrence Network
+#' Build a co-occurrence network of items in transactions
 #'
 #' @description
 #' `cooccurrence()` builds an undirected network of items that appear
@@ -43,10 +43,7 @@
 #' @param by The column that defines the transactions of a long table: each
 #'   of its values is one transaction, holding the distinct `field` values of
 #'   its rows (for example `"paper_id"` or `"session_id"`). Default `NULL`,
-#'   where items co-occur within the same row. It needs a single `field`
-#'   column (several raise an error of class `nestimate_bad_input`). Ignored,
-#'   with a warning of class `nestimate_ignored_argument`, when `sep` is
-#'   set, which reads `field` as delimited.
+#'   where items co-occur within the same row. It needs a single `field` column. Ignored, with a warning, when `sep` is set, since `sep` reads `field` as delimited.
 #' @param sep The separator that splits delimited `field` values, such as
 #'   `";"` or `","`, matched literally; the split values are trimmed. Default
 #'   `NULL`. See `field` for the combinations that raise an error.
@@ -98,8 +95,7 @@
 #'   `"binary"` declares them items, one row per transaction, where a missing
 #'   cell counts as no occurrence; it raises the same error on data with any
 #'   other value.
-#' @param ... Not used; an argument given here is ignored with a warning of
-#'   class `nestimate_ignored_argument`.
+#' @param ... Not used; an argument given here is ignored with a warning.
 #'
 #' @return A `netobject` (class `c("netobject", "cograph_network")`),
 #'   undirected (directed with `similarity = "relative"`), with

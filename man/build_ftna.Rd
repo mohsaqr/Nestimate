@@ -2,7 +2,7 @@
 % Please edit documentation in R/estimate_network.R
 \name{build_ftna}
 \alias{build_ftna}
-\title{Build a Frequency Transition Network (FTNA)}
+\title{Estimate a frequency transition network}
 \usage{
 build_ftna(
   data,
@@ -12,15 +12,21 @@ build_ftna(
   action = NULL,
   time = NULL,
   session = NULL,
-  ...
+  ...,
+  group = NULL,
+  codes = NULL,
+  state_cols = NULL,
+  time_threshold = 900,
+  scaling = NULL,
+  threshold = 0,
+  params = list()
 )
 }
 \arguments{
 \item{data}{The sequences: a data frame with one row per sequence and one
 column per position, an event log (one row per event, with \code{action}
-set), one-hot code columns, or a square matrix of transition
-counts (non-negative whole numbers). Column roles are declared as in
-\code{\link[=build_network]{build_network()}}.}
+set), one-hot code columns (declared with \code{codes}), or a square matrix
+of transition counts (non-negative whole numbers).}
 
 \item{start}{A start state put before every sequence, so the network
 shows where sequences begin. \code{FALSE} (default) adds none, \code{TRUE} adds
@@ -48,9 +54,44 @@ Default \code{NULL}.}
 \item{session}{The column identifying sessions in an event log; each
 session is its own sequence, also without \code{actor}. Default \code{NULL}.}
 
-\item{...}{Further arguments for \code{\link[=build_network]{build_network()}}, such as \code{group},
-\code{params}, \code{scaling}, \code{threshold} or \code{state_cols}. \code{method} cannot be
-given: it is always \code{"frequency"} (error of class \code{nestimate_bad_input}).}
+\item{...}{Further arguments for \code{\link[=build_network]{build_network()}}, such as \code{labels},
+\code{metadata_cols} or \code{timezone}. \code{method} cannot be given: it is always
+\code{"frequency"} (error of class \code{nestimate_bad_input}).}
+
+\item{group}{A column to split the data by: one network is estimated per
+value and the result is a \code{netobject_group}. Default \code{NULL}.}
+
+\item{codes}{The one-hot code columns (one per state, 1 when the state is
+active); setting them declares one-hot data. Default \code{NULL}.}
+
+\item{state_cols}{The columns of a wide table that are sequence
+positions; every other column goes to the network's metadata. Declared
+columns are positions even when they hold only 0 and 1. With nothing
+declared, the position columns must be named as a numbered run (\code{T1},
+\code{T2}, ... or \code{1}, \code{2}, ...), and any other frame raises an error of
+class \code{nestimate_bad_input}. Default \code{NULL}.}
+
+\item{time_threshold}{The longest gap, in seconds, between two events of
+the same sequence in an event log; a longer gap starts a new sequence.
+\code{FALSE} turns the split off, so each actor (or actor-session) is one
+sequence. Default \code{900}.}
+
+\item{scaling}{Rescaling applied to the weights after estimation, in the
+order given: \code{"minmax"} maps the non-zero weights into (0, 1],
+\code{"max"} divides by the largest absolute weight, \code{"rank"} replaces the
+non-zero weights by their ranks, and \code{"normalize"} makes each row's
+absolute weights sum to 1. Zero weights stay zero under every option.
+Combine them as in \code{c("rank", "minmax")}. Default \code{NULL} (none).}
+
+\item{threshold}{Weights whose absolute value is below this are set to
+zero. Default \code{0} (none).}
+
+\item{params}{Settings for the estimator, as a named list. Transitions
+are counted with tna's \code{weighted} and \code{concat} options, and
+\code{window_size} (with \code{window_span}, or \code{windowed = TRUE} for a size of 2)
+counts them between consecutive non-overlapping blocks of that many
+positions. The network keeps these settings, and the resampling verbs
+such as \code{\link[=bootstrap_network]{bootstrap_network()}} re-estimate with them. Default \code{list()}.}
 }
 \value{
 A \code{netobject} (a \code{netobject_group} with \code{group}), exactly as
@@ -72,7 +113,27 @@ how far the counts move under resampling with \code{\link[=bootstrap_network]{bo
 \examples{
 net <- build_ftna(trajectories)
 net
+
+by_achiever <- build_ftna(group_regulation_long, actor = "Actor",
+                          action = "Action", time = "Time",
+                          group = "Achiever", scaling = "minmax")
+by_achiever
+}
+\references{
+Saqr, M., L\enc{ó}{o}pez-Pernas, S., T\enc{ö}{o}rm\enc{ä}{a}nen, T.,
+Kaliisa, R., Misiejuk, K., & Tikka, S. (2025). Transition network
+analysis: A novel framework for modeling, visualizing, and identifying the
+temporal patterns of learners and learning processes. In
+\emph{Proceedings of the 15th International Learning Analytics and
+Knowledge Conference (LAK25)} (pp. 351--361). ACM.
+\doi{10.1145/3706468.3706513}
+
+Tikka, S., L\enc{ó}{o}pez-Pernas, S., & Saqr, M. (2025). tna: An R
+package for transition network analysis. \emph{Applied Psychological
+Measurement}. \doi{10.1177/01466216251348840}
 }
 \seealso{
-\code{\link{build_network}}
+\code{\link[=build_network]{build_network()}} for every method; \code{\link[=build_tna]{build_tna()}},
+\code{\link[=build_atna]{build_atna()}} and \code{\link[=build_cna]{build_cna()}} for the other transition networks;
+\code{\link[=bootstrap_network]{bootstrap_network()}} and \code{\link[=permutation]{permutation()}} for inference.
 }

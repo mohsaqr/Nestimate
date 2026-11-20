@@ -2,7 +2,7 @@
 % Please edit documentation in R/mogen.R
 \name{mogen_transitions}
 \alias{mogen_transitions}
-\title{Extract Transition Table from a MOGen Model}
+\title{Extract the transitions of a MOGen model}
 \usage{
 mogen_transitions(x, order = NULL, min_count = 1L)
 }

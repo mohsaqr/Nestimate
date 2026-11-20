@@ -4,7 +4,7 @@
 \alias{net_centrality}
 \alias{plot.net_centrality}
 \alias{plot.net_centrality_group}
-\title{Compute Centrality Measures for a Network}
+\title{Compute centrality measures for a network}
 \usage{
 net_centrality(
   x,
@@ -44,10 +44,9 @@ net_centrality(
 }
 \arguments{
 \item{x}{The network: a \code{netobject}, \code{netobject_group}, \code{mcml} or
-\code{cograph_network}.
-A \code{tna} model or a \code{group_tna} (package tna) is first rebuilt as a network from its own sequences (see \code{\link[=as_netobject]{as_netobject()}}).
-For the \code{plot()} methods: the result of
-\code{net_centrality()}.}
+\code{cograph_network}. A \code{tna} model or a \code{group_tna} (package tna) is first
+rebuilt as a network from its own sequences (see \code{\link[=as_netobject]{as_netobject()}}). For
+the \code{plot()} methods: the result of \code{net_centrality()}.}
 
 \item{measures}{The measures to compute. The default is \code{"InStrength"},
 \code{"Betweenness"} and \code{"Diffusion"}; \code{"all"} computes every built-in one:

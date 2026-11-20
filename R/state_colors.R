@@ -16,7 +16,7 @@
 # ==============================================================================
 
 
-#' Set the state colours carried by a network object
+#' Set the state colours of a network object
 #'
 #' @description
 #' `set_state_colors()` attaches a palette to a network object, so every
@@ -114,7 +114,7 @@ set_state_colors.netobject_group <- function(x, colors) {
 `state_colors<-` <- function(x, value) set_state_colors(x, value)
 
 
-#' The state colours an object will draw with
+#' Get the state colours of an object
 #'
 #' @description
 #' `state_colors()` returns the palette an object draws with: the colours set

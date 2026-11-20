@@ -5,7 +5,7 @@
 \alias{print.net_reliability}
 \alias{summary.net_reliability}
 \alias{plot.net_reliability}
-\title{Split-Half Reliability for Network Estimates}
+\title{Estimate the split-half reliability of a network}
 \usage{
 network_reliability(
   ...,
@@ -22,23 +22,19 @@ network_reliability(
 \method{plot}{net_reliability}(x, bins = 60L, combined = TRUE, ...)
 }
 \arguments{
-\item{...}{The networks: one or more \code{netobject}s from
-\code{\link[=build_network]{build_network()}}. A \code{netobject_group} is split into its networks,
-named by group; an \code{mcml} is converted with
-\code{\link[=as_tna]{as_tna()}} first, and a bare \code{cograph_network}
-is read as a \code{netobject}. Each network is named by its argument name
-or, failing that, its method; repeated names get a suffix (\code{"_1"},
-\code{"_2"}, ...).
-A \code{tna} model or a \code{group_tna} (package tna) is first rebuilt as a network from its own sequences (see \code{\link[=as_netobject]{as_netobject()}}).
-A network without its sequence data (which
-\code{\link[=build_network]{build_network()}} keeps) raises an error, a
-network resting on one sequence an error of class
-\code{nestimate_single_sequence}, a network built with
-\code{method = "latency"} an error of class
-\code{nestimate_latency_resampling} (latency networks are not resampled),
-and networks of different methods with
-\code{scale = "none"} a warning of class \code{nestimate_mixed_methods}. For the \code{print()}, \code{summary()} and
-\code{plot()} methods: ignored.}
+\item{...}{The networks: one or more \code{netobject}s from \code{\link[=build_network]{build_network()}}. A
+\code{netobject_group} is split into its networks, named by group; an \code{mcml} is
+converted with \code{\link[=as_tna]{as_tna()}} first, and a bare
+\code{cograph_network} is read as a \code{netobject}. Each network is named by its
+argument name or, failing that, its method; repeated names get a suffix
+(\code{"_1"}, \code{"_2"}, ...). A \code{tna} model or a \code{group_tna} (package tna) is
+first rebuilt as a network from its own sequences (see \code{\link[=as_netobject]{as_netobject()}}).
+A network without its sequence data (which \code{\link[=build_network]{build_network()}} keeps) raises
+an error, a network resting on one sequence an error of class
+\code{nestimate_single_sequence}, a network built with \code{method = "latency"}
+an error of class \code{nestimate_latency_resampling} (latency networks are
+not resampled), and networks of different methods with \code{scale = "none"} a warning of class \code{nestimate_mixed_methods}. For the \code{print()},
+\code{summary()} and \code{plot()} methods: ignored.}
 
 \item{iter}{The number of split-half iterations, at least 2. Default
 \code{1000}.}

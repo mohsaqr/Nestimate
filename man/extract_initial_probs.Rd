@@ -4,7 +4,7 @@
 \alias{extract_initial_probs}
 \alias{print.nest_initial_probs}
 \alias{summary.nest_initial_probs}
-\title{Extract Initial Probabilities from Model}
+\title{Extract the initial-state probabilities of a network}
 \usage{
 extract_initial_probs(model)
 

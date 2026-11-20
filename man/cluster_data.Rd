@@ -2,7 +2,7 @@
 % Please edit documentation in R/cluster_data.R
 \name{cluster_data}
 \alias{cluster_data}
-\title{Cluster sequence data (deprecated alias)}
+\title{Cluster sequences (deprecated)}
 \usage{
 cluster_data(...)
 }

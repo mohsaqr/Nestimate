@@ -2,7 +2,7 @@
 % Please edit documentation in R/pattern_outcome.R
 \name{pattern_outcome}
 \alias{pattern_outcome}
-\title{Model a Binary Outcome From Sequential Patterns}
+\title{Model a binary outcome from sequential patterns}
 \usage{
 pattern_outcome(
   x,
@@ -95,8 +95,7 @@ between 0 and 1. Default \code{0.95}.}
 \code{\link[=extract_sequences]{extract_sequences()}}. Default \code{NULL}.}
 
 \item{actor, action, time}{The actor, action and timestamp columns of a
-long event log, as in \code{\link[=extract_sequences]{extract_sequences()}}: setting \code{action} declares
-\code{x} an event log. Default \code{NULL}.}
+long event log; setting \code{action} marks \code{x} as one. Default \code{NULL}.}
 
 \item{...}{Further arguments passed to \code{\link[=prepare]{prepare()}} for a long event log,
 such as \code{time_threshold} or \code{order}.}
@@ -111,12 +110,7 @@ log odds ratio, adjusted for the other terms), \code{std_error}, \code{ci_lower}
 \code{ci_upper} and \code{p_value} (Wald z); and \code{odds_ratio}, \code{or_lower} and
 \code{or_upper}.
 
-Sequences with a missing outcome, covariate or group are dropped with a
-warning of class \code{nestimate_missing_outcome}. A selected pattern
-collinear with the other terms gets \code{NA} estimates (and \code{NA} standard
-error, intervals, p-value and odds ratios), its descriptive columns
-kept, and a warning of class
-\code{nestimate_aliased_pattern}. Warnings from the model fit (such as
+Raises the warning \code{nestimate_missing_outcome} when it drops sequences with a missing outcome, covariate or group. A selected pattern collinear with the other terms keeps its descriptive columns but gets \code{NA} estimates, intervals, p-value and odds ratios, with a warning. Warnings from the model fit (such as
 separation) are passed on unchanged.
 }
 \description{

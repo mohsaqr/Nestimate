@@ -7,7 +7,7 @@
 \alias{plot.net_mmm}
 \alias{print.net_mmm_clustering}
 \alias{plot.net_mmm_clustering}
-\title{Fit a Mixed Markov Model}
+\title{Fit a mixed Markov model}
 \usage{
 build_mmm(
   data,

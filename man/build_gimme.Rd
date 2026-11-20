@@ -3,7 +3,7 @@
 \name{build_gimme}
 \alias{build_gimme}
 \alias{coefs.net_gimme}
-\title{GIMME: Group Iterative Multiple Model Estimation}
+\title{Estimate person-specific networks with GIMME}
 \usage{
 build_gimme(
   data,
@@ -57,9 +57,7 @@ significant for more than this share of the people whose models
 converged, a number in (0, 1]. No group path is added when half or fewer
 of the models converge. Default \code{0.75}.}
 
-\item{subcutoff}{Not used: reserved for subgrouping, which neither
-Nestimate nor \code{\link[idiographic:fit_gimme]{idiographic::fit_gimme()}} implements, and accepted for
-compatibility with \pkg{gimme}; it is not passed on. Default \code{0.50}.}
+\item{subcutoff}{Not used. It is accepted for compatibility with \pkg{gimme}, where it sets the subgrouping cutoff; subgrouping is not implemented, so the value is not passed on. Default \code{0.50}.}
 
 \item{paths}{Paths, in lavaan syntax, to fix into every model, such as
 \code{"V2~V1lag"}. Default \code{NULL}.}
@@ -95,9 +93,7 @@ session's own random stream is left as it was. Default \code{NULL}.}
 \item{...}{For the \code{coefs()} method: passed to \code{\link[idiographic:coefs]{idiographic::coefs()}}.}
 }
 \value{
-The \code{net_gimme} object (class
-\code{c("net_gimme", "cograph_network", "list")}) that
-\code{\link[idiographic:fit_gimme]{idiographic::fit_gimme()}} returns; its \code{print()}, \code{summary()} and
+The \code{net_gimme} object, also a \code{cograph_network}, that \code{\link[idiographic:fit_gimme]{idiographic::fit_gimme()}} returns; its \code{print()}, \code{summary()} and
 \code{plot()} methods are \pkg{idiographic}'s, not Nestimate's. \code{print()}
 shows the group-level paths, the number of individual paths and the
 share of people with each path; \code{\link[=summary]{summary()}} returns a data frame with

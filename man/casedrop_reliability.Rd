@@ -9,7 +9,7 @@
 \alias{print.summary.net_casedrop_reliability_group}
 \alias{plot.net_casedrop_reliability}
 \alias{plot.net_casedrop_reliability_group}
-\title{Edge-weight Case-dropping Stability}
+\title{Estimate the case-dropping stability of edge weights}
 \usage{
 casedrop_reliability(
   x,
@@ -44,18 +44,17 @@ casedrop_reliability(
 }
 \arguments{
 \item{x}{The network: a \code{netobject} or \code{cograph_network} that carries its
-data, or a \code{netobject_group} or \code{mcml}, whose networks (for an \code{mcml},
-the macro network and each cluster's) are assessed one by one.
-A \code{tna} model or a \code{group_tna} (package tna) is first rebuilt as a network from its own sequences (see \code{\link[=as_netobject]{as_netobject()}}).
-A
-network without data raises an error, and one that rests on a single
-sequence, or one-hot data with no actor or session, has no cases to
-drop and raises an error of class \code{nestimate_single_sequence}. A
-network built with \code{method = "latency"} raises an error of class
-\code{nestimate_latency_resampling}: latency networks are not resampled. For the
-\code{print()} and \code{plot()} methods: the result of
-\code{casedrop_reliability()} (for \code{print()}, also the \code{summary()} of a
-group result).}
+data, or a \code{netobject_group} or \code{mcml}, whose networks (for an \code{mcml}, the
+macro network and each cluster's) are assessed one by one. A \code{tna} model
+or a \code{group_tna} (package tna) is first rebuilt as a network from its own
+sequences (see \code{\link[=as_netobject]{as_netobject()}}). A network without data raises an error,
+and one that rests on a single sequence, or one-hot data with no actor or
+session, has no cases to drop and raises an error of class
+\code{nestimate_single_sequence}. A network built with \code{method = "latency"}
+raises an error of class \code{nestimate_latency_resampling}: latency
+networks are not resampled. For the \code{print()} and \code{plot()} methods: the
+result of \code{casedrop_reliability()} (for \code{print()}, also the \code{summary()} of
+a group result).}
 
 \item{iter}{The number of random subsets drawn for each drop proportion,
 at least 2. Default \code{1000}.}
@@ -232,7 +231,6 @@ subset, and the fixed zeros would inflate the correlation. Association
 networks and scaled or thresholded networks compare all cells, because a
 zero original weight can become non-zero once cases are dropped; set
 \code{target = "existing"} to compare only the original edges there.
-
 }
 \section{Nested data and \code{actor}}{
 
@@ -243,10 +241,7 @@ ones, and the CS-coefficient overstates the stability. With \code{actor}, a
 case is an actor: \code{drop_prop} is the proportion of actors dropped, and
 all sequences of a dropped actor leave together, as in
 \code{tna::estimate_cs(actor = )}. With one sequence per actor the result is
-that of \code{actor = NULL}. A column that is absent or has missing values
-raises \code{nestimate_actor_missing}, fewer than two actors
-\code{nestimate_bad_actor}, and a network that is not a transition network
-\code{nestimate_actor_unsupported}.
+that of \code{actor = NULL}. Raises \code{nestimate_actor_missing} when the \code{actor} column is absent or incomplete, and \code{nestimate_actor_unsupported} when the network is not a transition network.
 }
 
 \examples{

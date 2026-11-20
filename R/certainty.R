@@ -16,7 +16,7 @@
 # more certainty than the sequence bootstrap. Use bootstrap_network() when the
 # population is a mixture and sequences are long.
 
-#' Analytic certainty of network edges (Bayesian Dirichlet-Multinomial)
+#' Estimate the Bayesian certainty of transition network edges
 #'
 #' @description
 #' `certainty()` gives each edge of a transition-probability network a
@@ -90,8 +90,7 @@
 #'   `ci_method = "analytic"` and `iter = NA` (no iterations).
 #'
 #'   For a `netobject_group`: a named list of those objects, one per
-#'   network, of class `c("net_certainty_group", "net_bootstrap_group",
-#'   "list")`, printed and summarised by the `net_bootstrap_group` methods
+#'   network, a `net_certainty_group`, printed and summarised as a `net_bootstrap_group`
 #'   ([summary()] stacks the per-network tables with a `group` column).
 #'
 #' @examples

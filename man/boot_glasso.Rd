@@ -5,7 +5,7 @@
 \alias{print.boot_glasso}
 \alias{summary.boot_glasso}
 \alias{plot.boot_glasso}
-\title{Bootstrap for Regularised Partial Correlation Networks}
+\title{Bootstrap a graphical lasso network}
 \usage{
 boot_glasso(
   x,
@@ -84,8 +84,7 @@ needs \code{centrality_fn}, which then computes it; the built-in measures
 are always computed internally.}
 
 \item{centrality_fn}{A function for measures beyond the four built-in
-ones: it is called as \code{centrality_fn(mat)} on the partial correlation
-matrix and returns a named list of centrality vectors, such as
+ones: it takes the partial correlation matrix and returns a named list of centrality vectors, such as
 \code{list(my_metric = ...)}. Default \code{NULL}; a measure in \code{centrality}
 that is neither built in nor returned by it raises an error.}
 

@@ -686,6 +686,11 @@
 #' One-hot data is read only when declared (`format = "onehot"` or `codes`);
 #' 0/1 columns are otherwise positions whose states are 0 and 1.
 #'
+#' `type = "relative"` row-normalises the counts on every route, as the one-hot
+#' route always did; each cell is then its own edge, so the network is
+#' directed. The windowed sequences a clustering of a one-hot network rebuilds
+#' from count the same pairs as the one-hot rows, so they normalise the same.
+#'
 #' @noRd
 .estimator_co_occurrence <- function(data,
                                      format = "auto",
@@ -702,7 +707,14 @@
                                      concat = 1L,
                                      begin_state = NULL,
                                      end_state = NULL,
+                                     type = "frequency",
                                      ...) {
+  if (!(is.character(type) && length(type) == 1L &&
+        type %in% c("frequency", "relative"))) {
+    stop(errorCondition(
+      "`type` must be \"frequency\" or \"relative\" for co-occurrence.",
+      class = "nestimate_bad_input", call = NULL))
+  }
   if (is.matrix(data)) {
     cooc_mat <- .transition_matrix_input(data, type = "co_occurrence")
     return(list(matrix = cooc_mat, nodes = rownames(cooc_mat),
@@ -715,7 +727,7 @@
     return(.estimator_wtna_core(
       data, codes = codes, window_size = window_size,
       mode = mode, actor = actor,
-      wtna_method = "cooccurrence", ...
+      wtna_method = "cooccurrence", type = type, ...
     ))
   }
 
@@ -736,10 +748,17 @@
     ) # nocov end
   }
 
+  relative <- identical(type, "relative")
+  if (relative) {
+    row_totals <- rowSums(cooc_mat)
+    row_totals[row_totals == 0] <- 1
+    cooc_mat <- cooc_mat / row_totals
+  }
+
   list(
     matrix = cooc_mat,
     nodes = rownames(cooc_mat),
-    directed = FALSE,
+    directed = relative,
     cleaned_data = data
   )
 }
@@ -1464,7 +1483,11 @@
   # Math delegated to psychnets (max abs delta 5.6e-17 vs the former
   # solve(S) path; see delegation-baseline.R). The singularity guards
   # above stay Nestimate's own so the error surface is unchanged.
-  fit <- psychnets::pcor_network(cor_matrix = S, n = n_obs, threshold = 0)
+  # psychnets warns about the same near-singular matrix (`psychnet_singular`)
+  # that the guard above has already reported; one warning is enough.
+  fit <- withCallingHandlers(
+    psychnets::pcor_network(cor_matrix = S, n = n_obs, threshold = 0),
+    psychnet_singular = function(w) invokeRestart("muffleWarning"))
   Wi <- fit$precision
   pcor <- fit$weights
   pcor[abs(pcor) < threshold] <- 0

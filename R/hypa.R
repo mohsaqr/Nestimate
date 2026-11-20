@@ -306,7 +306,7 @@
   )
 }
 
-#' Detect Path Anomalies via HYPA
+#' Detect over- and under-represented paths with HYPA
 #'
 #' @description
 #' `build_hypa()` tests which paths in a set of sequences occur more or less

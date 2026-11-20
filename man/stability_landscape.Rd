@@ -5,7 +5,7 @@
 \alias{summary.net_landscape}
 \alias{print.net_landscape}
 \alias{plot.net_landscape}
-\title{Stability Landscape of a Transition Network}
+\title{Estimate the stability landscape of a transition network}
 \usage{
 stability_landscape(
   x,
@@ -29,7 +29,7 @@ stability_landscape(
 \code{\link[=build_network]{build_network()}} of a \code{\link[=build_clusters]{build_clusters()}} result), a \code{tna} model or a \code{group_tna} (one landscape
 per group), or a
 wide sequence data frame or matrix. A network must count one-step transitions (a
-windowed one raises an error) and carry its sequences;
+window wider than one position raises an error) and carry its sequences;
 a network of another method (for example \code{"glasso"}) raises an error of
 class \code{nestimate_not_markov}. For the \code{print()} and \code{plot()} methods: a
 \code{net_landscape} object.}

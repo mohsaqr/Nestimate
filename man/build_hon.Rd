@@ -4,7 +4,7 @@
 \alias{build_hon}
 \alias{print.net_hon}
 \alias{summary.net_hon}
-\title{Build a Higher-Order Network (HON)}
+\title{Build a higher-order network from sequences}
 \usage{
 build_hon(
   data,

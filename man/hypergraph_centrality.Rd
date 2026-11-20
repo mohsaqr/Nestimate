@@ -2,7 +2,7 @@
 % Please edit documentation in R/hypergraph_centrality.R
 \name{hypergraph_centrality}
 \alias{hypergraph_centrality}
-\title{Hypergraph eigenvector centralities}
+\title{Compute the eigenvector centralities of a hypergraph}
 \usage{
 hypergraph_centrality(
   hg,
@@ -13,8 +13,7 @@ hypergraph_centrality(
 )
 }
 \arguments{
-\item{hg}{The hypergraph: a \code{net_hypergraph} from \code{\link[=build_hypergraph]{build_hypergraph()}}
-or \code{\link[=bipartite_groups]{bipartite_groups()}}.}
+\item{hg}{A hypergraph, from \code{\link[=build_hypergraph]{build_hypergraph()}} or \code{\link[=bipartite_groups]{bipartite_groups()}}.}
 
 \item{type}{The centralities to compute, any of \code{"clique"}, \code{"Z"} and
 \code{"H"}, returned in the order given. Default \code{"clique"}. \code{"Z"} and \code{"H"}
@@ -67,7 +66,7 @@ Z-eigenvector is not unique.
 of the clique-expanded pairwise graph \eqn{W} with
 \eqn{W_{ij} = |\{e : i, j \in e\}|}, the number of hyperedges two
 nodes share. It reads membership only (a positive incidence cell, the
-rule that builds \code{$hyperedges}), so incidence weights are ignored:
+rule that builds \verb{$hyperedges}), so incidence weights are ignored:
 it equals \code{igraph::eigen_centrality()} on
 \code{clique_expansion(hg, weighted = FALSE)}, and on \code{\link[=clique_expansion]{clique_expansion()}}'s
 default output only for an unweighted hypergraph. The vector is solved

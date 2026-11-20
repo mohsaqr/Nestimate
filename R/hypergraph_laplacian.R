@@ -18,12 +18,11 @@
 # deviation of the edge's vertex weights plus one - is reproduced here as
 # `edge_weights = NULL` for `type = "random_walk"`.
 
-#' Normalised hypergraph Laplacian
+#' Compute the normalised Laplacian of a hypergraph
 #'
 #' @description
 #' `hypergraph_laplacian()` computes the normalised Laplacian of a hypergraph
-#' and returns it as a symmetric node-by-node matrix, the operator that
-#' [hypergraph_cluster()] and [hypergraph_transduction()] are built on. It
+#' and returns it as a symmetric node-by-node matrix. [hypergraph_cluster()] and [hypergraph_transduction()] are built on it. It
 #' comes in two forms. `type = "zhou"` is the Laplacian of Zhou, Huang and
 #' Sch\enc{ö}{o}lkopf (2006), computed on the binary incidence pattern, so
 #' the values in the incidence cells play no part. `type = "random_walk"` is
@@ -58,11 +57,7 @@
 #' hyperedge weights follow the reference implementation in HyperNetX
 #' (`laplacians_clustering.py`).
 #'
-#' @param hg The hypergraph: a `net_hypergraph` from [build_hypergraph()] or
-#'   [bipartite_groups()], with at least two nodes and one hyperedge. A
-#'   hypergraph that is not connected has no unique stationary distribution
-#'   and raises an error of class `nestimate_hypergraph_disconnected`;
-#'   analyse its components separately.
+#' @param hg A hypergraph, from [build_hypergraph()] or [bipartite_groups()], with at least two nodes and one hyperedge. Raises `nestimate_hypergraph_disconnected` when the hypergraph is not connected, since it then has no unique stationary distribution; analyse its components separately.
 #' @param type The Laplacian. `"zhou"` (default) is the Zhou et al. (2006)
 #'   Laplacian on the binary incidence pattern; `"random_walk"` is the
 #'   Hayashi et al. (2020) random-walk Laplacian on the weighted incidence.
@@ -117,7 +112,7 @@ hypergraph_laplacian <- function(hg,
   L
 }
 
-#' Spectral clustering of hypergraph vertices
+#' Cluster the nodes of a hypergraph spectrally
 #'
 #' @description
 #' `hypergraph_cluster()` partitions the nodes of a hypergraph into `k`
@@ -261,7 +256,7 @@ hypergraph_cluster <- function(hg, k,
   )
 }
 
-#' Transductive label spreading on a hypergraph
+#' Classify unlabelled hypergraph nodes by label spreading
 #'
 #' @description
 #' `hypergraph_transduction()` classifies the unlabelled nodes of a
@@ -523,8 +518,7 @@ hypergraph_transduction <- function(hg, labels, xi = 0.99,
 # ---- S3: net_hypergraph_cluster ----------------------------------------
 
 #' @rdname hypergraph_cluster
-#' @param x For the `print()` and `plot()` methods and for
-#'   `node_clusters()`: a `net_hypergraph_cluster` object.
+#' @param x For `print()`, `plot()` and `node_clusters()`: a result of `hypergraph_cluster()`.
 #' @param ... For the methods: ignored.
 #' @param object For the `summary()` method: a `net_hypergraph_cluster`
 #'   object.
@@ -678,9 +672,7 @@ plot.net_hypergraph_cluster <- function(x,
 # ---- S3: net_hypergraph_transduction -----------------------------------
 
 #' @rdname hypergraph_transduction
-#' @param x For the `print()` and `plot()` methods and for
-#'   `label_predictions()` and `label_scores()`: a
-#'   `net_hypergraph_transduction` object.
+#' @param x For `print()`, `plot()`, `label_predictions()` and `label_scores()`: a result of `hypergraph_transduction()`.
 #' @param ... For the methods: ignored.
 #' @param object For the `summary()` method: a `net_hypergraph_transduction`
 #'   object.

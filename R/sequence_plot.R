@@ -104,7 +104,7 @@
   list(data = data, group = group, clustering = clustering)
 }
 
-#' Sequence Plot (heatmap, index, or distribution)
+#' Draw a sequence index plot, heatmap or distribution plot
 #'
 #' @description
 #' `sequence_plot()` draws categorical sequences: one row per sequence and

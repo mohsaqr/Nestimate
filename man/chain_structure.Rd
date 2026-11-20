@@ -8,7 +8,7 @@
 \alias{print.chain_structure_group}
 \alias{summary.chain_structure_group}
 \alias{print.summary_chain_structure}
-\title{Qualitative structure of a discrete-time Markov chain}
+\title{Classify the states and structure of a Markov chain}
 \usage{
 chain_structure(x, normalize = TRUE, tol = 1e-10)
 
@@ -41,14 +41,9 @@ they do, with a warning, as \code{\link[=passage_time]{passage_time()}} does. De
 transitions (a row of zeros) raises an error either way.}
 
 \item{tol}{The tolerance below which a transition probability counts as
-zero when the support graph is built (it drives \code{classification},
-\code{communicating_classes}, \code{period}, \code{hitting_probabilities},
-\code{absorption_probabilities} and \code{mean_absorption_time}, the last three
-computed with the transitions at or below \code{tol} removed and each row
-rescaled to sum to 1), and the tolerance of the reversibility check (detailed balance). Default
+zero when the support graph is built. Every structural result is read from that graph, and the absorption results from the chain with those transitions removed and each row rescaled to sum to 1. \code{tol} is also the tolerance of the reversibility check (detailed balance). Default
 \code{1e-10}. It does \strong{not} govern the absorbing-state test: a state is
-absorbing only when \code{P[i, i]} equals 1 to a fixed internal tolerance of
-\code{.Machine$double.eps^0.5}, so raising \code{tol} to ignore tiny transition
+absorbing only when \code{P[i, i]} equals 1 to within a fixed tolerance of about 1.5e-8, so raising \code{tol} to ignore tiny transition
 probabilities never reclassifies a near-deterministic state as
 absorbing.}
 
@@ -69,15 +64,10 @@ Default \code{2}.}
 }
 \value{
 A \code{chain_structure} object, or for a \code{netobject_group} a
-\code{chain_structure_group} (class \code{c("chain_structure_group", "list")}), a
-named list holding one \code{chain_structure} per network. \code{print()} shows
+\code{chain_structure_group}, a named list holding one \code{chain_structure} per network. \code{print()} shows
 the chain-level properties (for a group, one block per network);
 \code{summary()} returns a data frame (see \emph{Summary columns}): for a
-\code{chain_structure}, one row per state, of class
-\code{c("summary_chain_structure", "data.frame")}, carrying the chain-level
-flags \code{is_regular}, \code{is_irreducible}, \code{is_aperiodic}, \code{is_reversible},
-\code{n_classes} and \code{absorbing_states} as attributes that its \code{print()}
-method shows as a header above the table; for a
+\code{chain_structure}, a \code{summary_chain_structure} data frame with one row per state, carrying the chain-level flags as attributes that its \code{print()} method shows above the table; for a
 \code{chain_structure_group}, a plain data frame with one row per group and
 state. \code{plot()} returns a \code{ggplot} heatmap of the hitting probabilities
 (see \emph{Plot colours}). The \code{print()} methods return their input
@@ -95,7 +85,7 @@ strongly connected component of the support graph.}
 \item{\code{transient_classes}}{The communicating classes that are not
 closed.}
 \item{\code{absorbing_states}}{Character vector of states with
-\code{P[i, i] = 1}, tested to within \code{.Machine$double.eps^0.5}; \code{tol}
+\code{P[i, i]} equal to 1, to within about 1.5e-8; \code{tol}
 does not relax this.}
 \item{\code{period}}{Named integer vector: the period of each recurrent
 state, \code{NA} for transient states.}
@@ -163,9 +153,7 @@ steps, as \code{markovchain::hittingProbabilities()} does.
 The \code{plot()} method draws the hitting-probability matrix as a heatmap,
 with rows and columns ordered by communicating class (closed classes
 first, larger classes before smaller ones) so the block structure is
-visible. Cell colour runs from white (0) to dark blue (1) and encodes
-\verb{P(ever reach j | start at i)}; the diagonal uses the return-time
-convention, \verb{P(return to j in >= 1 steps)}. The state labels on both axes
+visible. Cell colour runs from white (0) to dark blue (1) and encodes the probability of ever reaching the column state from the row state; the diagonal holds the probability of returning to the state in one or more steps. The state labels on both axes
 name each state's class, as in \code{Active (recurrent)}, and the subtitle
 lists the chain-level properties. A
 chain that is not irreducible shows zero entries between classes that
@@ -175,16 +163,17 @@ that state's column is all 1s.
 
 \section{Summary columns}{
 
-\code{summary()} of a \code{chain_structure} returns one row per state, combining
-every per-state result: \code{state}, \code{classification}, \code{period},
-\code{persistence} (the diagonal of the transition matrix),
-\code{return_probability} (the diagonal of the hitting matrix) and
-\code{sojourn_steps} (\code{1 / (1 - persistence)}, \code{Inf} for an absorbing state).
-An irreducible chain adds \code{stationary_probability}. A chain with transient
-states adds \code{absorption_probability} (one closed class) or one
-\verb{absorbed_in_<class>} column per closed class (named as the columns of
-\code{absorption_probabilities}), and \code{mean_absorption_time} (steps to enter a
-closed class); these are \code{NA} for states that are not transient. Probabilities are rounded to 4 decimals and step counts to 2.
+\code{summary()} of a \code{chain_structure} returns one row per state, combining every per-state result:
+\itemize{
+\item \code{state}, \code{classification} and \code{period};
+\item \code{persistence}, the diagonal of the transition matrix;
+\item \code{return_probability}, the diagonal of the hitting matrix;
+\item \code{sojourn_steps}, \code{1 / (1 - persistence)} (\code{Inf} for an absorbing state);
+\item \code{stationary_probability}, for an irreducible chain;
+\item for a chain with transient states: \code{mean_absorption_time}, the steps to enter a closed class, and \code{absorption_probability}, the probability of ending in the closed class; with several closed classes, one \verb{absorbed_in_<class>} column per class. Both are \code{NA} for states that are not transient.
+}
+
+Probabilities are rounded to 4 decimals and step counts to 2.
 Columns are ordered for readability: identifiers first, classification
 second, per-state results last.
 

@@ -4,7 +4,7 @@
 \alias{predict_links}
 \alias{print.net_link_prediction}
 \alias{summary.net_link_prediction}
-\title{Predict Missing or Future Links in a Network}
+\title{Predict missing or future links in a network}
 \usage{
 predict_links(
   x,

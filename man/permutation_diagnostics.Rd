@@ -2,7 +2,7 @@
 % Please edit documentation in R/permutation_diagnostics.R
 \name{permutation_diagnostics}
 \alias{permutation_diagnostics}
-\title{Does Nesting Bias a Permutation Test?}
+\title{Diagnose the effect of nesting on a permutation test}
 \usage{
 permutation_diagnostics(
   x,
@@ -15,16 +15,11 @@ permutation_diagnostics(
 )
 }
 \arguments{
-\item{x}{The networks to compare: a \code{netobject_group}, whose every pair
-of groups is diagnosed, or a \code{netobject}, compared with \code{y}. An \code{mcml},
-whose layers hold different states, raises an error of class
-\code{nestimate_bad_input}. Only
-the transition methods
-\code{"relative"}, \code{"frequency"} and \code{"co_occurrence"} are supported; any
-other method, association networks and \code{wtna} among them, raises an
-error of class \code{nestimate_actor_unsupported}; a latency network, which is
-not resampled, raises one of class \code{nestimate_latency_resampling}.
-For a \code{tna} model or \code{group_tna} (package tna), \code{actor} is read from the metadata the model keeps (\code{attr(model$data, "meta")}, kept when the model is built from \code{tna::prepare_data()}); a model without it raises \code{nestimate_actor_missing}.}
+\item{x}{The networks to compare: a \code{netobject_group}, whose every pair of
+groups is diagnosed, or a \code{netobject}, compared with \code{y}. An \code{mcml}, whose
+layers hold different states, raises an error of class
+\code{nestimate_bad_input}. Only the transition methods \code{"relative"},
+\code{"frequency"} and \code{"co_occurrence"} are supported; any other method raises \code{nestimate_actor_unsupported}, and a latency network, which is not resampled, raises \code{nestimate_latency_resampling}. A \code{tna} model or \code{group_tna} must keep its metadata, as one built with \code{tna::prepare_data()} does.}
 
 \item{y}{The \code{netobject} to compare with when \code{x} is a \code{netobject}.
 Default \code{NULL}, as it must stay when \code{x} is a group.}

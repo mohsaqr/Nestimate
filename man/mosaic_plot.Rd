@@ -11,7 +11,7 @@
 \alias{mosaic_plot.matrix}
 \alias{mosaic_plot.array}
 \alias{mosaic_plot.data.frame}
-\title{Mosaic Plot of a Network's Transition or Co-occurrence Counts}
+\title{Draw a mosaic plot of transition or co-occurrence counts}
 \usage{
 mosaic_plot(x, ...)
 
@@ -131,17 +131,14 @@ mosaic_plot(x, ...)
 \arguments{
 \item{x}{The object to draw: a \code{netobject}, \code{netobject_group}, \code{mcml} or
 \code{htna} network, a contingency \code{table} (two-way, or three-way with the
-clusters as the third dimension), a numeric count \code{matrix}, or a
-data frame in long form (see \code{x_var}, \code{y_var} and \code{weight}).
-A \code{tna} model or a \code{group_tna} (package tna) is first rebuilt as a network from its own sequences (see \code{\link[=as_netobject]{as_netobject()}}).}
+clusters as the third dimension), a numeric count \code{matrix}, or a data
+frame in long form (see \code{x_var}, \code{y_var} and \code{weight}). A \code{tna} model or a
+\code{group_tna} (package tna) is first rebuilt as a network from its own
+sequences (see \code{\link[=as_netobject]{as_netobject()}}).}
 
 \item{...}{With \code{style = "flat"}: styling arguments for the flat mosaic
 of a network, table or matrix; an unknown name raises an error that
-lists the valid ones. The data-frame method takes no \code{style} and
-raises an error of class \code{nestimate_bad_input} for any argument it
-does not take; the \code{mcml} method does the same with
-\code{style = "classic"}; the other methods ignore it with a warning of
-class \code{nestimate_ignored_argument}.}
+lists the valid ones. Raises \code{nestimate_bad_input} when the data-frame method, or the \code{mcml} method with \code{style = "classic"}, gets an argument it does not take; the other methods ignore such an argument with a warning.}
 
 \item{xlab, ylab}{Axis titles. The network and \code{mcml} methods draw none
 by default (\code{NULL}); the \code{table} and \code{matrix} methods default to

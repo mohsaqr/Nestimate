@@ -2,7 +2,7 @@
 % Please edit documentation in R/link_prediction.R
 \name{evaluate_links}
 \alias{evaluate_links}
-\title{Evaluate Link Predictions Against Known Edges}
+\title{Evaluate link predictions against known edges}
 \usage{
 evaluate_links(pred, true_edges, k = c(5L, 10L, 20L))
 }

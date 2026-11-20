@@ -2,7 +2,7 @@
 % Please edit documentation in R/bipartite_groups.R
 \name{bipartite_groups}
 \alias{bipartite_groups}
-\title{Build a Hypergraph from Group Memberships}
+\title{Build a hypergraph from group memberships}
 \usage{
 bipartite_groups(data, player, group, weight = NULL)
 }
@@ -71,9 +71,7 @@ produces a single 3-hyperedge containing all three, not three pairwise
 edges AB, AC, BC. This avoids information loss when group interactions are
 the primary unit of analysis (Perc et al. 2013).
 
-Unlike \code{\link[=build_hypergraph]{build_hypergraph()}} (which derives hyperedges from a network's
-clique structure), \code{bipartite_groups()} takes group memberships
-directly. The two functions are complementary:
+\code{bipartite_groups()} takes group memberships as observed, while \code{\link[=build_hypergraph]{build_hypergraph()}} infers groups from the cliques of a network. The two functions are complementary:
 \itemize{
 \item \code{bipartite_groups()} - when group membership is observed
 (sessions, transactions, co-authorships).

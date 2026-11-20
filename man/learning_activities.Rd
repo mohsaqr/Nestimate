@@ -3,7 +3,7 @@
 \docType{data}
 \name{learning_activities}
 \alias{learning_activities}
-\title{Online Learning Activity Indicators}
+\title{Online learning activity indicators}
 \format{
 A data frame with 6,000 rows and 7 columns:
 \describe{
@@ -21,10 +21,11 @@ each.}
 learning_activities
 }
 \description{
-Simulated binary (one-hot) indicator time series of six online learning
-activities (Reading, Video, Forum, Quiz, Coding, Review) for 200
-students over 30 time points. Each row is one time point of one student
-and marks every activity active then (1) or not (0); at least one
+\code{learning_activities} is a simulated dataset of six online learning
+activities (Reading, Video, Forum, Quiz, Coding, Review) recorded as
+active or not for 200 students over 30 time points. Each row is one time
+point of one student and marks every activity active then (1) or not
+(0), one 0/1 column per activity; at least one
 activity is active in every row, and several often are. Activities tend
 to continue from one time point to the next. The rows of each student
 are consecutive and in time order, so the data are ready for \code{\link[=wtna]{wtna()}}

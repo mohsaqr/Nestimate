@@ -2,7 +2,7 @@
 % Please edit documentation in R/mogen.R
 \name{state_frequencies}
 \alias{state_frequencies}
-\title{Compute State Frequencies from Trajectory Data}
+\title{Count state frequencies in trajectories}
 \usage{
 state_frequencies(data)
 }

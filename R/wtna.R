@@ -1,4 +1,4 @@
-#' Window-based Transition Network Analysis
+#' Build a window-based transition network from one-hot data
 #'
 #' @description
 #' `wtna()` builds a network from one-hot data, where each row is a time
@@ -59,15 +59,15 @@
 #'   the initial-state distribution groups the rows by the first column
 #'   only.
 #'
-#' @return For `method = "transition"` or `"cooccurrence"`: a `netobject`
-#'   (class `c("netobject", "cograph_network")`, see [build_network()]) with
-#'   `method` set to `"wtna_transition"` or `"wtna_cooccurrence"`. `print()`
+#' @return For `method = "transition"` or `"cooccurrence"`: a `netobject`, as [build_network()] returns it, with `method` set to `"wtna_transition"` or `"wtna_cooccurrence"`. `print()`
 #'   shows the weights and, for transitions, the initial probabilities;
-#'   [extract_edges()] gives one row per edge, [extract_initial_probs()]
-#'   the initial-state distribution of a transition network,
-#'   `cograph::splot()` draws it,
-#'   [bootstrap_network()] resamples its actors, and [permutation()]
-#'   compares it with a second network by permuting actors. It is directed
+#'   
+#' * [extract_edges()] gives one row per edge;
+#' * [extract_initial_probs()] gives the initial-state distribution of a transition network;
+#' * `cograph::splot()` draws it;
+#' * [bootstrap_network()] resamples its actors, and [permutation()] compares it with a second network by permuting actors.
+#' 
+#'  It is directed
 #'   only for transitions, holds the input as given in `data`,
 #'   and records the windowing settings (`type`, `window_size`, `mode`,
 #'   `codes`, `actor`) in `params`. A transition network also stores the

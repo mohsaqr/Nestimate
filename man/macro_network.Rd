@@ -2,7 +2,7 @@
 % Please edit documentation in R/macro_network.R
 \name{macro_network}
 \alias{macro_network}
-\title{Cluster-Level Network, With One Cluster Expanded}
+\title{Build the cluster-level network with chosen clusters expanded}
 \usage{
 macro_network(
   x,

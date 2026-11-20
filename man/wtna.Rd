@@ -3,7 +3,7 @@
 \name{wtna}
 \alias{wtna}
 \alias{print.wtna_mixed}
-\title{Window-based Transition Network Analysis}
+\title{Build a window-based transition network from one-hot data}
 \usage{
 wtna(
   data,
@@ -69,15 +69,16 @@ only.}
 \item{...}{For the \code{print()} method: ignored.}
 }
 \value{
-For \code{method = "transition"} or \code{"cooccurrence"}: a \code{netobject}
-(class \code{c("netobject", "cograph_network")}, see \code{\link[=build_network]{build_network()}}) with
-\code{method} set to \code{"wtna_transition"} or \code{"wtna_cooccurrence"}. \code{print()}
+For \code{method = "transition"} or \code{"cooccurrence"}: a \code{netobject}, as \code{\link[=build_network]{build_network()}} returns it, with \code{method} set to \code{"wtna_transition"} or \code{"wtna_cooccurrence"}. \code{print()}
 shows the weights and, for transitions, the initial probabilities;
-\code{\link[=extract_edges]{extract_edges()}} gives one row per edge, \code{\link[=extract_initial_probs]{extract_initial_probs()}}
-the initial-state distribution of a transition network,
-\code{cograph::splot()} draws it,
-\code{\link[=bootstrap_network]{bootstrap_network()}} resamples its actors, and \code{\link[=permutation]{permutation()}}
-compares it with a second network by permuting actors. It is directed
+\itemize{
+\item \code{\link[=extract_edges]{extract_edges()}} gives one row per edge;
+\item \code{\link[=extract_initial_probs]{extract_initial_probs()}} gives the initial-state distribution of a transition network;
+\item \code{cograph::splot()} draws it;
+\item \code{\link[=bootstrap_network]{bootstrap_network()}} resamples its actors, and \code{\link[=permutation]{permutation()}} compares it with a second network by permuting actors.
+}
+
+It is directed
 only for transitions, holds the input as given in \code{data},
 and records the windowing settings (\code{type}, \code{window_size}, \code{mode},
 \code{codes}, \code{actor}) in \code{params}. A transition network also stores the

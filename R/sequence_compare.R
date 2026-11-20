@@ -5,7 +5,7 @@ utils::globalVariables(c(
   "side", "x_center", "xmax", "xmin", "yidx", "ymax", "ymin"
 ))
 
-#' Compare Subsequence Patterns Between Groups
+#' Compare subsequence patterns between groups
 #'
 #' @description
 #' `sequence_compare()` compares how often short subsequences occur in two
@@ -105,22 +105,13 @@ utils::globalVariables(c(
 #' the next level, and inside such a unit of the last level single sequences
 #' exchange labels. One column runs exactly the one-level scheme above.
 #'
-#' @param x The sequences: a `netobject_group` (from [build_network()] with
-#'   `group`, or from a clustering), whose groups are compared; a `netobject`,
-#'   `tna` model or `cograph_network` built from sequences; a wide data frame
-#'   with one row per sequence and one column per position, whose position
-#'   columns are named as a numbered run, as in [build_network()] (any column
-#'   beside them other than the `group` column raises an error of class
-#'   `nestimate_bad_input`); or a character matrix with one row per sequence
-#'   and one column per position, whatever its column names. A numeric or
-#'   logical matrix of only 0 and 1, and one-hot or association networks, raise
-#'   `nestimate_bad_input`. Every input except a `netobject_group` needs
-#'   `group`. A `group_tna` (package tna) is read as the group of networks it
-#'   converts to (see [as_netobject()]). For a tna model or `group_tna`,
-#'   `actor` is read from the metadata the model keeps (`attr(model$data,
-#'   "meta")`, kept when the model is built from `tna::prepare_data()`); a
-#'   model without it raises `nestimate_actor_missing`. For the `print()` and
-#'   `plot()` methods: a `net_sequence_comparison`.
+#' @param x The sequences:
+#' * a `netobject_group`, from [build_network()] with `group` or from a clustering, whose groups are compared;
+#' * a `netobject`, `tna` model or `cograph_network` built from sequences;
+#' * a wide data frame with numbered position columns, as in [build_network()], or a character matrix, one row per sequence;
+#' * a `group_tna`, read as the group of networks it converts to (see [as_netobject()]).
+#' 
+#' Every input except a `netobject_group` needs `group`. One-hot data, association networks and data frames with extra columns raise `nestimate_bad_input`. With `actor`, a tna model must keep its metadata, as one built with `tna::prepare_data()` does. For `print()` and `plot()`: a `sequence_compare()` result.
 #' @param group The group of each sequence: the name of a column of a data
 #'   frame or matrix `x` (that column is then not read as a position), or a
 #'   vector with one label per sequence. Ignored for a `netobject_group`;
@@ -136,8 +127,7 @@ utils::globalVariables(c(
 #' @param test The inference: `"permutation"` (default), `"chisq"` or
 #'   `"none"`; see *Details*.
 #' @param iter The number of permutations for `test = "permutation"`, a
-#'   positive whole number; ignored otherwise. `iter = 1` gives a warning
-#'   of class `nestimate_undefined_effect_size`. Default `1000`.
+#'   positive whole number; ignored otherwise. With `iter = 1` the effect size is undefined, and a warning says so. Default `1000`.
 #' @param adjust The p-value adjustment, any method of [stats::p.adjust()]
 #'   (`"holm"`, `"hochberg"`, `"hommel"`, `"bonferroni"`, `"BH"`, `"BY"`,
 #'   `"fdr"` or `"none"`). Default `"fdr"` (Benjamini-Hochberg).

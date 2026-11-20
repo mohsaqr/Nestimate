@@ -5,7 +5,7 @@
 \alias{print.net_cluster_diagnostics}
 \alias{plot.net_cluster_diagnostics}
 \alias{summary.net_cluster_diagnostics}
-\title{Cluster Diagnostics}
+\title{Collect the quality measures of a clustering}
 \usage{
 cluster_diagnostics(x, ...)
 

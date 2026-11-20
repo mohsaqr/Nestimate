@@ -3,7 +3,7 @@
 \name{composites}
 \alias{composites}
 \alias{composites.mcml_pc}
-\title{Cluster Scores From a Psychometric MCML Fit}
+\title{Compute cluster scores from a psychometric MCML fit}
 \usage{
 composites(x, ...)
 

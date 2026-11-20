@@ -4,7 +4,7 @@
 \alias{coefs}
 \alias{coefs.net_mlvar}
 \alias{coefs.default}
-\title{Tidy coefficients from a fitted mlvar model}
+\title{Tabulate the temporal coefficients of an mlVAR fit}
 \usage{
 coefs(x, ...)
 

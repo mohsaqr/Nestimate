@@ -189,11 +189,12 @@ test_that("mcml input dispatches: one CS per sub-network", {
   )
   clusters <- list(A = c("a1", "a2"), B = c("b1", "b2"))
   mc <- build_mcml(edges, clusters, from = "from", to = "to", weight = "weight")
-  # dropping 20% of 3 cases drops none, which is reported
-  expect_warning(
+  # dropping 20% of 3 cases drops none, which is reported; the layers with
+  # every weight 1 have no CS, which is reported per layer
+  expect_warnings_of_class(expect_warning(
     es <- casedrop_reliability(mc, iter = 30, drop_prop = c(0.2, 0.5),
                                seed = 2),
-    class = "nestimate_drop_prop_skipped")
+    class = "nestimate_drop_prop_skipped"), "nestimate_constant_measure")
   expect_s3_class(es, "net_casedrop_reliability_group")
   expect_true(all(c("macro", "A", "B") %in% names(es)))
   for (nm in names(es)) {
@@ -234,7 +235,9 @@ test_that("print methods run without error", {
   )
   mc <- build_mcml(edges, list(A = c("a1","a2"), B = c("b1","b2")),
                    from = "from", to = "to")
-  esg <- casedrop_reliability(mc, iter = 5, drop_prop = 0.3, seed = 1)
+  # every layer of this mcml has equal weights, so none has a CS
+  esg <- expect_warnings_of_class(
+    casedrop_reliability(mc, iter = 5, drop_prop = 0.3, seed = 1), "nestimate_constant_measure")
   expect_invisible(print(esg))
 })
 

@@ -14,7 +14,7 @@
 # The Jeffreys prior (alpha = 0.5) is non-informative and standard for
 # categorical data (Jeffreys 1946).
 
-#' Bayesian Dirichlet-Multinomial comparison of two transition networks
+#' Compare two transition networks with a Bayesian Dirichlet model
 #'
 #' @description
 #' `bayes_compare()` compares two transition networks edge by edge and

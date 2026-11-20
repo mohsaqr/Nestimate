@@ -204,9 +204,7 @@
 #' and no refit per permutation. The windows of a sequence overlap, so
 #' this approximates the reference distribution of \eqn{G^2} rather than
 #' giving it exactly (an exact test would sample whole sequences with the
-#' same counts; Besag & Mondal, 2013). The permutation p-value is
-#' `(number of permutations with a G^2 at least the observed + 1) /
-#' (n_perm + 1)`. An order at which no context holds both two different
+#' same counts; Besag & Mondal, 2013). The permutation p-value is \deqn{p = \frac{1 + B}{1 + n_{\mathrm{perm}}}}{p = (1 + B) / (1 + n_perm)} where \eqn{B} is the number of permutations whose \eqn{G^2} is at least the observed one. An order at which no context holds both two different
 #' extra states and two different successors has no degrees of freedom; it gets
 #' no p-value and counts as not rejected.
 #'

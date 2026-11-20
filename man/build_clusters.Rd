@@ -6,7 +6,7 @@
 \alias{summary.net_clustering}
 \alias{plot.net_clustering}
 \alias{print.tidy_covariates}
-\title{Cluster Sequences by Dissimilarity}
+\title{Cluster sequences by dissimilarity}
 \usage{
 build_clusters(
   data,
@@ -133,10 +133,7 @@ Default \code{NULL} (none).}
 \item{estimator}{How the relation between the covariates and the
 clusters is estimated; it never affects the clustering. \code{"auto"}
 (default) fits a multinomial logit of cluster membership on the
-covariates: with Firth's bias-reduced penalised likelihood
-(\code{brglm2::brmultinom()}, finite under quasi-complete separation) when a
-cell of the cluster-by-covariate table of a categorical covariate holds
-fewer than 5 sequences, and with \code{nnet::multinom()} otherwise.
+covariates. When a cell of the cluster-by-covariate table of a categorical covariate holds fewer than 5 sequences, it uses Firth's bias-reduced penalised likelihood (package brglm2), which stays finite under quasi-complete separation; otherwise it uses maximum likelihood (package nnet).
 \code{"firth"} forces the Firth fit, which is about 200 times slower on
 well-conditioned data. \code{"multinom"} forces classical maximum likelihood
 and warns that rare cells can give extreme odds ratios with degenerate
@@ -211,8 +208,10 @@ sequences; NULL for the hierarchical methods.}
 \code{estimator}), or NULL when \code{covariates = NULL}.}
 \item{network_method, build_args}{For \code{netobject} input, the
 source network's method and stored build arguments, so per-cluster
-networks can be rebuilt the same way. NULL otherwise, and
-\code{build_args} is NULL for a one-hot network.}
+networks can be rebuilt the same way. NULL otherwise. For a one-hot
+network, \code{build_args} holds only its estimator settings in
+\code{params} (such as a co-occurrence network's \code{type}), or is
+NULL when it has none.}
 \item{metadata}{For \code{netobject} input, its per-sequence metadata,
 one row per clustered sequence, so \code{\link{session_ids}} can name
 each sequence. For a data frame, the columns set aside as covariates

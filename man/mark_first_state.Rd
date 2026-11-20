@@ -2,7 +2,7 @@
 % Please edit documentation in R/sequence_terminal.R
 \name{mark_first_state}
 \alias{mark_first_state}
-\title{Mark leading-NA cells with an explicit state label}
+\title{Fill leading missing cells with a start state}
 \usage{
 mark_first_state(data, state = "Start", cols = NULL)
 }
@@ -14,9 +14,7 @@ numbered run of positions (\code{T1}, \code{T2}, ...); other columns beside them
 raise an error of class \code{nestimate_bad_input}.}
 
 \item{state}{The label written into the leading missing cells, a single
-non-empty string. Default \code{"Start"}. If the label already occurs in
-\code{data}, a warning of class \code{nestimate_state_collision} is given and \verb{_1}, \verb{_2}, ... is appended until it is
-unique, so the marker is never confused with an observed state.}
+non-empty string. Default \code{"Start"}. A label that already occurs in \code{data} is made unique with a suffix (\verb{_1}, \verb{_2}, ...) and raises the warning \code{nestimate_state_collision}, so the marker is never confused with an observed state.}
 
 \item{cols}{The columns holding the positions, in order; only they are
 returned. A name not in \code{data} raises an error of class

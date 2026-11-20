@@ -209,6 +209,21 @@ test_that("pcor warns on near-singular matrix", {
   )
 })
 
+test_that("a near-singular pcor warns once, not again from psychnets", {
+  set.seed(123)
+  mat <- matrix(rnorm(30 * 5), 30, 5)
+  mat[, 5] <- mat[, 1] + rnorm(30, sd = 1e-7)
+  colnames(mat) <- paste0("V", seq_len(5))
+  raised <- character(0)
+  withCallingHandlers(
+    build_network(cor(mat), method = "pcor", params = list(n = 30)),
+    warning = function(w) {
+      raised <<- c(raised, class(w)[1L])
+      invokeRestart("muffleWarning")
+    })
+  expect_identical(raised, "nestimate_near_singular")
+})
+
 test_that("pcor output is a symmetric matrix with a zero diagonal on well-conditioned data", {
   # The comparison of these weights with the partial correlations from solve(cor()) moved to
   # tests/equivalence/test-build_network.R.

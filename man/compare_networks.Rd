@@ -44,9 +44,7 @@ compare_networks(
 \code{netobject_group} (its members are compared individually and keep their
 names), \code{cograph_network}, \code{psychnet}, \code{mcml}, \code{tna}, \code{group_tna},
 square numeric matrices, or one unnamed list of these. Name the
-arguments to name the networks, as in \code{compare_networks(early = a, late = b)}; an unnamed network is named after its method, or \verb{network_<i>}.
-Nested lists, non-square matrices and other classes raise an error of
-class \code{nestimate_compare_bad_input}. For the \code{plot()} method: passed to
+arguments to name the networks, as in \verb{early = a, late = b}; an unnamed network is named after its method. Any other input raises an error. For the \code{plot()} method: passed to
 \code{cograph::splot()} in the \code{"networks"} and \code{"difference"} views (such as
 \code{layout}, \code{node_size} or \code{minimum}) and ignored by the other views; the
 \code{print()} method ignores it.}
@@ -89,11 +87,7 @@ values.}
 \code{"permutation"}, \code{"bayes"} and \code{"bootstrap"}. Each fills the columns it
 supports (see \emph{Details}). The permutation and Bayesian tests need
 networks that carry their data and share one estimation method, and the
-Bayesian test needs \code{"relative"} or \code{"frequency"} networks; otherwise an
-error of class \code{nestimate_compare_test_unsupported} is raised. Latency
-networks are not resampled: with \code{"permutation"} or \code{"bootstrap"}, a
-network built with \code{method = "latency"} raises an error of class
-\code{nestimate_latency_resampling}.}
+Bayesian test needs \code{"relative"} or \code{"frequency"} networks; otherwise the call raises \code{nestimate_compare_test_unsupported}. Latency networks are not resampled: the permutation and bootstrap tests raise \code{nestimate_latency_resampling} on one.}
 
 \item{iter}{The number of permutations, posterior draws or bootstrap
 replicates per pair, at least 2. Default \code{1000}.}
@@ -102,8 +96,7 @@ replicates per pair, at least 2. Default \code{1000}.}
 tests, a number between 0 and 1; the Bayesian credible interval covers
 \code{1 - alpha}. Default \code{0.05}.}
 
-\item{adjust}{The multiplicity correction for the permutation p-values, a
-method of \code{\link[stats:p.adjust]{stats::p.adjust()}}, applied within each pair and separately
+\item{adjust}{The multiplicity correction for the permutation p-values, any method of \link[stats:p.adjust]{p.adjust()}, applied within each pair and separately
 to the edge and node tables, as \code{\link[=permutation]{permutation()}} does. Default
 \code{"none"}.}
 
@@ -195,9 +188,7 @@ working.}
 A \code{net_network_comparison} object. \code{print()} shows one line per
 pair (Pearson correlation, mean and largest absolute difference, the
 largest change) and returns \code{x} invisibly; \code{\link[=summary]{summary()}} returns one row
-per pair; \code{\link[=edge_differences]{edge_differences()}}, \code{\link[=node_differences]{node_differences()}},
-\code{\link[=global_differences]{global_differences()}} and \code{\link[=network_metrics]{network_metrics()}} return the full tables
-(see \link{comparison_tables}); \code{plot()} draws one view per call. The
+per pair; the verbs of \link{comparison_tables} return the full tables; \code{plot()} draws one view per call. The
 object's fields:
 \itemize{
 \item \code{networks}: the input networks as \code{netobject}s, with scaled weights;
@@ -293,35 +284,14 @@ node tables), and otherwise the Bayesian one (edge table only).
 }
 \section{Errors}{
 
-The errors that \code{compare_networks()} and its verbs raise themselves have
-the class \code{nestimate_compare_error} and one of these:
-\itemize{
-\item \code{nestimate_compare_too_few}: fewer than two networks;
-\item \code{nestimate_compare_bad_input}: an input of an unsupported class, a
-non-square matrix or a nested list;
-\item \code{nestimate_compare_dim_mismatch}: different numbers of nodes;
-\item \code{nestimate_compare_node_mismatch}: node labels that differ in set or
-order;
-\item \code{nestimate_compare_na_weights}: missing weights;
-\item \code{nestimate_compare_reference_unknown}, \code{nestimate_compare_labels_length},
-\code{nestimate_compare_scaling_domain}, \code{nestimate_compare_scaling_inference},
-\code{nestimate_compare_test_unsupported} and
-\code{nestimate_compare_actor_needs_permutation}: see the arguments;
-\item \code{nestimate_compare_unknown_pair}: a \code{pair} that matches no comparison;
-\item \code{nestimate_compare_no_nodes}: the node view or table of a comparison
-without \code{measures};
-\item \code{nestimate_compare_no_test}: \code{plot(type = "inference")} without \code{test};
-\item \code{nestimate_compare_unknown_measure}: selecting a measure the object
-does not carry.
-}
+Every error that \code{compare_networks()} and its verbs raise has the class \code{nestimate_compare_error}, so one handler catches them all. The one met most often is \code{nestimate_compare_node_mismatch}, raised when the networks do not share the same nodes in the same order.
 
 Plain argument-type checks raise unclassed errors, and errors from
 \code{\link[=permutation]{permutation()}}, \code{\link[=bayes_compare]{bayes_compare()}} and \code{\link[=vertex_compare]{vertex_compare()}} keep their own
 classes (for example \code{nestimate_bad_actor} for \code{paired = TRUE} with
 \code{actor}).
 
-An unknown name in \code{measures} gives a warning of class
-\code{nestimate_compare_warning} and \code{nestimate_compare_unknown_measure}.
+An unknown name in \code{measures} is dropped with a \code{nestimate_compare_warning}.
 }
 
 \section{Reading the figures}{

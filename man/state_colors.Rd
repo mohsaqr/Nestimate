@@ -7,7 +7,7 @@
 \alias{state_colors.htna}
 \alias{state_colors.mcml}
 \alias{state_colors.netobject_group}
-\title{The state colours an object will draw with}
+\title{Get the state colours of an object}
 \usage{
 state_colors(x, ...)
 

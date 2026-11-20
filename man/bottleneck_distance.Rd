@@ -2,7 +2,7 @@
 % Please edit documentation in R/ph_distances.R
 \name{bottleneck_distance}
 \alias{bottleneck_distance}
-\title{Bottleneck Distance Between Persistence Diagrams}
+\title{Compute the bottleneck distance between persistence diagrams}
 \usage{
 bottleneck_distance(d1, d2, dimension = NULL, tol = .Machine$double.eps^0.5)
 }
@@ -49,11 +49,7 @@ The smallest feasible \eqn{\varepsilon} is found by binary search over
 the candidate costs (every pairwise \eqn{L_\infty} distance and every
 diagonal projection), checking each with a Kuhn bipartite matching.
 
-Essential classes (\code{death = Inf} in VR mode, \code{death = 0} with
-\code{birth > 0} in clique mode, as \code{\link[=persistence_landscape]{persistence_landscape()}} reads them; a
-\verb{(0, 0)} pair is a zero-length finite point) are matched one-to-one within
-each
-dimension by their sorted births. When the two diagrams have different
+Essential classes are matched one-to-one within each dimension by their sorted births. A class is essential when it never dies: death \code{Inf} in a Vietoris-Rips filtration, or death 0 with a positive birth in a clique filtration, as in \code{\link[=persistence_landscape]{persistence_landscape()}}. A \verb{(0, 0)} pair is a finite point of length zero. When the two diagrams have different
 numbers of essential classes in a dimension, the distance for that
 dimension is \code{Inf}.
 }

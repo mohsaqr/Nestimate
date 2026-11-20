@@ -8,7 +8,7 @@
 \alias{set_state_colors.mcml}
 \alias{set_state_colors.netobject_group}
 \alias{state_colors<-}
-\title{Set the state colours carried by a network object}
+\title{Set the state colours of a network object}
 \usage{
 set_state_colors(x, colors)
 

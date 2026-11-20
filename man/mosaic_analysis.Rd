@@ -5,7 +5,7 @@
 \alias{plot.mosaic_analysis}
 \alias{print.mosaic_analysis}
 \alias{summary.mosaic_analysis}
-\title{Two-variable mosaic analysis (chi-square test + flat mosaic)}
+\title{Test and draw the association of two categorical variables}
 \usage{
 mosaic_analysis(
   data,
@@ -62,13 +62,15 @@ each level of \code{var1}, \code{"column"} each level of \code{var2}.}
 
 \item{title}{The plot title. Default \code{""} (none).}
 
-\item{...}{Further styling for the flat mosaic: \code{col_label_side},
-\code{row_label_side}, \code{col_label_angle}, \code{row_label_angle}, \code{show_legend},
-\code{legend_position}, \code{legend_size}, \code{legend_title}, \code{label_size},
-\code{range}, \code{palette}, \code{min_label_h} and \code{min_label_w} (and \code{pct_base},
-which overrides \code{percentage_base} in the plot only; the \code{pct} column
-always follows \code{percentage_base}). The fill is the
-ColorBrewer RdBu ramp unless \code{palette} is given. Column labels turn
+\item{...}{Further styling for the flat mosaic:
+\itemize{
+\item labels: \code{col_label_side}, \code{row_label_side}, \code{col_label_angle}, \code{row_label_angle}, \code{label_size}, \code{min_label_h} and \code{min_label_w};
+\item legend: \code{show_legend}, \code{legend_position}, \code{legend_size} and \code{legend_title};
+\item fill: \code{range} and \code{palette} (default the ColorBrewer RdBu ramp);
+\item \code{pct_base}, which overrides \code{percentage_base} in the plot only.
+}
+
+Column labels turn
 vertical when there are more than 6 columns; \code{col_label_angle} sets an
 angle. Any other name raises an error. For the \code{plot()} method: the
 same styling and \code{title}, overriding what the fit stored; for the
@@ -79,10 +81,7 @@ allow for it. Default \code{FALSE}: every row is independent, as before.
 \code{TRUE} reports \code{nested_method} and needs \code{actor}; see \emph{Nested data}.}
 
 \item{nested_method}{With \code{nested = TRUE}, the test: \code{"rao_scott"}
-(default), \code{"donner_klar"}, \code{"cmh"}, \code{"gee"} or \code{"glmm"}. A test that
-cannot run on the design raises an error of class
-\code{nestimate_bad_input}; \code{"glmm"} without lme4 raises one of class
-\code{nestimate_missing_package}.}
+(default), \code{"donner_klar"}, \code{"cmh"}, \code{"gee"} or \code{"glmm"}. A test that cannot run on the design raises \code{nestimate_bad_input}; \code{"glmm"} needs the lme4 package.}
 
 \item{actor}{With \code{nested = TRUE} (required then): the name of the
 column whose values identify the actors, or several names for nested

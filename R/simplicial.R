@@ -10,7 +10,7 @@
 # Core constructor
 # =========================================================================
 
-#' Build a Simplicial Complex
+#' Build a simplicial complex
 #'
 #' @description
 #' `build_simplicial()` builds a simplicial complex, the higher-order
@@ -63,11 +63,7 @@
 #'   weights are never edges. Default `0`. Ignored for `"vr"`, which uses
 #'   `max_scale`, and for `"pathway"`.
 #' @param max_dim The highest simplex dimension built (a k-simplex has k + 1
-#'   nodes), a non-negative whole number. Default `10`. When a larger clique
-#'   is cut at this dimension, the clique or Vietoris-Rips complex is marked
-#'   truncated; [betti_numbers()] then warns with class
-#'   `nestimate_truncated_complex`, as does [persistent_homology()] on a
-#'   Vietoris-Rips complex. A pathway with more than `max_dim + 1` distinct
+#'   nodes), a non-negative whole number. Default `10`. A larger clique is cut at this dimension and the complex is marked truncated; its top Betti number is then unreliable, and [betti_numbers()] warns with `nestimate_truncated_complex`. A pathway with more than `max_dim + 1` distinct
 #'   states is cut to its faces of that size, without the truncated mark.
 #' @param max_pathways For `type = "pathway"`, how many pathways to keep:
 #'   the most frequent higher-order paths for a `net_hon`, the most frequent
@@ -87,9 +83,7 @@
 #' @param ... For `type = "pathway"` on a `tna` model or `netobject`: `method`
 #'   (`"hon"`, the default, `"hypa"` or `"mogen"`) chooses the higher-order
 #'   model built from it, and the other arguments go to [build_hon()],
-#'   [build_hypa()] or [build_mogen()]. Any other construction or input does
-#'   not read `...` and warns with class `nestimate_ignored_argument` when it
-#'   is given. For the `print()` and `plot()` methods: ignored.
+#'   [build_hypa()] or [build_mogen()]. Other constructions ignore `...` with a warning. For the `print()` and `plot()` methods: ignored.
 #' @return A `simplicial_complex` object. `print()` shows the counts, the
 #'   density, the f-vector (simplices per dimension), the Euler
 #'   characteristic and the non-zero Betti numbers; `plot()` draws the
@@ -526,7 +520,7 @@ build_simplicial <- function(x, type = "clique", threshold = 0,
 # Homology
 # =========================================================================
 
-#' Betti Numbers
+#' Count the holes of a simplicial complex
 #'
 #' @description
 #' `betti_numbers()` counts the holes of a simplicial complex in each
@@ -622,7 +616,7 @@ betti_numbers <- function(sc) {
   betti
 }
 
-#' Euler Characteristic
+#' Compute the Euler characteristic of a simplicial complex
 #'
 #' @description
 #' `euler_characteristic()` returns the Euler characteristic of a simplicial
@@ -926,7 +920,7 @@ euler_characteristic <- function(sc) {
   grid[, c("threshold", "dimension", "betti")]
 }
 
-#' Persistent Homology
+#' Compute the persistent homology of a network
 #'
 #' @description
 #' `persistent_homology()` follows the holes of a network's simplicial
@@ -1157,7 +1151,7 @@ persistent_homology <- function(x, n_steps = 20L, max_dim = 3L,
 # Simplicial centrality
 # =========================================================================
 
-#' Simplicial Degree
+#' Count the simplices that contain each node
 #'
 #' @description
 #' `simplicial_degree()` counts, for each node of a simplicial complex, how
@@ -1227,7 +1221,7 @@ simplicial_degree <- function(sc, normalized = FALSE) {
 # Q-analysis
 # =========================================================================
 
-#' Q-Analysis
+#' Describe the q-connectivity of a simplicial complex
 #'
 #' @description
 #' `q_analysis()` describes how the maximal simplices of a simplicial complex
@@ -1368,7 +1362,7 @@ q_analysis <- function(sc) {
 # Verification helper
 # =========================================================================
 
-#' Verify Simplicial Complex Against igraph
+#' Verify a simplicial complex against igraph
 #'
 #' @description
 #' `verify_simplicial()` builds the clique complex of `mat` with

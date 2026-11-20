@@ -1,6 +1,6 @@
 # ---- Vertex Bootstrap (Snijders & Borgatti 1999) ----
 
-#' Vertex Bootstrap for Network-Level Statistics
+#' Bootstrap network-level statistics by resampling nodes
 #'
 #' @description
 #' `vertex_bootstrap()` resamples the nodes of one observed network and
@@ -52,8 +52,7 @@
 #' @param x The network: a `netobject` (from [build_network()] or any builder),
 #'   a `cograph_network`, or a square numeric weight matrix, with at least 3
 #'   nodes. A `tna` model (package tna) is first rebuilt as a network from its
-#'   own sequences (see [as_netobject()]). Other input raises an error. For the
-#'   `print()` and `plot()` methods: a `net_vertex_bootstrap` result.
+#'   own sequences (see [as_netobject()]). Other input raises an error. For `print()` and `plot()`: a `vertex_bootstrap()` result.
 #' @param iter The number of bootstrap replicates, at least 2. Default
 #'   `1000`.
 #' @param ci_level The significance level of the confidence intervals, not
@@ -436,7 +435,7 @@ plot.net_vertex_bootstrap <- function(x, bins = 30, ...) {
 
 # ---- Two-Network Vertex-Bootstrap Comparison ----
 
-#' Compare Network-Level Statistics of Two Networks
+#' Test whether network-level statistics differ between two networks
 #'
 #' @description
 #' `vertex_compare()` tests whether two observed networks differ in their

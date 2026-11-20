@@ -5,7 +5,7 @@
 \alias{print.pc_loading_stability}
 \alias{summary.pc_loading_stability}
 \alias{plot.pc_loading_stability}
-\title{Composite-Weight Stability Under Case Resampling}
+\title{Bootstrap the item weights of a psychometric MCML fit}
 \usage{
 loading_stability(x, iter = 200L, ci_level = 0.05, seed = NULL)
 
@@ -62,8 +62,7 @@ row per item and the columns listed under \code{summary} above.
 }
 \description{
 \code{loading_stability()} bootstraps the item weights of a \code{\link[=build_mcml_pc]{build_mcml_pc()}}
-fit and returns a \code{pc_loading_stability} object with each item's observed
-signed weight, its bootstrap mean and standard deviation, a percentile
+fit and returns, for each item, its observed signed weight, its bootstrap mean and standard deviation, a percentile
 interval and how often its sign flipped. Each replicate resamples the rows
 of the raw data with replacement, re-estimates the node-level network
 with the fit's estimator (\code{cor}, \code{pcor} or \code{glasso}; any other node-level

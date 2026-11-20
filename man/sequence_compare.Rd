@@ -5,7 +5,7 @@
 \alias{print.net_sequence_comparison}
 \alias{summary.net_sequence_comparison}
 \alias{plot.net_sequence_comparison}
-\title{Compare Subsequence Patterns Between Groups}
+\title{Compare subsequence patterns between groups}
 \usage{
 sequence_compare(
   x,
@@ -33,20 +33,15 @@ sequence_compare(
 )
 }
 \arguments{
-\item{x}{The sequences: a \code{netobject_group} (from \code{\link[=build_network]{build_network()}} with
-\code{group}, or from a clustering), whose groups are compared; a
-\code{netobject}, \code{tna} model or \code{cograph_network} built from sequences; a
-wide data frame with one row per sequence and one column per position,
-whose position columns are named as a numbered run, as in
-\code{\link[=build_network]{build_network()}} (any column beside them other than the \code{group}
-column raises an error of class \code{nestimate_bad_input}); or a character
-matrix with one row per sequence and one column per position, whatever
-its column names. A numeric or logical matrix of only 0 and 1, and
-one-hot or association networks, raise \code{nestimate_bad_input}. Every
-input except a \code{netobject_group} needs \code{group}.
-A \code{group_tna} (package tna) is read as the group of networks it converts to (see \code{\link[=as_netobject]{as_netobject()}}). \code{actor} is read from the metadata the model keeps (\code{attr(model$data, "meta")}, kept when the model is built from \code{tna::prepare_data()}); a model without it raises \code{nestimate_actor_missing}.
-For the \code{print()} and
-\code{plot()} methods: a \code{net_sequence_comparison}.}
+\item{x}{The sequences:
+\itemize{
+\item a \code{netobject_group}, from \code{\link[=build_network]{build_network()}} with \code{group} or from a clustering, whose groups are compared;
+\item a \code{netobject}, \code{tna} model or \code{cograph_network} built from sequences;
+\item a wide data frame with numbered position columns, as in \code{\link[=build_network]{build_network()}}, or a character matrix, one row per sequence;
+\item a \code{group_tna}, read as the group of networks it converts to (see \code{\link[=as_netobject]{as_netobject()}}).
+}
+
+Every input except a \code{netobject_group} needs \code{group}. One-hot data, association networks and data frames with extra columns raise \code{nestimate_bad_input}. With \code{actor}, a tna model must keep its metadata, as one built with \code{tna::prepare_data()} does. For \code{print()} and \code{plot()}: a \code{sequence_compare()} result.}
 
 \item{group}{The group of each sequence: the name of a column of a data
 frame or matrix \code{x} (that column is then not read as a position), or a
@@ -67,8 +62,7 @@ reaches it, an error is raised. Default \code{5}.}
 \code{"none"}; see \emph{Details}.}
 
 \item{iter}{The number of permutations for \code{test = "permutation"}, a
-positive whole number; ignored otherwise. \code{iter = 1} gives a warning
-of class \code{nestimate_undefined_effect_size}. Default \code{1000}.}
+positive whole number; ignored otherwise. With \code{iter = 1} the effect size is undefined, and a warning says so. Default \code{1000}.}
 
 \item{adjust}{The p-value adjustment, any method of \code{\link[stats:p.adjust]{stats::p.adjust()}}
 (\code{"holm"}, \code{"hochberg"}, \code{"hommel"}, \code{"bonferroni"}, \code{"BH"}, \code{"BY"},

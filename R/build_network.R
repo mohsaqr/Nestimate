@@ -1,4 +1,4 @@
-#' Build a Network
+#' Estimate a network from sequences, events or variables
 #'
 #' @description
 #' `build_network()` estimates a network from sequences, an event log,
@@ -248,7 +248,7 @@
 #' \describe{
 #'   \item{\code{"relative"}}{Transition probabilities (row-normalised counts); directed. Aliases: \code{"tna"}, \code{"transition"}.}
 #'   \item{\code{"frequency"}}{Transition counts; directed. Aliases: \code{"ftna"}, \code{"counts"}.}
-#'   \item{\code{"co_occurrence"}}{Co-occurrence within sequences; undirected. Aliases: \code{"cna"}, \code{"wcna"}, \code{"co-occurrence"}.}
+#'   \item{\code{"co_occurrence"}}{Co-occurrence within sequences; undirected. With \code{params = list(type = "relative")} each row is normalised to sum to 1, and the network is directed. Also called \code{"cna"}, \code{"wcna"} or \code{"co-occurrence"}.}
 #'   \item{\code{"attention"}}{Decay-weighted transitions; directed. Alias: \code{"atna"}.}
 #'   \item{\code{"ngram"}}{Adjacent pairs counted once per n-gram window; directed. Aliases: \code{"n-gram"}, \code{"n_gram"}.}
 #'   \item{\code{"gap"}}{Pairs up to \code{max_gap + 1} positions apart, weighted \code{1 / distance}; directed.}
@@ -287,12 +287,7 @@
 #' edge's number of replies (\code{n_replies}) and their median latency in
 #' seconds (\code{median_latency}). \code{params = list(weighted = TRUE)}
 #' raises an error of class \code{nestimate_bad_input}, and so do
-#' \code{start} and \code{end}, which have no times. Latency networks are
-#' not resampled: [bootstrap_network()], [permutation()],
-#' [permutation_diagnostics()], [centrality_stability()],
-#' [casedrop_reliability()], [network_reliability()] and
-#' [compare_networks()] with a permutation or bootstrap \code{test} refuse
-#' one with an error of class \code{nestimate_latency_resampling}.
+#' \code{start} and \code{end}, which have no times. Latency networks are not resampled: the resampling verbs, such as [bootstrap_network()] and [permutation()], raise \code{nestimate_latency_resampling} on one.
 #'
 #' @details
 #' `build_network()` resolves the method alias, checks the declared column
@@ -559,18 +554,6 @@ build_network <- function(data,
       ))
     }
   }
-  # Two declarations of the positions that disagree: the estimator would read
-  # one and `$data` keep the other.
-  declared_cols <- .param_get(params, "cols")
-  if (!is.null(state_cols) && !is.null(declared_cols) &&
-      !identical(as.character(declared_cols), state_cols)) {
-    stop(errorCondition(sprintf(paste0(
-      "`state_cols` (%s) and `params$cols` (%s) name different positions; ",
-      "give the positions once."),
-      paste(state_cols, collapse = ", "),
-      paste(declared_cols, collapse = ", ")),
-      class = "nestimate_bad_input", call = NULL))
-  }
   if (is.data.frame(data)) {
     missing_state <- setdiff(state_cols,    names(data))
     missing_meta  <- setdiff(metadata_cols, names(data))
@@ -590,6 +573,21 @@ build_network <- function(data,
   dots <- list(...)
   if (length(dots) > 0) {
     params <- modifyList(params, dots)
+  }
+
+  # Two declarations of the positions that disagree: the estimator would read
+  # one and `$data` keep the other. Compared after the merge, so a `cols`
+  # given in the call replaces `params$cols` before the check, as it does
+  # for the estimator.
+  declared_cols <- .param_get(params, "cols")
+  if (!is.null(state_cols) && !is.null(declared_cols) &&
+      !identical(as.character(declared_cols), state_cols)) {
+    stop(errorCondition(sprintf(paste0(
+      "`state_cols` (%s) and the declared `cols` (%s) name different ",
+      "positions; give the positions once."),
+      paste(state_cols, collapse = ", "),
+      paste(declared_cols, collapse = ", ")),
+      class = "nestimate_bad_input", call = NULL))
   }
 
   # Resolve method aliases early (needed for format detection)
@@ -1803,7 +1801,7 @@ print.netobject_ml <- function(x, ...) {
 
 # ---- Predictability ----
 
-#' Compute Node Predictability
+#' Compute the predictability of each node
 #'
 #' @description
 #' `predictability()` computes how well each node of an association network

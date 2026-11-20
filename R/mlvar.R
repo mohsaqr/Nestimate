@@ -1,6 +1,6 @@
 # ---- Multilevel Vector Autoregression (mlVAR) ----
 
-#' Build a Multilevel Vector Autoregression (mlVAR) network
+#' Estimate multilevel vector autoregression networks
 #'
 #' @description
 #' `build_mlvar()` fits a multilevel vector autoregression to intensive
@@ -264,7 +264,7 @@ build_mlvar <- function(data, vars, id,
   nets
 }
 
-#' Tidy coefficients from a fitted mlvar model
+#' Tabulate the temporal coefficients of an mlVAR fit
 #'
 #' @description
 #' `coefs()` returns the temporal coefficients of a [build_mlvar()] fit as a

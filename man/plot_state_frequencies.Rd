@@ -12,7 +12,7 @@
 \alias{state_freq}
 \alias{print.state_freq}
 \alias{plot.state_freq}
-\title{Plot State Frequency Distributions}
+\title{Plot state frequencies as treemaps or bars}
 \usage{
 plot_state_frequencies(x, ...)
 
@@ -103,14 +103,13 @@ plot_state_frequencies(x, ...)
 \method{plot}{state_freq}(x, ...)
 }
 \arguments{
-\item{x}{The object to count: a \code{netobject}, \code{netobject_group}, \code{mcml}
-or \code{htna} network built from sequences.
-A \code{tna} model or a \code{group_tna} (package tna) is first rebuilt as a network from its own sequences (see \code{\link[=as_netobject]{as_netobject()}}).
-A network without sequence
-data raises an error; in a \code{netobject_group} or \code{mcml}, groups without
-it are left out. For the \code{print()} and \code{plot()}
-methods of the result: the \code{state_freq} object;
-for the \code{print()} methods of a per-panel figure: an object of class
+\item{x}{The object to count: a \code{netobject}, \code{netobject_group}, \code{mcml} or
+\code{htna} network built from sequences. A \code{tna} model or a \code{group_tna}
+(package tna) is first rebuilt as a network from its own sequences (see
+\code{\link[=as_netobject]{as_netobject()}}). A network without sequence data raises an error; in a
+\code{netobject_group} or \code{mcml}, groups without it are left out. For the
+\code{print()} and \code{plot()} methods of the result: the \code{state_freq} object; for
+the \code{print()} methods of a per-panel figure: an object of class
 \code{nestimate_facet_plot} or \code{nestimate_facet_list}.}
 
 \item{...}{Not used: the \code{netobject}, \code{netobject_group} and \code{htna}

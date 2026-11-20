@@ -6,7 +6,7 @@
 \alias{net_pruning_details.netobject_group}
 \alias{net_pruning_details.default}
 \alias{print.net_pruning_details}
-\title{Report Network Pruning Details}
+\title{List the edges a pruning removed}
 \usage{
 net_pruning_details(x, ...)
 

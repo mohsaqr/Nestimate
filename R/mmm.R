@@ -356,7 +356,7 @@
 # Main function
 # ---------------------------------------------------------------------------
 
-#' Fit a Mixed Markov Model
+#' Fit a mixed Markov model
 #'
 #' @description
 #' `build_mmm()` fits a mixture of first-order Markov chains to a set of
@@ -626,7 +626,9 @@ build_mmm <- function(data,
     # The rows of a one-hot network are time points, not sequences.
     if (.is_onehot_params(data$params)) {
       raw_data <- .onehot_unit_sequences(data)
-      build_args <- NULL
+      # settings that read the 0/1 codes are dropped; the rest (a
+      # co-occurrence network's `type`) rebuild each cluster as the source
+      build_args <- .onehot_rebuild_args(data)
       metadata <- NULL
       # its units are windowed state sequences now, which the wtna methods
       # (they read 0/1 codes) cannot rebuild; their counting methods can
@@ -937,7 +939,7 @@ build_mmm <- function(data,
 # Compare multiple k values
 # ---------------------------------------------------------------------------
 
-#' Compare MMM fits across different k
+#' Compare mixed Markov models across numbers of subgroups
 #'
 #' @description
 #' `compare_mmm()` fits a mixed Markov model with [build_mmm()] for each
@@ -1377,7 +1379,7 @@ plot.mmm_compare <- function(x, ...) {
   .restore_htna_group(nets, mmm$htna_partition)
 }
 
-#' Cluster sequences using Mixed Markov Models
+#' Cluster sequences with a mixed Markov model
 #'
 #' @description
 #' `cluster_mmm()` clusters sequences by fitting a mixture of first-order
@@ -1402,9 +1404,7 @@ plot.mmm_compare <- function(x, ...) {
 #'   [cluster_network()].
 #' @param ... Not used; any extra argument raises an error.
 #' @return A `net_mmm` object, exactly as [build_mmm()] returns it: `print()`,
-#'   [summary()] and `plot()` read it, [build_network()] turns it into a
-#'   `netobject_group` with one network per subgroup, and
-#'   [cluster_diagnostics()] gives the classification and, for sequences
+#'   [summary()] and `plot()` read it, [build_network()] gives one network per subgroup, [cluster_diagnostics()] the quality of the classification and, for sequences
 #'   built from long data with `actor`/`session`, [session_ids()] gives each
 #'   sequence's subgroup. [build_mmm()] lists its fields. For HTNA input,
 #'   the actor partition is kept and restored when the fit is turned into

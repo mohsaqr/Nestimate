@@ -7,7 +7,7 @@
 \alias{label_predictions}
 \alias{label_scores}
 \alias{plot.net_hypergraph_transduction}
-\title{Transductive label spreading on a hypergraph}
+\title{Classify unlabelled hypergraph nodes by label spreading}
 \usage{
 hypergraph_transduction(
   hg,
@@ -45,9 +45,7 @@ given labels. Default \code{0.99}.}
 \item{type, edge_weights}{The Laplacian and its hyperedge weights, passed
 to \code{\link[=hypergraph_laplacian]{hypergraph_laplacian()}}. Defaults \code{"zhou"} and \code{NULL}.}
 
-\item{x}{For the \code{print()} and \code{plot()} methods and for
-\code{label_predictions()} and \code{label_scores()}: a
-\code{net_hypergraph_transduction} object.}
+\item{x}{For \code{print()}, \code{plot()}, \code{label_predictions()} and \code{label_scores()}: a result of \code{hypergraph_transduction()}.}
 
 \item{...}{For the methods: ignored.}
 

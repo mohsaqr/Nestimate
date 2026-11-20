@@ -4,7 +4,7 @@
 \alias{extract_transition_matrix}
 \alias{print.nest_transition_matrix}
 \alias{summary.nest_transition_matrix}
-\title{Extract Transition Matrix from Model}
+\title{Extract the transition matrix of a network}
 \usage{
 extract_transition_matrix(model, type = c("raw", "scaled"))
 

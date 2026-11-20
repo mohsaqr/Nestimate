@@ -24,8 +24,9 @@
 #'   is raised; any other kind of object raises an error too. A matrix without
 #'   dimnames is labelled `V1`, `V2`, ..., so it matches only a network with
 #'   those labels. The difference is directed when either network is
-#'   directed (a network by its own `directed` flag, a matrix when its
-#'   weights are not symmetric) or when the difference itself is not
+#'   directed (a network by its own `directed` flag, a matrix, or a
+#'   `cograph_network` without that flag, when its weights are not
+#'   symmetric) or when the difference itself is not
 #'   symmetric. For the `print()` method: `x` is the `netdifference` object.
 #'
 #' @return A `netdifference` object, which is also a `netobject` (method
@@ -83,7 +84,7 @@ subtract_networks <- function(x, y) {
   out
 }
 
-#' Coerce an inferential comparison to a network difference
+#' Convert a network comparison to a difference network
 #'
 #' @description
 #' `as_netdifference()` turns the result of a network comparison into a

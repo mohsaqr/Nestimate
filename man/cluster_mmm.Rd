@@ -2,7 +2,7 @@
 % Please edit documentation in R/mmm.R
 \name{cluster_mmm}
 \alias{cluster_mmm}
-\title{Cluster sequences using Mixed Markov Models}
+\title{Cluster sequences with a mixed Markov model}
 \usage{
 cluster_mmm(
   data,
@@ -85,9 +85,7 @@ one call shape. Any other value raises an error that points to
 }
 \value{
 A \code{net_mmm} object, exactly as \code{\link[=build_mmm]{build_mmm()}} returns it: \code{print()},
-\code{\link[=summary]{summary()}} and \code{plot()} read it, \code{\link[=build_network]{build_network()}} turns it into a
-\code{netobject_group} with one network per subgroup, and
-\code{\link[=cluster_diagnostics]{cluster_diagnostics()}} gives the classification and, for sequences
+\code{\link[=summary]{summary()}} and \code{plot()} read it, \code{\link[=build_network]{build_network()}} gives one network per subgroup, \code{\link[=cluster_diagnostics]{cluster_diagnostics()}} the quality of the classification and, for sequences
 built from long data with \code{actor}/\code{session}, \code{\link[=session_ids]{session_ids()}} gives each
 sequence's subgroup. \code{\link[=build_mmm]{build_mmm()}} lists its fields. For HTNA input,
 the actor partition is kept and restored when the fit is turned into

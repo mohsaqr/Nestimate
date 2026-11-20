@@ -142,9 +142,7 @@ test_that("summary.net_mlvar reports B, Theta, and between blocks", {
 
 # ---- Fit diagnostics ----
 
-test_that("build_mlvar warns on singular fit", {
-  # Create data that will produce a singular random-effects fit:
-  # very few subjects, minimal variation in random intercepts
+test_that("build_mlvar warns when the between-subjects network is not estimable", {
   set.seed(42)
   d <- data.frame(
     id   = rep(1:2, each = 20),
@@ -153,22 +151,20 @@ test_that("build_mlvar warns on singular fit", {
     V1   = rnorm(40, 0, 0.001),  # near-zero variance
     V2   = rnorm(40, 0, 0.001)
   )
-  # With near-zero variance and only 2 subjects, lmer will likely
-  # produce a singular fit; we just verify the warning mechanism works
-  result <- tryCatch(
-    withCallingHandlers(
-      build_mlvar(d, vars = c("V1", "V2"), id = "id", day = "day", beep = "beep"),
-      warning = function(w) {
-        if (grepl("singular", w$message)) {
-          invokeRestart("muffleWarning")
-        }
-      }
-    ),
-    error = function(e) NULL
-  )
-  # Test passes if no error — the warning pathway is exercised
-  # (the actual singular condition depends on the data/optimizer)
-  expect_true(TRUE)
+  # Two subjects with almost no variation: each lmer fit is singular, and with
+  # no random-intercept variance the between-subjects network is the zero
+  # matrix. Both are warned about.
+  raised <- character(0)
+  fit <- withCallingHandlers(
+    build_mlvar(d, vars = c("V1", "V2"), id = "id", day = "day",
+                beep = "beep"),
+    warning = function(w) {
+      raised <<- c(raised, conditionMessage(w))
+      invokeRestart("muffleWarning")
+    })
+  expect_true(any(grepl("singular fit", raised)))
+  expect_true(any(grepl("Between-subjects network not estimable", raised)))
+  expect_equal(max(abs(fit$between$weights)), 0)
 })
 
 # ---- Edge direction, p-values, method registration (2026-11-08) ----

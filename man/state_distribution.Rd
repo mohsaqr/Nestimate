@@ -8,7 +8,7 @@
 \alias{state_distribution.netobject_group}
 \alias{state_distribution.state_freq}
 \alias{state_distribution.default}
-\title{Per-Class State Distribution as a Tidy Data Frame}
+\title{Tabulate the state distribution of each group}
 \usage{
 state_distribution(x, ...)
 
@@ -25,14 +25,13 @@ state_distribution(x, ...)
 \method{state_distribution}{default}(x, ...)
 }
 \arguments{
-\item{x}{A \code{netobject}, \code{netobject_group}, \code{mcml} or \code{htna} network
-built from sequences, or the \code{state_freq} result of
-\code{\link[=plot_state_frequencies]{plot_state_frequencies()}}, whose table is returned as drawn.
-A \code{tna} model or a \code{group_tna} (package tna) is first rebuilt as a network from its own sequences (see \code{\link[=as_netobject]{as_netobject()}}).
-A network without sequence data raises an error;
-in a \code{netobject_group} or \code{mcml}, groups without it are left out, and
-an error is raised only when none has any. Other classes raise an
-error.}
+\item{x}{A \code{netobject}, \code{netobject_group}, \code{mcml} or \code{htna} network built
+from sequences, or the \code{state_freq} result of \code{\link[=plot_state_frequencies]{plot_state_frequencies()}},
+whose table is returned as drawn. A \code{tna} model or a \code{group_tna} (package
+tna) is first rebuilt as a network from its own sequences (see
+\code{\link[=as_netobject]{as_netobject()}}). A network without sequence data raises an error; in a
+\code{netobject_group} or \code{mcml}, groups without it are left out, and an error
+is raised only when none has any. Other classes raise an error.}
 
 \item{...}{Not used. The \code{mcml} method raises an error for any argument
 it does not take; the other methods ignore it.}
@@ -58,9 +57,7 @@ network, named as in the group (or \code{"Group 1"}, \code{"Group 2"}, ...); an
 \code{mcml} one per cluster, with the node labels it was given in place of
 the raw codes. Missing and empty cells are not counted.
 
-The table is the one behind \code{\link[=plot_state_frequencies]{plot_state_frequencies()}}, and the per-group
-counterpart of \code{\link[=state_frequencies]{state_frequencies()}}, which counts the states of raw
-sequence data.
+This is the table that \code{\link[=plot_state_frequencies]{plot_state_frequencies()}} draws. To count the states of raw sequence data, use \code{\link[=state_frequencies]{state_frequencies()}} instead.
 }
 \examples{
 data(group_regulation_long, package = "Nestimate")

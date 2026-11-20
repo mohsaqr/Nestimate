@@ -2,9 +2,17 @@
 % Please edit documentation in R/estimate_network.R
 \name{build_ising}
 \alias{build_ising}
-\title{Build an Ising Network}
+\title{Estimate an Ising network}
 \usage{
-build_ising(data, actor = NULL, ...)
+build_ising(
+  data,
+  actor = NULL,
+  ...,
+  group = NULL,
+  scaling = NULL,
+  threshold = 0,
+  params = list()
+)
 }
 \arguments{
 \item{data}{The binary variables: a data frame with one row per
@@ -18,10 +26,27 @@ error.}
 \item{actor}{An id column naming whose observation each row is; it is
 set aside, not modelled. Default \code{NULL}.}
 
-\item{...}{Further arguments for \code{\link[=build_network]{build_network()}}, such as \code{params}
-(\code{gamma}, \code{nlambda}, \code{rule}), \code{threshold}, \code{scaling} or \code{group}.
-\code{method} cannot be given: it is always \code{"ising"} (error of class
-\code{nestimate_bad_input}).}
+\item{...}{Further arguments for \code{\link[=build_network]{build_network()}}, such as \code{labels} or
+\code{predictability}. \code{method} cannot be given: it is always \code{"ising"}
+(error of class \code{nestimate_bad_input}).}
+
+\item{group}{A column to split the data by: one network is estimated per
+value and the result is a \code{netobject_group}. Default \code{NULL}.}
+
+\item{scaling}{Rescaling applied to the weights after estimation, in the
+order given: \code{"minmax"} maps the non-zero weights into (0, 1],
+\code{"max"} divides by the largest absolute weight, \code{"rank"} replaces the
+non-zero weights by their ranks, and \code{"normalize"} makes each row's
+absolute weights sum to 1. Zero weights stay zero under every option.
+Combine them as in \code{c("rank", "minmax")}. Default \code{NULL} (none).}
+
+\item{threshold}{Weights whose absolute value is below this are set to
+zero. Default \code{0} (none).}
+
+\item{params}{Settings for the estimator, as a named list: \code{gamma},
+\code{nlambda} and \code{rule}, as described above. The network stores them, so
+\code{\link[=bootstrap_network]{bootstrap_network()}} re-estimates with the same settings. Default
+\code{list()}.}
 }
 \value{
 A \code{netobject} (a \code{netobject_group} with \code{group}), exactly as
@@ -47,7 +72,8 @@ stability of the edges with \code{\link[=bootstrap_network]{bootstrap_network()}
 if (requireNamespace("glmnet", quietly = TRUE)) {
   set.seed(1)
   bin_data <- data.frame(matrix(rbinom(200, 1, 0.5), ncol = 5))
-  net <- build_ising(bin_data)
+  net <- build_ising(bin_data, params = list(rule = "OR"))
+  net
 }
 }
 \references{
@@ -57,5 +83,7 @@ constructing networks from binary data. \emph{Scientific Reports}, 4,
 5918. \doi{10.1038/srep05918}
 }
 \seealso{
-\code{\link{build_network}}
+\code{\link[=build_network]{build_network()}} for every method; \code{\link[=build_cor]{build_cor()}},
+\code{\link[=build_pcor]{build_pcor()}} and \code{\link[=build_glasso]{build_glasso()}} for the other association
+networks; \code{\link[=bootstrap_network]{bootstrap_network()}} and \code{\link[=nct]{nct()}} for inference.
 }

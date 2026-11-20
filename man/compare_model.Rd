@@ -62,12 +62,11 @@ compare_model(x, ...)
 )
 }
 \arguments{
-\item{x}{The first network: a \code{netobject}, a \code{cograph_network} or a
-numeric square matrix, or a \code{netobject_group} whose members \code{i} and \code{j}
-are compared.
-A \code{tna} model or a \code{group_tna} (package tna) is first rebuilt as a network from its own sequences (see \code{\link[=as_netobject]{as_netobject()}}).
-For the \code{print()} and \code{plot()} methods: a
-\code{net_comparison} object.}
+\item{x}{The first network: a \code{netobject}, a \code{cograph_network} or a numeric
+square matrix, or a \code{netobject_group} whose members \code{i} and \code{j} are
+compared. A \code{tna} model or a \code{group_tna} (package tna) is first rebuilt as
+a network from its own sequences (see \code{\link[=as_netobject]{as_netobject()}}). For the \code{print()}
+and \code{plot()} methods: a \code{net_comparison} object.}
 
 \item{...}{Not used.}
 
@@ -213,7 +212,8 @@ The measures, scalings and edge metrics mirror \code{tna::compare()} (tna
 Szekely, Rizzo and Bakirov (2007), \code{NA} when one network is constant, and
 the RV coefficient that of Robert and Escoufier (1976). A network's own
 \code{directed} flag decides how its network metrics are computed; a plain
-matrix has none, so an asymmetric matrix is read as directed and a
+matrix has none, nor has a \code{cograph_network} without a \code{directed} field,
+so an asymmetric one is read as directed and a
 symmetric one as undirected, after its rows and columns are matched to
 the other network's nodes by name. A tna model is read by the \code{directed}
 flag of the network it is rebuilt into.

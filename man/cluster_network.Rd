@@ -2,7 +2,7 @@
 % Please edit documentation in R/cluster_data.R
 \name{cluster_network}
 \alias{cluster_network}
-\title{Cluster data and build per-cluster networks in one step}
+\title{Cluster sequences and estimate one network per cluster}
 \usage{
 cluster_network(data, k, cluster_by = "pam", dissimilarity = "hamming", ...)
 }
@@ -22,8 +22,7 @@ hierarchical methods \code{"ward.D2"}, \code{"ward.D"}, \code{"complete"},
 passed to \code{\link[=build_clusters]{build_clusters()}} as its \code{method}; \code{"mmm"} fits a mixed
 Markov model with \code{\link[=build_mmm]{build_mmm()}} instead.}
 
-\item{dissimilarity}{The distance between sequences for dissimilarity
-clustering, one of those \code{\link[=build_clusters]{build_clusters()}} accepts. Default
+\item{dissimilarity}{The distance between sequences, as in \code{\link[=build_clusters]{build_clusters()}}. Default
 \code{"hamming"}. Giving it with \code{cluster_by = "mmm"} raises an error.}
 
 \item{...}{Arguments for the two stages, routed by name. For

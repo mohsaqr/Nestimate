@@ -2,7 +2,7 @@
 % Please edit documentation in R/mogen.R
 \name{path_counts}
 \alias{path_counts}
-\title{Count Path Frequencies in Trajectory Data}
+\title{Count the paths of k states in trajectories}
 \usage{
 path_counts(data, k = 2L, top = NULL)
 }

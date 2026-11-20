@@ -5,7 +5,7 @@
 \alias{print.net_honem}
 \alias{summary.net_honem}
 \alias{plot.net_honem}
-\title{Build HONEM Embeddings for Higher-Order Networks}
+\title{Embed the nodes of a higher-order network with HONEM}
 \usage{
 build_honem(hon, dim = 32L, max_power = 10L)
 

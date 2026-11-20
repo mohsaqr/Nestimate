@@ -150,7 +150,7 @@
   colnames(x)[const]
 }
 
-#' Network Comparison Test
+#' Compare two networks with the network comparison test
 #'
 #' @description
 #' `nct()` tests whether two networks estimated from two samples of the same

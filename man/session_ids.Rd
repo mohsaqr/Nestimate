@@ -6,7 +6,7 @@
 \alias{session_ids.netobject}
 \alias{session_ids.net_mmm}
 \alias{session_ids.net_clustering}
-\title{The session behind each sequence}
+\title{Identify the session behind each sequence}
 \usage{
 session_ids(x, ...)
 

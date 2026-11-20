@@ -10,7 +10,7 @@
 # components). ZEC and HEC are shifted tensor power iterations, defined
 # for uniform hypergraphs only.
 
-#' Hypergraph eigenvector centralities
+#' Compute the eigenvector centralities of a hypergraph
 #'
 #' @description
 #' `hypergraph_centrality()` scores how central each node of a hypergraph
@@ -32,8 +32,7 @@
 #' Z-eigenvector is not unique.
 #' [hypergraph_measures()] describes the structure the scores come from.
 #'
-#' @param hg The hypergraph: a `net_hypergraph` from [build_hypergraph()]
-#'   or [bipartite_groups()].
+#' @param hg A hypergraph, from [build_hypergraph()] or [bipartite_groups()].
 #' @param type The centralities to compute, any of `"clique"`, `"Z"` and
 #'   `"H"`, returned in the order given. Default `"clique"`. `"Z"` and `"H"`
 #'   need a uniform hypergraph (every hyperedge with two or more members has

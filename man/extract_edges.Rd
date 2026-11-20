@@ -2,7 +2,7 @@
 % Please edit documentation in R/extraction.R
 \name{extract_edges}
 \alias{extract_edges}
-\title{Extract Edge List with Weights}
+\title{Extract the edge list of a network}
 \usage{
 extract_edges(model, threshold = 0, include_self = FALSE, sort_by = "weight")
 }

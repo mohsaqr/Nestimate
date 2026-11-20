@@ -4,7 +4,7 @@
 \alias{build_hypa}
 \alias{print.net_hypa}
 \alias{summary.net_hypa}
-\title{Detect Path Anomalies via HYPA}
+\title{Detect over- and under-represented paths with HYPA}
 \usage{
 build_hypa(
   data,

@@ -132,7 +132,8 @@
 #' Szekely, Rizzo and Bakirov (2007), `NA` when one network is constant, and
 #' the RV coefficient that of Robert and Escoufier (1976). A network's own
 #' `directed` flag decides how its network metrics are computed; a plain
-#' matrix has none, so an asymmetric matrix is read as directed and a
+#' matrix has none, nor has a `cograph_network` without a `directed` field,
+#' so an asymmetric one is read as directed and a
 #' symmetric one as undirected, after its rows and columns are matched to
 #' the other network's nodes by name. A tna model is read by the `directed`
 #' flag of the network it is rebuilt into.
@@ -253,15 +254,23 @@ compare_model.netobject_group <- function(x, i = 1L, j = 2L, scaling = "none",
 # bare cograph_network becomes a netobject) and read each one's own
 # `directed` flag: TRUE/FALSE for a network, NA for a plain matrix, which has
 # none. Reading the flag off the unconverted input lost a tna model's
-# direction (it keeps no `$directed`).
+# direction (it keeps no `$directed`). A bare cograph_network without a
+# `directed` field declares no direction either: the conversion fills one in
+# (TRUE), so its flag is NA, as for a matrix, and its symmetry decides.
 #' @noRd
 .compare_inputs <- function(x, y, fn = "compare_model") {
   what <- paste0(fn, "()")
-  conv <- lapply(list(x, y), function(z) .native_network(z, what))
+  inputs <- list(x, y)
+  conv <- lapply(inputs, function(z) .native_network(z, what))
+  undeclared <- vapply(inputs, function(z) {
+    inherits(z, "cograph_network") && !inherits(z, "netobject") &&
+      is.null(z$directed)
+  }, logical(1L))
   flags <- vapply(conv, function(z) {
     flag <- if (!is.matrix(z)) z$directed
     if (isTRUE(flag) || isFALSE(flag)) flag else NA
   }, logical(1L))
+  flags[undeclared] <- NA
   list(x = conv[[1L]], y = conv[[2L]], flags = flags)
 }
 

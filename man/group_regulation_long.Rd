@@ -3,7 +3,7 @@
 \docType{data}
 \name{group_regulation_long}
 \alias{group_regulation_long}
-\title{Group Regulation in Collaborative Learning (Long Format)}
+\title{Group regulation actions in collaborative learning}
 \format{
 A data frame with 27,533 rows and 6 columns:
 \describe{
@@ -26,9 +26,10 @@ in the \pkg{tna} package.
 group_regulation_long
 }
 \description{
-Students' regulation actions during collaborative learning, in long
-format: 27,533 timestamped actions by 2,000 students working in 200
-groups across three courses, one row per action.
+\code{group_regulation_long} is a coded dataset of students' regulation
+actions during collaborative learning: 27,533 timestamped actions by
+2,000 students working in 200 groups across three courses. It is in long
+format, one row per action.
 }
 \examples{
 net <- build_network(group_regulation_long,

@@ -5,7 +5,7 @@
 \alias{print.net_vertex_bootstrap}
 \alias{summary.net_vertex_bootstrap}
 \alias{plot.net_vertex_bootstrap}
-\title{Vertex Bootstrap for Network-Level Statistics}
+\title{Bootstrap network-level statistics by resampling nodes}
 \usage{
 vertex_bootstrap(
   x,
@@ -25,12 +25,10 @@ vertex_bootstrap(
 \method{plot}{net_vertex_bootstrap}(x, bins = 30, ...)
 }
 \arguments{
-\item{x}{The network: a \code{netobject} (from \code{\link[=build_network]{build_network()}} or any
-builder), a \code{cograph_network}, or a square numeric weight matrix, with
-at least 3 nodes.
-A \code{tna} model (package tna) is first rebuilt as a network from its own sequences (see \code{\link[=as_netobject]{as_netobject()}}).
-Other input raises an error. For the \code{print()} and
-\code{plot()} methods: a \code{net_vertex_bootstrap} result.}
+\item{x}{The network: a \code{netobject} (from \code{\link[=build_network]{build_network()}} or any builder),
+a \code{cograph_network}, or a square numeric weight matrix, with at least 3
+nodes. A \code{tna} model (package tna) is first rebuilt as a network from its
+own sequences (see \code{\link[=as_netobject]{as_netobject()}}). Other input raises an error. For \code{print()} and \code{plot()}: a \code{vertex_bootstrap()} result.}
 
 \item{iter}{The number of bootstrap replicates, at least 2. Default
 \code{1000}.}

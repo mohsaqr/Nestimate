@@ -2,7 +2,7 @@
 % Please edit documentation in R/sequence_metrics.R
 \name{sequence_metrics}
 \alias{sequence_metrics}
-\title{Per-Sequence Indices}
+\title{Compute descriptive indices for each sequence}
 \usage{
 sequence_metrics(
   x,
@@ -37,8 +37,7 @@ group, metadata) before the indices. Default \code{FALSE}.}
 \code{\link[=extract_sequences]{extract_sequences()}}. Default \code{NULL}.}
 
 \item{actor, action, time}{The actor, action and timestamp columns of a
-long event log, as in \code{\link[=extract_sequences]{extract_sequences()}}: setting \code{action} declares
-\code{x} an event log. Default \code{NULL}.}
+long event log; setting \code{action} marks \code{x} as one. Default \code{NULL}.}
 
 \item{...}{Further arguments passed to \code{\link[=prepare]{prepare()}} for a long event log,
 such as \code{time_threshold} or \code{order}.}

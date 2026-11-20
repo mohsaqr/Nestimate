@@ -78,7 +78,7 @@ test_that("pathways.net_hon order parameter filters", {
 
 test_that("pathways.net_hypa returns anomalous paths", {
   seqs <- .make_ho_seqs()
-  hypa <- build_hypa(seqs, k = 2, alpha = 0.05)
+  hypa <- build_hypa(seqs, order = 2, alpha = 0.05)
   pw <- pathways(hypa)
 
   expect_type(pw, "character")
@@ -90,7 +90,7 @@ test_that("pathways.net_hypa returns anomalous paths", {
 
 test_that("pathways.net_hypa type parameter filters", {
   seqs <- .make_ho_seqs()
-  hypa <- build_hypa(seqs, k = 2, alpha = 0.05)
+  hypa <- build_hypa(seqs, order = 2, alpha = 0.05)
 
   pw_all <- pathways(hypa, type = "all")
   pw_over <- pathways(hypa, type = "over")
@@ -106,7 +106,7 @@ test_that("pathways.net_hypa returns empty when no anomalies", {
     c("A", "B", "C"),
     c("B", "C", "A")
   )
-  hypa <- build_hypa(seqs, k = 2, alpha = 0.001)
+  hypa <- build_hypa(seqs, order = 2, alpha = 0.001)
   pw <- pathways(hypa)
 
   # May or may not have anomalies at strict alpha
@@ -165,7 +165,7 @@ test_that("pathways.net_mogen returns empty for order 0", {
 
 test_that("HYPA $edges is set and matches $scores", {
   seqs <- .make_ho_seqs()
-  hypa <- build_hypa(seqs, k = 2)
+  hypa <- build_hypa(seqs, order = 2)
 
   expect_false(is.null(hypa$ho_edges))
   expect_equal(hypa$ho_edges, hypa$scores)

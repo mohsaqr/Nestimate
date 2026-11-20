@@ -6,7 +6,7 @@
 \alias{summary.net_path_dependence}
 \alias{print.summary.net_path_dependence}
 \alias{plot.net_path_dependence}
-\title{Per-Context Path Dependence at Order k}
+\title{Measure the path dependence of each context at order k}
 \usage{
 path_dependence(x, order = 2L, min_count = 5L, base = 2)
 
@@ -19,17 +19,16 @@ path_dependence(x, order = 2L, min_count = 5L, base = 2)
 \method{plot}{net_path_dependence}(x, top = 15L, title = NULL, ...)
 }
 \arguments{
-\item{x}{The sequences: a wide data frame or matrix (one row per
-sequence, one column per time step), or a \code{netobject} built from
-sequences, whose stored data are read. A data frame needs position
-columns named as a numbered run (\code{T1}, \code{T2}, ...); any other frame, a
-one-hot network and an association network raise an error of class
-\code{nestimate_bad_input}, and a network without its data stops
-\code{path_dependence()}. Paths that touch a missing cell are left out.
-A \code{tna} model (package tna) or a bare \code{cograph_network} gives the sequences it carries.
-For
-the \code{print()} methods: a \code{net_path_dependence} object or its
-\code{summary()}; for the \code{plot()} method: a \code{net_path_dependence} object.}
+\item{x}{The sequences: a wide data frame or matrix (one row per sequence,
+one column per time step), or a \code{netobject} built from sequences, whose
+stored data are read. A data frame needs position columns named as a
+numbered run (\code{T1}, \code{T2}, ...); any other frame, a one-hot network and an
+association network raise an error of class \code{nestimate_bad_input}, and a
+network without its data stops \code{path_dependence()}. Paths that touch a
+missing cell are left out. A \code{tna} model (package tna) or a bare
+\code{cograph_network} gives the sequences it carries. For the \code{print()}
+methods: a \code{net_path_dependence} object or its \code{summary()}; for the
+\code{plot()} method: a \code{net_path_dependence} object.}
 
 \item{order}{The length k of the conditioning context, a whole number of
 at least 2; a non-integer value is an error, not truncated. Default

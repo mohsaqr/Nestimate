@@ -29,10 +29,7 @@
 #'   `netobject_group` (its members are compared individually and keep their
 #'   names), `cograph_network`, `psychnet`, `mcml`, `tna`, `group_tna`,
 #'   square numeric matrices, or one unnamed list of these. Name the
-#'   arguments to name the networks, as in `compare_networks(early = a, late
-#'   = b)`; an unnamed network is named after its method, or `network_<i>`.
-#'   Nested lists, non-square matrices and other classes raise an error of
-#'   class `nestimate_compare_bad_input`. For the `plot()` method: passed to
+#'   arguments to name the networks, as in `early = a, late = b`; an unnamed network is named after its method. Any other input raises an error. For the `plot()` method: passed to
 #'   `cograph::splot()` in the `"networks"` and `"difference"` views (such as
 #'   `layout`, `node_size` or `minimum`) and ignored by the other views; the
 #'   `print()` method ignores it.
@@ -70,18 +67,13 @@
 #'   `"permutation"`, `"bayes"` and `"bootstrap"`. Each fills the columns it
 #'   supports (see *Details*). The permutation and Bayesian tests need
 #'   networks that carry their data and share one estimation method, and the
-#'   Bayesian test needs `"relative"` or `"frequency"` networks; otherwise an
-#'   error of class `nestimate_compare_test_unsupported` is raised. Latency
-#'   networks are not resampled: with `"permutation"` or `"bootstrap"`, a
-#'   network built with `method = "latency"` raises an error of class
-#'   `nestimate_latency_resampling`.
+#'   Bayesian test needs `"relative"` or `"frequency"` networks; otherwise the call raises `nestimate_compare_test_unsupported`. Latency networks are not resampled: the permutation and bootstrap tests raise `nestimate_latency_resampling` on one.
 #' @param iter The number of permutations, posterior draws or bootstrap
 #'   replicates per pair, at least 2. Default `1000`.
 #' @param alpha The significance level of the permutation and bootstrap
 #'   tests, a number between 0 and 1; the Bayesian credible interval covers
 #'   `1 - alpha`. Default `0.05`.
-#' @param adjust The multiplicity correction for the permutation p-values, a
-#'   method of [stats::p.adjust()], applied within each pair and separately
+#' @param adjust The multiplicity correction for the permutation p-values, any method of [p.adjust()][stats::p.adjust], applied within each pair and separately
 #'   to the edge and node tables, as [permutation()] does. Default
 #'   `"none"`.
 #' @param paired Whether the networks hold paired observations, so the
@@ -154,9 +146,7 @@
 #' @return A `net_network_comparison` object. `print()` shows one line per
 #'   pair (Pearson correlation, mean and largest absolute difference, the
 #'   largest change) and returns `x` invisibly; [summary()] returns one row
-#'   per pair; [edge_differences()], [node_differences()],
-#'   [global_differences()] and [network_metrics()] return the full tables
-#'   (see [comparison_tables]); `plot()` draws one view per call. The
+#'   per pair; the verbs of [comparison_tables] return the full tables; `plot()` draws one view per call. The
 #'   object's fields:
 #' * `networks`: the input networks as `netobject`s, with scaled weights;
 #' * `matrices`: the scaled weight matrices;
@@ -186,33 +176,14 @@
 #'   logical per network), `n_networks` and `n_pairs`.
 #'
 #' @section Errors:
-#' The errors that `compare_networks()` and its verbs raise themselves have
-#' the class `nestimate_compare_error` and one of these:
-#' * `nestimate_compare_too_few`: fewer than two networks;
-#' * `nestimate_compare_bad_input`: an input of an unsupported class, a
-#'   non-square matrix or a nested list;
-#' * `nestimate_compare_dim_mismatch`: different numbers of nodes;
-#' * `nestimate_compare_node_mismatch`: node labels that differ in set or
-#'   order;
-#' * `nestimate_compare_na_weights`: missing weights;
-#' * `nestimate_compare_reference_unknown`, `nestimate_compare_labels_length`,
-#'   `nestimate_compare_scaling_domain`, `nestimate_compare_scaling_inference`,
-#'   `nestimate_compare_test_unsupported` and
-#'   `nestimate_compare_actor_needs_permutation`: see the arguments;
-#' * `nestimate_compare_unknown_pair`: a `pair` that matches no comparison;
-#' * `nestimate_compare_no_nodes`: the node view or table of a comparison
-#'   without `measures`;
-#' * `nestimate_compare_no_test`: `plot(type = "inference")` without `test`;
-#' * `nestimate_compare_unknown_measure`: selecting a measure the object
-#'   does not carry.
+#' Every error that `compare_networks()` and its verbs raise has the class `nestimate_compare_error`, so one handler catches them all. The one met most often is `nestimate_compare_node_mismatch`, raised when the networks do not share the same nodes in the same order.
 #'
 #' Plain argument-type checks raise unclassed errors, and errors from
 #' [permutation()], [bayes_compare()] and [vertex_compare()] keep their own
 #' classes (for example `nestimate_bad_actor` for `paired = TRUE` with
 #' `actor`).
 #'
-#' An unknown name in `measures` gives a warning of class
-#' `nestimate_compare_warning` and `nestimate_compare_unknown_measure`.
+#' An unknown name in `measures` is dropped with a `nestimate_compare_warning`.
 #'
 #' @seealso [compare_model()] (two-network predecessor), [permutation()],
 #'   [bayes_compare()], [vertex_compare()], [subtract_networks()].
@@ -512,7 +483,14 @@ compare_networks <- function(...,
 .cn_as_netobject <- function(obj, name = NULL) {
   if (inherits(obj, "netobject")) return(obj)
   if (inherits(obj, "psychnet") || inherits(obj, "cograph_network")) {
-    return(as_netobject(obj))
+    net <- as_netobject(obj)
+    # A bare cograph_network without a `directed` field declares no
+    # direction; the conversion fills in TRUE, so its symmetry decides, as
+    # for a matrix (compare_model() and subtract_networks() do the same).
+    if (inherits(obj, "cograph_network") && is.null(obj$directed)) {
+      net$directed <- !isSymmetric(unname(.weights_of(net$weights)))
+    }
+    return(net)
   }
   # the shared converter (R/tna_input.R), limited to the model types this
   # function has rebuilt since it first took tna models
@@ -991,14 +969,17 @@ print.net_network_comparison <- function(x, digits = 2L, ...) {
   out
 }
 
-#' Tables of a network comparison
+#' Tabulate the results of a network comparison
 #'
 #' @description
-#' `summary()`, `edge_differences()`, `node_differences()`,
-#' `global_differences()` and `network_metrics()` return the tables of a
-#' comparison made with [compare_networks()]: one row per pair, per pair and
-#' cell, per pair, node and measure, per pair and metric, and per network
-#' and structural metric. Each is a data frame with no row names, numeric
+#' `edge_differences()` and its sibling verbs return the tables of a [compare_networks()] result:
+#' * `summary()`: one row per pair;
+#' * `edge_differences()`: one row per pair and cell;
+#' * `node_differences()`: one row per pair, node and measure;
+#' * `global_differences()`: one row per pair and metric;
+#' * `network_metrics()`: one row per network and structural metric.
+#' 
+#'  Each is a data frame with no row names, numeric
 #' columns rounded to `digits` decimals and p-value and
 #' probability-of-direction columns left unrounded.
 #' All but `network_metrics()` select pairs with the same `pair` argument as

@@ -310,6 +310,25 @@
              row = row[ok])
 }
 
+#' The reply pairs a latency network is built from
+#'
+#' Reads the states as `.estimator_latency()` does (cleaned, with
+#' `alphabet`, when given, as the states; a state outside it forms no
+#' pair), so the cap prepass of a grouped build and each group's estimator
+#' select the same replies.
+#' @param state_frame Data frame of the state positions.
+#' @param times Numeric matrix of seconds, laid out as `state_frame`.
+#' @return List with `states` (the alphabet) and `pairs` (from
+#'   `.latency_pairs()`).
+#' @noRd
+.latency_reply_pairs <- function(state_frame, times, alphabet = NULL,
+                                 id = NULL) {
+  prep <- .sequence_matrix(state_frame, format = "wide", id = id,
+                           alphabet = alphabet)
+  list(states = prep$states,
+       pairs = .latency_pairs(prep$matrix, times, prep$states))
+}
+
 #' Resolve a latency cap to seconds
 #'
 #' A percentile is taken over the latencies of the sender-change pairs
@@ -442,10 +461,10 @@
               is.finite(latency_cap_seconds) && latency_cap_seconds > 0)
   }
   parts <- .latency_split(data, cols)
-  prep <- .sequence_matrix(parts$states, format = "wide", id = id,
-                           alphabet = alphabet)
-  states <- prep$states
-  pairs <- .latency_pairs(prep$matrix, parts$times, states)
+  reply <- .latency_reply_pairs(parts$states, parts$times,
+                                alphabet = alphabet, id = id)
+  states <- reply$states
+  pairs <- reply$pairs
   # A cap in seconds applies to every reply, whatever the scope
   scope <- if (is.null(settings$cap_seconds)) settings$scope else "global"
   unit <- .latency_pair_units(pairs, scope, parts$units, states)
@@ -505,9 +524,12 @@
 #' Event times of a prepared log as latency time columns (seconds)
 #'
 #' `prepare()` returns `time_data` aligned with `sequence_data`, one
-#' `time_T<j>` column per position.
+#' `time_T<j>` column per position. Every event with a state needs a time:
+#' `prepare()` sorts an event without one last and starts a session there,
+#' which would drop its reply, so such events are refused here, by row.
 #' @noRd
 .latency_time_frame <- function(prepared) {
+  .latency_stop_missing_times(prepared)
   td <- prepared$time_data
   n_pos <- ncol(prepared$sequence_data)
   if (!is.data.frame(td) || ncol(td) != n_pos ||
@@ -520,6 +542,34 @@
   out <- as.data.frame(lapply(td, as.numeric))
   names(out) <- paste0(.LATENCY_TIME_PREFIX, seq_len(n_pos))
   out
+}
+
+#' Refuse a latency event log with an event that has no time
+#'
+#' An event counts when it has a state (an event without an action forms
+#' no reply). Its row is read from `prepare()`'s `long_data`, whose row
+#' names are those of the data given.
+#' @noRd
+.latency_stop_missing_times <- function(prepared) {
+  long <- prepared$long_data
+  if (!is.data.frame(long) || !".parsed_time" %in% names(long)) {
+    return(invisible(NULL))
+  }
+  no_time <- is.na(long$.parsed_time)
+  if (!any(no_time)) return(invisible(NULL))
+  seq_row <- match(long$.session_id, prepared$meta_data$.session_id)
+  state <- .clean_states(as.character(
+    as.matrix(prepared$sequence_data)[cbind(seq_row, long$.sequence)]))
+  missing <- no_time & !is.na(state)
+  if (!any(missing)) return(invisible(NULL))
+  rows <- rownames(long)[missing]
+  shown <- paste0(paste(utils::head(rows, 5L), collapse = ", "),
+                  if (length(rows) > 5L) ", ..." else "")
+  stop(errorCondition(sprintf(paste0(
+    "method = \"latency\" needs the time of every event: %d event(s) have ",
+    "no timestamp (row(s) %s). Give them a time or remove them."),
+    length(rows), shown),
+    class = "nestimate_bad_input", call = NULL))
 }
 
 #' The latency caps of a grouped build
@@ -544,13 +594,15 @@
                                    session = session, order = order,
                                    time_threshold = time_threshold,
                                    timezone = timezone)
-    mat <- as.matrix(prepared$sequence_data)
-    mat[] <- .clean_states(mat)
     times <- as.matrix(.latency_time_frame(prepared))
-    alphabet <- sort(unique(mat[!is.na(mat)]))
-    pairs <- .latency_pairs(mat, times, alphabet)
+    # the replies each group's estimator reads: the same alphabet (the
+    # caller's, or the one pooled over the groups) drops the same pairs
+    reply <- .latency_reply_pairs(prepared$sequence_data, times,
+                                  alphabet = .param_get(params, "alphabet"),
+                                  id = .param_get(params, "id"))
+    pairs <- reply$pairs
     units <- .latency_row_units(prepared, scope, actor)
-    unit <- .latency_pair_units(pairs, scope, units, alphabet)
+    unit <- .latency_pair_units(pairs, scope, units, reply$states)
     data.frame(group = rep(i, nrow(pairs)), latency = pairs$latency,
                changed = pairs$from != pairs$to,
                unit = if (is.null(unit)) rep(NA_character_, nrow(pairs)) else

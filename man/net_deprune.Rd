@@ -5,7 +5,7 @@
 \alias{net_deprune.netobject}
 \alias{net_deprune.netobject_group}
 \alias{net_deprune.default}
-\title{Undo Network Pruning}
+\title{Undo the pruning of a network}
 \usage{
 net_deprune(x, ...)
 

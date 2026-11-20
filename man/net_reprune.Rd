@@ -5,7 +5,7 @@
 \alias{net_reprune.netobject}
 \alias{net_reprune.netobject_group}
 \alias{net_reprune.default}
-\title{Re-apply Network Pruning}
+\title{Re-apply the pruning of a network}
 \usage{
 net_reprune(x, ...)
 

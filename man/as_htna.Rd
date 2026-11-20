@@ -5,7 +5,7 @@
 \alias{as_htna.mcml}
 \alias{as_htna.net_mmm}
 \alias{as_htna.default}
-\title{Build a grouped node-level network (htna) from data and a clustering}
+\title{Build a node-level network with clusters as node groups}
 \usage{
 as_htna(x, clusters = NULL, method = "relative", ...)
 
@@ -78,9 +78,7 @@ data with a clustering, an \code{mcml} (which supplies the clustering, and
 often the data), or a fitted \code{net_mmm}.
 
 The result is an ordinary \code{netobject}, so the inference verbs apply to it
-(\code{\link[=bootstrap_network]{bootstrap_network()}}, \code{\link[=net_centrality]{net_centrality()}}, \code{\link[=permutation]{permutation()}}), and
-cograph draws it as a grouped network:
-\code{cograph::plot_htna(as_htna(data, clusters))}.
+(\code{\link[=bootstrap_network]{bootstrap_network()}}, \code{\link[=net_centrality]{net_centrality()}}, \code{\link[=permutation]{permutation()}}), and \code{cograph::plot_htna()} draws it as a grouped network.
 }
 \details{
 \subsection{Why it rebuilds from data}{

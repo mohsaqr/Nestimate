@@ -7,7 +7,7 @@
 \alias{summary.net_markov_stability}
 \alias{plot.net_markov_stability}
 \alias{plot.net_markov_stability_group}
-\title{Markov Stability Analysis}
+\title{Describe the stability of each state of a Markov chain}
 \usage{
 markov_stability(x, normalize = TRUE)
 
@@ -37,10 +37,7 @@ markov_stability(x, normalize = TRUE)
 \code{cograph_network} or \code{tna} model with non-negative transition weights,
 a non-negative numeric transition matrix, or a wide sequence data frame
 or character matrix (a \code{"relative"} network is estimated from it). A
-\code{netobject_group} gives one result per group. An association network or
-negative weights raise an error of class \code{nestimate_not_markov}. For
-the \code{print()} and \code{plot()} methods: a \code{net_markov_stability} or
-\code{net_markov_stability_group}.}
+\code{netobject_group} gives one result per group. An association network or negative weights raise \code{nestimate_not_markov}. For \code{print()} and \code{plot()}: a \code{markov_stability()} result.}
 
 \item{normalize}{Whether to rescale rows that do not sum to 1 so that
 they do, with a warning, as for a \code{"frequency"} network. With \code{FALSE},
@@ -92,7 +89,7 @@ times to 2.}
 }
 \description{
 \code{markov_stability()} describes how stable each state of a Markov chain
-is and returns a \code{net_markov_stability} object holding one row per state:
+is, one row per state:
 its persistence (the probability of staying, \eqn{P_{ii}}), stationary
 probability (\eqn{\pi_i}, the long-run share of steps spent in it), mean
 recurrence time, sojourn time (the expected number of

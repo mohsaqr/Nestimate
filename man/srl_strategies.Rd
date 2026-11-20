@@ -3,7 +3,7 @@
 \docType{data}
 \name{srl_strategies}
 \alias{srl_strategies}
-\title{Self-Regulated Learning Strategy Frequencies}
+\title{Simulated counts of self-regulated learning strategies}
 \format{
 A data frame with 250 rows and 9 columns, one row per student
 and one column per strategy. Every column is numeric (double) and
@@ -15,8 +15,10 @@ values.
 srl_strategies
 }
 \description{
-Simulated counts of how often 250 university students used 9
-self-regulated learning (SRL) strategies, in three clusters:
+\code{srl_strategies} is a simulated dataset of how often 250 university
+students used nine self-regulated learning (SRL) strategies, one row per
+student and one count column per strategy. The strategies form three
+clusters:
 metacognitive (Planning, Monitoring, Evaluating), cognitive (Elaboration,
 Organization, Rehearsal) and resource management (Help_Seeking,
 Time_Mgmt, Effort_Reg). Strategies of the same cluster were simulated to

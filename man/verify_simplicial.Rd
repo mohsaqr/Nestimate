@@ -2,7 +2,7 @@
 % Please edit documentation in R/simplicial.R
 \name{verify_simplicial}
 \alias{verify_simplicial}
-\title{Verify Simplicial Complex Against igraph}
+\title{Verify a simplicial complex against igraph}
 \usage{
 verify_simplicial(mat, threshold = 0)
 }

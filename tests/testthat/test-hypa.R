@@ -154,7 +154,7 @@ test_that(".hypa_compute_scores handles empty graph", {
 test_that("build_hypa returns net_hypa class", {
   trajs <- list(c("A", "B", "C"), c("A", "B", "D"), c("B", "C", "A"),
                 c("C", "A", "B"), c("A", "C", "B"), c("B", "A", "C"))
-  h <- build_hypa(trajs, k = 1L)
+  h <- build_hypa(trajs, order = 1L)
 
   expect_s3_class(h, "net_hypa")
   expect_equal(h$k, 1L)
@@ -171,7 +171,7 @@ test_that("build_hypa detects anomalies in biased data", {
     replicate(2, c("D", "B", "C"), simplify = FALSE),
     replicate(2, c("C", "B", "D"), simplify = FALSE)
   )
-  h <- build_hypa(trajs, k = 2L, alpha = 0.05)
+  h <- build_hypa(trajs, order = 2L, alpha = 0.05)
 
   # Should find some anomalous paths
   # The A->B->C path is very frequent, may be over-represented
@@ -182,7 +182,7 @@ test_that("build_hypa detects anomalies in biased data", {
 test_that("build_hypa handles k=1 (first-order)", {
   trajs <- list(c("A", "B", "C", "D"), c("A", "C", "B", "D"),
                 c("B", "C", "D", "A"), c("D", "A", "B", "C"))
-  h <- build_hypa(trajs, k = 1L)
+  h <- build_hypa(trajs, order = 1L)
 
   expect_equal(h$k, 1L)
   expect_true(nrow(h$scores) > 0L)
@@ -191,7 +191,9 @@ test_that("build_hypa handles k=1 (first-order)", {
 test_that("build_hypa rejects invalid input", {
   expect_error(build_hypa(42), "data.frame or list")
   # `k` is deprecated; the validator reports against the canonical `order`.
-  expect_error(build_hypa(list(c("A", "B")), k = 0L), "integers >= 1")
+  expect_warning(
+    expect_error(build_hypa(list(c("A", "B")), k = 0L), "integers >= 1"),
+    class = "deprecatedWarning")
   expect_error(build_hypa(list(c("A", "B")), alpha = 0.6),
                "alpha.*must be a single number in")
 })
@@ -255,8 +257,8 @@ test_that("build_hypa alpha parameter affects classification", {
   trajs <- list(c("A", "B", "C"), c("A", "B", "D"), c("B", "C", "A"),
                 c("C", "A", "B"), c("B", "A", "C"), c("A", "C", "B"))
 
-  h1 <- build_hypa(trajs, k = 1L, alpha = 0.05)
-  h2 <- build_hypa(trajs, k = 1L, alpha = 0.49)
+  h1 <- build_hypa(trajs, order = 1L, alpha = 0.05)
+  h2 <- build_hypa(trajs, order = 1L, alpha = 0.49)
 
   # Stricter alpha should find fewer or equal anomalies
   expect_true(h1$n_anomalous <= h2$n_anomalous)
@@ -271,7 +273,7 @@ test_that("HYPA scores are in [0, 1]", {
   trajs <- lapply(seq_len(50L), function(i) {
     sample(LETTERS[1:4], 5, replace = TRUE)
   })
-  h <- build_hypa(trajs, k = 1L)
+  h <- build_hypa(trajs, order = 1L)
 
   expect_true(all(h$scores$p_value >= 0))
   expect_true(all(h$scores$p_value <= 1))
@@ -280,7 +282,7 @@ test_that("HYPA scores are in [0, 1]", {
 test_that("HYPA expected values are positive", {
   trajs <- list(c("A", "B", "C"), c("A", "C", "B"), c("B", "A", "C"),
                 c("C", "B", "A"), c("B", "C", "A"), c("C", "A", "B"))
-  h <- build_hypa(trajs, k = 1L)
+  h <- build_hypa(trajs, order = 1L)
 
   expect_true(all(h$scores$expected >= 0))
 })
@@ -291,14 +293,14 @@ test_that("HYPA expected values are positive", {
 
 test_that("print.net_hypa works", {
   trajs <- list(c("A", "B", "C"), c("B", "C", "A"))
-  h <- build_hypa(trajs, k = 1L)
+  h <- build_hypa(trajs, order = 1L)
   out <- capture.output(print(h))
   expect_true(any(grepl("HYPA", out)))
 })
 
 test_that("summary.net_hypa works", {
   trajs <- list(c("A", "B", "C"), c("B", "C", "A"), c("A", "C", "B"))
-  h <- build_hypa(trajs, k = 1L)
+  h <- build_hypa(trajs, order = 1L)
   out <- capture.output(summary(h))
   expect_true(any(grepl("HYPA", out)))
 })
@@ -349,7 +351,7 @@ test_that("summary.net_hypa returns direction-specific tail probability", {
 test_that("build_hypa handles data.frame input", {
   df <- data.frame(T1 = c("A", "B", "C"), T2 = c("B", "C", "A"),
                    T3 = c("C", "A", "B"))
-  h <- build_hypa(df, k = 1L)
+  h <- build_hypa(df, order = 1L)
   expect_s3_class(h, "net_hypa")
 })
 
@@ -361,7 +363,7 @@ test_that("build_hypa handles data.frame input", {
 test_that("build_hypa stops when no valid trajectories", {
   # All single-state entries: parsed trajectories have < 2 states each
   df <- data.frame(T1 = c("A", "B"), stringsAsFactors = FALSE)
-  expect_error(build_hypa(df, k = 1L), "No valid trajectories")
+  expect_error(build_hypa(df, order = 1L), "No valid trajectories")
 })
 
 # --- build_hypa: no edges at given order (paths too short) ---
@@ -369,7 +371,7 @@ test_that("build_hypa stops when no edges at requested order k", {
   # k=3 requires 4-grams; trajectories of length 3 produce only 1-grams (k=1)
   # and 2-grams (k=2) but not 3-grams as transitions
   trajs <- list(c("A", "B", "C"), c("B", "C", "D"))
-  expect_error(build_hypa(trajs, k = 3L), "No edges at")
+  expect_error(build_hypa(trajs, order = 3L), "No edges at")
 })
 
 # --- summary.net_hypa with anomalies displays anomalous paths ---
@@ -379,7 +381,7 @@ test_that("summary.net_hypa displays anomalous paths when present", {
     replicate(50, c("A", "B", "C"), simplify = FALSE),
     replicate(2,  c("A", "B", "D"), simplify = FALSE)
   )
-  h <- build_hypa(trajs, k = 2L, alpha = 0.05, min_count = 1L)
+  h <- build_hypa(trajs, order = 2L, alpha = 0.05, min_count = 1L)
   out <- capture.output(summary(h))
   # Either found anomalies or printed "No anomalous paths detected."
   expect_true(any(grepl("Anomalous|anomalous|No anomalous", out,
@@ -396,7 +398,7 @@ test_that("pathways.net_hypa returns character vector", {
     replicate(50, c("A", "B", "C"), simplify = FALSE),
     replicate(2,  c("A", "B", "D"), simplify = FALSE)
   )
-  h <- build_hypa(trajs, k = 2L, alpha = 0.05, min_count = 1L)
+  h <- build_hypa(trajs, order = 2L, alpha = 0.05, min_count = 1L)
   pw <- pathways(h)
   expect_true(is.character(pw))
 })
@@ -406,7 +408,7 @@ test_that("pathways.net_hypa type='over' returns over-represented paths", {
     replicate(50, c("A", "B", "C"), simplify = FALSE),
     replicate(2,  c("A", "B", "D"), simplify = FALSE)
   )
-  h <- build_hypa(trajs, k = 2L, alpha = 0.05, min_count = 1L)
+  h <- build_hypa(trajs, order = 2L, alpha = 0.05, min_count = 1L)
   pw_all  <- pathways(h, type = "all")
   pw_over <- pathways(h, type = "over")
   expect_true(length(pw_over) <= length(pw_all))
@@ -417,14 +419,14 @@ test_that("pathways.net_hypa type='under' returns under-represented paths", {
     replicate(50, c("A", "B", "C"), simplify = FALSE),
     replicate(2,  c("A", "B", "D"), simplify = FALSE)
   )
-  h <- build_hypa(trajs, k = 2L, alpha = 0.05, min_count = 1L)
+  h <- build_hypa(trajs, order = 2L, alpha = 0.05, min_count = 1L)
   pw_under <- pathways(h, type = "under")
   expect_true(is.character(pw_under))
 })
 
 test_that("pathways.net_hypa returns empty when no anomalies", {
   trajs <- list(c("A", "B", "C"), c("B", "C", "A"))
-  h <- build_hypa(trajs, k = 1L, alpha = 1e-10)
+  h <- build_hypa(trajs, order = 1L, alpha = 1e-10)
   pw <- pathways(h)
   # With near-zero alpha threshold, likely no anomalies
   expect_true(is.character(pw))
@@ -439,7 +441,7 @@ test_that("build_hypa stores $over and $under data frames", {
     replicate(50, c("A", "B", "C"), simplify = FALSE),
     replicate(2,  c("A", "B", "D"), simplify = FALSE)
   )
-  h <- build_hypa(trajs, k = 2L, alpha = 0.05, min_count = 1L)
+  h <- build_hypa(trajs, order = 2L, alpha = 0.05, min_count = 1L)
 
   expect_true(is.data.frame(h$over))
   expect_true(is.data.frame(h$under))
@@ -462,7 +464,7 @@ test_that("build_hypa pre-sorts scores: anomalous first", {
     replicate(50, c("A", "B", "C"), simplify = FALSE),
     replicate(2,  c("A", "B", "D"), simplify = FALSE)
   )
-  h <- build_hypa(trajs, k = 2L, alpha = 0.05, min_count = 1L)
+  h <- build_hypa(trajs, order = 2L, alpha = 0.05, min_count = 1L)
 
   if (h$n_anomalous > 0L && nrow(h$scores) > h$n_anomalous) {
     # Anomalous rows should come before normal rows
@@ -479,7 +481,7 @@ test_that("summary.net_hypa respects n parameter", {
     replicate(50, c("A", "B", "C"), simplify = FALSE),
     replicate(2,  c("A", "B", "D"), simplify = FALSE)
   )
-  h <- build_hypa(trajs, k = 2L, alpha = 0.05, min_count = 1L)
+  h <- build_hypa(trajs, order = 2L, alpha = 0.05, min_count = 1L)
   out <- capture.output(summary(h, n = 2L))
   expect_true(any(grepl("HYPA", out)))
 })
@@ -489,7 +491,7 @@ test_that("summary.net_hypa shows over/under counts", {
     replicate(50, c("A", "B", "C"), simplify = FALSE),
     replicate(2,  c("A", "B", "D"), simplify = FALSE)
   )
-  h <- build_hypa(trajs, k = 2L, alpha = 0.05, min_count = 1L)
+  h <- build_hypa(trajs, order = 2L, alpha = 0.05, min_count = 1L)
   out <- capture.output(summary(h))
   expect_true(any(grepl("over:", out)))
   expect_true(any(grepl("under:", out)))
@@ -508,7 +510,7 @@ test_that("p_adjust='none' matches original behavior (no correction)", {
     replicate(2, c("D", "B", "C"), simplify = FALSE),
     replicate(2, c("C", "B", "D"), simplify = FALSE)
   )
-  h <- build_hypa(trajs, k = 2L, alpha = 0.05, min_count = 1L,
+  h <- build_hypa(trajs, order = 2L, alpha = 0.05, min_count = 1L,
                   p_adjust = "none")
 
   expect_equal(h$p_adjust, "none")
@@ -525,7 +527,7 @@ test_that("BH adjustment produces p_adjusted columns in scores", {
     replicate(5, c("C", "B", "A"), simplify = FALSE),
     replicate(2, c("D", "B", "C"), simplify = FALSE)
   )
-  h <- build_hypa(trajs, k = 2L, alpha = 0.05, min_count = 1L,
+  h <- build_hypa(trajs, order = 2L, alpha = 0.05, min_count = 1L,
                   p_adjust = "BH")
 
   expect_equal(h$p_adjust, "BH")
@@ -553,9 +555,9 @@ test_that("BH adjustment can differ from no correction on biased data", {
     replicate(3, c("B", "C", "D"), simplify = FALSE)
   )
 
-  h_none <- build_hypa(trajs, k = 2L, alpha = 0.05, min_count = 1L,
+  h_none <- build_hypa(trajs, order = 2L, alpha = 0.05, min_count = 1L,
                        p_adjust = "none")
-  h_bh   <- build_hypa(trajs, k = 2L, alpha = 0.05, min_count = 1L,
+  h_bh   <- build_hypa(trajs, order = 2L, alpha = 0.05, min_count = 1L,
                        p_adjust = "BH")
 
   # BH should be at least as conservative as none (fewer or equal anomalies)
@@ -573,9 +575,9 @@ test_that("bonferroni is more conservative than BH", {
     replicate(3, c("B", "C", "D"), simplify = FALSE)
   )
 
-  h_bh   <- build_hypa(trajs, k = 2L, alpha = 0.05, min_count = 1L,
+  h_bh   <- build_hypa(trajs, order = 2L, alpha = 0.05, min_count = 1L,
                        p_adjust = "BH")
-  h_bonf <- build_hypa(trajs, k = 2L, alpha = 0.05, min_count = 1L,
+  h_bonf <- build_hypa(trajs, order = 2L, alpha = 0.05, min_count = 1L,
                        p_adjust = "bonferroni")
 
   # Bonferroni should be at least as conservative as BH
@@ -595,7 +597,7 @@ test_that("$over and $under data frames have p_adjusted columns", {
     replicate(50, c("A", "B", "C"), simplify = FALSE),
     replicate(2, c("A", "B", "D"), simplify = FALSE)
   )
-  h <- build_hypa(trajs, k = 2L, alpha = 0.05, min_count = 1L)
+  h <- build_hypa(trajs, order = 2L, alpha = 0.05, min_count = 1L)
 
   # $over and $under should have p_adjusted columns as subsets of scores
   if (nrow(h$over) > 0L) {
@@ -610,19 +612,19 @@ test_that("$over and $under data frames have p_adjusted columns", {
 
 test_that("invalid p_adjust method errors", {
   trajs <- list(c("A", "B", "C"), c("B", "C", "A"))
-  expect_error(build_hypa(trajs, k = 1L, p_adjust = "invalid_method"),
+  expect_error(build_hypa(trajs, order = 1L, p_adjust = "invalid_method"),
                "p_adjust.*must be one of")
-  expect_error(build_hypa(trajs, k = 1L, p_adjust = 42),
+  expect_error(build_hypa(trajs, order = 1L, p_adjust = 42),
                "p_adjust.*must be one of")
-  expect_error(build_hypa(trajs, k = 1L, p_adjust = c("BH", "bonferroni")),
+  expect_error(build_hypa(trajs, order = 1L, p_adjust = c("BH", "bonferroni")),
                "p_adjust.*must be one of")
 })
 
 test_that("p_adjust stored in result object", {
   trajs <- list(c("A", "B", "C"), c("B", "C", "A"), c("A", "C", "B"))
-  h_bh <- build_hypa(trajs, k = 1L, p_adjust = "BH")
-  h_none <- build_hypa(trajs, k = 1L, p_adjust = "none")
-  h_bonf <- build_hypa(trajs, k = 1L, p_adjust = "bonferroni")
+  h_bh <- build_hypa(trajs, order = 1L, p_adjust = "BH")
+  h_none <- build_hypa(trajs, order = 1L, p_adjust = "none")
+  h_bonf <- build_hypa(trajs, order = 1L, p_adjust = "bonferroni")
 
   expect_equal(h_bh$p_adjust, "BH")
   expect_equal(h_none$p_adjust, "none")
@@ -631,18 +633,18 @@ test_that("p_adjust stored in result object", {
 
 test_that("print.net_hypa shows p_adjust", {
   trajs <- list(c("A", "B", "C"), c("B", "C", "A"))
-  h <- build_hypa(trajs, k = 1L, p_adjust = "BH")
+  h <- build_hypa(trajs, order = 1L, p_adjust = "BH")
   out <- capture.output(print(h))
   expect_true(any(grepl("p_adjust=BH", out)))
 
-  h_none <- build_hypa(trajs, k = 1L, p_adjust = "none")
+  h_none <- build_hypa(trajs, order = 1L, p_adjust = "none")
   out_none <- capture.output(print(h_none))
   expect_true(any(grepl("p_adjust=none", out_none)))
 })
 
 test_that("summary.net_hypa shows p_adjust", {
   trajs <- list(c("A", "B", "C"), c("B", "C", "A"), c("A", "C", "B"))
-  h <- build_hypa(trajs, k = 1L, p_adjust = "bonferroni")
+  h <- build_hypa(trajs, order = 1L, p_adjust = "bonferroni")
   out <- capture.output(summary(h))
   expect_true(any(grepl("p_adjust: bonferroni", out)))
 })

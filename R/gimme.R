@@ -1,6 +1,6 @@
 # ---- Group Iterative Multiple Model Estimation (GIMME) ----
 
-#' GIMME: Group Iterative Multiple Model Estimation
+#' Estimate person-specific networks with GIMME
 #'
 #' @description
 #' `build_gimme()` estimates a directed network for each person from
@@ -69,9 +69,7 @@
 #'   significant for more than this share of the people whose models
 #'   converged, a number in (0, 1]. No group path is added when half or fewer
 #'   of the models converge. Default `0.75`.
-#' @param subcutoff Not used: reserved for subgrouping, which neither
-#'   Nestimate nor [idiographic::fit_gimme()] implements, and accepted for
-#'   compatibility with \pkg{gimme}; it is not passed on. Default `0.50`.
+#' @param subcutoff Not used. It is accepted for compatibility with \pkg{gimme}, where it sets the subgrouping cutoff; subgrouping is not implemented, so the value is not passed on. Default `0.50`.
 #' @param paths Paths, in lavaan syntax, to fix into every model, such as
 #'   `"V2~V1lag"`. Default `NULL`.
 #' @param exogenous The variables treated as exogenous (predictors only),
@@ -93,9 +91,7 @@
 #' @param seed An integer that makes the estimation reproducible; the
 #'   session's own random stream is left as it was. Default `NULL`.
 #'
-#' @return The `net_gimme` object (class
-#'   `c("net_gimme", "cograph_network", "list")`) that
-#'   [idiographic::fit_gimme()] returns; its `print()`, `summary()` and
+#' @return The `net_gimme` object, also a `cograph_network`, that [idiographic::fit_gimme()] returns; its `print()`, `summary()` and
 #'   `plot()` methods are \pkg{idiographic}'s, not Nestimate's. `print()`
 #'   shows the group-level paths, the number of individual paths and the
 #'   share of people with each path; [summary()] returns a data frame with

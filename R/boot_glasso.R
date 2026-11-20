@@ -1,6 +1,6 @@
 # ---- Bootstrap for Regularized Partial Correlation Networks ----
 
-#' Bootstrap for Regularised Partial Correlation Networks
+#' Bootstrap a graphical lasso network
 #'
 #' @description
 #' `boot_glasso()` assesses how accurately an EBIC graphical lasso network
@@ -105,8 +105,7 @@
 #'   needs `centrality_fn`, which then computes it; the built-in measures
 #'   are always computed internally.
 #' @param centrality_fn A function for measures beyond the four built-in
-#'   ones: it is called as `centrality_fn(mat)` on the partial correlation
-#'   matrix and returns a named list of centrality vectors, such as
+#'   ones: it takes the partial correlation matrix and returns a named list of centrality vectors, such as
 #'   `list(my_metric = ...)`. Default `NULL`; a measure in `centrality`
 #'   that is neither built in nor returned by it raises an error.
 #' @param cor_method The correlation method: `"pearson"` (default),

@@ -4,7 +4,7 @@
 \alias{persistence_landscape}
 \alias{print.persistence_landscape}
 \alias{plot.persistence_landscape}
-\title{Persistence Landscape}
+\title{Compute the persistence landscape of a persistence diagram}
 \usage{
 persistence_landscape(ph, k_max = 5L, dimension = 1L, t_grid = NULL)
 

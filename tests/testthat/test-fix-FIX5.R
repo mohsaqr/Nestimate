@@ -61,7 +61,8 @@ test_that("A03-F01: build_hypa has its own complete, correct roxygen", {
 
   block <- paste(rox, collapse = "\n")
   expect_match(block, "@export", fixed = TRUE)
-  expect_match(block, "Detect Path Anomalies via HYPA", fixed = TRUE)
+  expect_match(block, "Detect over- and under-represented paths with HYPA",
+               fixed = TRUE)
 
   # @param must document build_hypa's real formals, not data/k of the helper.
   real_formals <- setdiff(names(formals(build_hypa)), "...")

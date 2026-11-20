@@ -1,4 +1,4 @@
-#' Extract Transition Matrix from Model
+#' Extract the transition matrix of a network
 #'
 #' @description
 #' `extract_transition_matrix()` returns the weight matrix of a network: for
@@ -129,7 +129,7 @@ summary.nest_transition_matrix <- function(object, ...) {
 }
 
 
-#' Extract Initial Probabilities from Model
+#' Extract the initial-state probabilities of a network
 #'
 #' @description
 #' `extract_initial_probs()` returns the initial-state probabilities of a
@@ -263,7 +263,7 @@ summary.nest_initial_probs <- function(object, ...) {
 }
 
 
-#' Extract Edge List with Weights
+#' Extract the edge list of a network
 #'
 #' @description
 #' `extract_edges()` returns the edges of a network as a data frame, one row

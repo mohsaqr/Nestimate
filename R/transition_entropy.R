@@ -34,7 +34,7 @@
 
 # ---- transition_entropy() ----
 
-#' Transition Entropy of a Markov Chain
+#' Compute the transition entropy of a Markov chain
 #'
 #' @description
 #' `transition_entropy()` measures how uncertain a Markov chain's next step
@@ -107,8 +107,7 @@
 #'   (uniform branching). The `print()` methods return their input
 #'   invisibly. The object's fields:
 #' \describe{
-#'   \item{row_entropy}{Named numeric vector of length \eqn{n}: each state's
-#'     branching entropy \eqn{H(P_{i\cdot}) = -\sum_j P_{ij} \log_b P_{ij}}.}
+#'   \item{row_entropy}{Named numeric vector, one value per state: its branching entropy \deqn{H(P_{i\cdot}) = -\sum_j P_{ij} \log_b P_{ij}.}}
 #'   \item{row_entropy_norm}{`row_entropy` divided by the ceiling
 #'     \eqn{\log_b n}, in \eqn{[0, 1]}; all zeros when \eqn{n = 1}.}
 #'   \item{stationary}{Named numeric vector: the stationary distribution
@@ -247,7 +246,7 @@ transition_entropy <- function(x, base = 2, normalize = TRUE) {
 
 # ---- entropy_network() ----
 
-#' Transition Entropy Network
+#' Decompose the entropy rate into a network of transitions
 #'
 #' @description
 #' `entropy_network()` splits a chain's entropy rate into one term per
@@ -559,7 +558,7 @@ entropy_network <- function(x, base = 2,
 
 # ---- entropy_trajectory() ----
 
-#' Sliding-Window Transition Entropy Trajectory
+#' Track transition entropy over time in sliding windows
 #'
 #' @description
 #' `entropy_trajectory()` tracks transition entropy over time: it forms the
@@ -1040,7 +1039,7 @@ plot.net_entropy_trajectory <- function(x, normalized = FALSE, span = 0.4,
   cw[labels, labels, drop = FALSE]
 }
 
-#' Bayesian Transition Entropy
+#' Estimate transition entropy with Bayesian credible intervals
 #'
 #' @description
 #' `entropy_bayes()` puts credible intervals on the entropy quantities of
@@ -1063,14 +1062,7 @@ plot.net_entropy_trajectory <- function(x, normalized = FALSE, span = 0.4,
 #' chain; whether a first-order chain describes the sequences is a separate
 #' question, which [markov_order_test()] tests.
 #'
-#' @param x The transition counts: a frequency `netobject`
-#'   (`build_network(method = "frequency")`); a relative, frequency or
-#'   co-occurrence `netobject` that carries its data, recounted with the
-#'   network's own start and end states, concatenation, windows and one-hot
-#'   units; a one-hot network built with `build_network(method = "wtna")` or
-#'   `"wtna_cooccurrence"`, with its data, recounted the same way (a [wtna()]
-#'   result, whose method is `"wtna_transition"`, currently raises
-#'   `nestimate_bad_input`); an unscaled frequency, co-occurrence or reverse
+#' @param x The transition counts: a frequency `netobject`; a relative, frequency or co-occurrence `netobject` that carries its data, recounted with the network's own start and end states, concatenation, windows and one-hot units; a one-hot network built with `build_network()`, with its data, recounted the same way (a [wtna()] result is not read yet); an unscaled frequency, co-occurrence or reverse
 #'   network without data, whose weights are the counts; a network without a
 #'   declared method whose weights are non-negative whole numbers, read as
 #'   counts; a `tna` model; a count matrix (non-negative whole numbers); or

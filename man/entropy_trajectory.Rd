@@ -5,7 +5,7 @@
 \alias{print.net_entropy_trajectory}
 \alias{summary.net_entropy_trajectory}
 \alias{plot.net_entropy_trajectory}
-\title{Sliding-Window Transition Entropy Trajectory}
+\title{Track transition entropy over time in sliding windows}
 \usage{
 entropy_trajectory(
   data,

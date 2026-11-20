@@ -2,7 +2,7 @@
 % Please edit documentation in R/transition_entropy.R
 \name{entropy_network}
 \alias{entropy_network}
-\title{Transition Entropy Network}
+\title{Decompose the entropy rate into a network of transitions}
 \usage{
 entropy_network(
   x,

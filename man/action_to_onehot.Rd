@@ -2,7 +2,7 @@
 % Please edit documentation in R/data_conversion.R
 \name{action_to_onehot}
 \alias{action_to_onehot}
-\title{Convert Action Column to One-Hot Encoding}
+\title{Convert an action column to one-hot columns}
 \usage{
 action_to_onehot(
   data,

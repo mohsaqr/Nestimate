@@ -8,7 +8,7 @@
 \alias{pathways.net_association_rules}
 \alias{pathways.net_link_prediction}
 \alias{pathways.net_mogen}
-\title{Extract Pathways from Higher-Order Network Objects}
+\title{Extract pathways from a higher-order network}
 \usage{
 pathways(x, ...)
 
@@ -25,12 +25,14 @@ pathways(x, ...)
 \method{pathways}{net_mogen}(x, order = NULL, min_count = 1L, min_prob = 0, top = NULL, ...)
 }
 \arguments{
-\item{x}{The object to read: a \code{net_hon}, \code{net_hypa} or \code{net_mogen} (from
-\code{\link[=build_hon]{build_hon()}}, \code{\link[=build_hypa]{build_hypa()}} or \code{\link[=build_mogen]{build_mogen()}}), a \code{netobject} built
-from sequences, a \code{net_association_rules} (from \code{\link[=association_rules]{association_rules()}})
-or a \code{net_link_prediction} (from \code{\link[=predict_links]{predict_links()}}). A \code{netobject} of an
-association method (whose rows are variables) or a one-hot \code{netobject}
-raises an error of class \code{nestimate_bad_input}; a network without its
+\item{x}{The object to read:
+\itemize{
+\item a \code{\link[=build_hon]{build_hon()}}, \code{\link[=build_hypa]{build_hypa()}} or \code{\link[=build_mogen]{build_mogen()}} result;
+\item a \code{netobject} built from sequences;
+\item an \code{\link[=association_rules]{association_rules()}} or \code{\link[=predict_links]{predict_links()}} result.
+}
+
+A \code{netobject} of an association method, or a one-hot one, raises \code{nestimate_bad_input}; a network without its
 sequences stops \code{pathways()}.}
 
 \item{...}{For the \code{netobject} method: passed to the \code{pathways()} method of

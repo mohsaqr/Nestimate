@@ -5,7 +5,7 @@
 \alias{print.net_vertex_comparison}
 \alias{summary.net_vertex_comparison}
 \alias{plot.net_vertex_comparison}
-\title{Compare Network-Level Statistics of Two Networks}
+\title{Test whether network-level statistics differ between two networks}
 \usage{
 vertex_compare(
   x,
@@ -26,16 +26,15 @@ vertex_compare(
 \method{plot}{net_vertex_comparison}(x, ...)
 }
 \arguments{
-\item{x, y}{The two networks: \code{netobject}s, \code{cograph_network}s, square
-weight matrices, or \code{net_vertex_bootstrap} results computed beforehand.
-A precomputed result is used as it is, so \code{iter}, \code{statistics},
-\code{statistic_fn} and \code{directed} do not apply to it. The two must cover
-the same statistics: a mismatch, such as a directed network's
-\code{reciprocity} against an undirected network, or two precomputed results
-with different \code{statistics}, raises an error rather than comparing a
-subset.
-A \code{tna} model (package tna) is first rebuilt as a network from its own sequences (see \code{\link[=as_netobject]{as_netobject()}}).
-For the \code{print()} and \code{plot()} methods, \code{x} is a
+\item{x, y}{The two networks: \code{netobject}s, \code{cograph_network}s, square weight
+matrices, or \code{net_vertex_bootstrap} results computed beforehand. A
+precomputed result is used as it is, so \code{iter}, \code{statistics},
+\code{statistic_fn} and \code{directed} do not apply to it. The two must cover the
+same statistics: a mismatch, such as a directed network's \code{reciprocity}
+against an undirected network, or two precomputed results with different
+\code{statistics}, raises an error rather than comparing a subset. A \code{tna}
+model (package tna) is first rebuilt as a network from its own sequences
+(see \code{\link[=as_netobject]{as_netobject()}}). For the \code{print()} and \code{plot()} methods, \code{x} is a
 \code{net_vertex_comparison} result.}
 
 \item{iter}{The number of bootstrap replicates, at least 2. Default

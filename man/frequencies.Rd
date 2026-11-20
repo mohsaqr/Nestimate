@@ -3,7 +3,7 @@
 \name{frequencies}
 \alias{frequencies}
 \alias{summary.nest_transition_counts}
-\title{Build a Transition Frequency Matrix}
+\title{Count the transitions between states in sequences}
 \usage{
 frequencies(
   data,

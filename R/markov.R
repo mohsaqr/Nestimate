@@ -141,7 +141,7 @@ utils::globalVariables(c("fill", "label", "txt_col"))
 
 # ---- passage_time() ----
 
-#' Mean First Passage Times
+#' Compute the mean first passage times of a Markov chain
 #'
 #' @description
 #' `passage_time()` computes the mean first passage times of a Markov chain:
@@ -468,11 +468,11 @@ plot.net_mpt_group <- function(x,
 
 # ---- markov_stability() ----
 
-#' Markov Stability Analysis
+#' Describe the stability of each state of a Markov chain
 #'
 #' @description
 #' `markov_stability()` describes how stable each state of a Markov chain
-#' is and returns a `net_markov_stability` object holding one row per state:
+#' is, one row per state:
 #' its persistence (the probability of staying, \eqn{P_{ii}}), stationary
 #' probability (\eqn{\pi_i}, the long-run share of steps spent in it), mean
 #' recurrence time, sojourn time (the expected number of
@@ -497,10 +497,7 @@ plot.net_mpt_group <- function(x,
 #'   `cograph_network` or `tna` model with non-negative transition weights,
 #'   a non-negative numeric transition matrix, or a wide sequence data frame
 #'   or character matrix (a `"relative"` network is estimated from it). A
-#'   `netobject_group` gives one result per group. An association network or
-#'   negative weights raise an error of class `nestimate_not_markov`. For
-#'   the `print()` and `plot()` methods: a `net_markov_stability` or
-#'   `net_markov_stability_group`.
+#'   `netobject_group` gives one result per group. An association network or negative weights raise `nestimate_not_markov`. For `print()` and `plot()`: a `markov_stability()` result.
 #' @param normalize Whether to rescale rows that do not sum to 1 so that
 #'   they do, with a warning, as for a `"frequency"` network. With `FALSE`,
 #'   such rows raise an error. A state with no outgoing transitions (a zero

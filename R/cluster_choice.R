@@ -12,7 +12,7 @@
 # same lower.tri block used in summary.net_clustering.
 # ==============================================================================
 
-#' Compare Clusterings Across k, Dissimilarity and Method
+#' Compare clusterings across k, dissimilarities and methods
 #'
 #' @description
 #' `cluster_choice()` clusters the same sequences under every combination of

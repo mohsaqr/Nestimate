@@ -2,13 +2,12 @@
 % Please edit documentation in R/clique_expansion.R
 \name{clique_expansion}
 \alias{clique_expansion}
-\title{Clique expansion of a hypergraph}
+\title{Project a hypergraph onto a pairwise network}
 \usage{
 clique_expansion(hg, weighted = TRUE)
 }
 \arguments{
-\item{hg}{The hypergraph: a \code{net_hypergraph} from \code{\link[=build_hypergraph]{build_hypergraph()}} or
-\code{\link[=bipartite_groups]{bipartite_groups()}}.}
+\item{hg}{A hypergraph, from \code{\link[=build_hypergraph]{build_hypergraph()}} or \code{\link[=bipartite_groups]{bipartite_groups()}}.}
 
 \item{weighted}{Whether to use the hypergraph's incidence values. With
 \code{TRUE} (default), a weighted hypergraph (from \code{\link[=bipartite_groups]{bipartite_groups()}} with

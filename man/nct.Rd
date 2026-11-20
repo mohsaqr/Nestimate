@@ -5,7 +5,7 @@
 \alias{print.net_nct}
 \alias{summary.net_nct}
 \alias{as.data.frame.net_nct}
-\title{Network Comparison Test}
+\title{Compare two networks with the network comparison test}
 \usage{
 nct(
   data1,

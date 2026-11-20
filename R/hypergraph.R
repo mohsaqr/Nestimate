@@ -3,7 +3,7 @@
 # pairwise edges. Foundation for higher-order analyses (centrality, walks,
 # contagion, public-goods games).
 
-#' Higher-order hypergraph from a network's clique structure
+#' Build a hypergraph from a network's cliques
 #'
 #' @description
 #' `build_hypergraph()` turns a network into a hypergraph by promoting its
@@ -11,9 +11,7 @@
 #' tied to each other becomes a hyperedge, kept with probability `p`, and
 #' the pairwise edges can be kept as hyperedges of size 2. It takes a
 #' `netobject`, a bare `cograph_network`, a `simplicial_complex` or an
-#' adjacency or weight matrix, and returns a `net_hypergraph`, the input of
-#' the hypergraph verbs such as [hypergraph_measures()],
-#' [hypergraph_centrality()] and [clique_expansion()].
+#' adjacency or weight matrix, and returns a `net_hypergraph`, the input of [hypergraph_measures()] and the other hypergraph verbs.
 #'
 #' A hyperedge built this way records that every pair of its nodes is tied
 #' in the thresholded network; a pairwise network cannot show whether those

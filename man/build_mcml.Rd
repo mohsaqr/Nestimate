@@ -5,7 +5,7 @@
 \alias{print.mcml_layer}
 \alias{print.mcml}
 \alias{summary.mcml}
-\title{Build MCML from Raw Transition Data}
+\title{Build an MCML model of cluster and within-cluster transitions}
 \usage{
 build_mcml(
   x,
@@ -204,9 +204,7 @@ already in those sequences, so passing one of them (or \code{actor},
 \code{action}, \code{time}, \code{order}, \code{session}, \code{time_threshold}, \code{end_by},
 \code{labels}, \code{from}, \code{to}, \code{weight}, \code{cols}) with a re-partition raises an
 error, as does passing \code{clusters} together with \code{combine} or \code{expand}.
-An \code{mcml} built from a matrix, from an edge list (it keeps only the
-within-cluster edges) or with \code{compute_within = FALSE} raises an error
-of class \code{nestimate_mcml_no_sequences}. \code{\link[=sequence_plot]{sequence_plot()}} takes the
+Raises \code{nestimate_mcml_no_sequences} on an \code{mcml} that keeps no sequences, such as one built from a matrix or an edge list. \code{\link[=sequence_plot]{sequence_plot()}} takes the
 same two arguments as display options: its \code{combine} draws what it
 draws for \code{build_mcml(x, combine = )}, while its \code{expand} opens
 clusters in the Summary panel only and keeps one panel per cluster.}

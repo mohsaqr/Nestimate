@@ -1,4 +1,4 @@
-#' Discover Sequential Patterns
+#' Discover sequential patterns
 #'
 #' @description
 #' `sequence_patterns()` finds the ordered patterns of states that occur in
@@ -63,14 +63,10 @@
 #' @param contain States a pattern must include, one of them at least.
 #'   Default `NULL` (any).
 #' @param pattern A template to search for instead of discovering all
-#'   patterns, such as `"discuss->*->consensus"`: each `*` is one position
-#'   holding any state (`**` is two). Every concrete instance is returned
-#'   as its own row (`"discuss->plan->consensus"`, ...). States are joined
+#'   patterns. Each `*` stands for one position holding any state (`**` for two), so `"A->*->B"` finds every three-state pattern from `A` to `B`, each concrete instance as its own row. States are joined
 #'   by `"->"` (spaces around it are allowed), and a template may mix fixed
 #'   states and wildcards or hold no wildcard at all. `type`, `len` and
-#'   `gap` are then ignored. An empty template, or one with an empty step
-#'   such as `"A->->B"` or a leading or trailing `"->"`, raises an error of
-#'   class `nestimate_bad_input`. Default `NULL`.
+#'   `gap` are then ignored. A template with an empty step, such as `"A->->B"`, raises `nestimate_bad_input`. Default `NULL`.
 #' @param group The grouping of the sequences for the group test: the name
 #'   of a column stored with them (a covariate of a wide data frame or long
 #'   event log, or of a network's metadata), or a vector with one value per
@@ -94,8 +90,7 @@
 #' @param cols The state columns of a wide data frame, as in
 #'   [extract_sequences()]. Default `NULL`.
 #' @param actor,action,time The actor, action and timestamp columns of a
-#'   long event log, as in [extract_sequences()]: setting `action` declares
-#'   `x` an event log. Default `NULL`.
+#'   long event log; setting `action` marks `x` as one. Default `NULL`.
 #' @param ... Further arguments passed to [prepare()] for a long event log,
 #'   such as `time_threshold` or `order`.
 #'

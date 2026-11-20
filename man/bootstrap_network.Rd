@@ -8,7 +8,7 @@
 \alias{summary.net_bootstrap_group}
 \alias{print.wtna_boot_mixed}
 \alias{summary.wtna_boot_mixed}
-\title{Bootstrap a Network Estimate}
+\title{Bootstrap a network estimate}
 \usage{
 bootstrap_network(
   x,
@@ -36,17 +36,20 @@ bootstrap_network(
 \method{summary}{wtna_boot_mixed}(object, ...)
 }
 \arguments{
-\item{x}{The network: a \code{netobject} that carries its data (any network
-from \code{\link[=build_network]{build_network()}}), or a \code{cograph_network}, which is converted
-first. A \code{netobject_group} or \code{mcml} bootstraps every network it holds
-(for an \code{mcml}, the macro network and each cluster's), and a
-\code{wtna_mixed} bootstraps both of its components (see \emph{Value}).
-A \code{tna} model or a \code{group_tna} (package tna) is first rebuilt as a network from its own sequences (see \code{\link[=as_netobject]{as_netobject()}}). \code{actor} is read from the metadata the model keeps (\code{attr(model$data, "meta")}, kept when the model is built from \code{tna::prepare_data()}); a model without it raises \code{nestimate_actor_missing}.
-A
-network without its data raises an error, and one that rests on a
-single sequence, or one-hot data with no actor or session, has nothing
-to resample and raises an error of class \code{nestimate_single_sequence}.
-For the \code{print()} methods: the result of \code{bootstrap_network()}.}
+\item{x}{The network: a \code{netobject} that carries its data (any network from
+\code{\link[=build_network]{build_network()}}), or a \code{cograph_network}, which is converted first. A
+\code{netobject_group} or \code{mcml} bootstraps every network it holds (for an
+\code{mcml}, the macro network and each cluster's), and a \code{wtna_mixed}
+bootstraps both of its components (see \emph{Value}). A \code{tna} model or a
+\code{group_tna} (package tna) is first rebuilt as a network from its own
+sequences (see \code{\link[=as_netobject]{as_netobject()}}). \code{actor} is read from the metadata the
+model keeps (\code{attr(model$data, "meta")}, kept when the model is built
+from \code{tna::prepare_data()}); a model without it raises
+\code{nestimate_actor_missing}. A network without its data raises an error,
+and one that rests on a single sequence, or one-hot data with no actor or
+session, has nothing to resample and raises an error of class
+\code{nestimate_single_sequence}. For the \code{print()} methods: the result of
+\code{bootstrap_network()}.}
 
 \item{iter}{The number of bootstrap replicates, at least 2. Default
 \code{1000}.}
@@ -223,7 +226,12 @@ replicate fails, every p-value is 1.
 A network built from an edge list (for example an \code{mcml} from
 \code{\link[=build_mcml]{build_mcml()}} with \code{from} and \code{to}) has no sequences, so each
 transition is resampled as an independent case, with a warning of class
-\code{nestimate_edgelist_resampling} that points to the alternatives.
+\code{nestimate_edgelist_resampling} that points to the alternatives. An
+\code{mcml} built with a \code{method} other than \code{"sum"} (such as \code{"mean"} or
+\code{"max"}) combines the transitions of each resample by that method, so
+every replicate is the \code{mcml} that \code{\link[=build_mcml]{build_mcml()}} gives on the resampled
+rows; \code{actor} is then not supported and raises an error of class
+\code{nestimate_actor_unsupported}.
 }
 \section{Nested data and \code{actor}}{
 

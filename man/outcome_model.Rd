@@ -5,7 +5,7 @@
 \alias{print.net_outcome_model}
 \alias{summary.net_outcome_model}
 \alias{plot.net_outcome_model}
-\title{Model Unit-Level Outcomes from Sequence or Network Predictors}
+\title{Model a unit-level outcome from sequence or network predictors}
 \usage{
 outcome_model(
   data,
@@ -73,8 +73,7 @@ rows raise an error of class \code{nestimate_bad_input}.}
 \item{n_select}{The number of predictors kept when \code{select = "split"}.
 Default \code{10}. Ignored otherwise.}
 
-\item{correction}{The multiplicity correction, one of
-\code{stats::p.adjust.methods}, passed to \code{\link[stats:p.adjust]{stats::p.adjust()}}. Default
+\item{correction}{The multiplicity correction, any method of \link[stats:p.adjust]{p.adjust()}. Default
 \code{"BH"}.}
 
 \item{ci_level}{The confidence level of the intervals, between 0 and 1.

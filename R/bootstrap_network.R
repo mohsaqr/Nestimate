@@ -1,6 +1,6 @@
 # ---- Bootstrap Network Estimation ----
 
-#' Bootstrap a Network Estimate
+#' Bootstrap a network estimate
 #'
 #' @description
 #' `bootstrap_network()` resamples the cases a network was estimated from,
@@ -58,7 +58,12 @@
 #' A network built from an edge list (for example an `mcml` from
 #' [build_mcml()] with `from` and `to`) has no sequences, so each
 #' transition is resampled as an independent case, with a warning of class
-#' `nestimate_edgelist_resampling` that points to the alternatives.
+#' `nestimate_edgelist_resampling` that points to the alternatives. An
+#' `mcml` built with a `method` other than `"sum"` (such as `"mean"` or
+#' `"max"`) combines the transitions of each resample by that method, so
+#' every replicate is the `mcml` that [build_mcml()] gives on the resampled
+#' rows; `actor` is then not supported and raises an error of class
+#' `nestimate_actor_unsupported`.
 #'
 #' @section Nested data and \code{actor}:
 #' The bootstrap resamples sequences as independent units. When sequences
@@ -392,7 +397,27 @@ bootstrap_network <- function(x,
   has_data <- is.data.frame(data) && ncol(data) > 0L && nrow(data) > 0L
   count_method <- .resampling_method(method, params)
   counts_relative <- .counts_are_relative(count_method, params)
-  if (count_method %in% c("relative", "frequency", "co_occurrence")) {
+  # An mcml layer whose pairs were combined by a mean, median, maximum,
+  # minimum, geometric mean or density (as_tna() records it) is not a sum of
+  # per-unit counts: each resample combines its own rows the same way.
+  aggregation <- .param_get(params, "aggregation", "sum")
+  if (!identical(aggregation, "sum") && has_data &&
+      count_method %in% c("relative", "frequency")) {
+    if (!is.null(actor)) {
+      stop(errorCondition(
+        sprintf(paste0("`actor` is not supported for a network whose ",
+                       "transitions were combined by method = \"%s\"."),
+                aggregation),
+        class = "nestimate_actor_unsupported", call = NULL))
+    }
+    boot_matrices <- .bootstrap_aggregated(
+      .resampling_transition_data(data, x$metadata, params),
+      method = count_method, params = params, states = states,
+      scaling = scaling, threshold = threshold, iter = iter,
+      is_relative = counts_relative,
+      include_zeros = .scaling_includes_zeros(method)
+    )
+  } else if (count_method %in% c("relative", "frequency", "co_occurrence")) {
     if (!has_data) {
       stop(errorCondition(
         paste0(
@@ -749,21 +774,117 @@ bootstrap_network <- function(x,
     boot_counts <- colSums(trans_2d[idx, , drop = FALSE])
     # Inline post-processing (no dimnames -- we flatten immediately)
     mat <- matrix(boot_counts, n_states, n_states, byrow = TRUE)
-    if (is_relative) {
-      rs <- rowSums(mat)
-      nz <- rs > 0
-      mat[nz, ] <- mat[nz, ] / rs[nz]
-    }
-    if (!is.null(scaling)) {
-      mat <- .apply_scaling(mat, scaling, include_zeros = include_zeros)
-    }
-    if (threshold > 0) mat[abs(mat) < threshold] <- 0
-    as.vector(mat)
+    .finish_replicate(mat, is_relative, scaling, include_zeros, threshold)
   }, numeric(nbins))
 
   # With one state (nbins = 1) vapply returns a vector; keep it nbins x iter
   # so the result is always iter x nbins.
   t(matrix(boot_flat, nrow = nbins))
+}
+
+
+#' Row-normalise, scale and threshold one replicate, flattened column-major
+#' @noRd
+.finish_replicate <- function(mat, is_relative, scaling, include_zeros,
+                              threshold) {
+  if (is_relative) {
+    rs <- rowSums(mat)
+    nz <- rs > 0
+    mat[nz, ] <- mat[nz, ] / rs[nz]
+  }
+  if (!is.null(scaling)) {
+    mat <- .apply_scaling(mat, scaling, include_zeros = include_zeros)
+  }
+  if (threshold > 0) mat[abs(mat) < threshold] <- 0
+  as.vector(mat)
+}
+
+
+#' Bootstrap an mcml layer whose transitions were combined other than by sum
+#'
+#' build_mcml() combines the weights of the transitions between two clusters
+#' (or two states) with net_aggregate_weights(): a mean, median, maximum,
+#' minimum, geometric mean or density. Those are not sums of per-unit
+#' counts, so each resample combines the weights of the transitions its
+#' drawn units hold, then applies what the fit applied after aggregating
+#' (`symmetrize`, row normalisation for type = "tna"). Every transition of a
+#' unit carries the unit's weight: an edge-list row holds one transition of
+#' its row weight, a sequence holds transitions of weight 1.
+#' @param data,method,params,states As for .precompute_per_sequence().
+#' @param scaling,threshold,iter,is_relative,include_zeros As for
+#'   .bootstrap_counts().
+#' @return An iter x n_states^2 matrix of flattened (column-major) replicates.
+#' @noRd
+.bootstrap_aggregated <- function(data, method, params, states, scaling,
+                                  threshold, iter, is_relative,
+                                  include_zeros) {
+  aggregation <- .param_get(params, "aggregation")
+  n_states <- length(states)
+  nbins <- n_states * n_states
+  counts <- .precompute_per_sequence_counts(data, method, params, states)
+  row_weight <- .param_get(params, "row_weight")
+  unit_weight <- if (is.null(row_weight)) rep(1, nrow(counts)) else
+    data[[row_weight]]
+  n_possible <- .param_get(params, "n_possible")
+  # cells are flattened row-major in `counts`
+  cell_possible <- if (is.null(n_possible)) rep(1, nbins) else
+    as.vector(t(n_possible[states, states, drop = FALSE]))
+  # one record per (unit, cell) holding transitions of a non-zero weight;
+  # net_aggregate_weights() leaves zero weights out
+  counts[unit_weight == 0, ] <- 0
+  at <- which(counts > 0, arr.ind = TRUE)
+  rec_unit <- at[, 1L]
+  rec_n <- counts[at]
+  rec_w <- unit_weight[rec_unit]
+  by_cell <- split(seq_along(rec_unit), at[, 2L])
+  cells <- as.integer(names(by_cell))
+  n_units <- nrow(counts)
+  symmetrize <- isTRUE(.param_get(params, "symmetrize", FALSE))
+
+  boot_flat <- vapply(seq_len(iter), function(i) {
+    drawn <- tabulate(sample.int(n_units, n_units, replace = TRUE), n_units)
+    mult <- drawn[rec_unit] * rec_n
+    flat <- numeric(nbins)
+    flat[cells] <- vapply(seq_along(cells), function(j) {
+      r <- by_cell[[j]]
+      .aggregate_repeated(rec_w[r], mult[r], aggregation,
+                          cell_possible[cells[j]])
+    }, numeric(1L))
+    mat <- matrix(flat, n_states, n_states, byrow = TRUE)
+    if (symmetrize) mat <- (mat + t(mat)) / 2
+    .finish_replicate(mat, is_relative, scaling, include_zeros, threshold)
+  }, numeric(nbins))
+  t(matrix(boot_flat, nrow = nbins))
+}
+
+
+#' net_aggregate_weights() of values repeated `times` times
+#'
+#' Equals `net_aggregate_weights(rep(values, times), method, n_possible)`
+#' for non-negative values, without building the repeated vector.
+#' @noRd
+.aggregate_repeated <- function(values, times, method, n_possible = 1) {
+  keep <- times > 0 & values != 0
+  values <- values[keep]
+  times <- times[keep]
+  if (length(values) == 0L) return(0)
+  switch(method,
+    mean = sum(values * times) / sum(times),
+    density = sum(values * times) / n_possible,
+    max = max(values),
+    min = min(values),
+    geomean = exp(sum(log(values) * times) / sum(times)),
+    median = {
+      ord <- order(values)
+      values <- values[ord]
+      ends <- cumsum(times[ord])
+      total <- ends[length(ends)]
+      at <- function(pos) values[which(ends >= pos)[1L]]
+      (at(floor((total + 1) / 2)) + at(floor(total / 2) + 1)) / 2
+    },
+    stop(errorCondition(paste0("Unknown aggregation: ", method),
+                        class = "nestimate_bad_input", call = NULL))
+  )
 }
 
 
@@ -777,6 +898,20 @@ bootstrap_network <- function(x,
 #' \code{\link{convert_sequence_format}}.
 #' @noRd
 .precompute_per_sequence <- function(data, method, params, states) {
+  # Per-unit counts add up to the network only when its pairs were summed. An
+  # mcml layer combined by a mean, maximum, density, ... (as_tna() records it
+  # as params$aggregation) is resampled by bootstrap_network() alone, which
+  # combines each resample the same way; every other reader would treat it
+  # as summed counts.
+  aggregation <- .param_get(params, "aggregation", "sum")
+  if (!identical(aggregation, "sum")) {
+    stop(errorCondition(sprintf(paste0(
+      "This network combines its transitions by method = \"%s\", so its ",
+      "weights are not counts; of the resampling verbs only ",
+      "bootstrap_network() reads it. Build the mcml with method = \"sum\" ",
+      "for the others."), aggregation),
+      class = "nestimate_bad_input", call = NULL))
+  }
   .declared_count_transform(
     .precompute_per_sequence_counts(data, method, params, states),
     data, params, states)

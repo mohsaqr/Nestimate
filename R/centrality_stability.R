@@ -1,6 +1,6 @@
 # ---- Centrality Stability ----
 
-#' Centrality Stability Coefficient (CS-coefficient)
+#' Estimate the CS-coefficient of centrality indices
 #'
 #' @description
 #' `centrality_stability()` estimates how stable a network's centrality

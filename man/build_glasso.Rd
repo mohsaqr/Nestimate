@@ -2,9 +2,18 @@
 % Please edit documentation in R/estimate_network.R
 \name{build_glasso}
 \alias{build_glasso}
-\title{Build a Graphical Lasso Network (EBICglasso)}
+\title{Estimate a graphical lasso network}
 \usage{
-build_glasso(data, actor = NULL, level = NULL, ...)
+build_glasso(
+  data,
+  actor = NULL,
+  level = NULL,
+  ...,
+  group = NULL,
+  scaling = NULL,
+  threshold = 0,
+  params = list()
+)
 }
 \arguments{
 \item{data}{The variables: a data frame with one row per observation and
@@ -27,10 +36,29 @@ estimates the network of person means, \code{"within"} the network of
 deviations from them, and \code{"both"} returns the two as a
 \code{netobject_ml}. Default \code{NULL} (no decomposition).}
 
-\item{...}{Further arguments for \code{\link[=build_network]{build_network()}}, such as \code{params}
-(\code{gamma}, \code{nlambda}, \code{refit}, \code{n} and the others above), \code{threshold},
-\code{scaling} or \code{group}. \code{method} cannot be given: it is always
-\code{"glasso"} (error of class \code{nestimate_bad_input}).}
+\item{...}{Further arguments for \code{\link[=build_network]{build_network()}}, such as \code{labels} or
+\code{predictability}. \code{method} cannot be given: it is always \code{"glasso"}
+(error of class \code{nestimate_bad_input}).}
+
+\item{group}{A column to split the data by: one network is estimated per
+value and the result is a \code{netobject_group}. Default \code{NULL}.}
+
+\item{scaling}{Rescaling applied to the weights after estimation, in the
+order given: \code{"minmax"} maps the non-zero weights into (0, 1],
+\code{"max"} divides by the largest absolute weight, \code{"rank"} replaces the
+non-zero weights by their ranks, and \code{"normalize"} makes each row's
+absolute weights sum to 1. Zero weights stay zero under every option.
+Combine them as in \code{c("rank", "minmax")}. Default \code{NULL} (none).}
+
+\item{threshold}{Weights whose absolute value is below this are set to
+zero. Default \code{0} (none).}
+
+\item{params}{Settings for the estimator, as a named list: \code{gamma},
+\code{nlambda}, \code{lambda.min.ratio}, \code{penalize.diagonal}, \code{refit} and
+\code{cor_method}, as described above, and \code{n}, the sample size when \code{data}
+is a correlation or covariance matrix. The network stores them, so
+\code{\link[=bootstrap_network]{bootstrap_network()}} re-estimates with the same settings. Default
+\code{list()}.}
 }
 \value{
 A \code{netobject} (a \code{netobject_group} with \code{group}, a \code{netobject_ml}
@@ -55,8 +83,11 @@ not that the two variables are shown to be independent. Check the
 stability of the edges and centralities with \code{\link[=boot_glasso]{boot_glasso()}}.
 }
 \examples{
-data(srl_strategies)
 net <- build_glasso(srl_strategies)
+net
+
+sparser <- build_glasso(srl_strategies, params = list(gamma = 0.75))
+sparser
 }
 \references{
 Friedman, J., Hastie, T., & Tibshirani, R. (2008). Sparse inverse
@@ -68,5 +99,7 @@ for Gaussian graphical models. \emph{Advances in Neural Information
 Processing Systems}, 23, 604--612.
 }
 \seealso{
-\code{\link{build_network}}
+\code{\link[=build_network]{build_network()}} for every method; \code{\link[=build_cor]{build_cor()}},
+\code{\link[=build_pcor]{build_pcor()}} and \code{\link[=build_ising]{build_ising()}} for the other association networks;
+\code{\link[=boot_glasso]{boot_glasso()}} and \code{\link[=nct]{nct()}} for inference.
 }

@@ -9,7 +9,7 @@
 \alias{summary.netobject_group}
 \alias{print.summary.netobject}
 \alias{print.summary.netobject_group}
-\title{Build a Network}
+\title{Estimate a network from sequences, events or variables}
 \usage{
 build_network(
   data,
@@ -372,7 +372,7 @@ those of \code{tna::summary.tna()} from tna 1.5.4 on.
 \describe{
 \item{\code{"relative"}}{Transition probabilities (row-normalised counts); directed. Aliases: \code{"tna"}, \code{"transition"}.}
 \item{\code{"frequency"}}{Transition counts; directed. Aliases: \code{"ftna"}, \code{"counts"}.}
-\item{\code{"co_occurrence"}}{Co-occurrence within sequences; undirected. Aliases: \code{"cna"}, \code{"wcna"}, \code{"co-occurrence"}.}
+\item{\code{"co_occurrence"}}{Co-occurrence within sequences; undirected. With \code{params = list(type = "relative")} each row is normalised to sum to 1, and the network is directed. Also called \code{"cna"}, \code{"wcna"} or \code{"co-occurrence"}.}
 \item{\code{"attention"}}{Decay-weighted transitions; directed. Alias: \code{"atna"}.}
 \item{\code{"ngram"}}{Adjacent pairs counted once per n-gram window; directed. Aliases: \code{"n-gram"}, \code{"n_gram"}.}
 \item{\code{"gap"}}{Pairs up to \code{max_gap + 1} positions apart, weighted \code{1 / distance}; directed.}
@@ -411,12 +411,7 @@ time unit when the cap is a percentile. \code{\link[=extract_edges]{extract_edge
 edge's number of replies (\code{n_replies}) and their median latency in
 seconds (\code{median_latency}). \code{params = list(weighted = TRUE)}
 raises an error of class \code{nestimate_bad_input}, and so do
-\code{start} and \code{end}, which have no times. Latency networks are
-not resampled: \code{\link[=bootstrap_network]{bootstrap_network()}}, \code{\link[=permutation]{permutation()}},
-\code{\link[=permutation_diagnostics]{permutation_diagnostics()}}, \code{\link[=centrality_stability]{centrality_stability()}},
-\code{\link[=casedrop_reliability]{casedrop_reliability()}}, \code{\link[=network_reliability]{network_reliability()}} and
-\code{\link[=compare_networks]{compare_networks()}} with a permutation or bootstrap \code{test} refuse
-one with an error of class \code{nestimate_latency_resampling}.
+\code{start} and \code{end}, which have no times. Latency networks are not resampled: the resampling verbs, such as \code{\link[=bootstrap_network]{bootstrap_network()}} and \code{\link[=permutation]{permutation()}}, raise \code{nestimate_latency_resampling} on one.
 }
 
 \section{Methods}{

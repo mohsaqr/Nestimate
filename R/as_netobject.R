@@ -3,7 +3,7 @@
 # Nestimate, never the reverse, so the converter lives here - on the side that
 # owns the target schema and can see both types.
 
-#' Coerce a network object to a Nestimate netobject
+#' Convert a network from another package to a netobject
 #'
 #' @description
 #' `as_netobject()` converts a \pkg{psychnets} result (class
@@ -109,7 +109,7 @@ as_netobject.default <- function(x) {
     class = "nestimate_bad_input", call = NULL))
 }
 
-#' Validate a netobject / cograph_network against the shared schema
+#' Validate the structure of a network object
 #'
 #' @description
 #' `validate_netobject()` checks that an object meets the structure Nestimate

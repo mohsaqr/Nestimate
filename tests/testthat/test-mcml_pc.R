@@ -720,12 +720,13 @@ test_that("lavaan arguments pass through ... verbatim", {
   # WLSMV and ULSMV loadings agree up to float noise. Prove the argument
   # reaches lavaan by handing it an estimator lavaan itself rejects: the
   # error surfaces through the fa -> pca fallback as a warning quoting it.
-  expect_warning(
+  # (once per cluster that falls back)
+  expect_warnings_of_class(expect_warning(
     build_mcml_pc(likert, cl, aggregation = "scaled", weighting = "factor",
                   fa_method = "cfa", cor_method = "polychoric",
                   method = "cor", estimator = "NOT_AN_ESTIMATOR"),
-    "invalid value in estimator option"
-  )
+    "invalid value in estimator option", class = "nestimate_fa_fallback"
+  ), "nestimate_fa_fallback")
   expect_true(max(abs(f_wlsmv$macro$weights - f_ulsmv$macro$weights)) < 0.05)
 })
 
@@ -833,13 +834,10 @@ test_that("as_networks.default passes through a group and errors otherwise", {
 })
 
 test_that("build_mcml_pc accepts clusters as a two-column data.frame", {
-  set.seed(1)
-  items <- as.data.frame(matrix(round(runif(200 * 6, 1, 5)), ncol = 6))
-  names(items) <- paste0("v", 1:6)
-
-  cl_list <- list(A = c("v1", "v2", "v3"), B = c("v4", "v5", "v6"))
-  cl_df   <- data.frame(item  = paste0("v", 1:6),
-                        group = rep(c("A", "B"), each = 3))
+  items <- make_block_data()
+  cl_list <- block_clusters()
+  cl_df   <- data.frame(item  = names(items),
+                        group = rep(names(cl_list), each = 3))
 
   f_list <- build_mcml_pc(items, cl_list, aggregation = "scaled", method = "cor")
   f_df   <- build_mcml_pc(items, cl_df,   aggregation = "scaled", method = "cor")
@@ -853,7 +851,7 @@ test_that("build_mcml_pc accepts clusters as a two-column data.frame", {
   expect_no_error(build_mcml_pc(items, cl_df2, aggregation = "scaled", method = "cor"))
 
   # a one-column data.frame is rejected with a clear message.
-  expect_error(build_mcml_pc(items, data.frame(x = paste0("v", 1:6))),
+  expect_error(build_mcml_pc(items, data.frame(x = names(items))),
                "at least two columns")
 })
 
@@ -962,4 +960,17 @@ test_that("macro_network(mcml_pc) rejects method and ... instead of ignoring the
   expect_error(macro_network(fit, method = "glasso"), "do not apply")
   expect_error(macro_network(fit, gamma = 0.5), "do not apply")
   expect_s3_class(macro_network(fit), "netobject")
+})
+
+test_that("misassigned and reverse-keyed items warn with their own classes", {
+  # Unrelated items: some load more on the other cluster, some negatively.
+  set.seed(1)
+  items <- as.data.frame(matrix(round(runif(200 * 6, 1, 5)), ncol = 6))
+  names(items) <- paste0("v", 1:6)
+  cl <- list(A = c("v1", "v2", "v3"), B = c("v4", "v5", "v6"))
+  expect_warning(
+    expect_warning(
+      build_mcml_pc(items, cl, aggregation = "scaled", method = "cor"),
+      class = "nestimate_item_misfit"),
+    class = "nestimate_reverse_keyed")
 })

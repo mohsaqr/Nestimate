@@ -1,6 +1,6 @@
 # ---- Split-Half Reliability ----
 
-#' Split-Half Reliability for Network Estimates
+#' Estimate the split-half reliability of a network
 #'
 #' @description
 #' `network_reliability()` measures how much a network's weights depend on

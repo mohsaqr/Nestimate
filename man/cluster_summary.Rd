@@ -2,7 +2,7 @@
 % Please edit documentation in R/mcml.R
 \name{cluster_summary}
 \alias{cluster_summary}
-\title{Cluster Summary Statistics}
+\title{Aggregate a network's weights to clusters of nodes}
 \usage{
 cluster_summary(
   x,

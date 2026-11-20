@@ -323,7 +323,7 @@ centrality <- function(x, ...) {
 
 # ---- Exported net_centrality() ----
 
-#' Compute Centrality Measures for a Network
+#' Compute centrality measures for a network
 #'
 #' @description
 #' `net_centrality()` scores how central each node is in a network, for one
@@ -982,7 +982,7 @@ plot.net_centrality_group <- function(x, reorder = TRUE, ncol = 3L,
 
 # ---- Exported net_edge_betweenness() ----
 
-#' Edge Betweenness Network
+#' Weight a network's edges by their betweenness
 #'
 #' @description
 #' `net_edge_betweenness()` returns a copy of a network in which each edge's

@@ -7,7 +7,7 @@
 \alias{summary.net_stability_group}
 \alias{summary.net_stability}
 \alias{plot.net_stability}
-\title{Centrality Stability Coefficient (CS-coefficient)}
+\title{Estimate the CS-coefficient of centrality indices}
 \usage{
 centrality_stability(
   x,
@@ -39,12 +39,11 @@ centrality_stability(
 \arguments{
 \item{x}{The network: a \code{netobject} from \code{\link[=build_network]{build_network()}}, a bare
 \code{cograph_network} (converted to one), or a \code{netobject_group} or \code{mcml},
-each of whose networks is assessed.
-A \code{tna} model or a \code{group_tna} (package tna) is first rebuilt as a network from its own sequences (see \code{\link[=as_netobject]{as_netobject()}}).
-Any other object, or a network
-built without its data, raises an error. For the \code{print()} methods: a
-\code{net_stability} or \code{net_stability_group}; for the \code{plot()} method: a
-\code{net_stability}.}
+each of whose networks is assessed. A \code{tna} model or a \code{group_tna}
+(package tna) is first rebuilt as a network from its own sequences (see
+\code{\link[=as_netobject]{as_netobject()}}). Any other object, or a network built without its data,
+raises an error. For the \code{print()} methods: a \code{net_stability} or
+\code{net_stability_group}; for the \code{plot()} method: a \code{net_stability}.}
 
 \item{measures}{The centrality measures to assess. The default is
 \code{"InStrength"}, \code{"OutStrength"} and \code{"Betweenness"}; \code{NULL} takes
@@ -214,9 +213,10 @@ A proportion that drops no actor (\code{n * p < 1}, likely with few actors)
 is not run and counts as not reaching \code{threshold}, with a warning of
 class \code{nestimate_drop_prop_skipped}; one actor may remain. With one
 sequence per actor, and proportions that drop at least one and leave at
-least two, the result is that of \code{actor = NULL}. A column that is absent or has missing values
-raises \code{nestimate_actor_missing}, fewer than two actors
-\code{nestimate_bad_actor}, and a network that is not a transition network
+least two, the result is that of \code{actor = NULL}. A
+column that is absent or has missing values raises
+\code{nestimate_actor_missing}, fewer than two actors \code{nestimate_bad_actor},
+and a network that is not a transition network
 \code{nestimate_actor_unsupported}.
 }
 

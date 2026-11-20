@@ -4,7 +4,7 @@
 \alias{as_networks}
 \alias{as_networks.mcml_pc}
 \alias{as_networks.default}
-\title{Promote a psychometric MCML result to a network group}
+\title{Convert a psychometric MCML fit to a group of networks}
 \usage{
 as_networks(x)
 
@@ -18,9 +18,7 @@ or a \code{netobject_group}, which is returned unchanged. Any other object
 raises an error.}
 }
 \value{
-A \code{netobject_group}, read by \code{print()}, \code{summary()} and
-\code{\link[=net_centrality]{net_centrality()}} and drawn by \code{cograph::splot()}: a named list whose
-first element, \code{macro}, is the cluster-level network, followed by one
+A \code{netobject_group}, which \code{\link[=net_centrality]{net_centrality()}} and \code{cograph::splot()} read as any group of networks: a named list whose first element, \code{macro}, is the cluster-level network, followed by one
 netobject per cluster with more than one member. A singleton cluster has no within-cluster network
 and is left out, with a warning naming it.
 }

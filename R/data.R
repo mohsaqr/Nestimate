@@ -1,11 +1,11 @@
-#' Human-AI Vibe Coding Interaction Data (Long Format)
+#' Coded turns of human-AI vibe coding sessions
 #'
-#' Coded turns from 429 human-AI pair-programming ("vibe coding") sessions
-#' across 34 projects, held between 5 February and 8 March 2026, in long
-#' format with one row per code. `human_long` holds the codes of the human
-#' turns and `ai_long` those of the AI turns (428 of the sessions have AI
-#' turns). The two data frames share their columns and their sessions, and
-#' interleave on `order_in_session`.
+#' `human_long` and `ai_long` are a coded dataset of the turns of 429
+#' human-AI pair-programming ("vibe coding") sessions across 34 projects,
+#' held between 5 February and 8 March 2026: `human_long` has the codes of
+#' the human turns and `ai_long` those of the AI turns (428 of the sessions
+#' have AI turns). Both are in long format, one row per code; they share
+#' their columns and their sessions, and interleave on `order_in_session`.
 #'
 #' @format Two data frames with the same 9 columns:
 #' \describe{
@@ -44,7 +44,7 @@
 #' }
 #'
 #' @source Saqr, M. (2026). Human-AI vibe coding interaction study.
-#'   \url{https://saqr.me/blog/2026/human-ai-interaction-cograph/}
+#'   \href{https://saqr.me/blog/2026/human-ai-interaction-cograph/}{saqr.me}
 #'
 #' @examples
 #' net <- build_network(human_long, method = "tna",
@@ -63,11 +63,12 @@ NULL
 "ai_long"
 
 
-#' Group Regulation in Collaborative Learning (Long Format)
+#' Group regulation actions in collaborative learning
 #'
-#' Students' regulation actions during collaborative learning, in long
-#' format: 27,533 timestamped actions by 2,000 students working in 200
-#' groups across three courses, one row per action.
+#' `group_regulation_long` is a coded dataset of students' regulation
+#' actions during collaborative learning: 27,533 timestamped actions by
+#' 2,000 students working in 200 groups across three courses. It is in long
+#' format, one row per action.
 #'
 #' @format A data frame with 27,533 rows and 6 columns:
 #' \describe{
@@ -96,10 +97,12 @@ NULL
 "group_regulation_long"
 
 
-#' Self-Regulated Learning Strategy Frequencies
+#' Simulated counts of self-regulated learning strategies
 #'
-#' Simulated counts of how often 250 university students used 9
-#' self-regulated learning (SRL) strategies, in three clusters:
+#' `srl_strategies` is a simulated dataset of how often 250 university
+#' students used nine self-regulated learning (SRL) strategies, one row per
+#' student and one count column per strategy. The strategies form three
+#' clusters:
 #' metacognitive (Planning, Monitoring, Evaluating), cognitive (Elaboration,
 #' Organization, Rehearsal) and resource management (Help_Seeking,
 #' Time_Mgmt, Effort_Reg). Strategies of the same cluster were simulated to
@@ -121,12 +124,13 @@ NULL
 "srl_strategies"
 
 
-#' Online Learning Activity Indicators
+#' Online learning activity indicators
 #'
-#' Simulated binary (one-hot) indicator time series of six online learning
-#' activities (Reading, Video, Forum, Quiz, Coding, Review) for 200
-#' students over 30 time points. Each row is one time point of one student
-#' and marks every activity active then (1) or not (0); at least one
+#' `learning_activities` is a simulated dataset of six online learning
+#' activities (Reading, Video, Forum, Quiz, Coding, Review) recorded as
+#' active or not for 200 students over 30 time points. Each row is one time
+#' point of one student and marks every activity active then (1) or not
+#' (0), one 0/1 column per activity; at least one
 #' activity is active in every row, and several often are. Activities tend
 #' to continue from one time point to the next. The rows of each student
 #' are consecutive and in time order, so the data are ready for [wtna()]
@@ -150,10 +154,11 @@ NULL
 "learning_activities"
 
 
-#' ChatGPT Self-Regulated Learning Scale Scores
+#' ChatGPT scores on self-regulated learning scales
 #'
-#' Scores on five self-regulated learning (SRL) scales for 1,000 responses
-#' that ChatGPT generated to a validated SRL questionnaire. The data are
+#' `chatgpt_srl` is a dataset of the scores on five self-regulated learning
+#' (SRL) scales of 1,000 responses that ChatGPT generated to a validated SRL
+#' questionnaire, one row per response and one column per scale. The data are
 #' part of a larger set comparing the responses of seven large language
 #' models with human norms.
 #'
@@ -183,11 +188,12 @@ NULL
 "chatgpt_srl"
 
 
-#' Student Engagement Trajectories
+#' Student engagement trajectories
 #'
-#' Wide-format sequences of student engagement over the 15 successive
-#' courses of a programme, one row per student and one column per course. The
-#' states are `"Active"`, `"Average"` and `"Disengaged"`. A missing value
+#' `trajectories` is a dataset of the engagement states (`"Active"`,
+#' `"Average"` and `"Disengaged"`) of 138 students over the 15 successive
+#' courses of a programme. It is in wide format, one row per student and one
+#' column per course. A missing value
 #' occurs only as a run at the end of a row, which marks drop-out; two rows
 #' are missing throughout.
 #'

@@ -2,7 +2,7 @@
 % Please edit documentation in R/sequence_terminal.R
 \name{actor_endpoints}
 \alias{actor_endpoints}
-\title{Tidy per-actor endpoint summary of a wide-format sequence dataset}
+\title{Tabulate the first and last states of each sequence}
 \usage{
 actor_endpoints(data, cols = NULL)
 }

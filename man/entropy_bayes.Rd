@@ -8,7 +8,7 @@
 \alias{plot.net_entropy_bayes_group}
 \alias{summary.net_entropy_bayes}
 \alias{plot.net_entropy_bayes}
-\title{Bayesian Transition Entropy}
+\title{Estimate transition entropy with Bayesian credible intervals}
 \usage{
 entropy_bayes(
   x,
@@ -33,14 +33,7 @@ entropy_bayes(
 \method{plot}{net_entropy_bayes}(x, top = 25, title = "Bayesian edge entropy contributions", ...)
 }
 \arguments{
-\item{x}{The transition counts: a frequency \code{netobject}
-(\code{build_network(method = "frequency")}); a relative, frequency or
-co-occurrence \code{netobject} that carries its data, recounted with the
-network's own start and end states, concatenation, windows and one-hot
-units; a one-hot network built with \code{build_network(method = "wtna")} or
-\code{"wtna_cooccurrence"}, with its data, recounted the same way (a \code{\link[=wtna]{wtna()}}
-result, whose method is \code{"wtna_transition"}, currently raises
-\code{nestimate_bad_input}); an unscaled frequency, co-occurrence or reverse
+\item{x}{The transition counts: a frequency \code{netobject}; a relative, frequency or co-occurrence \code{netobject} that carries its data, recounted with the network's own start and end states, concatenation, windows and one-hot units; a one-hot network built with \code{build_network()}, with its data, recounted the same way (a \code{\link[=wtna]{wtna()}} result is not read yet); an unscaled frequency, co-occurrence or reverse
 network without data, whose weights are the counts; a network without a
 declared method whose weights are non-negative whole numbers, read as
 counts; a \code{tna} model; a count matrix (non-negative whole numbers); or

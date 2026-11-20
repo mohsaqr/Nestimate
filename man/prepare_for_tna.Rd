@@ -2,7 +2,7 @@
 % Please edit documentation in R/data_conversion.R
 \name{prepare_for_tna}
 \alias{prepare_for_tna}
-\title{Prepare Data for TNA Analysis}
+\title{Prepare sequence data for the tna package}
 \usage{
 prepare_for_tna(
   data,

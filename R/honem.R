@@ -94,7 +94,7 @@
 # Main function: build_honem
 # ---------------------------------------------------------------------------
 
-#' Build HONEM Embeddings for Higher-Order Networks
+#' Embed the nodes of a higher-order network with HONEM
 #'
 #' @description
 #' `build_honem()` places the nodes of a higher-order network (HON) in a

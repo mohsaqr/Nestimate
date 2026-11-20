@@ -4,7 +4,7 @@
 # Answers: "How many cases can be dropped before the full set of edge
 # weights loses rank correlation with the original?"
 
-#' Edge-weight Case-dropping Stability
+#' Estimate the case-dropping stability of edge weights
 #'
 #' @description
 #' `casedrop_reliability()` measures how stable a network's edge weights are
@@ -160,10 +160,7 @@
 #' case is an actor: `drop_prop` is the proportion of actors dropped, and
 #' all sequences of a dropped actor leave together, as in
 #' `tna::estimate_cs(actor = )`. With one sequence per actor the result is
-#' that of `actor = NULL`. A column that is absent or has missing values
-#' raises `nestimate_actor_missing`, fewer than two actors
-#' `nestimate_bad_actor`, and a network that is not a transition network
-#' `nestimate_actor_unsupported`.
+#' that of `actor = NULL`. Raises `nestimate_actor_missing` when the `actor` column is absent or incomplete, and `nestimate_actor_unsupported` when the network is not a transition network.
 #'
 #' @seealso [centrality_stability()], [bootstrap_network()].
 #'

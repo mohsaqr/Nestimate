@@ -593,7 +593,7 @@
 # 6. Main Function
 # ==============================================================================
 
-#' Cluster Sequences by Dissimilarity
+#' Cluster sequences by dissimilarity
 #'
 #' @description
 #' `build_clusters()` splits a set of sequences into `k` groups of similar
@@ -710,10 +710,7 @@
 #' @param estimator How the relation between the covariates and the
 #'   clusters is estimated; it never affects the clustering. `"auto"`
 #'   (default) fits a multinomial logit of cluster membership on the
-#'   covariates: with Firth's bias-reduced penalised likelihood
-#'   (`brglm2::brmultinom()`, finite under quasi-complete separation) when a
-#'   cell of the cluster-by-covariate table of a categorical covariate holds
-#'   fewer than 5 sequences, and with `nnet::multinom()` otherwise.
+#'   covariates. When a cell of the cluster-by-covariate table of a categorical covariate holds fewer than 5 sequences, it uses Firth's bias-reduced penalised likelihood (package brglm2), which stays finite under quasi-complete separation; otherwise it uses maximum likelihood (package nnet).
 #'   `"firth"` forces the Firth fit, which is about 200 times slower on
 #'   well-conditioned data. `"multinom"` forces classical maximum likelihood
 #'   and warns that rare cells can give extreme odds ratios with degenerate
@@ -760,8 +757,10 @@
 #'     \code{estimator}), or NULL when \code{covariates = NULL}.}
 #'   \item{network_method, build_args}{For \code{netobject} input, the
 #'     source network's method and stored build arguments, so per-cluster
-#'     networks can be rebuilt the same way. NULL otherwise, and
-#'     \code{build_args} is NULL for a one-hot network.}
+#'     networks can be rebuilt the same way. NULL otherwise. For a one-hot
+#'     network, \code{build_args} holds only its estimator settings in
+#'     \code{params} (such as a co-occurrence network's \code{type}), or is
+#'     NULL when it has none.}
 #'   \item{metadata}{For \code{netobject} input, its per-sequence metadata,
 #'     one row per clustered sequence, so \code{\link{session_ids}} can name
 #'     each sequence. For a data frame, the columns set aside as covariates
@@ -992,7 +991,11 @@ build_clusters <- function(data, k, dissimilarity = "hamming", method = "pam",
       network_method = if (onehot_net) {
         .resampling_method(raw_data$method, raw_data$params)
       } else if (inherits(raw_data, "netobject")) raw_data$method else NULL,
-      build_args     = if (inherits(raw_data, "netobject") && !onehot_net) raw_data$build_args else NULL,
+      # and its estimator settings (a co-occurrence network's `type`); the
+      # settings that read the 0/1 codes do not apply to those sequences
+      build_args     = if (onehot_net) {
+        .onehot_rebuild_args(raw_data)
+      } else if (inherits(raw_data, "netobject")) raw_data$build_args else NULL,
       metadata       = if (onehot_net) NULL else if (inherits(raw_data, "netobject")) raw_data$metadata else set_aside,
       htna_partition = .capture_htna_partition(raw_data)
     ),
@@ -1001,7 +1004,7 @@ build_clusters <- function(data, k, dissimilarity = "hamming", method = "pam",
   result
 }
 
-#' Cluster sequence data (deprecated alias)
+#' Cluster sequences (deprecated)
 #'
 #' `cluster_data()` is the old name of [build_clusters()], renamed in
 #' Nestimate 0.4.3. It is kept so older tutorials and the historical pkgdown
@@ -2226,8 +2229,18 @@ print.tidy_covariates <- function(x, ...) {
   long_only <- c("actor", "time", "session", "order", "action",
                  "state_cols", "metadata_cols")
   dots <- list(...)
-  build_args <- if (!is.null(x$build_args))
-    modifyList(x$build_args, dots) else dots
+  stored <- x$build_args
+  # Estimator settings stored with the clustering (a one-hot network's) belong
+  # to its own method; the caller's `params` replace them whole, as
+  # .inherit_estimator_params() does.
+  if (!is.null(stored$params) &&
+      (!is.null(dots$params) || is.null(x$network_method) ||
+         !identical(.resolve_method_alias(method),
+                    .resolve_method_alias(x$network_method)))) {
+    stored$params <- NULL
+  }
+  build_args <- if (length(stored) > 0L)
+    modifyList(stored, dots) else dots
   build_args <- build_args[setdiff(names(build_args), long_only)]
 
   nets <- lapply(seq_len(k), function(cl) {
@@ -2259,6 +2272,22 @@ print.tidy_covariates <- function(x, ...) {
   build_dots
 }
 
+# A one-hot network's units are rebuilt as windowed state sequences, which
+# carry their windows as attributes. Its settings that read the 0/1 codes
+# (codes, actor, windows) would read those sequences as one-hot again; the
+# rest (a co-occurrence network's `type`) rebuild each cluster as the source
+# was built. A wtna transition network's `type` already chose the counting
+# method (.resampling_method()), so it is not passed on.
+#' @noRd
+.onehot_rebuild_args <- function(net) {
+  reading <- c("codes", "format", "actor", "id", "id_col", "session",
+               "window_size", "window_span", "windowed", "mode")
+  method <- .resampling_method(.resolve_method_alias(net$method), net$params)
+  if (!identical(method, "co_occurrence")) reading <- c(reading, "type")
+  kept <- net$params[setdiff(names(net$params), reading)]
+  if (length(kept) > 0L) list(params = kept) else NULL
+}
+
 # Add the columns set aside at fitting time to one component's network. The
 # rebuild can find metadata of its own (a position that is empty in this
 # component), so it joins what is there instead of giving way to it.
@@ -2277,7 +2306,7 @@ print.tidy_covariates <- function(x, ...) {
 # 9. cluster_network - one-shot clustering + network estimation
 # ==============================================================================
 
-#' Cluster data and build per-cluster networks in one step
+#' Cluster sequences and estimate one network per cluster
 #'
 #' @description
 #' `cluster_network()` clusters a set of sequences and estimates one network
@@ -2309,8 +2338,7 @@ print.tidy_covariates <- function(x, ...) {
 #'   `"average"`, `"single"`, `"mcquitty"`, `"median"` and `"centroid"` are
 #'   passed to [build_clusters()] as its `method`; `"mmm"` fits a mixed
 #'   Markov model with [build_mmm()] instead.
-#' @param dissimilarity The distance between sequences for dissimilarity
-#'   clustering, one of those [build_clusters()] accepts. Default
+#' @param dissimilarity The distance between sequences, as in [build_clusters()]. Default
 #'   `"hamming"`. Giving it with `cluster_by = "mmm"` raises an error.
 #' @param ... Arguments for the two stages, routed by name. For
 #'   dissimilarity clustering, [build_clusters()]'s `na_syms`, `weighted`,
@@ -2417,6 +2445,11 @@ cluster_network <- function(data, k, cluster_by = "pam",
     mmm_fit <- do.call(build_mmm, c(list(data = data, k = k), mmm_args))
     if (onehot && is.null(build_dots$method)) {
       build_dots$method <- mmm_fit$network_method %||% "relative"
+    }
+    if (onehot) {
+      build_dots <- .inherit_estimator_params(build_dots, list(
+        method = mmm_fit$network_method,
+        params = .onehot_rebuild_args(data)$params))
     }
     return(do.call(build_network, c(list(data = mmm_fit), build_dots)))
   }

@@ -75,7 +75,7 @@
 
 # ---- path_dependence() ----
 
-#' Per-Context Path Dependence at Order k
+#' Measure the path dependence of each context at order k
 #'
 #' @description
 #' `path_dependence()` shows, context by context, where a first-order

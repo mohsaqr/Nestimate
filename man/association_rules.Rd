@@ -5,7 +5,7 @@
 \alias{print.net_association_rules}
 \alias{summary.net_association_rules}
 \alias{plot.net_association_rules}
-\title{Discover Association Rules from Sequential or Transaction Data}
+\title{Discover association rules in transactions or sequences}
 \usage{
 association_rules(
   x,

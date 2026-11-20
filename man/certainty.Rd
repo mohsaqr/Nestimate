@@ -3,7 +3,7 @@
 \name{certainty}
 \alias{certainty}
 \alias{print.net_certainty}
-\title{Analytic certainty of network edges (Bayesian Dirichlet-Multinomial)}
+\title{Estimate the Bayesian certainty of transition network edges}
 \usage{
 certainty(
   x,
@@ -20,12 +20,12 @@ certainty(
 \item{x}{The network: a \code{netobject} built with \code{\link[=build_network]{build_network()}} using
 \code{method = "relative"} (or its aliases \code{"tna"}, \code{"transition"}), without
 \code{scaling}, or a \code{netobject_group} of such networks, each handled on its
-own. A bare \code{cograph_network} is recounted from the sequences it
-carries, and used only when they reproduce its weights; otherwise, and
-for an \code{mcml}, an error of class \code{nestimate_bad_input} is raised.
-A \code{tna} model or a \code{group_tna} (package tna) is first rebuilt as a network from its own sequences (see \code{\link[=as_netobject]{as_netobject()}}).
-Another method or a scaled network raises an error.
-For the \code{print()} method: a \code{net_certainty} object.}
+own. A bare \code{cograph_network} is recounted from the sequences it carries,
+and used only when they reproduce its weights; otherwise, and for an
+\code{mcml}, an error of class \code{nestimate_bad_input} is raised. A \code{tna} model
+or a \code{group_tna} (package tna) is first rebuilt as a network from its own
+sequences (see \code{\link[=as_netobject]{as_netobject()}}). Another method or a scaled network
+raises an error. For the \code{print()} method: a \code{net_certainty} object.}
 
 \item{prior}{The Dirichlet concentration added to every cell of the count
 matrix, zero cells and self-loops included; a positive number. Default
@@ -69,7 +69,7 @@ only), \code{method}, \code{params}, \code{ci_level}, \code{inference},
 \code{ci_method = "analytic"} and \code{iter = NA} (no iterations).
 
 For a \code{netobject_group}: a named list of those objects, one per
-network, of class \code{c("net_certainty_group", "net_bootstrap_group", "list")}, printed and summarised by the \code{net_bootstrap_group} methods
+network, a \code{net_certainty_group}, printed and summarised as a \code{net_bootstrap_group}
 (\code{\link[=summary]{summary()}} stacks the per-network tables with a \code{group} column).
 
 The \code{print()} method returns its input invisibly.

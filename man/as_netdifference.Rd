@@ -5,7 +5,7 @@
 \alias{as_netdifference.net_bayes}
 \alias{as_netdifference.netdifference}
 \alias{as_netdifference.default}
-\title{Coerce an inferential comparison to a network difference}
+\title{Convert a network comparison to a difference network}
 \usage{
 as_netdifference(x, ...)
 

@@ -3,7 +3,7 @@
 # Companion to sequence_plot(). Optional grouping + ncol/nrow facet grid.
 # ==============================================================================
 
-#' State Distribution Plot Over Time
+#' Draw a state distribution plot
 #'
 #' @description
 #' `distribution_plot()` draws how the states are distributed at each time

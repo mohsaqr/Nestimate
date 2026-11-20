@@ -2,7 +2,7 @@
 % Please edit documentation in R/estimator_registry.R
 \name{get_estimator}
 \alias{get_estimator}
-\title{Retrieve a Registered Estimator}
+\title{Retrieve a registered estimator}
 \usage{
 get_estimator(name)
 }

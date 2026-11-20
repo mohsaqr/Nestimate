@@ -1,4 +1,4 @@
-#' Convert Wide Sequences to Long Format
+#' Convert wide sequences to long format
 #'
 #' @description
 #' `wide_to_long()` turns sequences in wide format (one row per sequence,
@@ -114,7 +114,7 @@ wide_to_long <- function(data,
 }
 
 
-#' Convert Long Format to Wide Sequences
+#' Convert long event data to wide sequences
 #'
 #' @description
 #' `long_to_wide()` turns a long event table (one row per action) into wide
@@ -260,7 +260,7 @@ long_to_wide <- function(data,
 }
 
 
-#' Prepare Data for TNA Analysis
+#' Prepare sequence data for the tna package
 #'
 #' @description
 #' `prepare_for_tna()` returns the sequence columns of a data set as a wide
@@ -406,7 +406,7 @@ prepare_for_tna <- function(data,
 }
 
 
-#' Convert Action Column to One-Hot Encoding
+#' Convert an action column to one-hot columns
 #'
 #' @description
 #' `action_to_onehot()` adds one 0/1 indicator column per state to a data

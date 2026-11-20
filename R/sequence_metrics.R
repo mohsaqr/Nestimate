@@ -1,4 +1,4 @@
-#' Per-Sequence Indices
+#' Compute descriptive indices for each sequence
 #'
 #' @description
 #' `sequence_metrics()` computes descriptive indices for every sequence and
@@ -107,8 +107,7 @@
 #' @param cols The state columns of a wide data frame, as in
 #'   [extract_sequences()]. Default `NULL`.
 #' @param actor,action,time The actor, action and timestamp columns of a
-#'   long event log, as in [extract_sequences()]: setting `action` declares
-#'   `x` an event log. Default `NULL`.
+#'   long event log; setting `action` marks `x` as one. Default `NULL`.
 #' @param ... Further arguments passed to [prepare()] for a long event log,
 #'   such as `time_threshold` or `order`.
 #'

@@ -5,7 +5,7 @@
 \alias{print.mmm_compare}
 \alias{summary.mmm_compare}
 \alias{plot.mmm_compare}
-\title{Compare MMM fits across different k}
+\title{Compare mixed Markov models across numbers of subgroups}
 \usage{
 compare_mmm(
   data,

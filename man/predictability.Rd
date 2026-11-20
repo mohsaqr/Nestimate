@@ -5,7 +5,7 @@
 \alias{predictability.netobject}
 \alias{predictability.netobject_ml}
 \alias{predictability.netobject_group}
-\title{Compute Node Predictability}
+\title{Compute the predictability of each node}
 \usage{
 predictability(object, ...)
 

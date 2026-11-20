@@ -1,6 +1,6 @@
 # ---- Association Rule Mining ----
 
-#' Discover Association Rules from Sequential or Transaction Data
+#' Discover association rules in transactions or sequences
 #'
 #' @description
 #' `association_rules()` finds association rules of the form

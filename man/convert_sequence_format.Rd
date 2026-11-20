@@ -2,7 +2,7 @@
 % Please edit documentation in R/frequencies.R
 \name{convert_sequence_format}
 \alias{convert_sequence_format}
-\title{Convert Sequence Data to Different Formats}
+\title{Convert sequence data to counts, one-hot codes or transitions}
 \usage{
 convert_sequence_format(
   data,

@@ -16,7 +16,7 @@
 
 utils::globalVariables(c("term", "estimate", "ci_lower", "ci_upper"))
 
-#' Model Unit-Level Outcomes from Sequence or Network Predictors
+#' Model a unit-level outcome from sequence or network predictors
 #'
 #' @description
 #' `outcome_model()` fits a regression of a unit-level outcome on predictor
@@ -81,8 +81,7 @@ utils::globalVariables(c("term", "estimate", "ci_lower", "ci_upper"))
 #'   rows raise an error of class `nestimate_bad_input`.
 #' @param n_select The number of predictors kept when `select = "split"`.
 #'   Default `10`. Ignored otherwise.
-#' @param correction The multiplicity correction, one of
-#'   `stats::p.adjust.methods`, passed to [stats::p.adjust()]. Default
+#' @param correction The multiplicity correction, any method of [p.adjust()][stats::p.adjust]. Default
 #'   `"BH"`.
 #' @param ci_level The confidence level of the intervals, between 0 and 1.
 #'   Default `0.95`.
@@ -355,7 +354,7 @@ outcome_model <- function(data, outcome, predictors, group = NULL,
 
 # ---- accessor + methods -----------------------------------------------------
 
-#' Effect Table of a Fitted Outcome Model
+#' Tabulate the effects of an outcome model
 #'
 #' @description
 #' `effects_table()` returns the effect table of an [outcome_model()] fit:

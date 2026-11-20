@@ -4,7 +4,7 @@
 .estimator_registry <- new.env(parent = emptyenv())
 
 
-#' Register a Network Estimator
+#' Register a network estimator
 #'
 #' @description
 #' `register_estimator()` adds an estimator function to the registry that
@@ -41,10 +41,7 @@
 #'
 #' @param name The name the estimator is called by, as `method` in
 #'   [build_network()]: a single non-empty string. A name already registered
-#'   is replaced. A name that is a method alias (such as `"tna"`) is stored
-#'   with a warning of class `nestimate_alias_shadowed`, because
-#'   [build_network()] resolves the alias to the built-in method and never
-#'   calls the registered function.
+#'   is replaced. A method alias, such as `"tna"`, is stored with the warning `nestimate_alias_shadowed`: [build_network()] resolves an alias to its built-in method and never calls the registered function.
 #' @param fn The estimator function. Its first argument is `data`, and it
 #'   must accept `...`, because [build_network()] passes every setting by
 #'   name. It returns a list with `matrix` (the square numeric weight matrix),
@@ -106,7 +103,7 @@ register_estimator <- function(name, fn, description, directed) {
 }
 
 
-#' Retrieve a Registered Estimator
+#' Retrieve a registered estimator
 #'
 #' @description
 #' `get_estimator()` returns the registry entry of one estimator: its
@@ -145,7 +142,7 @@ get_estimator <- function(name) {
 }
 
 
-#' List All Registered Estimators
+#' List the registered estimators
 #'
 #' @description
 #' `list_estimators()` returns the estimators [build_network()] can call by
@@ -191,7 +188,7 @@ list_estimators <- function() {
 }
 
 
-#' Remove a Registered Estimator
+#' Remove a registered estimator
 #'
 #' @description
 #' `remove_estimator()` takes an estimator out of the registry, so

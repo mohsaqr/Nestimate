@@ -7,7 +7,7 @@
 \alias{plot.net_bayes}
 \alias{print.net_bayes_group}
 \alias{summary.net_bayes_group}
-\title{Bayesian Dirichlet-Multinomial comparison of two transition networks}
+\title{Compare two transition networks with a Bayesian Dirichlet model}
 \usage{
 bayes_compare(
   x,
@@ -31,17 +31,16 @@ bayes_compare(
 \method{summary}{net_bayes_group}(object, ...)
 }
 \arguments{
-\item{x}{The first network: a \code{netobject}
-estimated with \code{"relative"} or \code{"frequency"} or one of their aliases, a
-\code{netobject_group}, or a \code{net_edge_betweenness} object. A bare
-\code{cograph_network} is recounted from the sequences it carries, and used
-only when they reproduce its weights; otherwise, and for an \code{mcml}, an
-error of class \code{nestimate_bad_input} is raised. Both networks must use
-the same method and hold the same nodes; any other method raises an
-error, because the model needs transition counts.
-A \code{tna} model or a \code{group_tna} (package tna) is first rebuilt as a network from its own sequences (see \code{\link[=as_netobject]{as_netobject()}}).
-For the \code{print()} and \code{plot()} methods:
-a \code{net_bayes}, or for \code{print()} a \code{net_bayes_group}.}
+\item{x}{The first network: a \code{netobject} estimated with \code{"relative"} or
+\code{"frequency"} or one of their aliases, a \code{netobject_group}, or a
+\code{net_edge_betweenness} object. A bare \code{cograph_network} is recounted from
+the sequences it carries, and used only when they reproduce its weights;
+otherwise, and for an \code{mcml}, an error of class \code{nestimate_bad_input} is
+raised. Both networks must use the same method and hold the same nodes;
+any other method raises an error, because the model needs transition
+counts. A \code{tna} model or a \code{group_tna} (package tna) is first rebuilt as a
+network from its own sequences (see \code{\link[=as_netobject]{as_netobject()}}). For the \code{print()}
+and \code{plot()} methods: a \code{net_bayes}, or for \code{print()} a \code{net_bayes_group}.}
 
 \item{y}{The second network, of the same kind as \code{x}. Default \code{NULL}:
 with a \code{netobject_group} as \code{x}, every pair of its groups is compared.

@@ -6,7 +6,7 @@
 \alias{as_netobject.psychnet}
 \alias{as_netobject.cograph_network}
 \alias{as_netobject.default}
-\title{Coerce a network object to a Nestimate netobject}
+\title{Convert a network from another package to a netobject}
 \usage{
 as_netobject(x)
 
@@ -65,7 +65,11 @@ an error of class \code{nestimate_tna_unrebuilt} that names the reason. A pruned
 model keeps its data, and Nestimate reads the data: it converts to the
 full network, with a warning of class \code{nestimate_tna_pruned}. A
 \code{group_tna} gives a \code{netobject_group}, one network per group, named as
-the groups are. The covariates the model keeps become the network's metadata: \code{actor} is read from the metadata the model keeps (\code{attr(model$data, "meta")}, kept when the model is built from \code{tna::prepare_data()}); a model without it raises \code{nestimate_actor_missing}. Every verb
+the groups are. The covariates the model keeps become the network's
+metadata: \code{actor} is read from the metadata the model keeps
+(\code{attr(model$data, "meta")}, kept when the model is built from
+\code{tna::prepare_data()}); a model without it raises
+\code{nestimate_actor_missing}. Every verb
 that takes a network applies this conversion itself, so calling
 \code{as_netobject()} first is not needed.
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/estimate_network.R
 \name{estimate_network}
 \alias{estimate_network}
-\title{Estimate a Network (Deprecated)}
+\title{Estimate a network (deprecated)}
 \usage{
 estimate_network(
   data,

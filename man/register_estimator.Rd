@@ -2,17 +2,14 @@
 % Please edit documentation in R/estimator_registry.R
 \name{register_estimator}
 \alias{register_estimator}
-\title{Register a Network Estimator}
+\title{Register a network estimator}
 \usage{
 register_estimator(name, fn, description, directed)
 }
 \arguments{
 \item{name}{The name the estimator is called by, as \code{method} in
 \code{\link[=build_network]{build_network()}}: a single non-empty string. A name already registered
-is replaced. A name that is a method alias (such as \code{"tna"}) is stored
-with a warning of class \code{nestimate_alias_shadowed}, because
-\code{\link[=build_network]{build_network()}} resolves the alias to the built-in method and never
-calls the registered function.}
+is replaced. A method alias, such as \code{"tna"}, is stored with the warning \code{nestimate_alias_shadowed}: \code{\link[=build_network]{build_network()}} resolves an alias to its built-in method and never calls the registered function.}
 
 \item{fn}{The estimator function. Its first argument is \code{data}, and it
 must accept \code{...}, because \code{\link[=build_network]{build_network()}} passes every setting by

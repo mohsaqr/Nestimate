@@ -256,7 +256,7 @@
 # Main function: build_mogen
 # ---------------------------------------------------------------------------
 
-#' Build Multi-Order Generative Model (MOGen)
+#' Fit a multi-order generative model to sequences
 #'
 #' @description
 #' `build_mogen()` fits Markov chains of every order from 0 to `max_order`
@@ -563,7 +563,7 @@ build_mogen <- function(data, max_order = 5L, criterion = c("aic", "bic", "lrt")
 # Utility: Extract transitions at any order
 # ---------------------------------------------------------------------------
 
-#' Extract Transition Table from a MOGen Model
+#' Extract the transitions of a MOGen model
 #'
 #' @description
 #' `mogen_transitions()` returns the transitions of a fitted [build_mogen()]
@@ -683,7 +683,7 @@ mogen_transitions <- function(x, order = NULL, min_count = 1L) {
 # Utility: Count path frequencies
 # ---------------------------------------------------------------------------
 
-#' Count Path Frequencies in Trajectory Data
+#' Count the paths of k states in trajectories
 #'
 #' @description
 #' `path_counts()` counts how often each path of `k` consecutive states
@@ -774,7 +774,7 @@ path_counts <- function(data, k = 2L, top = NULL) {
 # Utility: State frequencies
 # ---------------------------------------------------------------------------
 
-#' Compute State Frequencies from Trajectory Data
+#' Count state frequencies in trajectories
 #'
 #' @description
 #' `state_frequencies()` counts how often each state occurs across all

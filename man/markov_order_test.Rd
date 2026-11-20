@@ -28,20 +28,20 @@ markov_order_test(
 \method{plot}{net_markov_order}(x, panel = c("both", "ic", "permutation"), combined = TRUE, ...)
 }
 \arguments{
-\item{data}{The sequences: a data frame with one row per sequence and
-one column per position, a list of character vectors (one per
-sequence), a sequence \code{netobject} or \code{netobject_group} built with its
-data, or a \code{\link[=prepare]{prepare()}} result (its sequence data is used). A data
-frame is read whole, so it must hold only positions: one column, or
-columns named as a numbered run (\code{T1}, \code{T2}, ...); anything else, such
-as an id column beside the positions, a column named \code{action}, or
-columns holding only 0 and 1, raises an error of class
-\code{nestimate_bad_input}, and the positions are then declared with
-\code{\link[=build_network]{build_network()}} (\code{state_cols}, or \code{action} for an event log) and the
-network passed instead. A one-hot or association network raises the
-same error. Sequences are split at missing values: no window spans an
-\code{NA}, and pieces with fewer than two states are dropped.
-A \code{tna} model (package tna) or a bare \code{cograph_network} gives the sequences it carries, and a \code{group_tna} one result per group.}
+\item{data}{The sequences: a data frame with one row per sequence and one
+column per position, a list of character vectors (one per sequence), a
+sequence \code{netobject} or \code{netobject_group} built with its data, or a
+\code{\link[=prepare]{prepare()}} result (its sequence data is used). A data frame is read
+whole, so it must hold only positions: one column, or columns named as a
+numbered run (\code{T1}, \code{T2}, ...); anything else, such as an id column beside
+the positions, a column named \code{action}, or columns holding only 0 and 1,
+raises an error of class \code{nestimate_bad_input}, and the positions are then
+declared with \code{\link[=build_network]{build_network()}} (\code{state_cols}, or \code{action} for an event
+log) and the network passed instead. A one-hot or association network
+raises the same error. Sequences are split at missing values: no window
+spans an \code{NA}, and pieces with fewer than two states are dropped. A \code{tna}
+model (package tna) or a bare \code{cograph_network} gives the sequences it
+carries, and a \code{group_tna} one result per group.}
 
 \item{max_order}{The highest order to test, at least 1. Default \code{3}. It
 is lowered, with a message, to one less than the length of the longest
@@ -169,8 +169,7 @@ every count the null hypothesis conditions on, with no plug-in estimate
 and no refit per permutation. The windows of a sequence overlap, so
 this approximates the reference distribution of \eqn{G^2} rather than
 giving it exactly (an exact test would sample whole sequences with the
-same counts; Besag & Mondal, 2013). The permutation p-value is
-\verb{(number of permutations with a G^2 at least the observed + 1) / (n_perm + 1)}. An order at which no context holds both two different
+same counts; Besag & Mondal, 2013). The permutation p-value is \deqn{p = \frac{1 + B}{1 + n_{\mathrm{perm}}}}{p = (1 + B) / (1 + n_perm)} where \eqn{B} is the number of permutations whose \eqn{G^2} is at least the observed one. An order at which no context holds both two different
 extra states and two different successors has no degrees of freedom; it gets
 no p-value and counts as not rejected.
 

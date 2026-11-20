@@ -3,7 +3,7 @@
 # contributes a unit (or weighted) tally to the resulting pairwise network.
 # Closes the I/O cycle with build_hypergraph() / bipartite_groups().
 
-#' Clique expansion of a hypergraph
+#' Project a hypergraph onto a pairwise network
 #'
 #' @description
 #' `clique_expansion()` projects a hypergraph onto an ordinary pairwise
@@ -23,8 +23,7 @@
 #' pairwise co-occurrence; [hypergraph_measures()] and
 #' [hypergraph_centrality()] work on the groups.
 #'
-#' @param hg The hypergraph: a `net_hypergraph` from [build_hypergraph()] or
-#'   [bipartite_groups()].
+#' @param hg A hypergraph, from [build_hypergraph()] or [bipartite_groups()].
 #' @param weighted Whether to use the hypergraph's incidence values. With
 #'   `TRUE` (default), a weighted hypergraph (from [bipartite_groups()] with
 #'   `weight`) gives a weighted projection; with `FALSE`, the incidence is

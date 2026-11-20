@@ -1,6 +1,6 @@
 # ---- Permutation diagnostics for nested data ----
 
-#' Does Nesting Bias a Permutation Test?
+#' Diagnose the effect of nesting on a permutation test
 #'
 #' @description
 #' `permutation_diagnostics()` shows what treating nested sequences as
@@ -39,13 +39,7 @@
 #'   groups is diagnosed, or a `netobject`, compared with `y`. An `mcml`, whose
 #'   layers hold different states, raises an error of class
 #'   `nestimate_bad_input`. Only the transition methods `"relative"`,
-#'   `"frequency"` and `"co_occurrence"` are supported; any other method,
-#'   association networks and `wtna` among them, raises an error of class
-#'   `nestimate_actor_unsupported`; a latency network, which is not
-#'   resampled, raises one of class `nestimate_latency_resampling`. A `tna` model or `group_tna` (package tna)
-#'   is read through the metadata it keeps (`attr(model$data, "meta")`, kept
-#'   when the model is built from `tna::prepare_data()`); one without metadata
-#'   raises an error of class `nestimate_actor_missing`.
+#'   `"frequency"` and `"co_occurrence"` are supported; any other method raises `nestimate_actor_unsupported`, and a latency network, which is not resampled, raises `nestimate_latency_resampling`. A `tna` model or `group_tna` must keep its metadata, as one built with `tna::prepare_data()` does.
 #' @param y The `netobject` to compare with when `x` is a `netobject`.
 #'   Default `NULL`, as it must stay when `x` is a group.
 #' @param actor The column identifying the actor each sequence belongs to,
