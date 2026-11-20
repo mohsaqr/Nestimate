@@ -43,6 +43,12 @@
       paste(sprintf("`%s`", has_na), collapse = " and "),
       if (is.null(periods)) "" else " and a period"))
   }
+  # Checked on the raw rows: prepare() reduces a covariate to one value per
+  # sequence, which would hide a value that changes inside one period.
+  if (!is.null(periods) && is.character(group) && length(group) == 1L &&
+      !is.na(group)) {
+    .period_check_constant(x[[group]], x[[actor]], group)
+  }
   prep <- prepare(x[cols], actor = actor, action = action, time = time,
                   order = order, session = periods,
                   time_threshold = if (is.null(periods)) 900 else FALSE)
@@ -120,6 +126,13 @@
   if (anyNA(g)) {
     .period_bad_input(sprintf("`%s` has missing values.", group))
   }
+  .period_check_constant(g, who, group)
+  g
+}
+
+# Refuse a `group` column that takes more than one value for an actor.
+#' @noRd
+.period_check_constant <- function(g, who, group) {
   n_per_actor <- tapply(as.character(g), as.character(who),
                         function(v) length(unique(v)))
   if (any(n_per_actor > 1L)) {
@@ -128,7 +141,7 @@
       "more than one value (e.g. %s)."), group, sum(n_per_actor > 1L),
       names(n_per_actor)[which(n_per_actor > 1L)[1L]]))
   }
-  g
+  invisible(NULL)
 }
 
 # The period axis. Factor levels (an unused level is an empty block); every

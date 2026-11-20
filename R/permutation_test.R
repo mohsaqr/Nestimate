@@ -153,8 +153,8 @@
 #' `alpha`. Line 4: the global test. Lines 5 and 6, only with `actor`: the
 #' ICC with its interval, whether actors sit in one group (`between`), in
 #' both (`within`) or either (`mixed`), and the design effects. With `actor`,
-#' when no p-value can fall below `alpha` (too few actors, or too small an
-#' `iter`), a last line says so. With several `actor` levels, line 2
+#' when `min_p` is above `alpha` (too few actors for the exact test, or too
+#' small an `iter`), a last line says so. With several `actor` levels, line 2
 #' names the levels (`Actor: Group > Student (nested)`), and line 5 is
 #' replaced by two: the design at every level, with its number of actors
 #' (`Design: Group: mixed (200 actors), Student: between (2000 actors)`), and
@@ -166,6 +166,9 @@
 #' networks' `scaling` and `threshold` are applied to every shuffled network
 #' as to the observed one. For the other methods the estimator is re-run on
 #' every shuffle (`cor` and `pcor` through a lighter direct path).
+#' Latency networks are not resampled: a network built with
+#' `method = "latency"` (alone or in a group) raises an error of class
+#' `nestimate_latency_resampling`.
 #' For `glasso`, every shuffled network is estimated as [build_network()]
 #' estimated the observed ones, with `x`'s `params` (each sample's own
 #' lambda path, `nlambda`, `lambda.min.ratio`, `gamma`,
@@ -222,7 +225,8 @@
 #'   the p-values. Default `0.05`.
 #' @param paired Whether the two networks hold paired observations (the
 #'   i-th sequence or row of `x` with the i-th of `y`, such as the same
-#'   people measured twice). Each shuffle then swaps the two members of a
+#'   people measured twice; for one-hot data, the i-th actor in the order
+#'   the actors first appear). Each shuffle then swaps the two members of a
 #'   pair at random instead of shuffling all labels, so `x` and `y` need the
 #'   same number of sequences (after `concat`) or rows; otherwise an error is
 #'   raised. It cannot be combined with `actor`, of which it is the special
@@ -331,7 +335,10 @@
 #'     entry per level), `icc` (at the innermost level) with `icc_ci_lower` and `icc_ci_upper` (how alike
 #'     the sequences of one actor are), `deff_edges` (the median design
 #'     effect over edges), `deff_global` (the design effect for M) and
-#'     `min_p`, the smallest attainable p-value.}
+#'     `min_p`, the smallest p-value the exact test over the actors'
+#'     arrangements can give: one over their number, or `1 / (iter + 1)`
+#'     when larger. The reported p-values are Monte Carlo estimates, so with
+#'     few arrangements one can fall below it by chance.}
 #'   \item{clustering_edges}{Only with `actor`: one row per edge of the edge
 #'     table, with `from`, `to`, `icc`, `null_sd_actor`, `null_sd_sequence`
 #'     and `deff`.}
@@ -412,6 +419,7 @@ permutation <- function(x, y = NULL,
   # a tna model or group_tna is rebuilt as a Nestimate network (R/tna_input.R)
   x <- .tna_input(x, "permutation()", need_data = TRUE, actor = actor)
   if (!is.null(y)) y <- .tna_input(y, "permutation()", need_data = TRUE, actor = actor)
+  .stop_latency_resampling(list(x, y), "permutation()")
   # Validate `adjust` before any shuffle runs: p.adjust() would otherwise
   # reject a typo only after the whole permutation run.
   .check_permutation_adjust(adjust)
@@ -794,13 +802,16 @@ permutation <- function(x, y = NULL,
 #' diagonal), and the lower triangle is mirrored from the corrected upper
 #' one. Cells zero in both networks keep their raw p-value (1). Same rule
 #' as tna's permutation_test() (tna R/permutation.R, owner 2026-11-08).
+#' A network flagged undirected whose weights are not symmetric has two
+#' edges per pair, so every cell is tested.
 #' @noRd
 .adjust_edge_p <- function(p_mat, wx, wy, directed, adjust) {
   if (identical(adjust, "none")) return(p_mat)
   wx <- unclass(as.matrix(wx))
   wy <- unclass(as.matrix(wy))
   tested <- (!is.na(wx) & wx != 0) | (!is.na(wy) & wy != 0)
-  undirected <- isFALSE(directed)
+  symmetric <- function(w) isSymmetric(unname(w), tol = sqrt(.Machine$double.eps))
+  undirected <- isFALSE(directed) && symmetric(wx) && symmetric(wy)
   if (undirected) tested <- tested & upper.tri(tested, diag = TRUE)
   p_mat[tested] <- stats::p.adjust(p_mat[tested], method = adjust)
   if (undirected) p_mat[lower.tri(p_mat)] <- t(p_mat)[lower.tri(p_mat)]
@@ -1116,7 +1127,9 @@ permutation <- function(x, y = NULL,
   n_nodes <- length(nodes)
   nbins <- n_nodes * n_nodes
   is_relative <- .counts_are_relative(method, x$params)
-  zeros_scaled <- .scaling_includes_zeros(method)
+  # the networks' own scaling domain: a wtna network permuted as counts
+  # still scales its non-zero cells only, as build_network() did
+  zeros_scaled <- .scaling_includes_zeros(.resolve_method_alias(x$method))
   do_cent <- !is.null(measures)
   if (is.null(transform)) transform <- identity
   if (do_cent) {
@@ -1400,8 +1413,10 @@ permutation <- function(x, y = NULL,
   if (warn && log_arrangements < log(1 / alpha)) {
     warning(warningCondition(
       sprintf(paste0("`actor = \"%s\"` allows only %d distinct permutations, ",
-                     "so no p-value can fall below %.3g (alpha = %g). ",
-                     "More actors are needed for this test to detect anything."),
+                     "so the exact test cannot give a p-value below %.3g ",
+                     "(alpha = %g); a Monte Carlo p-value falls below it only ",
+                     "by chance. More actors are needed for this test to ",
+                     "detect anything."),
               block, as.integer(round(exp(log_arrangements))),
               exp(-log_arrangements), alpha),
       class = "nestimate_few_actors", call = NULL))
@@ -1520,9 +1535,10 @@ permutation <- function(x, y = NULL,
   if (warn && log_arrangements < log(1 / alpha)) {
     warning(warningCondition(
       sprintf(paste0("`actor = c(%s)` allows only %.0f distinct permutations, ",
-                     "so no p-value can fall below %.3g (alpha = %g). ",
-                     "More actors are needed at the level where the groups ",
-                     "differ for this test to detect anything."),
+                     "so the exact test cannot give a p-value below %.3g ",
+                     "(alpha = %g); a Monte Carlo p-value falls below it only ",
+                     "by chance. More actors are needed at the level where ",
+                     "the groups differ for this test to detect anything."),
               paste0("\"", block, "\"", collapse = ", "),
               round(exp(log_arrangements)), exp(-log_arrangements), alpha),
       class = "nestimate_few_actors", call = NULL))
@@ -1666,12 +1682,20 @@ permutation <- function(x, y = NULL,
   n_x <- nrow(x$data)
   n_y <- nrow(y$data)
   # Pool by column name, not position: the same variables in a different
-  # column order would otherwise be mixed in the permutation null.
+  # column order would otherwise be mixed in the permutation null. The cor
+  # and pcor fast paths read the node columns only; the full estimator gets
+  # every column the networks share, which can hold more than the nodes (a
+  # registered estimator's auxiliary input).
   cols_x <- colnames(x$data)
   cols_y <- colnames(y$data)
-  if (all(nodes %in% cols_x) && all(nodes %in% cols_y)) {
+  nodes_in_both <- all(nodes %in% cols_x) && all(nodes %in% cols_y)
+  same_cols <- !is.null(cols_x) && !anyDuplicated(cols_x) &&
+    setequal(cols_x, cols_y)
+  if (nodes_in_both && (method %in% c("cor", "pcor") || !same_cols)) {
     pooled_mat <- rbind(x$data[, nodes, drop = FALSE],
                         y$data[, nodes, drop = FALSE])
+  } else if (same_cols) {
+    pooled_mat <- rbind(x$data, y$data[, cols_x, drop = FALSE])
   } else if (identical(cols_x, cols_y)) {
     pooled_mat <- rbind(x$data, y$data)
   } else {
@@ -1902,14 +1926,19 @@ print.net_permutation <- function(x, ...) {
     if (cl$min_p > x$alpha) {
       # min_p is the larger of two floors: name the one that binds.
       iter_binds <- isTRUE(all.equal(cl$min_p, 1 / (x$iter + 1)))
-      if (iter_binds || length(x$actor) == 1L) {
-        cat(sprintf("  Note: with %d %s no p-value can fall below %s\n",
-                    if (iter_binds) x$iter else cl$n_actors,
-                    if (iter_binds) "iterations" else "actors",
-                    format(cl$min_p, digits = 3)))
+      # The iteration floor binds every reported p-value; the actors' floor
+      # binds the exact test, which the Monte Carlo draws only estimate.
+      if (iter_binds) {
+        cat(sprintf("  Note: with %d iterations no p-value can fall below %s\n",
+                    x$iter, format(cl$min_p, digits = 3)))
+      } else if (length(x$actor) == 1L) {
+        cat(sprintf(paste0("  Note: with %d actors the exact test gives no ",
+                           "p-value below %s\n"),
+                    cl$n_actors, format(cl$min_p, digits = 3)))
       } else {
-        cat(sprintf(paste0("  Note: these nested actors allow no p-value ",
-                           "below %s\n"), format(cl$min_p, digits = 3)))
+        cat(sprintf(paste0("  Note: these nested actors allow the exact test ",
+                           "no p-value below %s\n"),
+                    format(cl$min_p, digits = 3)))
       }
     }
   }

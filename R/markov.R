@@ -743,10 +743,13 @@ plot.net_markov_stability_group <- function(x,
                  value = st[[m]], stringsAsFactors = FALSE)
     }))
   }))
-  # States ordered by their mean stationary probability across groups
+  # States ordered by their mean stationary probability across groups, ties
+  # by name; a state whose probability is undefined (a chain with several
+  # closed classes) is kept, last, as sort() would drop it.
   stationary <- do.call(rbind, lapply(x, \(s) s$stability))
   mean_pi <- tapply(stationary$stationary_prob, stationary$state, mean)
-  d$state <- factor(d$state, levels = names(sort(mean_pi)))
+  d$state <- factor(d$state, levels = names(mean_pi)[
+    order(mean_pi, names(mean_pi), na.last = TRUE)])
   d$metric <- factor(d$metric, levels = labels[metrics])
   d$group <- factor(d$group, levels = names(x))
   marks <- .group_marks(nlevels(d$group))

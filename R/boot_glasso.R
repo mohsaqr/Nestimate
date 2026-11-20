@@ -71,9 +71,11 @@
 #'   `netobject` (or `cograph_network`) built with `method = "glasso"`,
 #'   whose data are resampled; any `gamma`, `nlambda` or `cor_method` set in
 #'   its `params` replaces the arguments of the same name, and its
-#'   `lambda.min.ratio`, `penalize.diagonal` and `refit` are used too, so
-#'   `original_pcor` is the network's weights. Any other network raises an
-#'   error. A correlation or
+#'   `lambda.min.ratio`, `penalize.diagonal`, `refit` and `threshold` are
+#'   used too, as is the network's own `threshold` when it has no `scaling`,
+#'   so `original_pcor` is the network's weights (for a scaled network, its
+#'   partial correlations before the scaling) and every resample is
+#'   thresholded alike. Any other network raises an error. A correlation or
 #'   covariance matrix is not accepted: a matrix is always read as data,
 #'   its rows as observations. For the `print()`
 #'   and `plot()` methods: a `boot_glasso`.
@@ -281,6 +283,12 @@ boot_glasso <- function(x,
     if (!is.null(x$params$nlambda)) nlambda <- as.integer(x$params$nlambda)
     if (!is.null(x$params$cor_method)) cor_method <- x$params$cor_method
     glasso_set <- .bg_glasso_settings(x$params)
+    # build_network()'s threshold zeroes the same partial correlations when
+    # the network is not scaled, so every fit below is thresholded as the
+    # network was
+    if (is.null(x$scaling)) {
+      glasso_set$threshold <- max(glasso_set$threshold, x$threshold %||% 0)
+    }
   } else if (is.data.frame(x) || is.matrix(x)) {
     # a correlation or covariance matrix has no observations to resample
     if (is.matrix(x) && is.numeric(x) && nrow(x) == ncol(x) &&
@@ -352,6 +360,7 @@ boot_glasso <- function(x,
 
   pcor_orig <- .precision_to_pcor(Wi_orig, threshold = 0)
   pcor_orig <- (pcor_orig + t(pcor_orig)) / 2
+  pcor_orig[abs(pcor_orig) < glasso_set$threshold] <- 0
   colnames(pcor_orig) <- rownames(pcor_orig) <- nodes
 
   # Original centrality
@@ -570,7 +579,10 @@ boot_glasso <- function(x,
   list(
     lambda_min_ratio  = get("lambda.min.ratio"),
     penalize_diagonal = isTRUE(get("penalize.diagonal")),
-    refit             = if (isTRUE(get("refit"))) "unregularized" else TRUE
+    refit             = if (isTRUE(get("refit"))) "unregularized" else TRUE,
+    # partial correlations below this (absolute) are set to zero, as the
+    # estimator's own `threshold` does
+    threshold         = get("threshold")
   )
 }
 
@@ -609,6 +621,7 @@ boot_glasso <- function(x,
 
   pcor <- .precision_to_pcor(Wi, threshold = 0)
   pcor <- (pcor + t(pcor)) / 2
+  pcor[abs(pcor) < glasso_set$threshold] <- 0
 
   # Extract upper triangle
   edges <- pcor[upper.tri(pcor)]

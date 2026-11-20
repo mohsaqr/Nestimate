@@ -212,8 +212,10 @@ sequences resampled; joins inside each merged sequence are retained.
 With \code{actor}, a merged sequence must belong entirely to one actor. Every
 other method (the association methods, \code{"attention"}, \code{"ngram"}, \code{"gap"},
 \code{"reverse"} and registered estimators) is re-estimated in full on
-resampled rows. A replicate whose estimation fails, or that loses a
-node, is left out of the p-values, with a warning of class
+resampled rows. Latency networks are not resampled: a network built with
+\code{method = "latency"} raises an error of class
+\code{nestimate_latency_resampling}. A replicate whose estimation fails, or
+that loses a node, is left out of the p-values, with a warning of class
 \code{nestimate_resample_failed} that counts them, and the bootstrap
 statistics are computed over the remaining replicates; if every
 replicate fails, every p-value is 1.

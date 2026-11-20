@@ -192,8 +192,10 @@ not counted.
 \item{\code{"permutation"}}{Shuffles the group labels across
 sequences \code{iter} times and recomputes, for each pattern, the
 Euclidean norm of its row of differences between observed and
-expected counts in the patterns-by-groups table of the patterns kept
-at that length (expected under independence). It asks whether the
+expected counts in the patterns-by-groups table of every pattern
+observed at that length (expected under independence), whether or
+not \code{min_freq} keeps it, so the filter does not change the null
+distribution of a reported pattern. It asks whether the
 pattern's distribution is associated with group membership at the
 level of the sequence,
 which respects the sequence as the unit of analysis but has little

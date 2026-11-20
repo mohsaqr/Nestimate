@@ -22,7 +22,8 @@ whose layers hold different states, raises an error of class
 the transition methods
 \code{"relative"}, \code{"frequency"} and \code{"co_occurrence"} are supported; any
 other method, association networks and \code{wtna} among them, raises an
-error of class \code{nestimate_actor_unsupported}.
+error of class \code{nestimate_actor_unsupported}; a latency network, which is
+not resampled, raises one of class \code{nestimate_latency_resampling}.
 For a \code{tna} model or \code{group_tna} (package tna), \code{actor} is read from the metadata the model keeps (\code{attr(model$data, "meta")}, kept when the model is built from \code{tna::prepare_data()}); a model without it raises \code{nestimate_actor_missing}.}
 
 \item{y}{The \code{netobject} to compare with when \code{x} is a \code{netobject}.
@@ -75,9 +76,11 @@ edge difference (Kish, 1965).}
 \code{p < alpha} under each test.}
 \item{edges_changed}{The number of edges significant under one test
 but not the other.}
-\item{min_p_actor}{The smallest p-value the actor-level test can
-reach: one over the number of distinct arrangements of the actors,
-or \code{1 / (iter + 1)}, whichever is larger.}
+\item{min_p_actor}{The smallest p-value the exact actor-level test can
+give: one over the number of distinct arrangements of the actors,
+or \code{1 / (iter + 1)}, whichever is larger. \code{p_global_actor} and the
+edge p-values are Monte Carlo estimates, so with few arrangements
+they can fall below it by chance.}
 }
 With \code{level = "edges"}, one row per edge present in either network, with
 the columns \code{pair}, \code{from}, \code{to}, \code{diff} (the observed difference,
@@ -121,8 +124,9 @@ actor-level one varies more, below 1 less.}
 the other. Edges with p-values close to \code{alpha} can flip from
 Monte Carlo error alone; increase \code{iter} before reading much
 into one or two.}
-\item{\code{min_p_actor} above \code{alpha}}{Too few actors: the
-actor-level test cannot reject anything.}
+\item{\code{min_p_actor} above \code{alpha}}{Too few actors: the exact
+actor-level test cannot reject anything, and an actor-level p-value
+below \code{alpha} is Monte Carlo chance.}
 }
 }
 

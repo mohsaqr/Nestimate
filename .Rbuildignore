@@ -66,3 +66,4 @@
 ^HONETS-DELEGATION-PLAN\.md$
 ^\.mini-ci$
 ^\.ci$
+^tests/equivalence$

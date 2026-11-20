@@ -172,7 +172,9 @@ distribution_plot <- function(x,
                                wide = "`cols`", whole_frame = TRUE,
                                takes_action = FALSE)
     } else {
-      x <- x[cols]
+      # as.data.frame() first: on a data.table, x[cols] is a join, not a
+      # column selection
+      x <- as.data.frame(x, stringsAsFactors = FALSE)[cols]
     }
   } else if (!is.null(cols)) {
     stop(errorCondition("`cols` applies to a wide data frame.",

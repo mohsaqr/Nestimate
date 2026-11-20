@@ -30,8 +30,9 @@
 #'     the other. Edges with p-values close to `alpha` can flip from
 #'     Monte Carlo error alone; increase `iter` before reading much
 #'     into one or two.}
-#'   \item{`min_p_actor` above `alpha`}{Too few actors: the
-#'     actor-level test cannot reject anything.}
+#'   \item{`min_p_actor` above `alpha`}{Too few actors: the exact
+#'     actor-level test cannot reject anything, and an actor-level p-value
+#'     below `alpha` is Monte Carlo chance.}
 #' }
 #'
 #' @param x The networks to compare: a `netobject_group`, whose every pair of
@@ -40,7 +41,8 @@
 #'   `nestimate_bad_input`. Only the transition methods `"relative"`,
 #'   `"frequency"` and `"co_occurrence"` are supported; any other method,
 #'   association networks and `wtna` among them, raises an error of class
-#'   `nestimate_actor_unsupported`. A `tna` model or `group_tna` (package tna)
+#'   `nestimate_actor_unsupported`; a latency network, which is not
+#'   resampled, raises one of class `nestimate_latency_resampling`. A `tna` model or `group_tna` (package tna)
 #'   is read through the metadata it keeps (`attr(model$data, "meta")`, kept
 #'   when the model is built from `tna::prepare_data()`); one without metadata
 #'   raises an error of class `nestimate_actor_missing`.
@@ -88,9 +90,11 @@
 #'     `p < alpha` under each test.}
 #'   \item{edges_changed}{The number of edges significant under one test
 #'     but not the other.}
-#'   \item{min_p_actor}{The smallest p-value the actor-level test can
-#'     reach: one over the number of distinct arrangements of the actors,
-#'     or `1 / (iter + 1)`, whichever is larger.}
+#'   \item{min_p_actor}{The smallest p-value the exact actor-level test can
+#'     give: one over the number of distinct arrangements of the actors,
+#'     or `1 / (iter + 1)`, whichever is larger. `p_global_actor` and the
+#'     edge p-values are Monte Carlo estimates, so with few arrangements
+#'     they can fall below it by chance.}
 #' }
 #' With `level = "edges"`, one row per edge present in either network, with
 #' the columns `pair`, `from`, `to`, `diff` (the observed difference,
@@ -151,6 +155,7 @@ permutation_diagnostics <- function(x, y = NULL, actor, iter = 1000L,
                     actor = actor)
   }
 
+  .stop_latency_resampling(list(x, y), "permutation_diagnostics()")
   if (inherits(x, "mcml") || inherits(y, "mcml")) {
     .stop_mcml_input("permutation_diagnostics()",
                      "compares networks over the same states")

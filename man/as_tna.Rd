@@ -36,10 +36,12 @@ with \code{cograph::splot()}. Each
 element is a \code{netobject} (class \code{c("netobject", "cograph_network")})
 with the layer's weights, initial probabilities, node and edge tables
 and data, and records \code{method = "relative"} when the \code{mcml} holds
-row-normalised weights (\code{type = "tna"}), \code{method = "co_occurrence"}
-for symmetrised counts (\code{type = "cooccurrence"}), and
-\code{method = "frequency"} for counts (\code{type} \code{"raw"} or \code{"frequency"}) and
-for the aggregates of \code{\link[=cluster_summary]{cluster_summary()}}. With
+row-normalised weights (\code{type = "tna"}) and \code{method = "frequency"} for
+counts (\code{type} \code{"raw"}, \code{"frequency"} or \code{"cooccurrence"}) and for the
+aggregates of \code{\link[=cluster_summary]{cluster_summary()}}. An undirected \code{mcml} (\code{type = "cooccurrence"} or \code{directed = FALSE}) also records
+\code{params$symmetrize = TRUE}, and one built from a weighted edge list
+carries the edge weights in its data, so the resampling verbs recount
+each layer as it was fitted. With
 \code{expand}, the \code{macro} element is the mixed-resolution network of
 \code{\link[=macro_network]{macro_network()}} instead of the fully collapsed one. The default
 method returns a \code{tna} model unchanged and raises an error for any

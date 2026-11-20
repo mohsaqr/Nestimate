@@ -133,7 +133,9 @@
 #' the RV coefficient that of Robert and Escoufier (1976). A network's own
 #' `directed` flag decides how its network metrics are computed; a plain
 #' matrix has none, so an asymmetric matrix is read as directed and a
-#' symmetric one as undirected.
+#' symmetric one as undirected, after its rows and columns are matched to
+#' the other network's nodes by name. A tna model is read by the `directed`
+#' flag of the network it is rebuilt into.
 #' @references
 #' Szekely, G. J., Rizzo, M. L., & Bakirov, N. K. (2007). Measuring and
 #' testing dependence by correlation of distances. \emph{The Annals of
@@ -169,9 +171,7 @@ compare_model.default <- function(x, ...) {
 #' @export
 compare_model.netobject <- function(x, y, scaling = "none", measures = character(0),
                               network = TRUE, ...) {
-  .compare_impl(.weights_of(x, label_unnamed = FALSE),
-                .weights_of(y, label_unnamed = FALSE), scaling, measures, network,
-                directed = c(.compare_directed(x), .compare_directed(y)))
+  .compare_pair(x, y, scaling, measures, network)
 }
 
 #' @rdname compare_model
@@ -179,18 +179,14 @@ compare_model.netobject <- function(x, y, scaling = "none", measures = character
 compare_model.cograph_network <- function(x, y, scaling = "none",
                                     measures = character(0), network = TRUE,
                                     ...) {
-  .compare_impl(.weights_of(x, label_unnamed = FALSE),
-                .weights_of(y, label_unnamed = FALSE), scaling, measures, network,
-                directed = c(.compare_directed(x), .compare_directed(y)))
+  .compare_pair(x, y, scaling, measures, network)
 }
 
 #' @rdname compare_model
 #' @export
 compare_model.matrix <- function(x, y, scaling = "none", measures = character(0),
                            network = TRUE, ...) {
-  .compare_impl(.weights_of(x, label_unnamed = FALSE),
-                .weights_of(y, label_unnamed = FALSE), scaling, measures, network,
-                directed = c(.compare_directed(x), .compare_directed(y)))
+  .compare_pair(x, y, scaling, measures, network)
 }
 
 #' @rdname compare_model
@@ -253,13 +249,44 @@ compare_model.netobject_group <- function(x, i = 1L, j = 2L, scaling = "none",
 }
 
 
-# A network's own flag decides. A plain matrix has none, so symmetry stands in;
-# symmetry alone would read a directed network with reciprocal arcs as undirected.
+# Convert both compared inputs first (a tna model, a group_tna member or a
+# bare cograph_network becomes a netobject) and read each one's own
+# `directed` flag: TRUE/FALSE for a network, NA for a plain matrix, which has
+# none. Reading the flag off the unconverted input lost a tna model's
+# direction (it keeps no `$directed`).
 #' @noRd
-.compare_directed <- function(z) {
-  flag <- if (!is.matrix(z)) z$directed
-  if (isTRUE(flag) || isFALSE(flag)) return(flag)
-  !isSymmetric(unname(.weights_of(z, label_unnamed = FALSE)))
+.compare_inputs <- function(x, y, fn = "compare_model") {
+  what <- paste0(fn, "()")
+  conv <- lapply(list(x, y), function(z) .native_network(z, what))
+  flags <- vapply(conv, function(z) {
+    flag <- if (!is.matrix(z)) z$directed
+    if (isTRUE(flag) || isFALSE(flag)) flag else NA
+  }, logical(1L))
+  list(x = conv[[1L]], y = conv[[2L]], flags = flags)
+}
+
+
+# Direction of each of two compared networks, decided after conversion
+# (.compare_inputs()) and node alignment. A network's own flag decides:
+# symmetry alone would read a directed network with reciprocal arcs as
+# undirected. A plain matrix (flag NA) is directed when its ALIGNED weights
+# are asymmetric; read before alignment, a symmetric matrix whose columns
+# come in another order looks directed. Shared by compare_model() (one
+# direction per side) and subtract_networks() (directed when either is).
+#' @noRd
+.resolve_directed <- function(flags, wx, wy) {
+  symmetric <- c(isSymmetric(unname(wx)), isSymmetric(unname(wy)))
+  ifelse(is.na(flags), !symmetric, flags)
+}
+
+
+# compare_model() for two inputs of any supported kind.
+#' @noRd
+.compare_pair <- function(x, y, scaling, measures, network) {
+  inputs <- .compare_inputs(x, y)
+  .compare_impl(.weights_of(inputs$x, label_unnamed = FALSE),
+                .weights_of(inputs$y, label_unnamed = FALSE),
+                scaling, measures, network, flags = inputs$flags)
 }
 
 
@@ -311,7 +338,7 @@ compare_model.netobject_group <- function(x, i = 1L, j = 2L, scaling = "none",
 
 # ---- Internal: the comparison machinery ----
 
-.compare_impl <- function(x, y, scaling, measures, network, directed) {
+.compare_impl <- function(x, y, scaling, measures, network, flags) {
   .assert("x and y must have the same number of nodes" =
             identical(dim(x), dim(y)))
   .assert("x and y must not contain missing weights" =
@@ -319,6 +346,7 @@ compare_model.netobject_group <- function(x, i = 1L, j = 2L, scaling = "none",
   aligned <- .compare_align_nodes(x, y)
   x <- aligned$x
   y <- aligned$y
+  directed <- .resolve_directed(flags, x, y)
   n <- nrow(x)
 
   scaling <- .compare_match_arg(scaling, .compare_scaling_names(), "scaling")

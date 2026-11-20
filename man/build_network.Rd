@@ -36,6 +36,10 @@ build_network(
   end = FALSE,
   params = list(),
   labels = NULL,
+  latency_floor = 0.5,
+  latency_cap = 0.95,
+  latency_aggregate = c("sum", "mean"),
+  latency_scope = c("global", "actor", "session", "responder"),
   ...
 )
 
@@ -204,6 +208,39 @@ a two-column data frame (\code{name}, \code{label}), a named character vector
 \code{c(name = "label")} or a named list. It rewrites the node labels and the
 weight matrix's dimnames; nodes not listed keep their names.}
 
+\item{latency_floor}{For \code{method = "latency"}: the weight of a reply that
+takes \code{latency_cap} or longer, a single number from 0 to 1. A reply's
+weight falls linearly from 1 (an immediate reply) to \code{latency_floor} at
+the cap and stays there beyond it, so every reply counts. \code{1} ignores
+time and gives the counts of \code{"reverse"}; \code{0} gives replies at or past
+the cap no weight. Default \code{0.5}. Any other method raises an error of
+class \code{nestimate_bad_input} when it is set.}
+
+\item{latency_cap}{For \code{method = "latency"}: the time at which a reply's
+weight reaches \code{latency_floor}. A number in (0, 1] is a percentile of
+the latencies of the replies to another sender, pooled over all of
+\code{data} (with \code{group}, over every group, so the groups share one cap); a
+string such as \code{"120s"} is a number of seconds. The resolved cap, in
+seconds, is stored on the network. Default \code{0.95}.}
+
+\item{latency_aggregate}{For \code{method = "latency"}: how the replies of a
+pair of senders make one weight. \code{"sum"} (default) adds their weights,
+so an edge grows with both the speed and the number of replies;
+\code{"mean"} averages them, the mean speed of the pair's replies.}
+
+\item{latency_scope}{For \code{method = "latency"} with a percentile
+\code{latency_cap}: the units that get their own cap. \code{"global"} (default)
+takes one cap from all of \code{data}; \code{"actor"} one per value of \code{actor}
+(each team's own pace; with several \code{actor} columns, one per
+combination of their values); \code{"session"} one per sequence;
+\code{"responder"} one per responding sender. A unit's cap is the percentile
+of its own latencies of replies to another sender; a unit with fewer
+than 5 of them takes the global cap, and a message of class
+\code{nestimate_latency_fallback} says how many units did. The caps are
+resolved before a \code{group} split. A cap
+in seconds applies to every reply, so a scope other than \code{"global"} is
+then ignored with a message of class \code{nestimate_ignored_argument}.}
+
 \item{...}{Further arguments for the estimator. For event logs,
 \code{\link[=prepare]{prepare()}}'s time options \code{unix_time_unit}, \code{is_unix_time} and
 \code{custom_format} go to \code{\link[=prepare]{prepare()}} instead (e.g.
@@ -263,7 +300,13 @@ the method: for example \code{frequency_matrix} and \code{initial} for \code{rel
 \code{frequency}, \code{ngram}, \code{gap} and \code{reverse} (only \code{initial} for
 \code{attention}, neither for \code{co_occurrence}), \code{cor_matrix} and the sample
 size \code{n} for \code{cor}, \code{pcor} and \code{glasso}, \code{precision_matrix} for \code{pcor}
-and \code{glasso}, and \code{lambda_selected} for \code{glasso}.
+and \code{glasso}, and \code{lambda_selected} for \code{glasso}. A \code{latency} network
+keeps \code{initial}, \code{n_replies} and \code{median_latency} (matrices laid out as
+the weights), \code{latency_cap_seconds} (the resolved global cap, also in
+\code{params}), \code{latency_unit_caps} (the per-unit caps of a non-global
+\code{latency_scope}, named by unit, also in \code{params}) and \code{latency_time}, the
+event times in seconds (and, for the \code{"actor"} and \code{"session"} scopes,
+each sequence's unit), one row per row of \code{data}.
 
 With \code{level = "both"}, the result is a \code{netobject_ml} holding the
 between-person and within-person networks (\code{between} and \code{within}, each a
@@ -334,6 +377,7 @@ those of \code{tna::summary.tna()} from tna 1.5.4 on.
 \item{\code{"ngram"}}{Adjacent pairs counted once per n-gram window; directed. Aliases: \code{"n-gram"}, \code{"n_gram"}.}
 \item{\code{"gap"}}{Pairs up to \code{max_gap + 1} positions apart, weighted \code{1 / distance}; directed.}
 \item{\code{"reverse"}}{Reply network, the transpose of \code{"frequency"}; directed.}
+\item{\code{"latency"}}{Reply network weighted by response speed; directed. See below.}
 \item{\code{"wtna"}}{Window-based transitions on one-hot data; directed. Alias: \code{"wtna_transition"}.}
 \item{\code{"wtna_cooccurrence"}}{Window-based co-occurrence on one-hot data; undirected.}
 \item{\code{"cor"}}{Pearson correlations; undirected. Aliases: \code{"corr"}, \code{"correlation"}.}
@@ -348,6 +392,31 @@ types \code{"n-gram"}, \code{"gap"} and \code{"reverse"}. Their settings go in
 \code{params}: \code{list(n_gram = 2)}, \code{list(max_gap = 1)} and
 \code{list(weighted = FALSE)} are the defaults. All three return raw weights;
 add \code{scaling = "normalize"} for row probabilities.
+
+\code{"latency"} reads an event log with \code{action} and \code{time}
+(a message log, one row per message, \code{action} the sender). Its edges
+are the replies of \code{"reverse"}: within each sequence (an
+\code{actor}'s events, split by \code{session} or \code{time_threshold}),
+each event points from its sender, the responder, to the sender of the
+event before it. A reply that takes \eqn{t} seconds weighs
+\eqn{1 - (1 - f) \min(t / c, 1)}{1 - (1 - f) * min(t / c, 1)}, with
+\eqn{f} the \code{latency_floor} and \eqn{c} the \code{latency_cap} in
+seconds, and the weights of a pair are summed or averaged
+(\code{latency_aggregate}). Fast replies signal social connection
+(Templeton et al., 2022), and the weight grades it linearly instead of
+cutting replies at a threshold. A sender who posts twice in a row is a
+self-loop on the diagonal, weighted by the same rule. Shifting every
+time by a constant leaves the weights unchanged, and so does a change of
+time unit when the cap is a percentile. \code{\link[=extract_edges]{extract_edges()}} adds each
+edge's number of replies (\code{n_replies}) and their median latency in
+seconds (\code{median_latency}). \code{params = list(weighted = TRUE)}
+raises an error of class \code{nestimate_bad_input}, and so do
+\code{start} and \code{end}, which have no times. Latency networks are
+not resampled: \code{\link[=bootstrap_network]{bootstrap_network()}}, \code{\link[=permutation]{permutation()}},
+\code{\link[=permutation_diagnostics]{permutation_diagnostics()}}, \code{\link[=centrality_stability]{centrality_stability()}},
+\code{\link[=casedrop_reliability]{casedrop_reliability()}}, \code{\link[=network_reliability]{network_reliability()}} and
+\code{\link[=compare_networks]{compare_networks()}} with a permutation or bootstrap \code{test} refuse
+one with an error of class \code{nestimate_latency_resampling}.
 }
 
 \section{Methods}{
@@ -371,7 +440,10 @@ counts of its between- and within-person networks.
 node and edge counts, density, mean shortest-path distance, the mean and
 SD of out- and in-strength, the mean and SD of out-degree, out- and
 in-degree centralisation (Freeman) and reciprocity. A self-loop counts as
-an edge, an undirected edge is counted once, and density is capped at 1.
+an edge, and an undirected edge is counted once. Density divides the
+edge count, self-loops included, by the n(n - 1) off-diagonal pairs
+(n(n - 1) / 2 when undirected), as \code{tna::summary.tna()} and
+\code{igraph::edge_density(loops = FALSE)} do, and is capped at 1.
 Strengths sum absolute weights. Distances take each edge's absolute
 weight as its length, not its inverse, and pairs with no path between
 them are left out of the mean. Degree centralisation ignores self-loops,
@@ -425,6 +497,11 @@ van Borkulo, C. D., Borsboom, D., Epskamp, S., Blanken, T. F., Boschloo,
 L., Schoevers, R. A., & Waldorp, L. J. (2014). A new method for
 constructing networks from binary data. \emph{Scientific Reports}, 4,
 5918. \doi{10.1038/srep05918}
+
+Templeton, E. M., Chang, L. J., Reynolds, E. A., Cone LeBeaumont, M. D.,
+& Wheatley, T. (2022). Fast response times signal social connection in
+conversation. \emph{Proceedings of the National Academy of Sciences},
+119(4), e2116915119. \doi{10.1073/pnas.2116915119}
 
 Haslbeck, J. M. B., & Waldorp, L. J. (2020). mgm: Estimating time-varying
 mixed graphical models in high-dimensional data. \emph{Journal of

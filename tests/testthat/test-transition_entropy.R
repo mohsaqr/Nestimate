@@ -143,9 +143,11 @@ test_that("transition_entropy normalises rows that don't sum to 1", {
 
 test_that("base argument is validated", {
   expect_error(transition_entropy(.P3, base = 1),
-               regexp = "base != 1|stopifnot")
-  expect_error(transition_entropy(.P3, base = -2))
-  expect_error(transition_entropy(.P3, base = c(2, 10)))
+               class = "nestimate_bad_input")
+  expect_error(transition_entropy(.P3, base = -2),
+               class = "nestimate_bad_input")
+  expect_error(transition_entropy(.P3, base = c(2, 10)),
+               class = "nestimate_bad_input")
 })
 
 # ---- group dispatch ----

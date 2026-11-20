@@ -37,7 +37,7 @@ side effect.
 \description{
 \code{register_estimator()} adds an estimator function to the registry that
 \code{\link[=build_network]{build_network()}} reads, so that \code{build_network(data, method = name)} calls
-it the way it calls a built-in method; the package registers its fourteen
+it the way it calls a built-in method; the package registers its fifteen
 built-in methods with this function when it loads. A name already in the
 registry is replaced, built-ins included, without a message.
 \code{\link[=list_estimators]{list_estimators()}} shows what is

@@ -32,7 +32,9 @@
 #' the summed weights [bipartite_groups()] produces with `weight`) set where
 #' a walker that enters a hyperedge lands, and the walk, which is not
 #' reversible, is symmetrised through its stationary distribution (Chung
-#' 2005).
+#' 2005). Only a positive cell makes a node a member: a cell that is zero or
+#' negative (a net-negative summed weight) is not part of the hyperedge and
+#' carries no weight in either form.
 #'
 #' Both Laplacians are symmetric positive semi-definite with eigenvalues in
 #' \[0, 2\]. On a binary incidence with unit hyperedge weights the two forms
@@ -67,7 +69,7 @@
 #' @param edge_weights Positive hyperedge weights, one per hyperedge in the
 #'   order of the incidence columns. Default `NULL`, which gives unit weights
 #'   for `"zhou"` and, for `"random_walk"`, the heuristic of Hayashi et al.:
-#'   the population standard deviation of each hyperedge's non-zero
+#'   the population standard deviation of each hyperedge's positive
 #'   incidence cells plus one, which is 1 on a binary incidence. A vector of
 #'   the wrong length, or with a value that is not finite and positive,
 #'   raises an error.
@@ -483,10 +485,14 @@ hypergraph_transduction <- function(hg, labels, xi = 0.99,
     w <- edge_weights %||% vapply(seq_len(m), function(j) {
       .hl_pop_sd(gamma[gamma[, j] > 0, j]) + 1
     }, numeric(1L))
-    delta_e <- colSums(gamma)
+    # EDVW are defined for members only (gamma_e(v) > 0, Hayashi et al.
+    # 2020). A zero or negative cell (a summed weight <= 0 in
+    # bipartite_groups()) is not a member, so it carries no walk mass.
+    gamma_m <- gamma * pattern
+    delta_e <- colSums(gamma_m)
     d_v <- as.vector(pattern %*% w)
     A <- sweep(pattern, 2L, w, "*") / d_v      # A[v,e] = w(e) 1[v in e]/d(v)
-    B <- t(gamma) / delta_e                     # B[e,u] = gamma_e(u)/delta(e)
+    B <- t(gamma_m) / delta_e                   # B[e,u] = gamma_e(u)/delta(e)
     P <- A %*% B
 
     # Stationary distribution: dominant left eigenvector of P

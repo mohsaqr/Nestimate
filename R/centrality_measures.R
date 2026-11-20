@@ -4,10 +4,13 @@
 # all-pairs shortest paths via Floyd-Warshall. For transition/frequency
 # networks, weights are inverted so higher weight = shorter distance.
 
-# Tolerance for "same path length": relative, so a tie that floating-point
-# addition breaks (1/10 + 1/15 vs 1/6) is still a tie. Shared by the path
-# counting and the on-path tests so both agree on what a tie is.
-.sp_tol <- function(d) 1e-10 * pmax(1, abs(d))
+# Tolerance for "same path length": relative to the path-length scale, so a
+# tie that floating-point addition breaks (1/10 + 1/15 vs 1/6) is still a tie,
+# while two paths that differ by more than ~1e-10 of their length never are --
+# whatever the unit of the weights (no absolute floor: with weights near 1e-12
+# a floor of 1e-10 would merge a strictly shorter path into a tie). Shared by
+# the path counting and the on-path tests so both agree on what a tie is.
+.sp_tol <- function(d) 1e-10 * abs(d)
 
 
 #' All-pairs shortest paths via Floyd-Warshall (vectorized)
@@ -37,7 +40,10 @@
     # Standard Floyd-Warshall only relaxes (s, t) when both s and t differ
     # from k. With diag(D) = 0, new_d[k, j] would otherwise match D[k, j]
     # under the equal-path test and double-count sigma.
-    tol            <- .sp_tol(ifelse(is.finite(D), D, 0))
+    # Scale the tie tolerance by the larger of the two candidate lengths
+    # (both finite wherever `tol` is used below).
+    both_finite    <- is.finite(D) & is.finite(new_d)
+    tol            <- .sp_tol(ifelse(both_finite, pmax(abs(D), abs(new_d)), 0))
     shorter        <- is.finite(new_d) & (!is.finite(D) | new_d < D - tol)
     equal          <- is.finite(new_d) & is.finite(D) &
                       abs(new_d - D) <= tol & new_d > 0

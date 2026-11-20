@@ -295,14 +295,36 @@ Cram\enc{é}{e}r's V on two variables of a data frame, use
 \code{\link[=mosaic_analysis]{mosaic_analysis()}}.
 }
 \details{
-A mosaic needs counts. A network whose weights are whole numbers
-(\code{method = "frequency"} or \code{"co_occurrence"}) is drawn from its weights;
-otherwise from the transition counts stored with it at estimation, and
-failing that from first-order transitions recounted from its sequence
-data. A \code{netobject_group} is counted from each group's sequences, or
+A mosaic needs counts, never probabilities. A network is drawn from the
+transition counts stored with it at estimation; failing that from its
+weights, when its method counts (such as \code{"frequency"}) and they are not
+scaled, thresholded or weighted; and failing that from first-order
+transitions recounted from its sequence data. A network that records no
+method is drawn from its weights if they are whole numbers. A
+\code{netobject_group} is counted from each group's sequences, or
 from the column sums of its weights when they are counts. A single
 network with none of these, such as an association network (\code{cor},
-\code{pcor}, \code{glasso}, \code{ising}, \code{mgm}), raises an error. A \code{netobject_group}
+\code{pcor}, \code{glasso}, \code{ising}, \code{mgm}), raises an error.
+
+A co-occurrence network (\code{method = "co_occurrence"}) is undirected: it
+stores each unordered pair of positions in both mirrored cells and the
+same-state pairs once on the diagonal, so its matrix is not a table of
+row-by-column counts. The mosaic draws its table of pairs instead, each
+pair counted once and split equally between its two mirrored cells (so a
+cell can hold a half; Newman, 2003), and the residuals compare it with
+random pairing of the pair ends, which keeps how often each state ends a
+pair: \code{"permutation"} re-pairs the ends at random \code{n_perm} times, and
+\code{"asymptotic"} gives each unordered pair's multinomial residual under
+that null, as for genotypes under Hardy-Weinberg proportions (Guo &
+Thompson, 1992). The pairs of a sequence share its positions, so they
+are not independent counts, and \code{report = TRUE} or \code{nested = TRUE} on a
+co-occurrence network raises an error of class
+\code{nestimate_mosaic_undirected}. So does any mosaic of an undirected
+network whose diagonal holds each state's own occurrences rather than
+pairs: a windowed or one-hot co-occurrence network, \code{"wtna_cooccurrence"}
+and \code{\link[=cooccurrence]{cooccurrence()}}.
+
+A \code{netobject_group}
 must hold sequence networks: the group method counts whatever its
 networks' data hold, so a group of association networks is drawn
 without an error, each distinct numeric value counted as a state. An
@@ -310,8 +332,8 @@ without an error, each distinct numeric value counted as a state. An
 with a single state has no table to draw: when it holds self-transitions
 it is left out of the per-cluster figure with a warning, and when it holds
 no transition at all the call stops with an error. When a row or
-column of the table is empty, the asymptotic residuals are undefined
-and every tile is drawn at 0. The geometry and the asymptotic
+column of the table is empty, its cells have no asymptotic residual and
+are drawn at 0; the other cells keep theirs. The geometry and the asymptotic
 residuals follow \code{tna::plot_mosaic()}; the function has its own name so
 the two packages can be attached together.
 }
@@ -354,11 +376,12 @@ independence, over its cluster-robust standard error.}
 }
 The methods are described in full under \emph{Nested data} in
 \code{\link[=mosaic_analysis]{mosaic_analysis()}}. \code{nested = TRUE} needs per-sequence counts: a
-network built with \code{method = "relative"}, \code{"frequency"} or
-\code{"co_occurrence"} that keeps its sequence data, or a \code{netobject_group}
-whose groups keep theirs. Other networks, and per-sequence counts that
-do not add up to the drawn table, raise an error of class
-\code{nestimate_bad_input}. An \code{mcml} takes no \code{nested}. A \code{table} or
+network built with \code{method = "relative"} or \code{"frequency"} that keeps its
+sequence data, or a \code{netobject_group} whose groups keep theirs. Other
+networks, and per-sequence counts that do not add up to the drawn table,
+raise an error of class \code{nestimate_bad_input}; a co-occurrence network
+raises one of class \code{nestimate_mosaic_undirected} (see Details). An
+\code{mcml} takes no \code{nested}. A \code{table} or
 \code{matrix} (or a plain array) takes it as a three-way table, rows x columns x actors (e.g.
 \code{table(var1, var2, actor)}); the mosaic draws the table summed over
 actors. A three-way table without \code{nested = TRUE}, or a two-way table
@@ -389,6 +412,14 @@ mosaic_plot(df, x_var = "group", y_var = "state", weight = "count")
 Friendly, M. (1994). Mosaic displays for multi-way contingency tables.
 \emph{Journal of the American Statistical Association}, 89(425),
 190--200. \doi{10.1080/01621459.1994.10476460}
+
+Guo, S. W., & Thompson, E. A. (1992). Performing the exact test of
+Hardy-Weinberg proportion for multiple alleles. \emph{Biometrics},
+48(2), 361--372. \doi{10.2307/2532296}
+
+Newman, M. E. J. (2003). Mixing patterns in networks.
+\emph{Physical Review E}, 67(2), 026126.
+\doi{10.1103/PhysRevE.67.026126}
 
 Rao, J. N. K., & Scott, A. J. (1984). On chi-squared tests for multiway
 contingency tables with cell proportions estimated from survey data.

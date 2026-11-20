@@ -60,7 +60,8 @@
 #' **Clique-motif eigenvector centrality (CEC)** is the leading eigenvector
 #' of the clique-expanded pairwise graph \eqn{W} with
 #' \eqn{W_{ij} = |\{e : i, j \in e\}|}, the number of hyperedges two
-#' nodes share. It reads membership only, so incidence weights are ignored:
+#' nodes share. It reads membership only (a positive incidence cell, the
+#' rule that builds `$hyperedges`), so incidence weights are ignored:
 #' it equals `igraph::eigen_centrality()` on
 #' `clique_expansion(hg, weighted = FALSE)`, and on [clique_expansion()]'s
 #' default output only for an unweighted hypergraph. The vector is solved
@@ -193,7 +194,11 @@ hypergraph_centrality <- function(hg,
 
   # ---- CEC: Perron vector of the clique expansion W, per component ----
   if ("clique" %in% type) {
-    W <- tcrossprod((hg$incidence != 0) * 1.0)
+    # Membership is a positive incidence entry, the same rule that builds
+    # `hg$hyperedges` (bipartite_groups(): a player whose summed weight in a
+    # group is zero or negative is not a member), so the clique expansion and
+    # the Z/H tensors see the same hyperedges.
+    W <- tcrossprod((hg$incidence > 0) * 1.0)
     diag(W) <- 0
     x <- .hg_perron_vector(.hg_component_spectra(W), x0)
     if (!normalize && any(x != 0)) x <- x / max(abs(x))

@@ -28,7 +28,7 @@ test_that("the covariate line names the covariates, after chisq and a logit", {
                           estimator = "chisq")
   logit <- build_clusters(trajectories, k = 2, covariates = study_group,
                           estimator = "multinom") |>
-    suppressWarnings(classes = "simpleWarning")
+    suppressWarnings(classes = "nestimate_multinom_ml")
   expect_output(print(chisq), "Covariates: study_group (post-hoc, 1 covariate)",
                 fixed = TRUE)
   expect_output(print(logit), "Covariates: study_group (post-hoc, 1 covariate)",

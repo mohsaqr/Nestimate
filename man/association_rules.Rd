@@ -49,8 +49,10 @@ A numeric or logical matrix is a binary transaction table (rows are
 transactions, columns are items, named \code{I1}, \code{I2}, ... when the
 matrix has no column names).}
 }
-Binary input must hold only 0/1 or \code{TRUE}/\code{FALSE}: a missing cell or any
-other value raises an error of class \code{nestimate_bad_input}. For the
+Binary input must hold only 0/1 or \code{TRUE}/\code{FALSE}: a missing cell, any
+other value or two columns with one name raises an error of class
+\code{nestimate_bad_input}. Input with no transaction (a one-hot network
+with no complete window) gives an empty result. For the
 \code{print()} and \code{plot()} methods: a \code{net_association_rules} object.}
 
 \item{min_support}{The smallest share of transactions an itemset must

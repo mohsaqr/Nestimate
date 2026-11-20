@@ -43,7 +43,8 @@ length minus 1, with a message.}
 
 \item{criterion}{How the order is selected: \code{"aic"} (default) or
 \code{"bic"} takes the order with the smallest criterion, and \code{"lrt"} uses
-the sequential likelihood-ratio tests described in \emph{Details}.}
+the sequential likelihood-ratio tests described in \emph{Details}, which
+select an order of at least 1.}
 
 \item{lrt_alpha}{The significance level of the likelihood-ratio tests,
 strictly between 0 and 1. Default \code{0.01}. It only affects the selection
@@ -93,7 +94,7 @@ of each model.}
 each layer.}
 \item{dof_method}{\code{"paths"} or \code{"observed"}.}
 \item{lrt_p}{Named numeric vector: the likelihood-ratio p-value of
-order k against order k - 1.}
+order k against order k - 1 (\code{NA} for orders 0 and 1).}
 \item{transition_matrices}{List of row-stochastic transition
 matrices (a context never followed by another state keeps a zero
 row), the first (order 0) held as the named vector of marginal
@@ -105,12 +106,14 @@ order, the first (order 0) as a named vector of state counts;
 \item{n_paths}{Number of trajectories fitted.}
 \item{n_observations}{Total number of state observations.}
 \item{weights}{The transition matrix of the selected order, as the
-\code{cograph_network} weight matrix (a 1 x n matrix named \code{"marginal"}
-when the selected order is 0). Its dimnames are internal k-tuple
+\code{cograph_network} weight matrix (when the selected order is 0, a
+states x states matrix of zeros, since an order-0 model has no
+transitions; its marginal is the first element of
+\code{transition_matrices}). Its dimnames are internal k-tuple
 keys (states joined by a non-printing separator), not arrow
 notation.}
 \item{nodes}{Data frame (\code{id}, \code{label}, \code{name}) of the nodes of the
-selected order.}
+selected order (the states at order 0).}
 \item{edges}{The \code{cograph_network} edge data frame, with integer
 \code{from} and \code{to} node indices and a numeric \code{weight};
 \code{\link[=mogen_transitions]{mogen_transitions()}} gives the readable table.}
@@ -146,11 +149,16 @@ trajectory by the marginal distribution, the j-th state by the order
 j - 1 transitions while j <= k, and every later state by the order-k
 transitions. The likelihood-ratio test of order k against order k - 1
 refers twice the gain in log-likelihood to a chi-square distribution with
-the order-k layer's degrees of freedom; its p-value is \code{NA} for order 0
-and where the statistic or the degrees of freedom are not positive. With
-\code{criterion = "lrt"} the selected order is the largest k whose test
-rejects at \code{lrt_alpha} (Scholtes 2017), or 0 when none does. Every
-p-value is kept in the result, so a non-monotone run of tests is visible.
+the order-k layer's degrees of freedom. The tests start from the
+first-order model as the null (Scholtes 2017; pathpy 2
+\code{MultiOrderModel.estimate_order}): order 1 is not tested against order 0,
+because a first-order model restricted to the observed transitions does
+not nest the order-0 model, so the p-value is \code{NA} for orders 0 and 1, and
+also where the statistic or the degrees of freedom are not positive. With
+\code{criterion = "lrt"} the selected order is the largest k of at least 2
+whose test rejects at \code{lrt_alpha}, or 1 when none does; only AIC and BIC
+can select order 0. Every p-value is kept in the result, so a
+non-monotone run of tests is visible.
 
 The model is the one pathpy 2 calls \code{MultiOrderModel}. It is not the
 multi-order generative model of Gote et al. (2023), which adds start and

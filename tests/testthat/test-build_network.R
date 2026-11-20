@@ -209,21 +209,17 @@ test_that("pcor warns on near-singular matrix", {
   )
 })
 
-test_that("pcor output unchanged for well-conditioned data", {
-  # Verify the rcond check doesn't alter numerical output, on fixed data
+test_that("pcor output is a symmetric matrix with a zero diagonal on well-conditioned data", {
+  # The comparison of these weights with the partial correlations from solve(cor()) moved to
+  # tests/equivalence/test-build_network.R.
   df <- data.frame(
     V1 = c(1, 3, 2, 5, 4, 6, 8, 7), V2 = c(2, 1, 4, 3, 6, 5, 7, 9),
     V3 = c(5, 3, 4, 1, 2, 0, 1, 2), V4 = c(1, 2, 2, 3, 5, 4, 3, 6)
   )
   net <- build_network(df, method = "pcor")
-  # Manual reference: solve(cor) -> precision -> pcor
-  S <- cor(as.matrix(df))
-  Wi <- solve(S)
-  D <- diag(1 / sqrt(diag(Wi)))
-  pcor_ref <- -D %*% Wi %*% D
-  diag(pcor_ref) <- 0
-  dimnames(pcor_ref) <- dimnames(S)
-  expect_equal(unname(net$weights), unname(pcor_ref), tolerance = 1e-14)
+  expect_equal(dim(net$weights), c(4L, 4L))
+  expect_equal(net$weights, t(net$weights))
+  expect_true(all(diag(net$weights) == 0))
 })
 
 

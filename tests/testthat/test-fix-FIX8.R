@@ -140,7 +140,9 @@ test_that("mosaic_plot.netobject recounts non-integer nets from $data", {
   no_counts <- nw_rel
   no_counts$data <- NULL
   no_counts$frequency_matrix <- NULL
-  expect_error(mosaic_plot(no_counts), "integer-valued")
+  # By class: a relative network's weights are probabilities, never counts
+  # (2026-11-20, P2).
+  expect_error(mosaic_plot(no_counts), class = "nestimate_bad_input")
   # an association network holds no transitions at all: refused before that
   no_counts$method <- "glasso"
   expect_error(mosaic_plot(no_counts), "holds variables",
@@ -171,6 +173,7 @@ test_that("mosaic_plot data-bearing top/left_angle NULL auto-rule reachable", {
   dimnames(m) <- list(letters[1:3], letters[1:3])
   small <- nw
   small$weights <- m
+  small$frequency_matrix <- m   # the stored counts are read first (P2)
   small$data <- NULL
   p3 <- mosaic_plot(small, residuals = "asymptotic")
   expect_equal(ggplot2::ggplot_build(p3)$plot$theme$axis.text.y$angle, 0)

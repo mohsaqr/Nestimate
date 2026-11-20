@@ -20,7 +20,7 @@ Hayashi et al. (2020) random-walk Laplacian on the weighted incidence.}
 \item{edge_weights}{Positive hyperedge weights, one per hyperedge in the
 order of the incidence columns. Default \code{NULL}, which gives unit weights
 for \code{"zhou"} and, for \code{"random_walk"}, the heuristic of Hayashi et al.:
-the population standard deviation of each hyperedge's non-zero
+the population standard deviation of each hyperedge's positive
 incidence cells plus one, which is 1 on a binary incidence. A vector of
 the wrong length, or with a value that is not finite and positive,
 raises an error.}
@@ -43,7 +43,9 @@ edge-dependent vertex weights: the weighted incidence cells (for example
 the summed weights \code{\link[=bipartite_groups]{bipartite_groups()}} produces with \code{weight}) set where
 a walker that enters a hyperedge lands, and the walk, which is not
 reversible, is symmetrised through its stationary distribution (Chung
-2005).
+2005). Only a positive cell makes a node a member: a cell that is zero or
+negative (a net-negative summed weight) is not part of the hyperedge and
+carries no weight in either form.
 
 Both Laplacians are symmetric positive semi-definite with eigenvalues in
 [0, 2]. On a binary incidence with unit hyperedge weights the two forms

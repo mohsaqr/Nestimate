@@ -224,13 +224,18 @@ cluster_diagnostics.net_mmm <- function(x, ...) {
   # Per-cluster classification error: the expected misclassification
   # 1 - max posterior averaged over the sequences assigned to cluster m
   # (Vermunt & Magidson, 2005), the breakdown of quality$classification_error.
+  # The overall error is recomputed from the posterior with the same
+  # definition, so the two agree also for a fit saved by a version that
+  # stored the share of max posteriors below 0.5 instead.
   class_err_pct <- rep(NA_real_, k)
+  classification_error <- as.numeric(x$quality$classification_error)
   if (!is.null(x$posterior)) {
     max_post <- apply(x$posterior, 1L, max)
     class_err_pct <- vapply(seq_len(k), \(cl) {
       members <- which(assignments == cl)
       if (length(members) == 0L) NA_real_ else mean(1 - max_post[members]) * 100
     }, numeric(1))
+    classification_error <- mean(1 - max_post)
   }
 
   avepp <- as.numeric(x$quality$avepp %||% rep(NA_real_, k))
@@ -256,7 +261,7 @@ cluster_diagnostics.net_mmm <- function(x, ...) {
       overall     = list(
         avepp_overall        = as.numeric(x$quality$avepp_overall),
         entropy              = as.numeric(x$quality$entropy),
-        classification_error = as.numeric(x$quality$classification_error)
+        classification_error = classification_error
       ),
       ics         = list(BIC = as.numeric(x$BIC),
                          AIC = as.numeric(x$AIC),

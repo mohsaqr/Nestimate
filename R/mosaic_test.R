@@ -29,11 +29,17 @@
 #' methods are asked for, a test that cannot run on the design gives a row
 #' of `NA` with the reason in `note`; asked for alone, it raises the error.
 #'
-#' @param x A `netobject` or `htna` network (relative, frequency or
-#'   co-occurrence, with its sequences), a `netobject_group`, a three-way
+#' @param x A `netobject` or `htna` network (relative or frequency, with its
+#'   sequences), a `netobject_group`, a three-way
 #'   `table` or array (rows x columns x actors), or a data frame (with `var1`,
-#'   `var2` and `actor`). A `tna` model or a `group_tna` (package tna) is first
-#'   rebuilt as a network from its own sequences (see [as_netobject()]).
+#'   `var2` and `actor`). A co-occurrence network raises an error of class
+#'   `nestimate_mosaic_undirected`: it counts each pair of states in both
+#'   mirrored cells and the pairs of a sequence share its positions, so its
+#'   counts are not independent and the tests would not hold their level
+#'   (under independence Pearson's test rejected 200 of 200 simulated tables
+#'   at 0.05). [mosaic_plot()] still draws it. A `tna` model or a
+#'   `group_tna` (package tna) is first rebuilt as a network from its own
+#'   sequences (see [as_netobject()]).
 #'   `actor` is read from the metadata the model keeps (`attr(model$data,
 #'   "meta")`, kept when the model is built from `tna::prepare_data()`); a
 #'   model without it raises `nestimate_actor_missing`.
@@ -228,7 +234,9 @@ mosaic_test.data.frame <- function(x, var1, var2, actor,
 .mosaic_test_network <- function(x, source_class, method, actor, level,
                                  ...) {
   .mosaic_test_no_dots(...)
-  tab <- .mosaic_panels(x, source_class)$tabs[[1L]]
+  panels <- .mosaic_panels(x, source_class)
+  if (isTRUE(panels$pairs)) .mosaic_refuse_undirected("mosaic_test()")
+  tab <- panels$tabs[[1L]]
   arr <- .mosaic_cluster_array(x, source_class, actor, tab)
   var_names <- if (identical(source_class, "netobject_group")) {
     c("group", "state")

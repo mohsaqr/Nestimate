@@ -266,7 +266,10 @@ sequence_metrics <- function(x, favorable = NULL, omega = 1, meta = FALSE,
   # seqintegr): a missing position is not an unfavourable one
   integrative <- if (length(fav) > 0L) {
     seen <- which(!is.na(r))
-    w <- seen^omega
+    # in log space, scaled by the largest weight: seen^omega overflows to
+    # Inf for a large omega and Inf / Inf gave NaN
+    log_w <- omega * log(seen)
+    w <- exp(log_w - max(log_w))
     sum((r[seen] %in% fav) * w) / sum(w)
   } else {
     NA_real_

@@ -47,8 +47,10 @@
 #'       transactions, columns are items, named `I1`, `I2`, ... when the
 #'       matrix has no column names).}
 #'   }
-#'   Binary input must hold only 0/1 or `TRUE`/`FALSE`: a missing cell or any
-#'   other value raises an error of class `nestimate_bad_input`. For the
+#'   Binary input must hold only 0/1 or `TRUE`/`FALSE`: a missing cell, any
+#'   other value or two columns with one name raises an error of class
+#'   `nestimate_bad_input`. Input with no transaction (a one-hot network
+#'   with no complete window) gives an empty result. For the
 #'   `print()` and `plot()` methods: a `net_association_rules` object.
 #' @param min_support The smallest share of transactions an itemset must
 #'   occur in to be frequent, above 0 and at most 1. Default `0.1`. It is
@@ -184,6 +186,12 @@ association_rules <- function(x,
   items <- parsed$items
   n_trans <- nrow(trans_mat)
   n_items <- length(items)
+  # No transaction at all (for example a one-hot network with no complete
+  # window): nothing has support, and support = count / 0 is undefined
+  if (n_trans == 0L) {
+    return(.ar_empty_result(items, n_trans, min_support, min_confidence,
+                            min_lift, max_length))
+  }
   min_count <- ceiling(min_support * n_trans)
 
   # ---- Level 1: frequent 1-itemsets ----
@@ -456,6 +464,9 @@ association_rules <- function(x,
 .ar_onehot_input <- function(x) {
   data <- .resampling_transition_data(x$data, x$metadata, x$params)
   codes <- .param_get(x$params, "codes")
+  # wtna() keeps an unnamed one-hot matrix as it came and reads it through
+  # as.data.frame(), whose V1, V2, ... are the codes; read it the same way
+  data <- as.data.frame(data, stringsAsFactors = FALSE)
   actor <- .param_get(x$params, "actor")
   size <- as.integer(.param_get(x$params, "window_size", 1L))
   mode <- .param_get(x$params, "mode", "non-overlapping")
@@ -485,6 +496,16 @@ association_rules <- function(x,
 
 #' @noRd
 .ar_binary_input <- function(mat, items) {
+  # Items are matched by name: two columns with one name would be counted as
+  # two items yet reported as one (rules such as "A -> A")
+  dup <- unique(items[duplicated(items)])
+  if (length(dup) > 0L) {
+    stop(errorCondition(
+      sprintf(paste0("binary transaction input `x` has duplicated item ",
+                     "(column) names: %s. Give every item its own name."),
+              paste(utils::head(dup, 5L), collapse = ", ")),
+      class = "nestimate_bad_input", call = NULL))
+  }
   # A missing cell is neither present nor absent; reading it as either would
   # change every support count, so the caller must decide
   n_missing <- sum(is.na(mat))

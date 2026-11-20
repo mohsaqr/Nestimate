@@ -71,6 +71,8 @@
 #' @param statistic_fn Statistics of your own, as a named list of functions,
 #'   each taking the weight matrix and returning a single number. They are
 #'   computed beside the built-ins on the whole matrix, diagonal included.
+#'   Each needs a name of its own: a name used twice or taken by a
+#'   built-in statistic raises an error of class `nestimate_bad_input`.
 #'   Default `NULL`.
 #' @param directed Whether the network is directed, which decides how
 #'   collisions are filled and whether `reciprocity` is available. Default
@@ -197,6 +199,20 @@ vertex_bootstrap <- function(x,
       !is.null(names(statistic_fn)), all(nzchar(names(statistic_fn))),
       all(vapply(statistic_fn, is.function, logical(1)))
     )
+    # Results are keyed by statistic name, so a custom statistic named like
+    # a built-in (or like another custom one) gave two rows of one name
+    reserved <- union(names(.vb_builtin_statistics(TRUE)),
+                      names(.vb_builtin_statistics(FALSE)))
+    clash <- intersect(names(statistic_fn), reserved)
+    repeated <- unique(names(statistic_fn)[duplicated(names(statistic_fn))])
+    if (length(clash) > 0L || length(repeated) > 0L) {
+      stop(errorCondition(sprintf(paste0(
+        "`statistic_fn` needs names of its own: %s. The built-in ",
+        "statistics are %s."),
+        paste(union(clash, repeated), collapse = ", "),
+        paste(reserved, collapse = ", ")),
+        class = "nestimate_bad_input", call = NULL))
+    }
     stat_fns <- c(stat_fns, statistic_fn)
   }
   stat_names <- names(stat_fns)

@@ -293,7 +293,9 @@ net_aggregate_weights <- function(w, method = "sum", n_possible = NULL) {
 #' @param directed Whether the network is directed, so that A->B and B->A are
 #'   separate edges. Default `TRUE`. `FALSE` replaces the matrix by the mean
 #'   of it and its transpose before aggregating, which makes every layer
-#'   symmetric.
+#'   symmetric; each undirected edge then counts once, so a cluster's macro
+#'   self-loop aggregates the upper triangle of its block with the diagonal
+#'   (and `"density"` divides by its `n_i (n_i + 1) / 2` possible edges).
 #' @param compute_within Whether to build the within-cluster networks, one
 #'   n_i x n_i matrix per cluster. Default `TRUE`; `FALSE` skips them when
 #'   only the macro network is needed, and [summary()] then reports their
@@ -513,12 +515,22 @@ cluster_summary <- function(x,
 
   # Both diagonal (within-cluster) and off-diagonal (between-cluster) cells.
   # vapply() fills one column per source cluster i, hence the t().
+  # Undirected, a within-cluster block lists every edge twice (A-B and B-A),
+  # so the diagonal cell aggregates its upper triangle with the self-loops:
+  # each edge once, out of n_i (n_i + 1) / 2 possible ones.
   between_raw[] <- t(vapply(seq_len(n_clusters), function(i) {
     idx_i <- cluster_indices[[i]]
     vapply(seq_len(n_clusters), function(j) {
       idx_j <- cluster_indices[[j]]
-      net_aggregate_weights(as.vector(mat[idx_i, idx_j]), method,
-                            length(idx_i) * length(idx_j))
+      block <- mat[idx_i, idx_j, drop = FALSE]
+      if (i == j && !isTRUE(directed)) {
+        n_i <- length(idx_i)
+        net_aggregate_weights(block[upper.tri(block, diag = TRUE)], method,
+                              n_i * (n_i + 1) / 2)
+      } else {
+        net_aggregate_weights(as.vector(block), method,
+                              length(idx_i) * length(idx_j))
+      }
     }, numeric(1L))
   }, numeric(n_clusters)))
 
@@ -874,9 +886,10 @@ cluster_summary <- function(x,
 #'   `"density"` divides each count by `n_i * n_j`. The other methods suit
 #'   weighted edge lists and weight matrices, where each row is already a
 #'   measurement rather than one observation. On sequences and event logs the
-#'   within-cluster networks likewise get 1 for each observed pair of states
-#'   under every method but `"sum"` (`"density"` too, which is not divided by
-#'   `n_i * n_j` there); on an edge list they hold the aggregated weights.
+#'   within-cluster networks keep the counts under `"sum"` and `"density"`
+#'   (which is not divided by `n_i * n_j` there) and get 1 for each observed
+#'   pair of states under the other methods; on an edge list they hold the
+#'   aggregated weights.
 #' @param type How the aggregated counts are turned into weights:
 #'   \describe{
 #'     \item{`"tna"`}{(default) Each row is normalised to sum to 1, giving
@@ -989,7 +1002,10 @@ cluster_summary <- function(x,
 #'   of the data it carries. [summary()] returns a data frame with one row
 #'   per cluster, with
 #'   columns `cluster`, `size`, `within_total` (the total absolute weight of
-#'   the within-cluster network, `NA` when it was not built), `between_out`
+#'   the within-cluster network, each observation once as on the macro
+#'   diagonal: an undirected edge of a weight matrix once, an undirected
+#'   transition count as its two halves; `NA` when it was not built),
+#'   `between_out`
 #'   and `between_in` (the absolute macro weight leaving and entering the
 #'   cluster, diagonal excluded); for an undirected macro network, `between_out` is
 #'   the total incident weight and `between_in` is `NA`.
@@ -1192,7 +1208,10 @@ build_mcml <- function(x,
   end_label <- .mcml_end_label(end)
   is_edge_list <- .mcml_check_roles(x, action, actor, time, order, session, from,
                                     to, weight, cols)
-  if (is.data.frame(x) && !is.null(cols)) x <- .mark_positions(x[cols])
+  if (is.data.frame(x) && !is.null(cols)) {
+    # a re-partitioned windowed mcml keeps counting its window (.mcml_rebuild())
+    x <- .mark_positions(.mcml_keep_window(x[cols], x))
+  }
 
   # Long-format event-log shortcut: if `action` is supplied on a data.frame,
   # delegate to prepare() and feed the resulting wide sequence into the
@@ -1356,10 +1375,32 @@ build_mcml <- function(x,
   # to sequence input: matrix inputs carry no node-level data, and the
   # edgelist -> build_network(method = "relative") round-trip is unreliable,
   # so those fall back to the explicit "pass data" path in as_htna.mcml().
+  # It carries the labels too, as the clusters do, so macro_network() and
+  # as_htna() find the cluster members in it.
   if (identical(input_type, "sequence")) {
-    attr(result, "htna_source") <- x
+    attr(result, "htna_source") <- .mcml_relabel_states(x, labels)
   }
   result
+}
+
+#' Relabel the states in the cells of a wide sequence frame
+#'
+#' Cells not in the `labels` map keep their value; the frame's attributes
+#' (the position marker) are kept.
+#' @param x A wide sequence data.frame.
+#' @param labels A label map accepted by .coerce_label_map(), or NULL.
+#' @return `x` with its cells relabelled.
+#' @noRd
+.mcml_relabel_states <- function(x, labels) {
+  map <- .coerce_label_map(labels)
+  if (is.null(map)) return(x)
+  x[] <- lapply(x, function(col) {
+    v <- as.character(col)
+    out <- unname(map[v])
+    out[is.na(out)] <- v[is.na(out)]
+    out
+  })
+  x
 }
 
 # Re-partition a named cluster list: `combine` merges clusters (a merged
@@ -1921,31 +1962,36 @@ build_mcml <- function(x,
   #   * Edgelist input (each row is a single from -> to transition):
   #     build 2-column pseudo-sequences, each row representing one
   #     transition. Resampling rows = resampling transitions, which
-  #     is the correct bootstrap at the edge level.
+  #     is the correct bootstrap at the edge level. The edge weights
+  #     travel as the "weight" attribute, so a resample sums the weights
+  #     of the rows it draws, as the fit does.
+  #
+  # Windowed sequences keep their window attributes, so a resample counts
+  # the same block pairs as the fit (.mcml_sequence_pairs()).
   between_seq_data <- NULL
   within_seq_data_list <- NULL
   is_seq <- is.data.frame(data) && !is_edgelist_data
 
   if (is_seq) {
     # Recode sequences to cluster labels
-    between_seq_data <- as.data.frame(
+    between_seq_data <- .mcml_keep_window(as.data.frame(
       lapply(data, function(col) {
         recoded <- unname(cluster_lookup[as.character(col)])
         recoded
       }),
       stringsAsFactors = FALSE
-    )
+    ), data)
 
     # Filter sequences per cluster (keep only that cluster's nodes, NA others)
     within_seq_data_list <- lapply(cluster_list, function(cl_nodes) {
-      as.data.frame(
+      .mcml_keep_window(as.data.frame(
         lapply(data, function(col) {
           vals <- as.character(col)
           vals[!vals %in% cl_nodes] <- NA_character_
           vals
         }),
         stringsAsFactors = FALSE
-      )
+      ), data)
     })
   } else if (length(from_nodes) > 0L) {
     # Edgelist branch: every transition -> one 2-row pseudo-sequence.
@@ -1959,6 +2005,7 @@ build_mcml <- function(x,
       stringsAsFactors = FALSE
     )
     attr(between_seq_data, "source") <- "edgelist"
+    attr(between_seq_data, "weight") <- unname(weights)
 
     within_seq_data_list <- lapply(cluster_list, function(cl_nodes) {
       keep <- from_nodes %in% cl_nodes & to_nodes %in% cl_nodes
@@ -1968,6 +2015,7 @@ build_mcml <- function(x,
         stringsAsFactors = FALSE
       )
       attr(df, "source") <- "edgelist"
+      attr(df, "weight") <- unname(weights[keep])
       df
     })
   }
@@ -2224,11 +2272,13 @@ build_mcml <- function(x,
       class = "nestimate_bad_input", call = NULL))
   }
 
-  # Extract consecutive pairs: (col[t], col[t+1]) for all rows
-  pairs <- lapply(seq_len(nc - 1), function(t) {
-    from_t <- as.character(df[[t]])
-    to_t <- as.character(df[[t + 1]])
-    data.frame(from = from_t, to = to_t, stringsAsFactors = FALSE)
+  # Extract the counted pairs for all rows: consecutive columns
+  # (col[t], col[t+1]), or the block pairs of a windowed sequence
+  col_pairs <- .mcml_sequence_pairs(df)
+  pairs <- lapply(seq_len(nrow(col_pairs)), function(p) {
+    data.frame(from = as.character(df[[col_pairs[p, 1L]]]),
+               to = as.character(df[[col_pairs[p, 2L]]]),
+               stringsAsFactors = FALSE)
   })
   pairs <- as.data.frame(data.table::rbindlist(pairs))
 
@@ -2259,6 +2309,45 @@ build_mcml <- function(x,
                             cluster_lookup, cluster_list,
                             method, type, directed, compute_within,
                             data = df)
+}
+
+#' Column pairs a sequence frame's transitions are counted between
+#'
+#' Consecutive columns, or for windowed sequences (the `windowed`,
+#' `window_size` and `window_span` attributes build_network() sets from
+#' `params = list(window_size = )`) every position of one block of
+#' `window_size * window_span` columns to every position of the next, as
+#' .count_transitions_wide() counts them.
+#' @param df A wide sequence data.frame.
+#' @return A two-column integer matrix of (from, to) column indices.
+#' @noRd
+.mcml_sequence_pairs <- function(df) {
+  nc <- ncol(df)
+  if (!isTRUE(attr(df, "windowed"))) {
+    return(cbind(seq_len(nc - 1L), seq_len(nc - 1L) + 1L))
+  }
+  size <- as.integer(attr(df, "window_size") %||% 2L)
+  span <- as.integer(attr(df, "window_span") %||% 1L)
+  width <- size * span
+  n_blocks <- nc %/% width - as.integer(nc %% width == 0L)
+  blocks <- lapply(seq_len(max(n_blocks, 0L)), function(i) {
+    from_cols <- seq((i - 1L) * width + 1L, i * width)
+    to_cols <- seq(i * width + 1L, min(nc, (i + 1L) * width))
+    as.matrix(expand.grid(from = from_cols, to = to_cols))
+  })
+  if (length(blocks) == 0L) return(matrix(integer(0), ncol = 2L))
+  pairs <- do.call(rbind, blocks)
+  storage.mode(pairs) <- "integer"
+  pairs
+}
+
+#' Carry the window attributes of a sequence frame over to a recoding of it
+#' @noRd
+.mcml_keep_window <- function(recoded, source) {
+  kept <- intersect(names(attributes(source)),
+                    c("windowed", "window_size", "window_span"))
+  attributes(recoded)[kept] <- attributes(source)[kept]
+  recoded
 }
 
 #' Process weights based on type
@@ -2352,10 +2441,13 @@ build_mcml <- function(x,
 #'   element is a `netobject` (class `c("netobject", "cograph_network")`)
 #'   with the layer's weights, initial probabilities, node and edge tables
 #'   and data, and records `method = "relative"` when the `mcml` holds
-#'   row-normalised weights (`type = "tna"`), `method = "co_occurrence"`
-#'   for symmetrised counts (`type = "cooccurrence"`), and
-#'   `method = "frequency"` for counts (`type` `"raw"` or `"frequency"`) and
-#'   for the aggregates of [cluster_summary()]. With
+#'   row-normalised weights (`type = "tna"`) and `method = "frequency"` for
+#'   counts (`type` `"raw"`, `"frequency"` or `"cooccurrence"`) and for the
+#'   aggregates of [cluster_summary()]. An undirected `mcml` (`type =
+#'   "cooccurrence"` or `directed = FALSE`) also records
+#'   `params$symmetrize = TRUE`, and one built from a weighted edge list
+#'   carries the edge weights in its data, so the resampling verbs recount
+#'   each layer as it was fitted. With
 #'   `expand`, the `macro` element is the mixed-resolution network of
 #'   [macro_network()] instead of the fully collapsed one. The default
 #'   method returns a `tna` model unchanged and raises an error for any
@@ -2418,29 +2510,23 @@ as_tna.mcml <- function(x, expand = NULL, ...) {
                                  "frequency"
                                })
   }
-  # Determine the method to record on the wrapped netobjects:
-  #   * "raw"/"frequency"/"aggregate" -> "frequency" (matrix-path or counts)
-  #   * "tna" (already row-normalised) -> "relative"
-  #   * "cooccurrence" (symmetrised counts, rows do not sum to 1, the
-  #     "undirected co-occurrence" of build_mcml()) -> "co_occurrence";
-  #     recording "relative" made downstream verbs read counts as
-  #     probabilities.
+  # Determine the method to record on the wrapped netobjects. It is the
+  # estimator the resampling verbs (bootstrap_network(), permutation(), ...)
+  # recount each layer's data with, so it must count what the fit counted:
+  #   * "raw"/"frequency"/"cooccurrence"/"aggregate" -> "frequency": counts
+  #     of consecutive pairs (or of a window's block pairs). "cooccurrence"
+  #     is the mean of those counts and their transpose, recorded as
+  #     `params$symmetrize`; the "co_occurrence" estimator counts every pair
+  #     of positions instead, a different quantity.
+  #   * "tna" (row-normalised counts) -> "relative".
   meta_type <- x$meta$type
-  net_method <- if (is.null(meta_type) ||
-                    meta_type %in% c("raw", "frequency", "aggregate")) {
-    "frequency"
-  } else if (identical(meta_type, "cooccurrence")) {
-    "co_occurrence"
-  } else {
-    "relative"
-  }
+  net_method <- if (identical(meta_type, "tna")) "relative" else "frequency"
   directed <- if (!is.null(x$meta$directed)) x$meta$directed else TRUE
 
   # Macro
   if (is.null(expand)) {
-    macro_net <- .wrap_netobject(x$macro$weights, data = x$macro$data,
-                                 method = net_method, directed = directed,
-                                 inits = x$macro$inits)
+    macro_net <- .mcml_layer_netobject(x$macro, method = net_method,
+                                       directed = directed)
   }
 
   # Per-cluster. Every cluster is kept. A zero-sum row is a legitimate sink
@@ -2451,9 +2537,8 @@ as_tna.mcml <- function(x, expand = NULL, ...) {
   # over-conservative and is no longer done.
   cluster_nets <- if (!is.null(x$clusters)) {
     nets <- lapply(names(x$clusters), function(cl) {
-      .wrap_netobject(x$clusters[[cl]]$weights, data = x$clusters[[cl]]$data,
-                      method = net_method, directed = directed,
-                      inits = x$clusters[[cl]]$inits)
+      .mcml_layer_netobject(x$clusters[[cl]], method = net_method,
+                            directed = directed)
     })
     names(nets) <- names(x$clusters)
     nets
@@ -2467,10 +2552,35 @@ as_tna.mcml <- function(x, expand = NULL, ...) {
 }
 
 
+#' One mcml layer as a netobject the resampling verbs recount exactly
+#'
+#' The parameters tell .precompute_per_sequence() how the fit counted the
+#' layer's data: `symmetrize` when the stored weights are (W + t(W)) / 2 of
+#' the counts W (an undirected fit), and `row_weight` naming the column that
+#' holds each edge-list row's weight, so a resample sums the weights of the
+#' rows it draws, as the fit does.
+#' @param layer An mcml layer (weights, inits, data).
+#' @param method,directed As recorded by as_tna.mcml().
+#' @return A netobject.
+#' @noRd
+.mcml_layer_netobject <- function(layer, method, directed) {
+  data <- layer$data
+  params <- list()
+  if (!isTRUE(directed)) params$symmetrize <- TRUE
+  row_weight <- attr(data, "weight")
+  if (is.data.frame(data) && !is.null(row_weight)) {
+    data$weight <- row_weight
+    params$cols <- c("from", "to")
+    params$row_weight <- "weight"
+  }
+  .wrap_netobject(layer$weights, data = data, method = method,
+                  directed = directed, inits = layer$inits, params = params)
+}
+
 #' Wrap a weight matrix + optional data into a minimal netobject
 #' @noRd
 .wrap_netobject <- function(mat, data = NULL, method = "relative",
-                            directed = TRUE, inits = NULL) {
+                            directed = TRUE, inits = NULL, params = list()) {
   if (!is.matrix(mat) || !is.numeric(mat)) {
     stop(errorCondition(
       "'mat' must be a numeric matrix.",
@@ -2533,7 +2643,7 @@ as_tna.mcml <- function(x, expand = NULL, ...) {
       edges      = edges,
       directed   = directed,
       method     = method,
-      params     = list(),
+      params     = params,
       scaling    = NULL,
       threshold  = 0,
       n_nodes    = length(states),
@@ -2968,14 +3078,22 @@ summary.mcml <- function(object, ...) {
   sizes <- object$meta$cluster_sizes
   if (is.null(sizes)) sizes <- vapply(object$cluster_members, length, integer(1L))
 
+  directed <- isTRUE(object$meta$directed)
   # Total within-cluster weight, self-transitions included (they are part of
-  # the macro diagonal); NA when the layers were not computed.
+  # the macro diagonal); NA when the layers were not computed. Every
+  # observation counts once, as on the macro diagonal: an undirected weight
+  # matrix (cluster_summary()) lists each edge twice, so its upper triangle
+  # with the diagonal is summed; undirected transition counts are the mean
+  # of the counts and their transpose, which give each transition half to
+  # A-B and half to B-A, so the whole matrix is summed.
+  edges_listed_twice <- !directed && identical(object$meta$source, "matrix")
   within_total <- vapply(cluster_names, function(nm) {
     mat <- cluster_mats[[nm]]
-    if (is.null(mat)) NA_real_ else sum(abs(mat))
+    if (is.null(mat)) return(NA_real_)
+    if (edges_listed_twice) sum(abs(mat[upper.tri(mat, diag = TRUE)])) else
+      sum(abs(mat))
   }, numeric(1L))
 
-  directed <- isTRUE(object$meta$directed)
   if (!is.null(macro)) {
     diag0 <- macro
     diag(diag0) <- 0

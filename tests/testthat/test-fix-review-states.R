@@ -24,7 +24,10 @@ test_that("numeric netobjects keep literal states in higher-order input", {
   grouped <- structure(list(first = net, second = net),
                        class = "netobject_group")
   parsed <- .cs_parse_input(grouped, NULL)
-  expect_equal(unname(parsed$seq_mat), unname(rbind(as.matrix(raw), as.matrix(raw))))
+  # States are read as text in every group (numeric 1 and "1" are one state).
+  expected <- rbind(as.matrix(raw), as.matrix(raw))
+  expect_equal(unname(parsed$seq_mat),
+               unname(matrix(as.character(expected), nrow(expected))))
 })
 
 test_that("tna state codes are decoded even when codes also name states", {

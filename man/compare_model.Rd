@@ -214,7 +214,9 @@ Szekely, Rizzo and Bakirov (2007), \code{NA} when one network is constant, and
 the RV coefficient that of Robert and Escoufier (1976). A network's own
 \code{directed} flag decides how its network metrics are computed; a plain
 matrix has none, so an asymmetric matrix is read as directed and a
-symmetric one as undirected.
+symmetric one as undirected, after its rows and columns are matched to
+the other network's nodes by name. A tna model is read by the \code{directed}
+flag of the network it is rebuilt into.
 }
 \examples{
 nets <- build_network(group_regulation_long, method = "relative",

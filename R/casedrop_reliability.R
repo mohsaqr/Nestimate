@@ -43,7 +43,9 @@
 #'   sequences (see [as_netobject()]). A network without data raises an error,
 #'   and one that rests on a single sequence, or one-hot data with no actor or
 #'   session, has no cases to drop and raises an error of class
-#'   `nestimate_single_sequence`. For the `print()` and `plot()` methods: the
+#'   `nestimate_single_sequence`. A network built with `method = "latency"`
+#'   raises an error of class `nestimate_latency_resampling`: latency
+#'   networks are not resampled. For the `print()` and `plot()` methods: the
 #'   result of `casedrop_reliability()` (for `print()`, also the `summary()` of
 #'   a group result).
 #' @param iter The number of random subsets drawn for each drop proportion,
@@ -197,6 +199,7 @@ casedrop_reliability <- function(x,
   # a tna model or group_tna is rebuilt as a Nestimate network (R/tna_input.R)
   x <- .tna_input(x, "casedrop_reliability()", need_data = TRUE,
                   actor = actor)
+  .stop_latency_resampling(list(x), "casedrop_reliability()")
   target <- match.arg(target)
   .check_permutation_block(actor, paired = FALSE)
 
@@ -249,6 +252,9 @@ casedrop_reliability <- function(x,
 
   # ---- Resolve estimator + reuse bootstrap precompute for transition methods ----
   net_method <- .resampling_method(.resolve_method_alias(x$method), x$params)
+  # The scaling domain is the network's own: a wtna network resampled as
+  # counts still scales its non-zero cells only, as build_network() did
+  zeros_scaled <- .scaling_includes_zeros(.resolve_method_alias(x$method))
   states     <- x$nodes$label
   n_states   <- length(states)
   is_transition <- net_method %in% c("relative", "frequency", "co_occurrence")
@@ -322,7 +328,7 @@ casedrop_reliability <- function(x,
       }
       if (!is.null(scaling)) {
         mat <- .apply_scaling(mat, scaling,
-                              include_zeros = .scaling_includes_zeros(net_method))
+                              include_zeros = zeros_scaled)
       }
       if (thresh > 0) mat[abs(mat) < thresh] <- 0
       mat
@@ -356,7 +362,7 @@ casedrop_reliability <- function(x,
       mat <- est$matrix[states, states]
       if (!is.null(scaling)) {
         mat <- .apply_scaling(mat, scaling,
-                              include_zeros = .scaling_includes_zeros(net_method))
+                              include_zeros = zeros_scaled)
       }
       if (thresh > 0) mat[abs(mat) < thresh] <- 0
       mat

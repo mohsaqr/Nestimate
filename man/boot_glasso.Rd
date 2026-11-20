@@ -42,9 +42,11 @@ correlation or covariance matrix and refused (class
 \code{netobject} (or \code{cograph_network}) built with \code{method = "glasso"},
 whose data are resampled; any \code{gamma}, \code{nlambda} or \code{cor_method} set in
 its \code{params} replaces the arguments of the same name, and its
-\code{lambda.min.ratio}, \code{penalize.diagonal} and \code{refit} are used too, so
-\code{original_pcor} is the network's weights. Any other network raises an
-error. A correlation or
+\code{lambda.min.ratio}, \code{penalize.diagonal}, \code{refit} and \code{threshold} are
+used too, as is the network's own \code{threshold} when it has no \code{scaling},
+so \code{original_pcor} is the network's weights (for a scaled network, its
+partial correlations before the scaling) and every resample is
+thresholded alike. Any other network raises an error. A correlation or
 covariance matrix is not accepted: a matrix is always read as data,
 its rows as observations. For the \code{print()}
 and \code{plot()} methods: a \code{boot_glasso}.}

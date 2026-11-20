@@ -38,11 +38,18 @@ utils::globalVariables(c(
   )
 }
 
-# Min-max scale a matrix's values to [0, 1].
+# TRUE when a range has (numerically) no width: every value is the same.
+.magdiff_flat <- function(rng) isTRUE(all.equal(rng[1L], rng[2L]))
+
+# Min-max scale a matrix's values to [0, 1]. A constant matrix has no range
+# to stretch: every value is tied, so it goes to the middle, 0.5, the value
+# rank_minmax gives tied values (returning the raw values compared counts
+# with probabilities unscaled).
 .magdiff_minmax <- function(M) {
   v <- as.vector(M); rng <- range(v, finite = TRUE)
-  if (diff(rng) == 0) return(M)
-  out <- M; out[] <- (v - rng[1]) / diff(rng); out
+  out <- M
+  if (.magdiff_flat(rng)) { out[] <- 0.5; return(out) }
+  out[] <- (v - rng[1]) / diff(rng); out
 }
 
 # Rank-min-max: rank each matrix's values, scale ranks to [0, 1]. Puts FTNA
@@ -50,8 +57,9 @@ utils::globalVariables(c(
 # native units.
 .magdiff_rank_minmax <- function(M) {
   v <- as.vector(M)
-  rks <- rank(v, ties.method = "average")
   out <- M
+  if (length(v) < 2L) { out[] <- 0.5; return(out) }  # one cell: 0 / 0
+  rks <- rank(v, ties.method = "average")
   out[] <- (rks - 1) / (length(v) - 1)
   out
 }
@@ -64,8 +72,12 @@ utils::globalVariables(c(
   ref_v <- as.vector(ref)
   rng_M <- range(v, finite = TRUE)
   rng_R <- range(ref_v, finite = TRUE)
-  if (diff(rng_M) == 0) return(M)
   out <- M
+  # A constant matrix is one point, which a linear map can only send to one
+  # point: the middle of the reference range (the reference's own value
+  # when it is constant too). Returning the raw counts left them in count
+  # units against probabilities.
+  if (.magdiff_flat(rng_M)) { out[] <- mean(rng_R); return(out) }
   out[] <- rng_R[1] + (v - rng_M[1]) / diff(rng_M) * diff(rng_R)
   out
 }
@@ -114,10 +126,14 @@ utils::globalVariables(c(
 #'   replaces each matrix's values by their ranks scaled to \[0, 1\]
 #'   (ordinal). `"minmax"` scales each matrix to \[0, 1\] separately, so the
 #'   two maxima map to the same value although their native ranges differ.
-#'   `"none"` uses the raw weights.
+#'   `"none"` uses the raw weights. A matrix whose weights are all equal has
+#'   no range to rescale and maps to the middle of the target range (0.5,
+#'   or for `"tna_range"` the middle of the probability range).
 #' @param format The input format passed to [build_network()]. `"auto"`
 #'   (default) reads wide sequences when `action` is `NULL` and an event log
-#'   otherwise; `"long"` and `"wide"` force a reading.
+#'   otherwise; `"long"` and `"wide"` force a reading. `"long"` needs
+#'   `action`; without it, an error of class `nestimate_bad_input` is
+#'   raised.
 #'
 #' @return A `magnitude_difference` object. `print()` reports the metric,
 #'   the scale, the states, the number of edges and the minimum, quartiles,
@@ -158,6 +174,14 @@ magnitude_difference <- function(data, actor = NULL, action = NULL,
   scale  <- match.arg(scale)
   format <- match.arg(format)
   .assert("`data` must be a data frame" = is.data.frame(data))
+  # an explicit long reading without an action column used to fall back to
+  # the wide reading silently
+  if (identical(format, "long") && is.null(action)) {
+    stop(errorCondition(paste0(
+      "magnitude_difference(): `format = \"long\"` reads an event log and ",
+      "needs `action`, the column of actions."),
+      class = "nestimate_bad_input", call = NULL))
+  }
   .check_declared_columns(data, "magnitude_difference()", actor = actor,
                           action = action, time = time)
   if (is.null(action) && identical(format, "auto")) {
@@ -177,9 +201,9 @@ magnitude_difference <- function(data, actor = NULL, action = NULL,
     args_t <- list(data = data, method = "relative",  format = "wide")
   } else {
     args_f <- list(data = data, actor = actor, action = action,
-                   method = "frequency")
+                   method = "frequency", format = "long")
     args_t <- list(data = data, actor = actor, action = action,
-                   method = "relative")
+                   method = "relative", format = "long")
     if (!is.null(time)) { args_f$time <- time; args_t$time <- time }
   }
   net_f <- do.call(build_network, args_f)

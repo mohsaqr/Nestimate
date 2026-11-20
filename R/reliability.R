@@ -47,7 +47,9 @@
 #'   first rebuilt as a network from its own sequences (see [as_netobject()]).
 #'   A network without its sequence data (which [build_network()] keeps) raises
 #'   an error, a network resting on one sequence an error of class
-#'   `nestimate_single_sequence`, and networks of different methods with `scale
+#'   `nestimate_single_sequence`, a network built with `method = "latency"`
+#'   an error of class `nestimate_latency_resampling` (latency networks are
+#'   not resampled), and networks of different methods with `scale
 #'   = "none"` a warning of class `nestimate_mixed_methods`. For the `print()`,
 #'   `summary()` and `plot()` methods: ignored.
 #' @param iter The number of split-half iterations, at least 2. Default
@@ -148,6 +150,7 @@ network_reliability <- function(..., iter = 1000L, split = 0.5,
     stop(errorCondition("At least one netobject is required.",
                         class = "nestimate_bad_input", call = NULL))
   }
+  .stop_latency_resampling(objs, "network_reliability()")
   invisible(Map(.stop_single_unit, objs, label = labels))
 
   # Deduplicate names
@@ -228,6 +231,8 @@ network_reliability <- function(..., iter = 1000L, split = 0.5,
 #' Split-half reliability for transition methods
 #' @noRd
 .reliability_transition <- function(net, method, iter, split, scale) {
+  # the network's own scaling domain, not that of the count method
+  zeros_scaled <- .scaling_includes_zeros(.resolve_method_alias(net$method))
   states <- net$nodes$label
   n_states <- length(states)
   nbins <- n_states * n_states
@@ -254,7 +259,7 @@ network_reliability <- function(..., iter = 1000L, split = 0.5,
     }
     if (!is.null(scaling)) { # nocov start
       mat <- .apply_scaling(mat, scaling,
-                            include_zeros = .scaling_includes_zeros(method))
+                            include_zeros = zeros_scaled)
     } # nocov end
     if (threshold > 0) mat[abs(mat) < threshold] <- 0 # nocov
     mat
@@ -293,6 +298,7 @@ network_reliability <- function(..., iter = 1000L, split = 0.5,
 #' Split-half reliability for association methods
 #' @noRd
 .reliability_association <- function(net, method, iter, split, scale) {
+  zeros_scaled <- .scaling_includes_zeros(.resolve_method_alias(net$method))
   data <- net$data
   states <- net$nodes$label
   n_states <- length(states)
@@ -311,7 +317,7 @@ network_reliability <- function(..., iter = 1000L, split = 0.5,
   postprocess <- function(mat) {
     if (!is.null(scaling)) { # nocov start
       mat <- .apply_scaling(mat, scaling,
-                            include_zeros = .scaling_includes_zeros(method))
+                            include_zeros = zeros_scaled)
     }
     if (threshold > 0) mat[abs(mat) < threshold] <- 0
     mat # nocov end

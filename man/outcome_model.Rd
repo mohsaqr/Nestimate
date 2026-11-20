@@ -63,10 +63,12 @@ second-smallest outcome value (or \code{TRUE}) as 1 and every other value as
 0, so give it a two-valued outcome.}
 
 \item{select}{How the predictors are chosen: \code{"none"} (default) fits all
-of them; \code{"split"} ranks them on a random half of the rows by the
+of them; \code{"split"} ranks them on a random half of the rows (with a
+\code{group}, the rows of a random half of the groups) by the
 absolute z or t statistic of a one-predictor \code{glm()} (without \code{adjust}
 or \code{group}), keeps the best \code{n_select}, and fits the reported model on
-the other half.}
+the other half. With a \code{group}, fewer than two groups in the complete
+rows raise an error of class \code{nestimate_bad_input}.}
 
 \item{n_select}{The number of predictors kept when \code{select = "split"}.
 Default \code{10}. Ignored otherwise.}
@@ -149,7 +151,8 @@ Choosing predictors by their association with the outcome and then
 testing them on the same rows invalidates the p-values. With
 \code{select = "split"} the data is halved: predictors are ranked on one half
 and the reported model is fitted on the other, so the returned inference
-is valid for the selected set. \code{select = "none"} (default) fits every
+is valid for the selected set. With a \code{group}, the groups are halved, so
+no group has rows in both halves. \code{select = "none"} (default) fits every
 supplied predictor and needs no split.
 }
 

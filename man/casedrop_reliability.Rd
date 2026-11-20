@@ -50,7 +50,9 @@ A \code{tna} model or a \code{group_tna} (package tna) is first rebuilt as a net
 A
 network without data raises an error, and one that rests on a single
 sequence, or one-hot data with no actor or session, has no cases to
-drop and raises an error of class \code{nestimate_single_sequence}. For the
+drop and raises an error of class \code{nestimate_single_sequence}. A
+network built with \code{method = "latency"} raises an error of class
+\code{nestimate_latency_resampling}: latency networks are not resampled. For the
 \code{print()} and \code{plot()} methods: the result of
 \code{casedrop_reliability()} (for \code{print()}, also the \code{summary()} of a
 group result).}

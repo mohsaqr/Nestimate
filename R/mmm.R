@@ -883,10 +883,12 @@ build_mmm <- function(data,
   # ---- Information criteria ----
   n_params <- k * n_states * (n_states - 1L) +
               k * (n_states - 1L) +
-              # mixing: one free logit per non-reference class and design
-              # column (a 4-level factor is 3 columns, not 1)
+              # mixing: one free logit per non-reference class and
+              # estimable design column, (k - 1) x rank(X) as
+              # nnet::multinom() counts them (a 4-level factor is 3
+              # columns; an unused level or a collinear column adds none)
               if (is.null(em_cov_df)) (k - 1L) else
-                (k - 1L) * ncol(stats::model.matrix(~ ., data = em_cov_df))
+                (k - 1L) * qr(stats::model.matrix(~ ., data = em_cov_df))$rank
   BIC_val <- -2 * best$ll + n_params * log(N)
   AIC_val <- -2 * best$ll + 2 * n_params
   ICL_val <- BIC_val + 2 * quality$class_entropy

@@ -121,10 +121,23 @@
           nrow(meta) == nrow(net$data)) {
         net$metadata <- meta
       }
+      # The model's own initial probabilities: tna counts a sequence's first
+      # position, Nestimate its first observed state, which differ when a
+      # sequence starts with a missing value.
+      inits <- x$inits
+      if (!is.null(net$initial) && is.numeric(inits) &&
+          length(inits) == length(labels)) {
+        if (is.null(names(inits))) names(inits) <- labels
+        if (setequal(names(inits), names(net$initial))) {
+          net$initial <- inits[names(net$initial)]
+        }
+      }
       return(list(net = net, reason = NULL, pruned = pruned))
     }
   }
-  list(net = .wrap_netobject(W, method = method %||% "tna", directed = TRUE,
+  # a co-occurrence model is undirected, as extract_edges() reads it
+  list(net = .wrap_netobject(W, method = method %||% "tna",
+                             directed = !identical(type, "co-occurrence"),
                              inits = x$inits),
        reason = reason, pruned = FALSE)
 }

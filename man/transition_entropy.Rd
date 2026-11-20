@@ -43,8 +43,8 @@ For the
 \code{print()} also takes a group result or the result of \code{summary()}.}
 
 \item{base}{The logarithm base, which sets the unit: \code{2} (default) for
-bits, \code{exp(1)} for nats, \code{10} for hartleys. Any positive number other
-than 1.}
+bits, \code{exp(1)} for nats, \code{10} for hartleys. Any finite number greater
+than 1; another value raises an error of class \code{nestimate_bad_input}.}
 
 \item{normalize}{Whether rows that do not sum to 1 (a frequency network, a
 count matrix) are divided by their sums, with a warning. With \code{FALSE},

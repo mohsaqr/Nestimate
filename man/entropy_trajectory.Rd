@@ -47,7 +47,8 @@ transition as the axis. The column must be numeric, a \code{Date} or a
 
 \item{group}{A column splitting the data into parallel trajectories (for
 example a condition or an achievement level), each with its own windows.
-Default \code{NULL} (one trajectory, labelled \code{"all"}).}
+Default \code{NULL} (one trajectory, labelled \code{"all"}). A missing value in it
+raises an error of class \code{nestimate_bad_input}.}
 
 \item{window}{The number of transitions per window, at least 10. Default
 \code{500}.}
@@ -56,7 +57,8 @@ Default \code{NULL} (one trajectory, labelled \code{"all"}).}
 windows. Default \code{NULL}, which uses \code{window \%/\% 5} (at least 1).}
 
 \item{base}{The logarithm base, which sets the unit: \code{2} (default) for
-bits. Any positive number other than 1.}
+bits. Any finite number greater than 1; another value raises an error
+of class \code{nestimate_bad_input}.}
 
 \item{x}{For the \code{print()} and \code{plot()} methods: an
 \code{entropy_trajectory()} result.}

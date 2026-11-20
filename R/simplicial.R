@@ -252,10 +252,15 @@ build_simplicial <- function(x, type = "clique", threshold = 0,
 #'
 #' A complex built at a larger scale may be truncated there but not within
 #' the cap persistent_homology() is asked to use: recheck with the edges and
-#' top simplices whose filtration value is at most \code{cap}.
+#' top simplices whose filtration value is at most \code{cap}. A cap at or
+#' above the build scale keeps every simplex, so the build's flag stands; so
+#' does a complex of dimension 0, which stores no edges to recheck with (its
+#' truncation is the presence of an edge, known only at the build scale).
 #' @noRd
 .sc_truncated_within <- function(x, cap) {
-  if (is.null(cap)) return(TRUE)
+  if (is.null(cap) || isTRUE(cap >= x$max_scale) || x$dimension == 0L) {
+    return(TRUE)
+  }
   inside <- x$filtration <= cap
   simp <- x$simplices[inside]
   adj <- matrix(FALSE, x$n_nodes, x$n_nodes)

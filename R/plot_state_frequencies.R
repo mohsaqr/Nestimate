@@ -380,11 +380,12 @@
 #' }
 #' The methods are described in full under *Nested data* in
 #' [mosaic_analysis()]. `nested = TRUE` needs per-sequence counts: a
-#' network built with `method = "relative"`, `"frequency"` or
-#' `"co_occurrence"` that keeps its sequence data, or a `netobject_group`
-#' whose groups keep theirs. Other networks, and per-sequence counts that
-#' do not add up to the drawn table, raise an error of class
-#' `nestimate_bad_input`. An `mcml` takes no `nested`. A `table` or
+#' network built with `method = "relative"` or `"frequency"` that keeps its
+#' sequence data, or a `netobject_group` whose groups keep theirs. Other
+#' networks, and per-sequence counts that do not add up to the drawn table,
+#' raise an error of class `nestimate_bad_input`; a co-occurrence network
+#' raises one of class `nestimate_mosaic_undirected` (see Details). An
+#' `mcml` takes no `nested`. A `table` or
 #' `matrix` (or a plain array) takes it as a three-way table, rows x columns x actors (e.g.
 #' `table(var1, var2, actor)`); the mosaic draws the table summed over
 #' actors. A three-way table without `nested = TRUE`, or a two-way table
@@ -393,14 +394,36 @@
 #' table, all methods side by side, use [mosaic_test()].
 #'
 #' @details
-#' A mosaic needs counts. A network whose weights are whole numbers
-#' (`method = "frequency"` or `"co_occurrence"`) is drawn from its weights;
-#' otherwise from the transition counts stored with it at estimation, and
-#' failing that from first-order transitions recounted from its sequence
-#' data. A `netobject_group` is counted from each group's sequences, or
+#' A mosaic needs counts, never probabilities. A network is drawn from the
+#' transition counts stored with it at estimation; failing that from its
+#' weights, when its method counts (such as `"frequency"`) and they are not
+#' scaled, thresholded or weighted; and failing that from first-order
+#' transitions recounted from its sequence data. A network that records no
+#' method is drawn from its weights if they are whole numbers. A
+#' `netobject_group` is counted from each group's sequences, or
 #' from the column sums of its weights when they are counts. A single
 #' network with none of these, such as an association network (`cor`,
-#' `pcor`, `glasso`, `ising`, `mgm`), raises an error. A `netobject_group`
+#' `pcor`, `glasso`, `ising`, `mgm`), raises an error.
+#'
+#' A co-occurrence network (`method = "co_occurrence"`) is undirected: it
+#' stores each unordered pair of positions in both mirrored cells and the
+#' same-state pairs once on the diagonal, so its matrix is not a table of
+#' row-by-column counts. The mosaic draws its table of pairs instead, each
+#' pair counted once and split equally between its two mirrored cells (so a
+#' cell can hold a half; Newman, 2003), and the residuals compare it with
+#' random pairing of the pair ends, which keeps how often each state ends a
+#' pair: `"permutation"` re-pairs the ends at random `n_perm` times, and
+#' `"asymptotic"` gives each unordered pair's multinomial residual under
+#' that null, as for genotypes under Hardy-Weinberg proportions (Guo &
+#' Thompson, 1992). The pairs of a sequence share its positions, so they
+#' are not independent counts, and `report = TRUE` or `nested = TRUE` on a
+#' co-occurrence network raises an error of class
+#' `nestimate_mosaic_undirected`. So does any mosaic of an undirected
+#' network whose diagonal holds each state's own occurrences rather than
+#' pairs: a windowed or one-hot co-occurrence network, `"wtna_cooccurrence"`
+#' and [cooccurrence()].
+#'
+#' A `netobject_group`
 #' must hold sequence networks: the group method counts whatever its
 #' networks' data hold, so a group of association networks is drawn
 #' without an error, each distinct numeric value counted as a state. An
@@ -408,8 +431,8 @@
 #' with a single state has no table to draw: when it holds self-transitions
 #' it is left out of the per-cluster figure with a warning, and when it holds
 #' no transition at all the call stops with an error. When a row or
-#' column of the table is empty, the asymptotic residuals are undefined
-#' and every tile is drawn at 0. The geometry and the asymptotic
+#' column of the table is empty, its cells have no asymptotic residual and
+#' are drawn at 0; the other cells keep theirs. The geometry and the asymptotic
 #' residuals follow `tna::plot_mosaic()`; the function has its own name so
 #' the two packages can be attached together.
 #'
@@ -531,6 +554,14 @@
 #' Friendly, M. (1994). Mosaic displays for multi-way contingency tables.
 #' \emph{Journal of the American Statistical Association}, 89(425),
 #' 190--200. \doi{10.1080/01621459.1994.10476460}
+#'
+#' Guo, S. W., & Thompson, E. A. (1992). Performing the exact test of
+#' Hardy-Weinberg proportion for multiple alleles. \emph{Biometrics},
+#' 48(2), 361--372. \doi{10.2307/2532296}
+#'
+#' Newman, M. E. J. (2003). Mixing patterns in networks.
+#' \emph{Physical Review E}, 67(2), 026126.
+#' \doi{10.1103/PhysRevE.67.026126}
 #'
 #' Rao, J. N. K., & Scott, A. J. (1984). On chi-squared tests for multiway
 #' contingency tables with cell proportions estimated from survey data.
@@ -862,6 +893,9 @@ mosaic_plot.data.frame <- function(x,
   # nested = TRUE: count every actor's table and fit the method once;
   # report = TRUE: the test line for the subtitle, the row printed.
   nested <- NULL
+  if (isTRUE(panels$pairs) && (!is.null(nested_method) || isTRUE(report))) {
+    .mosaic_refuse_undirected("mosaic_plot()")
+  }
   if (!is.null(nested_method) || isTRUE(report)) {
     tab <- panels$tabs[[1L]]
     arr <- if (is.null(nested_method)) NULL else
@@ -900,7 +934,8 @@ mosaic_plot.data.frame <- function(x,
                           n_perm = n_perm, seed = seed,
                           axis_groups = ag, values = values,
                           style = style, stdres = nested$stdres,
-                          subtitle = nested$subtitle, ...)
+                          subtitle = nested$subtitle,
+                          pairs = isTRUE(panels$pairs), ...)
     if (!is.null(panels$titles)) p + ggplot2::ggtitle(panels$titles[[i]]) else p
   })
 
@@ -1061,7 +1096,10 @@ mosaic_plot.data.frame <- function(x,
         "pass the sequences."), x$method),
         class = "nestimate_bad_input", call = NULL))
     }
-    w <- .mosaic_count_or_stop(x)
+    # An undirected network is drawn from its table of unordered pairs, each
+    # pair counted once (see .mosaic_pair_table()).
+    pairs <- .mosaic_is_undirected(x)
+    w <- if (pairs) .mosaic_pair_table(x) else .mosaic_count_or_stop(x)
     axis_groups <- NULL
     # htna carries actor membership in $node_groups (data.frame node, group).
     # Reorder rows/cols so each actor block is contiguous, and pass the
@@ -1083,7 +1121,8 @@ mosaic_plot.data.frame <- function(x,
                 titles = NULL,
                 xlab_default = NULL,
                 ylab_default = NULL,
-                axis_groups = list(axis_groups)))
+                axis_groups = list(axis_groups),
+                pairs = pairs))
   }
   if (identical(source_class, "netobject_group")) {
     # Single mosaic of the joint (group x state) contingency table -- an
@@ -1191,35 +1230,28 @@ mosaic_plot.data.frame <- function(x,
 }
 
 
-# Resolve a transition count matrix for a single netobject. Mosaic residuals
-# are defined for count tables. If $weights is already integer-valued
-# (method = "frequency" / "co_occurrence") use it directly. Otherwise, when
-# the raw $data sequences are available, recount order-1 transition counts
-# from them so the mosaic works on any estimation method (relative, glasso,
-# cor, ...) -- mirroring the documented fallback honored by the
-# netobject_group path. Falls through to the strict integer guard only when
-# $data is also absent.
+# Resolve a transition count matrix for a single netobject (or an mcml
+# layer, passed as list(weights, data, method)). Mosaic residuals and the
+# tests behind them are defined on counts, never on probabilities that happen
+# to be whole numbers (a relative network whose rows are 0/1). In order:
+# 1. the transition counts stored at estimation ($frequency_matrix), which
+#    follow the network's own construction (start/end states, concat, ...);
+# 2. the weights, when the method declares them counts and they are neither
+#    scaled nor thresholded nor weighted;
+# 3. plain order-1 transitions recounted from the sequences in $data (the
+#    path of a relative network without stored counts, and of mcml layers of
+#    type "tna");
+# 4. the weights of a network whose method is not recorded, if whole numbers.
+# A network that declares a method with non-count weights and keeps neither
+# counts nor sequences raises nestimate_bad_input.
 .mosaic_count_or_stop <- function(x, ctx = NULL) {
   w <- x$weights
-  is_count_mat <- function(m) {
-    is.matrix(m) && is.numeric(m) && all(is.finite(m)) &&
-      all(m >= 0) && all(abs(m - round(m)) <= 1e-8) && sum(m) > 0
-  }
-  # 1. $weights are already integer counts (method = "frequency" /
-  #    "co_occurrence") -- use them directly.
-  if (is_count_mat(w)) return(w)
-  # 2. The estimator's own stored transition counts. Every build_network
-  #    netobject preserves $frequency_matrix, which reflects the actual
-  #    count construction (begin_state/end_state/concat/weighted params,
-  #    one-hot WTNA, ...). Prefer it over a naive raw recount so the mosaic
-  #    agrees with the network and does not break on one-hot data (Codex
-  #    review).
   fm <- x$frequency_matrix
-  if (is_count_mat(fm)) return(fm)
-  # 3. Last resort: recount plain order-1 transitions from raw $data. This
-  #    is what lets a row-normalised network (tna / relative / glasso) still
-  #    produce a count-based mosaic -- and is the path mcml clusters take,
-  #    since their stored $weights are probabilities under type = "tna".
+  if (.mosaic_is_count_matrix(fm)) return(fm)
+  method <- .mosaic_method_name(x)
+  if (.mosaic_weights_are_counts(x, method) && .mosaic_is_count_matrix(w)) {
+    return(w)
+  }
   if (!is.null(x$data) &&
       (is.data.frame(x$data) || is.matrix(x$data))) {
     alphabet <- rownames(w) %||% colnames(w)
@@ -1227,7 +1259,180 @@ mosaic_plot.data.frame <- function(x,
                                  id = NULL, alphabet = alphabet)
     return(.mosaic_weights_or_stop(counts, "frequency", ctx))
   }
-  .mosaic_weights_or_stop(w, x$method, ctx)
+  if (!nzchar(method)) return(.mosaic_weights_or_stop(w, x$method, ctx))
+  pre <- if (is.null(ctx)) "mosaic_plot: " else
+    paste0("mosaic_plot [", ctx, "]: ")
+  stop(errorCondition(sprintf(paste0(
+    "%sthe weights of this \"%s\" network are not counts (scaled, ",
+    "thresholded, weighted or probabilities), and it keeps neither its ",
+    "transition counts nor its sequences to count them again. Pass the ",
+    "count matrix itself, or a network built with its data."),
+    pre, method),
+    class = "nestimate_bad_input", call = NULL))
+}
+
+# Finite, non-negative, whole numbers with a positive total.
+.mosaic_is_count_matrix <- function(m) {
+  is.matrix(m) && is.numeric(m) && all(is.finite(m)) &&
+    all(m >= 0) && all(abs(m - round(m)) <= 1e-8) && sum(m) > 0
+}
+
+# The network's method with aliases resolved; "" when none is recorded.
+.mosaic_method_name <- function(x) {
+  m <- x$method
+  if (!is.character(m) || length(m) != 1L || is.na(m)) return("")
+  .resolve_method_alias(m)
+}
+
+# Whether the stored weights are the counts themselves: a counting method
+# (an mcml layer gives its `type`), with no scaling, threshold or
+# per-sequence weighting applied.
+.mosaic_weights_are_counts <- function(x, method) {
+  counting <- method %in% c("frequency", "reverse", "ngram", "co_occurrence",
+                            "raw", "cooccurrence", "aggregate") ||
+    (method %in% c("wtna", "wtna_cooccurrence") &&
+       !identical(.param_get(x$params, "type"), "relative"))
+  scaled <- length(x$scaling) > 0L && !identical(x$scaling, "none")
+  counting && !scaled && !isTRUE(x$threshold > 0) &&
+    !isTRUE(.param_get(x$params, "weighted", FALSE))
+}
+
+
+# ---- Undirected (co-occurrence) networks ----
+#
+# A co-occurrence network of sequence positions counts every unordered pair
+# of positions once, but stores pair {a, b} in both mirrored cells [a, b] and
+# [b, a] (and {a, a} once on the diagonal). Its matrix is therefore not a
+# table of independent row-by-column counts: the total is inflated and, under
+# independence, the diagonal falls short of the margins' product. The mosaic
+# draws the table of unordered pairs instead, each pair once and split
+# equally between its two mirrored cells (the symmetric mixing matrix of
+# Newman 2003), and the tests refuse it (.mosaic_refuse_undirected()).
+
+.mosaic_undirected_methods <- c("co_occurrence", "wtna_cooccurrence",
+                                "co_occurrence_fn")
+
+#' @noRd
+.mosaic_is_undirected <- function(x) {
+  isFALSE(x$directed) ||
+    .mosaic_method_name(x) %in% .mosaic_undirected_methods
+}
+
+# The table of unordered pairs of an undirected network: [a, a] the pairs
+# {a, a}, [a, b] = [b, a] half the pairs {a, b}, so the total is the number
+# of pairs. Only a positional co-occurrence network (no windows, not
+# one-hot) is a table of pairs: the others hold each state's own
+# occurrences on the diagonal and are refused.
+#' @noRd
+.mosaic_pair_table <- function(x) {
+  method <- .mosaic_method_name(x)
+  params <- x$params
+  positional <- identical(method, "co_occurrence") &&
+    !.is_onehot_params(params) &&
+    is.null(.param_get(params, "window_size")) &&
+    !isTRUE(attr(x$data, "windowed"))
+  if (!positional) {
+    stop(errorCondition(sprintf(paste0(
+      "mosaic_plot(): this undirected \"%s\" network counts how often states ",
+      "occur together, with each state's own occurrences on the diagonal, ",
+      "so it is not a table of pairs and has no mosaic. A co-occurrence ",
+      "network of sequence positions, build_network(method = ",
+      "\"co_occurrence\") without windows, can be drawn."),
+      if (nzchar(method)) method else "unknown"),
+      class = c("nestimate_mosaic_undirected", "nestimate_bad_input"),
+      call = NULL))
+  }
+  w <- x$weights
+  if (!.mosaic_weights_are_counts(x, method) ||
+      !.mosaic_is_count_matrix(w)) {
+    if (!is.data.frame(x$data) || nrow(x$data) == 0L) {
+      stop(errorCondition(paste0(
+        "mosaic_plot(): the weights of this co-occurrence network are not ",
+        "pair counts (scaled, thresholded or weighted) and it keeps no ",
+        "sequences to count them again."),
+        class = "nestimate_bad_input", call = NULL))
+    }
+    # Count the pairs again, unweighted, as the estimator counts them.
+    states <- rownames(w)
+    p <- params
+    p$weighted <- FALSE
+    per <- .precompute_per_sequence(
+      .resampling_transition_data(x$data, x$metadata, p),
+      "co_occurrence", p, states)
+    w <- matrix(colSums(per), length(states), length(states), byrow = TRUE,
+                dimnames = list(states, states))
+    w <- .mosaic_weights_or_stop(w, "co_occurrence")
+  }
+  (w + diag(diag(w), nrow(w))) / 2
+}
+
+# Refuse a test on an undirected network: Pearson's chi-square and the
+# clustered tests assume one independent count per cell, and the pairs of a
+# sequence share its positions. A null simulation (iid uniform states, 40
+# sequences of 4) rejected 200 of 200 at alpha = 0.05 on the mirrored table.
+#' @noRd
+.mosaic_refuse_undirected <- function(what) {
+  stop(errorCondition(paste0(
+    what, ": a co-occurrence network is undirected. Each pair of states is ",
+    "counted in both of its mirrored cells and every position pairs with ",
+    "all others in its sequence, so the counts are not independent ",
+    "row-by-column observations and Pearson's and the clustered tests do ",
+    "not hold their level on them. Test a directed network (method = ",
+    "\"relative\" or \"frequency\"); mosaic_plot() still draws the pairs ",
+    "without `report` or `nested`."),
+    class = c("nestimate_mosaic_undirected", "nestimate_bad_input"),
+    call = NULL))
+}
+
+# Standardised residuals of a table of unordered pairs (from
+# .mosaic_pair_table()), one value per pair mirrored into both cells. The
+# null is random pairing: the 2M pair ends, each a state, are matched at
+# random, which keeps how often each state ends a pair (the Hardy-Weinberg
+# null for genotypes; Guo & Thompson 1992). Under it pair {a, b} has
+# probability 2 p_a p_b (a != b) and {a, a} p_a^2, with p_a the share of
+# ends in state a. "permutation" shuffles and re-pairs the ends n_perm times
+# and gives (observed - mean) / sd; "asymptotic" gives the multinomial
+# residual (U - M pi) / sqrt(M pi (1 - pi)). A cell that never varies, or
+# has no expected pair, gets 0 / NA (drawn at 0).
+#' @noRd
+.mosaic_pair_stdres <- function(tab, residuals = "permutation",
+                                n_perm = 500L, seed = NULL) {
+  s <- nrow(tab)
+  upper <- upper.tri(tab, diag = TRUE)
+  u_mat <- tab + t(tab)
+  diag(u_mat) <- diag(tab)
+  u_obs <- round(u_mat[upper])
+  ends <- round(2 * rowSums(tab))
+  n_pairs <- sum(u_obs)
+  z <- if (identical(residuals, "permutation")) {
+    .assert(n_perm >= 2L)
+    if (!is.null(seed)) .local_seed(seed)
+    ends_long <- rep(seq_len(s), times = ends)
+    first <- seq.int(1L, length(ends_long), by = 2L)
+    perm <- vapply(seq_len(n_perm), function(b) {
+      sh <- ends_long[sample.int(length(ends_long))]
+      lo <- pmin(sh[first], sh[first + 1L])
+      hi <- pmax(sh[first], sh[first + 1L])
+      tabulate(lo + (hi - 1L) * s, nbins = s * s)[which(upper)]
+    }, numeric(sum(upper)))
+    perm <- matrix(perm, nrow = sum(upper))
+    mean_perm <- rowMeans(perm)
+    sd_perm <- sqrt(rowMeans((perm - mean_perm)^2) * n_perm / (n_perm - 1L))
+    out <- (u_obs - mean_perm) / sd_perm
+    out[!is.finite(out)] <- 0
+    out
+  } else {
+    p <- ends / sum(ends)
+    pi_mat <- 2 * outer(p, p)
+    diag(pi_mat) <- p^2
+    pi_u <- pi_mat[upper]
+    .nest_safe_div(u_obs - n_pairs * pi_u,
+                   sqrt(n_pairs * pi_u * (1 - pi_u)))
+  }
+  res <- matrix(NA_real_, s, s, dimnames = dimnames(tab))
+  res[upper] <- z
+  res[lower.tri(res)] <- t(res)[lower.tri(res)]
+  res
 }
 
 # Validate that a weight matrix is mosaic-able (finite, non-negative, integer-
@@ -1329,7 +1534,8 @@ mosaic_plot.data.frame <- function(x,
 }
 
 .mosaic_rect_data <- function(tab, residuals = "permutation",
-                              n_perm = 500L, seed = NULL, stdres = NULL) {
+                              n_perm = 500L, seed = NULL, stdres = NULL,
+                              pairs = FALSE) {
   n <- nrow(tab); m <- ncol(tab)
   if (n < 1L || m < 1L) {
     stop(errorCondition(
@@ -1361,6 +1567,10 @@ mosaic_plot.data.frame <- function(x,
     .assert("precomputed residuals must match the table shape" =
               identical(dim(stdres), dim(tab)))
     stdres
+  } else if (isTRUE(pairs)) {
+    # A table of unordered pairs: random pairing, not shuffled labels.
+    .mosaic_pair_stdres(tab, residuals = residuals, n_perm = n_perm,
+                        seed = seed)
   } else if (identical(residuals, "permutation")) {
     .mosaic_perm_stdres(tab, n_perm = n_perm, seed = seed)
   } else {
@@ -1402,10 +1612,12 @@ mosaic_plot.data.frame <- function(x,
                              residuals = "permutation", n_perm = 500L,
                              seed = NULL, axis_groups = NULL,
                              values = FALSE, style = "classic",
-                             stdres = NULL, subtitle = NULL, ...) {
+                             stdres = NULL, subtitle = NULL, pairs = FALSE,
+                             ...) {
   .mosaic_reject_df_args(style, ...)
   d <- .mosaic_rect_data(tab, residuals = residuals,
-                         n_perm = n_perm, seed = seed, stdres = stdres)
+                         n_perm = n_perm, seed = seed, stdres = stdres,
+                         pairs = pairs)
   legend_name <- if (is.null(stdres)) "Standardized\nresidual" else
     "Cluster-adjusted\nresidual"
   # "flat" routes to the ported Saqrmisc renderer: white gutters, theme_void,
@@ -1614,7 +1826,7 @@ mosaic_plot.data.frame <- function(x,
 
   raw_txt <- switch(tile_label,
     none     = rep("", nrow(tiles)),
-    count    = formatC(tiles$freq, format = "d", big.mark = ","),
+    count    = formatC(tiles$freq, format = "fg", big.mark = ","),  # half pairs show as .5
     percent  = paste0(formatC(pct, format = "f", digits = 1), "%"),
     residual = formatC(tiles$stdres, format = "f", digits = 1),
     category = tiles$col)

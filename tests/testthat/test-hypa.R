@@ -103,24 +103,14 @@ test_that(".hypa_compute_scores returns correct format", {
   expect_true(all(scores$p_over <= 1))
 })
 
-test_that(".hypa_compute_scores uses the strict over tail of LaRock et al. (2020)", {
+test_that(".hypa_compute_scores: the over tail is the complement of the lower tail", {
+  # The tails against stats::phyper() and BiasedUrn moved to tests/equivalence/test-build_hypa.R.
   adj <- matrix(c(0, 12, 5, 2,
                   3, 0, 8, 1,
                   6, 4, 0, 9,
                   2, 7, 3, 0), 4, 4, byrow = TRUE,
                 dimnames = list(LETTERS[1:4], LETTERS[1:4]))
-  xi <- .hypa_fit_xi(adj)
-  scores <- .hypa_compute_scores(adj, xi)
-  edge <- scores[scores$from == "B" & scores$to == "C", , drop = FALSE]
-  K <- round(xi["B", "C"])
-  N_total <- round(sum(xi))
-  n_draws <- min(sum(adj), N_total)
-
-  expect_equal(edge$p_under,
-               stats::phyper(edge$observed, K, N_total - K, n_draws))
-  expect_equal(edge$p_over,
-               stats::phyper(edge$observed, K, N_total - K, n_draws,
-                             lower.tail = FALSE))
+  scores <- .hypa_compute_scores(adj, .hypa_fit_xi(adj))
   expect_equal(scores$p_over, 1 - scores$p_under)
 })
 
@@ -657,29 +647,8 @@ test_that("summary.net_hypa shows p_adjust", {
   expect_true(any(grepl("p_adjust: bonferroni", out)))
 })
 
-test_that("two-sided correction adjusts under and over separately", {
-  # Create data with enough edges to see the effect of separate adjustments
-  set.seed(123)
-  trajs <- c(
-    replicate(60, c("A", "B", "C"), simplify = FALSE),
-    replicate(3, c("A", "B", "D"), simplify = FALSE),
-    replicate(3, c("C", "B", "A"), simplify = FALSE),
-    replicate(3, c("D", "B", "C"), simplify = FALSE),
-    replicate(3, c("A", "C", "D"), simplify = FALSE),
-    replicate(3, c("D", "C", "A"), simplify = FALSE)
-  )
-  h <- build_hypa(trajs, k = 2L, alpha = 0.05, min_count = 1L,
-                  p_adjust = "BH")
-
-  # Verify that p_adjusted_under and p_adjusted_over are adjusted separately
-  # by checking they equal p.adjust applied to the raw values
-  raw_p_under <- h$scores$p_under
-  raw_p_over <- h$scores$p_over
-  expect_equal(h$scores$p_adjusted_under,
-               stats::p.adjust(raw_p_under, method = "BH"))
-  expect_equal(h$scores$p_adjusted_over,
-               stats::p.adjust(raw_p_over, method = "BH"))
-})
+# "two-sided correction adjusts under and over separately" (against stats::p.adjust()) moved to
+# tests/equivalence/test-build_hypa.R.
 
 test_that("p_adjust defaults to none (LaRock et al. 2020 apply no correction)", {
   trajs <- list(c("A", "B", "C"), c("A", "B", "C"), c("B", "C", "A"))

@@ -53,7 +53,9 @@ test_that("mosaic_plot recounts non-integer nets from $data, errors without it",
   net_nocounts <- net_rel
   net_nocounts$data <- NULL
   net_nocounts$frequency_matrix <- NULL
-  expect_error(mosaic_plot(net_nocounts), "integer-valued")
+  # A relative network's weights are probabilities, never counts, even when
+  # they are whole numbers: the error is by class (2026-11-20, P2).
+  expect_error(mosaic_plot(net_nocounts), class = "nestimate_bad_input")
 })
 
 test_that("mosaic_plot.netobject_group returns one (group x state) mosaic", {

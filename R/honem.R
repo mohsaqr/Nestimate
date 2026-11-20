@@ -34,7 +34,8 @@
 #' where D is the row-normalized transition matrix and Z is the normalization.
 #'
 #' @param D Row-stochastic transition matrix.
-#' @param max_power Integer. Maximum power L (default: 10 or diameter).
+#' @param max_power Integer L, the upper limit of k; the highest power is
+#'   D^(L+1).
 #' @return Dense neighborhood matrix S.
 #' @noRd
 .honem_neighborhood_matrix <- function(D, max_power = 10L) {
@@ -139,9 +140,10 @@
 #' @param dim The number of embedding dimensions. Default `32`. It is capped
 #'   at the number of nodes minus 1 without a warning; `print()` reports the
 #'   dimension used.
-#' @param max_power \eqn{L}, the highest matrix power in the decayed sum, at
-#'   least 1. Default `10`. Higher values let longer paths shape the
-#'   proximities.
+#' @param max_power \eqn{L}, the upper limit of \eqn{k} in the decayed sum,
+#'   at least 1. Default `10`. The sum runs from \eqn{D^1} to
+#'   \eqn{D^{L+1}}, so the highest matrix power is `max_power + 1`. Higher
+#'   values let longer paths shape the proximities.
 #' @return A `net_honem` object. `print()` shows the number of nodes, the
 #'   dimensions, `max_power` and the variance explained; `summary()` prints
 #'   the leading singular values and the range of the coordinates, and
@@ -155,7 +157,8 @@
 #'     \item{explained_variance}{Share of the squared singular values held
 #'       by the kept dimensions.}
 #'     \item{dim}{Embedding dimension used.}
-#'     \item{max_power}{Highest matrix power used.}
+#'     \item{max_power}{\eqn{L}, the upper limit of \eqn{k}; the highest
+#'       matrix power used is `max_power + 1`.}
 #'     \item{n_nodes}{Number of nodes embedded.}
 #'   }
 #'
@@ -249,7 +252,8 @@ print.net_honem <- function(x, ...) {
   cat("HONEM: Higher-Order Network Embedding\n")
   cat(sprintf("  Nodes:      %d\n", x$n_nodes))
   cat(sprintf("  Dimensions: %d\n", x$dim))
-  cat(sprintf("  Max power:  %d\n", x$max_power))
+  cat(sprintf("  Max power:  %d (the sum runs to D^%d)\n", x$max_power,
+              x$max_power + 1L))
   cat(sprintf("  Variance explained: %.1f%%\n", x$explained_variance * 100))
   invisible(x)
 }

@@ -27,7 +27,8 @@ one, in either order, so \verb{(C, A)} matches the listed pair \verb{(A, C)}.}
 A data frame with one row per index: \code{method}, \code{auc},
 \code{average_precision} (\code{0} when no evaluated pair is a known edge), and
 one \verb{precision_at_<k>} column per value of \code{k}. A prediction with no
-listed pairs (every possible link already exists) gives \code{NULL}.
+listed pairs (every possible link already exists) gives a zero-row
+data frame with these columns.
 }
 \description{
 \code{evaluate_links()} measures how well each index of a \code{\link[=predict_links]{predict_links()}}

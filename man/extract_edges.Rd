@@ -30,6 +30,10 @@ the columns:
 \item{to}{The target state.}
 \item{weight}{The edge weight (for a \code{"relative"} network, the
 transition probability).}
+\item{n_replies}{For a \code{"latency"} network only: the number of replies
+the edge holds (an integer).}
+\item{median_latency}{For a \code{"latency"} network only: the median time
+of those replies, in seconds.}
 }
 
 For an \code{mcml}: a named list of such data frames, \code{macro} first and then

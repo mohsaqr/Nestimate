@@ -556,7 +556,8 @@ test_that("dof = 'observed' reproduces the counts used before 0.9.28", {
 test_that("LRT selects the largest rejecting order, not the first non-rejection", {
   # rejections at 1 and 3 with a non-rejection at 2: Scholtes picks 3
   expect_identical(.mogen_lrt_order(c(NA, 0.001, 0.5, 0.001), 0.01), 3L)
-  expect_identical(.mogen_lrt_order(c(NA, 0.5, 0.5), 0.01), 0L)
+  # no rejection at k >= 2 keeps the first-order null (pathpy estimate_order)
+  expect_identical(.mogen_lrt_order(c(NA, 0.5, 0.5), 0.01), 1L)
   expect_identical(.mogen_lrt_order(c(NA, NA, 0.001), 0.01), 2L)
 })
 

@@ -26,8 +26,10 @@ stability_landscape(
 \item{x}{The network or sequences: a transition network from
 \code{\link[=build_network]{build_network()}} with method \code{"relative"} or \code{"frequency"} (or a bare
 \code{cograph_network} of one), a grouped one (\code{netobject_group}, for example
-\code{\link[=build_network]{build_network()}} of a \code{\link[=build_clusters]{build_clusters()}} result), a \code{tna} model, or a
-wide sequence data frame or matrix. A network must carry its sequences;
+\code{\link[=build_network]{build_network()}} of a \code{\link[=build_clusters]{build_clusters()}} result), a \code{tna} model or a \code{group_tna} (one landscape
+per group), or a
+wide sequence data frame or matrix. A network must count one-step transitions (a
+windowed one raises an error) and carry its sequences;
 a network of another method (for example \code{"glasso"}) raises an error of
 class \code{nestimate_not_markov}. For the \code{print()} and \code{plot()} methods: a
 \code{net_landscape} object.}
@@ -80,7 +82,8 @@ network and state, with \code{group}, \code{state}, \code{depth}, \code{ci_lower
 (\eqn{P_{ii}}), \code{share} (share of observed time steps in the state),
 \code{n_from} (transitions out of the state, self-transitions included) and
 \code{resamples}. With \code{table = "exits"}: one row per network and pair of
-distinct states, with \code{group}, \code{from}, \code{to}, \code{probability} and \code{count}.
+distinct states, with \code{group}, \code{from}, \code{to}, \code{probability} (the one-step transition
+probability \eqn{P_{ij}}, stays included in the denominator) and \code{count}.
 With \code{table = "circulation"}: one row per network, with \code{group},
 \code{cycle} (the direction of the net flow), \code{current}, \code{ci_lower},
 \code{ci_upper} and \code{resamples} (resamples with a unique stationary
@@ -112,9 +115,11 @@ resampling whole sequences.
 
 Depth is a property of the state alone. How often the process enters the
 state is its \code{share} of the observed time steps, reported beside the
-depth, and where the process goes when it leaves is in the exit
-probabilities (\code{summary(x, table = "exits")}), which the plot writes under
-each cup. With three states the result also reports the net circulation,
+depth, and where it goes next is in the exit probabilities
+(\code{summary(x, table = "exits")}), the one-step transition probabilities
+\eqn{P_{ij}}: their denominator includes the stays, so a state's exits
+sum to \eqn{1 - P_{ii}}. The plot writes them under each cup. With three
+states the result also reports the net circulation,
 the net probability flux \eqn{\pi_i P_{ij} - \pi_j P_{ji}} around the
 cycle, which stationarity makes equal on all three edges (Schnakenberg
 1976): zero for a chain whose every transition is as common as its

@@ -44,8 +44,10 @@ utils::globalVariables(c(
 #'   \item{\code{"permutation"}}{Shuffles the group labels across
 #'     sequences `iter` times and recomputes, for each pattern, the
 #'     Euclidean norm of its row of differences between observed and
-#'     expected counts in the patterns-by-groups table of the patterns kept
-#'     at that length (expected under independence). It asks whether the
+#'     expected counts in the patterns-by-groups table of every pattern
+#'     observed at that length (expected under independence), whether or
+#'     not `min_freq` keeps it, so the filter does not change the null
+#'     distribution of a reported pattern. It asks whether the
 #'     pattern's distribution is associated with group membership at the
 #'     level of the sequence,
 #'     which respects the sequence as the unit of analysis but has little
@@ -371,7 +373,11 @@ sequence_compare <- function(x, group = NULL, sub = 3:5,
       rows$statistic <- chi[1L, ]
       rows$p_value <- chi[2L, ]
     } else if (test == "permutation") {
-      stat_obs <- .cs_pattern_statistic(counts)
+      # The statistic of a pattern is computed on the table of every pattern
+      # of this length, kept or not, so its group margins do not depend on
+      # which patterns the observed labels let through the min_freq filter;
+      # only the reported rows are subset.
+      stat_obs <- .cs_pattern_statistic(counts_all)[keep]
       stat_perm <- matrix(0, nrow = n_pat, ncol = iter)
       stat_ge <- integer(n_pat)
 
@@ -396,9 +402,7 @@ sequence_compare <- function(x, group = NULL, sub = 3:5,
         if (!is.matrix(perm_counts_all)) {
           perm_counts_all <- matrix(perm_counts_all, ncol = n_groups)
         }
-        rownames(perm_counts_all) <- unique_pats
-        perm_counts <- perm_counts_all[kept_pats, , drop = FALSE]
-        stat_perm[, it] <- .cs_pattern_statistic(perm_counts)
+        stat_perm[, it] <- .cs_pattern_statistic(perm_counts_all)[keep]
         stat_ge <- stat_ge + (stat_perm[, it] >= stat_obs)
       }
 
@@ -482,7 +486,7 @@ sequence_compare <- function(x, group = NULL, sub = 3:5,
       if (is.null(d)) stop(errorCondition(
         "netobject_group element has no $data.",
         class = "nestimate_bad_input", call = NULL))
-      as.matrix(as.data.frame(d, stringsAsFactors = FALSE))
+      .cs_as_char_matrix(d)
     })
     # Align column count
     max_cols <- max(vapply(mats, ncol, integer(1)))
@@ -517,7 +521,7 @@ sequence_compare <- function(x, group = NULL, sub = 3:5,
       stop(errorCondition("Object has no $data.",
                           class = "nestimate_bad_input", call = NULL))
     }
-    seq_mat <- as.matrix(as.data.frame(d, stringsAsFactors = FALSE))
+    seq_mat <- .cs_as_char_matrix(d)
     ids <- if (actor_ids) {
       if (length(actor) == 1L) {
         .permutation_block_ids(x, actor, nrow(seq_mat), "x")
@@ -540,7 +544,7 @@ sequence_compare <- function(x, group = NULL, sub = 3:5,
                                via_network = TRUE, whole_frame = TRUE)
     }
     .refuse_binary_matrix(x, "sequence_compare()")
-    seq_mat <- as.matrix(as.data.frame(x, stringsAsFactors = FALSE))
+    seq_mat <- .cs_as_char_matrix(x)
     # the actor column is set aside after the group is read, which may be it
     drop_actor <- !is.null(actor) && any(actor %in% colnames(seq_mat))
   } else {
@@ -566,6 +570,18 @@ sequence_compare <- function(x, group = NULL, sub = 3:5,
   }
 
   list(seq_mat = seq_mat, group = group_vec, actor = ids)
+}
+
+# A data frame or matrix of sequences as a character matrix, converting each
+# column on its own: as.matrix() on a data frame formats a numeric column to
+# a common width (1 and 10 become " 1" and "10"), so the same state would be
+# spelled differently in two groups.
+#' @noRd
+.cs_as_char_matrix <- function(d) {
+  d <- as.data.frame(d, stringsAsFactors = FALSE)
+  matrix(unlist(lapply(d, as.character), use.names = FALSE),
+         nrow = nrow(d), ncol = ncol(d),
+         dimnames = list(NULL, names(d)))
 }
 
 # The actor id of every row of a data frame or matrix `x`, from its column
@@ -625,8 +641,10 @@ sequence_compare <- function(x, group = NULL, sub = 3:5,
   if (warn && log_arrangements < log(1 / alpha)) {
     warning(warningCondition(
       sprintf(paste0("`actor = \"%s\"` allows only %d distinct permutations, ",
-                     "so no p-value can fall below %.3g (alpha = %g). ",
-                     "More actors are needed for this test to detect anything."),
+                     "so the exact test cannot give a p-value below %.3g ",
+                     "(alpha = %g); a Monte Carlo p-value falls below it only ",
+                     "by chance. More actors are needed for this test to ",
+                     "detect anything."),
               actor, as.integer(round(exp(log_arrangements))),
               exp(-log_arrangements), alpha),
       class = "nestimate_few_actors", call = NULL))

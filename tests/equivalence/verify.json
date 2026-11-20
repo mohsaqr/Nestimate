@@ -1,0 +1,444 @@
+{
+  "product": "r-nestimate",
+  "collection": "equivalence",
+  "title": "Equivalence tests",
+  "references": {
+    "stats": {
+      "authority": "open-source"
+    },
+    "tna": {
+      "authority": "open-source"
+    },
+    "qgraph": {
+      "authority": "open-source"
+    },
+    "glasso": {
+      "authority": "open-source"
+    },
+    "corpcor": {
+      "authority": "open-source"
+    },
+    "igraph": {
+      "authority": "open-source"
+    },
+    "bootnet": {
+      "authority": "open-source"
+    },
+    "IsingFit": {
+      "authority": "open-source"
+    },
+    "mlVAR": {
+      "authority": "open-source"
+    },
+    "gimme": {
+      "authority": "open-source"
+    },
+    "mgm": {
+      "authority": "open-source"
+    },
+    "NetworkComparisonTest": {
+      "authority": "open-source"
+    },
+    "arules": {
+      "authority": "open-source"
+    },
+    "markovchain": {
+      "authority": "open-source"
+    },
+    "seqHMM": {
+      "authority": "open-source"
+    },
+    "TraMineR": {
+      "authority": "open-source"
+    },
+    "TDAstats": {
+      "authority": "open-source"
+    },
+    "HyperG": {
+      "authority": "open-source"
+    },
+    "lavaan": {
+      "authority": "open-source"
+    },
+    "lme4": {
+      "authority": "open-source"
+    },
+    "glmnet": {
+      "authority": "open-source"
+    },
+    "psych": {
+      "authority": "open-source"
+    },
+    "stringdist": {
+      "authority": "open-source"
+    },
+    "entropy": {
+      "authority": "open-source"
+    },
+    "RSpectra": {
+      "authority": "open-source"
+    },
+    "survey": {
+      "authority": "open-source"
+    },
+    "geepack": {
+      "authority": "open-source"
+    },
+    "aod": {
+      "authority": "open-source"
+    },
+    "vcd": {
+      "authority": "open-source"
+    },
+    "BiasedUrn": {
+      "authority": "open-source"
+    },
+    "nnet": {
+      "authority": "open-source"
+    },
+    "brglm2": {
+      "authority": "open-source"
+    },
+    "cluster": {
+      "authority": "open-source"
+    },
+    "Matrix": {
+      "authority": "open-source"
+    },
+    "idiographic": {
+      "authority": "internal"
+    },
+    "psychnets": {
+      "authority": "internal"
+    },
+    "pathpy": {
+      "authority": "open-source",
+      "url": "https://pypi.org/project/pathpy/"
+    },
+    "hypernetx": {
+      "authority": "open-source",
+      "url": "https://pypi.org/project/hypernetx/"
+    },
+    "cograph": {
+      "authority": "open-source"
+    },
+    "TDA": {
+      "authority": "open-source"
+    },
+    "boot": {
+      "authority": "open-source"
+    }
+  },
+  "exports": {
+    "covered": [
+      "chain_structure()",
+      "summary.chain_structure()",
+      "build_tna()",
+      "build_ftna()",
+      "build_cna()",
+      "build_atna()",
+      "extract_transition_matrix()",
+      "extract_initial_probs()",
+      "extract_edges()",
+      "summary.nest_transition_matrix()",
+      "summary.nest_initial_probs()",
+      "bootstrap_network()",
+      "summary.net_bootstrap()",
+      "summary.net_bootstrap_group()",
+      "permutation()",
+      "summary.net_permutation()",
+      "build_glasso()",
+      "build_cor()",
+      "build_pcor()",
+      "build_ising()",
+      "build_network()",
+      "predictability()",
+      "predictability.netobject()",
+      "predictability.netobject_group()",
+      "predictability.netobject_ml()",
+      "prepare()",
+      "extract_sequences()",
+      "long_to_wide()",
+      "wide_to_long()",
+      "nct()",
+      "as.data.frame.net_nct()",
+      "summary.net_nct()",
+      "boot_glasso()",
+      "summary.boot_glasso()",
+      "net_centrality()",
+      "net_prune()",
+      "net_prune.netobject()",
+      "net_prune.netobject_group()",
+      "net_pruning_details()",
+      "net_pruning_details.netobject()",
+      "net_pruning_details.netobject_group()",
+      "net_deprune()",
+      "net_deprune.netobject()",
+      "net_deprune.netobject_group()",
+      "net_reprune()",
+      "net_reprune.netobject()",
+      "net_reprune.netobject_group()",
+      "net_edge_betweenness()",
+      "net_edge_betweenness.netobject()",
+      "net_edge_betweenness.netobject_group()",
+      "build_mlvar()",
+      "coefs()",
+      "coefs.net_mlvar()",
+      "summary.net_mlvar()",
+      "build_gimme()",
+      "coefs.net_gimme()",
+      "build_mcml_pc()",
+      "summary.mcml_pc()",
+      "item_loadings()",
+      "item_loadings.mcml_pc()",
+      "frequencies()",
+      "summary.nest_transition_counts()",
+      "estimate_network()",
+      "convert_sequence_format()",
+      "state_frequencies()",
+      "state_distribution()",
+      "state_distribution.netobject()",
+      "summary.netobject()",
+      "summary.netobject_group()",
+      "action_to_onehot()",
+      "wtna()",
+      "passage_time()",
+      "summary.net_mpt()",
+      "markov_stability()",
+      "summary.net_markov_stability()",
+      "transition_entropy()",
+      "summary.net_transition_entropy()",
+      "bipartite_groups()",
+      "summary.net_hypergraph()",
+      "clique_expansion()",
+      "hypergraph_measures()",
+      "markov_order_test()",
+      "summary.net_markov_order()",
+      "centrality_stability()",
+      "summary.net_stability()",
+      "summary.net_stability_group()",
+      "network_reliability()",
+      "summary.net_reliability()",
+      "compare_model()",
+      "compare_model.matrix()",
+      "compare_model.netobject()",
+      "compare_model.default()",
+      "compare_model.cograph_network()",
+      "compare_model.netobject_group()",
+      "compare_networks()",
+      "edge_differences()",
+      "node_differences()",
+      "global_differences()",
+      "summary.net_network_comparison()",
+      "network_metrics()",
+      "bayes_compare()",
+      "summary.net_bayes()",
+      "summary.net_bayes_group()",
+      "as_netdifference()",
+      "as_netdifference.net_bayes()",
+      "as_netdifference.netdifference()",
+      "subtract_networks()",
+      "magnitude_difference()",
+      "vertex_bootstrap()",
+      "summary.net_vertex_bootstrap()",
+      "vertex_compare()",
+      "summary.net_vertex_comparison()",
+      "stability_landscape()",
+      "summary.net_landscape()",
+      "summary.net_permutation_group()",
+      "build_hon()",
+      "hypergraph_laplacian()",
+      "hypergraph_transduction()",
+      "label_scores()",
+      "label_predictions()",
+      "as.data.frame.net_hypergraph_transduction()",
+      "summary.net_hypergraph_transduction()",
+      "hypergraph_cluster()",
+      "node_clusters()",
+      "as.data.frame.net_hypergraph_cluster()",
+      "hypergraph_centrality()",
+      "build_hypergraph()",
+      "certainty()",
+      "macro_network()",
+      "actor_endpoints()",
+      "net_aggregate_weights()",
+      "cooccurrence()",
+      "as.data.frame.state_freq()",
+      "state_distribution.state_freq()",
+      "state_distribution.netobject_group()",
+      "state_distribution.mcml()",
+      "state_distribution.htna()",
+      "as_htna()",
+      "as_htna.mcml()",
+      "as_htna.default()",
+      "prepare_for_tna()",
+      "state_distribution.default()",
+      "build_simplicial()",
+      "betti_numbers()",
+      "euler_characteristic()",
+      "simplicial_degree()",
+      "simplicial_features()",
+      "verify_simplicial()",
+      "q_analysis()",
+      "persistent_homology()",
+      "persistence_landscape()",
+      "bottleneck_distance()",
+      "build_honem()",
+      "build_hypa()",
+      "summary.net_hypa()",
+      "build_mogen()",
+      "summary.net_mogen()",
+      "path_counts()",
+      "mogen_transitions()",
+      "predict_links()",
+      "evaluate_links()",
+      "summary.net_link_prediction()",
+      "association_rules()",
+      "summary.net_association_rules()",
+      "entropy_network()",
+      "path_dependence()",
+      "summary.net_path_dependence()",
+      "entropy_trajectory()",
+      "summary.net_entropy_trajectory()",
+      "summary.net_transition_entropy_group()",
+      "summary.chain_structure_group()",
+      "summary.net_honem()",
+      "extract_pathways()",
+      "build_clusters()",
+      "cluster_data()",
+      "summary.net_clustering()",
+      "cluster_diagnostics()",
+      "cluster_diagnostics.net_clustering()",
+      "as.data.frame.net_cluster_diagnostics()",
+      "summary.net_cluster_diagnostics()",
+      "cluster_choice()",
+      "summary.cluster_choice()",
+      "cluster_network()",
+      "cluster_diagnostics.netobject_group()",
+      "build_mmm()",
+      "summary.net_mmm()",
+      "cluster_diagnostics.net_mmm()",
+      "cluster_mmm()",
+      "compare_mmm()",
+      "summary.mmm_compare()",
+      "build_mcml()",
+      "cluster_summary()",
+      "summary.mcml()",
+      "mosaic_test()",
+      "mosaic_test.table()",
+      "mosaic_test.data.frame()",
+      "mosaic_test.array()",
+      "mosaic_test.netobject()",
+      "mosaic_analysis()",
+      "summary.mosaic_analysis()",
+      "mosaic_test.default()",
+      "sequence_patterns()",
+      "sequence_compare()",
+      "summary.net_sequence_comparison()",
+      "pattern_outcome()",
+      "outcome_model()",
+      "effects_table()",
+      "summary.net_outcome_model()",
+      "sequence_metrics()",
+      "cluster_diagnostics.net_mmm_clustering()",
+      "composites()",
+      "composites.mcml_pc()",
+      "loading_stability()",
+      "summary.pc_loading_stability()",
+      "as_networks()",
+      "as_networks.default()",
+      "as_networks.mcml_pc()",
+      "casedrop_reliability()",
+      "summary.net_casedrop_reliability()",
+      "summary.net_casedrop_reliability_group()",
+      "permutation_diagnostics()",
+      "landscape_surface()",
+      "summary.net_landscape_surface()",
+      "landscape_trend()",
+      "summary.net_landscape_trend()",
+      "summary.net_hypergraph_cluster()",
+      "summary.wtna_boot_mixed()",
+      "summary.wtna_perm_mixed()",
+      "as_htna.net_mmm()",
+      "summary.net_hon()",
+      "entropy_bayes()",
+      "summary.net_entropy_bayes()",
+      "summary.net_entropy_bayes_group()",
+      "mosaic_test.netobject_group()",
+      "mosaic_test.htna()"
+    ],
+    "not_numeric": {
+      "$.net_nct()": "field access on an nct() result: returns the stored element and raises a classed error for the names M and S that were removed",
+      "net_prune.default()": "raises a classed error (nestimate_bad_input) for an input that is not a network; returns no numbers",
+      "net_pruning_details.default()": "raises a classed error (nestimate_bad_input) for an input that is not a network; returns no numbers",
+      "net_deprune.default()": "raises a classed error (nestimate_bad_input) for an input that is not a network; returns no numbers",
+      "net_reprune.default()": "raises a classed error (nestimate_bad_input) for an input that is not a network; returns no numbers",
+      "net_edge_betweenness.default()": "raises a classed error (nestimate_bad_input) for an input that is not a network; returns no numbers",
+      "coefs.default()": "raises a classed error for an object without a coefs() method",
+      "state_colors()": "returns the colours assigned to states",
+      "state_colors.default()": "returns the colours assigned to states",
+      "set_state_colors.default()": "assigns colours to states",
+      "plot_state_frequencies.default()": "draws a bar chart of state frequencies",
+      "state_colors.htna()": "returns the colours assigned to states",
+      "set_state_colors.htna()": "assigns colours to states",
+      "plot_state_frequencies.htna()": "draws a bar chart of state frequencies",
+      "state_colors.mcml()": "returns the colours assigned to states",
+      "set_state_colors.mcml()": "assigns colours to states",
+      "plot_state_frequencies.mcml()": "draws a bar chart of state frequencies",
+      "state_colors.netobject()": "returns the colours assigned to states",
+      "set_state_colors.netobject()": "assigns colours to states",
+      "plot_state_frequencies.netobject()": "draws a bar chart of state frequencies",
+      "state_colors.netobject_group()": "returns the colours assigned to states",
+      "set_state_colors.netobject_group()": "assigns colours to states",
+      "plot_state_frequencies.netobject_group()": "draws a bar chart of state frequencies",
+      "state_colors<-()": "assigns colours to states",
+      "set_state_colors()": "assigns colours to states",
+      "plot_state_frequencies()": "draws a bar chart of state frequencies",
+      "sequence_plot()": "draws sequence index or distribution plots",
+      "distribution_plot()": "draws a state distribution plot",
+      "validate_netobject()": "checks the structure of a network object and returns it or raises an error",
+      "get_estimator()": "returns an estimator function from the registry",
+      "list_estimators()": "lists the registered estimators by name and description",
+      "register_estimator()": "adds an estimator to the registry",
+      "remove_estimator()": "removes an estimator from the registry",
+      "rename_models()": "renames the networks of a group",
+      "rename_models.default()": "renames the networks of a group",
+      "rename_models.netobject_group()": "renames the networks of a group",
+      "session_ids()": "returns the session identifiers of the sequences",
+      "session_ids.default()": "returns the session identifiers of the sequences",
+      "session_ids.net_clustering()": "returns the session identifiers of the sequences",
+      "session_ids.net_mmm()": "returns the session identifiers of the sequences",
+      "session_ids.netobject()": "returns the session identifiers of the sequences",
+      "mark_first_state()": "adds a start-state label to the sequences; labels only",
+      "mark_terminal_state()": "adds an end-state label to the sequences; labels only",
+      "as_tna()": "converts a network object to a tna model, carrying its weights unchanged; computes nothing",
+      "as_tna.default()": "converts a network object to a tna model, carrying its weights unchanged; computes nothing",
+      "as_tna.mcml()": "converts a network object to a tna model, carrying its weights unchanged; computes nothing",
+      "as_netobject()": "converts another network object to a netobject, carrying its weights unchanged; computes nothing",
+      "as_netobject.cograph_network()": "converts another network object to a netobject, carrying its weights unchanged; computes nothing",
+      "as_netobject.default()": "converts another network object to a netobject, carrying its weights unchanged; computes nothing",
+      "as_netobject.netobject()": "converts another network object to a netobject, carrying its weights unchanged; computes nothing",
+      "as_netobject.psychnet()": "converts another network object to a netobject, carrying its weights unchanged; computes nothing",
+      "as_netdifference.default()": "raises a classed error (nestimate_bad_input) for an object that cannot be a difference network; returns no numbers",
+      "pathways()": "returns the higher-order pathways of a model as character strings (\"A B -> C\") for plotting",
+      "pathways.net_association_rules()": "returns pathways as character strings for plotting; the numbers behind them are compared through the model's own function",
+      "pathways.net_hon()": "returns pathways as character strings for plotting; the numbers behind them are compared through the model's own function",
+      "pathways.net_hypa()": "returns pathways as character strings for plotting; the numbers behind them are compared through the model's own function",
+      "pathways.net_link_prediction()": "returns pathways as character strings for plotting; the numbers behind them are compared through the model's own function",
+      "pathways.net_mogen()": "returns pathways as character strings for plotting; the numbers behind them are compared through the model's own function",
+      "pathways.netobject()": "returns pathways as character strings for plotting; the numbers behind them are compared through the model's own function",
+      "mosaic_plot()": "draws a mosaic plot (ggplot); the residuals it shades are those mosaic_test() returns and the tests compare",
+      "mosaic_plot.array()": "draws a mosaic plot (ggplot); the residuals it shades are those mosaic_test() returns and the tests compare",
+      "mosaic_plot.data.frame()": "draws a mosaic plot (ggplot); the residuals it shades are those mosaic_test() returns and the tests compare",
+      "mosaic_plot.default()": "draws a mosaic plot (ggplot); the residuals it shades are those mosaic_test() returns and the tests compare",
+      "mosaic_plot.htna()": "draws a mosaic plot (ggplot); the residuals it shades are those mosaic_test() returns and the tests compare",
+      "mosaic_plot.matrix()": "draws a mosaic plot (ggplot); the residuals it shades are those mosaic_test() returns and the tests compare",
+      "mosaic_plot.mcml()": "draws a mosaic plot (ggplot); the residuals it shades are those mosaic_test() returns and the tests compare",
+      "mosaic_plot.netobject()": "draws a mosaic plot (ggplot); the residuals it shades are those mosaic_test() returns and the tests compare",
+      "mosaic_plot.netobject_group()": "draws a mosaic plot (ggplot); the residuals it shades are those mosaic_test() returns and the tests compare",
+      "mosaic_plot.table()": "draws a mosaic plot (ggplot); the residuals it shades are those mosaic_test() returns and the tests compare",
+      "cluster_diagnostics.default()": "converts a tna model, group_tna or bare cograph_network to a native network and dispatches again; none of these carries a clustering, so every input it accepts ends in the error of class nestimate_bad_input (as ?cluster_diagnostics documents for any other object): it returns no numbers"
+    },
+    "not_yet": {}
+  }
+}

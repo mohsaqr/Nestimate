@@ -47,8 +47,10 @@
 #' With `actor`, a merged sequence must belong entirely to one actor. Every
 #' other method (the association methods, `"attention"`, `"ngram"`, `"gap"`,
 #' `"reverse"` and registered estimators) is re-estimated in full on
-#' resampled rows. A replicate whose estimation fails, or that loses a
-#' node, is left out of the p-values, with a warning of class
+#' resampled rows. Latency networks are not resampled: a network built with
+#' `method = "latency"` raises an error of class
+#' `nestimate_latency_resampling`. A replicate whose estimation fails, or
+#' that loses a node, is left out of the p-values, with a warning of class
 #' `nestimate_resample_failed` that counts them, and the bootstrap
 #' statistics are computed over the remaining replicates; if every
 #' replicate fails, every p-value is 1.
@@ -269,6 +271,7 @@ bootstrap_network <- function(x,
                               actor = NULL) {
   # a tna model or group_tna is rebuilt as a Nestimate network (R/tna_input.R)
   x <- .tna_input(x, "bootstrap_network()", need_data = TRUE, actor = actor)
+  .stop_latency_resampling(list(x), "bootstrap_network()")
   boundary <- match.arg(boundary)
   ci_method <- match.arg(ci_method)
 
@@ -420,14 +423,18 @@ bootstrap_network <- function(x,
                 actor[[1L]], nrow(units)),
         class = "nestimate_bad_actor", call = NULL))
     }
+    # the network's own scaling domain: a wtna network resampled as counts
+    # still scales its non-zero cells only, as build_network() did
     boot_matrices <- .bootstrap_counts(
       units, method = count_method, states = states, scaling = scaling,
-      threshold = threshold, iter = iter, is_relative = counts_relative
+      threshold = threshold, iter = iter, is_relative = counts_relative,
+      include_zeros = .scaling_includes_zeros(method)
     )
     # sequence-level reference drawn in the same run, for the design effect
     reference <- if (is.null(block_ids)) NULL else .bootstrap_counts(
       trans_2d, method = count_method, states = states, scaling = scaling,
-      threshold = threshold, iter = iter, is_relative = counts_relative
+      threshold = threshold, iter = iter, is_relative = counts_relative,
+      include_zeros = .scaling_includes_zeros(method)
     )
   } else {
     .stop_block_unsupported(actor, method)
@@ -680,18 +687,17 @@ bootstrap_network <- function(x,
   }
   concat <- .wide_resampling_concat(params)
   if (concat > 1L) return(as.integer(ceiling(nrow(data) / concat)))
-  actor <- .param_get(params, "actor") %||% .param_get(params, "id") %||%
-    .param_get(params, "id_col")
-  # One-hot rows are time points of one sequence unless a column groups them.
-  if (is.null(actor) && .is_onehot_params(params)) return(1L)
-  if (!is.null(actor) && all(actor %in% names(data))) {
-    if (length(actor) == 1L) {
-      return(length(unique(data[[actor]])))
-    }
-    return(length(unique(interaction(data[, actor, drop = FALSE],
-                                     drop = TRUE))))
-  }
-  nrow(data)
+  # The units the resampler draws: for one-hot data, the actors (or
+  # sessions) of `params$actor` (.precompute_per_sequence_onehot()), and
+  # without one, the rows are time points of one sequence; otherwise every
+  # row is a sequence, whatever id it carries (the estimators count each
+  # row as its own sequence and the resampler draws rows).
+  if (!.is_onehot_params(params)) return(nrow(data))
+  actor <- .param_get(params, "actor")
+  if (is.null(actor)) return(1L)
+  if (!all(actor %in% names(data))) return(nrow(data))
+  if (length(actor) == 1L) return(length(unique(data[[actor]])))
+  length(unique(interaction(data[, actor, drop = FALSE], drop = TRUE)))
 }
 
 
@@ -731,7 +737,8 @@ bootstrap_network <- function(x,
 #' counts) for the cluster bootstrap.
 #' @noRd
 .bootstrap_counts <- function(trans_2d, method, states, scaling, threshold,
-                              iter, is_relative = method == "relative") {
+                              iter, is_relative = method == "relative",
+                              include_zeros = .scaling_includes_zeros(method)) {
   n_states <- length(states)
   nbins <- n_states * n_states
   n_seq <- nrow(trans_2d)
@@ -748,14 +755,15 @@ bootstrap_network <- function(x,
       mat[nz, ] <- mat[nz, ] / rs[nz]
     }
     if (!is.null(scaling)) {
-      mat <- .apply_scaling(mat, scaling,
-                            include_zeros = .scaling_includes_zeros(method))
+      mat <- .apply_scaling(mat, scaling, include_zeros = include_zeros)
     }
     if (threshold > 0) mat[abs(mat) < threshold] <- 0
     as.vector(mat)
   }, numeric(nbins))
 
-  t(boot_flat)
+  # With one state (nbins = 1) vapply returns a vector; keep it nbins x iter
+  # so the result is always iter x nbins.
+  t(matrix(boot_flat, nrow = nbins))
 }
 
 
@@ -769,6 +777,36 @@ bootstrap_network <- function(x,
 #' \code{\link{convert_sequence_format}}.
 #' @noRd
 .precompute_per_sequence <- function(data, method, params, states) {
+  .declared_count_transform(
+    .precompute_per_sequence_counts(data, method, params, states),
+    data, params, states)
+}
+
+
+#' Per-unit weights and symmetrisation a network declares in its params
+#'
+#' A weighted edge list (`params$row_weight`, set by as_tna() for an mcml
+#' built with `weight =`) counts each row by its weight, and a network whose
+#' weights are (W + t(W)) / 2 of the counts W (`params$symmetrize`, set by
+#' as_tna() for an undirected mcml) has each unit's counts symmetrised the
+#' same way. Both are linear, so the summed units equal the fit.
+#' @noRd
+.declared_count_transform <- function(counts, data, params, states) {
+  row_weight <- .param_get(params, "row_weight")
+  if (!is.null(row_weight)) counts <- counts * data[[row_weight]]
+  if (isTRUE(.param_get(params, "symmetrize", FALSE))) {
+    n <- length(states)
+    transposed <- as.vector(matrix(seq_len(n * n), n, n, byrow = TRUE))
+    counts <- (counts + counts[, transposed, drop = FALSE]) / 2
+  }
+  counts
+}
+
+
+#' Per-unit counts as the estimator counts them, before any declared
+#' weighting or symmetrisation (see .precompute_per_sequence())
+#' @noRd
+.precompute_per_sequence_counts <- function(data, method, params, states) {
   # Determine format (mirrors estimator dispatch)
   format <- .param_get(params, "format", "auto")
   action <- .param_get(params, "action")
@@ -805,20 +843,27 @@ bootstrap_network <- function(x,
 
 #' Pre-compute per-sequence counts from windowed sequences
 #'
-#' The estimator's own counting on one row at a time, so a window means the
-#' same in a resample as in the network being resampled.
+#' The estimator's own counting on one sequence at a time, so a window means
+#' the same in a resample as in the network being resampled. With
+#' `params$concat = k`, the estimator merges each run of `k` rows (the last
+#' run may be shorter) into one sequence before windowing; such a merged
+#' sequence is one resampling unit, counted with the same `concat`.
 #' @noRd
 .precompute_per_sequence_windowed <- function(data, method, params, states) {
   count <- if (method == "co_occurrence") .count_cooccurrence_wide else
     .count_transitions_wide
-  rows <- lapply(seq_len(nrow(data)), function(i) {
-    mat <- count(data[i, , drop = FALSE], cols = params$cols, alphabet = states,
+  concat <- .wide_resampling_concat(params)
+  units <- split(seq_len(nrow(data)), ceiling(seq_len(nrow(data)) / concat))
+  rows <- lapply(units, function(ii) {
+    mat <- count(data[ii, , drop = FALSE], cols = params$cols,
+                 alphabet = states, concat = concat,
                  weighted = .param_get(params, "weighted", FALSE),
                  begin_state = .param_get(params, "begin_state"),
                  end_state = .param_get(params, "end_state"))
     as.vector(t(mat[states, states, drop = FALSE]))
   })
-  matrix(unlist(rows), nrow = nrow(data), ncol = length(states)^2L, byrow = TRUE)
+  matrix(unlist(rows), nrow = length(units), ncol = length(states)^2L,
+         byrow = TRUE)
 }
 
 
@@ -833,13 +878,15 @@ bootstrap_network <- function(x,
   n_states <- length(states)
   nbins <- n_states * n_states
 
+  # One unit per actor, in the order the actors first appear in the rows (not
+  # the order of a factor's levels), so the i-th unit of two networks is
+  # their i-th actor, as a paired permutation pairs them.
   groups <- if (is.null(actor)) {
     list(data)
-  } else if (length(actor) == 1L) {
-    split(data, data[[actor]], drop = TRUE)
   } else {
-    split(data, interaction(data[, actor, drop = FALSE], drop = TRUE),
-          drop = TRUE)
+    key <- if (length(actor) == 1L) as.character(data[[actor]]) else
+      as.character(interaction(data[, actor, drop = FALSE], drop = TRUE))
+    split(data, factor(key, levels = unique(key)), drop = TRUE)
   }
 
   rows <- lapply(groups, function(g) {

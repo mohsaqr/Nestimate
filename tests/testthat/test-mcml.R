@@ -2140,7 +2140,7 @@ test_that("a fractional build_mcml trim only ever cuts the end of the data", {
   expect_identical(names(.mcml_trim_sequences(d, 2)), c("T1", "T2"))
 })
 
-test_that("as_tna.mcml labels a cooccurrence mcml co_occurrence, not relative", {
+test_that("as_tna.mcml labels a cooccurrence mcml as symmetrised frequency counts", {
   # Macro transitions G->G 3, Z->G 2, G->Z 2, Z->Z 1 (counts), symmetrised:
   # rows sum to 5 and 3, so they are counts, not probabilities.
   seqs <- data.frame(T1 = c("A", "B", "A", "C"), T2 = c("B", "C", "C", "D"),
@@ -2149,7 +2149,10 @@ test_that("as_tna.mcml labels a cooccurrence mcml co_occurrence, not relative", 
                    type = "cooccurrence")
   g <- as_tna(mc)
   expect_equal(unname(rowSums(g$macro$weights)), c(5, 3))
+  # counts of adjacent pairs, symmetrised: the "co_occurrence" estimator
+  # counts every pair of positions, a different quantity
   expect_identical(unname(vapply(g, function(z) z$method, "")),
-                   rep("co_occurrence", 3L))
+                   rep("frequency", 3L))
+  expect_true(all(vapply(g, function(z) isTRUE(z$params$symmetrize), TRUE)))
   expect_false(g$macro$directed)
 })

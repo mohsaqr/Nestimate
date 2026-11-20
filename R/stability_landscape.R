@@ -1,7 +1,7 @@
 # ---- Stability landscapes (ball-in-cup) of a transition network ----
 
 utils::globalVariables(c("u", "y", "ymin", "ymax", "label", "state", "group", "value", "depth", "h",
-                         "label_y"))
+                         "label_y", "run"))
 
 #' @noRd
 .ls_bad <- function(msg, class = "nestimate_bad_input") {
@@ -18,7 +18,9 @@ utils::globalVariables(c("u", "y", "ymin", "ymax", "label", "state", "group", "v
   if (ncol(codes) < 2L) return(matrix(0L, nrow(codes), k * k))
   cell <- codes[, -ncol(codes), drop = FALSE] * k +
     codes[, -1L, drop = FALSE] + 1L
-  counts <- t(apply(cell, 1L, \(v) tabulate(v[!is.na(v)], nbins = k * k)))
+  # matrix(byrow = TRUE): with one state apply() returns a vector, not k^2 rows
+  counts <- matrix(apply(cell, 1L, \(v) tabulate(v[!is.na(v)], nbins = k * k)),
+                   nrow = nrow(cell), ncol = k * k, byrow = TRUE)
   if (is.null(sequence_weights)) counts else counts * sequence_weights
 }
 
@@ -32,13 +34,25 @@ utils::globalVariables(c("u", "y", "ymin", "ymax", "label", "state", "group", "v
   -log1p(-stay)
 }
 
+# The stationary distribution of a finite chain, or NULL when it is not
+# unique. It is unique exactly when the chain has one closed communicating
+# class (Norris, 1997, Sections 1.5 and 1.7); the transient states outside
+# it get probability 0.
 #' @noRd
-.ls_irreducible <- function(P) {
-  # repeated squaring of the one-step reachability matrix
+.ls_stationary <- function(P) {
+  k <- nrow(P)
+  # transitive closure of one-step reachability, by repeated squaring
   reach <- Reduce(\(r, i) (r %*% r) > 0,
-                  seq_len(ceiling(log2(nrow(P))) + 1L),
-                  (P > 0) | diag(nrow(P)) > 0)
-  all(reach)
+                  seq_len(ceiling(log2(k)) + 1L),
+                  (P > 0) | diag(k) > 0)
+  # i is in a closed class when every state it reaches reaches it back
+  closed <- vapply(seq_len(k), \(i) all(reach[reach[i, ], i]), logical(1))
+  members <- which(closed)
+  # one closed class: its members all reach one another
+  if (length(members) == 0L || !all(reach[members, members])) return(NULL)
+  pi <- numeric(k)
+  pi[members] <- .mpt_stationary(P[members, members, drop = FALSE])
+  pi
 }
 
 # Net circulation of a three-state chain: the net flux pi_1 P_12 - pi_2 P_21,
@@ -49,8 +63,8 @@ utils::globalVariables(c("u", "y", "ymin", "ymax", "label", "state", "group", "v
   out_n <- rowSums(n)
   if (any(out_n == 0)) return(NA_real_)
   P <- n / out_n
-  if (!.ls_irreducible(P)) return(NA_real_)
-  pi <- .mpt_stationary(P)
+  pi <- .ls_stationary(P)
+  if (is.null(pi)) return(NA_real_)
   pi[1L] * P[1L, 2L] - pi[2L] * P[2L, 1L]
 }
 
@@ -75,6 +89,18 @@ utils::globalVariables(c("u", "y", "ymin", "ymax", "label", "state", "group", "v
     .ls_bad("Landscapes require an unscaled, unthresholded transition network.")
   }
   params <- x$params %||% list()
+  # A cup's depth is the log expected stay in steps, from one-step
+  # transitions; a windowed network counts transitions between blocks of
+  # positions, whose self-transitions are not stays.
+  if (isTRUE(attr(x$data, "windowed")) ||
+      !is.null(.param_get(params, "window_size")) ||
+      !is.null(.param_get(params, "window_span")) ||
+      isTRUE(.param_get(params, "windowed"))) {
+    .ls_bad(paste(
+      "Landscapes need one-step transitions; this network counts them",
+      "between windows of positions (`params$window_size`). Build it",
+      "without a window."))
+  }
   concat <- as.integer(.param_get(params, "concat", 1L))
   prepared <- .prepare_sequence_wide(
     as.data.frame(seqs$states), concat = concat,
@@ -97,19 +123,39 @@ utils::globalVariables(c("u", "y", "ymin", "ymax", "label", "state", "group", "v
     1 / pmax(rowSums(!is.na(seqs$states)), 1L)
   } else rep(1, nrow(seqs$states))
   # Pruned or otherwise modified weights do not describe the stored sequences.
+  # A relative network is checked on its counts too: proportions alone agree
+  # with any multiple of the counts.
   counts <- matrix(colSums(.ls_counts(seqs$states, seqs$alphabet,
                                       seqs$sequence_weights)),
                    length(seqs$alphabet), byrow = TRUE)
   reconstructed <- if (x$method == "relative") {
     counts / pmax(rowSums(counts), .Machine$double.xmin)
   } else counts
-  original <- x$weights[seqs$alphabet, seqs$alphabet, drop = FALSE]
-  if (!isTRUE(all.equal(unname(original), reconstructed,
-                       check.attributes = FALSE, tolerance = 1e-10))) {
+  agrees <- function(stored, rebuilt) {
+    stored <- stored[seqs$alphabet, seqs$alphabet, drop = FALSE]
+    isTRUE(all.equal(unname(stored), rebuilt, check.attributes = FALSE,
+                     tolerance = 1e-10))
+  }
+  stored_counts <- x$frequency_matrix
+  if (!agrees(x$weights, reconstructed) ||
+      (is.matrix(stored_counts) &&
+         all(seqs$alphabet %in% rownames(stored_counts)) &&
+         !agrees(stored_counts, counts))) {
     .ls_bad(paste("The network weights cannot be reconstructed from its",
                   "stored sequences and estimation settings."))
   }
   seqs
+}
+
+# The networks a landscape verb draws one landscape each for: every group of
+# a grouped network, a tna::group_tna() converted to one first, otherwise the
+# one network.
+#' @noRd
+.ls_parts <- function(x, what) {
+  if (inherits(x, "group_tna")) {
+    x <- .tna_input(x, what = what, need_data = TRUE)
+  }
+  if (inherits(x, "netobject_group")) as.list(x) else list(network = x)
 }
 
 #' @noRd
@@ -214,9 +260,11 @@ utils::globalVariables(c("u", "y", "ymin", "ymax", "label", "state", "group", "v
 #'
 #' Depth is a property of the state alone. How often the process enters the
 #' state is its `share` of the observed time steps, reported beside the
-#' depth, and where the process goes when it leaves is in the exit
-#' probabilities (`summary(x, table = "exits")`), which the plot writes under
-#' each cup. With three states the result also reports the net circulation,
+#' depth, and where it goes next is in the exit probabilities
+#' (`summary(x, table = "exits")`), the one-step transition probabilities
+#' \eqn{P_{ij}}: their denominator includes the stays, so a state's exits
+#' sum to \eqn{1 - P_{ii}}. The plot writes them under each cup. With three
+#' states the result also reports the net circulation,
 #' the net probability flux \eqn{\pi_i P_{ij} - \pi_j P_{ji}} around the
 #' cycle, which stationarity makes equal on all three edges (Schnakenberg
 #' 1976): zero for a chain whose every transition is as common as its
@@ -246,8 +294,10 @@ utils::globalVariables(c("u", "y", "ymin", "ymax", "label", "state", "group", "v
 #' @param x The network or sequences: a transition network from
 #'   [build_network()] with method `"relative"` or `"frequency"` (or a bare
 #'   `cograph_network` of one), a grouped one (`netobject_group`, for example
-#'   [build_network()] of a [build_clusters()] result), a `tna` model, or a
-#'   wide sequence data frame or matrix. A network must carry its sequences;
+#'   [build_network()] of a [build_clusters()] result), a `tna` model or a `group_tna` (one landscape
+#'   per group), or a
+#'   wide sequence data frame or matrix. A network must count one-step transitions (a
+#'   windowed one raises an error) and carry its sequences;
 #'   a network of another method (for example `"glasso"`) raises an error of
 #'   class `nestimate_not_markov`. For the `print()` and `plot()` methods: a
 #'   `net_landscape` object.
@@ -290,7 +340,8 @@ utils::globalVariables(c("u", "y", "ymin", "ymax", "label", "state", "group", "v
 #'   (\eqn{P_{ii}}), `share` (share of observed time steps in the state),
 #'   `n_from` (transitions out of the state, self-transitions included) and
 #'   `resamples`. With `table = "exits"`: one row per network and pair of
-#'   distinct states, with `group`, `from`, `to`, `probability` and `count`.
+#'   distinct states, with `group`, `from`, `to`, `probability` (the one-step transition
+#'   probability \eqn{P_{ij}}, stays included in the denominator) and `count`.
 #'   With `table = "circulation"`: one row per network, with `group`,
 #'   `cycle` (the direction of the net flow), `current`, `ci_lower`,
 #'   `ci_upper` and `resamples` (resamples with a unique stationary
@@ -347,8 +398,7 @@ stability_landscape <- function(x, states = NULL, iter = 1000L,
       length(ci_level) == 1L && is.numeric(ci_level) && ci_level > 0 &&
       ci_level < 1
   )
-  parts <- if (inherits(x, "netobject_group")) as.list(x) else
-    list(network = x)
+  parts <- .ls_parts(x, "stability_landscape()")
   seqs <- lapply(parts, .ls_sequences, cols = cols)
   alphabet <- sort(unique(unlist(lapply(seqs, \(s) s$alphabet))))
   if (length(alphabet) < 2L) .ls_bad("A landscape needs at least two states.")
@@ -598,7 +648,8 @@ plot.net_landscape <- function(x, ...) {
 #' @param x The network or sequences: a transition network from
 #'   [build_network()] with method `"relative"` or `"frequency"` (or a bare
 #'   `cograph_network` of one), a grouped one (`netobject_group`), a `tna`
-#'   model, or a wide sequence data frame or matrix. A network must carry its
+#'   model or a `group_tna` (one landscape per group), or a wide sequence data frame or matrix. A network must count one-step transitions (a
+#'   windowed one raises an error) and carry its
 #'   sequences; a network of another method (for example `"glasso"`) raises
 #'   an error of class `nestimate_not_markov`. For the `print()` and `plot()`
 #'   methods: a `net_landscape_surface` object.
@@ -700,8 +751,7 @@ landscape_surface <- function(x, measure = "longitudinal_entropy",
   if (!is.character(measure) || length(measure) == 0L) {
     .ls_bad("`measure` must name one or more sequence_metrics() columns.")
   }
-  parts <- if (inherits(x, "netobject_group")) as.list(x) else
-    list(network = x)
+  parts <- .ls_parts(x, "landscape_surface()")
   seqs <- lapply(parts, .ls_sequences, cols = cols)
   alphabet <- sort(unique(unlist(lapply(seqs, \(s) s$alphabet))))
   states <- .ls_states(states, alphabet)
@@ -877,7 +927,8 @@ plot.net_landscape_surface <- function(x, max_stay = 50, theta = 10, phi = 30,
 # stationary distribution) and ridges at -log of the symmetrised flux
 # (pi_i P_ij + pi_j P_ji) / 2 between neighbours in state order and between
 # the last and the first state. All NA when the chain has no unique
-# stationary distribution; a ridge never crossed is NA.
+# stationary distribution; a transient state's cup is Inf (pi = 0) and a
+# ridge never crossed is NA.
 #' @noRd
 .ls_n_ridges <- function(k) if (k == 2L) 1L else k
 
@@ -887,8 +938,8 @@ plot.net_landscape_surface <- function(x, max_stay = 50, theta = 10, phi = 30,
   n_out <- k + .ls_n_ridges(k)
   if (any(out_n == 0)) return(rep(NA_real_, n_out))
   P <- n / out_n
-  if (!.ls_irreducible(P)) return(rep(NA_real_, n_out))
-  pi <- .mpt_stationary(P)
+  pi <- .ls_stationary(P)
+  if (is.null(pi)) return(rep(NA_real_, n_out))
   nxt <- c(seq_len(k)[-1L], 1L)
   sym <- (pi * P[cbind(seq_len(k), nxt)] + pi[nxt] * P[cbind(nxt, seq_len(k))]) / 2
   # with two states the last-first ridge is the one pair already counted
@@ -999,8 +1050,10 @@ plot.net_landscape_surface <- function(x, max_stay = 50, theta = 10, phi = 30,
 #' gives an infinite depth, and one in which it does not occur gives `NA`.
 #' With `depth = "occupancy"`, ridges join the states next to each other in
 #' `states` order and the last state to the first (one ridge with two
-#' states); a window whose chain has no unique stationary distribution is
-#' `NA` throughout, and a ridge never crossed is `NA`. Such points are kept
+#' states); a window whose chain has no unique stationary distribution
+#' (more than one closed class of states) is `NA` throughout, a state
+#' outside the closed class (transient) has an infinite potential, and a
+#' ridge never crossed is `NA`. Such points are kept
 #' in `summary()`, left out of the lines and the surface, and counted in the
 #' plot caption. Interval bands are clipped at the panel edge, which is set
 #' by the estimates.
@@ -1013,10 +1066,11 @@ plot.net_landscape_surface <- function(x, max_stay = 50, theta = 10, phi = 30,
 #' @param x The network or sequences: a transition network from
 #'   [build_network()] with method `"relative"` or `"frequency"` (or a bare
 #'   `cograph_network` of one), a grouped one (`netobject_group`), a `tna`
-#'   model, or a wide sequence data frame. A covariate is read from the
+#'   model or a `group_tna` (one landscape per group), or a wide sequence data frame. A covariate is read from the
 #'   network's metadata, which [build_network()] fills with the numeric
 #'   columns of a wide data frame, or from a data frame's columns beside the
-#'   positions. A network must carry its sequences; a network of another
+#'   positions. A network must count one-step transitions (a
+#'   windowed one raises an error) and carry its sequences; a network of another
 #'   method (for example `"glasso"`) raises an error of class
 #'   `nestimate_not_markov`. For the `print()` and `plot()` methods: a
 #'   `net_landscape_trend` object.
@@ -1142,8 +1196,7 @@ landscape_trend <- function(x, along = "phase",
       length(ci_level) == 1L && is.numeric(ci_level) && ci_level > 0 &&
       ci_level < 1
   )
-  parts <- if (inherits(x, "netobject_group")) as.list(x) else
-    list(network = x)
+  parts <- .ls_parts(x, "landscape_trend()")
   seqs <- lapply(parts, .ls_sequences, cols = cols)
   alphabet <- sort(unique(unlist(lapply(seqs, \(s) s$alphabet))))
   if (length(alphabet) < 2L) .ls_bad("A landscape needs at least two states.")
@@ -1264,6 +1317,11 @@ plot.net_landscape_trend <- function(x, type = c("lines", "surface"),
   tab <- x$table[x$table$feature == "well", ]
   tab$h <- tab[[hc]]
   bad <- sum(!is.finite(tab$h))
+  # A line does not bridge a point that is not estimable: each state's line
+  # is split into runs, a new one after every such point.
+  tab <- tab[order(tab$group, tab$state, tab$value), ]
+  tab$run <- stats::ave(as.numeric(!is.finite(tab$h)), tab$group, tab$state,
+                        FUN = cumsum)
   tab <- tab[is.finite(tab$h), ]
   tab$ci_upper[!is.finite(tab$ci_upper)] <- NA_real_
   tab$state <- factor(tab$state, levels = x$states)
@@ -1290,9 +1348,11 @@ plot.net_landscape_trend <- function(x, type = c("lines", "surface"),
   p <- ggplot2::ggplot(tab, ggplot2::aes(value, h, colour = state,
                                          fill = state, shape = state,
                                          linetype = state)) +
-    ggplot2::geom_ribbon(ggplot2::aes(ymin = ci_lower, ymax = ci_upper),
+    ggplot2::geom_ribbon(ggplot2::aes(ymin = ci_lower, ymax = ci_upper,
+                                      group = interaction(state, run)),
                          alpha = 0.15, colour = NA, na.rm = TRUE) +
-    ggplot2::geom_line(linewidth = 0.9) +
+    ggplot2::geom_line(ggplot2::aes(group = interaction(state, run)),
+                       linewidth = 0.9) +
     ggplot2::geom_point(size = 2.2, fill = "white") +
     ggplot2::geom_text(data = last, ggplot2::aes(label = state), hjust = -0.15,
                        size = 3.4, show.legend = FALSE) +
@@ -1310,8 +1370,9 @@ plot.net_landscape_trend <- function(x, type = c("lines", "surface"),
                   caption = paste0(sprintf(
                     "Bands: %d%% interval, %d resamples of sequences, clipped at the panel edge.",
                     round(100 * x$ci_level), x$iter),
-                    if (bad > 0L) sprintf(" %d point%s not estimable, not drawn.",
-                                          bad, if (bad == 1L) "" else "s")
+                    if (bad > 0L) sprintf(
+                      " %d point%s not estimable, not drawn; lines break there.",
+                      bad, if (bad == 1L) "" else "s")
                     else "")) +
     ggplot2::theme_minimal(base_size = 12) +
     ggplot2::theme(legend.position = "bottom",

@@ -66,7 +66,9 @@ multiplicative processes.}
 \item{directed}{Whether the network is directed, so that A->B and B->A are
 separate edges. Default \code{TRUE}. \code{FALSE} replaces the matrix by the mean
 of it and its transpose before aggregating, which makes every layer
-symmetric.}
+symmetric; each undirected edge then counts once, so a cluster's macro
+self-loop aggregates the upper triangle of its block with the diagonal
+(and \code{"density"} divides by its \code{n_i (n_i + 1) / 2} possible edges).}
 
 \item{compute_within}{Whether to build the within-cluster networks, one
 n_i x n_i matrix per cluster. Default \code{TRUE}; \code{FALSE} skips them when

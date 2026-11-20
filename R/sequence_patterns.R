@@ -173,8 +173,16 @@ sequence_patterns <- function(x, type = c("ngram", "gapped", "repeated"),
   if (inherits(x, "group_tna")) {
     x <- .tna_input(x, "sequence_patterns()", need_data = TRUE)
   }
-  type <- match.arg(type)
   adjust <- match.arg(adjust, stats::p.adjust.methods)
+  # a `pattern` template sets the shape of the search, so `type`, `len` and
+  # `gap` are ignored, as documented, and not validated
+  if (is.null(pattern)) {
+    type <- match.arg(type)
+  } else {
+    type <- NULL
+    len <- NULL
+    gap <- NULL
+  }
   .sp_check_args(len, gap, min_freq, min_support, start, end, contain)
   .assert(
     "`top` must be NULL or a single positive whole number" = is.null(top) ||
@@ -377,14 +385,16 @@ sequence_patterns <- function(x, type = c("ngram", "gapped", "repeated"),
 
 
 #' Validate the pattern arguments shared by the pattern verbs
+#'
+#' `len` and `gap` may be NULL when a `pattern` template replaces them.
 #' @noRd
 .sp_check_args <- function(len, gap, min_freq, min_support,
                            start = NULL, end = NULL, contain = NULL) {
   is_counts <- function(v) is.numeric(v) && length(v) >= 1L &&
     all(is.finite(v)) && all(v >= 1) && all(v == round(v))
   .assert(
-    "`len` must be positive whole numbers" = is_counts(len),
-    "`gap` must be positive whole numbers" = is_counts(gap),
+    "`len` must be positive whole numbers" = is.null(len) || is_counts(len),
+    "`gap` must be positive whole numbers" = is.null(gap) || is_counts(gap),
     "`min_freq` must be a single number >= 1" =
       is.numeric(min_freq) && length(min_freq) == 1L && min_freq >= 1,
     "`min_support` must be a single number in [0, 1]" =

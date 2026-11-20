@@ -32,8 +32,9 @@
 #' @param type The weights: `"frequency"` (default) keeps the counts, and
 #'   `"relative"` divides each row by its sum (a row without counts stays
 #'   zero). On a co-occurrence network `"relative"` gives an asymmetric
-#'   matrix, the co-occurrence conditional on the row's code, so keep
-#'   `"frequency"` when symmetric counts are needed.
+#'   matrix, the co-occurrence conditional on the row's code, so the
+#'   network is then directed (each cell its own edge); keep `"frequency"`
+#'   when symmetric counts are needed.
 #' @param codes The one-hot columns, as names, as column positions, or as a
 #'   single `"first:last"` string naming a range of adjacent columns.
 #'   Default `NULL`, every numeric or logical column holding only 0, 1 and
@@ -478,7 +479,8 @@ wtna <- function(data,
   }
 
   dimnames(weights) <- list(codes, codes)
-  directed <- method == "transition"
+  # row-normalised co-occurrence is asymmetric: each cell is its own edge
+  directed <- method == "transition" || type == "relative"
 
   # Extract edges
   edges <- .extract_edges_from_matrix(weights, directed = directed)
@@ -560,7 +562,8 @@ wtna <- function(data,
   }
 
   dimnames(weights) <- list(codes, codes)
-  directed <- wtna_method == "transition"
+  # row-normalised co-occurrence is asymmetric: each cell is its own edge
+  directed <- wtna_method == "transition" || type == "relative"
 
   list(
     matrix = weights,
@@ -639,8 +642,9 @@ print.wtna_mixed <- function(x, ...) {
   cat("-- Transition (directed) --\n")
   t <- x$transition
   cat(sprintf("  Nodes: %d  |  Edges: %d\n", t$n_nodes, t$n_edges))
-  cat("-- Co-occurrence (undirected) --\n")
   co <- x$cooccurrence
+  cat(if (isTRUE(co$directed)) "-- Co-occurrence (row-normalised, directed) --\n" else
+    "-- Co-occurrence (undirected) --\n")
   cat(sprintf("  Nodes: %d  |  Edges: %d\n", co$n_nodes, co$n_edges))
   invisible(x)
 }

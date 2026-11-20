@@ -130,6 +130,33 @@
   trajectories
 }
 
+#' Refuse states whose label contains a node-name separator
+#'
+#' A higher-order node is named by its states joined with `" -> "`, and keyed
+#' internally by them joined with `.HON_SEP`. A state containing either would
+#' share its name with a higher-order node (the state `"A -> B"` and B
+#' reached from A), merging two rows of the transition matrix, and every
+#' reader that splits node names on the arrow would misread it. The arrow is
+#' the package's public node notation, so such labels are refused rather
+#' than re-keyed.
+#' @param trajectories List of character vectors.
+#' @param fn Name of the calling function, for the message.
+#' @noRd
+.hon_refuse_separator_states <- function(trajectories, fn) {
+  states <- unique(unlist(trajectories, use.names = FALSE))
+  bad <- states[grepl(" -> ", states, fixed = TRUE) |
+                  grepl(.HON_SEP, states, fixed = TRUE)]
+  if (length(bad)) {
+    stop(errorCondition(
+      sprintf(paste0("%s: state labels must not contain \" -> \", which ",
+                     "joins the states of a higher-order node; rename %s."),
+              fn, paste0("\"", bad[seq_len(min(3L, length(bad)))], "\"",
+                         collapse = ", ")),
+      class = "nestimate_bad_input", call = NULL))
+  }
+  invisible(NULL)
+}
+
 # ---------------------------------------------------------------------------
 # Observation counting
 # ---------------------------------------------------------------------------
@@ -1117,7 +1144,9 @@
 #'   raised. A one-hot or association network, a `netobject_group`, a
 #'   classed list, and a matrix or data frame of only 0 and 1 raise an
 #'   error of class
-#'   `nestimate_bad_input`.
+#'   `nestimate_bad_input`. A state whose label contains `" -> "`, the
+#'   separator of the node names, also raises `nestimate_bad_input`: the
+#'   state `"A -> B"` and the node of B reached from A would be one node.
 #' @param max_order The highest order a node may reach, that is, how many
 #'   states of history it carries. Default `5`. Lower orders result where
 #'   the data do not support a longer history; `print()` reports the highest
@@ -1273,6 +1302,7 @@ build_hon <- function(data, max_order = 5L, min_freq = 1L,
       "No valid trajectories (each must have at least 2 states)",
       class = "nestimate_bad_input", call = NULL))
   }
+  .hon_refuse_separator_states(trajectories, "build_hon()")
 
   # --- Extract rules ---
   extraction <- if (method == "hon+") {

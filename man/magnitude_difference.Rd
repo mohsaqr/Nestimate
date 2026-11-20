@@ -49,11 +49,15 @@ as they are, so the difference is in probability units. \code{"rank_minmax"}
 replaces each matrix's values by their ranks scaled to [0, 1]
 (ordinal). \code{"minmax"} scales each matrix to [0, 1] separately, so the
 two maxima map to the same value although their native ranges differ.
-\code{"none"} uses the raw weights.}
+\code{"none"} uses the raw weights. A matrix whose weights are all equal has
+no range to rescale and maps to the middle of the target range (0.5,
+or for \code{"tna_range"} the middle of the probability range).}
 
 \item{format}{The input format passed to \code{\link[=build_network]{build_network()}}. \code{"auto"}
 (default) reads wide sequences when \code{action} is \code{NULL} and an event log
-otherwise; \code{"long"} and \code{"wide"} force a reading.}
+otherwise; \code{"long"} and \code{"wide"} force a reading. \code{"long"} needs
+\code{action}; without it, an error of class \code{nestimate_bad_input} is
+raised.}
 
 \item{x}{For the \code{print()} and \code{plot()} methods: a \code{magnitude_difference}
 object.}

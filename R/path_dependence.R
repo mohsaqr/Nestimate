@@ -239,7 +239,10 @@ path_dependence <- function(x, order = 2L, min_count = 5L, base = 2) {
     out[sub$next_state] <- sub$p
     out
   }
-  p1_cache <- vapply(states, build_p1, numeric(length(states)))
+  # matrix(): with one state vapply() returns a plain vector, not 1 x 1
+  p1_cache <- matrix(vapply(states, build_p1, numeric(length(states))),
+                     length(states), length(states),
+                     dimnames = list(states, states))
   ## p1_cache is states x states matrix: rows = next_state, cols = last_state
 
   ## Order-k conditional table

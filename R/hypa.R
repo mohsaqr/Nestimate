@@ -411,9 +411,14 @@
 #'       propensity matrix keeps the observed in- and out-strength of every
 #'       De Bruijn node (at order 2 this equals the first-order Markov
 #'       expectation \eqn{n(a b \cdot) n(\cdot b c) /
-#'       n(\cdot b \cdot)}{n(a,b,.) n(.,b,c) / n(.,b,.)});
+#'       n(\cdot b \cdot)}{n(a,b,.) n(.,b,c) / n(.,b,.)}), from the
+#'       continuous fit;
 #'       `ratio`, observed / expected; `p_under`, the hypergeometric
-#'       lower-tail probability `P(X <= observed)`, and `p_value`, the same
+#'       lower-tail probability `P(X <= observed)`, whose pool sizes are the
+#'       propensities rounded to whole numbers, as the hypergeometric
+#'       distribution requires, so its mean can differ from `expected` by up
+#'       to about `0.5 / m` for `m` observed paths of that order; and
+#'       `p_value`, the same
 #'       value under its older name; `p_over`, the strict upper tail
 #'       `P(X > observed) = 1 - p_under`, so that `p_over <= alpha` is the
 #'       paper's HYPA score of at least `1 - alpha`; `p_adjusted_under` and

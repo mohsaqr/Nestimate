@@ -89,7 +89,7 @@ extract_sequences <- function(x, cols = NULL, actor = NULL, action = NULL,
 #' @noRd
 # Methods whose $data are sequences of states.
 .sequence_methods <- c("relative", "frequency", "co_occurrence", "attention",
-                       "ngram", "gap", "reverse", "entropy")
+                       "ngram", "gap", "reverse", "latency", "entropy")
 
 # Name of the column that holds a grouped network's group labels: the
 # grouping column, or for several the joined names ("Achiever-Course"),

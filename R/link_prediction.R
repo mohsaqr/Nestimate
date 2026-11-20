@@ -73,6 +73,7 @@
 #'     `NULL` when only one index was computed.}
 #'   \item{scores}{Named list of score matrices, one per index.}
 #'   \item{adjacency}{The 0/1 adjacency matrix of the input network.}
+#'   \item{weights}{The weight matrix of the input network.}
 #'   \item{methods}{The indices computed.}
 #'   \item{nodes}{The node names.}
 #'   \item{directed, weighted}{Whether the network was read as directed, and
@@ -233,6 +234,7 @@ predict_links <- function(x,
     consensus   = consensus,
     scores      = score_mats,
     adjacency   = A,
+    weights     = W,
     methods     = methods,
     nodes       = nodes,
     directed    = directed,
@@ -291,7 +293,7 @@ predict_links <- function(x,
   # RA(i,j) = sum_z M(i,z)*M(z,j) / degree(z)
   deg <- if (directed) rowSums(A) + colSums(A) else rowSums(A)
   inv_deg <- ifelse(deg > 0, 1 / deg, 0)
-  D <- diag(inv_deg)
+  D <- diag(inv_deg, nrow = length(inv_deg))  # diag(x) of a length-1 x is x-by-x
   if (directed) {
     s <- M %*% D %*% t(M) + t(M) %*% D %*% M
   } else {
@@ -305,7 +307,7 @@ predict_links <- function(x,
 .lp_adamic_adar <- function(M, A, directed) {
   deg <- if (directed) rowSums(A) + colSums(A) else rowSums(A)
   inv_log_deg <- ifelse(deg > 1, 1 / log(deg), 0)
-  D <- diag(inv_log_deg)
+  D <- diag(inv_log_deg, nrow = length(inv_log_deg))
   if (directed) {
     s <- M %*% D %*% t(M) + t(M) %*% D %*% M
   } else {
@@ -328,10 +330,11 @@ predict_links <- function(x,
   B <- abs(M)
   if (directed) B <- pmax(B, t(B))
   n <- nrow(B)
+  # matrix(): vapply() returns a plain vector, not a 1 x 1 matrix, at n = 1
   overlap <- function(f) {
-    vapply(seq_len(n), function(i) {
+    matrix(vapply(seq_len(n), function(i) {
       rowSums(f(B, matrix(B[i, ], n, n, byrow = TRUE)))
-    }, numeric(n))
+    }, numeric(n)), n, n)
   }
   intersection <- overlap(pmin)
   union_mat <- overlap(pmax)
@@ -472,7 +475,7 @@ predict_links <- function(x,
     df <- data.frame(
       from   = idx$from,
       to     = idx$to,
-      method = m,
+      method = rep(m, nrow(idx)),           # 0 pairs on a one-node network
       score  = scores,
       existing = existing,
       stringsAsFactors = FALSE
@@ -532,7 +535,8 @@ predict_links <- function(x,
 #' @return A data frame with one row per index: `method`, `auc`,
 #'   `average_precision` (`0` when no evaluated pair is a known edge), and
 #'   one `precision_at_<k>` column per value of `k`. A prediction with no
-#'   listed pairs (every possible link already exists) gives `NULL`.
+#'   listed pairs (every possible link already exists) gives a zero-row
+#'   data frame with these columns.
 #'
 #' @examples
 #' seqs <- data.frame(

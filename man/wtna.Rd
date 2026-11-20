@@ -33,8 +33,9 @@ returns the two networks together as a \code{wtna_mixed}.}
 \item{type}{The weights: \code{"frequency"} (default) keeps the counts, and
 \code{"relative"} divides each row by its sum (a row without counts stays
 zero). On a co-occurrence network \code{"relative"} gives an asymmetric
-matrix, the co-occurrence conditional on the row's code, so keep
-\code{"frequency"} when symmetric counts are needed.}
+matrix, the co-occurrence conditional on the row's code, so the
+network is then directed (each cell its own edge); keep \code{"frequency"}
+when symmetric counts are needed.}
 
 \item{codes}{The one-hot columns, as names, as column positions, or as a
 single \code{"first:last"} string naming a range of adjacent columns.

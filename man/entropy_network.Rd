@@ -25,8 +25,8 @@ or a matrix with negative entries raises an error of class
 network at a time.}
 
 \item{base}{The logarithm base, which sets the unit: \code{2} (default) for
-bits, \code{exp(1)} for nats, \code{10} for hartleys. Any positive number other
-than 1.}
+bits, \code{exp(1)} for nats, \code{10} for hartleys. Any finite number greater
+than 1; another value raises an error of class \code{nestimate_bad_input}.}
 
 \item{weight}{What each edge's weight measures:
 \describe{
@@ -68,8 +68,8 @@ such rows raise an error. Default \code{TRUE}. A state with no outgoing
 transitions (a row summing to zero) is an error either way.}
 }
 \value{
-A \code{netobject} (class \code{c("netobject", "cograph_network")}; for a
-bare \code{cograph_network} input, that network with its own class) with
+A \code{netobject} (class \code{c("netobject", "cograph_network")}, also
+for a bare \code{cograph_network} input) with
 method \code{"entropy"}, whose weights are the per-edge entropy quantities.
 Print it for an overview; \code{summary()} (see \code{\link[=build_network]{build_network()}}) gives its
 network metrics,
@@ -78,7 +78,10 @@ When \code{x} is a network (or sequence data, from which a relative network
 is built), the result is that network with the entropy weights swapped
 in: its initial probabilities, metadata, node groups and node
 coordinates are kept, so it plots with the same TNA styling and layout
-as its source. The stored parameters are \code{base}, \code{weight}, \code{scaling},
+as its source. A bare \code{cograph_network} is first converted to a
+\code{netobject}, which keeps its nodes, data, metadata, node groups and
+parameters but no other field (its \code{inits}, for one, is dropped). The
+stored parameters are \code{base}, \code{weight}, \code{scaling},
 the entropy rate \code{entropy_rate} (whatever the weight) and the stationary
 distribution \code{stationary}, plus \code{production_rate} and \code{n_oneway_pairs}
 when \code{weight = "production"}.

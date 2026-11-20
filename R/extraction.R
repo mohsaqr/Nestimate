@@ -300,6 +300,10 @@ summary.nest_initial_probs <- function(object, ...) {
 #'   \item{to}{The target state.}
 #'   \item{weight}{The edge weight (for a `"relative"` network, the
 #'     transition probability).}
+#'   \item{n_replies}{For a `"latency"` network only: the number of replies
+#'     the edge holds (an integer).}
+#'   \item{median_latency}{For a `"latency"` network only: the median time
+#'     of those replies, in seconds.}
 #' }
 #'
 #'   For an `mcml`: a named list of such data frames, `macro` first and then
@@ -383,6 +387,13 @@ extract_edges <- function(model,
     stringsAsFactors = FALSE
   )
   edges$weight <- as.vector(weights)
+  # A latency network also reports, per edge, its replies and their median
+  # latency; the matrices share the weight matrix's layout.
+  if (inherits(model, "netobject") && identical(model$method, "latency") &&
+      is.matrix(model$n_replies)) {
+    edges$n_replies <- as.integer(as.vector(model$n_replies))
+    edges$median_latency <- as.vector(model$median_latency)
+  }
 
   # An edge is a non-zero cell: |weight| > threshold keeps negative edges
   # (correlation, partial-correlation, mlVAR networks) and drops zero

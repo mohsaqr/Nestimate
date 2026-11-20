@@ -48,7 +48,8 @@ two categories of either variable remain, an error is raised.}
 chi-square test, or \code{"fisher"} for Fisher's exact test: exact for a
 2 x 2 table, and otherwise with a p-value simulated from 10,000 tables
 (so it changes with the random seed and cannot fall below 1/10,001).
-Cramer's V and the residuals come from the chi-square statistic. Used
+Cramer's V and the residuals come from Pearson's chi-square (V from
+the statistic without Yates' correction). Used
 when \code{nested = FALSE}; given with \code{nested = TRUE} it is ignored with a
 warning of class \code{nestimate_ignored_argument}.}
 
@@ -125,7 +126,10 @@ where the test has none.}
 \item{test}{The \code{htest} object of the test reported; \code{NULL} for a
 nested test.}
 \item{actor}{The \code{actor} column names, or \code{NULL}.}
-\item{cramers_v, effect_size}{Cramer's V, unrounded, and its label.}
+\item{cramers_v, effect_size}{Cramer's V, unrounded, and its label.
+V is computed from Pearson's chi-square without Yates' continuity
+correction, as Cramer defined it, so a perfect 2 x 2 association
+gives 1; the 2 x 2 test reported keeps the correction.}
 \item{table}{The filtered contingency table.}
 \item{removed}{The dropped categories, as a list with \code{var1} and
 \code{var2}.}

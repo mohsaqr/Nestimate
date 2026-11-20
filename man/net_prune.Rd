@@ -78,7 +78,7 @@ bootstrap is run here on \code{x}. For a \code{netobject_group}, pass the
 \code{net_bootstrap_group} of \code{\link[=bootstrap_network]{bootstrap_network()}} on the group, matched
 to the networks by name, or \code{NULL} to bootstrap each network on its
 own. Another object, a bootstrap of another network (its weights
-differ), a single \code{net_bootstrap} for a group, or a group bootstrap
+or its data differ), a single \code{net_bootstrap} for a group, or a group bootstrap
 missing one of the networks raises an error of class
 \code{nestimate_bad_input}.}
 
@@ -138,11 +138,11 @@ stays weakly connected without it, so a network that is not weakly
 connected to begin with loses no edge to these two methods.
 \code{"disparity"} and \code{"bootstrap"} apply no connectivity check. Negative
 edges are never candidates for \code{"threshold"} and \code{"lowest"}, whatever
-their size. On a signed network, \code{"disparity"} treats negative edges as
-not significant and removes them at the default \code{level}; at a \code{level}
-above 0.5, a negative edge leaving a state with no positive outgoing edge
-(or entering one with no positive incoming edge) can stay. \code{"bootstrap"}
-removes the non-significant edges of either sign.
+their size. On a signed network, \code{"disparity"} reads the positive edges
+only, as the filter is defined for non-negative weights: the strengths
+and degrees it divides by are those of the positive edges, and every
+negative edge is removed. \code{"bootstrap"} removes the non-significant edges
+of either sign.
 
 On an undirected network an edge is a pair of cells: it is removed in
 both directions or kept in both, so the pruned matrix stays symmetric,

@@ -90,7 +90,10 @@ values.}
 supports (see \emph{Details}). The permutation and Bayesian tests need
 networks that carry their data and share one estimation method, and the
 Bayesian test needs \code{"relative"} or \code{"frequency"} networks; otherwise an
-error of class \code{nestimate_compare_test_unsupported} is raised.}
+error of class \code{nestimate_compare_test_unsupported} is raised. Latency
+networks are not resampled: with \code{"permutation"} or \code{"bootstrap"}, a
+network built with \code{method = "latency"} raises an error of class
+\code{nestimate_latency_resampling}.}
 
 \item{iter}{The number of permutations, posterior draws or bootstrap
 replicates per pair, at least 2. Default \code{1000}.}

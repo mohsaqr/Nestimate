@@ -14,3 +14,17 @@ fetch .ci/cran-review
 
 # the local cograph, not the released one
 sibling ../cograph
+
+# Prova Verify: capture of the equivalence tests, run as
+#   mini-ci -- Rscript ../equivalence/nestimate/import-tests.R capture [file-regex]
+include ../equivalence/nestimate/local
+include ../equivalence/nestimate/import-tests.R
+include ../equivalence/import-tests-common.R
+include ../prova/.claude/worktrees/verify/reporters/verify-capture.R
+fetch .ci/verify-capture
+
+# The declared equivalence tests (tests/equivalence, the standard: ../equivalence/STANDARD.md): every
+# comparison with a reference, recorded in .ci/verify-capture/capture.json. Reference packages outside
+# Suggests come from ~/equiv-lib, Python ones from ~/equiv-py. Then, on the Mac:
+#   sh ../equivalence/push.sh nestimate
+job verify RETICULATE_PYTHON=$HOME/equiv-py/bin/python Rscript -e 'source("tests/equivalence/helper-verify.R"); verify_tests(lib = "~/equiv-lib")'

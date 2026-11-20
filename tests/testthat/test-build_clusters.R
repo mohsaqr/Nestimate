@@ -1280,12 +1280,14 @@ test_that("build_clusters errors when fewer than two positions remain", {
 .logit_cells <- function(x0 = 0, x1 = 1) {
   y <- factor(c(rep(1, 30), rep(2, 10), rep(1, 12), rep(2, 28)))
   x <- c(rep(x0, 40), rep(x1, 40))
-  list(y = y, design = stats::model.matrix(~ x))
+  list(y = y, design = stats::model.matrix(~ x), formula = y ~ x,
+       data = data.frame(y = y, x = x))
 }
 
 test_that(".multinom_standardised reports the hand-computed logit", {
   cells <- .logit_cells()
-  fit <- .multinom_standardised(cells$y, cells$design)$estimates
+  fit <- .multinom_standardised(cells$y, cells$design, cells$formula,
+                                cells$data)$estimates
   expect_equal(fit$coefficients[1, "x"], log(30 * 28 / (10 * 12)),
                tolerance = 1e-4)
   expect_equal(fit$coefficients[1, "(Intercept)"], log(10 / 30),
@@ -1300,9 +1302,12 @@ test_that("a covariate's location and scale leave the logit equivalent", {
   base <- .logit_cells()
   year <- .logit_cells(2015, 2016)
   income <- .logit_cells(50000, 60000)
-  fit_base <- .multinom_standardised(base$y, base$design)$estimates
-  fit_year <- .multinom_standardised(year$y, year$design)$estimates
-  fit_income <- .multinom_standardised(income$y, income$design)$estimates
+  fit_base <- .multinom_standardised(base$y, base$design, base$formula,
+                                base$data)$estimates
+  fit_year <- .multinom_standardised(year$y, year$design, year$formula,
+                                year$data)$estimates
+  fit_income <- .multinom_standardised(income$y, income$design, income$formula,
+                                income$data)$estimates
   expect_equal(fit_year$coefficients[1, "x"], fit_base$coefficients[1, "x"],
                tolerance = 1e-5)
   expect_equal(fit_year$standard.errors[1, "x"], fit_base$standard.errors[1, "x"],
@@ -1319,7 +1324,8 @@ test_that("a covariate's location and scale leave the logit equivalent", {
 test_that(".multinom_standardised lines up the blocks of three levels", {
   y <- factor(c(rep(1, 20), rep(2, 10), rep(3, 30), rep(1, 25), rep(2, 25), rep(3, 10)))
   x <- c(rep(2015, 60), rep(2016, 60))
-  fit <- .multinom_standardised(y, stats::model.matrix(~ x))$estimates
+  fit <- .multinom_standardised(y, stats::model.matrix(~ x), y ~ x,
+                                data.frame(y = y, x = x))$estimates
   expect_equal(fit$coefficients["2", "x"], log(25 * 20 / (10 * 25)), tolerance = 1e-4)
   expect_equal(fit$coefficients["3", "x"], log(10 * 20 / (30 * 25)), tolerance = 1e-4)
   expect_equal(fit$standard.errors["2", "x"],
@@ -1357,8 +1363,10 @@ test_that("set-aside columns reach a cluster that has metadata of its own", {
                   T3 = c(NA, NA, NA, "B", "B", "B"), id = paste0("id", 1:6))
   fit <- suppressMessages(build_clusters(d, k = 2, method = "ward.D2"))
   nets <- build_network(fit, method = "frequency")
-  # T3 is empty in the first cluster, so that rebuild sets it aside itself.
-  expect_true("T3" %in% names(nets[[1L]]$metadata))
+  # T3 is empty in the first cluster but is still a position the estimator
+  # reads, so it stays in that cluster's $data (not its metadata).
+  expect_true("T3" %in% names(nets[[1L]]$data))
+  expect_false("T3" %in% names(nets[[1L]]$metadata))
   expect_identical(nets[[1L]]$metadata$id, d$id[fit$assignments == 1L])
   expect_identical(nets[[2L]]$metadata$id, d$id[fit$assignments == 2L])
 })

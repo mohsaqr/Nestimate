@@ -52,7 +52,8 @@ network declares its method, counts are read from that method, never
 from the values: a scaled or relative network is recounted from its
 data. An association network, or any other network
 whose counts cannot be recovered, raises an error of class
-\code{nestimate_bad_input}; a matrix of probabilities raises an error. A
+\code{nestimate_bad_input}; a matrix of probabilities raises an error, and
+so does a network of one state (class \code{nestimate_bad_input}). A
 \code{netobject_group} gives one result per group. For the \code{print()} and
 \code{plot()} methods: an \code{entropy_bayes()} result; \code{print()} also takes a
 group result.}
@@ -72,7 +73,8 @@ an edge is credible when the lower limit of the credible interval of its
 credibly accounts for at least 1\% of the entropy rate.}
 
 \item{base}{The logarithm base, which sets the unit: \code{2} (default) for
-bits. Any positive number other than 1.}
+bits. Any finite number greater than 1; another value raises an error
+of class \code{nestimate_bad_input}.}
 
 \item{seed}{An integer that makes the draws reproducible. Default \code{NULL}.
 The session's own random stream is left as it was; a group uses the

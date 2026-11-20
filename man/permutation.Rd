@@ -61,7 +61,8 @@ the p-values. Default \code{0.05}.}
 
 \item{paired}{Whether the two networks hold paired observations (the
 i-th sequence or row of \code{x} with the i-th of \code{y}, such as the same
-people measured twice). Each shuffle then swaps the two members of a
+people measured twice; for one-hot data, the i-th actor in the order
+the actors first appear). Each shuffle then swaps the two members of a
 pair at random instead of shuffling all labels, so \code{x} and \code{y} need the
 same number of sequences (after \code{concat}) or rows; otherwise an error is
 raised. It cannot be combined with \code{actor}, of which it is the special
@@ -181,7 +182,10 @@ Absent for edge-betweenness input.}
 entry per level), \code{icc} (at the innermost level) with \code{icc_ci_lower} and \code{icc_ci_upper} (how alike
 the sequences of one actor are), \code{deff_edges} (the median design
 effect over edges), \code{deff_global} (the design effect for M) and
-\code{min_p}, the smallest attainable p-value.}
+\code{min_p}, the smallest p-value the exact test over the actors'
+arrangements can give: one over their number, or \code{1 / (iter + 1)}
+when larger. The reported p-values are Monte Carlo estimates, so with
+few arrangements one can fall below it by chance.}
 \item{clustering_edges}{Only with \code{actor}: one row per edge of the edge
 table, with \code{from}, \code{to}, \code{icc}, \code{null_sd_actor}, \code{null_sd_sequence}
 and \code{deff}.}
@@ -224,6 +228,9 @@ each shuffle only re-sums them, which keeps a large \code{iter} fast; the
 networks' \code{scaling} and \code{threshold} are applied to every shuffled network
 as to the observed one. For the other methods the estimator is re-run on
 every shuffle (\code{cor} and \code{pcor} through a lighter direct path).
+Latency networks are not resampled: a network built with
+\code{method = "latency"} (alone or in a group) raises an error of class
+\code{nestimate_latency_resampling}.
 For \code{glasso}, every shuffled network is estimated as \code{\link[=build_network]{build_network()}}
 estimated the observed ones, with \code{x}'s \code{params} (each sample's own
 lambda path, \code{nlambda}, \code{lambda.min.ratio}, \code{gamma},
@@ -388,8 +395,8 @@ Line 3: the edges present in either network and how many differ at
 \code{alpha}. Line 4: the global test. Lines 5 and 6, only with \code{actor}: the
 ICC with its interval, whether actors sit in one group (\code{between}), in
 both (\code{within}) or either (\code{mixed}), and the design effects. With \code{actor},
-when no p-value can fall below \code{alpha} (too few actors, or too small an
-\code{iter}), a last line says so. With several \code{actor} levels, line 2
+when \code{min_p} is above \code{alpha} (too few actors for the exact test, or too
+small an \code{iter}), a last line says so. With several \code{actor} levels, line 2
 names the levels (\code{Actor: Group > Student (nested)}), and line 5 is
 replaced by two: the design at every level, with its number of actors
 (\verb{Design: Group: mixed (200 actors), Student: between (2000 actors)}), and

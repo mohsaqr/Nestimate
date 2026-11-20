@@ -42,8 +42,10 @@ transitions (a row of zeros) raises an error either way.}
 
 \item{tol}{The tolerance below which a transition probability counts as
 zero when the support graph is built (it drives \code{classification},
-\code{communicating_classes}, \code{period} and \code{hitting_probabilities}), and the
-tolerance of the reversibility check (detailed balance). Default
+\code{communicating_classes}, \code{period}, \code{hitting_probabilities},
+\code{absorption_probabilities} and \code{mean_absorption_time}, the last three
+computed with the transitions at or below \code{tol} removed and each row
+rescaled to sum to 1), and the tolerance of the reversibility check (detailed balance). Default
 \code{1e-10}. It does \strong{not} govern the absorbing-state test: a state is
 absorbing only when \code{P[i, i]} equals 1 to a fixed internal tolerance of
 \code{.Machine$double.eps^0.5}, so raising \code{tol} to ignore tiny transition
@@ -109,7 +111,8 @@ is not irreducible (no unique stationary distribution).}
 the probability of ever reaching \code{j} from \code{i}, computed over the
 same \code{tol}-thresholded support graph as \code{classification}, so the
 two agree: a state in a closed class has hitting probability 0 to
-every state outside it.}
+every state outside it. The absorption probabilities and times use
+the same thresholded chain.}
 \item{\code{absorption_probabilities}}{\verb{n_transient x n_closed} matrix
 whose \verb{[i, j]} entry is the probability that the chain started in
 transient state \code{i} ends in closed class \code{j}; each row sums to 1.

@@ -276,9 +276,14 @@ pathways.net_link_prediction <- function(x, method = NULL, top = 10L,
     cn_nodes <- nodes[cn_indices]
 
     if (length(cn_nodes) > max_evidence) {
-      # Rank by combined weight to source and target
-      cn_weights <- A[from_idx, cn_indices] + A[cn_indices, to_idx]
-      cn_nodes <- cn_nodes[order(-cn_weights)][seq_len(max_evidence)]
+      # Rank by the summed weight of the edges from the source and to the
+      # target; ties by node order. The 0/1 adjacency made every bridge tie,
+      # so node order alone decided. An older result that keeps no
+      # weights falls back to it.
+      W <- x$weights %||% A
+      cn_weights <- W[from_idx, cn_indices] + W[cn_indices, to_idx]
+      keep <- order(-cn_weights, cn_indices)[seq_len(max_evidence)]
+      cn_nodes <- cn_nodes[keep]
     }
 
     sources <- c(df$from[i], cn_nodes)

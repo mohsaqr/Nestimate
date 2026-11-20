@@ -635,7 +635,9 @@ sequence_plot <- function(x,
   if (is.data.frame(x) && !inherits(x, "nestimate_data")) {
     .check_declared_columns(x, "sequence_plot()", action = action, actor = actor,
                             time = time, order = order, cols = cols)
-    if (!is.null(cols)) x <- x[cols]
+    # as.data.frame() first: on a data.table, x[cols] is a join, not a
+    # column selection
+    if (!is.null(cols)) x <- as.data.frame(x, stringsAsFactors = FALSE)[cols]
   } else if (!is.null(cols)) {
     stop(errorCondition("`cols` applies to a wide data frame.",
                         class = "nestimate_bad_input", call = NULL))
@@ -663,7 +665,12 @@ sequence_plot <- function(x,
 
   if (is.data.frame(x) && is.null(action) && is.null(cols) &&
       !inherits(x, "nestimate_data")) {
-    .refuse_undeclared_roles(x, "sequence_plot()", taken = group, whole_frame = TRUE)
+    # `group` names a column only with `periods`; otherwise it holds one
+    # value per sequence, and a value that happens to equal a column name
+    # must not exempt that column from the guard
+    .refuse_undeclared_roles(x, "sequence_plot()",
+                             taken = if (!is.null(periods)) group,
+                             whole_frame = TRUE)
   }
 
   # Open a new device when width/height supplied (interactive use). In

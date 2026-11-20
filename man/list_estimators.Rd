@@ -13,7 +13,7 @@ directed networks). With an empty registry it has no rows.
 }
 \description{
 \code{list_estimators()} returns the estimators \code{\link[=build_network]{build_network()}} can call by
-name: the fourteen built-ins and any added with
+name: the fifteen built-ins and any added with
 \code{\link[=register_estimator]{register_estimator()}}. Aliases such as
 \code{"tna"} or \code{"ebicglasso"} are not listed; the \emph{Estimators} section of
 \code{\link[=build_network]{build_network()}} gives them.

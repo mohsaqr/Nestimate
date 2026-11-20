@@ -54,6 +54,8 @@ A name not available for a network raises an error.}
 \item{statistic_fn}{Statistics of your own, as a named list of functions,
 each taking the weight matrix and returning a single number. They are
 computed beside the built-ins on the whole matrix, diagonal included.
+Each needs a name of its own: a name used twice or taken by a
+built-in statistic raises an error of class \code{nestimate_bad_input}.
 Default \code{NULL}.}
 
 \item{directed}{Whether the networks are directed, which decides how

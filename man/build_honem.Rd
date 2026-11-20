@@ -24,9 +24,10 @@ else raises an error.}
 at the number of nodes minus 1 without a warning; \code{print()} reports the
 dimension used.}
 
-\item{max_power}{\eqn{L}, the highest matrix power in the decayed sum, at
-least 1. Default \code{10}. Higher values let longer paths shape the
-proximities.}
+\item{max_power}{\eqn{L}, the upper limit of \eqn{k} in the decayed sum,
+at least 1. Default \code{10}. The sum runs from \eqn{D^1} to
+\eqn{D^{L+1}}, so the highest matrix power is \code{max_power + 1}. Higher
+values let longer paths shape the proximities.}
 
 \item{x}{For the \code{print()} and \code{plot()} methods: a \code{net_honem} object.}
 
@@ -54,7 +55,8 @@ the node names as row names and columns \code{dim_1}, \code{dim_2}, ...}
 \item{explained_variance}{Share of the squared singular values held
 by the kept dimensions.}
 \item{dim}{Embedding dimension used.}
-\item{max_power}{Highest matrix power used.}
+\item{max_power}{\eqn{L}, the upper limit of \eqn{k}; the highest
+matrix power used is \code{max_power + 1}.}
 \item{n_nodes}{Number of nodes embedded.}
 }
 

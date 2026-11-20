@@ -520,7 +520,7 @@ build_ising <- function(data, actor = NULL, ...) {
 #' @noRd
 .scaling_includes_zeros <- function(method) {
   method %in% c("relative", "frequency", "co_occurrence", "attention", "ngram",
-                "gap", "reverse")
+                "gap", "reverse", "latency")
 }
 
 .apply_scaling <- function(mat, scaling, include_zeros = FALSE) {

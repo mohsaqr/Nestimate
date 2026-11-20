@@ -144,7 +144,8 @@
 #'   chi-square test, or `"fisher"` for Fisher's exact test: exact for a
 #'   2 x 2 table, and otherwise with a p-value simulated from 10,000 tables
 #'   (so it changes with the random seed and cannot fall below 1/10,001).
-#'   Cramer's V and the residuals come from the chi-square statistic. Used
+#'   Cramer's V and the residuals come from Pearson's chi-square (V from
+#'   the statistic without Yates' correction). Used
 #'   when `nested = FALSE`; given with `nested = TRUE` it is ignored with a
 #'   warning of class `nestimate_ignored_argument`.
 #' @param nested Whether the rows are nested in actors and the test should
@@ -208,7 +209,10 @@
 #'   \item{test}{The `htest` object of the test reported; `NULL` for a
 #'     nested test.}
 #'   \item{actor}{The `actor` column names, or `NULL`.}
-#'   \item{cramers_v, effect_size}{Cramer's V, unrounded, and its label.}
+#'   \item{cramers_v, effect_size}{Cramer's V, unrounded, and its label.
+#'     V is computed from Pearson's chi-square without Yates' continuity
+#'     correction, as Cramer defined it, so a perfect 2 x 2 association
+#'     gives 1; the 2 x 2 test reported keeps the correction.}
 #'   \item{table}{The filtered contingency table.}
 #'   \item{removed}{The dropped categories, as a list with `var1` and
 #'     `var2`.}
@@ -355,9 +359,11 @@ mosaic_analysis <- function(data, var1, var2, min_count = 10L,
     df_val   <- as.numeric(chi$parameter)
   }
 
+  # Cramer's V is defined on the uncorrected Pearson statistic (Cramer
+  # 1946): with Yates' correction a perfect 2 x 2 association gave V < 1.
   n  <- sum(tab)
   k  <- min(dim(tab))
-  cramers_v   <- as.numeric(sqrt(as.numeric(chi$statistic) / (n * (k - 1L))))
+  cramers_v   <- sqrt(.nest_pearson(unclass(tab))$x2 / (n * (k - 1L)))
   effect_size <- .interpret_cramers_v(cramers_v, k - 1L)
 
   # Clustered test: one table per actor, the residuals and the test from

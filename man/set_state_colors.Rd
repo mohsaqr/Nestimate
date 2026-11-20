@@ -29,7 +29,8 @@ state_colors(x) <- value
 object raises an error.}
 
 \item{colors}{The palette: a named character vector of colours, such as
-\code{c(plan = "#0072B2", monitor = "#D55E00")}. Names are states, and for an
+\code{c(plan = "#0072B2", monitor = "#D55E00")}. Names are states (for a
+network built with \code{labels}, the labels it draws), and for an
 \code{mcml} may also be cluster names. A name the object does not carry is
 reported in a message and draws nothing, so one project-wide palette can
 be attached to every object. States left unnamed are dealt the

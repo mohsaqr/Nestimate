@@ -40,7 +40,8 @@ utils::globalVariables(c("term", "estimate", "ci_lower", "ci_upper"))
 #' testing them on the same rows invalidates the p-values. With
 #' `select = "split"` the data is halved: predictors are ranked on one half
 #' and the reported model is fitted on the other, so the returned inference
-#' is valid for the selected set. `select = "none"` (default) fits every
+#' is valid for the selected set. With a `group`, the groups are halved, so
+#' no group has rows in both halves. `select = "none"` (default) fits every
 #' supplied predictor and needs no split.
 #'
 #' @param data A data frame with one row per unit of analysis. Rows with a
@@ -72,10 +73,12 @@ utils::globalVariables(c("term", "estimate", "ci_lower", "ci_upper"))
 #'   second-smallest outcome value (or `TRUE`) as 1 and every other value as
 #'   0, so give it a two-valued outcome.
 #' @param select How the predictors are chosen: `"none"` (default) fits all
-#'   of them; `"split"` ranks them on a random half of the rows by the
+#'   of them; `"split"` ranks them on a random half of the rows (with a
+#'   `group`, the rows of a random half of the groups) by the
 #'   absolute z or t statistic of a one-predictor `glm()` (without `adjust`
 #'   or `group`), keeps the best `n_select`, and fits the reported model on
-#'   the other half.
+#'   the other half. With a `group`, fewer than two groups in the complete
+#'   rows raise an error of class `nestimate_bad_input`.
 #' @param n_select The number of predictors kept when `select = "split"`.
 #'   Default `10`. Ignored otherwise.
 #' @param correction The multiplicity correction, one of
@@ -205,7 +208,7 @@ outcome_model <- function(data, outcome, predictors, group = NULL,
   selected <- predictors
   fit_rows <- seq_len(nrow(d))
   if (identical(select, "split")) {
-    sp <- .om_split(d, outcome, predictors, fam, n_select, seed)
+    sp <- .om_split(d, outcome, predictors, fam, n_select, seed, group)
     selected <- sp$selected
     fit_rows <- sp$fit_rows
   }
@@ -240,11 +243,29 @@ outcome_model <- function(data, outcome, predictors, group = NULL,
 
 # Rank predictors on one half, fit on the other. Ranking uses the univariate
 # association of each predictor with the outcome; only the ranking sees the
-# selection half, so the fitted half stays untouched by the choice.
-.om_split <- function(d, outcome, predictors, fam, n_select, seed) {
+# selection half, so the fitted half stays untouched by the choice. With a
+# `group`, the halves are halves of the groups: rows of one group are
+# correlated, so a group in both halves would carry the selection's
+# information into the fit and the held-out inference would not hold.
+.om_split <- function(d, outcome, predictors, fam, n_select, seed,
+                      group = NULL) {
   if (!is.null(seed)) .local_seed(seed)
   n <- nrow(d)
-  sel_rows <- sample.int(n, size = floor(n / 2))
+  if (is.null(group)) {
+    sel_rows <- sample.int(n, size = floor(n / 2))
+  } else {
+    groups <- unique(d[[group]])
+    if (length(groups) < 2L) {
+      stop(errorCondition(sprintf(paste0(
+        "`select = \"split\"` with `group` splits the groups in half, and ",
+        "the complete rows hold %d group(s); it needs at least 2."),
+        length(groups)),
+        class = "nestimate_bad_input", call = NULL))
+    }
+    sel_groups <- groups[sample.int(length(groups),
+                                    size = floor(length(groups) / 2))]
+    sel_rows <- which(d[[group]] %in% sel_groups)
+  }
   fit_rows <- setdiff(seq_len(n), sel_rows)
   sel <- d[sel_rows, , drop = FALSE]
 

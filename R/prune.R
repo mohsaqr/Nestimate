@@ -86,9 +86,17 @@
 }
 
 #' Serrano disparity filter (backbone significance) -- matches tna
+#'
+#' The filter is defined for non-negative weights (Serrano et al. 2009):
+#' alpha_ij = (1 - w_ij / s_i)^(k_i - 1), with the strength s_i and degree k_i
+#' taken over the same edges. Both are taken over the positive edges, so a
+#' negative edge neither lowers a node's strength nor is significant itself
+#' (share 0, p = 1). Summing signed weights against a positive-only degree
+#' inflated shares above 1 and gave negative p-values.
 #' @noRd
 .disparity_filter <- function(W, level) {
   d          <- ncol(W)
+  W          <- pmax(W, 0)
   idx_mat    <- 1 * (W > 0)
   # A state with no outgoing (incoming) edges has nothing to normalize;
   # dividing by 1 keeps its absent edges at 0 instead of 0 / 0 = NaN, which
@@ -130,14 +138,20 @@
   }
   W <- x$weights
   # The significant matrix replaces the weights, so it must come from this
-  # network: a bootstrap of another one would paste in its weights.
+  # network: a bootstrap of another one would paste in its weights. Equal
+  # point estimates are not enough -- two data sets of different size can
+  # give the same weights and very different significance -- so the data
+  # the bootstrap resampled must be this network's too, when it keeps any.
   boot_w <- boot$original$weights
-  if (is.null(boot_w) || !identical(dim(boot_w), dim(W)) ||
-      !isTRUE(all.equal(unname(boot_w), unname(W)))) {
+  same_weights <- !is.null(boot_w) && identical(dim(boot_w), dim(W)) &&
+    isTRUE(all.equal(unname(boot_w), unname(W)))
+  same_data <- is.null(x$data) || identical(boot$original$data, x$data)
+  if (!same_weights || !same_data) {
     stop(errorCondition(paste0(
-      "'boot' was not computed on this network: its weights differ from ",
-      "the network's. Pass bootstrap_network() of this network, or leave ",
-      "`boot = NULL`."), class = "nestimate_bad_input", call = NULL))
+      "'boot' was not computed on this network: its ",
+      if (same_weights) "data differ" else "weights differ",
+      " from the network's. Pass bootstrap_network() of this network, or ",
+      "leave `boot = NULL`."), class = "nestimate_bad_input", call = NULL))
   }
   pruned  <- boot$significant            # significant edges keep weight, rest 0
   dimnames(pruned) <- dimnames(W)
@@ -204,11 +218,11 @@
 #' connected to begin with loses no edge to these two methods.
 #' `"disparity"` and `"bootstrap"` apply no connectivity check. Negative
 #' edges are never candidates for `"threshold"` and `"lowest"`, whatever
-#' their size. On a signed network, `"disparity"` treats negative edges as
-#' not significant and removes them at the default `level`; at a `level`
-#' above 0.5, a negative edge leaving a state with no positive outgoing edge
-#' (or entering one with no positive incoming edge) can stay. `"bootstrap"`
-#' removes the non-significant edges of either sign.
+#' their size. On a signed network, `"disparity"` reads the positive edges
+#' only, as the filter is defined for non-negative weights: the strengths
+#' and degrees it divides by are those of the positive edges, and every
+#' negative edge is removed. `"bootstrap"` removes the non-significant edges
+#' of either sign.
 #'
 #' On an undirected network an edge is a pair of cells: it is removed in
 #' both directions or kept in both, so the pruned matrix stays symmetric,
@@ -244,7 +258,7 @@
 #'   `net_bootstrap_group` of [bootstrap_network()] on the group, matched
 #'   to the networks by name, or `NULL` to bootstrap each network on its
 #'   own. Another object, a bootstrap of another network (its weights
-#'   differ), a single `net_bootstrap` for a group, or a group bootstrap
+#'   or its data differ), a single `net_bootstrap` for a group, or a group bootstrap
 #'   missing one of the networks raises an error of class
 #'   `nestimate_bad_input`.
 #' @param ... For `method = "bootstrap"` with `boot = NULL`: arguments

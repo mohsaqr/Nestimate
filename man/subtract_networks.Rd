@@ -17,10 +17,10 @@ They must have the same number of nodes, with the
 same labels in the same order, or an error is raised; any other kind of
 object raises an error too. A matrix without dimnames is labelled \code{V1},
 \code{V2}, ..., so it matches only a network with those labels. The
-difference is directed when \code{x} is a directed
-\code{netobject}; when \code{x} is not a \code{netobject}, it is directed when \code{x}'s
-weights are not symmetric. For the \code{print()} method: \code{x} is the
-\code{netdifference} object.}
+difference is directed when either network is
+directed (a network by its own \code{directed} flag, a matrix when its
+weights are not symmetric) or when the difference itself is not
+symmetric. For the \code{print()} method: \code{x} is the \code{netdifference} object.}
 
 \item{max_print}{For the \code{print()} method: the most edges to list; the
 number left out is reported. Default \code{12}.}

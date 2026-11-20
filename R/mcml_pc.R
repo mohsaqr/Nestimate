@@ -220,7 +220,8 @@
 #'   total.
 #' @param cor_method The correlation used when estimating from raw data:
 #'   `"pearson"` (default), `"spearman"` or `"polychoric"` (needs
-#'   \pkg{lavaan}; see Details).
+#'   \pkg{lavaan}; see Details). For a network, the correlation it was
+#'   estimated with, unless given.
 #' @param signed Whether reverse-keyed items are flipped in the cluster
 #'   scores (see Details). Default `TRUE`.
 #' @param fa_method The extraction method for `weighting = "factor"`; ignored
@@ -399,6 +400,7 @@ build_mcml_pc <- function(x,
     if (!weighting_given) weighting <- "strength"
   }
   within <- match.arg(within)
+  cor_method_given <- !missing(cor_method)
   cor_method <- match.arg(cor_method)
   fa_method <- match.arg(fa_method)
   fa_args <- list(...)
@@ -467,6 +469,20 @@ build_mcml_pc <- function(x,
     net_method <- .resolve_method_alias(x$method)
     if (!method_given && net_method %in% pc_methods) {
       method <- net_method
+    }
+    # The clusters are re-estimated, and resampled, with the correlation the
+    # node network was estimated with, unless another one is asked for.
+    net_cor_method <- .param_get(x$params, "cor_method")
+    if (!cor_method_given && !is.null(net_cor_method)) {
+      if (!net_cor_method %in% eval(formals(build_mcml_pc)$cor_method)) {
+        stop(errorCondition(
+          sprintf(paste0(
+            "The network was estimated with cor_method = \"%s\", which ",
+            "build_mcml_pc() does not support. Pass `cor_method` explicitly."),
+            net_cor_method),
+          class = "nestimate_bad_input", call = NULL))
+      }
+      cor_method <- net_cor_method
     }
     if (isTRUE(x$directed)) {
       stop(errorCondition(

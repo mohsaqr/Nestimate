@@ -3,6 +3,15 @@
 #' @noRd
 # A chain with a zero stationary probability is not ergodic; the entropy
 # verbs report it the same way.
+# A logarithm base for an entropy: a finite number above 1. A base in (0, 1)
+# has a negative logarithm, which turns every entropy negative and inverts
+# its normalised forms.
+.te_check_base <- function(base) {
+  .assert("`base` must be a single finite number greater than 1" =
+            is.numeric(base) && length(base) == 1L && is.finite(base) &&
+            base > 1)
+}
+
 # Name of the unit for a logarithm base: bits, nats, hartleys, or log_b.
 .te_unit <- function(base) {
   if (isTRUE(all.equal(base, 2))) return("bits")
@@ -68,8 +77,8 @@
 #'   the `print()` and `plot()` methods: a `transition_entropy()` result;
 #'   `print()` also takes a group result or the result of `summary()`.
 #' @param base The logarithm base, which sets the unit: `2` (default) for
-#'   bits, `exp(1)` for nats, `10` for hartleys. Any positive number other
-#'   than 1.
+#'   bits, `exp(1)` for nats, `10` for hartleys. Any finite number greater
+#'   than 1; another value raises an error of class `nestimate_bad_input`.
 #' @param normalize Whether rows that do not sum to 1 (a frequency network, a
 #'   count matrix) are divided by their sums, with a warning. With `FALSE`,
 #'   such rows raise an error. Default `TRUE`. A state with no outgoing
@@ -181,7 +190,7 @@ transition_entropy <- function(x, base = 2, normalize = TRUE) {
     return(out)
   }
 
-  .assert(is.numeric(base), length(base) == 1L, base > 0, base != 1)
+  .te_check_base(base)
 
   P           <- .mpt_extract_P(x)
   state_names <- colnames(P)
@@ -274,8 +283,8 @@ transition_entropy <- function(x, base = 2, normalize = TRUE) {
 #'   `nestimate_not_markov`. A `netobject_group` is not accepted; pass one
 #'   network at a time.
 #' @param base The logarithm base, which sets the unit: `2` (default) for
-#'   bits, `exp(1)` for nats, `10` for hartleys. Any positive number other
-#'   than 1.
+#'   bits, `exp(1)` for nats, `10` for hartleys. Any finite number greater
+#'   than 1; another value raises an error of class `nestimate_bad_input`.
 #' @param weight What each edge's weight measures:
 #'   \describe{
 #'     \item{`"contribution"`}{(default) \eqn{\pi_i P_{ij} \log_b(1/P_{ij})},
@@ -313,8 +322,8 @@ transition_entropy <- function(x, base = 2, normalize = TRUE) {
 #'   such rows raise an error. Default `TRUE`. A state with no outgoing
 #'   transitions (a row summing to zero) is an error either way.
 #'
-#' @return A `netobject` (class `c("netobject", "cograph_network")`; for a
-#'   bare `cograph_network` input, that network with its own class) with
+#' @return A `netobject` (class `c("netobject", "cograph_network")`, also
+#'   for a bare `cograph_network` input) with
 #'   method `"entropy"`, whose weights are the per-edge entropy quantities.
 #'   Print it for an overview; `summary()` (see [build_network()]) gives its
 #'   network metrics,
@@ -323,7 +332,10 @@ transition_entropy <- function(x, base = 2, normalize = TRUE) {
 #'   is built), the result is that network with the entropy weights swapped
 #'   in: its initial probabilities, metadata, node groups and node
 #'   coordinates are kept, so it plots with the same TNA styling and layout
-#'   as its source. The stored parameters are `base`, `weight`, `scaling`,
+#'   as its source. A bare `cograph_network` is first converted to a
+#'   `netobject`, which keeps its nodes, data, metadata, node groups and
+#'   parameters but no other field (its `inits`, for one, is dropped). The
+#'   stored parameters are `base`, `weight`, `scaling`,
 #'   the entropy rate `entropy_rate` (whatever the weight) and the stationary
 #'   distribution `stationary`, plus `production_rate` and `n_oneway_pairs`
 #'   when `weight = "production"`.
@@ -387,7 +399,7 @@ entropy_network <- function(x, base = 2,
                             normalize = TRUE) {
   weight  <- match.arg(weight)
   scaling <- match.arg(scaling)
-  .assert(is.numeric(base), length(base) == 1L, base > 0, base != 1)
+  .te_check_base(base)
   if (scaling == "chance" && weight != "surprisal") {
     stop(errorCondition(
       "scaling = 'chance' applies to weight = 'surprisal' only.",
@@ -578,13 +590,15 @@ entropy_network <- function(x, base = 2,
 #'   `POSIXct`; a character timestamp fails, so parse it first.
 #' @param group A column splitting the data into parallel trajectories (for
 #'   example a condition or an achievement level), each with its own windows.
-#'   Default `NULL` (one trajectory, labelled `"all"`).
+#'   Default `NULL` (one trajectory, labelled `"all"`). A missing value in it
+#'   raises an error of class `nestimate_bad_input`.
 #' @param window The number of transitions per window, at least 10. Default
 #'   `500`.
 #' @param step The number of transitions between the starts of consecutive
 #'   windows. Default `NULL`, which uses `window %/% 5` (at least 1).
 #' @param base The logarithm base, which sets the unit: `2` (default) for
-#'   bits. Any positive number other than 1.
+#'   bits. Any finite number greater than 1; another value raises an error
+#'   of class `nestimate_bad_input`.
 #'
 #' @return A `net_entropy_trajectory` object. `print()` shows each group's
 #'   number of windows and its mean and range of entropy, and returns its
@@ -656,9 +670,15 @@ entropy_trajectory <- function(data, action, actor = NULL, time = NULL,
                         time %in% names(data)),
     is.null(group) || (is.character(group) && length(group) == 1L &&
                          group %in% names(data)),
-    is.numeric(window), length(window) == 1L, window >= 10,
-    is.numeric(base), length(base) == 1L, base > 0, base != 1
+    is.numeric(window), length(window) == 1L, window >= 10
   )
+  .te_check_base(base)
+  if (!is.null(group) && anyNA(data[[group]])) {
+    stop(errorCondition(sprintf(paste0(
+      "`group` column '%s' has %d missing values; drop or relabel these ",
+      "rows first."), group, sum(is.na(data[[group]]))),
+      class = "nestimate_bad_input", call = NULL))
+  }
   if (!is.null(time) && !(is.numeric(data[[time]]) ||
                            inherits(data[[time]], c("Date", "POSIXt")))) {
     stop(errorCondition(sprintf(paste0(
@@ -1062,7 +1082,8 @@ plot.net_entropy_trajectory <- function(x, normalized = FALSE, span = 0.4,
 #'   from the values: a scaled or relative network is recounted from its
 #'   data. An association network, or any other network
 #'   whose counts cannot be recovered, raises an error of class
-#'   `nestimate_bad_input`; a matrix of probabilities raises an error. A
+#'   `nestimate_bad_input`; a matrix of probabilities raises an error, and
+#'   so does a network of one state (class `nestimate_bad_input`). A
 #'   `netobject_group` gives one result per group. For the `print()` and
 #'   `plot()` methods: an `entropy_bayes()` result; `print()` also takes a
 #'   group result.
@@ -1077,7 +1098,8 @@ plot.net_entropy_trajectory <- function(x, normalized = FALSE, span = 0.4,
 #'   \emph{share} of the entropy rate exceeds it. Default `0.01`: the edge
 #'   credibly accounts for at least 1% of the entropy rate.
 #' @param base The logarithm base, which sets the unit: `2` (default) for
-#'   bits. Any positive number other than 1.
+#'   bits. Any finite number greater than 1; another value raises an error
+#'   of class `nestimate_bad_input`.
 #' @param seed An integer that makes the draws reproducible. Default `NULL`.
 #'   The session's own random stream is left as it was; a group uses the
 #'   same seed for every
@@ -1169,14 +1191,20 @@ entropy_bayes <- function(x, prior = 0.5, draws = 4000, ci = 0.95,
     is.numeric(draws), length(draws) == 1L, draws >= 100,
     is.numeric(ci), length(ci) == 1L, ci > 0, ci < 1,
     is.numeric(min_share), length(min_share) == 1L,
-    min_share >= 0, min_share < 1,
-    is.numeric(base), length(base) == 1L, base > 0, base != 1
+    min_share >= 0, min_share < 1
   )
+  .te_check_base(base)
   if (!is.null(seed)) .local_seed(seed)
 
   counts <- .te_extract_counts(x)
   states <- rownames(counts)
   n      <- nrow(counts)
+  if (n < 2L) {
+    stop(errorCondition(paste0(
+      "entropy_bayes() needs at least two states: a one-state chain has ",
+      "entropy rate 0 with certainty, and no edge has a share of it."),
+      class = "nestimate_bad_input", call = NULL))
+  }
   draws  <- as.integer(draws)
 
   ## Posterior: independent Dirichlet(counts + prior) per row, sampled via

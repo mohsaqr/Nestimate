@@ -36,7 +36,9 @@ fewer than two states are dropped; when none is left, an error is
 raised. A one-hot or association network, a \code{netobject_group}, a
 classed list, and a matrix or data frame of only 0 and 1 raise an
 error of class
-\code{nestimate_bad_input}.}
+\code{nestimate_bad_input}. A state whose label contains \code{" -> "}, the
+separator of the node names, also raises \code{nestimate_bad_input}: the
+state \code{"A -> B"} and the node of B reached from A would be one node.}
 
 \item{max_order}{The highest order a node may reach, that is, how many
 states of history it carries. Default \code{5}. Lower orders result where

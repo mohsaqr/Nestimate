@@ -112,9 +112,14 @@ context (the conditioning states); \code{to}, the next state;
 propensity matrix keeps the observed in- and out-strength of every
 De Bruijn node (at order 2 this equals the first-order Markov
 expectation \eqn{n(a b \cdot) n(\cdot b c) /
-      n(\cdot b \cdot)}{n(a,b,.) n(.,b,c) / n(.,b,.)});
+      n(\cdot b \cdot)}{n(a,b,.) n(.,b,c) / n(.,b,.)}), from the
+continuous fit;
 \code{ratio}, observed / expected; \code{p_under}, the hypergeometric
-lower-tail probability \code{P(X <= observed)}, and \code{p_value}, the same
+lower-tail probability \code{P(X <= observed)}, whose pool sizes are the
+propensities rounded to whole numbers, as the hypergeometric
+distribution requires, so its mean can differ from \code{expected} by up
+to about \code{0.5 / m} for \code{m} observed paths of that order; and
+\code{p_value}, the same
 value under its older name; \code{p_over}, the strict upper tail
 \code{P(X > observed) = 1 - p_under}, so that \code{p_over <= alpha} is the
 paper's HYPA score of at least \code{1 - alpha}; \code{p_adjusted_under} and

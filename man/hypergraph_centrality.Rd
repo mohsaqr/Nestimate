@@ -66,7 +66,8 @@ Z-eigenvector is not unique.
 \strong{Clique-motif eigenvector centrality (CEC)} is the leading eigenvector
 of the clique-expanded pairwise graph \eqn{W} with
 \eqn{W_{ij} = |\{e : i, j \in e\}|}, the number of hyperedges two
-nodes share. It reads membership only, so incidence weights are ignored:
+nodes share. It reads membership only (a positive incidence cell, the
+rule that builds \code{$hyperedges}), so incidence weights are ignored:
 it equals \code{igraph::eigen_centrality()} on
 \code{clique_expansion(hg, weighted = FALSE)}, and on \code{\link[=clique_expansion]{clique_expansion()}}'s
 default output only for an unweighted hypergraph. The vector is solved

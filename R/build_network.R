@@ -153,6 +153,35 @@
 #'   a two-column data frame (`name`, `label`), a named character vector
 #'   `c(name = "label")` or a named list. It rewrites the node labels and the
 #'   weight matrix's dimnames; nodes not listed keep their names.
+#' @param latency_floor For `method = "latency"`: the weight of a reply that
+#'   takes `latency_cap` or longer, a single number from 0 to 1. A reply's
+#'   weight falls linearly from 1 (an immediate reply) to `latency_floor` at
+#'   the cap and stays there beyond it, so every reply counts. `1` ignores
+#'   time and gives the counts of `"reverse"`; `0` gives replies at or past
+#'   the cap no weight. Default `0.5`. Any other method raises an error of
+#'   class `nestimate_bad_input` when it is set.
+#' @param latency_cap For `method = "latency"`: the time at which a reply's
+#'   weight reaches `latency_floor`. A number in (0, 1] is a percentile of
+#'   the latencies of the replies to another sender, pooled over all of
+#'   `data` (with `group`, over every group, so the groups share one cap); a
+#'   string such as `"120s"` is a number of seconds. The resolved cap, in
+#'   seconds, is stored on the network. Default `0.95`.
+#' @param latency_aggregate For `method = "latency"`: how the replies of a
+#'   pair of senders make one weight. `"sum"` (default) adds their weights,
+#'   so an edge grows with both the speed and the number of replies;
+#'   `"mean"` averages them, the mean speed of the pair's replies.
+#' @param latency_scope For `method = "latency"` with a percentile
+#'   `latency_cap`: the units that get their own cap. `"global"` (default)
+#'   takes one cap from all of `data`; `"actor"` one per value of `actor`
+#'   (each team's own pace; with several `actor` columns, one per
+#'   combination of their values); `"session"` one per sequence;
+#'   `"responder"` one per responding sender. A unit's cap is the percentile
+#'   of its own latencies of replies to another sender; a unit with fewer
+#'   than 5 of them takes the global cap, and a message of class
+#'   `nestimate_latency_fallback` says how many units did. The caps are
+#'   resolved before a `group` split. A cap
+#'   in seconds applies to every reply, so a scope other than `"global"` is
+#'   then ignored with a message of class `nestimate_ignored_argument`.
 #' @param ... Further arguments for the estimator. For event logs,
 #'   [prepare()]'s time options `unix_time_unit`, `is_unix_time` and
 #'   `custom_format` go to [prepare()] instead (e.g.
@@ -198,7 +227,13 @@
 #' `frequency`, `ngram`, `gap` and `reverse` (only `initial` for
 #' `attention`, neither for `co_occurrence`), `cor_matrix` and the sample
 #' size `n` for `cor`, `pcor` and `glasso`, `precision_matrix` for `pcor`
-#' and `glasso`, and `lambda_selected` for `glasso`.
+#' and `glasso`, and `lambda_selected` for `glasso`. A `latency` network
+#' keeps `initial`, `n_replies` and `median_latency` (matrices laid out as
+#' the weights), `latency_cap_seconds` (the resolved global cap, also in
+#' `params`), `latency_unit_caps` (the per-unit caps of a non-global
+#' `latency_scope`, named by unit, also in `params`) and `latency_time`, the
+#' event times in seconds (and, for the `"actor"` and `"session"` scopes,
+#' each sequence's unit), one row per row of `data`.
 #'
 #' With `level = "both"`, the result is a `netobject_ml` holding the
 #' between-person and within-person networks (`between` and `within`, each a
@@ -218,6 +253,7 @@
 #'   \item{\code{"ngram"}}{Adjacent pairs counted once per n-gram window; directed. Aliases: \code{"n-gram"}, \code{"n_gram"}.}
 #'   \item{\code{"gap"}}{Pairs up to \code{max_gap + 1} positions apart, weighted \code{1 / distance}; directed.}
 #'   \item{\code{"reverse"}}{Reply network, the transpose of \code{"frequency"}; directed.}
+#'   \item{\code{"latency"}}{Reply network weighted by response speed; directed. See below.}
 #'   \item{\code{"wtna"}}{Window-based transitions on one-hot data; directed. Alias: \code{"wtna_transition"}.}
 #'   \item{\code{"wtna_cooccurrence"}}{Window-based co-occurrence on one-hot data; undirected.}
 #'   \item{\code{"cor"}}{Pearson correlations; undirected. Aliases: \code{"corr"}, \code{"correlation"}.}
@@ -232,6 +268,31 @@
 #' \code{params}: \code{list(n_gram = 2)}, \code{list(max_gap = 1)} and
 #' \code{list(weighted = FALSE)} are the defaults. All three return raw weights;
 #' add \code{scaling = "normalize"} for row probabilities.
+#'
+#' \code{"latency"} reads an event log with \code{action} and \code{time}
+#' (a message log, one row per message, \code{action} the sender). Its edges
+#' are the replies of \code{"reverse"}: within each sequence (an
+#' \code{actor}'s events, split by \code{session} or \code{time_threshold}),
+#' each event points from its sender, the responder, to the sender of the
+#' event before it. A reply that takes \eqn{t} seconds weighs
+#' \eqn{1 - (1 - f) \min(t / c, 1)}{1 - (1 - f) * min(t / c, 1)}, with
+#' \eqn{f} the \code{latency_floor} and \eqn{c} the \code{latency_cap} in
+#' seconds, and the weights of a pair are summed or averaged
+#' (\code{latency_aggregate}). Fast replies signal social connection
+#' (Templeton et al., 2022), and the weight grades it linearly instead of
+#' cutting replies at a threshold. A sender who posts twice in a row is a
+#' self-loop on the diagonal, weighted by the same rule. Shifting every
+#' time by a constant leaves the weights unchanged, and so does a change of
+#' time unit when the cap is a percentile. [extract_edges()] adds each
+#' edge's number of replies (\code{n_replies}) and their median latency in
+#' seconds (\code{median_latency}). \code{params = list(weighted = TRUE)}
+#' raises an error of class \code{nestimate_bad_input}, and so do
+#' \code{start} and \code{end}, which have no times. Latency networks are
+#' not resampled: [bootstrap_network()], [permutation()],
+#' [permutation_diagnostics()], [centrality_stability()],
+#' [casedrop_reliability()], [network_reliability()] and
+#' [compare_networks()] with a permutation or bootstrap \code{test} refuse
+#' one with an error of class \code{nestimate_latency_resampling}.
 #'
 #' @details
 #' `build_network()` resolves the method alias, checks the declared column
@@ -300,6 +361,11 @@
 #' constructing networks from binary data. \emph{Scientific Reports}, 4,
 #' 5918. \doi{10.1038/srep05918}
 #'
+#' Templeton, E. M., Chang, L. J., Reynolds, E. A., Cone LeBeaumont, M. D.,
+#' & Wheatley, T. (2022). Fast response times signal social connection in
+#' conversation. \emph{Proceedings of the National Academy of Sciences},
+#' 119(4), e2116915119. \doi{10.1073/pnas.2116915119}
+#'
 #' Haslbeck, J. M. B., & Waldorp, L. J. (2020). mgm: Estimating time-varying
 #' mixed graphical models in high-dimensional data. \emph{Journal of
 #' Statistical Software}, 93(8), 1--46. \doi{10.18637/jss.v093.i08}
@@ -334,6 +400,11 @@ build_network <- function(data,
                           end = FALSE,
                           params = list(),
                           labels = NULL,
+                          latency_floor = 0.5,
+                          latency_cap = 0.95,
+                          latency_aggregate = c("sum", "mean"),
+                          latency_scope = c("global", "actor", "session",
+                                            "responder"),
                           ...) {
   # --- Coerce sequence matrices (character / logical / integer) to data.frame ---
   # Numeric square matrices are left alone - they may already be transition
@@ -488,6 +559,18 @@ build_network <- function(data,
       ))
     }
   }
+  # Two declarations of the positions that disagree: the estimator would read
+  # one and `$data` keep the other.
+  declared_cols <- .param_get(params, "cols")
+  if (!is.null(state_cols) && !is.null(declared_cols) &&
+      !identical(as.character(declared_cols), state_cols)) {
+    stop(errorCondition(sprintf(paste0(
+      "`state_cols` (%s) and `params$cols` (%s) name different positions; ",
+      "give the positions once."),
+      paste(state_cols, collapse = ", "),
+      paste(declared_cols, collapse = ", ")),
+      class = "nestimate_bad_input", call = NULL))
+  }
   if (is.data.frame(data)) {
     missing_state <- setdiff(state_cols,    names(data))
     missing_meta  <- setdiff(metadata_cols, names(data))
@@ -511,6 +594,50 @@ build_network <- function(data,
 
   # Resolve method aliases early (needed for format detection)
   method <- .resolve_method_alias(method)
+
+  # ---- Response-latency settings ----
+  # Set only for method = "latency"; given for another method they would be
+  # ignored, so they are refused.
+  latency_given <- intersect(
+    c("latency_floor", "latency_cap", "latency_aggregate", "latency_scope"),
+    names(match.call()))
+  if (!identical(method, "latency") && length(latency_given) > 0L) {
+    stop(errorCondition(sprintf(paste0(
+      "%s appl%s to method = \"latency\" only; got method = \"%s\"."),
+      paste0("`", latency_given, "`", collapse = ", "),
+      if (length(latency_given) == 1L) "ies" else "y", method),
+      class = "nestimate_bad_input", call = NULL))
+  }
+  if (identical(method, "latency")) {
+    if (identical(latency_aggregate, c("sum", "mean"))) {
+      latency_aggregate <- "sum"
+    }
+    if (identical(latency_scope, c("global", "actor", "session",
+                                   "responder"))) {
+      latency_scope <- "global"
+    }
+    latency_settings <- .latency_settings(latency_floor, latency_cap,
+                                          latency_aggregate, latency_scope)
+    if (!is.null(latency_settings$cap_seconds) &&
+        !identical(latency_scope, "global")) {
+      cond <- simpleMessage(sprintf(paste0(
+        "`latency_scope = \"%s\"` is ignored: a cap given in seconds ",
+        "(\"%s\") applies to every reply.\n"), latency_scope, latency_cap))
+      class(cond) <- c("nestimate_ignored_argument", class(cond))
+      message(cond)
+      latency_scope <- "global"
+    }
+    if (!isFALSE(.param_get(params, "weighted", FALSE))) {
+      stop(errorCondition(paste0(
+        "`weighted` (inverse sequence length) does not apply to method = ",
+        "\"latency\", whose replies are weighted by their speed."),
+        class = "nestimate_bad_input", call = NULL))
+    }
+    params$latency_floor <- latency_floor
+    params$latency_cap <- latency_cap
+    params$latency_aggregate <- latency_aggregate
+    params$latency_scope <- latency_scope
+  }
 
   # ---- start/end boundary markers ----
   # Public surface for the internal begin_state/end_state transition options.
@@ -568,6 +695,13 @@ build_network <- function(data,
                                    action = action, time = time,
                                    codes = codes)
   }
+  if (identical(method, "latency") &&
+      (!is.data.frame(data) || is.null(action) || is.null(time))) {
+    stop(errorCondition(paste0(
+      "method = \"latency\" reads the time between consecutive events: ",
+      "give an event log with `action` and `time` set."),
+      class = "nestimate_bad_input", call = NULL))
+  }
 
   # ---- Column roles are declared, never read from names ----
   # The wtna methods read one-hot codes; declared positions would be ignored
@@ -597,7 +731,7 @@ build_network <- function(data,
   # Resolve wide sequence roles before collecting a shared group alphabet.
   # Child estimation and metadata extraction must use the same columns.
   transition_methods <- c("relative", "frequency", "co_occurrence", "attention",
-                          "ngram", "gap", "reverse")
+                          "ngram", "gap", "reverse", "latency")
   if (method %in% transition_methods && is.data.frame(data) &&
       is.null(action) && is.null(codes) && !identical(format, "onehot")) {
     roles_declared <- !is.null(params$cols) || !is.null(state_cols) ||
@@ -605,11 +739,13 @@ build_network <- function(data,
     params$cols <- .build_sequence_cols(data, params$cols, state_cols,
                                         metadata_cols,
                                         exclude = c(group, actor, session,
+                                          time, order,
                                           .param_get(params, "id"),
                                           .param_get(params, "id_col")))
     if (!roles_declared && !is.null(params$cols)) {
       .set_aside_notice(data, params$cols,
-                        c(group, actor, session, .param_get(params, "id"),
+                        c(group, actor, session, time, order,
+                          .param_get(params, "id"),
                           .param_get(params, "id_col")))
     }
   }
@@ -621,7 +757,7 @@ build_network <- function(data,
       if (!is.null(action) && action %in% names(data)) {
         vals <- .clean_states(as.character(data[[action]]))
       } else {
-        exclude <- c(group, actor, session, metadata_cols)
+        exclude <- c(group, actor, session, time, order, metadata_cols)
         state_names <- if (!is.null(params$cols)) {
           intersect(params$cols, names(data))
         } else {
@@ -650,17 +786,44 @@ build_network <- function(data,
     }
     grp_levels <- unique(grp_key)
     # Drop group column(s) from sub-data so they don't become state cols
-    drop_cols <- intersect(group, names(data))
+    # A group column that also plays a role (`group = "Team"` with
+    # `actor = "Team"`) stays, since the per-group build reads that role.
+    drop_cols <- setdiff(intersect(group, names(data)),
+                         c(actor, action, time, session, order))
     # Strip group from params so the recursive per-group call does not
     # try to re-canonicalize a `group` column that has been dropped from
     # `sub`. The parent call already consumed it.
     child_params <- if (is.list(params)) params[setdiff(names(params), "group")] else params
-    nets <- lapply(grp_levels, function(g) {
+    group_rows <- lapply(grp_levels, function(g) {
       sub <- data[grp_key == g, , drop = FALSE]
       if (length(drop_cols) > 0L) {
         sub <- sub[, setdiff(names(sub), drop_cols), drop = FALSE]
       }
-      build_network(
+      sub
+    })
+    # One latency cap for all groups, resolved on the pooled reply pairs of
+    # every group before the split, so the groups' weights share one scale.
+    latency_args <- list()
+    group_params <- rep(list(child_params), length(group_rows))
+    if (identical(method, "latency")) {
+      if (is.null(.param_get(child_params, "latency_cap_seconds"))) {
+        group_caps <- .latency_group_caps(
+          group_rows, params, action = action, actor = actor, time = time,
+          session = session, order = order, time_threshold = time_threshold,
+          timezone = timezone)
+        group_params <- lapply(group_caps, function(caps) {
+          child_params$latency_cap_seconds <- caps$global
+          child_params$latency_unit_caps <- caps$units
+          child_params
+        })
+      }
+      latency_args <- list(latency_floor = latency_floor,
+                           latency_cap = latency_cap,
+                           latency_aggregate = latency_aggregate,
+                           latency_scope = latency_scope)
+    }
+    nets <- Map(function(sub, child_params) {
+      do.call(build_network, c(list(
         sub, method = method, actor = actor, action = action,
         time = time, session = session, order = order, codes = codes,
         group = NULL, format = format, window_size = window_size,
@@ -668,9 +831,8 @@ build_network <- function(data,
         level = level, time_threshold = time_threshold,
         timezone = timezone, predictability = predictability,
         state_cols = state_cols, metadata_cols = metadata_cols,
-        labels = labels, params = child_params, ...
-      )
-    })
+        labels = labels, params = child_params), latency_args, list(...)))
+    }, group_rows, group_params)
     names(nets) <- as.character(grp_levels)
     attr(nets, "group_col") <- group
     class(nets) <- "netobject_group"
@@ -716,22 +878,20 @@ build_network <- function(data,
   # ---- Long format: prepare event log data ----
   if (format == "long" && !is.null(action) && is.data.frame(data) &&
       action %in% names(data)) {
-    prep_args <- list(data = data, action = action)
-    if (!is.null(actor)) prep_args$actor <- actor
-    if (!is.null(time)) prep_args$time <- time
-    if (!is.null(session)) prep_args$session <- session # nocov start
-    if (!is.null(order)) prep_args$order <- order # nocov end
-    prep_args$time_threshold <- time_threshold
-    prep_args$timezone <- timezone
-    # prepare()'s time-parsing options arrive through `...`; they belong to
-    # prepare(), not to the estimator (which would ignore them silently).
-    time_opts <- intersect(c("custom_format", "is_unix_time", "unix_time_unit"),
-                           names(params))
-    prep_args[time_opts] <- params[time_opts]
-    params[time_opts] <- NULL
-
-    prepared <- do.call(prepare, prep_args)
+    prepared <- .prepare_event_log(data, params, action = action,
+                                   actor = actor, time = time,
+                                   session = session, order = order,
+                                   time_threshold = time_threshold,
+                                   timezone = timezone)
+    # prepare()'s time-parsing options belong to prepare(), not to the
+    # estimator (which would ignore them silently).
+    params[.prepare_time_options(params)] <- NULL
     data <- prepared$sequence_data
+    if (identical(method, "latency")) {
+      latency_time <- .latency_time_frame(prepared)
+      row_units <- .latency_row_units(prepared, latency_scope, actor)
+      if (!is.null(row_units)) latency_time[[.LATENCY_UNIT_COL]] <- row_units
+    }
     if (nrow(data) == 1L) .single_sequence_note()
     format <- "wide"
     params$format <- "wide"
@@ -742,7 +902,7 @@ build_network <- function(data,
   # ---- One-hot format: dispatch to wtna/cna path ----
   if (format == "onehot" || is_onehot) {
     # These count positions of states, and would read 0, 1 and the ids as states
-    if (method %in% c("attention", "ngram", "gap", "reverse")) {
+    if (method %in% c("attention", "ngram", "gap", "reverse", "latency")) {
       stop(errorCondition(
         sprintf(paste0("build_network(): method \"%s\" reads positions of states and ",
                        "has no reading of one-hot data. Use \"relative\", ",
@@ -787,7 +947,8 @@ build_network <- function(data,
          !is.null(metadata_cols))) {
       params$cols <- .build_sequence_cols(data, params$cols, state_cols,
                                           metadata_cols,
-                                          exclude = c(actor, session,
+                                          exclude = c(actor, session, time,
+                                            order,
                                             .param_get(params, "id"),
                                             .param_get(params, "id_col")),
                                           infer_numeric_metadata =
@@ -800,13 +961,15 @@ build_network <- function(data,
     }
   }
 
-  # Declared metadata columns are not variables of an association network
-  # (cor, pcor, glasso, ising, mgm); without this they entered as nodes.
-  # Dropped before the sequence check below, so a declared character
-  # covariate cannot turn numeric data into "sequences".
+  # Declared metadata columns, and the `time` and `order` columns, are not
+  # variables of an association network (cor, pcor, glasso, ising, mgm);
+  # without this they entered as nodes. Dropped before the sequence check
+  # below, so a declared character covariate cannot turn numeric data into
+  # "sequences".
+  not_variables <- c(metadata_cols, time, order)
   if (method %in% c("cor", "pcor", "glasso", "ising", "mgm") &&
-      is.data.frame(data) && !is.null(metadata_cols)) {
-    data <- data[, setdiff(names(data), metadata_cols), drop = FALSE]
+      is.data.frame(data) && length(not_variables) > 0L) {
+    data <- data[, setdiff(names(data), not_variables), drop = FALSE]
   }
   # ---- Auto-convert sequences to frequencies for association methods ----
   # Association methods (cor, pcor, glasso) need numeric data. Categorical
@@ -814,7 +977,8 @@ build_network <- function(data,
   # fewer than two numeric columns: they are converted to per-row state
   # frequencies and a numeric covariate is left out. Numeric variables with
   # a stray character column (gender) are not sequences: the estimator uses
-  # the numeric columns.
+  # the numeric columns. Declared `state_cols` are the positions, whatever
+  # the other columns hold, and are always converted.
   assoc_methods <- c("cor", "pcor", "glasso")
   if (method %in% assoc_methods && is.data.frame(data)) {
     exclude <- intersect(c(actor, session), names(data))
@@ -822,10 +986,14 @@ build_network <- function(data,
     is_cat <- vapply(data[check_cols],
                      function(x) is.character(x) || is.factor(x), logical(1))
     is_num <- vapply(data[check_cols], is.numeric, logical(1))
-    if (sum(is_cat) >= 2L && sum(is_num) < 2L) {
-      seq_data <- data[c(exclude, check_cols[is_cat])]
+    declared <- !is.null(state_cols)
+    seq_cols <- if (declared) intersect(state_cols, check_cols) else
+      check_cols[is_cat]
+    if ((declared && length(seq_cols) > 0L) ||
+        (!declared && sum(is_cat) >= 2L && sum(is_num) < 2L)) {
+      seq_data <- data[c(exclude, seq_cols)]
       freq_data <- convert_sequence_format(
-        seq_data, seq_cols = check_cols[is_cat],
+        seq_data, seq_cols = seq_cols,
         id_col = if (length(exclude) == 0L) character(0) else exclude,
         format = "frequency"
       )
@@ -928,8 +1096,17 @@ build_network <- function(data,
     }
   }
 
+  # The latency estimator reads each event's time beside its state
+  if (identical(method, "latency")) data <- cbind(data, latency_time)
+
   # Call estimator
   est_result <- do.call(estimator$fn, c(list(data = data), params))
+  # The resolved caps are recorded in params, so the params reproduce the
+  # network (and a group's networks share the caps of the pooled data)
+  if (identical(method, "latency")) {
+    params$latency_cap_seconds <- est_result$latency_cap_seconds
+    params$latency_unit_caps <- est_result$latency_unit_caps
+  }
 
   # Validate estimator output
   if (!is.list(est_result) ||
@@ -980,10 +1157,15 @@ build_network <- function(data,
     } else {
       character(0)
     }
+    # The positions the estimator read (.prepare_sequence_wide(): `cols`, or
+    # every column but the id), so `$data` keeps an all-missing position and
+    # a resample reads the sequences the network was estimated from.
     auto_wide_state <- if (is.null(state_cols) &&
                            method %in% transition_methods &&
                            !identical(format, "onehot")) {
-      intersect(params$cols, names(raw_data))
+      intersect(.select_state_cols(raw_data, .param_get(params, "id"),
+                                   params$cols),
+                names(raw_data))
     } else {
       character(0)
     }
@@ -1111,6 +1293,32 @@ build_network <- function(data,
   result
 }
 
+
+#' prepare()'s time-parsing options among `params`
+#' @noRd
+.prepare_time_options <- function(params) {
+  intersect(c("custom_format", "is_unix_time", "unix_time_unit"),
+            names(params))
+}
+
+#' Run prepare() on an event log with build_network()'s roles
+#'
+#' @return The `nestimate_data` from [prepare()].
+#' @noRd
+.prepare_event_log <- function(data, params, action, actor = NULL,
+                               time = NULL, session = NULL, order = NULL,
+                               time_threshold = 900, timezone = "UTC") {
+  prep_args <- list(data = data, action = action)
+  if (!is.null(actor)) prep_args$actor <- actor
+  if (!is.null(time)) prep_args$time <- time
+  if (!is.null(session)) prep_args$session <- session # nocov start
+  if (!is.null(order)) prep_args$order <- order # nocov end
+  prep_args$time_threshold <- time_threshold
+  prep_args$timezone <- timezone
+  time_opts <- .prepare_time_options(params)
+  prep_args[time_opts] <- params[time_opts]
+  do.call(prepare, prep_args)
+}
 
 #' @noRd
 .canonicalize_build_network_params <- function(params,
@@ -1353,7 +1561,8 @@ print.netobject <- function(x, ...) {
     cor           = "Correlation Network",
     ising         = "Ising Model Network",
     attention     = "Attention Network (decay-weighted transitions)",
-    wtna          = "Window TNA (transitions)"
+    wtna          = "Window TNA (transitions)",
+    latency       = "Reply Network (response-latency weighted)"
   )
 
   label <- if (x$method %in% names(method_labels)) {
@@ -1440,6 +1649,21 @@ print.netobject <- function(x, ...) {
       cat(sprintf("  Thresholds: [%.3f, %.3f]\n", thr_rng[1], thr_rng[2]))
     }
   }
+  if (identical(x$method, "latency") && !is.null(x$latency_cap_seconds)) {
+    cat(sprintf(paste0("\n  Latency: weight 1 at 0 s, falling to %g at the ",
+                       "cap of %.4g s (%s)  |  %s per pair  |  %d replies\n"),
+                x$params$latency_floor, x$latency_cap_seconds,
+                if (is.character(x$params$latency_cap)) "given" else
+                  sprintf("%g percentile", x$params$latency_cap),
+                x$params$latency_aggregate, as.integer(sum(x$n_replies))))
+    unit_caps <- x$latency_unit_caps
+    if (length(unit_caps) > 0L) {
+      cat(sprintf(paste0("  Caps per %s: %d unit(s), %.4g to %.4g s; ",
+                         "other units use the cap above\n"),
+                  x$params$latency_scope, length(unit_caps),
+                  min(unit_caps), max(unit_caps)))
+    }
+  }
   if (!is.null(x$scaling))  cat(sprintf("\n  Scaling: %s\n",   paste(x$scaling, collapse = " -> ")))
   if (x$threshold > 0)      cat(sprintf("  Threshold: %g\n",  x$threshold))
 
@@ -1468,7 +1692,10 @@ print.netobject <- function(x, ...) {
 #' node and edge counts, density, mean shortest-path distance, the mean and
 #' SD of out- and in-strength, the mean and SD of out-degree, out- and
 #' in-degree centralisation (Freeman) and reciprocity. A self-loop counts as
-#' an edge, an undirected edge is counted once, and density is capped at 1.
+#' an edge, and an undirected edge is counted once. Density divides the
+#' edge count, self-loops included, by the n(n - 1) off-diagonal pairs
+#' (n(n - 1) / 2 when undirected), as `tna::summary.tna()` and
+#' `igraph::edge_density(loops = FALSE)` do, and is capped at 1.
 #' Strengths sum absolute weights. Distances take each edge's absolute
 #' weight as its length, not its inverse, and pairs with no path between
 #' them are left out of the mean. Degree centralisation ignores self-loops,

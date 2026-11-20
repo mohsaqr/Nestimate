@@ -31,10 +31,11 @@ landscape_trend(
 \item{x}{The network or sequences: a transition network from
 \code{\link[=build_network]{build_network()}} with method \code{"relative"} or \code{"frequency"} (or a bare
 \code{cograph_network} of one), a grouped one (\code{netobject_group}), a \code{tna}
-model, or a wide sequence data frame. A covariate is read from the
+model or a \code{group_tna} (one landscape per group), or a wide sequence data frame. A covariate is read from the
 network's metadata, which \code{\link[=build_network]{build_network()}} fills with the numeric
 columns of a wide data frame, or from a data frame's columns beside the
-positions. A network must carry its sequences; a network of another
+positions. A network must count one-step transitions (a
+windowed one raises an error) and carry its sequences; a network of another
 method (for example \code{"glasso"}) raises an error of class
 \code{nestimate_not_markov}. For the \code{print()} and \code{plot()} methods: a
 \code{net_landscape_trend} object.}
@@ -162,8 +163,10 @@ With \code{depth = "stay"}, a window or slice in which a state is never left
 gives an infinite depth, and one in which it does not occur gives \code{NA}.
 With \code{depth = "occupancy"}, ridges join the states next to each other in
 \code{states} order and the last state to the first (one ridge with two
-states); a window whose chain has no unique stationary distribution is
-\code{NA} throughout, and a ridge never crossed is \code{NA}. Such points are kept
+states); a window whose chain has no unique stationary distribution
+(more than one closed class of states) is \code{NA} throughout, a state
+outside the closed class (transient) has an infinite potential, and a
+ridge never crossed is \code{NA}. Such points are kept
 in \code{summary()}, left out of the lines and the surface, and counted in the
 plot caption. Interval bands are clipped at the panel edge, which is set
 by the estimates.

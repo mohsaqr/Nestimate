@@ -188,16 +188,23 @@
 
 #' Order selected by sequential likelihood-ratio tests
 #'
-#' The largest order whose test against the order below rejects at
-#' \code{alpha} (Scholtes 2017), or 0 when none does.
+#' The largest order k >= 2 whose test against order k - 1 rejects at
+#' \code{alpha}, or 1 when none does: the first-order model is the null
+#' that the tests start from (Scholtes 2017; pathpy 2
+#' \code{MultiOrderModel.estimate_order}, which sets
+#' \code{max_accepted_order = 1} and tests \code{k in range(2, ...)}).
+#' Order 1 against order 0 is not tested, because the path-constrained
+#' first-order model does not nest the order-0 model.
 #'
-#' @param lrt_p p-values indexed by order 0..K (order 0 is \code{NA}).
+#' @param lrt_p p-values indexed by order 0..K (orders 0 and 1 are not
+#'   used).
 #' @param alpha Significance threshold.
-#' @return Integer order.
+#' @return Integer order, at least 1.
 #' @noRd
 .mogen_lrt_order <- function(lrt_p, alpha) {
-  rejected <- which(!is.na(lrt_p) & lrt_p < alpha)
-  if (length(rejected)) as.integer(max(rejected) - 1L) else 0L
+  order <- seq_along(lrt_p) - 1L
+  rejected <- order[order >= 2L & !is.na(lrt_p) & lrt_p < alpha]
+  if (length(rejected)) as.integer(max(rejected)) else 1L
 }
 
 #' Path-based degrees of freedom of each layer (Scholtes 2017, Eq. 7)
@@ -277,11 +284,16 @@
 #' j - 1 transitions while j <= k, and every later state by the order-k
 #' transitions. The likelihood-ratio test of order k against order k - 1
 #' refers twice the gain in log-likelihood to a chi-square distribution with
-#' the order-k layer's degrees of freedom; its p-value is `NA` for order 0
-#' and where the statistic or the degrees of freedom are not positive. With
-#' `criterion = "lrt"` the selected order is the largest k whose test
-#' rejects at `lrt_alpha` (Scholtes 2017), or 0 when none does. Every
-#' p-value is kept in the result, so a non-monotone run of tests is visible.
+#' the order-k layer's degrees of freedom. The tests start from the
+#' first-order model as the null (Scholtes 2017; pathpy 2
+#' `MultiOrderModel.estimate_order`): order 1 is not tested against order 0,
+#' because a first-order model restricted to the observed transitions does
+#' not nest the order-0 model, so the p-value is `NA` for orders 0 and 1, and
+#' also where the statistic or the degrees of freedom are not positive. With
+#' `criterion = "lrt"` the selected order is the largest k of at least 2
+#' whose test rejects at `lrt_alpha`, or 1 when none does; only AIC and BIC
+#' can select order 0. Every p-value is kept in the result, so a
+#' non-monotone run of tests is visible.
 #'
 #' The model is the one pathpy 2 calls `MultiOrderModel`. It is not the
 #' multi-order generative model of Gote et al. (2023), which adds start and
@@ -307,7 +319,8 @@
 #'   length minus 1, with a message.
 #' @param criterion How the order is selected: `"aic"` (default) or
 #'   `"bic"` takes the order with the smallest criterion, and `"lrt"` uses
-#'   the sequential likelihood-ratio tests described in *Details*.
+#'   the sequential likelihood-ratio tests described in *Details*, which
+#'   select an order of at least 1.
 #' @param lrt_alpha The significance level of the likelihood-ratio tests,
 #'   strictly between 0 and 1. Default `0.01`. It only affects the selection
 #'   with `criterion = "lrt"`; the p-values are computed under every
@@ -342,7 +355,7 @@
 #'       each layer.}
 #'     \item{dof_method}{`"paths"` or `"observed"`.}
 #'     \item{lrt_p}{Named numeric vector: the likelihood-ratio p-value of
-#'       order k against order k - 1.}
+#'       order k against order k - 1 (`NA` for orders 0 and 1).}
 #'     \item{transition_matrices}{List of row-stochastic transition
 #'       matrices (a context never followed by another state keeps a zero
 #'       row), the first (order 0) held as the named vector of marginal
@@ -354,12 +367,14 @@
 #'     \item{n_paths}{Number of trajectories fitted.}
 #'     \item{n_observations}{Total number of state observations.}
 #'     \item{weights}{The transition matrix of the selected order, as the
-#'       `cograph_network` weight matrix (a 1 x n matrix named `"marginal"`
-#'       when the selected order is 0). Its dimnames are internal k-tuple
+#'       `cograph_network` weight matrix (when the selected order is 0, a
+#'       states x states matrix of zeros, since an order-0 model has no
+#'       transitions; its marginal is the first element of
+#'       `transition_matrices`). Its dimnames are internal k-tuple
 #'       keys (states joined by a non-printing separator), not arrow
 #'       notation.}
 #'     \item{nodes}{Data frame (`id`, `label`, `name`) of the nodes of the
-#'       selected order.}
+#'       selected order (the states at order 0).}
 #'     \item{edges}{The `cograph_network` edge data frame, with integer
 #'       `from` and `to` node indices and a numeric `weight`;
 #'       [mogen_transitions()] gives the readable table.}
@@ -468,8 +483,12 @@ build_mogen <- function(data, max_order = 5L, criterion = c("aic", "bic", "lrt")
     .mogen_log_likelihood(trajectories, k, trans_mats[seq_len(k + 1L)])
   }, numeric(1L))
 
-  # Likelihood-ratio test of each order against the one below
+  # Likelihood-ratio test of each order k >= 2 against the one below. Order 1
+  # is the null the tests start from (Scholtes 2017; pathpy 2
+  # estimate_order): it does not nest order 0 once its transitions are
+  # restricted to the observed topology, so it gets no p-value.
   lrt_p <- c(NA_real_, vapply(seq_len(max_order), function(k) {
+    if (k < 2L) return(NA_real_)
     x <- -2 * (logliks[k] - logliks[k + 1L])
     df_diff <- layer_dofs[k + 1L]
     if (df_diff > 0 && x > 0) {
@@ -500,15 +519,15 @@ build_mogen <- function(data, max_order = 5L, criterion = c("aic", "bic", "lrt")
     optimal_order <- .mogen_lrt_order(lrt_p, lrt_alpha)
   }
 
-  # Extract optimal-order transition matrix for cograph compatibility
+  # Extract optimal-order transition matrix for cograph compatibility. An
+  # order-0 model has no transitions: its graph is the states with no edges
+  # (the marginal stays in transition_matrices[[1]]).
   opt_mat <- trans_mats[[optimal_order + 1L]]
   if (is.null(dim(opt_mat))) {
-    # Order 0: marginal vector -> 1xn matrix
-    opt_mat <- matrix(opt_mat, nrow = 1,
-                      dimnames = list("marginal", names(opt_mat)))
+    opt_mat <- matrix(0, nrow = length(opt_mat), ncol = length(opt_mat),
+                      dimnames = list(names(opt_mat), names(opt_mat)))
   }
-  opt_nodes <- rownames(opt_mat) %||% names(marginal)
-  cg <- .ho_cograph_fields(opt_mat, opt_nodes, method = "mogen")
+  cg <- .ho_cograph_fields(opt_mat, rownames(opt_mat), method = "mogen")
 
   result <- list(
     optimal_order = as.integer(optimal_order),

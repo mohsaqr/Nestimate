@@ -86,6 +86,7 @@ index. An undirected network lists each pair once.}
 \code{NULL} when only one index was computed.}
 \item{scores}{Named list of score matrices, one per index.}
 \item{adjacency}{The 0/1 adjacency matrix of the input network.}
+\item{weights}{The weight matrix of the input network.}
 \item{methods}{The indices computed.}
 \item{nodes}{The node names.}
 \item{directed, weighted}{Whether the network was read as directed, and

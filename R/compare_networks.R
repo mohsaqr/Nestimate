@@ -71,7 +71,10 @@
 #'   supports (see *Details*). The permutation and Bayesian tests need
 #'   networks that carry their data and share one estimation method, and the
 #'   Bayesian test needs `"relative"` or `"frequency"` networks; otherwise an
-#'   error of class `nestimate_compare_test_unsupported` is raised.
+#'   error of class `nestimate_compare_test_unsupported` is raised. Latency
+#'   networks are not resampled: with `"permutation"` or `"bootstrap"`, a
+#'   network built with `method = "latency"` raises an error of class
+#'   `nestimate_latency_resampling`.
 #' @param iter The number of permutations, posterior draws or bootstrap
 #'   replicates per pair, at least 2. Default `1000`.
 #' @param alpha The significance level of the permutation and bootstrap
@@ -311,6 +314,9 @@ compare_networks <- function(...,
   # every pair gets `seed` itself, as permutation() does for its own pairs
   seeds <- rep(list(seed), nrow(pairs))
 
+  if (any(test %in% c("permutation", "bootstrap"))) {
+    .stop_latency_resampling(nets, "compare_networks()")
+  }
   if (length(test) > 0L) {
     .cn_check_test_support(nets, pairs, test)
   }

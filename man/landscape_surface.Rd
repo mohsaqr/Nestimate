@@ -26,7 +26,8 @@ landscape_surface(
 \item{x}{The network or sequences: a transition network from
 \code{\link[=build_network]{build_network()}} with method \code{"relative"} or \code{"frequency"} (or a bare
 \code{cograph_network} of one), a grouped one (\code{netobject_group}), a \code{tna}
-model, or a wide sequence data frame or matrix. A network must carry its
+model or a \code{group_tna} (one landscape per group), or a wide sequence data frame or matrix. A network must count one-step transitions (a
+windowed one raises an error) and carry its
 sequences; a network of another method (for example \code{"glasso"}) raises
 an error of class \code{nestimate_not_markov}. For the \code{print()} and \code{plot()}
 methods: a \code{net_landscape_surface} object.}

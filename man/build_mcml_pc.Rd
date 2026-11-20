@@ -155,7 +155,8 @@ total.}
 
 \item{cor_method}{The correlation used when estimating from raw data:
 \code{"pearson"} (default), \code{"spearman"} or \code{"polychoric"} (needs
-\pkg{lavaan}; see Details).}
+\pkg{lavaan}; see Details). For a network, the correlation it was
+estimated with, unless given.}
 
 \item{signed}{Whether reverse-keyed items are flipped in the cluster
 scores (see Details). Default \code{TRUE}.}

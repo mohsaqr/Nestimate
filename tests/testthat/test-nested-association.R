@@ -16,19 +16,8 @@
         dimnames = list(c("a", "b"), c("x", "y"), paste0("k", 1:5)))
 }
 
-test_that("Rao-Scott residuals equal chisq.test()'s with one row per cluster", {
-  tab <- matrix(c(12, 5, 7, 9, 4, 11), 2, 3,
-                dimnames = list(c("a", "b"), c("x", "y", "z")))
-  # Expand every count into singleton clusters.
-  cells <- which(tab > 0, arr.ind = TRUE)
-  reps <- rep(seq_len(nrow(cells)), tab[cells])
-  arr <- array(0, c(2, 3, length(reps)), dimnames = c(dimnames(tab), list(NULL)))
-  arr[cbind(cells[reps, , drop = FALSE], seq_along(reps))] <- 1
-  fit <- Nestimate:::.nested_association(arr, "rao_scott")
-  expect_equal(unname(fit$residuals),
-               unname(unclass(suppressWarnings(stats::chisq.test(tab))$stdres)),
-               tolerance = 1e-12)
-})
+# "Rao-Scott residuals equal chisq.test()'s with one row per cluster" moved to
+# tests/equivalence/test-mosaic_test.R (a comparison with stats::chisq.test()).
 
 test_that("Rao-Scott is symmetric in rows and columns and ignores cluster order", {
   arr <- .na_array()

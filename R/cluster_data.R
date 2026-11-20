@@ -987,7 +987,11 @@ build_clusters <- function(data, k, dissimilarity = "hamming", method = "pam",
       weighted = weighted,
       lambda = lambda,
       covariates = cov_result,
-      network_method = if (inherits(raw_data, "netobject")) raw_data$method else NULL,
+      # a one-hot network's units are windowed state sequences, which only
+      # its counting method can rebuild (the wtna methods read 0/1 codes)
+      network_method = if (onehot_net) {
+        .resampling_method(raw_data$method, raw_data$params)
+      } else if (inherits(raw_data, "netobject")) raw_data$method else NULL,
       build_args     = if (inherits(raw_data, "netobject") && !onehot_net) raw_data$build_args else NULL,
       metadata       = if (onehot_net) NULL else if (inherits(raw_data, "netobject")) raw_data$metadata else set_aside,
       htna_partition = .capture_htna_partition(raw_data)
@@ -1790,17 +1794,19 @@ plot.net_clustering <- function(x, type = c("silhouette", "mds", "heatmap",
         "Install with: install.packages('nnet')"),
         class = "nestimate_missing_package", call = NULL)) # nocov end
     }
-    if (!via_auto) warning(
+    if (!via_auto) warning(warningCondition(paste0(
       "estimator = 'multinom' uses nnet::multinom (classical ML). ",
       "Coefficient estimates can diverge under quasi-complete separation ",
       "(rare-cell or zero-cell covariate levels), producing astronomical ",
       "ORs with degenerate confidence intervals. The default ",
       "estimator = 'auto' falls back to firth (brglm2) when separation ",
-      "risk is detected. See Heinze & Schemper (2002).",
-      call. = FALSE
-    )
+      "risk is detected. See Heinze & Schemper (2002)."),
+      class = "nestimate_multinom_ml", call = NULL))
     design <- stats::model.matrix(stats::as.formula(paste("~", rhs)), fit_df)
-    fit <- .multinom_standardised(fit_df$cluster, design)
+    fit <- .multinom_standardised(fit_df$cluster, design,
+                                  formula = stats::as.formula(
+                                    paste("cluster ~", rhs)),
+                                  data = fit_df)
     null_fit <- nnet::multinom(cluster ~ 1, data = fit_df, trace = FALSE)
   } else {
     # estimator == "firth"
@@ -1916,14 +1922,20 @@ plot.net_clustering <- function(x, type = c("silhouette", "mds", "heatmap",
 
 #' Multinomial logit on standardised columns, reported on the original scale
 #'
+#' The returned `model` is the same fit on the original covariates: refitted
+#' from `formula` and `data`, started at the standardised solution expressed
+#' on the original scale, so it is a `multinom` model that `predict()`s on new
+#' data holding the original covariate columns.
 #' @param y Factor outcome.
 #' @param design Design matrix of the original covariates.
-#' @return List with `model` (the nnet fit, on the standardised columns) and
+#' @param formula,data The model formula on the original covariates (outcome
+#'   `y`'s column on the left) and the data it is evaluated in.
+#' @return List with `model` (the nnet fit on the original covariates) and
 #'   `estimates` (list of `coefficients` and `standard.errors`, one row per
 #'   non-reference level, on the original scale). Warns with class
 #'   `nestimate_no_converge` when the optimiser stopped early.
 #' @noRd
-.multinom_standardised <- function(y, design) {
+.multinom_standardised <- function(y, design, formula, data) {
   std <- .standardise_design(design)
   X <- std$X
   fit <- nnet::multinom(y ~ X - 1, Hess = TRUE, maxit = 1000L, trace = FALSE)
@@ -1932,6 +1944,15 @@ plot.net_clustering <- function(x, type = c("silhouette", "mds", "heatmap",
   p <- ncol(design)
   beta <- matrix(stats::coef(fit), nrow = length(levels_kept), ncol = p,
                  dimnames = list(levels_kept, colnames(design)))
+  # nnet's weights: per output unit its (fixed, zero) bias, then one weight
+  # per design column; the reference level's unit is all zero. Two levels
+  # use a single logistic unit.
+  original <- beta %*% std$back
+  start <- if (length(levels_kept) == 1L) c(0, original) else
+    c(rep(0, p + 1L), as.vector(rbind(0, t(original))))
+  model <- nnet::multinom(formula, data = data, Wts = start, Hess = TRUE,
+                          maxit = 1000L, trace = FALSE)
+  .warn_multinom_convergence(model)
   covariance <- stats::vcov(fit)
   # vcov() holds one p x p block per non-reference level, in level order.
   ses <- vapply(seq_along(levels_kept), \(level) {
@@ -1941,8 +1962,8 @@ plot.net_clustering <- function(x, type = c("silhouette", "mds", "heatmap",
   }, numeric(p))
   ses <- matrix(ses, nrow = length(levels_kept), ncol = p, byrow = TRUE,
                 dimnames = dimnames(beta))
-  list(model = fit,
-       estimates = list(coefficients = beta %*% std$back,
+  list(model = model,
+       estimates = list(coefficients = original,
                         standard.errors = ses))
 }
 
@@ -2411,7 +2432,12 @@ cluster_network <- function(data, k, cluster_by = "pam",
   cluster_args <- caller_dots[intersect(names(caller_dots), cluster_arg_names)]
   build_dots   <- caller_dots[setdiff(names(caller_dots), cluster_arg_names)]
 
-  if (inherits(data, "netobject")) {
+  # As in the MMM branch: a one-hot network's units are clustered as windowed
+  # state sequences, so its one-hot build arguments (actor, codes,
+  # window_size) do not apply to them; the clustering carries the method
+  # that rebuilds them.
+  onehot <- inherits(data, "netobject") && .is_onehot_params(data$params)
+  if (inherits(data, "netobject") && !onehot) {
     if (!is.null(data$build_args))
       build_dots <- modifyList(data$build_args, build_dots)
     if (is.null(build_dots$method))
@@ -2424,6 +2450,9 @@ cluster_network <- function(data, k, cluster_by = "pam",
                  c(list(data = data, k = k, method = cluster_by,
                         dissimilarity = dissimilarity),
                    cluster_args))
+  if (onehot && is.null(build_dots$method)) {
+    build_dots$method <- cls$network_method %||% "relative"
+  }
   do.call(build_network, c(list(data = cls), build_dots))
 }
 

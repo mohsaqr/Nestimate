@@ -23,10 +23,10 @@
 #'   same number of nodes, with the same labels in the same order, or an error
 #'   is raised; any other kind of object raises an error too. A matrix without
 #'   dimnames is labelled `V1`, `V2`, ..., so it matches only a network with
-#'   those labels. The difference is directed when `x` is a directed
-#'   `netobject`; when `x` is not a `netobject`, it is directed when `x`'s
-#'   weights are not symmetric. For the `print()` method: `x` is the
-#'   `netdifference` object.
+#'   those labels. The difference is directed when either network is
+#'   directed (a network by its own `directed` flag, a matrix when its
+#'   weights are not symmetric) or when the difference itself is not
+#'   symmetric. For the `print()` method: `x` is the `netdifference` object.
 #'
 #' @return A `netdifference` object, which is also a `netobject` (method
 #'   `"difference"`). `print()` lists the edges present in either network,
@@ -50,11 +50,11 @@
 #' subtract_networks(net_edge_betweenness(a), net_edge_betweenness(b))
 #' @export
 subtract_networks <- function(x, y) {
-  # a tna model or group_tna is rebuilt as a Nestimate network (R/tna_input.R)
-  x <- .tna_input(x, "subtract_networks()")
-  y <- .tna_input(y, "subtract_networks()")
-  wx <- .weights_of(x, fn = "subtract_networks")
-  wy <- .weights_of(y, fn = "subtract_networks")
+  # a tna model or bare cograph_network is converted to a Nestimate network
+  # first (R/tna_input.R), and each input's own `directed` flag read off it
+  inputs <- .compare_inputs(x, y, fn = "subtract_networks")
+  wx <- .weights_of(inputs$x, fn = "subtract_networks")
+  wy <- .weights_of(inputs$y, fn = "subtract_networks")
   if (!identical(dim(wx), dim(wy))) {
     stop(errorCondition("x and y must have the same number of nodes.",
       class = "nestimate_bad_input", call = NULL))
@@ -65,12 +65,15 @@ subtract_networks <- function(x, y) {
     stop(errorCondition("x and y must have the same node labels and order.",
       class = "nestimate_bad_input", call = NULL))
   }
-  directed <- if (inherits(x, "netobject") && !is.null(x$directed)) {
-    isTRUE(x$directed)
-  } else {
-    !isSymmetric(unname(wx))
-  }
-  out <- .wrap_netobject(wx - wy, method = "difference", directed = directed)
+  # Directed when either network is (each by its own flag, a plain matrix by
+  # its symmetry; R/compare_network.R), or when the difference itself is
+  # asymmetric: an undirected difference keeps one triangle, so a change
+  # confined to the other one would vanish from the edges and the print.
+  difference <- wx - wy
+  directed <- any(.resolve_directed(inputs$flags, wx, wy)) ||
+    !isSymmetric(unname(difference))
+  out <- .wrap_netobject(difference, method = "difference",
+                         directed = directed)
   out$x <- wx
   out$y <- wy
   out$difference_matrix <- out$weights

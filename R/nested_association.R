@@ -80,23 +80,29 @@
   keep_k <- apply(sub, 3L, sum) > 0
   sub <- sub[, , keep_k, drop = FALSE]
   levels <- levels[keep_k, , drop = FALSE]
-  if (dim(sub)[3L] < 2L) {
-    stop(errorCondition(
-      sprintf("A clustered test needs at least two clusters with counts; found %d.",
-              dim(sub)[3L]),
-      class = "nestimate_bad_input", call = NULL))
-  }
 
   # Only the GLMM models nesting levels; the other methods use the outermost
   # level, the ultimate cluster, which carries the dependence of every level
   # below it.
-  if (!identical(method, "glmm") && ncol(levels) > 1L) {
+  collapsed <- !identical(method, "glmm") && ncol(levels) > 1L
+  outer_name <- names(levels)[1L]
+  if (collapsed) {
     outer <- as.character(levels[[1L]])
     flat <- rowsum(t(matrix(sub, prod(dim(sub)[1:2]), dim(sub)[3L])), outer,
                    reorder = FALSE)
     sub <- array(t(flat), c(dim(sub)[1:2], nrow(flat)),
                  dimnames = c(dimnames(sub)[1:2], list(rownames(flat))))
     levels <- data.frame(cluster = rownames(flat), stringsAsFactors = FALSE)
+  }
+  # Counted after the collapse: the clusters a test uses are the outer ones.
+  if (dim(sub)[3L] < 2L) {
+    stop(errorCondition(
+      sprintf(paste0("Fewer than two clusters with counts%s (found %d); a ",
+                     "clustered test needs at least two."),
+              if (collapsed) sprintf(" at the outermost actor level, `%s`",
+                                     outer_name) else "",
+              dim(sub)[3L]),
+      class = "nestimate_bad_input", call = NULL))
   }
 
   flip <- identical(predictor, "cols") && method %in% c("gee", "glmm")
@@ -570,19 +576,21 @@
   list(counts = counts, levels = out$levels, predictor = out$predictor)
 }
 
-# Transitions (or co-occurrences) per sequence, counted as the estimator
-# counts them, then summed within clusters. Mosaic rows are the targets and
-# columns the sources, so the source ("cols") is the predictor.
+# Transitions per sequence, counted as the estimator counts them, then
+# summed within clusters. Mosaic rows are the targets and columns the
+# sources, so the source ("cols") is the predictor.
 #' @noRd
 .mosaic_network_clusters <- function(x, actor) {
   method <- .resampling_method(.resolve_method_alias(x$method %||% ""),
                                x$params)
-  if (!method %in% c("relative", "frequency", "co_occurrence") ||
+  # A co-occurrence network is refused before this point
+  # (.mosaic_refuse_undirected()): its pairs are not independent counts.
+  if (!method %in% c("relative", "frequency") ||
       !is.data.frame(x$data) || nrow(x$data) == 0L) {
     stop(errorCondition(sprintf(paste0(
       "Clustered residuals count the transitions of each sequence, which ",
-      "needs a relative, frequency or co_occurrence network that keeps its ",
-      "sequences; this one is method \"%s\"%s."),
+      "needs a relative or frequency network that keeps its sequences; ",
+      "this one is method \"%s\"%s."),
       x$method %||% "unknown",
       if (is.data.frame(x$data)) "" else " without sequence data"),
       class = "nestimate_bad_input", call = NULL))
@@ -622,25 +630,26 @@
                          factor(vals[ok], levels = states)))
     agg <- .mosaic_sum_clusters(per, .mosaic_cluster_levels(g, actor,
                                                             nrow(m), label))
-    data.frame(group = group_names[i],
-               key = rep(agg$key, times = length(states)),
-               state = rep(states, each = length(agg$key)),
-               count = as.vector(agg$counts),
-               agg$levels[rep(seq_along(agg$key), times = length(states)), ,
-                          drop = FALSE],
-               stringsAsFactors = FALSE, check.names = FALSE,
-               row.names = NULL)
+    # The actor levels stay in their own table: a metadata column may be
+    # called `group`, `key`, `state` or `count`, so it never shares a frame
+    # with the internal long-format columns.
+    list(long = data.frame(group = group_names[i],
+                           key = rep(agg$key, times = length(states)),
+                           state = rep(states, each = length(agg$key)),
+                           count = as.vector(agg$counts),
+                           stringsAsFactors = FALSE, row.names = NULL),
+         levels = agg$levels, key = agg$key)
   })
-  long <- do.call(rbind, parts)
+  long <- do.call(rbind, lapply(parts, `[[`, "long"))
   keys <- unique(long$key)
   long$group <- factor(long$group, levels = group_names)
   long$state <- factor(long$state, levels = states)
   long$key <- factor(long$key, levels = keys)
   counts <- unclass(stats::xtabs(count ~ group + state + key, data = long))
   attr(counts, "call") <- NULL
-  level_cols <- setdiff(names(long), c("group", "key", "state", "count"))
-  levels <- long[match(keys, as.character(long$key)), level_cols,
-                 drop = FALSE]
+  all_levels <- do.call(rbind, lapply(parts, `[[`, "levels"))
+  all_keys <- unlist(lapply(parts, `[[`, "key"), use.names = FALSE)
+  levels <- all_levels[match(keys, all_keys), , drop = FALSE]
   rownames(levels) <- NULL
   list(counts = counts, levels = levels, predictor = "rows")
 }

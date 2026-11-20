@@ -59,10 +59,15 @@ mosaic_test(x, ...)
 )
 }
 \arguments{
-\item{x}{A \code{netobject} or \code{htna} network (relative, frequency or
-co-occurrence, with its sequences), a \code{netobject_group}, a three-way
+\item{x}{A \code{netobject} or \code{htna} network (relative or frequency, with its
+sequences), a \code{netobject_group}, a three-way
 \code{table} or array (rows x columns x actors), or a data frame (with \code{var1},
-\code{var2} and \code{actor}).
+\code{var2} and \code{actor}). A co-occurrence network raises an error of class
+\code{nestimate_mosaic_undirected}: it counts each pair of states in both
+mirrored cells and the pairs of a sequence share its positions, so its
+counts are not independent and the tests would not hold their level
+(under independence Pearson's test rejected 200 of 200 simulated tables
+at 0.05). \code{\link[=mosaic_plot]{mosaic_plot()}} still draws it.
 A \code{tna} model or a \code{group_tna} (package tna) is first rebuilt as a network from its own sequences (see \code{\link[=as_netobject]{as_netobject()}}). \code{actor} is read from the metadata the model keeps (\code{attr(model$data, "meta")}, kept when the model is built from \code{tna::prepare_data()}); a model without it raises \code{nestimate_actor_missing}.}
 
 \item{...}{Not used; a name given here raises an error of class

@@ -149,6 +149,24 @@
   H
 }
 
+#' The transition matrix of the support graph
+#'
+#' `P` with the transitions the support graph `A` drops (at or below `tol`)
+#' set to 0 and each row rescaled to sum to 1, so hitting and absorption
+#' probabilities describe the same chain as the classification. A state
+#' left with no transition at all (every one at or below `tol`) is a closed
+#' class of its own in the support graph; it keeps its mass (self-loop 1).
+#' @noRd
+.cs_support_chain <- function(P, A) {
+  P_support <- P * A
+  row_mass <- rowSums(P_support)
+  stranded <- !(row_mass > 0)
+  P_support[!stranded, ] <- P_support[!stranded, , drop = FALSE] /
+    row_mass[!stranded]
+  P_support[cbind(which(stranded), which(stranded))] <- 1
+  P_support
+}
+
 #' Absorption analysis (transient -> closed classes) via fundamental matrix.
 #'
 #' Kemeny & Snell (1976, ch. III): lump every closed (recurrent) class into
@@ -239,8 +257,10 @@
 #'   transitions (a row of zeros) raises an error either way.
 #' @param tol The tolerance below which a transition probability counts as
 #'   zero when the support graph is built (it drives `classification`,
-#'   `communicating_classes`, `period` and `hitting_probabilities`), and the
-#'   tolerance of the reversibility check (detailed balance). Default
+#'   `communicating_classes`, `period`, `hitting_probabilities`,
+#'   `absorption_probabilities` and `mean_absorption_time`, the last three
+#'   computed with the transitions at or below `tol` removed and each row
+#'   rescaled to sum to 1), and the tolerance of the reversibility check (detailed balance). Default
 #'   `1e-10`. It does **not** govern the absorbing-state test: a state is
 #'   absorbing only when `P[i, i]` equals 1 to a fixed internal tolerance of
 #'   `.Machine$double.eps^0.5`, so raising `tol` to ignore tiny transition
@@ -289,7 +309,8 @@
 #'       the probability of ever reaching `j` from `i`, computed over the
 #'       same `tol`-thresholded support graph as `classification`, so the
 #'       two agree: a state in a closed class has hitting probability 0 to
-#'       every state outside it.}
+#'       every state outside it. The absorption probabilities and times use
+#'       the same thresholded chain.}
 #'     \item{`absorption_probabilities`}{`n_transient x n_closed` matrix
 #'       whose `[i, j]` entry is the probability that the chain started in
 #'       transient state `i` ends in closed class `j`; each row sums to 1.
@@ -401,10 +422,16 @@ chain_structure <- function(x, normalize = TRUE, tol = 1e-10) {
   # with a hard-coded `P > 0`, and a state classified "absorbing" via a
   # sub-`tol` escape edge could still show hitting probability 1 to other
   # states (a self-contradictory object).
+  # Both are computed on the chain the support graph describes (sub-`tol`
+  # transitions removed, rows rescaled), not on the raw P: with the raw P a
+  # transient state reached a closed class through a sub-`tol` edge in
+  # `absorption_probabilities` while `hitting_probabilities` said 0.
   reach <- .cs_reachability(A)
   diag(reach) <- 1L
-  H <- .cs_hitting(P, reach = reach)
-  abs_info <- .cs_absorption(P, transient_idx, recurrent_classes, state_names)
+  P_support <- .cs_support_chain(P, A)
+  H <- .cs_hitting(P_support, reach = reach)
+  abs_info <- .cs_absorption(P_support, transient_idx, recurrent_classes,
+                             state_names)
 
   structure(list(
     states                   = state_names,

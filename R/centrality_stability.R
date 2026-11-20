@@ -36,7 +36,9 @@
 #' and column sums, betweenness and closeness from Floyd-Warshall shortest
 #' paths. A network that rests on one sequence, or one-hot data with no
 #' actor or session, has nothing to drop and raises an error of class
-#' `nestimate_single_sequence`.
+#' `nestimate_single_sequence`. Latency networks are not resampled: a
+#' network built with `method = "latency"` raises an error of class
+#' `nestimate_latency_resampling`.
 #'
 #' Every draw counts towards `certainty`: a draw whose correlation is
 #' undefined (the measure is constant in it), and a draw whose network
@@ -211,6 +213,7 @@ centrality_stability <- function(x,
   # a tna model or group_tna is rebuilt as a Nestimate network (R/tna_input.R)
   x <- .tna_input(x, "centrality_stability()", need_data = TRUE,
                   actor = actor)
+  .stop_latency_resampling(list(x), "centrality_stability()")
   .check_permutation_block(actor, paired = FALSE)
 
   # ---- Input validation ----
@@ -280,6 +283,9 @@ centrality_stability <- function(x,
 
   # ---- Setup ----
   net_method <- .resampling_method(.resolve_method_alias(x$method), x$params)
+  # The scaling domain is the network's own: a wtna network resampled as
+  # counts still scales its non-zero cells only, as build_network() did
+  zeros_scaled <- .scaling_includes_zeros(.resolve_method_alias(x$method))
   states <- x$nodes$label
   n_states <- length(states)
   is_transition <- net_method %in% c("relative", "frequency", "co_occurrence")
@@ -353,7 +359,7 @@ centrality_stability <- function(x,
     }
     if (!is.null(scaling)) { # nocov start
       mat <- .apply_scaling(mat, scaling,
-                            include_zeros = .scaling_includes_zeros(net_method))
+                            include_zeros = zeros_scaled)
     } # nocov end
     if (thresh > 0) mat[abs(mat) < thresh] <- 0 # nocov
     dimnames(mat) <- list(states, states)
@@ -381,7 +387,7 @@ centrality_stability <- function(x,
     mat <- est$matrix[states, states] # nocov start
     if (!is.null(scaling)) {
       mat <- .apply_scaling(mat, scaling,
-                            include_zeros = .scaling_includes_zeros(net_method))
+                            include_zeros = zeros_scaled)
     }
     if (thresh > 0) mat[abs(mat) < thresh] <- 0
     mat # nocov end
@@ -627,12 +633,16 @@ centrality_stability <- function(x,
 #' A measure whose finite values span no more than sqrt(machine epsilon)
 #' relative to their size has no variance to correlate: OutStrength of a
 #' relative network with self-loops is 1 for every state up to 1e-16, and
-#' an exact `sd() > 0` test kept it and correlated rounding noise.
+#' an exact `sd() > 0` test kept it and correlated rounding noise. The
+#' tolerance is relative only, so a measure in small units (values near
+#' 1e-10) is judged as it is in large ones; all zeros are constant.
 #' @noRd
 .is_constant_vector <- function(v) {
   v <- v[is.finite(v)]
   if (length(v) < 2L) return(TRUE)
-  diff(range(v)) <= sqrt(.Machine$double.eps) * max(1, abs(v))
+  size <- max(abs(v))
+  if (!(size > 0)) return(TRUE)
+  diff(range(v)) <= sqrt(.Machine$double.eps) * size
 }
 
 

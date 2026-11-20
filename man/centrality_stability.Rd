@@ -178,7 +178,9 @@ directly, without igraph, as in \code{\link[=net_centrality]{net_centrality()}}:
 and column sums, betweenness and closeness from Floyd-Warshall shortest
 paths. A network that rests on one sequence, or one-hot data with no
 actor or session, has nothing to drop and raises an error of class
-\code{nestimate_single_sequence}.
+\code{nestimate_single_sequence}. Latency networks are not resampled: a
+network built with \code{method = "latency"} raises an error of class
+\code{nestimate_latency_resampling}.
 
 Every draw counts towards \code{certainty}: a draw whose correlation is
 undefined (the measure is constant in it), and a draw whose network

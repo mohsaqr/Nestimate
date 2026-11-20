@@ -105,9 +105,10 @@ and \code{"geomean"} give 1 for every pair of clusters with a transition, and
 \code{"density"} divides each count by \code{n_i * n_j}. The other methods suit
 weighted edge lists and weight matrices, where each row is already a
 measurement rather than one observation. On sequences and event logs the
-within-cluster networks likewise get 1 for each observed pair of states
-under every method but \code{"sum"} (\code{"density"} too, which is not divided by
-\code{n_i * n_j} there); on an edge list they hold the aggregated weights.}
+within-cluster networks keep the counts under \code{"sum"} and \code{"density"}
+(which is not divided by \code{n_i * n_j} there) and get 1 for each observed
+pair of states under the other methods; on an edge list they hold the
+aggregated weights.}
 
 \item{type}{How the aggregated counts are turned into weights:
 \describe{
@@ -235,7 +236,10 @@ counts, weight range, weight matrix, initial probabilities and the size
 of the data it carries. \code{\link[=summary]{summary()}} returns a data frame with one row
 per cluster, with
 columns \code{cluster}, \code{size}, \code{within_total} (the total absolute weight of
-the within-cluster network, \code{NA} when it was not built), \code{between_out}
+the within-cluster network, each observation once as on the macro
+diagonal: an undirected edge of a weight matrix once, an undirected
+transition count as its two halves; \code{NA} when it was not built),
+\code{between_out}
 and \code{between_in} (the absolute macro weight leaving and entering the
 cluster, diagonal excluded); for an undirected macro network, \code{between_out} is
 the total incident weight and \code{between_in} is \code{NA}.

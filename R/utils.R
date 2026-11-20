@@ -167,7 +167,7 @@ NULL
     # columns would invalidate params$cols, and remapping numeric indicator
     # or association values would change the observations themselves.
     sequence_methods <- c("relative", "frequency", "co_occurrence",
-                          "attention", "ngram", "gap", "reverse")
+                          "attention", "ngram", "gap", "reverse", "latency")
     column_nodes <- !x$method %in% sequence_methods ||
       !is.null(.param_get(x$params, "codes")) ||
       identical(.param_get(x$params, "format"), "onehot")
@@ -207,6 +207,10 @@ NULL
       x$params[state_roles] <- lapply(x$params[state_roles], remap)
     }
     if (!is.null(x$initial)) names(x$initial) <- remap(names(x$initial))
+    # a palette set before relabelling follows its states to their labels
+    if (!is.null(x$state_colors)) {
+      names(x$state_colors) <- remap(names(x$state_colors))
+    }
     if (!is.null(x$predictability)) {
       names(x$predictability) <- remap(names(x$predictability))
     }
@@ -602,6 +606,11 @@ safe_sd <- function(x) {
 # state back when that function exits, so a `seed =` argument gives
 # reproducible draws without moving the caller's own random stream (as
 # withr::local_seed()). A session with no random state yet is left with none.
+# Limit: under RNGkind(normal.kind = "Box-Muller") R caches the second normal
+# deviate of each pair outside `.Random.seed`, and set.seed() clears that
+# cache (?Random); it cannot be saved or restored from R, so the caller's
+# next rnorm() differs from what it would have been. The default
+# "Inversion" kind has no cache and its stream is preserved exactly.
 .local_seed <- function(seed, envir = parent.frame()) {
   had_state <- exists(".Random.seed", envir = globalenv(), inherits = FALSE)
   old_state <- if (had_state) {

@@ -9,7 +9,7 @@
 #' @description
 #' `register_estimator()` adds an estimator function to the registry that
 #' [build_network()] reads, so that `build_network(data, method = name)` calls
-#' it the way it calls a built-in method; the package registers its fourteen
+#' it the way it calls a built-in method; the package registers its fifteen
 #' built-in methods with this function when it loads. A name already in the
 #' registry is replaced, built-ins included, without a message.
 #' [list_estimators()] shows what is
@@ -149,7 +149,7 @@ get_estimator <- function(name) {
 #'
 #' @description
 #' `list_estimators()` returns the estimators [build_network()] can call by
-#' name: the fourteen built-ins and any added with
+#' name: the fifteen built-ins and any added with
 #' [register_estimator()]. Aliases such as
 #' `"tna"` or `"ebicglasso"` are not listed; the *Estimators* section of
 #' [build_network()] gives them.
@@ -262,6 +262,9 @@ remove_estimator <- function(name) {
                      directed = TRUE)
   register_estimator("reverse", .estimator_reverse,
                      "Reverse (reply) transitions: transpose of frequency",
+                     directed = TRUE)
+  register_estimator("latency", .estimator_latency,
+                     "Reply network weighted by response speed (latency)",
                      directed = TRUE)
   register_estimator("wtna", .estimator_wtna,
                      "Window-based TNA transitions (one-hot)", directed = TRUE)

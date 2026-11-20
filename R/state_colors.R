@@ -29,7 +29,8 @@
 #' @param x A `netobject`, `netobject_group`, `mcml` or `htna`; any other
 #'   object raises an error.
 #' @param colors The palette: a named character vector of colours, such as
-#'   `c(plan = "#0072B2", monitor = "#D55E00")`. Names are states, and for an
+#'   `c(plan = "#0072B2", monitor = "#D55E00")`. Names are states (for a
+#'   network built with `labels`, the labels it draws), and for an
 #'   `mcml` may also be cluster names. A name the object does not carry is
 #'   reported in a message and draws nothing, so one project-wide palette can
 #'   be attached to every object. States left unnamed are dealt the
@@ -184,7 +185,10 @@ state_colors.netobject_group <- function(x, ...) .state_colors_table(x)
     members <- Filter(function(z) inherits(z, "netobject"), x)
     return(unique(unlist(lapply(members, .object_states), use.names = FALSE)))
   }
-  unique(as.character(x$nodes$name))
+  # The labels, not the original names: a network built with `labels` draws
+  # (and holds in $weights and $data) its labels, so a palette keyed by the
+  # original names would colour states that are never drawn.
+  unique(as.character(x$nodes$label %||% x$nodes$name))
 }
 
 # A stored palette is always a named character vector. Names the object does
