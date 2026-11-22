@@ -27,7 +27,8 @@ labels). Columns take the same roles as in \code{\link[=build_network]{build_net
 covariate is not a position, and the columns set aside are named in a
 message and kept as metadata. Association networks (\code{cor}, \code{pcor},
 \code{glasso}, \code{ising}, \code{mgm}) hold variables, not sequences, and raise an
-error of class \code{nestimate_bad_input}.}
+error of class \code{nestimate_bad_input}, as do other fitted objects (an
+\code{mcml}, a \code{group_tna}, a \code{netobject_group}).}
 
 \item{k}{The number of subgroups (mixture components), a whole number of
 at least 2. Default \code{2}.}

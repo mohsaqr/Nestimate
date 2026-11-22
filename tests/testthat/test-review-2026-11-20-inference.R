@@ -21,7 +21,7 @@ test_that("latency networks built with different settings are not permuted", {
   expect_error(network_reliability(rel, fit(0.5), iter = 10L, seed = 1),
                class = "nestimate_latency_resampling")
   # the refusal is a bad input, as the other refusals of these verbs are
-  expect_error(bootstrap_network(fit(0.5), iter = 10L),
+  expect_error(centrality_stability(fit(0.5), iter = 10L),
                class = "nestimate_bad_input")
 })
 
@@ -34,7 +34,7 @@ test_that("compound actors that join to the same label keep their own caps", {
                   b = rep(c("c", "b-c"), each = 6),
                   sender = rep(c("A", "B"), 6),
                   t = c(5 * (0:5), 50 * (0:5)))
-  net <- build_network(d, "latency", actor = c("a", "b"), action = "sender",
+  net <- build_network(d, "latency", latency_aggregate = "sum", actor = c("a", "b"), action = "sender",
                        time = "t", latency_scope = "actor", latency_cap = 1)
   expect_equal(net$latency_unit_caps[c("a\\-b-c", "a-b\\-c")],
                c("a\\-b-c" = 5, "a-b\\-c" = 50))
@@ -46,7 +46,7 @@ test_that("compound actors that join to the same label keep their own caps", {
   # the same with the two actors in different groups: the caps are pooled
   # over the groups by unit, and the group networks add up to the full one
   d$team <- rep(c("x", "y"), each = 6)
-  grouped <- build_network(d, "latency", actor = c("a", "b"),
+  grouped <- build_network(d, "latency", latency_aggregate = "sum", actor = c("a", "b"),
                            action = "sender", time = "t",
                            latency_scope = "actor", latency_cap = 1,
                            group = "team")
@@ -60,7 +60,7 @@ test_that("compound actors that join to the same label keep their own caps", {
   # without a "-" in any value the label is the plain join
   plain <- transform(d, a = rep(c("ab", "a"), each = 6),
                      b = rep(c("c", "bc"), each = 6))
-  net2 <- build_network(plain, "latency", actor = c("a", "b"),
+  net2 <- build_network(plain, "latency", latency_aggregate = "sum", actor = c("a", "b"),
                         action = "sender", time = "t",
                         latency_scope = "actor", latency_cap = 1)
   expect_setequal(names(net2$latency_unit_caps), c("ab-c", "a-bc"))

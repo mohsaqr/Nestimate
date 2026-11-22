@@ -12,20 +12,26 @@ reference:
     desc: Core functions for building networks from data
     contents:
       - build_network
+      - build_tna
+      - build_ftna
+      - build_atna
+      - build_cna
+      - build_ngram
+      - build_gap
+      - build_reverse
+      - build_latency
+      - build_wtna
+      - wtna
+      - build_cor
+      - build_pcor
+      - build_glasso
+      - build_ising
+      - build_mgm
       - estimate_network
       - register_estimator
       - get_estimator
       - list_estimators
       - remove_estimator
-      - build_tna
-      - build_atna
-      - build_ftna
-      - build_cna
-      - build_cor
-      - build_pcor
-      - build_glasso
-      - build_ising
-      - wtna
       - cooccurrence
       - build_mlvar
       - build_gimme

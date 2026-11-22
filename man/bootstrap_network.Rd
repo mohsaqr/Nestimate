@@ -166,8 +166,10 @@ described with the methods below. A \code{wtna_mixed} gives a
 The \code{print()} methods return their input invisibly. The
 \code{summary()} method of a \code{net_bootstrap} returns its per-edge table, the
 \code{summary} field described above. For a \code{net_bootstrap_group}
-it stacks those tables into one data frame, with a first column \code{group}
-naming the network each row comes from; for a \code{wtna_boot_mixed} it
+it returns the tables of all groups stacked into one data frame, with a
+first column \code{group} naming the network each row comes from; the group
+object keeps that table from the start (its \code{"summary"} attribute); for
+a \code{wtna_boot_mixed} it
 returns a list of the \code{transition} and \code{cooccurrence} tables.
 }
 \description{
@@ -205,6 +207,28 @@ use \code{\link[=permutation]{permutation()}}.
 \details{
 The two tests and the inclusive boundary rule follow \code{tna::bootstrap()}.
 
+A latency network (\code{method = "latency"}) is resampled by its sequences, and
+every edge's weight is recomputed from the replies of the drawn sequences.
+A percentile cap the network resolved from its own replies is resolved
+again in every resample; a cap in seconds, or one pooled over the groups of
+a grouped build, keeps its value. Per-unit caps (\code{latency_scope} other than
+\code{"global"}) and \code{actor} raise an error of class
+\code{nestimate_latency_resampling} or \code{nestimate_actor_unsupported}; to resample
+within groups, build the network with \code{group} and bootstrap the group. With
+the default \code{aggregate = "mean"}, the stability test is run on the speed
+score \code{(weight - floor) / (1 - floor)}, which runs from 0 (every reply at or
+past the cap) to 1 (every reply instant), because a band around a mean
+weight between the floor and 1 passes almost every edge. An edge whose
+replies come from fewer than 5 sequences cannot vary across resamples and
+gets a p-value of 1. The summary adds each edge's \code{n_replies},
+\code{n_sequences} and \code{cv}, the coefficient of variation of its resampled
+speed scores. These rules were checked by simulation against known reply
+speeds: with a percentile cap the 95\% intervals covered 0.91-0.95 of the
+true weights from 30 sequences on, and an edge called stable was within
+25\% of its true score in 97-100\% of datasets from 300 sequences on.
+Bootstrapping latency networks is experimental: every call says so in a
+message of class \code{nestimate_experimental} (once for a group of networks).
+
 Transition networks (\code{"relative"}, \code{"frequency"}, \code{"co_occurrence"}, and
 \code{wtna} networks, which hold the same one-hot counts) take a fast path:
 the count matrix of every sequence is computed once, and each replicate
@@ -215,9 +239,7 @@ sequences resampled; joins inside each merged sequence are retained.
 With \code{actor}, a merged sequence must belong entirely to one actor. Every
 other method (the association methods, \code{"attention"}, \code{"ngram"}, \code{"gap"},
 \code{"reverse"} and registered estimators) is re-estimated in full on
-resampled rows. Latency networks are not resampled: a network built with
-\code{method = "latency"} raises an error of class
-\code{nestimate_latency_resampling}. A replicate whose estimation fails, or
+resampled rows. A replicate whose estimation fails, or
 that loses a node, is left out of the p-values, with a warning of class
 \code{nestimate_resample_failed} that counts them, and the bootstrap
 statistics are computed over the remaining replicates; if every

@@ -5,6 +5,7 @@
   if (is.matrix(x))     return(as.data.frame(x, stringsAsFactors = FALSE))
   if (is.data.frame(x)) return(x)
   if (inherits(x, "netobject") || inherits(x, "cograph_network")) {
+    .refuse_edgelist_network(x)
     if (!is.null(x$data) && (is.data.frame(x$data) || is.matrix(x$data)))
       return(as.data.frame(x$data, stringsAsFactors = FALSE))
     stop(errorCondition(

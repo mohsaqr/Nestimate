@@ -264,15 +264,14 @@
   sizes <- tabulate(assignments, nbins = k)
   empty <- which(sizes == 0L)
   if (length(empty) > 0L) {
-    warning(
+    warning(warningCondition(paste0(
       "MMM produced empty hard-assignment cluster",
       if (length(empty) == 1L) " " else "s ",
       paste(empty, collapse = ", "),
       ". The fitted mixture components should be treated as unstable; ",
       "try fewer clusters, more starts, a fixed seed, or stronger sequence ",
-      "signal.",
-      call. = FALSE
-    )
+      "signal."),
+      class = "nestimate_empty_cluster", call = NULL))
   }
 
   pairs <- utils::combn(seq_len(k), 2L, simplify = FALSE)
@@ -388,7 +387,8 @@
 #'   covariate is not a position, and the columns set aside are named in a
 #'   message and kept as metadata. Association networks (`cor`, `pcor`,
 #'   `glasso`, `ising`, `mgm`) hold variables, not sequences, and raise an
-#'   error of class `nestimate_bad_input`.
+#'   error of class `nestimate_bad_input`, as do other fitted objects (an
+#'   `mcml`, a `group_tna`, a `netobject_group`).
 #' @param k The number of subgroups (mixture components), a whole number of
 #'   at least 2. Default `2`.
 #' @param n_starts How many starting configurations to try, a positive whole
@@ -463,8 +463,13 @@
 #'     \item{covariates}{The post-hoc covariate analysis (list), or NULL
 #'       when \code{covariates = NULL}.}
 #'     \item{network_method, build_args, htna_partition}{Provenance kept
-#'       from \code{netobject} / HTNA input so per-cluster networks can be
-#'       rebuilt the same way; NULL otherwise.}
+#'       from \code{netobject} / HTNA input so per-cluster networks are of
+#'       the same type; NULL otherwise.}
+#'     \item{network_settings}{For \code{netobject} input, the network's
+#'       \code{threshold} and \code{scaling} when they are not the defaults
+#'       and its estimator settings in \code{params}, which
+#'       \code{build_network(x, inherit = TRUE)} uses; NULL when there are
+#'       none.}
 #'     \item{metadata}{The \code{netobject}'s per-sequence metadata, one row
 #'       per fitted sequence in the row order of \code{posterior}, so
 #'       \code{\link{session_ids}} can name each sequence; NULL for other
@@ -566,6 +571,7 @@ build_mmm <- function(data,
   htna_partition <- .capture_htna_partition(data)
   network_method <- NULL
   build_args     <- NULL
+  network_settings <- NULL
   metadata       <- NULL
   if (inherits(data, "tna") || inherits(data, "ftna")) {
     raw_data <- data$data
@@ -613,13 +619,12 @@ build_mmm <- function(data,
     .mmm_refuse_association(list(method = declared_method))
     if (bare) data <- .as_netobject(data)
     .mmm_refuse_association(data)
+    .refuse_edgelist_network(data)
     network_method <- if (bare) declared_method else data$method
     build_args     <- if (bare) NULL else data$build_args
-    # the estimator's own settings (n_gram, start/end states, concatenation)
-    # rebuild the clusters as the source network was built
-    if (!bare && length(data$params) > 0L && is.null(build_args$params)) {
-      build_args$params <- data$params
-    }
+    # its threshold, scaling and estimator settings, which a rebuild uses
+    # only with `inherit = TRUE`
+    network_settings <- if (bare) NULL else .network_settings(data)
     metadata       <- data$metadata
     raw_data <- data$data
     states <- data$nodes$label
@@ -627,7 +632,7 @@ build_mmm <- function(data,
     if (.is_onehot_params(data$params)) {
       raw_data <- .onehot_unit_sequences(data)
       # settings that read the 0/1 codes are dropped; the rest (a
-      # co-occurrence network's `type`) rebuild each cluster as the source
+      # co-occurrence network's `type`) make its type
       build_args <- .onehot_rebuild_args(data)
       metadata <- NULL
       # its units are windowed state sequences now, which the wtna methods
@@ -636,6 +641,17 @@ build_mmm <- function(data,
         network_method <- .resampling_method(network_method, data$params)
       }
     }
+  } else if (is.object(data) && is.list(data) && !is.data.frame(data)) {
+    # An mcml, a group_tna or another fitted object is not one set of
+    # sequences; as.data.frame() of it failed with an unclassed error.
+    stop(errorCondition(paste0(
+      "build_mmm(): unsupported input of class ",
+      paste(class(data), collapse = ", "), ". Expected a data frame, matrix, ",
+      "netobject, tna model or cograph_network",
+      if (inherits(data, "group_tna")) {
+        "; fit each group's model, or pass the sequences of all groups"
+      }, "."),
+      class = "nestimate_bad_input", call = NULL))
   } else {
     raw_data <- as.data.frame(data)
     state_cols <- .select_state_cols(raw_data, id = NULL, cols = NULL)
@@ -930,6 +946,7 @@ build_mmm <- function(data,
     covariate_effect = if (is.null(cov_result)) NULL else covariate_effect,
     network_method = network_method,
     build_args     = build_args,
+    network_settings = network_settings,
     metadata       = metadata,
     htna_partition = htna_partition
   ), class = "net_mmm")

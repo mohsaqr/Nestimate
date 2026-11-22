@@ -29,7 +29,7 @@
 
 test_that("latency weights match a hand computation (sum and mean)", {
   d <- .latency_toy()
-  net <- build_network(d, method = "latency", actor = "chat",
+  net <- build_network(d, method = "latency", latency_aggregate = "sum", actor = "chat",
                        action = "sender", time = "at",
                        latency_floor = 0.5, latency_cap = "60s")
   # pairs (responder -> previous sender, t): B->A 10, A->B 60, B->A 30,
@@ -64,7 +64,7 @@ test_that("latency weights match a hand computation (sum and mean)", {
 
 test_that("latency_floor = 1 gives the counts of method = 'reverse'", {
   d <- .latency_random()
-  lat <- build_network(d, method = "latency", actor = "chat",
+  lat <- build_network(d, method = "latency", latency_aggregate = "sum", actor = "chat",
                        action = "sender", time = "at", latency_floor = 1)
   rev <- build_network(d, method = "reverse", actor = "chat",
                        action = "sender", time = "at")
@@ -74,7 +74,7 @@ test_that("latency_floor = 1 gives the counts of method = 'reverse'", {
 
 test_that("floor = 0 gives slow replies no weight but still counts them", {
   d <- .latency_toy()
-  net <- build_network(d, method = "latency", actor = "chat",
+  net <- build_network(d, method = "latency", latency_aggregate = "sum", actor = "chat",
                        action = "sender", time = "at",
                        latency_floor = 0, latency_cap = "60s")
   expect_equal(net$weights["A", "C"], 0)  # t = 300 >= cap
@@ -102,14 +102,14 @@ test_that("a percentile cap is the quantile of sender-change latencies", {
 
 test_that("with group, every group shares the cap of the full data", {
   d <- .latency_random()
-  full <- build_network(d, method = "latency", actor = "chat",
+  full <- build_network(d, method = "latency", latency_aggregate = "sum", actor = "chat",
                         action = "sender", time = "at")
-  grouped <- build_network(d, method = "latency", actor = "chat",
+  grouped <- build_network(d, method = "latency", latency_aggregate = "sum", actor = "chat",
                            action = "sender", time = "at", group = "team")
   expect_s3_class(grouped, "netobject_group")
   caps <- vapply(grouped, function(n) n$latency_cap_seconds, numeric(1))
   expect_equal(unname(caps), rep(full$latency_cap_seconds, 2))
-  own <- build_network(subset(d, team == "red"), method = "latency",
+  own <- build_network(subset(d, team == "red"), method = "latency", latency_aggregate = "sum",
                        actor = "chat", action = "sender", time = "at")
   expect_false(isTRUE(all.equal(own$latency_cap_seconds,
                                 full$latency_cap_seconds)))
@@ -166,18 +166,19 @@ test_that("self-continuations stay on the diagonal", {
   expect_gt(scaled$weights["A", "A"], 0)
 })
 
-test_that("resampling verbs refuse a latency network", {
-  # latency networks are not resampled: every verb that bootstraps,
-  # shuffles or drops sequences refuses one, alone or inside a group
+test_that("resampling verbs other than bootstrap_network() refuse a latency network", {
+  # bootstrap_network() resamples latency networks by their sequences; every
+  # other verb that shuffles or drops sequences refuses one, alone or inside a
+  # group
   d <- .latency_random()
   net <- build_network(d, method = "latency", actor = "chat",
                        action = "sender", time = "at")
   grouped <- build_network(d, method = "latency", actor = "chat",
                            action = "sender", time = "at", group = "team")
   refused <- "nestimate_latency_resampling"
-  expect_error(bootstrap_network(net, iter = 10L, seed = 1), class = refused)
-  expect_error(bootstrap_network(grouped, iter = 10L, seed = 1),
-               class = refused)
+  expect_s3_class(bootstrap_network(net, iter = 10L, seed = 1), "net_bootstrap")
+  expect_s3_class(bootstrap_network(grouped, iter = 10L, seed = 1),
+                  "net_bootstrap_group")
   expect_error(permutation(grouped$red, grouped$blue, iter = 10L, seed = 1),
                class = refused)
   expect_error(permutation(grouped, iter = 10L, seed = 1), class = refused)
@@ -199,9 +200,9 @@ test_that("resampling verbs refuse a latency network", {
   expect_error(compare_networks(grouped$red, grouped$blue,
                                 test = "bootstrap", iter = 10L),
                class = refused)
-  # the message says so
-  expect_error(bootstrap_network(net, iter = 10L),
-               "Latency networks are not resampled")
+  # the message names the verb that does resample them
+  expect_error(permutation(grouped, iter = 10L, seed = 1),
+               "bootstrap_network\\(\\) resamples latency networks")
   # without resampling, the networks are still compared
   expect_s3_class(compare_networks(grouped$red, grouped$blue),
                   "net_network_comparison")
@@ -297,7 +298,7 @@ test_that("per-actor and per-session caps match a hand computation", {
   w_g <- function(t) 1 - 0.5 * min(t / global_cap, 1)
 
   expect_message(
-    actor <- build_network(d, method = "latency", actor = "chat",
+    actor <- build_network(d, method = "latency", latency_aggregate = "sum", actor = "chat",
                            action = "sender", time = "at",
                            latency_scope = "actor"),
     class = "nestimate_latency_fallback")
@@ -308,7 +309,7 @@ test_that("per-actor and per-session caps match a hand computation", {
                3 * (1 - 0.5 * 5 / w_cap) + w_g(30), tolerance = 1e-12)
 
   expect_message(
-    sess <- build_network(d, method = "latency", actor = "chat",
+    sess <- build_network(d, method = "latency", latency_aggregate = "sum", actor = "chat",
                           action = "sender", time = "at",
                           latency_scope = "session"),
     class = "nestimate_latency_fallback")
@@ -328,13 +329,13 @@ test_that("responder scope gives each responding sender its own cap", {
   gaps <- rep(c(5, 50), length.out = 11)
   d <- data.frame(chat = "c", sender = rep(c("A", "B"), 6),
                   at = t0 + cumsum(c(0, gaps)))
-  resp <- build_network(d, method = "latency", actor = "chat",
+  resp <- build_network(d, method = "latency", latency_aggregate = "sum", actor = "chat",
                         action = "sender", time = "at",
                         latency_scope = "responder")
   expect_equal(resp$latency_unit_caps[c("A", "B")], c(A = 50, B = 5))
   expect_equal(resp$weights["B", "A"], 6 * 0.5, tolerance = 1e-12)
   expect_equal(resp$weights["A", "B"], 5 * 0.5, tolerance = 1e-12)
-  global <- build_network(d, method = "latency", actor = "chat",
+  global <- build_network(d, method = "latency", latency_aggregate = "sum", actor = "chat",
                           action = "sender", time = "at")
   expect_equal(global$weights["B", "A"],
                6 * (1 - 0.5 * 5 / global$latency_cap_seconds),
@@ -345,11 +346,11 @@ test_that("unit caps are resolved before a group split", {
   d <- rbind(transform(.latency_scoped("r"), team = "red"),
              transform(.latency_scoped("b"), team = "blue"))
   full <- suppressMessages(
-    build_network(d, method = "latency", actor = "chat", action = "sender",
+    build_network(d, method = "latency", latency_aggregate = "sum", actor = "chat", action = "sender",
                   time = "at", latency_scope = "actor"),
     classes = "nestimate_latency_fallback")
   grouped <- suppressMessages(
-    build_network(d, method = "latency", actor = "chat", action = "sender",
+    build_network(d, method = "latency", latency_aggregate = "sum", actor = "chat", action = "sender",
                   time = "at", latency_scope = "actor", group = "team"),
     classes = "nestimate_latency_fallback")
   invisible(lapply(grouped, function(n) {

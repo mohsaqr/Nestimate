@@ -4,7 +4,14 @@
 \alias{cluster_network}
 \title{Cluster sequences and estimate one network per cluster}
 \usage{
-cluster_network(data, k, cluster_by = "pam", dissimilarity = "hamming", ...)
+cluster_network(
+  data,
+  k,
+  cluster_by = "pam",
+  dissimilarity = "hamming",
+  inherit = FALSE,
+  ...
+)
 }
 \arguments{
 \item{data}{The sequences: a data frame, matrix, \code{netobject}, bare
@@ -25,6 +32,15 @@ Markov model with \code{\link[=build_mmm]{build_mmm()}} instead.}
 \item{dissimilarity}{The distance between sequences, as in \code{\link[=build_clusters]{build_clusters()}}. Default
 \code{"hamming"}. Giving it with \code{cluster_by = "mmm"} raises an error.}
 
+\item{inherit}{When \code{data} is a \code{netobject}, whether the per-cluster
+networks take its \code{threshold}, \code{scaling} and estimator settings
+(\verb{$params}: start and end states, an attention network's \code{lambda}, an
+n-gram's \code{n_gram}). \code{FALSE} (default) builds them afresh with the
+network's method and the arguments given in the call; \code{TRUE} uses the
+network's settings for any not given in the call, when the clusters are
+built with its method. Under \code{cluster_by = "mmm"} the relative networks
+are the fitted chains, which take only its \code{threshold} and \code{scaling}.}
+
 \item{...}{Arguments for the two stages, routed by name. For
 dissimilarity clustering, \code{\link[=build_clusters]{build_clusters()}}'s \code{na_syms}, \code{weighted},
 \code{lambda}, \code{seed}, \code{q}, \code{p}, \code{covariates} and \code{estimator} go to the
@@ -36,9 +52,9 @@ registered estimator; any other name raises an error before either
 stage runs. A name both stages accept goes to the clustering: under
 dissimilarity clustering a \code{lambda} given here is the Hamming decay of
 the clustering and never reaches an attention network, and the same
-holds for \code{weighted}. When \code{data} is a \code{netobject}, its stored build
-arguments are reused for the per-cluster networks, and a value given in
-the call replaces the stored one. The \emph{Details} section lists which
+holds for \code{weighted}. When \code{data} is a \code{netobject}, the arguments that
+read its data are reused for the per-cluster networks, and a value given
+in the call replaces the stored one. The \emph{Details} section lists which
 network arguments take effect.}
 }
 \value{
@@ -58,9 +74,10 @@ clustering with PAM or a hierarchical method) or, with
 \code{cluster_by = "mmm"}, \code{\link[=build_mmm]{build_mmm()}} (a mixture of Markov chains), then
 \code{\link[=build_network]{build_network()}} on each cluster's sequences. The network method is
 the \code{method} given in \code{...}; without one, a \code{netobject} input passes on
-its own method and stored build arguments, so the per-cluster networks
-are of the same type as the input, and other input gives \code{"relative"}
-transition networks.
+its own method, so the per-cluster networks are of the same type as the
+input, and other input gives \code{"relative"} transition networks. The
+networks are built afresh: the input network's threshold, scaling and
+estimator settings are used only with \code{inherit = TRUE}.
 
 The clusters were formed to make the sequences within each one alike, so
 their networks differ partly by construction. Check the classification
@@ -72,9 +89,7 @@ differences between the networks.
 \details{
 \code{method}, the estimators' own arguments (such as \code{n_gram} or
 \code{direction}) and \code{\link[=build_network]{build_network()}}'s \code{threshold}, \code{scaling}, \code{start},
-\code{end} and \code{params} reach the per-cluster networks. A \code{netobject} input
-of the same method also passes on its estimator settings (\verb{$params}, such
-as an attention network's \code{lambda}) unless \code{params} is given. With
+\code{end} and \code{params} reach the per-cluster networks. With
 \code{cluster_by = "mmm"} and the default relative networks, which are the
 fitted chains, \code{scaling} and \code{threshold} are applied to the fitted
 weights, and an estimator argument, \code{start}, \code{end} or a new \code{params}

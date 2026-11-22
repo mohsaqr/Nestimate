@@ -40,10 +40,17 @@
 }
 
 #' Prepare wide sequence data with tna-compatible sequence options
+#'
+#' @param end_column `"always"` appends a column for `end_state`; `"needed"`
+#'   appends it only when a row fills the last column, as tna's
+#'   `create_seqdata()` does. The column is empty for every other method, so
+#'   only the n-gram windows, which run over the columns, read the difference.
 #' @noRd
 .prepare_sequence_wide <- function(data, id = NULL, cols = NULL,
                                    alphabet = NULL, concat = 1L,
-                                   begin_state = NULL, end_state = NULL) {
+                                   begin_state = NULL, end_state = NULL,
+                                   end_column = c("always", "needed")) {
+  end_column <- match.arg(end_column)
   state_cols <- .select_state_cols(data, id, cols)
   missing_cols <- setdiff(state_cols, names(data))
   if (length(missing_cols) > 0) {
@@ -102,8 +109,11 @@
   if (!is.null(end_state) && nrow(mat) > 0L) {
     end_state <- as.character(end_state)[1L]
     last_obs <- max.col(!is.na(mat), ties.method = "last")
-    mat <- cbind(mat, NA_character_)
-    has_obs <- rowSums(!is.na(mat[, -ncol(mat), drop = FALSE])) > 0L
+    has_obs <- rowSums(!is.na(mat)) > 0L
+    # max.col() puts an empty row at the last column, as in tna.
+    if (identical(end_column, "always") || any(last_obs == ncol(mat))) {
+      mat <- cbind(mat, NA_character_)
+    }
     idx <- cbind(which(has_obs), last_obs[has_obs] + 1L)
     mat[idx] <- end_state
     alphabet <- c(alphabet, end_state)

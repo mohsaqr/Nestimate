@@ -15,60 +15,19 @@ estimate_network(
 )
 }
 \arguments{
-\item{data}{The data to estimate from: a data frame of sequences (one row
-per sequence, one column per position), an event log (one row per
-event, with \code{action} set), one-hot code columns, numeric variables (one
-row per observation) for the association methods, or a square symmetric
-correlation or covariance matrix. A fitted \code{net_clustering} or \code{net_mmm}
-object also works: its per-cluster networks are built, with the
-\code{scaling}, \code{threshold}, \code{start}, \code{end} and \code{params} given here, and
-returned as a \code{netobject_group}. The relative networks of a \code{net_mmm}
-are the fitted chains: \code{scaling} and \code{threshold} are applied to them,
-and any other argument raises an error of class \code{nestimate_bad_input}.}
+\item{data}{The data, as for \code{\link[=build_network]{build_network()}}.}
 
 \item{method}{The estimator, as in \code{\link[=build_network]{build_network()}}. Default
 \code{"relative"}, kept for backward compatibility; \code{\link[=build_network]{build_network()}} has no
 default.}
 
-\item{params}{Settings passed to the estimator, as a named list, such as
-\code{list(gamma = 0.5)} for \code{glasso} or \code{list(n_gram = 3)} for \code{ngram}. The
-list is stored on the network, so \code{\link[=bootstrap_network]{bootstrap_network()}} and the other
-resampling verbs re-estimate with exactly the same settings. The
-transition methods take tna's sequence options \code{weighted} and \code{concat},
-and the low-level \code{begin_state} / \code{end_state} that \code{start} and \code{end}
-set. \code{window_size} (with \code{window_span}, or \code{windowed = TRUE} for a size
-of 2) counts \code{relative}, \code{frequency} and \code{co_occurrence} between
-consecutive non-overlapping blocks of that many positions, as
-\code{tna::tna()} does; other transition methods raise an error of class
-\code{nestimate_bad_input}, and \code{mode = "overlapping"} a warning of class
-\code{nestimate_ignored_mode}. Column roles given here (\code{action}, \code{id},
-\code{id_col}, \code{actor}, \code{time}, \code{session}, \code{order}, \code{cols}, \code{codes},
-\code{group}) must name existing columns, and must agree with the same role
-given directly.}
+\item{params}{Settings for the estimator, as a named list, as on the
+method's page (for example \code{\link[=build_glasso]{build_glasso()}}). Default \code{list()}.}
 
-\item{scaling}{Rescaling applied to the weights after estimation, in the
-order given: \code{"minmax"} maps the non-zero weights into (0, 1],
-\code{"max"} divides by the largest absolute weight, \code{"rank"} replaces the
-non-zero weights by their ranks, and \code{"normalize"} makes each row's
-absolute weights sum to 1. Zero weights stay zero under every option.
-Combine them as in \code{c("rank", "minmax")}. Default \code{NULL} (none).}
+\item{scaling, threshold}{As in \code{\link[=build_network]{build_network()}}.}
 
-\item{threshold}{Weights whose absolute value is below this are set to
-zero. Default \code{0} (none). For \code{method = "mgm"}, \code{"LW"} or \code{"none"}
-instead selects mgm's coefficient-thresholding rule (a \code{threshold} in
-\code{params} takes precedence); any other non-numeric value raises an
-error.}
-
-\item{level}{Multilevel decomposition for the undirected association
-methods (\code{cor}, \code{pcor}, \code{glasso}, \code{mgm}): \code{"between"} estimates the
-network of person means, \code{"within"} the network of deviations from them,
-and \code{"both"} returns the two as a \code{netobject_ml}. It needs an id column,
-given as \code{actor} or as \code{params$id}; a directed method raises an error.
-Default \code{NULL} (no decomposition). For \code{method = "mgm"}, a numeric
-vector instead gives one category count per modelled variable (\code{1} for
-continuous ones), after group, actor and metadata columns are set
-aside; it is checked and kept for compatibility, and the fit reads the
-categories from the data.}
+\item{level}{Multilevel decomposition for the association methods, as in
+\code{\link[=build_cor]{build_cor()}}. Default \code{NULL}.}
 
 \item{...}{Further arguments for \code{\link[=build_network]{build_network()}}, such as \code{actor},
 \code{action}, \code{time} or \code{group}.}

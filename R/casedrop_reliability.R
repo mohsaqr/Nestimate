@@ -278,6 +278,19 @@ casedrop_reliability <- function(x,
   idx_mask <- idx_mask & !is.na(x$weights)
   if (target == "existing") idx_mask <- idx_mask & x$weights != 0
   orig_edges <- as.vector(x$weights[idx_mask])
+  # A layer combined by a mean, maximum, density, ... is refused by
+  # .precompute_per_sequence() below; refused here first, so a layer whose
+  # combined weights happen to be constant (a mean of ones) is not answered
+  # "CS undefined" instead.
+  aggregation <- .param_get(x$params, "aggregation", "sum")
+  if (is_transition && !identical(aggregation, "sum")) {
+    stop(errorCondition(sprintf(paste0(
+      "This network combines its transitions by method = \"%s\", so its ",
+      "weights are not counts; of the resampling verbs only ",
+      "bootstrap_network() reads it. Build the mcml with method = \"sum\" ",
+      "for the others."), aggregation),
+      class = "nestimate_bad_input", call = NULL))
+  }
   if (.is_constant_vector(orig_edges)) {
     warning(warningCondition(
       "Original edge vector has zero variance; CS undefined.",

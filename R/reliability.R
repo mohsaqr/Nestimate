@@ -48,8 +48,8 @@
 #'   A network without its sequence data (which [build_network()] keeps) raises
 #'   an error, a network resting on one sequence an error of class
 #'   `nestimate_single_sequence`, a network built with `method = "latency"`
-#'   an error of class `nestimate_latency_resampling` (latency networks are
-#'   not resampled), and networks of different methods with `scale
+#'   an error of class `nestimate_latency_resampling`, and networks of
+#'   different methods with `scale
 #'   = "none"` a warning of class `nestimate_mixed_methods`. For the `print()`,
 #'   `summary()` and `plot()` methods: ignored.
 #' @param iter The number of split-half iterations, at least 2. Default
@@ -205,7 +205,8 @@ network_reliability <- function(..., iter = 1000L, split = 0.5,
       data.frame(
         model = nm,
         metric = met,
-        mean = mean(vals, na.rm = TRUE),
+        # every value undefined (a one-state network): NA, not NaN
+        mean = if (any(!is.na(vals))) mean(vals, na.rm = TRUE) else NA_real_,
         sd = sd(vals, na.rm = TRUE),
         stringsAsFactors = FALSE
       )

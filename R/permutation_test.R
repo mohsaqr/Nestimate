@@ -161,9 +161,9 @@
 #' networks' `scaling` and `threshold` are applied to every shuffled network
 #' as to the observed one. For the other methods the estimator is re-run on
 #' every shuffle (`cor` and `pcor` through a lighter direct path).
-#' Latency networks are not resampled: a network built with
-#' `method = "latency"` (alone or in a group) raises an error of class
-#' `nestimate_latency_resampling`.
+#' A network built with `method = "latency"` (alone or in a group) raises an
+#' error of class `nestimate_latency_resampling`; [bootstrap_network()] is the
+#' verb that resamples latency networks.
 #' For `glasso`, every shuffled network is estimated as [build_network()]
 #' estimated the observed ones, with `x`'s `params` (each sample's own
 #' lambda path, `nlambda`, `lambda.min.ratio`, `gamma`,

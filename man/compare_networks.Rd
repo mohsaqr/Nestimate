@@ -87,7 +87,7 @@ values.}
 \code{"permutation"}, \code{"bayes"} and \code{"bootstrap"}. Each fills the columns it
 supports (see \emph{Details}). The permutation and Bayesian tests need
 networks that carry their data and share one estimation method, and the
-Bayesian test needs \code{"relative"} or \code{"frequency"} networks; otherwise the call raises \code{nestimate_compare_test_unsupported}. Latency networks are not resampled: the permutation and bootstrap tests raise \code{nestimate_latency_resampling} on one.}
+Bayesian test needs \code{"relative"} or \code{"frequency"} networks; otherwise the call raises \code{nestimate_compare_test_unsupported}. The permutation and bootstrap tests raise \code{nestimate_latency_resampling} on a latency network.}
 
 \item{iter}{The number of permutations, posterior draws or bootstrap
 replicates per pair, at least 2. Default \code{1000}.}

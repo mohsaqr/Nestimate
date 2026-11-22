@@ -1,10 +1,10 @@
-# Nestimate 1.0.20
+# Nestimate 1.0.21
 
 ## New features
 
 * `build_network(method = "latency")` builds a reply network weighted by reply
   speed (Templeton et al. 2022) from an event log with a time for every event;
-  the resampling verbs refuse it.
+  `bootstrap_network()` resamples it, and the other resampling verbs refuse it.
 * `tna` and `group_tna` models are accepted wherever a network or sequences are.
 * `actor` drops whole actors in `centrality_stability()` and
   `casedrop_reliability()`, and takes nested levels in `permutation()` and others.

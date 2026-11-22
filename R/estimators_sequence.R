@@ -13,7 +13,8 @@
 .sequence_matrix <- function(data, format = "auto", action = NULL,
                              id = NULL, time = NULL, cols = NULL,
                              alphabet = NULL, concat = 1L,
-                             begin_state = NULL, end_state = NULL) {
+                             begin_state = NULL, end_state = NULL,
+                             end_column = "always") {
   .assert("`data` must be a data frame" = is.data.frame(data))
   if (identical(format, "auto")) {
     format <- .format_from_action(action, data)
@@ -36,7 +37,7 @@
   }
   .prepare_sequence_wide(data, id = id, cols = cols, alphabet = alphabet,
                          concat = concat, begin_state = begin_state,
-                         end_state = end_state)
+                         end_state = end_state, end_column = end_column)
 }
 
 #' Count state pairs across a set of column offsets
@@ -114,8 +115,11 @@
         n_gram >= 2
   )
   n_gram <- as.integer(n_gram)
+  # The windows run over the columns, so the end state gets a column of its
+  # own only when a sequence has no room for it (tna's rule).
   prep <- .sequence_matrix(data, format, action, id, time, cols, alphabet,
-                           concat, begin_state, end_state)
+                           concat, begin_state, end_state,
+                           end_column = "needed")
   mat <- prep$matrix
   p <- ncol(mat)
   n_windows <- p - n_gram + 1L
@@ -210,7 +214,7 @@
 #'   NULL), `cap_seconds` (seconds or NULL) and `aggregate`.
 #' @noRd
 .latency_settings <- function(latency_floor = 0.5, latency_cap = 0.95,
-                              latency_aggregate = "sum",
+                              latency_aggregate = "mean",
                               latency_scope = "global") {
   bad <- function(msg) {
     stop(errorCondition(msg, class = "nestimate_bad_input", call = NULL))
@@ -422,8 +426,8 @@
 #' The reply pairs of `"reverse"` (responder -> previous sender, lag 1 within
 #' each sequence), each weighted by how fast the reply came:
 #' `w = 1 - (1 - latency_floor) * min(t / cap, 1)`, with `t` the seconds
-#' between the two events. `latency_aggregate = "sum"` adds the weights of a
-#' pair, `"mean"` averages them. The diagonal (a sender continuing) is
+#' between the two events. `latency_aggregate = "mean"` (default) averages
+#' the weights of a pair, `"sum"` adds them. The diagonal (a sender continuing) is
 #' weighted by the same rule. `latency_cap_seconds` (and, for a non-global
 #' `latency_scope`, `latency_unit_caps`), when given, are the caps already
 #' resolved on the full data and win over `latency_cap`.
@@ -434,7 +438,7 @@
                                begin_state = NULL, end_state = NULL,
                                weighted = FALSE,
                                latency_floor = 0.5, latency_cap = 0.95,
-                               latency_aggregate = "sum",
+                               latency_aggregate = "mean",
                                latency_scope = "global",
                                latency_cap_seconds = NULL,
                                latency_unit_caps = NULL, ...) {
@@ -664,10 +668,10 @@
 
 #' Refuse to resample a latency network
 #'
-#' Latency networks are not resampled: a reply's weight rests on the caps
-#' resolved on all of the data, so the verbs that bootstrap, shuffle or drop
-#' sequences refuse a network built with `method = "latency"`, and a group
-#' that holds one.
+#' Only bootstrap_network() resamples latency networks (validated by
+#' simulation); the verbs that shuffle, drop or otherwise resample sequences
+#' refuse a network built with `method = "latency"`, and a group that holds
+#' one.
 #' @param nets List of the verb's network inputs; anything that is not a
 #'   `netobject` or `netobject_group` passes.
 #' @param verb The verb's name, for the message.
@@ -682,8 +686,8 @@
   }
   if (!any(vapply(nets, is_latency, logical(1)))) return(invisible(NULL))
   stop(errorCondition(sprintf(paste0(
-    "Latency networks are not resampled, so %s does not take a network ",
-    "built with method = \"latency\"."), verb),
+    "%s does not take a network built with method = \"latency\"; ",
+    "bootstrap_network() resamples latency networks."), verb),
     class = c("nestimate_latency_resampling", "nestimate_bad_input"),
     call = NULL))
 }

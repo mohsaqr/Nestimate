@@ -207,11 +207,16 @@ sequences; NULL for the hierarchical methods.}
 \item{covariates}{The covariate analysis (a list; see
 \code{estimator}), or NULL when \code{covariates = NULL}.}
 \item{network_method, build_args}{For \code{netobject} input, the
-source network's method and stored build arguments, so per-cluster
-networks can be rebuilt the same way. NULL otherwise. For a one-hot
-network, \code{build_args} holds only its estimator settings in
-\code{params} (such as a co-occurrence network's \code{type}), or is
-NULL when it has none.}
+source network's method and the arguments that read its data, so
+per-cluster networks are of the same type. NULL otherwise. For a
+one-hot network, \code{build_args} holds only the settings that make
+its type in \code{params} (such as a co-occurrence network's
+\code{type}), or is NULL when it has none.}
+\item{network_settings}{For \code{netobject} input, the source
+network's \code{threshold} and \code{scaling} when they are not the
+defaults and its estimator settings in \code{params}, which
+\code{build_network(x, inherit = TRUE)} uses; NULL when there are
+none.}
 \item{metadata}{For \code{netobject} input, its per-sequence metadata,
 one row per clustered sequence, so \code{\link{session_ids}} can name
 each sequence. For a data frame, the columns set aside as covariates

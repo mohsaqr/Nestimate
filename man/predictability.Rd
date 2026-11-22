@@ -5,6 +5,7 @@
 \alias{predictability.netobject}
 \alias{predictability.netobject_ml}
 \alias{predictability.netobject_group}
+\alias{predictability.default}
 \title{Compute the predictability of each node}
 \usage{
 predictability(object, ...)
@@ -14,10 +15,14 @@ predictability(object, ...)
 \method{predictability}{netobject_ml}(object, ...)
 
 \method{predictability}{netobject_group}(object, ...)
+
+\method{predictability}{default}(object, ...)
 }
 \arguments{
 \item{object}{The network: a \code{netobject} estimated with \code{method = "glasso"}, \code{"pcor"} or \code{"cor"}, or a \code{netobject_ml} or \code{netobject_group}
-of them. A network from any other method raises an error.}
+of them. A tna model, \code{group_tna} or bare \code{cograph_network} is read as
+the network it holds. A network from any other method, and any other
+object, raises an error of class \code{nestimate_bad_input}.}
 
 \item{...}{Not used.}
 

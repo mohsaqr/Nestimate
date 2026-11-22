@@ -516,6 +516,7 @@
         "netobject has no $data. Pass the original sequence data.",
         class = "nestimate_bad_input", call = NULL))
     } # nocov end
+    .refuse_edgelist_network(data)
     if (.is_onehot_params(data$params)) return(.onehot_unit_sequences(data))
     return(as.data.frame(data$data, stringsAsFactors = FALSE))
   }
@@ -555,6 +556,21 @@
       paste(class(data), collapse = ", "),
       ". Expected data.frame, matrix, netobject, tna, or cograph_network."),
     class = "nestimate_bad_input", call = NULL))
+}
+
+# The layer of an mcml built from an edge list holds one weighted transition
+# per row (from, to, weight), not one sequence per row; read as sequences,
+# the weight became a state. Same refusal as .coerce_sequence_input().
+#' @noRd
+.refuse_edgelist_network <- function(net) {
+  if (identical(attr(net$data, "source"), "edgelist")) {
+    stop(errorCondition(paste(
+      "This network was built from an edge list: its data hold one",
+      "weighted transition per row, not sequences of states. Pass the",
+      "sequences, or build the network from them."),
+      class = "nestimate_bad_input", call = NULL))
+  }
+  invisible(net)
 }
 
 #' Split a wide frame into sequence positions and set-aside covariates
@@ -756,11 +772,16 @@
 #'   \item{covariates}{The covariate analysis (a list; see
 #'     \code{estimator}), or NULL when \code{covariates = NULL}.}
 #'   \item{network_method, build_args}{For \code{netobject} input, the
-#'     source network's method and stored build arguments, so per-cluster
-#'     networks can be rebuilt the same way. NULL otherwise. For a one-hot
-#'     network, \code{build_args} holds only its estimator settings in
-#'     \code{params} (such as a co-occurrence network's \code{type}), or is
-#'     NULL when it has none.}
+#'     source network's method and the arguments that read its data, so
+#'     per-cluster networks are of the same type. NULL otherwise. For a
+#'     one-hot network, \code{build_args} holds only the settings that make
+#'     its type in \code{params} (such as a co-occurrence network's
+#'     \code{type}), or is NULL when it has none.}
+#'   \item{network_settings}{For \code{netobject} input, the source
+#'     network's \code{threshold} and \code{scaling} when they are not the
+#'     defaults and its estimator settings in \code{params}, which
+#'     \code{build_network(x, inherit = TRUE)} uses; NULL when there are
+#'     none.}
 #'   \item{metadata}{For \code{netobject} input, its per-sequence metadata,
 #'     one row per clustered sequence, so \code{\link{session_ids}} can name
 #'     each sequence. For a data frame, the columns set aside as covariates
@@ -991,11 +1012,15 @@ build_clusters <- function(data, k, dissimilarity = "hamming", method = "pam",
       network_method = if (onehot_net) {
         .resampling_method(raw_data$method, raw_data$params)
       } else if (inherits(raw_data, "netobject")) raw_data$method else NULL,
-      # and its estimator settings (a co-occurrence network's `type`); the
-      # settings that read the 0/1 codes do not apply to those sequences
+      # how its data were read; for a one-hot network, whose reading
+      # arguments read 0/1 codes, the settings that make its type (a
+      # co-occurrence network's `type`)
       build_args     = if (onehot_net) {
         .onehot_rebuild_args(raw_data)
       } else if (inherits(raw_data, "netobject")) raw_data$build_args else NULL,
+      # its threshold, scaling and estimator settings, which a rebuild uses
+      # only with `inherit = TRUE`
+      network_settings = if (inherits(raw_data, "netobject")) .network_settings(raw_data),
       metadata       = if (onehot_net) NULL else if (inherits(raw_data, "netobject")) raw_data$metadata else set_aside,
       htna_partition = .capture_htna_partition(raw_data)
     ),
@@ -2217,7 +2242,8 @@ print.tidy_covariates <- function(x, ...) {
 #'   node-to-actor partition and HTNA class, while the clustering diagnostics
 #'   remain attached to the outer object.
 #' @noRd
-.build_network_clustering <- function(x, method = "relative", ...) {
+.build_network_clustering <- function(x, method = "relative", ...,
+                                      inherit = FALSE) {
   assignments <- x$assignments
   seq_data <- x$data
   k <- x$k
@@ -2229,15 +2255,10 @@ print.tidy_covariates <- function(x, ...) {
   long_only <- c("actor", "time", "session", "order", "action",
                  "state_cols", "metadata_cols")
   dots <- list(...)
-  stored <- x$build_args
-  # Estimator settings stored with the clustering (a one-hot network's) belong
-  # to its own method; the caller's `params` replace them whole, as
-  # .inherit_estimator_params() does.
-  if (!is.null(stored$params) &&
-      (!is.null(dots$params) || is.null(x$network_method) ||
-         !identical(.resolve_method_alias(method),
-                    .resolve_method_alias(x$network_method)))) {
-    stored$params <- NULL
+  stored <- .stored_type_params(x$build_args, dots, method, x$network_method)
+  if (isTRUE(inherit)) {
+    stored <- .inherit_settings(stored, x$network_settings, method,
+                                x$network_method, given = names(dots))
   }
   build_args <- if (length(stored) > 0L)
     modifyList(stored, dots) else dots
@@ -2258,18 +2279,64 @@ print.tidy_covariates <- function(x, ...) {
   .restore_htna_group(nets, x$htna_partition)
 }
 
-# A network's estimator settings live in `$params` (an attention network's
-# `lambda`, an n-gram's `n_gram`), not in `$build_args`; without them the
-# per-cluster rebuild silently fell back to the defaults. The caller's own
-# `params`, and a method other than the network's, take precedence.
+# A network's settings beyond its type and the reading of its data: its
+# threshold and scaling when they are not the defaults, and its estimator
+# settings (`$params`: start/end states, `lambda`, `n_gram`) without the
+# column roles. A one-hot network's remaining params (a co-occurrence
+# network's `type`) make its type and are kept with its build arguments
+# instead. A rebuild uses these settings only with `inherit = TRUE`.
 #' @noRd
-.inherit_estimator_params <- function(build_dots, net) {
-  same_method <- identical(.resolve_method_alias(build_dots$method),
-                           .resolve_method_alias(net$method))
-  if (is.null(build_dots$params) && same_method && length(net$params) > 0L) {
-    build_dots$params <- net$params
+.network_settings <- function(net) {
+  params <- if (.is_onehot_params(net$params)) NULL else .rebuild_params(net$params)
+  threshold <- net$threshold
+  settings <- c(
+    if (is.numeric(threshold) && length(threshold) == 1L &&
+        isTRUE(threshold > 0)) list(threshold = threshold),
+    if (!is.null(net$scaling)) list(scaling = net$scaling),
+    if (length(params) > 0L) list(params = params))
+  if (length(settings) > 0L) settings
+}
+
+# The `params` stored with the build arguments (a one-hot network's `type`)
+# make the source network's type: they belong to its own method, and the
+# caller's `params` replace them whole.
+#' @noRd
+.stored_type_params <- function(stored, dots, method, source_method) {
+  if (!is.null(stored$params) &&
+      (!is.null(dots$params) || is.null(source_method) ||
+         !identical(.resolve_method_alias(method),
+                    .resolve_method_alias(source_method)))) {
+    stored$params <- NULL
   }
-  build_dots
+  stored
+}
+
+# A rebuild's arguments with the source network's settings added for those the
+# call does not give (`given`: the names in the call, so `scaling = NULL` keeps
+# the networks unscaled and a `params` given replaces the stored one whole).
+# The settings belong to the source network's method: a rebuild with another
+# method takes none of them.
+#' @noRd
+.inherit_settings <- function(args, settings, method, source_method,
+                              given = names(args)) {
+  same_method <- !is.null(source_method) &&
+    identical(.resolve_method_alias(method),
+              .resolve_method_alias(source_method))
+  if (!same_method || is.null(settings)) return(args)
+  inherited <- setdiff(names(settings), given)
+  args[inherited] <- settings[inherited]
+  args
+}
+
+# A network's `$params` without the column roles that name columns outside
+# its sequence positions (the id an `actor` became): the clusters are rebuilt
+# from the positions alone, where such a role names a column that is not
+# there.
+#' @noRd
+.rebuild_params <- function(params) {
+  roles <- c("id", "id_col", "actor", "session", "time", "order", "action",
+             "group")
+  params[setdiff(names(params), roles)]
 }
 
 # A one-hot network's units are rebuilt as windowed state sequences, which
@@ -2315,9 +2382,10 @@ print.tidy_covariates <- function(x, ...) {
 #' `cluster_by = "mmm"`, [build_mmm()] (a mixture of Markov chains), then
 #' [build_network()] on each cluster's sequences. The network method is
 #' the `method` given in `...`; without one, a `netobject` input passes on
-#' its own method and stored build arguments, so the per-cluster networks
-#' are of the same type as the input, and other input gives `"relative"`
-#' transition networks.
+#' its own method, so the per-cluster networks are of the same type as the
+#' input, and other input gives `"relative"` transition networks. The
+#' networks are built afresh: the input network's threshold, scaling and
+#' estimator settings are used only with `inherit = TRUE`.
 #'
 #' The clusters were formed to make the sequences within each one alike, so
 #' their networks differ partly by construction. Check the classification
@@ -2340,6 +2408,14 @@ print.tidy_covariates <- function(x, ...) {
 #'   Markov model with [build_mmm()] instead.
 #' @param dissimilarity The distance between sequences, as in [build_clusters()]. Default
 #'   `"hamming"`. Giving it with `cluster_by = "mmm"` raises an error.
+#' @param inherit When `data` is a `netobject`, whether the per-cluster
+#'   networks take its `threshold`, `scaling` and estimator settings
+#'   (`$params`: start and end states, an attention network's `lambda`, an
+#'   n-gram's `n_gram`). `FALSE` (default) builds them afresh with the
+#'   network's method and the arguments given in the call; `TRUE` uses the
+#'   network's settings for any not given in the call, when the clusters are
+#'   built with its method. Under `cluster_by = "mmm"` the relative networks
+#'   are the fitted chains, which take only its `threshold` and `scaling`.
 #' @param ... Arguments for the two stages, routed by name. For
 #'   dissimilarity clustering, [build_clusters()]'s `na_syms`, `weighted`,
 #'   `lambda`, `seed`, `q`, `p`, `covariates` and `estimator` go to the
@@ -2351,16 +2427,14 @@ print.tidy_covariates <- function(x, ...) {
 #'   stage runs. A name both stages accept goes to the clustering: under
 #'   dissimilarity clustering a `lambda` given here is the Hamming decay of
 #'   the clustering and never reaches an attention network, and the same
-#'   holds for `weighted`. When `data` is a `netobject`, its stored build
-#'   arguments are reused for the per-cluster networks, and a value given in
-#'   the call replaces the stored one. The *Details* section lists which
+#'   holds for `weighted`. When `data` is a `netobject`, the arguments that
+#'   read its data are reused for the per-cluster networks, and a value given
+#'   in the call replaces the stored one. The *Details* section lists which
 #'   network arguments take effect.
 #' @details
 #' `method`, the estimators' own arguments (such as `n_gram` or
 #' `direction`) and [build_network()]'s `threshold`, `scaling`, `start`,
-#' `end` and `params` reach the per-cluster networks. A `netobject` input
-#' of the same method also passes on its estimator settings (`$params`, such
-#' as an attention network's `lambda`) unless `params` is given. With
+#' `end` and `params` reach the per-cluster networks. With
 #' `cluster_by = "mmm"` and the default relative networks, which are the
 #' fitted chains, `scaling` and `threshold` are applied to the fitted
 #' weights, and an estimator argument, `start`, `end` or a new `params`
@@ -2400,7 +2474,7 @@ print.tidy_covariates <- function(x, ...) {
 #' }
 #' @export
 cluster_network <- function(data, k, cluster_by = "pam",
-                             dissimilarity = "hamming", ...) {
+                             dissimilarity = "hamming", inherit = FALSE, ...) {
   if (missing(k)) {
     stop(errorCondition(
       "argument \"k\" is missing, with no default",
@@ -2446,12 +2520,8 @@ cluster_network <- function(data, k, cluster_by = "pam",
     if (onehot && is.null(build_dots$method)) {
       build_dots$method <- mmm_fit$network_method %||% "relative"
     }
-    if (onehot) {
-      build_dots <- .inherit_estimator_params(build_dots, list(
-        method = mmm_fit$network_method,
-        params = .onehot_rebuild_args(data)$params))
-    }
-    return(do.call(build_network, c(list(data = mmm_fit), build_dots)))
+    return(do.call(build_network, c(list(data = mmm_fit, inherit = inherit),
+                                    build_dots)))
   }
 
   # Split caller's `...` into build_clusters() args vs build_network() args.
@@ -2475,7 +2545,6 @@ cluster_network <- function(data, k, cluster_by = "pam",
       build_dots <- modifyList(data$build_args, build_dots)
     if (is.null(build_dots$method))
       build_dots$method <- data$method
-    build_dots <- .inherit_estimator_params(build_dots, data)
   }
   .validate_cluster_network_build_args(build_dots)
 
@@ -2486,14 +2555,14 @@ cluster_network <- function(data, k, cluster_by = "pam",
   if (onehot && is.null(build_dots$method)) {
     build_dots$method <- cls$network_method %||% "relative"
   }
-  do.call(build_network, c(list(data = cls), build_dots))
+  do.call(build_network, c(list(data = cls, inherit = inherit), build_dots))
 }
 
 .validate_cluster_network_build_args <- function(args) {
   arg_names <- names(args)
   if (is.null(arg_names) || !length(arg_names)) return(invisible(TRUE))
 
-  build_formals <- setdiff(names(formals(build_network)), c("data", "..."))
+  build_formals <- setdiff(names(formals(.build_network_impl)), c("data", "..."))
   estimator_names <- list_estimators()$name
   estimator_formals <- unique(unlist(lapply(estimator_names, function(nm) {
     entry <- get_estimator(nm)

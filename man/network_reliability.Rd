@@ -32,8 +32,8 @@ first rebuilt as a network from its own sequences (see \code{\link[=as_netobject
 A network without its sequence data (which \code{\link[=build_network]{build_network()}} keeps) raises
 an error, a network resting on one sequence an error of class
 \code{nestimate_single_sequence}, a network built with \code{method = "latency"}
-an error of class \code{nestimate_latency_resampling} (latency networks are
-not resampled), and networks of different methods with \code{scale = "none"} a warning of class \code{nestimate_mixed_methods}. For the \code{print()},
+an error of class \code{nestimate_latency_resampling}, and networks of
+different methods with \code{scale = "none"} a warning of class \code{nestimate_mixed_methods}. For the \code{print()},
 \code{summary()} and \code{plot()} methods: ignored.}
 
 \item{iter}{The number of split-half iterations, at least 2. Default

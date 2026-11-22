@@ -583,7 +583,12 @@ compare_model.netobject_group <- function(x, i = 1L, j = 2L, scaling = "none",
     pos <- abs_x + abs_y > 0
   }
   needs_sd <- any(metrics %in% c("pearson", "spearman", "kendall", "cv_ratio"))
-  if (needs_sd) { sd_x <- stats::sd(x_vec); sd_y <- stats::sd(y_vec) }
+  if (needs_sd) {
+    sd_x <- stats::sd(x_vec); sd_y <- stats::sd(y_vec)
+    # sd() of a single value (a one-state network) is NA: the spread is
+    # undefined, so are the measures built on it.
+    spread <- isTRUE(sd_x > 0) && isTRUE(sd_y > 0)
+  }
 
   # Compute requested metrics on demand. Each branch only fires if asked.
   one <- function(m) switch(m,
@@ -597,15 +602,16 @@ compare_model.netobject_group <- function(x, i = 1L, j = 2L, scaling = "none",
     },
     cv_ratio        = {
       mx <- mean(x_vec); my <- mean(y_vec)
-      if (mx == 0 || sd_y == 0) NA_real_ else sd_x * my / (mx * sd_y)
+      if (mx == 0 || !isTRUE(sd_y > 0)) NA_real_
+      else sd_x * my / (mx * sd_y)
     },
-    pearson         = if (sd_x == 0 || sd_y == 0) NA_real_
+    pearson         = if (!spread) NA_real_
                       else stats::cor(x_vec, y_vec, method = "pearson",
                                       use = "complete.obs"),
-    spearman        = if (sd_x == 0 || sd_y == 0) NA_real_
+    spearman        = if (!spread) NA_real_
                       else stats::cor(x_vec, y_vec, method = "spearman",
                                       use = "complete.obs"),
-    kendall         = if (sd_x == 0 || sd_y == 0) NA_real_
+    kendall         = if (!spread) NA_real_
                       else stats::cor(x_vec, y_vec, method = "kendall",
                                       use = "complete.obs"),
     distance_cor    = .distance_correlation(x_vec, y_vec),
@@ -636,7 +642,7 @@ compare_model.netobject_group <- function(x, i = 1L, j = 2L, scaling = "none",
     },
     rv              = if (has_matrix) .rv_coefficient(x_mat, y_mat)
                       else NA_real_,
-    rank_agreement  = if (has_matrix)
+    rank_agreement  = if (has_matrix && nrow(x_mat) > 1L)
                         mean(sign(diff(x_mat)) == sign(diff(y_mat)))
                       else NA_real_,
     sign_agreement  = mean(sign(x_vec) == sign(y_vec))
@@ -680,8 +686,11 @@ compare_model.netobject_group <- function(x, i = 1L, j = 2L, scaling = "none",
   y <- scale(y, scale = FALSE)
   xx <- tcrossprod(x)
   yy <- tcrossprod(y)
-  sum(diag(xx %*% yy)) /
-    sqrt(sum(diag(xx %*% xx)) * sum(diag(yy %*% yy)))
+  denominator <- sqrt(sum(diag(xx %*% xx)) * sum(diag(yy %*% yy)))
+  # A matrix with constant columns (one node) has no centred variation: RV
+  # is undefined, NA rather than 0 / 0.
+  if (!isTRUE(denominator > 0)) return(NA_real_)
+  sum(diag(xx %*% yy)) / denominator
 }
 
 .compare_centralities <- function(x, y, measures) {

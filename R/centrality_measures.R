@@ -158,7 +158,15 @@
   n   <- nrow(W)
   nms <- rownames(W)
   D   <- .floyd_warshall_sp(W, invert)$D
+  # Direction ignored (igraph mode = "all"): i and j are joined by the shorter
+  # of their two edges. Inverted weights are 1 / w, so the shorter edge is the
+  # larger weight; raw weights are themselves the lengths, so it is the
+  # smaller one where both edges exist.
   W_all <- pmax(W, t(W))
+  if (!invert) {
+    both <- W > 0 & t(W) > 0
+    W_all[both] <- pmin(W, t(W))[both]
+  }
   D_all <- .floyd_warshall_sp(W_all, invert)$D
 
   .cl <- function(d_vec) {

@@ -45,7 +45,8 @@ labels). Columns take the same roles as in \code{\link[=build_network]{build_net
 covariate is not a position, and the columns set aside are named in a
 message and kept as metadata. Association networks (\code{cor}, \code{pcor},
 \code{glasso}, \code{ising}, \code{mgm}) hold variables, not sequences, and raise an
-error of class \code{nestimate_bad_input}.}
+error of class \code{nestimate_bad_input}, as do other fitted objects (an
+\code{mcml}, a \code{group_tna}, a \code{netobject_group}).}
 
 \item{k}{The number of subgroups (mixture components), a whole number of
 at least 2. Default \code{2}.}
@@ -153,8 +154,13 @@ missing covariates are dropped under
 \item{covariates}{The post-hoc covariate analysis (list), or NULL
 when \code{covariates = NULL}.}
 \item{network_method, build_args, htna_partition}{Provenance kept
-from \code{netobject} / HTNA input so per-cluster networks can be
-rebuilt the same way; NULL otherwise.}
+from \code{netobject} / HTNA input so per-cluster networks are of
+the same type; NULL otherwise.}
+\item{network_settings}{For \code{netobject} input, the network's
+\code{threshold} and \code{scaling} when they are not the defaults
+and its estimator settings in \code{params}, which
+\code{build_network(x, inherit = TRUE)} uses; NULL when there are
+none.}
 \item{metadata}{The \code{netobject}'s per-sequence metadata, one row
 per fitted sequence in the row order of \code{posterior}, so
 \code{\link{session_ids}} can name each sequence; NULL for other

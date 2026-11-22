@@ -107,6 +107,17 @@ utils::globalVariables(c("u", "y", "ymin", "ymax", "label", "state", "group", "v
     .ls_bad("Landscapes require an unscaled, unthresholded transition network.")
   }
   params <- x$params %||% list()
+  # An mcml layer combined by a mean, maximum, density, ... does not hold the
+  # summed counts of its sequences, even where its weights happen to equal
+  # them (a mean of ones); as in .precompute_per_sequence(), only
+  # bootstrap_network() reads it.
+  aggregation <- .param_get(params, "aggregation", "sum")
+  if (!identical(aggregation, "sum")) {
+    .ls_bad(sprintf(paste0(
+      "This network combines its transitions by method = \"%s\", so its ",
+      "weights are not counts; a landscape needs counts. Build the mcml ",
+      "with method = \"sum\"."), aggregation))
+  }
   # A cup's depth is the log expected stay in steps, from one-step
   # transitions; a windowed network counts transitions between blocks of
   # positions, whose self-transitions are not stays. Blocks of one position
@@ -162,6 +173,26 @@ utils::globalVariables(c("u", "y", "ymin", "ymax", "label", "state", "group", "v
                   "stored sequences and estimation settings."))
   }
   seqs
+}
+
+# The resampling landscape verbs draw whole sequences (the rows of each
+# part's prepared states): a network resting on one has every resample equal
+# to the data, so its intervals would have zero width and read as certainty
+# (the owner's rule for every resampling verb, as .stop_single_unit()).
+# Without resamples (`iter = 0`) there are no intervals, so nothing is refused.
+#' @noRd
+.ls_refuse_single <- function(seqs, iter) {
+  if (iter < 1) return(invisible(NULL))
+  single <- vapply(seqs, \(s) nrow(s$states) == 1L, logical(1))
+  if (!any(single)) return(invisible(NULL))
+  where <- if (identical(names(seqs), "network")) "" else
+    paste0(paste(names(seqs)[single], collapse = ", "), ": ")
+  stop(errorCondition(paste0(
+    where, "This network rests on one sequence, so there is nothing to ",
+    "resample. Rebuild it with `actor` or `session` set to the column that ",
+    "identifies the units, or pass `iter = 0` for the estimates alone."),
+    class = c("nestimate_single_sequence", "nestimate_bad_input"),
+    call = NULL))
 }
 
 # The networks a landscape verb draws one landscape each for: every group of
@@ -374,10 +405,15 @@ utils::globalVariables(c("u", "y", "ymin", "ymax", "label", "state", "group", "v
 #'   }
 #'
 #' @section Errors:
+#' `nestimate_latency_resampling` for a latency network (or a group holding
+#' one);
+#' `nestimate_single_sequence` for a network or data resting on one sequence
+#' when `iter > 0`, whose intervals would have zero width;
 #' `nestimate_not_markov` for a network that is not a transition network;
 #' `nestimate_bad_input` for `states` that do not name every state once,
-#' fewer than two states, input without sequences, or a network whose
-#' weights cannot be rebuilt from its sequences;
+#' fewer than two states, input without sequences (a network built from an
+#' edge list included), an mcml layer combined by other than a sum, or a
+#' network whose weights cannot be rebuilt from its sequences;
 #' `nestimate_landscape_unestimable` for a state that is never left or input
 #' with no observed transition.
 #'
@@ -415,11 +451,15 @@ stability_landscape <- function(x, states = NULL, iter = 1000L,
       length(ci_level) == 1L && is.numeric(ci_level) && ci_level > 0 &&
       ci_level < 1
   )
+  # latency networks are never resampled; checked before .ls_sequences(),
+  # which would call one not a chain
+  .stop_latency_resampling(list(x), "stability_landscape()")
   parts <- .ls_parts(x, "stability_landscape()")
   seqs <- lapply(parts, .ls_sequences, cols = cols)
   alphabet <- sort(unique(unlist(lapply(seqs, \(s) s$alphabet))))
   if (length(alphabet) < 2L) .ls_bad("A landscape needs at least two states.")
   states <- .ls_states(states, alphabet)
+  .ls_refuse_single(seqs, iter)
   if (!is.null(seed)) .local_seed(seed)
   fits <- Map(\(s, nm) .ls_fit(s$states, states, as.integer(iter), ci_level,
                                nm, s$sequence_weights), seqs, names(parts))
@@ -1159,6 +1199,9 @@ plot.net_landscape_surface <- function(x, max_stay = 50, theta = 10, phi = 30,
 #'   }
 #'
 #' @section Errors:
+#' `nestimate_latency_resampling` for a latency network (or a group holding
+#' one); `nestimate_single_sequence` along `"phase"` for a network or data
+#' resting on one sequence when `iter > 0`;
 #' `nestimate_not_markov` for a network that is not a transition network;
 #' `nestimate_bad_input` for an unknown, non-numeric or constant covariate,
 #' a covariate that varies within a concatenated sequence, bad `states`, a
@@ -1213,6 +1256,9 @@ landscape_trend <- function(x, along = "phase",
       length(ci_level) == 1L && is.numeric(ci_level) && ci_level > 0 &&
       ci_level < 1
   )
+  # latency networks are never resampled; checked before .ls_sequences(),
+  # which would call one not a chain
+  .stop_latency_resampling(list(x), "landscape_trend()")
   parts <- .ls_parts(x, "landscape_trend()")
   seqs <- lapply(parts, .ls_sequences, cols = cols)
   alphabet <- sort(unique(unlist(lapply(seqs, \(s) s$alphabet))))
@@ -1232,6 +1278,8 @@ landscape_trend <- function(x, along = "phase",
     }
     v
   })
+  # along a covariate a slice needs five sequences, which refuses one already
+  if (identical(along, "phase")) .ls_refuse_single(seqs, iter)
   if (!is.null(seed)) .local_seed(seed)
   kk <- length(states)
   nxt <- c(seq_len(kk)[-1L], 1L)

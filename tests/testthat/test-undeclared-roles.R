@@ -1154,18 +1154,22 @@ test_that("build_mmm() refuses inputs it would read as false sequences", {
   expect_error(build_mmm(cor_net, k = 2L, seed = 1), class = "nestimate_bad_input")
 })
 
-test_that("an MMM rebuild keeps the source network's settings", {
+test_that("an MMM rebuild keeps the source network's settings with inherit = TRUE", {
   seqs <- data.frame(T1 = c("A", "A", "D", "D"), T2 = c("B", "B", "C", "C"),
                      T3 = c("C", "C", "B", "B"), T4 = c("D", "D", "A", "A"))
   grams <- build_network(seqs, method = "ngram", params = list(n_gram = 3L))
   # ABC, BCD per forward row and DCB, CBA per reverse row: 16 in all
   expect_equal(sum(grams$weights), 16)
   fit <- build_mmm(grams, k = 2L, n_starts = 5L, seed = 1)
-  expect_equal(Reduce(`+`, lapply(build_network(fit), \(n) n$weights)),
+  expect_equal(Reduce(`+`, lapply(build_network(fit, inherit = TRUE), \(n) n$weights)),
                grams$weights)
   routed <- cluster_network(grams, k = 2L, cluster_by = "mmm", n_starts = 5L,
-                            seed = 1)
+                            seed = 1, inherit = TRUE)
   expect_equal(Reduce(`+`, lapply(routed, \(n) n$weights)), grams$weights)
+  # by default the clusters are built afresh: n-grams of the default length 2
+  bigrams <- build_network(seqs, method = "ngram")
+  expect_equal(Reduce(`+`, lapply(build_network(fit), \(n) n$weights)),
+               bigrams$weights)
 })
 
 test_that("a network converted from a tna model counts only when its data agree", {

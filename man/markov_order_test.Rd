@@ -37,8 +37,10 @@ numbered run (\code{T1}, \code{T2}, ...); anything else, such as an id column be
 the positions, a column named \code{action}, or columns holding only 0 and 1,
 raises an error of class \code{nestimate_bad_input}, and the positions are then
 declared with \code{\link[=build_network]{build_network()}} (\code{state_cols}, or \code{action} for an event
-log) and the network passed instead. A one-hot or association network
-raises the same error. Sequences are split at missing values: no window
+log) and the network passed instead. A one-hot or association network,
+a network built from an edge list (such as a layer of an edge-list
+\code{\link[=build_mcml]{build_mcml()}}), an \code{mcml} object, and any list other than a plain list
+of state vectors raise the same error. Sequences are split at missing values: no window
 spans an \code{NA}, and pieces with fewer than two states are dropped. A \code{tna}
 model (package tna) or a bare \code{cograph_network} gives the sequences it
 carries, and a \code{group_tna} one result per group.}

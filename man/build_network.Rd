@@ -9,38 +9,17 @@
 \alias{summary.netobject_group}
 \alias{print.summary.netobject}
 \alias{print.summary.netobject_group}
-\title{Estimate a network from sequences, events or variables}
+\title{Estimate a network}
 \usage{
 build_network(
   data,
   method,
-  actor = NULL,
-  action = NULL,
-  time = NULL,
-  session = NULL,
-  order = NULL,
-  codes = NULL,
+  ...,
   group = NULL,
-  format = "auto",
-  window_size = 3L,
-  mode = c("non-overlapping", "overlapping"),
   scaling = NULL,
   threshold = 0,
-  level = NULL,
-  time_threshold = 900,
-  timezone = "UTC",
-  predictability = TRUE,
-  state_cols = NULL,
-  metadata_cols = NULL,
-  start = FALSE,
-  end = FALSE,
-  params = list(),
   labels = NULL,
-  latency_floor = 0.5,
-  latency_cap = 0.95,
-  latency_aggregate = c("sum", "mean"),
-  latency_scope = c("global", "actor", "session", "responder"),
-  ...
+  inherit = FALSE
 )
 
 \method{print}{netobject}(x, ...)
@@ -58,194 +37,70 @@ build_network(
 \method{print}{summary.netobject_group}(x, ...)
 }
 \arguments{
-\item{data}{The data to estimate from: a data frame of sequences (one row
-per sequence, one column per position), an event log (one row per
-event, with \code{action} set), one-hot code columns, numeric variables (one
-row per observation) for the association methods, or a square symmetric
-correlation or covariance matrix. A fitted \code{net_clustering} or \code{net_mmm}
-object also works: its per-cluster networks are built, with the
-\code{scaling}, \code{threshold}, \code{start}, \code{end} and \code{params} given here, and
-returned as a \code{netobject_group}. The relative networks of a \code{net_mmm}
-are the fitted chains: \code{scaling} and \code{threshold} are applied to them,
-and any other argument raises an error of class \code{nestimate_bad_input}.}
+\item{data}{The data the method reads (see its page), or a fitted
+clustering (\code{net_clustering}, \code{net_mmm}), to build one network per
+cluster with the clustering's method.}
 
-\item{method}{The estimator: a built-in method or alias (see the
-\emph{Estimators} section), or a name added with \code{\link[=register_estimator]{register_estimator()}};
-\code{\link[=list_estimators]{list_estimators()}} lists them. Required, except when \code{data} is a
-\code{net_clustering} or \code{net_mmm} object, whose own method is used.}
+\item{method}{The estimator. Each has its own page with its arguments:
+\tabular{lll}{
+\emph{Sequences and event logs} \tab \tab \cr
+\code{"relative"} \tab transition network analysis (TNA) \tab see \code{\link[=build_tna]{build_tna()}} for details \cr
+\code{"frequency"} \tab frequency transition network analysis (FTNA) \tab see \code{\link[=build_ftna]{build_ftna()}} for details \cr
+\code{"attention"} \tab attention transition network analysis (ATNA) \tab see \code{\link[=build_atna]{build_atna()}} for details \cr
+\code{"co_occurrence"} \tab co-occurrence network analysis (CNA) \tab see \code{\link[=build_cna]{build_cna()}} for details \cr
+\code{"ngram"} \tab n-gram transition network analysis \tab see \code{\link[=build_ngram]{build_ngram()}} for details \cr
+\code{"gap"} \tab gap transition network analysis \tab see \code{\link[=build_gap]{build_gap()}} for details \cr
+\code{"reverse"} \tab reverse (reply) transition network analysis \tab see \code{\link[=build_reverse]{build_reverse()}} for details \cr
+\emph{Message logs} \tab \tab \cr
+\code{"latency"} \tab latency network analysis \tab see \code{\link[=build_latency]{build_latency()}} for details \cr
+\emph{One-hot codes} \tab \tab \cr
+\code{"wtna"} \tab window transition network analysis (WTNA) \tab see \code{\link[=build_wtna]{build_wtna()}} for details \cr
+\code{"wtna_cooccurrence"} \tab window co-occurrence network analysis \tab see \code{\link[=wtna]{wtna()}} for details \cr
+\emph{Numeric variables} \tab \tab \cr
+\code{"cor"} \tab correlation network \tab see \code{\link[=build_cor]{build_cor()}} for details \cr
+\code{"pcor"} \tab partial correlation network \tab see \code{\link[=build_pcor]{build_pcor()}} for details \cr
+\code{"glasso"} \tab EBIC graphical lasso network \tab see \code{\link[=build_glasso]{build_glasso()}} for details \cr
+\code{"ising"} \tab Ising model \tab see \code{\link[=build_ising]{build_ising()}} for details \cr
+\code{"mgm"} \tab mixed graphical model (MGM) \tab see \code{\link[=build_mgm]{build_mgm()}} for details \cr
+}
+The other names \code{\link[=list_estimators]{list_estimators()}} shows (\code{"tna"}, \code{"ftna"},
+\code{"atna"}, \code{"cna"}, ...) also work, and an estimator added with
+\code{\link[=register_estimator]{register_estimator()}} is called by its name. Required, except for a
+fitted clustering, whose own method is used.}
 
-\item{actor}{The column naming who each row belongs to (a person, a team).
-In an event log, each actor's events form a sequence, split further by
-\code{session} or \code{time_threshold}. With \code{level}, it is the id the multilevel
-decomposition groups by. Default \code{NULL}.}
+\item{...}{The method's arguments, by name, as listed on its page, such as
+\code{actor}, \code{action}, \code{start} or \code{lambda}. For the \code{print()} and
+\code{summary()} methods: ignored.}
 
-\item{action}{The column holding each event's state; setting it declares
-the data an event log. Column names give no role: \code{action}, \code{actor},
-\code{time} and \code{session} are read only when set. A column called \code{Action}
-with nothing declared raises an error of class \code{nestimate_bad_input},
-and an undeclared time or session column beside \code{action} is named in a
-message of class \code{nestimate_column_role}. Default \code{NULL}.}
-
-\item{time}{The timestamp column of an event log. Events are ordered by
-it, and a gap longer than \code{time_threshold} starts a new sequence.
-Default \code{NULL}.}
-
-\item{session}{The column identifying sessions in an event log; each
-session is its own sequence, also without \code{actor}. Default \code{NULL}.}
-
-\item{order}{The column that orders events sharing a timestamp; without
-it, those events keep their row order. Default \code{NULL}.}
-
-\item{codes}{The one-hot code columns (one per state, 1 when the state is
-active); setting them declares one-hot data. Default \code{NULL}.}
-
-\item{group}{A column to split the data by: one network is estimated per
-value and the result is a \code{netobject_group}. Default \code{NULL}.}
-
-\item{format}{How to read \code{data}. \code{"auto"} (default) reads an event log
-when \code{action} is set, one-hot data when \code{codes} is set, and wide
-positions otherwise; it never infers one-hot data from the values.
-\code{"wide"}, \code{"long"} and \code{"onehot"} force a reading. The association
-methods and the \code{wtna} methods read 0/1 columns as they always do.}
-
-\item{window_size}{For one-hot data: how many consecutive rows form one
-window (default \code{3}). Windows on sequence data are set through \code{params}
-instead.}
-
-\item{mode}{For one-hot data: \code{"non-overlapping"} (default) or
-\code{"overlapping"} windows; \code{\link[=wtna]{wtna()}} describes how overlapping windows are
-counted. Wide and long sequence data ignore it.}
+\item{group}{A column to split the data by: one network per value,
+returned as a \code{netobject_group}. Default \code{NULL}.}
 
 \item{scaling}{Rescaling applied to the weights after estimation, in the
-order given: \code{"minmax"} maps the non-zero weights into (0, 1],
-\code{"max"} divides by the largest absolute weight, \code{"rank"} replaces the
-non-zero weights by their ranks, and \code{"normalize"} makes each row's
-absolute weights sum to 1. Zero weights stay zero under every option.
-Combine them as in \code{c("rank", "minmax")}. Default \code{NULL} (none).}
+order given: \code{"minmax"} rescales the weights to run from 0 to 1, over
+every cell for the transition methods (tna's rule, so with no zero cell
+the smallest weight becomes 0) and over the non-zero weights, into
+(0, 1], for the other methods, \code{"max"} divides by the largest absolute
+weight, \code{"rank"} replaces the non-zero weights by their ranks, and
+\code{"normalize"} makes each row's absolute weights sum to 1. Zero weights
+stay zero under every option. Combine them as in \code{c("rank", "minmax")}.
+Default \code{NULL} (none).}
 
 \item{threshold}{Weights whose absolute value is below this are set to
-zero. Default \code{0} (none). For \code{method = "mgm"}, \code{"LW"} or \code{"none"}
-instead selects mgm's coefficient-thresholding rule (a \code{threshold} in
-\code{params} takes precedence); any other non-numeric value raises an
-error.}
-
-\item{level}{Multilevel decomposition for the undirected association
-methods (\code{cor}, \code{pcor}, \code{glasso}, \code{mgm}): \code{"between"} estimates the
-network of person means, \code{"within"} the network of deviations from them,
-and \code{"both"} returns the two as a \code{netobject_ml}. It needs an id column,
-given as \code{actor} or as \code{params$id}; a directed method raises an error.
-Default \code{NULL} (no decomposition). For \code{method = "mgm"}, a numeric
-vector instead gives one category count per modelled variable (\code{1} for
-continuous ones), after group, actor and metadata columns are set
-aside; it is checked and kept for compatibility, and the fit reads the
-categories from the data.}
-
-\item{time_threshold}{The longest gap, in seconds, between two events of
-the same sequence in an event log; a longer gap starts a new sequence.
-\code{FALSE} turns the split off, so each actor (or actor-session) is one
-sequence. Default \code{900}.}
-
-\item{timezone}{The Olson time zone for timestamps without an offset
-(passed to \code{\link[=prepare]{prepare()}}); timestamps with an offset, such as \code{...Z} or
-\code{+02:00}, are converted from it. Default \code{"UTC"}.}
-
-\item{predictability}{Whether to compute each node's predictability (the
-R-squared of the node on its neighbours) for the undirected association
-methods \code{cor}, \code{pcor} and \code{glasso}. It is stored on the network,
-and \code{cograph::splot()} draws it as a ring around each node. Default
-\code{TRUE}.}
-
-\item{state_cols}{The columns of a wide table that are sequence positions;
-every other column of the cleaned input goes to the network's metadata. Declared
-columns are positions even when they hold only 0 and 1; one-hot data is
-declared with \code{codes} or \code{format = "onehot"}. With nothing declared, the
-frame must be one column or hold position columns named as a numbered
-run (a shared prefix and a number, \code{T1}, \code{T2}, ..., or \code{1}, \code{2}, ...);
-numeric columns beside the run and character or factor columns outside
-it are then covariates. Any other frame on a sequence method, and
-columns of only 0 and 1, raise an error of class \code{nestimate_bad_input}:
-nothing says whether they are positions or one-hot codes. Default
-\code{NULL}.}
-
-\item{metadata_cols}{Columns to keep as the network's metadata (covariates), never as
-positions; they cannot overlap \code{state_cols}. A column left out of a
-numbered run of positions is named in a message of class
-\code{nestimate_column_role}, and listing it here or in \code{state_cols} settles
-it. Default \code{NULL}.}
-
-\item{start}{A start state put before every sequence, so the network shows
-where sequences begin (an edge from it to each sequence's first state).
-\code{FALSE} (default) adds none, \code{TRUE} adds one labelled \code{"Start"}, and a
-single string adds one with that label. Only for the transition methods
-\code{relative}, \code{frequency}, \code{co_occurrence}, \code{attention}, \code{ngram}, \code{gap}
-and \code{reverse}; any other method, \code{wtna} included, raises an error.}
-
-\item{end}{An end state put in the cell after each sequence's last
-observed state, so the network shows where sequences stop. It has no
-outgoing edges and no self-loop, unlike \code{\link[=mark_terminal_state]{mark_terminal_state()}}, which
-fills all trailing missing cells with an absorbing state. \code{FALSE}
-(default) adds none, \code{TRUE} adds one labelled \code{"End"}, and a single
-string adds one with that label. Same methods as \code{start}.}
-
-\item{params}{Settings passed to the estimator, as a named list, such as
-\code{list(gamma = 0.5)} for \code{glasso} or \code{list(n_gram = 3)} for \code{ngram}. The
-list is stored on the network, so \code{\link[=bootstrap_network]{bootstrap_network()}} and the other
-resampling verbs re-estimate with exactly the same settings. The
-transition methods take tna's sequence options \code{weighted} and \code{concat},
-and the low-level \code{begin_state} / \code{end_state} that \code{start} and \code{end}
-set. \code{window_size} (with \code{window_span}, or \code{windowed = TRUE} for a size
-of 2) counts \code{relative}, \code{frequency} and \code{co_occurrence} between
-consecutive non-overlapping blocks of that many positions, as
-\code{tna::tna()} does; other transition methods raise an error of class
-\code{nestimate_bad_input}, and \code{mode = "overlapping"} a warning of class
-\code{nestimate_ignored_mode}. Column roles given here (\code{action}, \code{id},
-\code{id_col}, \code{actor}, \code{time}, \code{session}, \code{order}, \code{cols}, \code{codes},
-\code{group}) must name existing columns, and must agree with the same role
-given directly.}
+zero. Default \code{0} (none).}
 
 \item{labels}{New display labels for the nodes, applied after estimation:
 a two-column data frame (\code{name}, \code{label}), a named character vector
 \code{c(name = "label")} or a named list. It rewrites the node labels and the
-weight matrix's dimnames; nodes not listed keep their names.}
+weight matrix's dimnames; nodes not listed keep their names. Default
+\code{NULL}.}
 
-\item{latency_floor}{For \code{method = "latency"}: the weight of a reply that
-takes \code{latency_cap} or longer, a single number from 0 to 1. A reply's
-weight falls linearly from 1 (an immediate reply) to \code{latency_floor} at
-the cap and stays there beyond it, so every reply counts. \code{1} ignores
-time and gives the counts of \code{"reverse"}; \code{0} gives replies at or past
-the cap no weight. Default \code{0.5}. Any other method raises an error of
-class \code{nestimate_bad_input} when it is set.}
-
-\item{latency_cap}{For \code{method = "latency"}: the time at which a reply's
-weight reaches \code{latency_floor}. A number in (0, 1] is a percentile of
-the latencies of the replies to another sender, pooled over all of
-\code{data} (with \code{group}, over every group, so the groups share one cap); a
-string such as \code{"120s"} is a number of seconds. The resolved cap, in
-seconds, is stored on the network. Default \code{0.95}.}
-
-\item{latency_aggregate}{For \code{method = "latency"}: how the replies of a
-pair of senders make one weight. \code{"sum"} (default) adds their weights,
-so an edge grows with both the speed and the number of replies;
-\code{"mean"} averages them, the mean speed of the pair's replies.}
-
-\item{latency_scope}{For \code{method = "latency"} with a percentile
-\code{latency_cap}: the units that get their own cap. \code{"global"} (default)
-takes one cap from all of \code{data}; \code{"actor"} one per value of \code{actor}
-(each team's own pace; with several \code{actor} columns, one per
-combination of their values); \code{"session"} one per sequence;
-\code{"responder"} one per responding sender. A unit's cap is the percentile
-of its own latencies of replies to another sender; a unit with fewer
-than 5 of them takes the global cap, and a message of class
-\code{nestimate_latency_fallback} says how many units did. The caps are
-resolved before a \code{group} split. A cap
-in seconds applies to every reply, so a scope other than \code{"global"} is
-then ignored with a message of class \code{nestimate_ignored_argument}.}
-
-\item{...}{Further arguments for the estimator. For event logs,
-\code{\link[=prepare]{prepare()}}'s time options \code{unix_time_unit}, \code{is_unix_time} and
-\code{custom_format} go to \code{\link[=prepare]{prepare()}} instead (e.g.
-\code{unix_time_unit = "milliseconds"}). For the \code{print()} and \code{summary()}
-methods: ignored.}
+\item{inherit}{Only when \code{data} is a fitted clustering (\code{net_clustering}
+or \code{net_mmm}) of a network: whether the per-cluster networks also take
+that network's \code{threshold}, \code{scaling} and estimator settings. \code{FALSE}
+(default) builds them with its method and the arguments given here;
+\code{TRUE} uses its settings for any not given here, when the clusters are
+built with its method. The relative networks of a \code{net_mmm} are the
+fitted chains, which take only its \code{threshold} and \code{scaling}.}
 
 \item{x}{For the \code{print()} methods: a \code{netobject}, \code{netobject_group} or
 \code{netobject_ml}, or the result of \code{summary()} on one.}
@@ -319,101 +174,18 @@ group, that records the grouping column in its \code{group_col} attribute.
 }
 \description{
 \code{build_network()} estimates a network from sequences, an event log,
-one-hot codes or numeric variables, and returns a \code{netobject}: the object
-every other Nestimate verb reads (bootstrap, permutation, centrality,
-clustering, plotting). One call covers two kinds of network.
-Transition networks (\code{"relative"}, \code{"frequency"}, \code{"co_occurrence"} and
-their variants) are directed or undirected graphs of states, where an edge
-says how often or how likely one state follows another. Association
-networks (\code{"cor"}, \code{"pcor"}, \code{"glasso"}, \code{"ising"}, \code{"mgm"}) are undirected
-graphs of variables, where an edge is a correlation or a (regularised)
-partial correlation. The \emph{Estimators} section lists every method and its
-aliases; estimators added with \code{\link[=register_estimator]{register_estimator()}} are called the same
-way.
+one-hot codes or numeric variables, with the estimator named by \code{method},
+and returns a \code{netobject}: the object every other Nestimate verb reads
+(bootstrap, permutation, centrality, clustering, plotting). Each method's
+arguments are on its own page, named under \code{method}; they are given here
+by name, as in \code{build_network(df, method = "relative", actor = "id")}.
 
-Column roles are declared, never read from names or values. An event log
-needs \code{action}, and usually \code{actor}, \code{time} or \code{session}; a wide table
-needs position columns named as a numbered run (\code{T1}, \code{T2}, ...) or listed
-in \code{state_cols}; one-hot data needs \code{codes} or \code{format = "onehot"}. Input
-that fits none of these raises an error of class \code{nestimate_bad_input}
-instead of being read one way or another.
-
-The weights are point estimates. Before reading single edges, see how far
-they move under resampling with \code{\link[=bootstrap_network]{bootstrap_network()}}, and compare groups
-with \code{\link[=permutation]{permutation()}} rather than by eye. An event log that yields a single
-sequence is reported with a message of class \code{nestimate_single_sequence}:
-that network describes one sequence and cannot be resampled.
+Column roles are declared, never read from names or values, and input
+that fits none of the readings raises an error of class
+\code{nestimate_bad_input}. The weights are point estimates: see how far they
+move under resampling with \code{\link[=bootstrap_network]{bootstrap_network()}}, and compare groups with
+\code{\link[=permutation]{permutation()}}.
 }
-\details{
-\code{build_network()} resolves the method alias, checks the declared column
-arguments before the format is resolved, and takes the estimator from the
-registry. For an association method with \code{level}, it first decomposes
-the data into person means (\code{"between"}) or deviations from them
-(\code{"within"}). It then calls the estimator with \code{data} and \code{params},
-applies \code{scaling} and then \code{threshold} to the weight matrix, and extracts
-the edges.
-
-In an event log, \code{action} alone makes all rows one sequence in row order;
-\code{session}, or a \code{time} gap above \code{time_threshold}, splits them without an
-\code{actor}. When the log yields a single sequence, a message of class
-\code{nestimate_single_sequence} says so, because such a network cannot be
-validated by bootstrap or the other confirmatory tests.
-
-For \code{method = "mgm"}, missing continuous values are filled with the
-observed column mean and missing categorical values with the modal level.
-This keeps the rows and is \pkg{psychnets}' documented
-\code{na_method = "pairwise"} policy; it is not pairwise deletion.
-
-For a network with non-negative weights, the \code{summary()} values equal
-those of \code{tna::summary.tna()} from tna 1.5.4 on.
-}
-\section{Estimators}{
-
-\describe{
-\item{\code{"relative"}}{Transition probabilities (row-normalised counts); directed. Aliases: \code{"tna"}, \code{"transition"}.}
-\item{\code{"frequency"}}{Transition counts; directed. Aliases: \code{"ftna"}, \code{"counts"}.}
-\item{\code{"co_occurrence"}}{Co-occurrence within sequences; undirected. With \code{params = list(type = "relative")} each row is normalised to sum to 1, and the network is directed. Also called \code{"cna"}, \code{"wcna"} or \code{"co-occurrence"}.}
-\item{\code{"attention"}}{Decay-weighted transitions; directed. Alias: \code{"atna"}.}
-\item{\code{"ngram"}}{Adjacent pairs counted once per n-gram window; directed. Aliases: \code{"n-gram"}, \code{"n_gram"}.}
-\item{\code{"gap"}}{Pairs up to \code{max_gap + 1} positions apart, weighted \code{1 / distance}; directed.}
-\item{\code{"reverse"}}{Reply network, the transpose of \code{"frequency"}; directed.}
-\item{\code{"latency"}}{Reply network weighted by response speed; directed. See below.}
-\item{\code{"wtna"}}{Window-based transitions on one-hot data; directed. Alias: \code{"wtna_transition"}.}
-\item{\code{"wtna_cooccurrence"}}{Window-based co-occurrence on one-hot data; undirected.}
-\item{\code{"cor"}}{Pearson correlations; undirected. Aliases: \code{"corr"}, \code{"correlation"}.}
-\item{\code{"pcor"}}{Partial correlations, unregularised; undirected. Alias: \code{"partial"}.}
-\item{\code{"glasso"}}{EBIC graphical lasso partial correlations; undirected. Aliases: \code{"ebicglasso"}, \code{"regularized"}.}
-\item{\code{"ising"}}{Ising model (L1-penalised logistic regression); undirected. Alias: \code{"isingfit"}.}
-\item{\code{"mgm"}}{Mixed graphical model; undirected. Aliases: \code{"mixed"}, \code{"mixed_graphical"}.}
-}
-
-\code{"ngram"}, \code{"gap"} and \code{"reverse"} are \code{tna::build_model()}'s
-types \code{"n-gram"}, \code{"gap"} and \code{"reverse"}. Their settings go in
-\code{params}: \code{list(n_gram = 2)}, \code{list(max_gap = 1)} and
-\code{list(weighted = FALSE)} are the defaults. All three return raw weights;
-add \code{scaling = "normalize"} for row probabilities.
-
-\code{"latency"} reads an event log with \code{action} and \code{time}
-(a message log, one row per message, \code{action} the sender). Its edges
-are the replies of \code{"reverse"}: within each sequence (an
-\code{actor}'s events, split by \code{session} or \code{time_threshold}),
-each event points from its sender, the responder, to the sender of the
-event before it. A reply that takes \eqn{t} seconds weighs
-\eqn{1 - (1 - f) \min(t / c, 1)}{1 - (1 - f) * min(t / c, 1)}, with
-\eqn{f} the \code{latency_floor} and \eqn{c} the \code{latency_cap} in
-seconds, and the weights of a pair are summed or averaged
-(\code{latency_aggregate}). Fast replies signal social connection
-(Templeton et al., 2022), and the weight grades it linearly instead of
-cutting replies at a threshold. A sender who posts twice in a row is a
-self-loop on the diagonal, weighted by the same rule. Shifting every
-time by a constant leaves the weights unchanged, and so does a change of
-time unit when the cap is a percentile. \code{\link[=extract_edges]{extract_edges()}} adds each
-edge's number of replies (\code{n_replies}) and their median latency in
-seconds (\code{median_latency}). \code{params = list(weighted = TRUE)}
-raises an error of class \code{nestimate_bad_input}, and so do
-\code{start} and \code{end}, which have no times. Latency networks are not resampled: the resampling verbs, such as \code{\link[=bootstrap_network]{bootstrap_network()}} and \code{\link[=permutation]{permutation()}}, raise \code{nestimate_latency_resampling} on one.
-}
-
 \section{Methods}{
 
 Printing a \code{netobject} shows the kind of network, the range of its
@@ -449,27 +221,11 @@ integers and the other metrics to four significant digits.
 }
 
 \examples{
-seqs <- data.frame(V1 = c("A","B","C","A"), V2 = c("B","C","A","B"))
-net <- build_network(seqs, method = "relative")
-net
-\donttest{
-# Transition network (relative probabilities)
-seqs <- data.frame(
-  V1 = sample(LETTERS[1:4], 30, TRUE), V2 = sample(LETTERS[1:4], 30, TRUE),
-  V3 = sample(LETTERS[1:4], 30, TRUE), V4 = sample(LETTERS[1:4], 30, TRUE)
-)
-net <- build_network(seqs, method = "relative")
-print(net)
-
-# Association network (glasso)
-freq_data <- convert_sequence_format(seqs, format = "frequency")
-net_glasso <- build_network(freq_data, method = "glasso",
-                             params = list(gamma = 0.5, nlambda = 50))
-
-# With scaling
-net_scaled <- build_network(seqs, method = "relative",
-                             scaling = c("rank", "minmax"))
-}
+build_network(trajectories, method = "relative")
+build_network(group_regulation_long, method = "relative", actor = "Actor",
+              action = "Action", time = "Time", group = "Course")
+build_network(trajectories, method = "attention", lambda = 2)
+build_network(srl_strategies, method = "glasso", gamma = 0.25)
 
 }
 \references{
@@ -479,30 +235,9 @@ analysis: A novel framework for modeling, visualizing, and identifying the
 temporal patterns of learners and learning processes. In
 \emph{Proceedings of the 15th International Learning Analytics and
 Knowledge Conference (LAK25)}. ACM. \doi{10.1145/3706468.3706513}
-
-Friedman, J., Hastie, T., & Tibshirani, R. (2008). Sparse inverse
-covariance estimation with the graphical lasso. \emph{Biostatistics},
-9(3), 432--441. \doi{10.1093/biostatistics/kxm045}
-
-Foygel, R., & Drton, M. (2010). Extended Bayesian information criteria
-for Gaussian graphical models. \emph{Advances in Neural Information
-Processing Systems}, 23, 604--612.
-
-van Borkulo, C. D., Borsboom, D., Epskamp, S., Blanken, T. F., Boschloo,
-L., Schoevers, R. A., & Waldorp, L. J. (2014). A new method for
-constructing networks from binary data. \emph{Scientific Reports}, 4,
-5918. \doi{10.1038/srep05918}
-
-Templeton, E. M., Chang, L. J., Reynolds, E. A., Cone LeBeaumont, M. D.,
-& Wheatley, T. (2022). Fast response times signal social connection in
-conversation. \emph{Proceedings of the National Academy of Sciences},
-119(4), e2116915119. \doi{10.1073/pnas.2116915119}
-
-Haslbeck, J. M. B., & Waldorp, L. J. (2020). mgm: Estimating time-varying
-mixed graphical models in high-dimensional data. \emph{Journal of
-Statistical Software}, 93(8), 1--46. \doi{10.18637/jss.v093.i08}
 }
 \seealso{
-\code{\link{register_estimator}}, \code{\link{list_estimators}},
-\code{\link{bootstrap_network}}
+\code{\link[=list_estimators]{list_estimators()}} and \code{\link[=register_estimator]{register_estimator()}} for the estimator
+registry; \code{\link[=bootstrap_network]{bootstrap_network()}}, \code{\link[=permutation]{permutation()}} and \code{\link[=net_centrality]{net_centrality()}}
+for what to do with the network.
 }

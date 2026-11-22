@@ -37,6 +37,28 @@
 #' @details
 #' The two tests and the inclusive boundary rule follow `tna::bootstrap()`.
 #'
+#' A latency network (`method = "latency"`) is resampled by its sequences, and
+#' every edge's weight is recomputed from the replies of the drawn sequences.
+#' A percentile cap the network resolved from its own replies is resolved
+#' again in every resample; a cap in seconds, or one pooled over the groups of
+#' a grouped build, keeps its value. Per-unit caps (`latency_scope` other than
+#' `"global"`) and `actor` raise an error of class
+#' `nestimate_latency_resampling` or `nestimate_actor_unsupported`; to resample
+#' within groups, build the network with `group` and bootstrap the group. With
+#' the default `aggregate = "mean"`, the stability test is run on the speed
+#' score `(weight - floor) / (1 - floor)`, which runs from 0 (every reply at or
+#' past the cap) to 1 (every reply instant), because a band around a mean
+#' weight between the floor and 1 passes almost every edge. An edge whose
+#' replies come from fewer than 5 sequences cannot vary across resamples and
+#' gets a p-value of 1. The summary adds each edge's `n_replies`,
+#' `n_sequences` and `cv`, the coefficient of variation of its resampled
+#' speed scores. These rules were checked by simulation against known reply
+#' speeds: with a percentile cap the 95% intervals covered 0.91-0.95 of the
+#' true weights from 30 sequences on, and an edge called stable was within
+#' 25% of its true score in 97-100% of datasets from 300 sequences on.
+#' Bootstrapping latency networks is experimental: every call says so in a
+#' message of class `nestimate_experimental` (once for a group of networks).
+#'
 #' Transition networks (`"relative"`, `"frequency"`, `"co_occurrence"`, and
 #' `wtna` networks, which hold the same one-hot counts) take a fast path:
 #' the count matrix of every sequence is computed once, and each replicate
@@ -47,9 +69,7 @@
 #' With `actor`, a merged sequence must belong entirely to one actor. Every
 #' other method (the association methods, `"attention"`, `"ngram"`, `"gap"`,
 #' `"reverse"` and registered estimators) is re-estimated in full on
-#' resampled rows. Latency networks are not resampled: a network built with
-#' `method = "latency"` raises an error of class
-#' `nestimate_latency_resampling`. A replicate whose estimation fails, or
+#' resampled rows. A replicate whose estimation fails, or
 #' that loses a node, is left out of the p-values, with a warning of class
 #' `nestimate_resample_failed` that counts them, and the bootstrap
 #' statistics are computed over the remaining replicates; if every
@@ -276,7 +296,6 @@ bootstrap_network <- function(x,
                               actor = NULL) {
   # a tna model or group_tna is rebuilt as a Nestimate network (R/tna_input.R)
   x <- .tna_input(x, "bootstrap_network()", need_data = TRUE, actor = actor)
-  .stop_latency_resampling(list(x), "bootstrap_network()")
   boundary <- match.arg(boundary)
   ci_method <- match.arg(ci_method)
 
@@ -309,15 +328,23 @@ bootstrap_network <- function(x,
   # ---- netobject_group dispatch: bootstrap each element ----
   if (inherits(x, "netobject_group")) {
     .stop_single_unit_group(x)
-    results <- lapply(x, function(net) {
+    # the experimental note of a latency bootstrap is said once for the group
+    said <- FALSE
+    results <- withCallingHandlers(lapply(x, function(net) {
       bootstrap_network(net, iter = iter, ci_level = ci_level,
                         inference = inference,
                         consistency_range = consistency_range,
                         edge_threshold = edge_threshold, seed = seed,
                         boundary = boundary, ci_method = ci_method,
                         actor = actor)
+    }), nestimate_experimental = function(m) {
+      if (said) invokeRestart("muffleMessage")
+      said <<- TRUE
     })
     class(results) <- c("net_bootstrap_group", "list")
+    # every group's edges in one table, kept beside the groups (an attribute,
+    # so the object still iterates as its groups); summary() returns it
+    attr(results, "summary") <- .bootstrap_group_table(results)
     return(results)
   }
 
@@ -401,7 +428,19 @@ bootstrap_network <- function(x,
   # minimum, geometric mean or density (as_tna() records it) is not a sum of
   # per-unit counts: each resample combines its own rows the same way.
   aggregation <- .param_get(params, "aggregation", "sum")
-  if (!identical(aggregation, "sum") && has_data &&
+  latency_boot <- NULL
+  if (identical(method, "latency")) {
+    if (!is.null(actor)) {
+      stop(errorCondition(paste0(
+        "`actor` is not supported for a latency network: its sequences are ",
+        "resampled. To resample within groups, build it with `group` and ",
+        "bootstrap the grouped network."),
+        class = "nestimate_actor_unsupported", call = NULL))
+    }
+    .latency_experimental_message()
+    latency_boot <- .bootstrap_latency(x, iter)
+    boot_matrices <- latency_boot$weights
+  } else if (!identical(aggregation, "sum") && has_data &&
       count_method %in% c("relative", "frequency")) {
     if (!is.null(actor)) {
       stop(errorCondition(
@@ -496,6 +535,13 @@ bootstrap_network <- function(x,
     boundary = boundary,
     ci_method = ci_method
   )
+  # a mean latency network is tested on its speed score (the weight with the
+  # floor taken off), and needs replies in several sequences
+  if (!is.null(latency_boot$scores) && identical(inference, "stability")) {
+    stats <- .latency_stability(stats, latency_boot, original$weights,
+                                params$latency_floor, consistency_range,
+                                boundary, ci_level)
+  }
 
   # ---- Build summary data frame ----
   summary_df <- .build_bootstrap_summary(
@@ -506,6 +552,13 @@ bootstrap_network <- function(x,
     ci_level = ci_level,
     inference = inference
   )
+  if (!is.null(latency_boot)) {
+    edge <- cbind(summary_df$from, summary_df$to)
+    summary_df$n_replies <- original$n_replies[edge]
+    summary_df$n_sequences <- matrix(latency_boot$n_sequences, n_states,
+                                     n_states, dimnames = dimnames(original$weights))[edge]
+    if (!is.null(stats$cv)) summary_df$cv <- stats$cv[edge]
+  }
 
   # ---- Build pruned model ----
   pruned_matrix <- stats$significant
@@ -523,8 +576,8 @@ bootstrap_network <- function(x,
     n_nodes = n_states,
     n_edges = nrow(pruned_edges),
     level = level,
-    meta = list(source = "nestimate", layout = NULL,
-                tna = list(method = method)),
+    meta = c(list(source = "nestimate", layout = NULL,
+                  tna = list(method = method)), .splot_contract(method)),
     node_groups = NULL
   )
   class(model) <- c("netobject", "cograph_network")
@@ -553,6 +606,11 @@ bootstrap_network <- function(x,
     actor             = actor,
     n_actors          = if (is.null(actor)) NULL else nrow(units)
   )
+  if (!is.null(latency_boot)) {
+    result$latency_cap <- latency_boot$cap
+    # drawn as the network itself is (cograph's rendering contract)
+    result$meta <- .splot_contract(method)
+  }
   if (!is.null(actor)) {
     clus <- .build_bootstrap_clustering(stats$sd, reference, trans_2d,
                                         block_ids, summary_df, states)
@@ -1331,8 +1389,10 @@ bootstrap_network <- function(x,
 #' @return The `print()` methods return their input invisibly. The
 #'   `summary()` method of a `net_bootstrap` returns its per-edge table, the
 #'   `summary` field described above. For a `net_bootstrap_group`
-#'   it stacks those tables into one data frame, with a first column `group`
-#'   naming the network each row comes from; for a `wtna_boot_mixed` it
+#'   it returns the tables of all groups stacked into one data frame, with a
+#'   first column `group` naming the network each row comes from; the group
+#'   object keeps that table from the start (its `"summary"` attribute); for
+#'   a `wtna_boot_mixed` it
 #'   returns a list of the `transition` and `cooccurrence` tables.
 #' @export
 print.net_bootstrap <- function(x, ...) {
@@ -1512,6 +1572,13 @@ print.net_bootstrap_group <- function(x, ...) {
 #' @rdname bootstrap_network
 #' @export
 summary.net_bootstrap_group <- function(object, ...) {
+  attr(object, "summary") %||% .bootstrap_group_table(object)
+}
+
+# The edge tables of a grouped bootstrap stacked into one, with a `group`
+# column first.
+#' @noRd
+.bootstrap_group_table <- function(object) {
   do.call(rbind, lapply(names(object), function(nm) {
     df       <- object[[nm]]$summary
     df$group <- nm
@@ -1539,4 +1606,137 @@ summary.wtna_boot_mixed <- function(object, ...) {
     transition   = summary(object$transition),
     cooccurrence = summary(object$cooccurrence)
   )
+}
+
+
+# ---- Latency networks ----
+
+# Sequences an edge's replies must come from before its stability is judged:
+# with all its replies in one sequence, every resample that holds the edge
+# gives it the same mean, so its resampled weights cannot vary.
+.LATENCY_MIN_SEQUENCES <- 5L
+
+#' Resample a latency network
+#'
+#' Sequences are resampled with replacement and every edge's weight is
+#' recomputed from the replies of the drawn sequences, as the estimator
+#' computes it: each reply weighs `1 - (1 - floor) * min(t / cap, 1)`, and a
+#' pair's replies are averaged (or summed). A percentile cap that the network
+#' resolved from its own replies is resolved again in every resample; a cap
+#' in seconds, or one pooled over the groups of a grouped build, is held at
+#' its value.
+#' @param x A latency `netobject`.
+#' @return List with `weights` (iter x n^2, column-major, after the network's
+#'   scaling and threshold), `scores` (iter x n^2 mean speed scores
+#'   `(w - floor) / (1 - floor)`, NA where a resample holds no reply on the
+#'   edge; NULL for `aggregate = "sum"`), `n_sequences` (n^2: the sequences
+#'   with a reply on each edge) and `cap` (`"resolved"` or `"held"`).
+#' @noRd
+.bootstrap_latency <- function(x, iter) {
+  params <- x$params
+  floor <- params$latency_floor
+  aggregate <- params$latency_aggregate %||% "mean"
+  states <- rownames(x$weights)
+  k <- length(states)
+  times <- x$latency_time
+  times <- as.matrix(times[startsWith(names(times), .LATENCY_TIME_PREFIX)])
+  pairs <- .latency_reply_pairs(x$data, times, alphabet = states)$pairs
+  changed <- pairs$from != pairs$to
+  cell <- (pairs$to - 1L) * k + pairs$from
+  percentile <- is.numeric(params$latency_cap)
+  if (percentile && !identical(params$latency_scope %||% "global", "global")) {
+    stop(errorCondition(paste0(
+      "bootstrap_network() resamples latency networks with one cap for all ",
+      "replies; per-unit caps (latency_scope = \"", params$latency_scope,
+      "\") are not resampled. Build the network with latency_scope = ",
+      "\"global\" or a cap in seconds."),
+      class = c("nestimate_latency_resampling", "nestimate_bad_input"),
+      call = NULL))
+  }
+  # a cap the network resolved from its own replies is resolved again; one
+  # pooled over the groups of a grouped build belongs to all the groups
+  own_cap <- percentile && any(changed) && isTRUE(all.equal(
+    stats::quantile(pairs$latency[changed], params$latency_cap,
+                    names = FALSE, type = 7),
+    x$latency_cap_seconds))
+  include_zeros <- .scaling_includes_zeros("latency")
+  rows_by_sequence <- split(seq_len(nrow(pairs)), pairs$row)
+  n_seq <- nrow(x$data)
+  replicate_once <- function() {
+    drawn <- sample.int(n_seq, n_seq, replace = TRUE)
+    rows <- unlist(rows_by_sequence[as.character(drawn)], use.names = FALSE)
+    cap <- if (own_cap && any(changed[rows])) {
+      stats::quantile(pairs$latency[rows][changed[rows]], params$latency_cap,
+                      names = FALSE, type = 7)
+    } else x$latency_cap_seconds
+    w <- 1 - (1 - floor) * pmin(pairs$latency[rows] / cap, 1)
+    total <- numeric(k * k)
+    sums <- rowsum(w, cell[rows], reorder = FALSE)
+    total[as.integer(rownames(sums))] <- sums[, 1L]
+    count <- tabulate(cell[rows], k * k)
+    mean_w <- ifelse(count > 0, total / pmax(count, 1L), 0)
+    mat <- matrix(if (identical(aggregate, "mean")) mean_w else total, k, k)
+    c(.finish_replicate(mat, FALSE, x$scaling, include_zeros, x$threshold),
+      ifelse(count > 0, (mean_w - floor) / (1 - floor), NA_real_))
+  }
+  draws <- t(vapply(seq_len(iter), function(i) replicate_once(),
+                    numeric(2L * k * k)))
+  first <- seq_len(k * k)
+  list(weights = draws[, first, drop = FALSE],
+       scores = if (identical(aggregate, "mean")) draws[, k * k + first, drop = FALSE],
+       n_sequences = tabulate(cell[!duplicated(paste(cell, pairs$row))], k * k),
+       cap = if (own_cap) "resolved" else "held")
+}
+
+#' The stability test of a mean latency network, on the speed score
+#'
+#' A mean reply weight lies in `[floor, 1]`, so a band around the weight
+#' passes almost every edge. The test is run on the speed score
+#' `(w - floor) / (1 - floor)`, which runs from 0 (every reply at or past the
+#' cap) to 1 (every reply instant): an edge passes when its resampled score
+#' stays inside `consistency_range` times the observed score. A resample that
+#' holds no reply on the edge counts as outside. An edge whose replies come
+#' from fewer than `.LATENCY_MIN_SEQUENCES` sequences gets a p-value of 1.
+#' @return The `stats` list with `p_values`, `significant`, `cr_lower` and
+#'   `cr_upper` replaced, `cv` (the coefficient of variation of the
+#'   resampled scores) and `n_sequences` added.
+#' @noRd
+.latency_stability <- function(stats, boot, original, floor, consistency_range,
+                               boundary, ci_level) {
+  k <- nrow(original)
+  observed <- (as.vector(original) - floor) / (1 - floor)
+  lo <- pmin(observed * consistency_range[1], observed * consistency_range[2])
+  hi <- pmax(observed * consistency_range[1], observed * consistency_range[2])
+  scores <- boot$scores
+  low <- if (identical(boundary, "strict")) sweep(scores, 2, lo, "<") else
+    sweep(scores, 2, lo, "<=")
+  high <- if (identical(boundary, "strict")) sweep(scores, 2, hi, ">") else
+    sweep(scores, 2, hi, ">=")
+  outside <- colSums(low | high | is.na(scores))
+  p <- (outside + 1) / (nrow(scores) + 1)
+  p[boot$n_sequences < .LATENCY_MIN_SEQUENCES] <- 1
+  m <- colMeans(scores, na.rm = TRUE)
+  s <- apply(scores, 2, stats::sd, na.rm = TRUE)
+  cv <- ifelse(m > 0, s / m, Inf)
+  cv[boot$n_sequences == 0L] <- NA_real_
+  as_mat <- function(v) matrix(v, k, k, dimnames = dimnames(original))
+  stats$p_values <- as_mat(p)
+  stats$significant <- original * (stats$p_values < ci_level)
+  stats$cr_lower <- as_mat(floor + (1 - floor) * lo)
+  stats$cr_upper <- as_mat(floor + (1 - floor) * hi)
+  stats$cv <- as_mat(cv)
+  stats$n_sequences <- as_mat(boot$n_sequences)
+  stats
+}
+
+
+#' The note that the latency bootstrap is experimental
+#' @noRd
+.latency_experimental_message <- function() {
+  cond <- simpleMessage(paste0(
+    "The latency bootstrap is experimental: tested in simulation, it ",
+    "showed promising results, but it has not yet been tested widely on ",
+    "real-life datasets.\n"))
+  class(cond) <- c("nestimate_experimental", class(cond))
+  message(cond)
 }

@@ -223,8 +223,10 @@
 #'   the positions, a column named `action`, or columns holding only 0 and 1,
 #'   raises an error of class `nestimate_bad_input`, and the positions are then
 #'   declared with [build_network()] (`state_cols`, or `action` for an event
-#'   log) and the network passed instead. A one-hot or association network
-#'   raises the same error. Sequences are split at missing values: no window
+#'   log) and the network passed instead. A one-hot or association network,
+#'   a network built from an edge list (such as a layer of an edge-list
+#'   [build_mcml()]), an `mcml` object, and any list other than a plain list
+#'   of state vectors raise the same error. Sequences are split at missing values: no window
 #'   spans an `NA`, and pieces with fewer than two states are dropped. A `tna`
 #'   model (package tna) or a bare `cograph_network` gives the sequences it
 #'   carries, and a `group_tna` one result per group.
@@ -342,6 +344,11 @@ markov_order_test <- function(data, max_order = 3L, n_perm = 500L, alpha = 0.05,
         "netobject has no $data; rebuild with build_network().",
         class = "nestimate_bad_input", call = NULL))
     }
+    # the rows of an edge-list mcml layer are weighted transitions, not
+    # sequences; .coerce_sequence_input() refuses it as every reader does
+    if (identical(attr(data$data, "source"), "edgelist")) {
+      .coerce_sequence_input(data)
+    }
     data <- data$data
   }
   max_order <- as.integer(max_order)
@@ -364,6 +371,11 @@ markov_order_test <- function(data, max_order = 3L, n_perm = 500L, alpha = 0.05,
   # Accept a prepare() result directly: use its $sequence_data (wide df)
   if (is.list(data) && !is.data.frame(data) && "sequence_data" %in% names(data)) {
     data <- data$sequence_data
+  }
+  # any other list must be a plain list of state vectors: an mcml (or any
+  # classed list) would have each of its fields read as a "sequence"
+  if (is.list(data) && !is.data.frame(data)) {
+    data <- .coerce_sequence_input(data)
   }
 
   trajectories <- .mot_split_na(

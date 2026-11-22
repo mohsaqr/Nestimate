@@ -1393,8 +1393,12 @@ test_that("cluster_network applies threshold, start and a network's params", {
   expect_equal(st$weights["Start", "A"], 1)
 
   att <- build_network(seqs, method = "attention", params = list(lambda = 5))
-  grp <- cluster_network(att, k = 2)
+  grp <- cluster_network(att, k = 2, inherit = TRUE)
   expect_true(all(vapply(grp, function(n) identical(n$params$lambda, 5),
+                         logical(1))))
+  # by default the clusters are built afresh with the network's method
+  fresh <- cluster_network(att, k = 2)
+  expect_true(all(vapply(fresh, function(n) is.null(n$params$lambda),
                          logical(1))))
 })
 

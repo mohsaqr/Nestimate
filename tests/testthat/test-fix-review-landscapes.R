@@ -11,12 +11,15 @@ test_that("landscapes replay weighting, concatenation and bootstrap units", {
 
   d <- d[c('T1','T2')]
   n <- build_network(d,method='relative',params=list(concat=3))
-  land <- stability_landscape(n,iter=10,seed=1)
+  # concat = 3 merges the three rows into one unit: resampling one unit gives
+  # zero-width intervals, so it is refused (owner rule, .stop_single_unit());
+  # without resamples the estimates are still given
+  expect_error(stability_landscape(n,iter=10,seed=1),
+               class = "nestimate_single_sequence")
+  land <- stability_landscape(n,iter=0)
   cups <- summary(land)
   expect_equal(cups$stay,c(2/3,1/2))
   expect_equal(land$fits$network$n_sequences,1L)
-  expect_equal(cups$ci_lower,cups$depth)
-  expect_equal(cups$ci_upper,cups$depth)
   expect_equal(summary(landscape_trend(n,window=6,iter=0))$depth,cups$depth)
 
   combined <- build_network(data.frame(T1=c('A','A','B','A','A'),

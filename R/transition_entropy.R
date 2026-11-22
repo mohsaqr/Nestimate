@@ -1051,7 +1051,8 @@ plot.net_entropy_trajectory <- function(x, normalized = FALSE, span = 0.4,
 #' stationary probability, and every edge's entropy contribution. Each is
 #' reported as a posterior mean with an equal-tailed credible interval. The
 #' counts are recovered from a network, a `tna` model, a count matrix or
-#' sequence data (see `x`); a `netobject_group` gives one result per group.
+#' sequence data (see `x`); a `netobject_group` or a `group_tna` gives one
+#' result per group.
 #'
 #' The practical purpose is to \strong{exclude unstable estimates}: an edge
 #' whose contribution rests on a handful of observations has a wide
@@ -1075,8 +1076,9 @@ plot.net_entropy_trajectory <- function(x, normalized = FALSE, span = 0.4,
 #'   data. An association network, or any other network
 #'   whose counts cannot be recovered, raises an error of class
 #'   `nestimate_bad_input`; a matrix of probabilities raises an error, and
-#'   so does a network of one state (class `nestimate_bad_input`). A
-#'   `netobject_group` gives one result per group. For the `print()` and
+#'   so does a network of one state or with no observed transition (class
+#'   `nestimate_bad_input`). A `netobject_group`, or a `group_tna` (read as
+#'   the networks it converts to), gives one result per group. For the `print()` and
 #'   `plot()` methods: an `entropy_bayes()` result; `print()` also takes a
 #'   group result.
 #' @param prior The Dirichlet concentration added to every cell of the count
@@ -1097,8 +1099,8 @@ plot.net_entropy_trajectory <- function(x, normalized = FALSE, span = 0.4,
 #'   same seed for every
 #'   group.
 #'
-#' @return A `net_entropy_bayes` object, or for a `netobject_group` a
-#'   `net_entropy_bayes_group`: a named list of them, one per group.
+#' @return A `net_entropy_bayes` object, or for a `netobject_group` (or a
+#'   `group_tna`) a `net_entropy_bayes_group`: a named list of them, one per group.
 #'   `print()` shows the posterior mean and credible interval of the entropy
 #'   rate, stationary entropy and redundancy, and how many edges are
 #'   credible; for a group, each group's entropy rate. For a group,
@@ -1169,6 +1171,9 @@ plot.net_entropy_trajectory <- function(x, normalized = FALSE, span = 0.4,
 #' @export
 entropy_bayes <- function(x, prior = 0.5, draws = 4000, ci = 0.95,
                           min_share = 0.01, base = 2, seed = NULL) {
+  # a group_tna is read as the netobject_group it converts to, as the
+  # siblings read it; a single tna model keeps its own count reader
+  if (inherits(x, "group_tna")) x <- .tna_input(x, "entropy_bayes()")
   if (inherits(x, "netobject_group")) {
     out <- lapply(x, function(net) {
       entropy_bayes(net, prior = prior, draws = draws, ci = ci,
@@ -1195,6 +1200,12 @@ entropy_bayes <- function(x, prior = 0.5, draws = 4000, ci = 0.95,
     stop(errorCondition(paste0(
       "entropy_bayes() needs at least two states: a one-state chain has ",
       "entropy rate 0 with certainty, and no edge has a share of it."),
+      class = "nestimate_bad_input", call = NULL))
+  }
+  if (sum(counts) == 0) {
+    stop(errorCondition(paste0(
+      "entropy_bayes() found no observed transition (no sequence has two ",
+      "adjacent observed states), so there is no edge to estimate."),
       class = "nestimate_bad_input", call = NULL))
   }
   draws  <- as.integer(draws)

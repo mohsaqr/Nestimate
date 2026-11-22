@@ -396,6 +396,15 @@ safe_sd <- function(x) {
         "it with a transition method or pass the sequences."), data$method),
         class = "nestimate_bad_input", call = NULL))
     }
+    # the layer of an mcml built from an edge list holds one transition (and
+    # its weight) per row, not one sequence per row
+    if (identical(attr(data$data, "source"), "edgelist")) {
+      stop(errorCondition(paste(
+        "This network was built from an edge list: its data hold one",
+        "weighted transition per row, not sequences of states. Pass the",
+        "sequences, or build the network from them."),
+        class = "nestimate_bad_input", call = NULL))
+    }
   }
   if (inherits(data, "tna")) {
     if (is.null(data$data)) { # nocov start

@@ -178,6 +178,9 @@ range.
 }
 \section{Errors}{
 
+\code{nestimate_latency_resampling} for a latency network (or a group holding
+one); \code{nestimate_single_sequence} along \code{"phase"} for a network or data
+resting on one sequence when \code{iter > 0};
 \code{nestimate_not_markov} for a network that is not a transition network;
 \code{nestimate_bad_input} for an unknown, non-numeric or constant covariate,
 a covariate that varies within a concatenated sequence, bad \code{states}, a

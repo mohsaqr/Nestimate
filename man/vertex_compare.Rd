@@ -34,7 +34,8 @@ same statistics: a mismatch, such as a directed network's \code{reciprocity}
 against an undirected network, or two precomputed results with different
 \code{statistics}, raises an error rather than comparing a subset. A \code{tna}
 model (package tna) is first rebuilt as a network from its own sequences
-(see \code{\link[=as_netobject]{as_netobject()}}). For the \code{print()} and \code{plot()} methods, \code{x} is a
+(see \code{\link[=as_netobject]{as_netobject()}}). A latency network raises an error of class
+\code{nestimate_latency_resampling}. For the \code{print()} and \code{plot()} methods, \code{x} is a
 \code{net_vertex_comparison} result.}
 
 \item{iter}{The number of bootstrap replicates, at least 2. Default

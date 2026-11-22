@@ -46,8 +46,9 @@ from the values: a scaled or relative network is recounted from its
 data. An association network, or any other network
 whose counts cannot be recovered, raises an error of class
 \code{nestimate_bad_input}; a matrix of probabilities raises an error, and
-so does a network of one state (class \code{nestimate_bad_input}). A
-\code{netobject_group} gives one result per group. For the \code{print()} and
+so does a network of one state or with no observed transition (class
+\code{nestimate_bad_input}). A \code{netobject_group}, or a \code{group_tna} (read as
+the networks it converts to), gives one result per group. For the \code{print()} and
 \code{plot()} methods: an \code{entropy_bayes()} result; \code{print()} also takes a
 group result.}
 
@@ -88,8 +89,8 @@ posterior mean contribution. Default \code{25}.}
 \code{"Bayesian edge entropy contributions"}.}
 }
 \value{
-A \code{net_entropy_bayes} object, or for a \code{netobject_group} a
-\code{net_entropy_bayes_group}: a named list of them, one per group.
+A \code{net_entropy_bayes} object, or for a \code{netobject_group} (or a
+\code{group_tna}) a \code{net_entropy_bayes_group}: a named list of them, one per group.
 \code{print()} shows the posterior mean and credible interval of the entropy
 rate, stationary entropy and redundancy, and how many edges are
 credible; for a group, each group's entropy rate. For a group,
@@ -137,7 +138,8 @@ stationary entropy, the redundancy, each state's branching entropy and
 stationary probability, and every edge's entropy contribution. Each is
 reported as a posterior mean with an equal-tailed credible interval. The
 counts are recovered from a network, a \code{tna} model, a count matrix or
-sequence data (see \code{x}); a \code{netobject_group} gives one result per group.
+sequence data (see \code{x}); a \code{netobject_group} or a \code{group_tna} gives one
+result per group.
 
 The practical purpose is to \strong{exclude unstable estimates}: an edge
 whose contribution rests on a handful of observations has a wide

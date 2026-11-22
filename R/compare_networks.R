@@ -67,7 +67,7 @@
 #'   `"permutation"`, `"bayes"` and `"bootstrap"`. Each fills the columns it
 #'   supports (see *Details*). The permutation and Bayesian tests need
 #'   networks that carry their data and share one estimation method, and the
-#'   Bayesian test needs `"relative"` or `"frequency"` networks; otherwise the call raises `nestimate_compare_test_unsupported`. Latency networks are not resampled: the permutation and bootstrap tests raise `nestimate_latency_resampling` on one.
+#'   Bayesian test needs `"relative"` or `"frequency"` networks; otherwise the call raises `nestimate_compare_test_unsupported`. The permutation and bootstrap tests raise `nestimate_latency_resampling` on a latency network.
 #' @param iter The number of permutations, posterior draws or bootstrap
 #'   replicates per pair, at least 2. Default `1000`.
 #' @param alpha The significance level of the permutation and bootstrap
@@ -682,8 +682,18 @@ compare_networks <- function(...,
 .cn_supports <- function(net, backend) {
   method <- .resolve_method_alias(net$method %||% "")
   has_data <- is.data.frame(net$data) && ncol(net$data) > 0L
+  # What permutation() reads: a transition network's sequences as a data
+  # frame, an association network's observations as a data frame or a
+  # matrix (cor, pcor, glasso and ising keep a numeric matrix).
+  count_method <- .resampling_method(method, net$params)
+  permutable <- if (count_method %in% c("relative", "frequency",
+                                        "co_occurrence")) {
+    has_data
+  } else {
+    (is.data.frame(net$data) || is.matrix(net$data)) && NCOL(net$data) > 0L
+  }
   switch(backend,
-    permutation = has_data,
+    permutation = permutable,
     bayes = has_data && method %in% c("relative", "frequency") &&
       !is.null(net$frequency_matrix),
     bootstrap = TRUE

@@ -148,10 +148,15 @@ is a smooth join, and every rim is drawn at 0.
 }
 \section{Errors}{
 
+\code{nestimate_latency_resampling} for a latency network (or a group holding
+one);
+\code{nestimate_single_sequence} for a network or data resting on one sequence
+when \code{iter > 0}, whose intervals would have zero width;
 \code{nestimate_not_markov} for a network that is not a transition network;
 \code{nestimate_bad_input} for \code{states} that do not name every state once,
-fewer than two states, input without sequences, or a network whose
-weights cannot be rebuilt from its sequences;
+fewer than two states, input without sequences (a network built from an
+edge list included), an mcml layer combined by other than a sum, or a
+network whose weights cannot be rebuilt from its sequences;
 \code{nestimate_landscape_unestimable} for a state that is never left or input
 with no observed transition.
 }

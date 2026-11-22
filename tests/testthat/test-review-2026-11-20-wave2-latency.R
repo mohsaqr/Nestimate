@@ -36,7 +36,7 @@ test_that("grouped and pooled latency networks agree under an alphabet, every sc
     build <- function(...) {
       suppressMessages(
         build_network(d, "latency", actor = "chat", action = "sender",
-                      time = "at", latency_scope = s,
+                      time = "at", latency_scope = s, latency_aggregate = "sum",
                       alphabet = c("A", "B", "C"), ...),
         classes = "nestimate_latency_fallback")
     }
@@ -86,7 +86,7 @@ test_that("a log with every time present is read as before (C13)", {
                   sender = c("A", "B", "A", "B", "C", "A", "A"),
                   at = c(0, 10, 70, 100, 2100, 2400, 2410))
   net <- build_network(d, "latency", actor = "chat", action = "sender",
-                       time = "at", latency_cap = "60s")
+                       time = "at", latency_cap = "60s", latency_aggregate = "sum")
   w <- function(t) 1 - 0.5 * min(t / 60, 1)
   expected <- matrix(0, 3, 3, dimnames = list(c("A", "B", "C"),
                                               c("A", "B", "C")))

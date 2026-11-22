@@ -224,9 +224,9 @@ each shuffle only re-sums them, which keeps a large \code{iter} fast; the
 networks' \code{scaling} and \code{threshold} are applied to every shuffled network
 as to the observed one. For the other methods the estimator is re-run on
 every shuffle (\code{cor} and \code{pcor} through a lighter direct path).
-Latency networks are not resampled: a network built with
-\code{method = "latency"} (alone or in a group) raises an error of class
-\code{nestimate_latency_resampling}.
+A network built with \code{method = "latency"} (alone or in a group) raises an
+error of class \code{nestimate_latency_resampling}; \code{\link[=bootstrap_network]{bootstrap_network()}} is the
+verb that resamples latency networks.
 For \code{glasso}, every shuffled network is estimated as \code{\link[=build_network]{build_network()}}
 estimated the observed ones, with \code{x}'s \code{params} (each sample's own
 lambda path, \code{nlambda}, \code{lambda.min.ratio}, \code{gamma},

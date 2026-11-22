@@ -52,7 +52,9 @@
 #' @param x The network: a `netobject` (from [build_network()] or any builder),
 #'   a `cograph_network`, or a square numeric weight matrix, with at least 3
 #'   nodes. A `tna` model (package tna) is first rebuilt as a network from its
-#'   own sequences (see [as_netobject()]). Other input raises an error. For `print()` and `plot()`: a `vertex_bootstrap()` result.
+#'   own sequences (see [as_netobject()]). A latency network raises an error
+#'   of class `nestimate_latency_resampling`.
+#'   Other input raises an error. For `print()` and `plot()`: a `vertex_bootstrap()` result.
 #' @param iter The number of bootstrap replicates, at least 2. Default
 #'   `1000`.
 #' @param ci_level The significance level of the confidence intervals, not
@@ -134,6 +136,9 @@ vertex_bootstrap <- function(x,
                              seed = NULL) {
   # a tna model or group_tna is rebuilt as a Nestimate network (R/tna_input.R)
   x <- .tna_input(x, "vertex_bootstrap()")
+  # latency networks are never resampled, nodes included (as in
+  # compare_networks(test = "bootstrap"), which runs this bootstrap)
+  .stop_latency_resampling(list(x), "vertex_bootstrap()")
   ci_method <- match.arg(ci_method)
   .assert(
     is.numeric(iter), length(iter) == 1, iter >= 2,
@@ -464,7 +469,8 @@ plot.net_vertex_bootstrap <- function(x, bins = 30, ...) {
 #'   against an undirected network, or two precomputed results with different
 #'   `statistics`, raises an error rather than comparing a subset. A `tna`
 #'   model (package tna) is first rebuilt as a network from its own sequences
-#'   (see [as_netobject()]). For the `print()` and `plot()` methods, `x` is a
+#'   (see [as_netobject()]). A latency network raises an error of class
+#'   `nestimate_latency_resampling`. For the `print()` and `plot()` methods, `x` is a
 #'   `net_vertex_comparison` result.
 #' @param ci_level The significance level of the normal-approximation
 #'   intervals for the differences: `0.05` (default) gives 95% intervals. It
@@ -539,6 +545,7 @@ vertex_compare <- function(x, y,
   # a tna model or group_tna is rebuilt as a Nestimate network (R/tna_input.R)
   x <- .tna_input(x, "vertex_compare()")
   y <- .tna_input(y, "vertex_compare()")
+  .stop_latency_resampling(list(x, y), "vertex_compare()")
   .assert(is.character(labels), length(labels) == 2, all(nzchar(labels)))
 
   if (!is.null(seed)) {
