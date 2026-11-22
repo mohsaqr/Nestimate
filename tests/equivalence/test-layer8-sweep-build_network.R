@@ -128,16 +128,22 @@ test_that("an empty trailing position column leaves every method's weights uncha
   # A wide table padded with one more all-missing position describes the same sequences.
   wide <- sweep_inputs$ragged
   padded <- cbind(wide, T10 = NA_character_)
+  # n-gram windows run over the table's columns (tna's definition), so an empty trailing column adds windows that
+  # contain the last observed pairs: a design decision (owner, 2026-11-22), not a defect
+  padding_reason <- "ngram (n_gram >= 3) counts change with trailing all-missing padding columns: windows run over columns, not over each sequence (inherited from tna)"
   invisible(lapply(method_grid, \(config) {
-    expect_reference(extract_transition_matrix(build_network(padded, method = config$method, params = config$params)),
-                     extract_transition_matrix(build_network(wide, method = config$method, params = config$params)),
-                     reference = "independent: the same sequences without the padding column",
-                     covers = "build_network()", quantity = sprintf("padding invariance, %s", config$label),
-                     tolerance = sw_tolerance,
-                     # n-gram windows run over the table's columns (tna's definition), so an empty trailing column
-                     # adds windows that contain the last observed pairs.
-                     defect = if (identical(config$method, "ngram") && (config$params$n_gram %||% 2L) >= 3L)
-                       "ngram (n_gram >= 3) counts change with trailing all-missing padding columns: windows run over columns, not over each sequence (inherited from tna)")
+    padded_weights <- extract_transition_matrix(build_network(padded, method = config$method, params = config$params))
+    wide_weights <- extract_transition_matrix(build_network(wide, method = config$method, params = config$params))
+    reference <- "independent: the same sequences without the padding column"
+    quantity <- sprintf("padding invariance, %s", config$label)
+    if (identical(config$method, "ngram") && (config$params$n_gram %||% 2L) >= 3L) {
+      expect_known_difference(padded_weights, wide_weights, reference = reference, covers = "build_network()",
+                              quantity = quantity, tolerance = sw_tolerance, reason = padding_reason,
+                              agrees_with = "tna's n-gram windows over the columns of the wide table")
+    } else {
+      expect_reference(padded_weights, wide_weights, reference = reference, covers = "build_network()",
+                       quantity = quantity, tolerance = sw_tolerance)
+    }
   }))
 })
 

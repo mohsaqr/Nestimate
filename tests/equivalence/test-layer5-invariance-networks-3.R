@@ -32,24 +32,26 @@ test_that("grouped networks follow renamed groups, and the order of the groups d
   }, names(group_map), unname(group_map))
   expect_reference(names(renamed_groups), unname(group_map[names(original)]), reference = li_ref("original group order, renamed"),
                    covers = "build_network()", quantity = "group order after renaming", tolerance = 0, authority = "internal")
-  order_defect <- "build_network(group = ) orders the groups by first appearance in the rows (unique()), so permuting rows reorders them and factor levels are ignored"
+  # a design decision (owner, 2026-11-22), not a defect
+  order_reason <- "build_network(group = ) orders the groups by first appearance in the rows (unique()), so permuting rows reorders them and factor levels are ignored"
+  order_agrees <- "the groups named in order of first appearance in the rows"
   reversed_rows <- build_network(grouped[rev(seq_len(nrow(grouped))), ], method = "relative", group = "g")
   Map(\(level) {
     li_expect_same_network(reversed_rows[[level]], original[[level]], route = "fit on the rows in their original order",
                            covers = "build_network()", quantity = sprintf("group %s, rows reversed", level),
                            drop_params = c("cols", "alphabet"))
   }, c("x", "y", "z"))
-  expect_reference(names(reversed_rows), names(original), reference = li_ref("fit on the rows in their original order"),
+  expect_known_difference(names(reversed_rows), names(original), reference = li_ref("fit on the rows in their original order"),
                    covers = "build_network()", quantity = "group order, rows reversed", tolerance = 0,
-                   authority = "internal", defect = order_defect)
+                   authority = "internal", reason = order_reason, agrees_with = order_agrees)
   levelled <- build_network(transform(grouped, g = factor(g, levels = c("z", "x", "y"))), method = "relative", group = "g")
-  expect_reference(names(levelled), c("z", "x", "y"), reference = li_ref("the declared factor levels"),
+  expect_known_difference(names(levelled), c("z", "x", "y"), reference = li_ref("the declared factor levels"),
                    covers = "build_network()", quantity = "group order of a factor with levels z, x, y", tolerance = 0,
-                   authority = "internal", defect = order_defect)
+                   authority = "internal", reason = order_reason, agrees_with = order_agrees)
   # downstream, the pair direction (and so the sign of every difference) follows that order
-  expect_reference(unique(edge_differences(compare_networks(reversed_rows), pair = c("x", "y"))$network_a),
+  expect_known_difference(unique(edge_differences(compare_networks(reversed_rows), pair = c("x", "y"))$network_a),
                    unique(edge_differences(compare_networks(original), pair = c("x", "y"))$network_a),
                    reference = li_ref("comparison of the fit on the rows in their original order"),
                    covers = c("compare_networks()", "build_network()"), quantity = "first network of the pair x, y, rows reversed",
-                   tolerance = 0, authority = "internal", defect = order_defect)
+                   tolerance = 0, authority = "internal", reason = order_reason, agrees_with = order_agrees)
 })

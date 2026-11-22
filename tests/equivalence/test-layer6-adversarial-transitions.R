@@ -238,22 +238,34 @@ test_that("a matrix of constant weights gives uniform rows, tied centralities an
 })
 
 test_that("start and end states frame every observed sequence, whatever its missing positions", {
-  boundary_defect <- paste("start = TRUE prepends the start state as a column, so a row whose first position is",
+  # a design decision (owner, 2026-11-22), not a defect
+  boundary_reason <- paste("start = TRUE prepends the start state as a column, so a row whose first position is",
                            "missing loses its start -> first-state transition, and a row with no observed state gets",
                            "a start -> end transition (R/estimators.R:99 and :106); tna's begin_state does the same")
+  boundary_agrees <- "the start state prepended as a column of the wide table (tna's begin_state)"
+  # a set whose first column holds a missing position shows the convention; the others must agree exactly
+  expect_boundary <- function(actual, expected, quantity, tolerance, shows) {
+    if (shows) {
+      expect_known_difference(actual, expected,
+                              reference = "independent: start before the first and end after the last observed state, base R",
+                              covers = "build_network()", quantity = quantity, tolerance = tolerance,
+                              reason = boundary_reason, agrees_with = boundary_agrees)
+    } else {
+      expect_reference(actual, expected,
+                       reference = "independent: start before the first and end after the last observed state, base R",
+                       covers = "build_network()", quantity = quantity, tolerance = tolerance)
+    }
+  }
   invisible(lapply(names(sets), \(name) {
     wide <- sets[[name]]
     counts <- adv_boundary_counts(wide)
     # the documented markers: start before each sequence, end in the cell after its last observed state
-    expect_reference(extract_transition_matrix(build_network(wide, method = "frequency", start = TRUE, end = TRUE)),
-                     counts, reference = "independent: start before the first and end after the last observed state, base R",
-                     covers = "build_network()", quantity = sprintf("frequency weights with start and end, %s", name),
-                     tolerance = exact, defect = if (anyNA(wide[[1L]])) boundary_defect)
-    expect_reference(extract_transition_matrix(build_network(wide, method = "relative", start = TRUE, end = TRUE)),
-                     adv_relative(counts),
-                     reference = "independent: start before the first and end after the last observed state, base R",
-                     covers = "build_network()", quantity = sprintf("relative weights with start and end, %s", name),
-                     tolerance = division, defect = if (anyNA(wide[[1L]])) boundary_defect)
+    expect_boundary(extract_transition_matrix(build_network(wide, method = "frequency", start = TRUE, end = TRUE)),
+                    counts, quantity = sprintf("frequency weights with start and end, %s", name),
+                    tolerance = exact, shows = anyNA(wide[[1L]]))
+    expect_boundary(extract_transition_matrix(build_network(wide, method = "relative", start = TRUE, end = TRUE)),
+                    adv_relative(counts), quantity = sprintf("relative weights with start and end, %s", name),
+                    tolerance = division, shows = anyNA(wide[[1L]]))
   }))
 })
 
