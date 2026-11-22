@@ -659,3 +659,31 @@ test_that("a first-order source with no surviving transition gets no rule", {
   expect_false(.hon_encode("D") %in% ls(rules))
   expect_true(.hon_encode("A") %in% ls(rules))
 })
+
+# BuildHON+ ExtendObservation (Saebi et al. 2020, Algorithm 1) extends the
+# suffix first when the source itself has no counts yet ("C[Source] = empty";
+# authors' code `len(Count[Source]) == 0`). Testing the suffix's count instead
+# left prefixes such as C -> D -> B without a distribution. The planted input
+# below is the one the authors' BuildRulesFastParameterFree.py was run on
+# (117 rules there; 112 before the fix).
+test_that("hon+ extends a prefix whose suffix was never extended", {
+  set.seed(1311)
+  paths <- lapply(seq_len(120L), \(i) Reduce(\(path, t) {
+    last <- paste(utils::tail(path, 2L), collapse = "")
+    c(path, if (last == "AB") "C" else if (last == "CB") "A" else
+      sample(c("A", "B", "C", "D"), 1L))
+  }, seq_len(10L), init = sample(c("A", "B", "C", "D"), 2L, replace = TRUE)))
+  fit <- build_hon(paths, max_order = 99L, min_freq = 2L, method = "hon+")
+  edges <- fit$ho_edges
+  expect_equal(nrow(edges), 117L)
+
+  cdb <- edges[edges$from == "C -> D -> B", ]
+  cdb <- cdb[order(cdb$to), ]
+  expect_equal(cdb$to, c("A", "B", "C", "D"))
+  expect_equal(cdb$count, c(7L, 7L, 5L, 2L))
+  expect_equal(cdb$probability, c(7, 7, 5, 2) / 21, tolerance = 1e-12)
+
+  accb <- edges[edges$path == "A -> C -> C -> B -> A", ]
+  expect_equal(accb$count, 7L)
+  expect_equal(accb$probability, 1)
+})

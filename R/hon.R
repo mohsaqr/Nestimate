@@ -455,12 +455,15 @@
   source <- .hon_decode(source_key)
   order <- length(source)
 
-  # Ensure the suffix order is already extended before going deeper
+  # Extend the suffix first when the suffix or the source itself has not been
+  # observed yet: Saebi et al. (2020) Algorithm 1, "not Source[1:] in C or
+  # C[Source] = empty" (the authors' code: len(Count[Source]) == 0). The source
+  # gets its starting points from the suffix's extension.
   if (order > 1L) {
     suffix_key <- .hon_encode(source[-1L])
-    if (is.null(count[[suffix_key]]) || length(count[[suffix_key]]) == 0L) {
-      .honp_extend_observation(suffix_key, source_to_ext, count, distr, # nocov start
-                               starting_points, trajectories, min_freq) # nocov end
+    if (is.null(count[[suffix_key]]) || length(count[[source_key]]) == 0L) {
+      .honp_extend_observation(suffix_key, source_to_ext, count, distr,
+                               starting_points, trajectories, min_freq)
     }
   }
 

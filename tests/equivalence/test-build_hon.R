@@ -151,20 +151,6 @@ ho_buildhon_check <- function(found, reference, variant, label, defect = NULL) {
                    quantity = sprintf("%s summary edges, %s", variant, label), tolerance = 1e-12, key = c("from", "to"), defect = defect)
 }
 
-# Declared defect (FINDINGS.md), shown by BuildHON+ on the planted input only. Saebi et al. (2020) Algorithm 1
-# ExtendObservation(Source) first extends Source[1:] when Source itself has not been observed yet ("not Source[1:] in
-# C or C[Source] empty"; the authors' code: `len(Count[Source]) == 0`). Nestimate's .honp_extend_observation() tests
-# the count of the suffix both times (`count[[suffix_key]]`), so a prefix whose suffix was never extended finds no
-# starting points: AddToRules() of A -> C -> C -> B -> A and C -> D -> B -> A then stores the prefixes
-# A -> C -> C -> B (7 observations, A 1.0) and C -> D -> B (21 observations) with no distribution, and the network
-# loses those nodes' 5 outgoing edges. With that one condition changed to the source (a probe, not committed),
-# Nestimate gives all 117 rules of the authors' code, maximum difference 0.
-ho_plus_prefix_defect <- paste(
-  "BuildHON+ ExtendObservation tests the suffix's count instead of the source's (Saebi et al. 2020 Alg. 1:",
-  "C[Source] empty), so prefixes whose suffix was never extended get no distribution: rules A -> C -> C -> B",
-  "(A 1.0) and C -> D -> B (A 0.333, B 0.333, C 0.238, D 0.095; 21 obs.) and their 5 network edges are missing",
-  "(planted input, 112 of 117 rules); FINDINGS.md")
-
 # A larger input with a planted second-order dependency (after A B comes C, after C B comes A): 120 paths of 12.
 ho_planted_input <- local({
   set.seed(1311)
@@ -172,8 +158,7 @@ ho_planted_input <- local({
     last <- paste(utils::tail(path, 2L), collapse = "")
     c(path, if (last == "AB") "C" else if (last == "CB") "A" else sample(c("A", "B", "C", "D"), 1L))
   }, seq_len(10L), init = sample(c("A", "B", "C", "D"), 2L, replace = TRUE)))
-  list(list(name = "planted second order, 120 paths", max_order = 3L, min_freq = 2L, trajectories = paths,
-            plus_defect = ho_plus_prefix_defect))
+  list(list(name = "planted second order, 120 paths", max_order = 3L, min_freq = 2L, trajectories = paths))
 })
 
 test_that("BuildHON rules and network equal the authors' BuildRules.py and BuildNetwork.py", {
@@ -189,7 +174,6 @@ test_that("BuildHON+ rules and network equal the authors' BuildRulesFastParamete
   skip_without_reference("reticulate")
   invisible(lapply(c(hon_plus_inputs, hon_inputs, ho_planted_input), \(input) {
     found <- build_hon(input$trajectories, max_order = 99L, min_freq = input$min_freq, method = "hon+")
-    ho_buildhon_check(found, ho_buildhon(input$trajectories, 99L, input$min_freq, plus = TRUE), "BuildHON+", input$name,
-                      defect = input$plus_defect)
+    ho_buildhon_check(found, ho_buildhon(input$trajectories, 99L, input$min_freq, plus = TRUE), "BuildHON+", input$name)
   }))
 })
