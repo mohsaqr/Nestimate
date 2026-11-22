@@ -128,3 +128,26 @@ test_that("as_networks() returns a netobject_group as it is: its networks equal 
                      quantity = sprintf("group %s correlation network", g), tolerance = 1e-12, key = c("from", "to"))
   }))
 })
+
+# Outside reference: psych::scoreItems() with the keys of the design (a3 reverse-keyed), the mean of the items
+# answered in each row (impute = "none"). psych reverses an item as min + max - x; with min = -max that is -x, the
+# sign correction of composites().
+test_that("mean and scaled cluster scores equal psych::scoreItems() with the design's keys", {
+  skip_without_reference("psych")
+  keys <- list(A = c("a1", "a2", "-a3"), B = c("b1", "b2", "b3"), C = c("c1", "c2"))
+  invisible(lapply(list(list(n = 200L, seed = 31L), list(n = 120L, seed = 32L)), \(input) {
+    data <- pc_items(input$n, input$seed)
+    invisible(lapply(c("mean", "scaled"), \(aggregation) {
+      items <- if (identical(aggregation, "scaled")) as.data.frame(base::scale(data)) else data
+      bound <- 10 * max(abs(items), na.rm = TRUE)
+      scored <- psych::scoreItems(keys, items, totals = FALSE, missing = TRUE, impute = "none",
+                                  min = -bound, max = bound)
+      fit <- suppressWarnings(build_mcml_pc(data, pc_clusters, aggregation = aggregation, method = "cor"))
+      expect_reference(data.frame(row = seq_len(nrow(data)), composites(fit)),
+                       data.frame(row = seq_len(nrow(data)), as.data.frame(unclass(scored$scores))),
+                       reference = "psych", covers = c("composites()", "composites.mcml_pc()"),
+                       quantity = sprintf("cluster score, %s, n = %d, psych scoreItems()", aggregation, input$n),
+                       tolerance = 1e-10, key = "row")
+    }))
+  }))
+})

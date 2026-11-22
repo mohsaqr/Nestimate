@@ -108,3 +108,34 @@ test_that("prepare_for_tna() reshapes a long log into each actor's actions in ti
                    reference = "independent: split() of the actions by actor in time order, base R",
                    covers = "prepare_for_tna()", quantity = "wide sequences of actors 1-40", tolerance = 0, key = "row")
 })
+
+test_that("long_to_wide() and prepare_for_tna() give the sequences of tna::prepare_data() ordered by time", {
+  skip_without_reference("tna")
+  reference <- suppressMessages(tna::prepare_data(regulation, actor = "Actor", action = "Action", order = "Time"))
+  sequences <- as.data.frame(reference$sequence_data)
+  expected <- cbind(Actor = as.integer(as.data.frame(reference$meta_data)$Actor),
+                    stats::setNames(sequences, paste0("V", seq_len(ncol(sequences)))))
+  expect_reference(long_to_wide(regulation, id_col = "Actor", time_col = "Time", action_col = "Action"), expected,
+                   reference = "tna", covers = "long_to_wide()",
+                   quantity = "wide sequences of group_regulation_long, actors 1-150, tna", tolerance = 0, key = "Actor")
+  log <- subset(regulation, Actor <= 40, select = c(Actor, Time, Action))
+  reference <- suppressMessages(tna::prepare_data(log, actor = "Actor", action = "Action", order = "Time"))
+  sequences <- as.data.frame(reference$sequence_data)
+  expect_reference(cbind(row = seq_len(nrow(sequences)), prepare_for_tna(log, type = "long")),
+                   cbind(row = seq_len(nrow(sequences)), stats::setNames(sequences, paste0("V", seq_len(ncol(sequences))))),
+                   reference = "tna", covers = "prepare_for_tna()", quantity = "wide sequences of actors 1-40, tna",
+                   tolerance = 0, key = "row")
+})
+
+test_that("wide_to_long() equals stats::reshape() of the wide table without its missing cells", {
+  invisible(lapply(c(201L, 202L), \(seed) {
+    wide <- tn_simulate(n_actors = 12L, n_states = 4L, seq_length = 10L, seed = seed, ragged = TRUE)
+    names(wide) <- paste0("V", seq_len(ncol(wide)))
+    stacked <- stats::reshape(cbind(id = seq_len(nrow(wide)), wide), direction = "long", varying = names(wide),
+                              v.names = "Action", timevar = "Time", idvar = "id")
+    expected <- subset(stacked, !is.na(Action), select = c(id, Time, Action))
+    expect_reference(wide_to_long(wide), expected, reference = "stats", covers = "wide_to_long()",
+                     quantity = sprintf("long table of 12 ragged sequences, seed %d, stats reshape()", seed),
+                     tolerance = 0, key = c("id", "Time"))
+  }))
+})

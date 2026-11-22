@@ -58,3 +58,26 @@ test_that("pattern effects equal one stats::glm() of the outcome on the selected
                    quantity = "logistic regression on three bigrams", tolerance = 1e-8, measure = "relative", key = "pattern",
                    note = "the event is the second outcome level, as glm() takes a factor")
 })
+
+test_that("n-gram occurrences, sequences, support and share equal stringdist::qgrams()", {
+  skip_without_reference("stringdist")
+  states <- sort(unique(stats::na.omit(unlist(regulation, use.names = FALSE))))
+  letters_of <- stats::setNames(LETTERS[seq_along(states)], states)
+  # Each sequence as one string, a letter per state; group_regulation has missing cells only at the end.
+  strings <- vapply(seq_len(nrow(regulation)), \(i) {
+    paste(letters_of[stats::na.omit(unlist(regulation[i, ], use.names = FALSE))], collapse = "")
+  }, character(1))
+  invisible(lapply(2:3, \(len) {
+    grams <- stringdist::qgrams(.list = as.list(strings), q = len)
+    pattern <- vapply(strsplit(colnames(grams), ""), \(g) paste(names(letters_of)[match(g, letters_of)], collapse = "->"),
+                      character(1))
+    occurrences <- colSums(grams)
+    containing <- colSums(grams > 0)
+    expected <- data.frame(pattern = pattern, occurrences = unname(occurrences), n_sequences = unname(containing),
+                           support = unname(containing) / nrow(regulation),
+                           proportion = unname(occurrences) / sum(occurrences))
+    expect_reference(sequence_patterns(regulation, type = "ngram", len = len, min_freq = 1, min_support = 0), expected,
+                     reference = "stringdist", covers = "sequence_patterns()",
+                     quantity = sprintf("%d-grams, stringdist qgrams()", len), tolerance = 1e-12, key = "pattern")
+  }))
+})

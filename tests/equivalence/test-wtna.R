@@ -64,3 +64,20 @@ test_that("sliding windows wider than 2 differ from tna 1.3.1, whose sliding rul
     })
   }, grid$seed, grid$window))
 })
+
+test_that("build_wtna() counts and probabilities equal tna::import_onehot() networks", {
+  skip_without_reference("tna")
+  codes <- c("A", "B", "C", "D")
+  invisible(Map(\(seed, window) {
+    data <- tn_wtna_data(seed)
+    imported <- tna::import_onehot(data, cols = codes, actor = "actor", window_size = window, window_type = "tumbling")
+    label <- sprintf("seed %d, window %d, non-overlapping", seed, window)
+    expect_reference(extract_transition_matrix(build_wtna(data, codes = codes, actor = "actor", window_size = window)),
+                     unclass(tna::ftna(imported)$weights), reference = "tna", covers = "build_wtna()",
+                     quantity = paste("transition counts,", label), tolerance = 1e-10)
+    expect_reference(extract_transition_matrix(build_wtna(data, codes = codes, actor = "actor", window_size = window,
+                                                          type = "relative")),
+                     unclass(tna::tna(imported)$weights), reference = "tna", covers = "build_wtna()",
+                     quantity = paste("transition probabilities,", label), tolerance = 1e-10)
+  }, c(3L, 17L, 3L, 17L), c(2L, 2L, 3L, 3L)))
+})

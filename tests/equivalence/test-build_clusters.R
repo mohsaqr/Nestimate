@@ -26,7 +26,7 @@ test_that("dissimilarities, PAM and hierarchical partitions equal tna::cluster_d
   invisible(lapply(c("hamming", "qgram", "cosine", "jaccard"), \(metric) {
     expect_reference(sq_pairs(build_clusters(regulation, k = 2, dissimilarity = metric, q = 2L)$distance),
                      sq_pairs(tna::cluster_data(regulation, k = 2, dissimilarity = metric, q = 2)$distance),
-                     reference = "tna", covers = "build_clusters()", quantity = sprintf("%s dissimilarity", metric),
+                     reference = "tna", covers = "build_clusters()", quantity = sprintf("%s dissimilarity, group_regulation", metric),
                      tolerance = 1e-10, key = c("i", "j"))
   }))
   invisible(lapply(c(0.5, 2), \(lambda) {

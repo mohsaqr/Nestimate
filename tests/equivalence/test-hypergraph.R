@@ -74,9 +74,39 @@ test_that("edge sizes and edge adjacency equal HyperG", {
     reference <- HyperG::hypergraph_from_incidence_matrix(hg_incidence(memberships))
     label <- sprintf("%d people, %d groups", input$n_people, input$n_groups)
     expect_reference(measures$edge_sizes, as.vector(HyperG::hdegree(reference)), reference = "HyperG",
-                     covers = "hypergraph_measures()", quantity = sprintf("edge size, %s", label), tolerance = 0)
+                     covers = "hypergraph_measures()", quantity = sprintf("edge size, %s, HyperG", label), tolerance = 0)
     expect_reference(unname(measures$edge_pairwise_overlap), unname(as.matrix(HyperG::hadjacency(reference))),
                      reference = "HyperG", covers = "hypergraph_measures()",
                      quantity = sprintf("edge pairwise overlap, %s", label), tolerance = 0)
+  }))
+})
+
+# Outside reference: igraph's bipartite graph of the memberships (people and groups), its degrees and its
+# projection onto the people, with the number of shared groups as the edge multiplicity.
+test_that("the incidence matrix, node degrees and clique expansion equal igraph's bipartite graph", {
+  skip_without_reference("igraph")
+  invisible(lapply(inputs, \(input) {
+    memberships <- hg_memberships(input$n_people, input$n_groups, input$max_size, input$seed)
+    hypergraph <- bipartite_groups(memberships, player = "person", group = "group")
+    pairs <- unique(subset(memberships, select = c(person, group)))
+    graph <- igraph::graph_from_data_frame(pairs, directed = FALSE)
+    igraph::V(graph)$type <- igraph::V(graph)$name %in% pairs$group
+    people <- sort(unique(pairs$person))
+    groups <- sort(unique(pairs$group))
+    biadjacency <- unclass(as.matrix(igraph::as_biadjacency_matrix(graph)))[people, groups]
+    label <- sprintf("%d people, %d groups, igraph", input$n_people, input$n_groups)
+    expect_reference(hypergraph$incidence[people, groups], biadjacency, reference = "igraph",
+                     covers = "bipartite_groups()", quantity = sprintf("incidence, %s", label), tolerance = 0)
+    degree <- igraph::degree(graph)
+    expect_reference(summary(hypergraph), data.frame(node = people, degree = unname(degree[people])),
+                     reference = "igraph", covers = c("bipartite_groups()", "summary.net_hypergraph()"),
+                     quantity = sprintf("node degree, %s", label), tolerance = 0, key = "node")
+    projection <- igraph::bipartite_projection(graph, multiplicity = TRUE, which = "false")
+    shared <- unclass(as.matrix(igraph::as_adjacency_matrix(projection, attr = "weight")))
+    expected <- matrix(0, length(people), length(people), dimnames = list(people, people))
+    expected[rownames(shared), colnames(shared)] <- shared
+    expect_reference(extract_transition_matrix(clique_expansion(hypergraph))[people, people], expected,
+                     reference = "igraph", covers = "clique_expansion()", quantity = sprintf("shared groups, %s", label),
+                     tolerance = 0)
   }))
 })

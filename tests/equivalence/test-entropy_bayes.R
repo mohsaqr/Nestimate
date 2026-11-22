@@ -122,3 +122,45 @@ test_that("a grouped network gives each group's posterior (Monte Carlo summary)"
                      tolerance = 4 * stats::sd(reference[1L, ]) * sqrt(2 / eb_draws), key = c("group", "quantity"))
   }))
 })
+
+# The same posterior simulated with gtools::rdirichlet() rows: chain-level entropy rate and per-edge contributions
+# (stationary distribution from eigen()), in bits.
+eb_gtools_reference <- function(counts, prior, draws, seed) {
+  sample <- out_dirichlet_draws(counts + prior, draws, seed)
+  vapply(seq_len(draws), \(d) {
+    p <- sample[d, , ]
+    leading <- eigen(t(p))$vectors[, 1L]
+    stationary <- Re(leading) / sum(Re(leading))
+    c(entropy_rate = sum(stationary * -rowSums(p * log2(p))), as.vector(-stationary * p * log2(p)))
+  }, numeric(1L + length(counts)))
+}
+
+test_that("per-edge contributions and group entropy rates equal a gtools::rdirichlet() simulation (Monte Carlo summary)", {
+  skip_without_reference("gtools")
+  reference <- eb_gtools_reference(eb_counts, prior = 0.5, draws = eb_draws, seed = 97L)
+  # 4 standard errors of the difference of two independent means of eb_draws draws each.
+  tolerance <- 4 * apply(reference, 1L, stats::sd) * sqrt(2 / eb_draws)
+  edges <- summary(entropy_bayes(eb_counts, prior = 0.5, draws = eb_draws, seed = 22L))
+  cells <- expand.grid(from = eb_states, to = eb_states, stringsAsFactors = FALSE)
+  invisible(lapply(seq_len(nrow(cells)), \(i) {
+    expect_reference(subset(edges, from == cells$from[[i]] & to == cells$to[[i]], select = c(from, to, contribution)),
+                     data.frame(from = cells$from[[i]], to = cells$to[[i]], contribution = mean(reference[1L + i, ])),
+                     reference = "gtools", covers = "summary.net_entropy_bayes()",
+                     quantity = sprintf("Monte Carlo summary: contribution mean %s -> %s, gtools", cells$from[[i]],
+                                        cells$to[[i]]),
+                     tolerance = tolerance[[1L + i]], key = c("from", "to"))
+  }))
+  wide <- tn_simulate(n_actors = 60L, n_states = 3L, seq_length = 15L, seed = 431L)
+  group <- rep(c("g1", "g2"), length.out = nrow(wide))
+  network <- build_network(cbind(wide, grp = group), method = "frequency", group = "grp")
+  found <- summary(entropy_bayes(network, prior = 0.5, draws = eb_draws, seed = 4L))
+  invisible(lapply(c("g1", "g2"), \(g) {
+    group_reference <- eb_gtools_reference(tn_pair_counts(tn_sequences(wide[group == g, ])), prior = 0.5,
+                                           draws = eb_draws, seed = 96L)
+    expect_reference(subset(found, group == g & quantity == "entropy_rate", select = c(group, quantity, mean)),
+                     data.frame(group = g, quantity = "entropy_rate", mean = mean(group_reference[1L, ])),
+                     reference = "gtools", covers = "summary.net_entropy_bayes_group()",
+                     quantity = sprintf("Monte Carlo summary: entropy rate mean, group %s, gtools", g),
+                     tolerance = 4 * stats::sd(group_reference[1L, ]) * sqrt(2 / eb_draws), key = c("group", "quantity"))
+  }))
+})

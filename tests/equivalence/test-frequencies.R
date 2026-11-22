@@ -185,3 +185,117 @@ test_that("state_distribution() of a tna model counts the events of the sequence
                    reference = "independent: table of all events, base R", covers = "state_distribution.default()",
                    quantity = "state distribution of a tna model", tolerance = tolerance, key = "state")
 })
+
+# Outside references for the same counts: TraMineR (Gabadinho et al. 2011) for state frequencies, per-sequence
+# state counts and transition counts; tna for the transition networks.
+test_that("transition counts equal TraMineR::seqtrate(count = TRUE) and tna::ftna()", {
+  skip_without_reference(c("TraMineR", "tna"))
+  traminer <- unclass(TraMineR::seqtrate(out_seqdef(wide, states), count = TRUE))
+  dimnames(traminer) <- list(states, states)
+  frequency <- unclass(tna::ftna(wide)$weights)
+  expect_reference(unclass(frequencies(wide, format = "wide")), traminer, reference = "TraMineR",
+                   covers = "frequencies()", quantity = "transition counts, wide, TraMineR", tolerance = 0)
+  expect_reference(unclass(frequencies(tn_long(wide), action = "action", id = "actor", time = "time", format = "long")),
+                   frequency, reference = "tna", covers = "frequencies()", quantity = "transition counts, long, tna",
+                   tolerance = 0)
+  expect_reference(summary(frequencies(wide, format = "wide")),
+                   stats::setNames(out_edges(frequency, nonzero = TRUE), c("from", "to", "count")), reference = "tna",
+                   covers = "summary.nest_transition_counts()", quantity = "non-zero transition counts, tna",
+                   tolerance = 0, key = c("from", "to"))
+  expect_reference(extract_transition_matrix(withCallingHandlers(estimate_network(wide, method = "frequency"),
+                     deprecatedWarning = \(w) invokeRestart("muffleWarning"))), frequency, reference = "tna",
+                   covers = "estimate_network()", quantity = "frequency network of the deprecated wrapper, tna",
+                   tolerance = 0)
+  expect_reference(extract_transition_matrix(withCallingHandlers(estimate_network(wide, method = "relative"),
+                     deprecatedWarning = \(w) invokeRestart("muffleWarning"))), unclass(tna::tna(wide)$weights),
+                   reference = "tna", covers = "estimate_network()",
+                   quantity = "relative network of the deprecated wrapper, tna", tolerance = tolerance)
+})
+
+test_that("convert_sequence_format() counts and pairs equal TraMineR::seqistatd() and seqtrate()", {
+  skip_without_reference("TraMineR")
+  identified <- cbind(id = seq_len(nrow(wide)), wide)
+  per_sequence <- unclass(TraMineR::seqistatd(out_seqdef(wide, states)))
+  counts <- cbind(data.frame(id = seq_len(nrow(wide))), as.data.frame(matrix(as.integer(per_sequence), nrow(wide),
+                                                                              dimnames = list(NULL, states))))
+  expect_reference(convert_sequence_format(identified, id_col = "id", format = "frequency"), counts,
+                   reference = "TraMineR", covers = "convert_sequence_format()",
+                   quantity = "state counts per sequence, TraMineR", tolerance = 0, key = "id")
+  presence <- cbind(data.frame(id = seq_len(nrow(wide))), as.data.frame(matrix(1L * (per_sequence > 0), nrow(wide),
+                                                                                dimnames = list(NULL, states))))
+  expect_reference(convert_sequence_format(identified, id_col = "id", format = "onehot"), presence,
+                   reference = "TraMineR", covers = "convert_sequence_format()",
+                   quantity = "state presence per sequence, TraMineR", tolerance = 0, key = "id")
+  edgelist <- convert_sequence_format(identified, id_col = "id", format = "edgelist")
+  traminer <- unclass(TraMineR::seqtrate(out_seqdef(wide, states), count = TRUE))
+  dimnames(traminer) <- list(states, states)
+  expect_reference(unclass(table(factor(edgelist$from, levels = states), factor(edgelist$to, levels = states), dnn = NULL)),
+                   traminer, reference = "TraMineR", covers = "convert_sequence_format()",
+                   quantity = "pairs of the edge list format, TraMineR", tolerance = 0)
+})
+
+test_that("state frequencies and distributions equal TraMineR::seqstatf()", {
+  skip_without_reference(c("TraMineR", "tna"))
+  overall <- out_state_table(wide, states)
+  # state_frequencies() rounds the proportion to 4 decimals, as documented: the reference is rounded too.
+  expect_reference(state_frequencies(wide), transform(overall, proportion = round(proportion, 4)), reference = "TraMineR",
+                   covers = "state_frequencies()", quantity = "state frequencies, TraMineR", tolerance = 1e-12,
+                   key = "state")
+  expect_reference(state_distribution(build_tna(wide)), overall, reference = "TraMineR",
+                   covers = c("state_distribution()", "state_distribution.netobject()"),
+                   quantity = "state distribution of a network, TraMineR", tolerance = tolerance, key = "state")
+  expect_reference(state_distribution(tna::tna(wide)), overall, reference = "TraMineR",
+                   covers = "state_distribution.default()", quantity = "state distribution of a tna model, TraMineR",
+                   tolerance = tolerance, key = "state")
+  grDevices::pdf(NULL)
+  on.exit(grDevices::dev.off(), add = TRUE)
+  plotted <- plot_state_frequencies(build_tna(wide))
+  expect_reference(as.data.frame(plotted), overall, reference = "TraMineR", covers = "as.data.frame.state_freq()",
+                   quantity = "table of a state frequency plot, TraMineR", tolerance = tolerance, key = "state")
+  expect_reference(state_distribution(plotted), overall, reference = "TraMineR",
+                   covers = "state_distribution.state_freq()",
+                   quantity = "state distribution of a state frequency plot, TraMineR", tolerance = tolerance,
+                   key = "state")
+  group <- rep(c("a", "b"), length.out = nrow(wide))
+  per_group <- do.call(rbind, lapply(c("a", "b"), \(g) cbind(group = g, out_state_table(subset(wide, group == g), states))))
+  expect_reference(state_distribution(build_network(cbind(group = group, wide), method = "relative", group = "group")),
+                   subset(per_group, count > 0), reference = "TraMineR", covers = "state_distribution.netobject_group()",
+                   quantity = "state distribution per group, TraMineR", tolerance = tolerance, key = c("group", "state"))
+  # Per cluster: TraMineR's counts, each state's share among the events of its cluster's states.
+  clusters <- list(c1 = states[1:2], c2 = states[3:5])
+  per_cluster <- do.call(rbind, lapply(names(clusters), \(cluster) {
+    rows <- subset(overall, state %in% clusters[[cluster]])
+    data.frame(group = cluster, state = rows$state, count = rows$count, proportion = rows$count / sum(rows$count))
+  }))
+  fit <- build_mcml(wide, clusters = clusters)
+  expect_reference(state_distribution(fit), per_cluster, reference = "TraMineR", covers = "state_distribution.mcml()",
+                   quantity = "state distribution per cluster of an mcml, TraMineR counts", tolerance = tolerance,
+                   key = c("group", "state"))
+  expect_reference(state_distribution(as_htna(fit)), per_cluster, reference = "TraMineR",
+                   covers = "state_distribution.htna()",
+                   quantity = "state distribution per cluster of an htna, TraMineR counts", tolerance = tolerance,
+                   key = c("group", "state"))
+})
+
+test_that("as_htna() networks equal tna::tna() and tna::ftna() of the same sequences", {
+  skip_without_reference("tna")
+  clusters <- list(c1 = states[1:2], c2 = states[3:5])
+  expected <- unclass(tna::tna(wide)$weights)
+  expect_reference(extract_transition_matrix(as_htna(build_mcml(wide, clusters = clusters))), expected,
+                   reference = "tna", covers = c("as_htna()", "as_htna.mcml()"), quantity = "htna from an mcml, tna",
+                   tolerance = tolerance)
+  expect_reference(extract_transition_matrix(as_htna(wide, clusters = clusters)), expected, reference = "tna",
+                   covers = c("as_htna()", "as_htna.default()"), quantity = "htna from wide sequences, tna",
+                   tolerance = tolerance)
+  # The frequency networks of a mixed Markov fit are tna's count networks of the sequences assigned to each cluster
+  # (the assignment is an input here; the EM is compared in test-build_mmm.R).
+  fit <- cluster_mmm(as_htna(wide, clusters = clusters), k = 2, seed = 1, smooth = 0, tol = 1e-12, max_iter = 2000L)
+  frequency <- as_htna(fit, method = "frequency")
+  invisible(lapply(seq_len(2L), \(cluster) {
+    assigned <- subset(wide, fit$assignments == cluster)
+    expect_reference(out_edges(extract_transition_matrix(frequency[[cluster]]), nonzero = TRUE),
+                     out_edges(tna::ftna(assigned)$weights, nonzero = TRUE), reference = "tna",
+                     covers = "as_htna.net_mmm()", quantity = sprintf("cluster %d, frequency, tna", cluster),
+                     tolerance = 0, key = c("from", "to"))
+  }))
+})

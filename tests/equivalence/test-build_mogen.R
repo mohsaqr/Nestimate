@@ -102,3 +102,64 @@ test_that("path counts and first-order transitions equal counts of consecutive s
                      quantity = sprintf("%s: first-order transitions", input$name), tolerance = 5e-5, key = "path")
   }))
 })
+
+# The trajectories as a wide table, NA after each one's end (the input tna takes).
+ho_wide <- function(trajectories) {
+  width <- max(lengths(trajectories))
+  as.data.frame(do.call(rbind, lapply(trajectories, \(s) c(s, rep(NA_character_, width - length(s))))))
+}
+
+test_that("path counts and first-order transitions equal tna::ftna() and tna::tna()", {
+  skip_without_reference("tna")
+  invisible(lapply(ho_mogen_inputs(), \(input) {
+    wide <- ho_wide(input$trajectories)
+    counts <- out_edges(tna::ftna(wide)$weights, nonzero = TRUE)
+    probabilities <- out_edges(tna::tna(wide)$weights, nonzero = TRUE)
+    bigrams <- data.frame(path = paste(counts$from, counts$to, sep = " -> "), count = counts$weight,
+                          proportion = counts$weight / sum(counts$weight))
+    # path_counts() and mogen_transitions() round proportions and probabilities to four decimals.
+    expect_reference(subset(path_counts(input$trajectories, k = 2L), select = c(path, count, proportion)), bigrams,
+                     reference = "tna", covers = "path_counts()", quantity = sprintf("%s: bigram counts, tna", input$name),
+                     tolerance = 5e-5, key = "path")
+    transitions <- data.frame(path = paste(probabilities$from, probabilities$to, sep = " -> "),
+                              count = counts$weight, probability = probabilities$weight)
+    expect_reference(subset(mogen_transitions(build_mogen(input$trajectories, max_order = 1L), order = 1L),
+                            select = c(path, count, probability)), transitions, reference = "tna",
+                     covers = "mogen_transitions()", quantity = sprintf("%s: first-order transitions, tna", input$name),
+                     tolerance = 5e-5, key = "path")
+  }))
+})
+
+test_that("bigram counts equal the edge weights of pathpy's first-order network", {
+  skip_without_reference("reticulate")
+  reticulate::py_run_file(reference_data("data/pathpy_mogen.py"))
+  invisible(lapply(ho_mogen_inputs(), \(input) {
+    paths <- reticulate::py$`_paths_from_sequences`(input$trajectories)
+    edges <- reticulate::py$hon_edges_df(paths, 1L)
+    pathpy <- data.frame(path = vapply(edges, \(e) paste(e[[1L]], e[[2L]], sep = " -> "), character(1)),
+                         count = vapply(edges, \(e) e[[3L]], numeric(1)))
+    expect_reference(subset(path_counts(input$trajectories, k = 2L), select = c(path, count)), pathpy,
+                     reference = "pathpy", covers = "path_counts()",
+                     quantity = sprintf("%s: bigram counts, pathpy first-order network", input$name), tolerance = 0,
+                     key = "path")
+  }))
+})
+
+test_that("the summary's log-likelihoods equal pathpy's multi-order model of each maximal order", {
+  skip_without_reference("reticulate")
+  reticulate::py_run_file(reference_data("data/pathpy_mogen.py"))
+  invisible(lapply(ho_mogen_inputs(), \(input) {
+    found <- build_mogen(input$trajectories, max_order = input$max_order)
+    paths <- reticulate::py$`_paths_from_sequences`(input$trajectories)
+    orders <- seq_len(input$max_order)
+    expected <- data.frame(order = orders,
+                           loglik = vapply(orders, \(k) reticulate::py$mogen_cumulative_likelihood(paths, as.integer(k)),
+                                           numeric(1)))
+    printed <- utils::capture.output(table <- summary(found))
+    # summary() rounds the log-likelihood to two decimals; its rows are the orders 0 to max_order.
+    found_table <- subset(cbind(order = 0:input$max_order, subset(table, select = loglik)), order >= 1L)
+    expect_reference(found_table, expected, reference = "pathpy",
+                     covers = "summary.net_mogen()", quantity = sprintf("%s: summary log-likelihoods, pathpy", input$name),
+                     tolerance = 5e-3, key = "order")
+  }))
+})

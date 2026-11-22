@@ -42,5 +42,9 @@ test_that("mixed graphical model weights equal mgm::mgm()", {
     expect_reference(extract_transition_matrix(network), expected, reference = "mgm", covers = "build_network()",
                      quantity = sprintf("edge weight, seed %d, %d Gaussian, %d categorical", input$seed, input$p_g, input$p_c),
                      tolerance = 1e-10, note = "build_network(method = \"mgm\")")
+    alias <- build_mgm(data, lambdaGam = 0.25, ruleReg = "AND", params = list(type = type, level = level, threshold = "LW"))
+    expect_reference(extract_transition_matrix(alias), expected, reference = "mgm", covers = "build_mgm()",
+                     quantity = sprintf("edge weight, seed %d, %d Gaussian, %d categorical", input$seed, input$p_g, input$p_c),
+                     tolerance = 1e-10, note = "build_mgm()")
   }))
 })

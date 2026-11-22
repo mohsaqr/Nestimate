@@ -40,3 +40,24 @@ test_that("triangle hyperedges equal the closed triples found with combn()", {
                      quantity = sprintf("triangles, %s network", name), tolerance = 0, key = "triangle")
   }))
 })
+
+# Outside reference: igraph::triangles() lists the triangles of a graph with its own enumeration (not the clique
+# search build_hypergraph() calls).
+test_that("triangle hyperedges equal igraph::triangles()", {
+  skip_without_reference("igraph")
+  invisible(lapply(names(networks), \(name) {
+    edges <- networks[[name]]
+    n <- max(edges)
+    adjacency <- matrix(0, n, n, dimnames = list(paste0("n", seq_len(n)), paste0("n", seq_len(n))))
+    adjacency[edges] <- 1
+    adjacency <- pmax(adjacency, t(adjacency))
+    graph <- igraph::graph_from_adjacency_matrix(adjacency, mode = "undirected")
+    corners <- matrix(igraph::V(graph)$name[as.integer(igraph::triangles(graph))], ncol = 3L, byrow = TRUE)
+    triangles <- apply(corners, 1L, \(t) paste(sort(t), collapse = ","))
+    found <- build_hypergraph(adjacency, method = "clique", p = 1, include_pairwise = FALSE)
+    expect_reference(data.frame(triangle = sort(hg_hyperedges(found$incidence)), present = 1),
+                     data.frame(triangle = sort(triangles), present = 1), reference = "igraph",
+                     covers = "build_hypergraph()", quantity = sprintf("triangles, %s network, igraph", name),
+                     tolerance = 0, key = "triangle")
+  }))
+})

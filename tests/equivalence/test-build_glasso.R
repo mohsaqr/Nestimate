@@ -56,14 +56,14 @@ test_that("the lambda path, the selected lambda and the network equal qgraph::EB
                      quantity = sprintf("lambda path, n = %d, p = %d", input$n, input$p), tolerance = 1e-12,
                      measure = "relative")
     expect_reference(network$lambda_selected, reference$lambda[which.min(reference$ebic)], reference = "qgraph",
-                     covers = "build_glasso()", quantity = sprintf("selected lambda, n = %d, p = %d", input$n, input$p),
+                     covers = "build_glasso()", quantity = sprintf("selected lambda, n = %d, p = %d, qgraph", input$n, input$p),
                      tolerance = 1e-12, measure = "relative")
     expected <- reference$optnet
     diag(expected) <- 0
     # qgraph runs glasso at its default thr = 1e-4, so its partial correlations are within about 1e-4 of the
     # optimum (the tolerance of the original test); glasso at thr = 1e-12 above is the tight comparison.
     expect_reference(extract_transition_matrix(network), expected, reference = "qgraph", covers = "build_glasso()",
-                     quantity = sprintf("partial correlation, n = %d, p = %d", input$n, input$p), tolerance = 1e-4)
+                     quantity = sprintf("partial correlation, n = %d, p = %d, qgraph", input$n, input$p), tolerance = 1e-4)
   }))
 })
 
@@ -73,7 +73,7 @@ test_that("where qgraph's thr = 1e-4 leaves an edge at lambda_max, its selection
   network <- build_glasso(data)
   reference <- qgraph::EBICglasso(stats::cor(data), n = 200L, gamma = 0.5, returnAllResults = TRUE)
   expect_known_difference(network$lambda_selected, reference$lambda[which.min(reference$ebic)], reference = "qgraph",
-                          covers = "build_glasso()", quantity = "selected lambda, weak structure", tolerance = 1e-12,
+                          covers = "build_glasso()", quantity = "selected lambda, weak structure, qgraph", tolerance = 1e-12,
                           measure = "relative",
                           reason = paste("At lambda_max = max|S_ij| the exact solution is the empty network; qgraph's glasso",
                                          "(thr = 1e-4) leaves one edge there, adds its EBIC penalty and selects a smaller",

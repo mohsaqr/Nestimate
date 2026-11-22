@@ -39,3 +39,31 @@ test_that("posterior means, standard deviations, intervals and tail masses equal
                      tolerance = 1e-10, key = c("from", "to"))
   }))
 })
+
+# Outside reference: the Dirichlet posterior simulated with gtools::rdirichlet() (seeded Monte Carlo, three seeds).
+# Tolerances fixed before the run at 4 standard errors of the Monte Carlo estimate: a mean 4 sd / sqrt(draws) with
+# the largest SD of the reference's draws, a probability 4 sqrt(0.25 / draws).
+test_that("posterior means and tail masses equal a gtools::rdirichlet() simulation of the posterior", {
+  skip_without_reference("gtools")
+  draws <- 50000L
+  counts <- tn_pair_counts(tn_sequences(wide))
+  weights <- tn_row_normalise(counts)
+  band <- c(0.75, 1.25)
+  invisible(lapply(c(411L, 412L, 413L), \(seed) {
+    sample <- out_dirichlet_draws(counts + 0.5, draws, seed)
+    means <- apply(sample, c(2L, 3L), mean)
+    outside <- apply(sweep(sample, c(2L, 3L), min(band) * weights, `<`) | sweep(sample, c(2L, 3L), max(band) * weights, `>`),
+                     c(2L, 3L), mean)
+    dimnames(means) <- dimnames(outside) <- dimnames(counts)
+    cells <- which(weights > 0, arr.ind = TRUE)
+    expected <- data.frame(from = rownames(counts)[cells[, "row"]], to = colnames(counts)[cells[, "col"]],
+                           mean = means[cells], p_value = outside[cells])
+    found <- summary(certainty(build_tna(wide), prior = 0.5, ci_level = 0.05, consistency_range = band))
+    expect_reference(found, subset(expected, select = c(from, to, mean)), reference = "gtools", covers = "certainty()",
+                     quantity = sprintf("posterior mean, reference seed %d, gtools", seed),
+                     tolerance = 4 * max(apply(sample, c(2L, 3L), stats::sd)) / sqrt(draws), key = c("from", "to"))
+    expect_reference(found, subset(expected, select = c(from, to, p_value)), reference = "gtools",
+                     covers = "certainty()", quantity = sprintf("posterior mass outside the band, reference seed %d, gtools", seed),
+                     tolerance = 4 * sqrt(0.25 / draws), key = c("from", "to"))
+  }))
+})

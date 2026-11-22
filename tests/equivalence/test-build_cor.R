@@ -39,7 +39,7 @@ test_that("partial correlation networks equal -K_ij / sqrt(K_ii K_jj) of the inv
     expected <- psy_partial(solve(stats::cor(data)))
     expect_reference(extract_transition_matrix(build_pcor(data)), expected,
                      reference = "independent: partial correlations of the inverse correlation matrix, base R",
-                     covers = "build_pcor()", quantity = sprintf("partial correlation, n = %d, p = %d", input$n, input$p),
+                     covers = "build_pcor()", quantity = sprintf("partial correlation, n = %d, p = %d, inverse correlation matrix", input$n, input$p),
                      tolerance = 1e-10)
   }))
 })

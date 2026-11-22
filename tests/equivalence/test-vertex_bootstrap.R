@@ -55,3 +55,31 @@ test_that("vertex_compare() reports both observed statistics and their differenc
                    covers = c("vertex_compare()", "summary.net_vertex_comparison()"),
                    quantity = "observed, sparse vs dense", tolerance = 1e-12, key = "statistic")
 })
+
+# igraph's graph of the off-diagonal transition probabilities: density and mean edge weight.
+rs_igraph_statistics <- function(sequences) {
+  sequences <- as.matrix(sequences)
+  states <- sort(unique(as.vector(sequences)))
+  weights <- unclass(prop.table(table(factor(as.vector(sequences[, -ncol(sequences)]), states),
+                                      factor(as.vector(sequences[, -1L]), states)), 1L))
+  graph <- igraph::graph_from_adjacency_matrix(weights, mode = "directed", weighted = TRUE, diag = FALSE)
+  c(density = igraph::edge_density(graph, loops = FALSE), mean_weight = mean(igraph::E(graph)$weight))
+}
+
+test_that("observed density and mean weight of both summaries equal igraph", {
+  skip_without_reference("igraph")
+  x <- rs_igraph_statistics(sparse)
+  y <- rs_igraph_statistics(dense)
+  boot <- vertex_bootstrap(build_network(dense, method = "relative"), iter = 20L, seed = 1)
+  expect_reference(subset(summary(boot), statistic %in% names(y)), data.frame(statistic = names(y), observed = unname(y)),
+                   reference = "igraph",
+                   covers = "summary.net_vertex_bootstrap()", quantity = "observed density and mean weight, igraph",
+                   tolerance = 1e-12, key = "statistic")
+  found <- vertex_compare(build_network(sparse, method = "relative"), build_network(dense, method = "relative"),
+                          iter = 20L, seed = 1)
+  expect_reference(subset(summary(found), statistic %in% names(x)),
+                   data.frame(statistic = names(x), observed_x = unname(x), observed_y = unname(y), diff = unname(x - y)),
+                   reference = "igraph", covers = c("vertex_compare()", "summary.net_vertex_comparison()"),
+                   quantity = "observed density and mean weight, sparse vs dense, igraph", tolerance = 1e-12,
+                   key = "statistic")
+})

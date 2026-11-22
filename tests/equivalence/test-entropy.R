@@ -122,3 +122,30 @@ test_that("group summaries of transition_entropy() and chain_structure() equal m
                    states, reference = "markovchain", covers = c("chain_structure()", "summary.chain_structure_group()"),
                    quantity = "persistence and stationary probability per group", tolerance = 5e-5, key = c("group", "state"))
 })
+
+test_that("windowed entropies equal H(X, Y) - H(X) by entropy::entropy.plugin()", {
+  skip_without_reference("entropy")
+  invisible(lapply(c(1205L, 1206L), \(seed) {
+    sequence <- unlist(ho_sequences(1L, 601L, ho_stochastic(4L, 1204L), seed), use.names = FALSE)
+    found <- entropy_trajectory(data.frame(actor = "a", action = sequence), action = "action", actor = "actor",
+                                window = 100L, step = 50L)
+    from <- utils::head(sequence, -1L)
+    to <- utils::tail(sequence, -1L)
+    starts <- seq(1L, length(from) - 99L, by = 50L)
+    entropy <- vapply(starts, \(start) {
+      window <- start + 0:99
+      entropy::entropy.plugin(table(from[window], to[window]), unit = "log2") -
+        entropy::entropy.plugin(table(from[window]), unit = "log2")
+    }, numeric(1))
+    expect_reference(subset(found$trajectory, select = c(window, entropy)),
+                     data.frame(window = seq_along(starts), entropy = entropy), reference = "entropy",
+                     covers = "entropy_trajectory()", quantity = sprintf("window entropies, seed %d, entropy", seed),
+                     tolerance = 1e-10, key = "window")
+    expect_reference(summary(found),
+                     data.frame(group = "all", windows = length(entropy), mean = mean(entropy), sd = stats::sd(entropy),
+                                min = min(entropy), max = max(entropy), first = entropy[[1L]],
+                                last = utils::tail(entropy, 1L), change = utils::tail(entropy, 1L) - entropy[[1L]]),
+                     reference = "entropy", covers = "summary.net_entropy_trajectory()",
+                     quantity = sprintf("trajectory summary, seed %d, entropy", seed), tolerance = 1e-10, key = "group")
+  }))
+})

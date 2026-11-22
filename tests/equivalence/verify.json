@@ -120,12 +120,15 @@
       "url": "https://pypi.org/project/hypernetx/"
     },
     "cograph": {
-      "authority": "open-source"
+      "authority": "internal"
     },
     "TDA": {
       "authority": "open-source"
     },
     "boot": {
+      "authority": "open-source"
+    },
+    "gtools": {
       "authority": "open-source"
     }
   },
@@ -137,6 +140,12 @@
       "build_ftna()",
       "build_cna()",
       "build_atna()",
+      "build_ngram()",
+      "build_gap()",
+      "build_reverse()",
+      "build_latency()",
+      "build_wtna()",
+      "build_mgm()",
       "extract_transition_matrix()",
       "extract_initial_probs()",
       "extract_edges()",
@@ -365,10 +374,18 @@
       "summary.net_entropy_bayes()",
       "summary.net_entropy_bayes_group()",
       "mosaic_test.netobject_group()",
-      "mosaic_test.htna()"
+      "mosaic_test.htna()",
+      "as_tna()",
+      "as_tna.default()",
+      "as_tna.mcml()",
+      "as_netobject()",
+      "as_netobject.cograph_network()",
+      "as_netobject.default()",
+      "as_netobject.netobject()"
     ],
     "not_numeric": {
       "$.net_nct()": "field access on an nct() result: returns the stored element and raises a classed error for the names M and S that were removed",
+      "predictability.default()": "passes a tna model, group_tna or bare cograph_network to the netobject methods and raises a classed error (nestimate_bad_input) for any other input; returns no numbers of its own",
       "net_prune.default()": "raises a classed error (nestimate_bad_input) for an input that is not a network; returns no numbers",
       "net_pruning_details.default()": "raises a classed error (nestimate_bad_input) for an input that is not a network; returns no numbers",
       "net_deprune.default()": "raises a classed error (nestimate_bad_input) for an input that is not a network; returns no numbers",
@@ -411,14 +428,6 @@
       "session_ids.netobject()": "returns the session identifiers of the sequences",
       "mark_first_state()": "adds a start-state label to the sequences; labels only",
       "mark_terminal_state()": "adds an end-state label to the sequences; labels only",
-      "as_tna()": "converts a network object to a tna model, carrying its weights unchanged; computes nothing",
-      "as_tna.default()": "converts a network object to a tna model, carrying its weights unchanged; computes nothing",
-      "as_tna.mcml()": "converts a network object to a tna model, carrying its weights unchanged; computes nothing",
-      "as_netobject()": "converts another network object to a netobject, carrying its weights unchanged; computes nothing",
-      "as_netobject.cograph_network()": "converts another network object to a netobject, carrying its weights unchanged; computes nothing",
-      "as_netobject.default()": "converts another network object to a netobject, carrying its weights unchanged; computes nothing",
-      "as_netobject.netobject()": "converts another network object to a netobject, carrying its weights unchanged; computes nothing",
-      "as_netobject.psychnet()": "converts another network object to a netobject, carrying its weights unchanged; computes nothing",
       "as_netdifference.default()": "raises a classed error (nestimate_bad_input) for an object that cannot be a difference network; returns no numbers",
       "pathways()": "returns the higher-order pathways of a model as character strings (\"A B -> C\") for plotting",
       "pathways.net_association_rules()": "returns pathways as character strings for plotting; the numbers behind them are compared through the model's own function",
@@ -439,6 +448,8 @@
       "mosaic_plot.table()": "draws a mosaic plot (ggplot); the residuals it shades are those mosaic_test() returns and the tests compare",
       "cluster_diagnostics.default()": "converts a tna model, group_tna or bare cograph_network to a native network and dispatches again; none of these carries a clustering, so every input it accepts ends in the error of class nestimate_bad_input (as ?cluster_diagnostics documents for any other object): it returns no numbers"
     },
-    "not_yet": {}
+    "not_yet": {
+      "as_netobject.psychnet()": "converts a psychnets result (the owner's package, not loaded by this suite) to a netobject, carrying its weights; returns numbers that are not yet compared"
+    }
   }
 }

@@ -66,16 +66,16 @@ test_that("relative, frequency, co-occurrence and attention weights equal tna", 
     wide <- inputs[[name]]
     expect_reference(extract_transition_matrix(build_tna(wide)), unclass(tna::tna(wide)$weights), reference = "tna",
                      covers = c("build_tna()", "build_network()", "extract_transition_matrix()"),
-                     quantity = sprintf("relative weights, %s", name), tolerance = tolerance)
+                     quantity = sprintf("relative weights, %s, tna", name), tolerance = tolerance)
     expect_reference(extract_initial_probs(build_tna(wide)), tna::tna(wide)$inits, reference = "tna",
                      covers = c("build_tna()", "extract_initial_probs()"),
-                     quantity = sprintf("initial probabilities, %s", name), tolerance = tolerance)
+                     quantity = sprintf("initial probabilities, %s, tna", name), tolerance = tolerance)
     expect_reference(extract_transition_matrix(build_ftna(wide)), unclass(tna::ftna(wide)$weights), reference = "tna",
                      covers = c("build_ftna()", "build_network()"),
-                     quantity = sprintf("frequency weights, %s", name), tolerance = tolerance)
+                     quantity = sprintf("frequency weights, %s, tna", name), tolerance = tolerance)
     expect_reference(extract_transition_matrix(build_cna(wide)), unclass(tna::ctna(wide)$weights), reference = "tna",
                      covers = c("build_cna()", "build_network()"),
-                     quantity = sprintf("co-occurrence weights, %s", name), tolerance = tolerance)
+                     quantity = sprintf("co-occurrence weights, %s, tna", name), tolerance = tolerance)
     expect_reference(extract_transition_matrix(build_atna(wide)), unclass(tna::atna(wide)$weights), reference = "tna",
                      covers = c("build_atna()", "build_network()"),
                      quantity = sprintf("attention weights, %s", name), tolerance = tolerance)

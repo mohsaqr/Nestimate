@@ -97,3 +97,20 @@ test_that("the per-method summary equals the mean, sd, max and min of the scores
                    covers = c("predict_links()", "summary.net_link_prediction()"), quantity = "per-method summary",
                    tolerance = 1e-8, key = "method")
 })
+
+test_that("the per-method summary of Jaccard and Adamic-Adar equals the same summaries of igraph::similarity()", {
+  skip_without_reference("igraph")
+  invisible(lapply(inputs, \(input) {
+    adjacency <- ho_graph(input$n, input$density, input$seed)
+    graph <- igraph::graph_from_adjacency_matrix(adjacency, mode = "undirected", diag = FALSE)
+    cells <- which(upper.tri(adjacency) & adjacency == 0, arr.ind = TRUE)
+    scores <- list(adamic_adar = igraph::similarity(graph, method = "invlogweighted")[cells],
+                   jaccard = igraph::similarity(graph, method = "jaccard")[cells])
+    expected <- data.frame(method = names(scores), n_predictions = lengths(scores),
+                           score_mean = vapply(scores, mean, numeric(1)), score_sd = vapply(scores, stats::sd, numeric(1)),
+                           score_max = vapply(scores, max, numeric(1)), score_min = vapply(scores, min, numeric(1)))
+    found <- predict_links(adjacency, methods = c("jaccard", "adamic_adar"), weighted = FALSE, exclude_existing = TRUE)
+    expect_reference(summary(found), expected, reference = "igraph", covers = "summary.net_link_prediction()",
+                     quantity = sprintf("per-method summary, %d nodes, igraph", input$n), tolerance = 1e-8, key = "method")
+  }))
+})

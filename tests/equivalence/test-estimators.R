@@ -35,13 +35,19 @@ test_that("n-gram, gap and reverse weights equal tna::build_model()", {
     list(method = "reverse", type = "reverse", params = list(), label = "reverse"),
     list(method = "reverse", type = "reverse", params = list(weighted = TRUE), label = "reverse, weighted")
   )
+  aliases <- list(ngram = "build_ngram", gap = "build_gap", reverse = "build_reverse")
   invisible(lapply(cases, \(case) {
+    expected <- unclass(tna::build_model(sequences, type = case$type, params = case$params)$weights)
     # The old test used testthat's default tolerance, sqrt(machine epsilon), relative; the weights are of order
     # one or counts, so 1e-10 relative is at least as strict and is what a one-division computation allows.
     expect_reference(extract_transition_matrix(build_network(sequences, method = case$method, params = case$params)),
-                     unclass(tna::build_model(sequences, type = case$type, params = case$params)$weights),
-                     reference = "tna", covers = "build_network()", quantity = case$label, tolerance = 1e-10,
+                     expected, reference = "tna", covers = "build_network()", quantity = case$label, tolerance = 1e-10,
                      measure = "relative")
+    # the method's alias, with its setting given by name
+    alias <- aliases[[case$method]]
+    expect_reference(extract_transition_matrix(do.call(alias, c(list(sequences), case$params))),
+                     expected, reference = "tna", covers = paste0(alias, "()"), quantity = case$label,
+                     tolerance = 1e-10, measure = "relative")
   }))
   regulation <- utils::head(tna::group_regulation, 200)
   expect_reference(extract_transition_matrix(build_network(regulation, method = "ngram", params = list(n_gram = 3))),

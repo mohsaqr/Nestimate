@@ -69,3 +69,19 @@ test_that("the embedding table of summary() gives the same Gram matrix U Sigma U
                    covers = c("build_honem()", "summary.net_honem()"), quantity = "embedding Gram matrix from summary()",
                    tolerance = 1e-8)
 })
+
+test_that("the embedding table of summary() gives the Gram matrix of RSpectra::svds()", {
+  skip_without_reference("RSpectra")
+  invisible(lapply(inputs, \(input) {
+    case <- honem_case(input)
+    table <- summary(case$found)
+    embedding <- as.matrix(subset(table, select = -node))
+    rownames(embedding) <- table$node
+    decomposition <- RSpectra::svds(case$proximity, k = input$dim)
+    gram <- decomposition$u %*% diag(decomposition$d, input$dim) %*% t(decomposition$u)
+    dimnames(gram) <- dimnames(case$proximity)
+    expect_reference(tcrossprod(embedding), gram, reference = "RSpectra", covers = "summary.net_honem()",
+                     quantity = sprintf("embedding Gram matrix from summary(), seed %d, RSpectra", input$seed),
+                     tolerance = 1e-8)
+  }))
+})

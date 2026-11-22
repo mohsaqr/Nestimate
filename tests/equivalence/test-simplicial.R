@@ -83,3 +83,83 @@ test_that("the q-vector equals the number of q-connected components of the maxim
                      quantity = sprintf("q-vector, network %d", i), tolerance = 0)
   }))
 })
+
+# Outside references: TDA (Fasy et al.; GUDHI's Rips filtration and persistence) on the distance matrix that is 1
+# for an edge and 2 otherwise, so that the Vietoris-Rips complex at scale 1 is the clique complex (persistence by
+# Dionysus: TDA refuses GUDHI above dimension 1 for an arbitrary distance); igraph for the
+# connected components (0-connectivity).
+out_rips <- function(adjacency) {
+  distance <- ifelse(adjacency > 0, 1, 2)
+  diag(distance) <- 0
+  distance
+}
+
+# The simplices of the clique complex from TDA::ripsFiltration() at scale 1, as vectors of node names.
+out_tda_simplices <- function(adjacency) {
+  filtration <- TDA::ripsFiltration(out_rips(adjacency), maxdimension = nrow(adjacency) - 1L, maxscale = 1,
+                                    dist = "arbitrary", library = "GUDHI")
+  lapply(filtration$cmplx, \(simplex) rownames(adjacency)[simplex])
+}
+
+# Betti numbers at scale 1 of TDA::ripsDiag(): the classes born at or before 1 that die after it.
+out_tda_betti <- function(adjacency, top) {
+  diagram <- unclass(TDA::ripsDiag(out_rips(adjacency), maxdimension = top, maxscale = 3, dist = "arbitrary",
+                                   library = "Dionysus")$diagram)
+  vapply(0:top, \(k) sum(diagram[, "dimension"] == k & diagram[, "Birth"] <= 1 & diagram[, "Death"] > 1), numeric(1))
+}
+
+test_that("the f-vector, Betti numbers, Euler characteristic and degrees equal TDA's Rips complex at scale 1", {
+  skip_without_reference("TDA")
+  invisible(lapply(seq_along(networks), \(i) {
+    adjacency <- (networks[[i]] > threshold) * 1
+    simplices <- out_tda_simplices(adjacency)
+    f_vector <- as.vector(table(lengths(simplices)))
+    top <- length(f_vector) - 1L
+    betti <- out_tda_betti(adjacency, top)
+    complex <- build_simplicial(networks[[i]], threshold = threshold)
+    expect_reference(unname(complex$f_vector), f_vector, reference = "TDA", covers = "build_simplicial()",
+                     quantity = sprintf("f-vector, network %d, TDA ripsFiltration()", i), tolerance = 0)
+    expect_reference(unname(betti_numbers(complex)), betti, reference = "TDA", covers = "betti_numbers()",
+                     quantity = sprintf("Betti numbers, network %d, TDA ripsDiag()", i), tolerance = 0)
+    # Euler-Poincare: the alternating sum of TDA's Betti numbers
+    expect_reference(euler_characteristic(complex), sum(betti * (-1)^(0:top)), reference = "TDA",
+                     covers = "euler_characteristic()", quantity = sprintf("Euler characteristic, network %d, TDA", i),
+                     tolerance = 0)
+    checked <- verify_simplicial(networks[[i]], threshold = threshold)
+    expect_reference(checked$n_simplices_ours, length(simplices), reference = "TDA", covers = "verify_simplicial()",
+                     quantity = sprintf("number of simplices, network %d, TDA", i), tolerance = 0)
+    expect_reference(unname(checked$betti), betti, reference = "TDA", covers = "verify_simplicial()",
+                     quantity = sprintf("Betti numbers by verify_simplicial(), network %d, TDA", i), tolerance = 0)
+    degrees <- as.data.frame(lapply(stats::setNames(0:top, paste0("d", 0:top)), \(k) {
+      vapply(rownames(adjacency), \(node) sum(vapply(simplices, \(s) length(s) == k + 1L && node %in% s, logical(1))),
+             numeric(1))
+    }))
+    expect_reference(simplicial_degree(complex), cbind(node = rownames(adjacency), degrees), reference = "TDA",
+                     covers = "simplicial_degree()", quantity = sprintf("simplicial degree, network %d, TDA", i),
+                     tolerance = 0, key = "node")
+    graph <- igraph::graph_from_adjacency_matrix(adjacency, mode = "undirected")
+    expect_reference(simplicial_features(networks[[i]], threshold = threshold),
+                     data.frame(threshold = threshold, n_edges = igraph::ecount(graph), b0 = igraph::count_components(graph),
+                                b1 = betti[[2L]], euler = sum(betti * (-1)^(0:top))),
+                     reference = "TDA", covers = "simplicial_features()",
+                     quantity = sprintf("features, network %d, TDA and igraph", i), tolerance = 0, key = "threshold")
+    # Q_0 counts the classes of 0-near maximal simplices (sharing a vertex): the connected components of the graph.
+    expect_reference(unname(q_analysis(complex)$q_vector[["q_0"]]), igraph::count_components(graph), reference = "igraph",
+                     covers = "q_analysis()", quantity = sprintf("q_0, network %d, igraph components", i), tolerance = 0)
+  }))
+})
+
+test_that("simplicial measures of sparser and denser thresholds equal TDA", {
+  skip_without_reference("TDA")
+  invisible(lapply(c(0.3, 0.6), \(cut) {
+    adjacency <- (networks[[1L]] > cut) * 1
+    simplices <- out_tda_simplices(adjacency)
+    f_vector <- as.vector(table(lengths(simplices)))
+    complex <- build_simplicial(networks[[1L]], threshold = cut)
+    expect_reference(unname(complex$f_vector), f_vector, reference = "TDA", covers = "build_simplicial()",
+                     quantity = sprintf("f-vector, network 1, threshold %.1f, TDA", cut), tolerance = 0)
+    expect_reference(unname(betti_numbers(complex)), out_tda_betti(adjacency, length(f_vector) - 1L), reference = "TDA",
+                     covers = "betti_numbers()", quantity = sprintf("Betti numbers, network 1, threshold %.1f, TDA", cut),
+                     tolerance = 0)
+  }))
+})

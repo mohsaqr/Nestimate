@@ -28,3 +28,21 @@ test_that("the collapsed and the partly expanded macro networks equal the recode
                    reference = "independent: table of consecutive pairs, base R",
                    covers = "macro_network()", quantity = "every cluster expanded, frequency", tolerance = 0)
 })
+
+test_that("the macro networks equal tna::tna() and tna::ftna() of the recoded sequences", {
+  skip_without_reference("tna")
+  fit <- build_mcml(wide, clusters = clusters)
+  sequences <- tn_sequences(wide)
+  expect_reference(extract_transition_matrix(macro_network(fit)),
+                   unclass(tna::tna(out_pad(tn_recode(sequences, clusters)))$weights), reference = "tna",
+                   covers = "macro_network()", quantity = "all clusters collapsed, tna", tolerance = 1e-10)
+  expect_reference(extract_transition_matrix(macro_network(fit, expand = "g2")),
+                   unclass(tna::tna(out_pad(tn_recode(sequences, clusters, expand = "g2")))$weights), reference = "tna",
+                   covers = "macro_network()", quantity = "cluster g2 expanded, tna", tolerance = 1e-10)
+  expect_reference(extract_transition_matrix(macro_network(fit, method = "frequency")),
+                   unclass(tna::ftna(out_pad(tn_recode(sequences, clusters)))$weights), reference = "tna",
+                   covers = "macro_network()", quantity = "all clusters collapsed, frequency, tna", tolerance = 0)
+  expect_reference(extract_transition_matrix(macro_network(fit, expand = "all", method = "frequency")),
+                   unclass(tna::ftna(wide)$weights), reference = "tna", covers = "macro_network()",
+                   quantity = "every cluster expanded, frequency, tna", tolerance = 0)
+})
