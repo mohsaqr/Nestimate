@@ -130,6 +130,10 @@
     },
     "gtools": {
       "authority": "open-source"
+    },
+    "BuildHON (Xu et al. 2016, authors' code)": {
+      "authority": "open-source",
+      "url": "https://github.com/xyjprc/hon"
     }
   },
   "exports": {
