@@ -124,12 +124,12 @@
 #' @export
 build_tna <- function(data, start = FALSE, end = FALSE,
                       actor = NULL, action = NULL, time = NULL,
-                      session = NULL, order = NULL, time_threshold = 900,
+                      session = NULL, ..., order = NULL, time_threshold = 900,
                       timezone = "UTC", state_cols = NULL,
                       metadata_cols = NULL, codes = NULL, window_size = 3L,
                       mode = c("non-overlapping", "overlapping"),
                       group = NULL, scaling = NULL, threshold = 0,
-                      labels = NULL, params = list(), ...) {
+                      labels = NULL, params = list()) {
   .forward_to_build_network("build_tna", "relative", ...names())
 }
 
@@ -170,12 +170,12 @@ build_tna <- function(data, start = FALSE, end = FALSE,
 #' @export
 build_ftna <- function(data, start = FALSE, end = FALSE,
                        actor = NULL, action = NULL, time = NULL,
-                       session = NULL, order = NULL, time_threshold = 900,
+                       session = NULL, ..., order = NULL, time_threshold = 900,
                        timezone = "UTC", state_cols = NULL,
                        metadata_cols = NULL, codes = NULL, window_size = 3L,
                        mode = c("non-overlapping", "overlapping"),
                        group = NULL, scaling = NULL, threshold = 0,
-                       labels = NULL, params = list(), ...) {
+                       labels = NULL, params = list()) {
   .forward_to_build_network("build_ftna", "frequency", ...names())
 }
 
@@ -229,12 +229,12 @@ build_ftna <- function(data, start = FALSE, end = FALSE,
 #' @export
 build_atna <- function(data, start = FALSE, end = FALSE,
                        actor = NULL, action = NULL, time = NULL,
-                       session = NULL, order = NULL, time_threshold = 900,
+                       session = NULL, ..., order = NULL, time_threshold = 900,
                        timezone = "UTC", state_cols = NULL,
                        metadata_cols = NULL, lambda = 1,
                        direction = c("forward", "backward", "both"),
                        decay = NULL, group = NULL, scaling = NULL,
-                       threshold = 0, labels = NULL, params = list(), ...) {
+                       threshold = 0, labels = NULL, params = list()) {
   .forward_to_build_network("build_atna", "attention", ...names())
 }
 
@@ -274,13 +274,13 @@ build_atna <- function(data, start = FALSE, end = FALSE,
 #' @export
 build_cna <- function(data, start = FALSE, end = FALSE,
                       actor = NULL, action = NULL, time = NULL,
-                      session = NULL, order = NULL, time_threshold = 900,
+                      session = NULL, ..., order = NULL, time_threshold = 900,
                       timezone = "UTC", state_cols = NULL,
                       metadata_cols = NULL, codes = NULL, window_size = 3L,
                       mode = c("non-overlapping", "overlapping"),
                       type = c("frequency", "relative"), group = NULL,
                       scaling = NULL, threshold = 0, labels = NULL,
-                      params = list(), ...) {
+                      params = list()) {
   .forward_to_build_network("build_cna", "co_occurrence", ...names())
 }
 
@@ -618,11 +618,11 @@ build_wtna <- function(data, codes = NULL, window_size = 3L,
 #'
 #' build_cor(srl_strategies, cor_method = "spearman", threshold = 0.2)
 #' @export
-build_cor <- function(data, actor = NULL, level = NULL,
+build_cor <- function(data, actor = NULL, level = NULL, ...,
                       cor_method = c("pearson", "spearman", "kendall"),
                       predictability = TRUE, metadata_cols = NULL,
                       group = NULL, scaling = NULL, threshold = 0,
-                      labels = NULL, params = list(), ...) {
+                      labels = NULL, params = list()) {
   .forward_to_build_network("build_cor", "cor", ...names())
 }
 
@@ -656,11 +656,11 @@ build_cor <- function(data, actor = NULL, level = NULL,
 #' build_network(srl_strategies, method = "pcor")
 #' build_pcor(srl_strategies)
 #' @export
-build_pcor <- function(data, actor = NULL, level = NULL,
+build_pcor <- function(data, actor = NULL, level = NULL, ...,
                        cor_method = c("pearson", "spearman", "kendall"),
                        predictability = TRUE, metadata_cols = NULL,
                        group = NULL, scaling = NULL, threshold = 0,
-                       labels = NULL, params = list(), ...) {
+                       labels = NULL, params = list()) {
   .forward_to_build_network("build_pcor", "pcor", ...names())
 }
 
@@ -707,12 +707,12 @@ build_pcor <- function(data, actor = NULL, level = NULL,
 #'
 #' build_glasso(srl_strategies, gamma = 0.75)
 #' @export
-build_glasso <- function(data, actor = NULL, level = NULL, gamma = 0.5,
+build_glasso <- function(data, actor = NULL, level = NULL, ..., gamma = 0.5,
                          nlambda = 100L,
                          cor_method = c("pearson", "spearman", "kendall"),
                          predictability = TRUE, metadata_cols = NULL,
                          group = NULL, scaling = NULL, threshold = 0,
-                         labels = NULL, params = list(), ...) {
+                         labels = NULL, params = list()) {
   .forward_to_build_network("build_glasso", "glasso", ...names())
 }
 
@@ -763,10 +763,10 @@ build_glasso <- function(data, actor = NULL, level = NULL, gamma = 0.5,
 #'   build_ising(binary, rule = "OR")
 #' }
 #' @export
-build_ising <- function(data, actor = NULL, gamma = 0.25, nlambda = 100L,
+build_ising <- function(data, actor = NULL, ..., gamma = 0.25, nlambda = 100L,
                         rule = c("AND", "OR"), metadata_cols = NULL,
                         group = NULL, scaling = NULL, threshold = 0,
-                        labels = NULL, params = list(), ...) {
+                        labels = NULL, params = list()) {
   .forward_to_build_network("build_ising", "ising", ...names())
 }
 

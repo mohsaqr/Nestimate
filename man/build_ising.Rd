@@ -7,6 +7,7 @@
 build_ising(
   data,
   actor = NULL,
+  ...,
   gamma = 0.25,
   nlambda = 100L,
   rule = c("AND", "OR"),
@@ -15,8 +16,7 @@ build_ising(
   scaling = NULL,
   threshold = 0,
   labels = NULL,
-  params = list(),
-  ...
+  params = list()
 )
 }
 \arguments{
@@ -30,6 +30,9 @@ error.}
 
 \item{actor}{An id column naming whose observation each row is; it is
 set aside, not modelled. Default \code{NULL}.}
+
+\item{...}{Further arguments for \code{\link[=build_network]{build_network()}}. \code{method} cannot be
+given (error of class \code{nestimate_bad_input}).}
 
 \item{gamma}{The EBIC hyperparameter. Default \code{0.25}.}
 
@@ -66,9 +69,6 @@ weight matrix's dimnames; nodes not listed keep their names. Default
 \item{params}{Settings for the estimator, as a named list. The network
 stores them, so the resampling verbs re-estimate with the same settings.
 Default \code{list()}.}
-
-\item{...}{Further arguments for \code{\link[=build_network]{build_network()}}. \code{method} cannot be
-given (error of class \code{nestimate_bad_input}).}
 }
 \value{
 A \code{netobject} (a \code{netobject_group} with \code{group}), as

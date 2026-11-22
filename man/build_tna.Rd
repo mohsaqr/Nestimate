@@ -12,6 +12,7 @@ build_tna(
   action = NULL,
   time = NULL,
   session = NULL,
+  ...,
   order = NULL,
   time_threshold = 900,
   timezone = "UTC",
@@ -24,8 +25,7 @@ build_tna(
   scaling = NULL,
   threshold = 0,
   labels = NULL,
-  params = list(),
-  ...
+  params = list()
 )
 }
 \arguments{
@@ -65,6 +65,12 @@ Default \code{NULL}.}
 
 \item{session}{The column identifying sessions in an event log; each
 session is its own sequence, also without \code{actor}. Default \code{NULL}.}
+
+\item{...}{Further arguments for \code{\link[=build_network]{build_network()}}: \code{format} (\code{"auto"},
+\code{"wide"}, \code{"long"} or \code{"onehot"}, to force a reading of \code{data}), and for
+event logs \code{\link[=prepare]{prepare()}}'s time options \code{unix_time_unit}, \code{is_unix_time}
+and \code{custom_format}. \code{method} cannot be given: each alias has its own
+(error of class \code{nestimate_bad_input}).}
 
 \item{order}{The column that orders events sharing a timestamp; without
 it, those events keep their row order. Default \code{NULL}.}
@@ -135,12 +141,6 @@ positions, as \code{tna::tna()} does; \code{mode = "overlapping"} then raises a
 warning of class \code{nestimate_ignored_mode}. The network keeps these
 settings, and the resampling verbs such as \code{\link[=bootstrap_network]{bootstrap_network()}}
 re-estimate with them. Default \code{list()}.}
-
-\item{...}{Further arguments for \code{\link[=build_network]{build_network()}}: \code{format} (\code{"auto"},
-\code{"wide"}, \code{"long"} or \code{"onehot"}, to force a reading of \code{data}), and for
-event logs \code{\link[=prepare]{prepare()}}'s time options \code{unix_time_unit}, \code{is_unix_time}
-and \code{custom_format}. \code{method} cannot be given: each alias has its own
-(error of class \code{nestimate_bad_input}).}
 }
 \value{
 A \code{netobject} (a \code{netobject_group} with \code{group}), as

@@ -214,10 +214,17 @@ NULL
     if (!is.null(x$predictability)) {
       names(x$predictability) <- remap(names(x$predictability))
     }
-    if (!is.null(x$frequency_matrix)) {
-      dimnames(x$frequency_matrix) <- lapply(dimnames(x$frequency_matrix),
-                                             function(d) if (is.null(d)) d else remap(d))
-    }
+    # matrices laid out as the weights follow them to the labels (latency's
+    # n_replies and median_latency are read by name in bootstrap_network())
+    beside_weights <- intersect(c("frequency_matrix", "n_replies",
+                                  "median_latency"), names(x))
+    x[beside_weights] <- lapply(x[beside_weights], function(m) {
+      if (is.matrix(m)) {
+        dimnames(m) <- lapply(dimnames(m),
+                              function(d) if (is.null(d)) d else remap(d))
+      }
+      m
+    })
     if (is.data.frame(x$node_groups) && "node" %in% names(x$node_groups)) {
       x$node_groups$node <- remap(as.character(x$node_groups$node))
     }

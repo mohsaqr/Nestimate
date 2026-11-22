@@ -1,4 +1,4 @@
-# Nestimate 1.0.21
+# Nestimate 1.0.22
 
 ## New features
 
@@ -130,6 +130,9 @@
 * `labels =` relabels stored data, and colours follow labels.
 * `sequence_plot()` and `distribution_plot()` accept a `data.table` or tibble.
 * `cluster_network()` passes its arguments and clusters one-hot actors.
+* `build_hon(method = "hon+")` extends a path whose shorter form had not been
+  extended yet, as in Saebi et al. (2020); some higher-order rules and their
+  edges were missing.
 * Plot, print and grouped-network fixes.
 
 # Nestimate 0.9.24

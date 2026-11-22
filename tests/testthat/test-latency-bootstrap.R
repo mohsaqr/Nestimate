@@ -114,3 +114,21 @@ test_that("a grouped bootstrap keeps every group's edges in one table", {
   # the object still iterates as its two groups
   expect_length(boot, 2L)
 })
+
+# labels = renames the weights and the matrices beside them, which the
+# bootstrap summary reads by the displayed names.
+test_that("a relabelled latency network bootstraps under its labels", {
+  replies <- data.frame(id = rep(1:6, each = 2), state = rep(c("A", "B"), 6),
+                        t = rep(c(0, 1), 6))
+  net <- suppressMessages(build_latency(replies, action = "state", time = "t",
+                                        actor = "id", cap = "2s",
+                                        labels = c(A = "Alpha", B = "Beta")))
+  expect_identical(rownames(net$n_replies), c("Alpha", "Beta"))
+  expect_identical(rownames(net$median_latency), c("Alpha", "Beta"))
+  edges <- suppressMessages(summary(bootstrap_network(net, iter = 20,
+                                                      seed = 1)))
+  expect_identical(c(edges$from, edges$to), c("Beta", "Alpha"))
+  expect_equal(edges$weight, 0.75)
+  expect_equal(edges$n_replies, 6)
+  expect_equal(edges$n_sequences, 6)
+})

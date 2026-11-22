@@ -8,6 +8,7 @@ build_cor(
   data,
   actor = NULL,
   level = NULL,
+  ...,
   cor_method = c("pearson", "spearman", "kendall"),
   predictability = TRUE,
   metadata_cols = NULL,
@@ -15,8 +16,7 @@ build_cor(
   scaling = NULL,
   threshold = 0,
   labels = NULL,
-  params = list(),
-  ...
+  params = list()
 )
 }
 \arguments{
@@ -39,6 +39,9 @@ set aside, not modelled. Default \code{NULL}.}
 estimates the network of person means, \code{"within"} the network of
 deviations from them, and \code{"both"} returns the two as a
 \code{netobject_ml}. Default \code{NULL} (no decomposition).}
+
+\item{...}{Further arguments for \code{\link[=build_network]{build_network()}}. \code{method} cannot be
+given (error of class \code{nestimate_bad_input}).}
 
 \item{cor_method}{\code{"pearson"} (default), \code{"spearman"} or \code{"kendall"},
 passed to \code{\link[stats:cor]{stats::cor()}}.}
@@ -77,9 +80,6 @@ weight matrix's dimnames; nodes not listed keep their names. Default
 the sample size when \code{data} is a correlation or covariance matrix. The
 network stores them, so \code{\link[=bootstrap_network]{bootstrap_network()}} re-estimates with the
 same settings. Default \code{list()}.}
-
-\item{...}{Further arguments for \code{\link[=build_network]{build_network()}}. \code{method} cannot be
-given (error of class \code{nestimate_bad_input}).}
 }
 \value{
 A \code{netobject} (a \code{netobject_group} with \code{group}, a \code{netobject_ml}

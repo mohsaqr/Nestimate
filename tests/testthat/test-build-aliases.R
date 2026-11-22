@@ -162,3 +162,35 @@ test_that("a latency network averages its replies by default", {
   replied <- net$n_replies > 0
   expect_equal(summed$weights[replied] / net$n_replies[replied], net$weights[replied])
 })
+
+# Before 1.0.21 the aliases ended their positional arguments at `session`
+# (`level` for cor, pcor and glasso; `actor` for ising) with `...`, so later
+# positional arguments filled build_network()'s next ones: order, codes, group.
+test_that("positional arguments after session bind as before the hub", {
+  onehot <- data.frame(id = rep(1:3, each = 6),
+                       A = rep(c(1, 0, 1, 0, 1, 0), 3),
+                       B = rep(c(0, 1, 1, 0, 0, 1), 3))
+  by_position <- build_tna(onehot, FALSE, FALSE, "id", NULL, NULL, NULL, NULL,
+                           c("A", "B"))
+  by_name <- build_tna(onehot, actor = "id", codes = c("A", "B"))
+  expect_equal(by_position$weights, by_name$weights)
+  expect_equal(unname(by_position$weights), matrix(0.5, 2, 2))
+
+  wide <- data.frame(T1 = rep(c("A", "B"), each = 5),
+                     T2 = rep(c("B", "A"), each = 5),
+                     T3 = rep(c("C", "B"), each = 5),
+                     g = rep(c("up", "down"), each = 5))
+  grouped <- build_tna(wide, FALSE, FALSE, NULL, NULL, NULL, NULL, NULL, NULL,
+                       "g")
+  expect_s3_class(grouped, "netobject_group")
+  expect_identical(names(grouped), c("up", "down"))
+
+  dots_after <- vapply(c("build_tna", "build_ftna", "build_cna", "build_atna",
+                         "build_cor", "build_pcor", "build_glasso",
+                         "build_ising"), function(f) {
+    args <- names(formals(getExportedValue("Nestimate", f)))
+    args[match("...", args) - 1L]
+  }, character(1))
+  expect_identical(unname(dots_after),
+                   c(rep("session", 4L), rep("level", 3L), "actor"))
+})
