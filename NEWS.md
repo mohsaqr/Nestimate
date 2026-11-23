@@ -1,3 +1,56 @@
+# Nestimate 1.0.23
+
+## Changes to results
+
+* `boot_glasso()` of a network uses that network's `gamma`, `nlambda` and
+  `cor_method` (the estimator's defaults when none is stored); a different
+  argument is ignored with a warning.
+* `build_mcml_pc()` and `loading_stability()` re-estimate with the node
+  network's estimator settings.
+* `scaling = "normalize"` makes an undirected network directed when it makes the
+  matrix asymmetric, so both values of a pair are kept as edges.
+* `predict_links()` gives pairs with the same score the same rank and lists
+  them in one order on every system; `evaluate_links()` takes average precision
+  over the distinct scores and counts a tie across the `k`-th place by its
+  share of the top `k`.
+* `build_network(method = "latency", params = )` uses the latency settings in
+  `params` unless the argument is given.
+* `landscape_surface()` and `landscape_trend()` use the distance to the `k`-th
+  nearest sequence as the kernel half-width, as documented.
+* `permutation()` and `compare_networks(test = "permutation")` stop when two
+  correlation, partial correlation, Ising or mixed graphical networks were
+  built with different estimator settings, as they did for graphical lasso
+  networks. Every shuffle is estimated with the first network's settings, so
+  the difference between, say, a Pearson and a Spearman network was reported
+  as a difference between the groups.
+* `compare_networks(scaling = )` returns networks whose edge tables hold the
+  scaled weights, as their matrices do.
+* A mixed graphical model built with `level` keeps the decomposition in
+  `$level`, so the resampling verbs refuse it as they refuse other multilevel
+  networks. Without `level`, `$level` holds each variable's category count, as
+  before.
+
+## Other changes
+
+* `bootstrap_network()`, `centrality_stability()`, `casedrop_reliability()` and
+  `network_reliability()` refuse a network built with `level`, whose resamples
+  all failed.
+* `bootstrap_network()`, `permutation()` and `network_reliability()` refuse a
+  sequence network with no observed transition.
+* `bootstrap_network()` of a latency network stops when a resample's percentile
+  cap is 0 seconds.
+* `build_clusters()` reads the sequences of n-gram, gap, reverse and latency
+  networks; per-cluster latency networks are refused with a message that names
+  the alternatives.
+* `build_mmm()` screens its starts on at most `getOption("mc.cores", 2L)` cores
+  and leaves out, with a warning, a start that fails, alike on any number of
+  cores.
+* `verify_simplicial()` returns its checks as an object with a print method.
+* `build_mcml_pc()` names the scaling when it stops on an association network
+  that `scaling = "normalize"` made asymmetric.
+* The file `extdata/prompting_data.csv`, which nothing in the package read, is
+  no longer installed.
+
 # Nestimate 1.0.22
 
 ## New features

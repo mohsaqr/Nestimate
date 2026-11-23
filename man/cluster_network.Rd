@@ -98,7 +98,9 @@ the stored build arguments are not used. Under \code{"mmm"}, rebuilding a
 network built from
 long-format data with any method other than \code{"relative"} currently raises
 an error, because its column names are passed on to the wide per-cluster
-data.
+data. Per-cluster \code{"latency"} networks are not available (a clustering
+keeps the sequences, not the event times): a latency network needs
+another \code{method} here, or the error has class \code{nestimate_latency_clusters}.
 }
 \examples{
 seqs <- data.frame(V1 = c("A","B","C","A","B"), V2 = c("B","C","A","B","A"),

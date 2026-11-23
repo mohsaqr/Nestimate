@@ -2,9 +2,12 @@
 % Please edit documentation in R/simplicial.R
 \name{verify_simplicial}
 \alias{verify_simplicial}
+\alias{print.net_simplicial_check}
 \title{Verify a simplicial complex against igraph}
 \usage{
 verify_simplicial(mat, threshold = 0)
+
+\method{print}{net_simplicial_check}(x, ...)
 }
 \arguments{
 \item{mat}{A square weight matrix, or a network object whose weight
@@ -13,12 +16,19 @@ matrix \code{\link[=build_simplicial]{build_simplicial()}} reads (a \code{netobj
 
 \item{threshold}{The smallest absolute edge weight an edge needs to
 enter, as in \code{\link[=build_simplicial]{build_simplicial()}}. Default \code{0}.}
+
+\item{x}{For the print() method: a \code{net_simplicial_check} from
+verify_simplicial().}
+
+\item{...}{For the print() method: not used.}
 }
 \value{
-A list, invisibly: \code{cliques_match} (whether the simplices equal
-the cliques from \code{igraph::cliques()} exactly), \code{n_simplices_ours},
-\code{n_simplices_igraph}, \code{betti}, \code{euler} and \code{f_vector}. The two checks
-are printed as a side effect.
+A list of class \code{net_simplicial_check}: \code{cliques_match} (whether
+the simplices equal the cliques from \code{igraph::cliques()} exactly),
+\code{n_simplices_ours}, \code{n_simplices_igraph}, \code{betti}, \code{euler},
+\code{euler_matches} (whether \code{euler} equals the alternating sum of \code{betti})
+and \code{f_vector}. For the print() method: \code{x}, invisibly, after printing
+the two checks and the Betti numbers.
 }
 \description{
 \code{verify_simplicial()} builds the clique complex of \code{mat} with
@@ -26,8 +36,8 @@ are printed as a side effect.
 its simplices
 against the cliques \code{igraph::cliques()} finds in the same thresholded
 graph, and its Euler characteristic against the alternating sum of its
-Betti numbers (the Euler-Poincare theorem). It prints the result of each
-check and the Betti numbers, and is meant for testing. It needs
+Betti numbers (the Euler-Poincare theorem). Its print method shows the
+result of each check and the Betti numbers; it is meant for testing. It needs
 \pkg{igraph}, and raises an error without it.
 }
 \details{

@@ -170,8 +170,9 @@ For transition methods, per-sequence count matrices are computed once
 and each draw only re-sums them; the network's \code{scaling} and \code{threshold}
 are applied to every re-estimated network as to the original. For the
 other methods the estimator is re-run on each subset with the network's
-\code{params} (after the multilevel decomposition, when the network was built
-with a \code{level} and an id column and its estimator is undirected).
+\code{params}. A network built with \code{level} is refused (error class
+\code{nestimate_multilevel_resampling}): its stored data are already
+decomposed and carry no id column to decompose a subset again.
 The built-in measures are computed from the weight matrix
 directly, without igraph, as in \code{\link[=net_centrality]{net_centrality()}}: strength from row
 and column sums, betweenness and closeness from Floyd-Warshall shortest

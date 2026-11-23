@@ -236,7 +236,8 @@ built with different settings raise an error of class
 \code{nestimate_bad_input}.
 A network that rests on one sequence, or one-hot data with no actor or
 session, has nothing to shuffle and raises an error of class
-\code{nestimate_single_sequence}.
+\code{nestimate_single_sequence}. A sequence network with no observed
+transition raises an error of class \code{nestimate_no_transition}.
 
 Wide rows combined with \code{params = list(concat = k)} are shuffled as the
 merged sequences the estimator used, keeping their internal joins. A

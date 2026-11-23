@@ -47,7 +47,10 @@
 #'   first rebuilt as a network from its own sequences (see [as_netobject()]).
 #'   A network without its sequence data (which [build_network()] keeps) raises
 #'   an error, a network resting on one sequence an error of class
-#'   `nestimate_single_sequence`, a network built with `method = "latency"`
+#'   `nestimate_single_sequence`, a sequence network with no observed
+#'   transition an error of class `nestimate_no_transition`, a network built
+#'   with `level` an error of class `nestimate_multilevel_resampling`, a
+#'   network built with `method = "latency"`
 #'   an error of class `nestimate_latency_resampling`, and networks of
 #'   different methods with `scale
 #'   = "none"` a warning of class `nestimate_mixed_methods`. For the `print()`,
@@ -131,6 +134,9 @@ network_reliability <- function(..., iter = 1000L, split = 0.5,
     obj <- .tna_input(obj, "network_reliability()", need_data = TRUE)
     if (inherits(obj, "mcml")) obj <- as_tna(obj)
     if (inherits(obj, "cograph_network")) obj <- .as_netobject(obj)
+    # before the type gate: a level = "both" fit is neither a netobject nor
+    # a group, and its refusal names the multilevel reason
+    .stop_multilevel_resampling(list(obj), "network_reliability()")
     if (inherits(obj, "netobject_group")) {
       list(objs = lapply(names(obj), function(g) obj[[g]]),
            labels = names(obj))
@@ -183,6 +189,7 @@ network_reliability <- function(..., iter = 1000L, split = 0.5,
     if (is_transition) {
       .reliability_transition(net, method, iter, split, scale)
     } else {
+      .stop_no_transition_refit(net, method, "network_reliability()")
       .reliability_association(net, method, iter, split, scale)
     }
   })
@@ -246,6 +253,7 @@ network_reliability <- function(..., iter = 1000L, split = 0.5,
                                                  net$params)
   trans_2d <- .precompute_per_sequence(transition_data, method, net$params,
                                        states)
+  .stop_no_transition(trans_2d, "network_reliability()")
   n_seq <- nrow(trans_2d)
   n_half <- max(1L, round(n_seq * split))
   .reliability_check_halves(n_half, n_seq, split)

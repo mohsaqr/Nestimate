@@ -503,8 +503,9 @@
   }
   # --- netobject (from Nestimate) ---
   if (inherits(data, "netobject")) {
-    seq_methods <- c("relative", "frequency", "co_occurrence", "attention")
-    if (!is.null(data$method) && !(data$method %in% seq_methods)) {
+    # the methods whose $data are sequences of states, as the other
+    # sequence readers take them (.as_sequences())
+    if (!is.null(data$method) && !(data$method %in% .sequence_methods)) {
       stop(errorCondition(paste0(sprintf(
         "build_clusters() requires sequence data, but this netobject uses method '%s'. ",
         data$method
@@ -2244,6 +2245,7 @@ print.tidy_covariates <- function(x, ...) {
 #' @noRd
 .build_network_clustering <- function(x, method = "relative", ...,
                                       inherit = FALSE) {
+  .stop_latency_clusters(method)
   assignments <- x$assignments
   seq_data <- x$data
   k <- x$k
@@ -2277,6 +2279,26 @@ print.tidy_covariates <- function(x, ...) {
   attr(nets, "clustering") <- x
   class(nets) <- "netobject_group"
   .restore_htna_group(nets, x$htna_partition)
+}
+
+# Per-cluster latency networks are refused: a clustering keeps the sequences
+# of states, not the time of each event, so the replies of a cluster cannot
+# be weighted by their speed. Said here, at the entry points that rebuild
+# cluster networks, instead of build_network()'s advice to give an event log.
+#' @noRd
+.stop_latency_clusters <- function(method) {
+  if (!is.character(method) || length(method) != 1L || is.na(method) ||
+      !identical(.resolve_method_alias(method), "latency")) {
+    return(invisible(NULL))
+  }
+  stop(errorCondition(paste0(
+    "Per-cluster latency networks are not available: a clustering keeps the ",
+    "sequences of states, not the times of the events. Name another method ",
+    "for the cluster networks, e.g. method = \"relative\", or build the ",
+    "latency networks of known groups from the event log with ",
+    "build_network(method = \"latency\", group = )."),
+    class = c("nestimate_latency_clusters", "nestimate_bad_input"),
+    call = NULL))
 }
 
 # A network's settings beyond its type and the reading of its data: its
@@ -2443,7 +2465,9 @@ print.tidy_covariates <- function(x, ...) {
 #' network built from
 #' long-format data with any method other than `"relative"` currently raises
 #' an error, because its column names are passed on to the wide per-cluster
-#' data.
+#' data. Per-cluster `"latency"` networks are not available (a clustering
+#' keeps the sequences, not the event times): a latency network needs
+#' another `method` here, or the error has class `nestimate_latency_clusters`.
 #' @return A `netobject_group`: one `netobject` per cluster, named
 #'   `"Cluster 1"`, `"Cluster 2"`, and so on, with the clustering (a
 #'   `net_clustering`, or for `"mmm"` a `net_mmm_clustering`) kept as
@@ -2516,6 +2540,7 @@ cluster_network <- function(data, k, cluster_by = "pam",
         build_dots$method <- data$method
     }
     .validate_cluster_network_build_args(build_dots)
+    .stop_latency_clusters(build_dots$method %||% "relative")
     mmm_fit <- do.call(build_mmm, c(list(data = data, k = k), mmm_args))
     if (onehot && is.null(build_dots$method)) {
       build_dots$method <- mmm_fit$network_method %||% "relative"
@@ -2547,6 +2572,7 @@ cluster_network <- function(data, k, cluster_by = "pam",
       build_dots$method <- data$method
   }
   .validate_cluster_network_build_args(build_dots)
+  .stop_latency_clusters(build_dots$method %||% "relative")
 
   cls <- do.call(build_clusters,
                  c(list(data = data, k = k, method = cluster_by,

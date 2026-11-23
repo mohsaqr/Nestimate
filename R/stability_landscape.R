@@ -651,9 +651,7 @@ plot.net_landscape <- function(x, ...) {
   grid <- seq(endpoints[1L], endpoints[2L], length.out = n_grid)
   floor_h <- diff(range(m)) / 50
   rows <- lapply(grid, \(y) {
-    d <- abs(m - y)
-    h <- max(sort(d)[k_eff], floor_h) * 1.01
-    w <- ifelse(d < h, (1 - (d / h)^3)^3, 0)
+    w <- .ls_kernel_weights(abs(m - y), k_eff, floor_h)
     n <- matrix(colSums(counts * w), kk, kk, byrow = TRUE)
     depth <- .ls_depth(n)
     data.frame(group = name, measure = measure, value = y, state = states,
@@ -661,6 +659,20 @@ plot.net_landscape <- function(x, ...) {
                effective_n = sum(w)^2 / sum(w^2))
   })
   do.call(rbind, rows)
+}
+
+# Tricube weights of the sequences at distance `d` from a slice: the
+# half-width is the distance to the k-th nearest, at least `floor_h`, and a
+# sequence at the half-width weighs 0. When the k nearest all lie at the
+# half-width itself (a measure or covariate with few distinct values, the
+# slice between two of them) no sequence is inside it and every weight would
+# be 0: those nearest sequences, all at one distance, then weigh equally.
+#' @noRd
+.ls_kernel_weights <- function(d, k, floor_h) {
+  h <- max(sort(d)[k], floor_h)
+  inside <- d < h
+  if (!any(inside)) return(as.numeric(d <= h))
+  ifelse(inside, (1 - (d / h)^3)^3, 0)
 }
 
 #' Trace a stability landscape across a sequence measure
@@ -698,7 +710,9 @@ plot.net_landscape <- function(x, ...) {
 #'
 #' Sequences with fewer than two observed positions, or no value of the
 #' measure, are left out. The kernel's half-width is the distance to the
-#' `k`-th nearest sequence, but at least 1/50 of the measure's range. A state
+#' `k`-th nearest sequence, but at least 1/50 of the measure's range; when
+#' the `k` nearest all lie at that distance (many sequences share a value),
+#' they weigh equally. A state
 #' that does not occur in a slice has an `NA` depth and leaves a gap in the
 #' surface, and one that is never left in a slice has an infinite depth.
 #'
@@ -1053,9 +1067,7 @@ plot.net_landscape_surface <- function(x, max_stay = 50, theta = 10, phi = 30,
   grid <- seq(endpoints[1L], endpoints[2L], length.out = n_grid)
   floor_h <- diff(range(m)) / 50
   weights_at <- function(mm, y) {
-    d <- abs(mm - y)
-    h <- max(sort(d)[min(k, length(d))], floor_h) * 1.01
-    ifelse(d < h, (1 - (d / h)^3)^3, 0)
+    .ls_kernel_weights(abs(mm - y), min(k, length(mm)), floor_h)
   }
   list(
     value = grid, label = format(round(grid, 2)),
@@ -1118,7 +1130,8 @@ plot.net_landscape_surface <- function(x, max_stay = 50, theta = 10, phi = 30,
 #' Along a covariate, sequences without its value or with fewer than two
 #' observed positions are left out, and the kernel's half-width is the distance
 #' to the `k`-th nearest sequence, but at least 1/50 of the covariate's
-#' range.
+#' range; when the `k` nearest all lie at that distance (a covariate with
+#' few distinct values), they weigh equally.
 #'
 #' @param x The network or sequences: a transition network from
 #'   [build_network()] with method `"relative"` or `"frequency"` (or a bare

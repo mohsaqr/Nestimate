@@ -124,12 +124,14 @@ test_that("a scaled wtna network is resampled on its own scaling domain", {
 # ---- C7, C11, C12, C14: the columns a network is estimated from ----
 
 test_that("$data keeps an all-missing position the estimator read", {
-  d <- data.frame(T1 = c("A", "A"), T2 = NA_character_, T3 = c("B", "B"))
+  d <- data.frame(T1 = c("A", "A"), T2 = NA_character_, T3 = c("B", "B"),
+                  T4 = c("C", "C"))
   n <- build_ftna(d)
-  # A, NA, B has no adjacent pair: no transition
+  # A, NA, B has no adjacent pair: the only transition is B -> C
   expect_equal(n$weights["A", "B"], 0)
-  expect_named(n$data, c("T1", "T2", "T3"))
-  expect_named(extract_sequences(n), c("T1", "T2", "T3"))
+  expect_equal(n$weights["B", "C"], 2)
+  expect_named(n$data, c("T1", "T2", "T3", "T4"))
+  expect_named(extract_sequences(n), c("T1", "T2", "T3", "T4"))
   b <- bootstrap_network(n, iter = 10L, seed = 1)
   expect_equal(unname(b$mean), unname(n$weights))
 })

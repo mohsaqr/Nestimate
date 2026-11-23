@@ -52,10 +52,8 @@
 #'                      action = "action", method = "relative")
 #' session_ids(net)
 #'
-#' \donttest{
 #' fit <- build_mmm(net, k = 2, n_starts = 2, seed = 1)
 #' session_ids(fit)
-#' }
 #' @seealso \code{\link{build_network}}, \code{\link{build_mmm}},
 #'   \code{\link{build_clusters}}
 #' @export

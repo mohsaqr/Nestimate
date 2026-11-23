@@ -266,7 +266,7 @@
 #'   J. J., Tio, P., Schoevers, R. A., Borsboom, D., & Waldorp, L. J. (2022).
 #'   Comparing network structures on three aspects: A permutation test.
 #'   \emph{Psychological Methods}. \doi{10.1037/met0000476}
-#' @examples
+#' @examplesIf requireNamespace("Matrix", quietly = TRUE)
 #' set.seed(1)
 #' x1 <- matrix(rnorm(100 * 4), 100, 4)
 #' x2 <- matrix(rnorm(100 * 4), 100, 4)

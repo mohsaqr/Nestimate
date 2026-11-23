@@ -16,7 +16,10 @@
 #'
 #' @param data The data the method reads (see its page), or a fitted
 #'   clustering (`net_clustering`, `net_mmm`), to build one network per
-#'   cluster with the clustering's method.
+#'   cluster with the clustering's method. Per-cluster `"latency"` networks
+#'   are not available (a clustering keeps the sequences, not the event
+#'   times): name another `method`, or the error has class
+#'   `nestimate_latency_clusters`.
 #' @param method The estimator. Each has its own page with its arguments:
 #'   \tabular{lll}{
 #'     \emph{Sequences and event logs} \tab \tab \cr
@@ -54,9 +57,11 @@
 #'   the smallest weight becomes 0) and over the non-zero weights, into
 #'   (0, 1], for the other methods, `"max"` divides by the largest absolute
 #'   weight, `"rank"` replaces the non-zero weights by their ranks, and
-#'   `"normalize"` makes each row's absolute weights sum to 1. Zero weights
-#'   stay zero under every option. Combine them as in `c("rank", "minmax")`.
-#'   Default `NULL` (none).
+#'   `"normalize"` makes each row's absolute weights sum to 1; an undirected
+#'   network whose matrix it makes asymmetric becomes directed, so both of
+#'   a pair's values are kept as edges. Zero weights stay zero under every
+#'   option. Combine them as in `c("rank", "minmax")`. Default `NULL`
+#'   (none).
 #' @param threshold Weights whose absolute value is below this are set to
 #'   zero. Default `0` (none).
 #' @param labels New display labels for the nodes, applied after estimation:
@@ -94,8 +99,8 @@
 #'   \item{threshold}{The threshold applied.}
 #'   \item{n_nodes}{Number of nodes.}
 #'   \item{n_edges}{Number of non-zero edges.}
-#'   \item{level}{Decomposition level used, or NULL; for `mgm`, the category
-#'     count of each variable.}
+#'   \item{level}{Decomposition level used, or NULL; for `mgm` built without
+#'     a decomposition, the category count of each variable.}
 #'   \item{build_args}{The resolved column/format arguments (\code{actor},
 #'     \code{action}, \code{time}, \code{session}, \code{order}, \code{codes},
 #'     \code{format}, \code{window_size}, \code{mode}) used for this build.}
@@ -226,6 +231,7 @@ build_network <- function(data, method, ..., group = NULL, scaling = NULL,
   # --- Early dispatch for net_mmm objects ---
   if (inherits(data, "net_mmm")) {
     if (missing(method)) method <- data$network_method %||% "relative"
+    .stop_latency_clusters(method)
     resolved <- .resolve_method_alias(method)
     dots <- c(shaping_args, list(...))
     settings <- if (isTRUE(inherit)) data$network_settings
@@ -409,6 +415,17 @@ build_network <- function(data, method, ..., group = NULL, scaling = NULL,
       class = "nestimate_bad_input", call = NULL))
   }
   if (identical(method, "latency")) {
+    # a setting given in `params` (as stored on a built network) is used
+    # unless the argument itself is given
+    from_params <- setdiff(intersect(c("latency_floor", "latency_cap",
+                                       "latency_aggregate", "latency_scope"),
+                                     names(params)), latency_given)
+    if ("latency_floor" %in% from_params) latency_floor <- params$latency_floor
+    if ("latency_cap" %in% from_params) latency_cap <- params$latency_cap
+    if ("latency_aggregate" %in% from_params) {
+      latency_aggregate <- params$latency_aggregate
+    }
+    if ("latency_scope" %in% from_params) latency_scope <- params$latency_scope
     if (identical(latency_aggregate, c("mean", "sum"))) {
       latency_aggregate <- "mean"
     }
@@ -938,6 +955,12 @@ build_network <- function(data, method, ..., group = NULL, scaling = NULL,
     net_matrix <- .apply_scaling(
       net_matrix, scaling, include_zeros = .scaling_includes_zeros(method)
     )
+    # a row-wise scaling ("normalize") of an undirected network gives each
+    # cell its own value: the network is then directed, or the lower
+    # triangle would be dropped from its edges
+    if (!isTRUE(directed) && !isSymmetric(unname(net_matrix))) {
+      directed <- TRUE
+    }
   }
 
   # Apply threshold
@@ -1083,6 +1106,10 @@ build_network <- function(data, method, ..., group = NULL, scaling = NULL,
   for (key in extras) {
     result[[key]] <- est_result[[key]]
   }
+  # mgm returns its per-variable category counts as `level`; a network built
+  # with a decomposition keeps the decomposition there, which is what the
+  # resampling verbs and print() read
+  if (is.character(level)) result$level <- level
 
   # Auto-compute predictability (R^2) for undirected association methods.
   # Stored as a named numeric vector for backward compatibility with downstream

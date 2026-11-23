@@ -197,7 +197,9 @@ test_that("every scaling, alone and chained, with every threshold, equals the do
     expect_reference(extract_transition_matrix(fit), expected,
                      reference = "independent: ?build_network scaling then threshold, base R",
                      covers = "build_network()", quantity = label, tolerance = sw_tolerance)
-    expect_reference(nrow(fit$edges), sum(expected != 0 & (sw_directed(config) | row(expected) <= col(expected))),
+    # an undirected network whose scaled matrix is asymmetric (normalize) is directed, as ?build_network states
+    directed <- sw_directed(config) || !isSymmetric(unname(expected))
+    expect_reference(nrow(fit$edges), sum(expected != 0 & (directed | row(expected) <= col(expected))),
                      reference = "independent: non-zero cells (upper triangle with diagonal when undirected)",
                      covers = "build_network()", quantity = sprintf("edge count, %s", label), tolerance = 0)
   }, cases$config, cases$scaling, cases$threshold))

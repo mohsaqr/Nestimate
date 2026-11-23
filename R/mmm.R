@@ -393,7 +393,11 @@
 #'   at least 2. Default `2`.
 #' @param n_starts How many starting configurations to try, a positive whole
 #'   number. More starts make it likelier that the best local maximum is
-#'   found. Default `50`.
+#'   found. Default `50`. On Unix the starts are screened in parallel on at
+#'   most `getOption("mc.cores", 2L)` cores; the fit does not depend on the
+#'   number of cores. A start whose EM stops with an error is left out with
+#'   a warning of class `nestimate_mmm_start_failed` that counts them; when
+#'   every start fails the error has class `nestimate_mmm_failed`.
 #' @param max_iter The most EM iterations a start may run, a positive whole
 #'   number. Default `200`.
 #' @param tol The convergence tolerance: EM stops when the log-likelihood
@@ -785,35 +789,72 @@ build_mmm <- function(data,
   })
   inits <- c(list(init_kmeans), init_random)
 
-  # Screen: short EM runs (parallel on Unix)
+  # Screen: short EM runs, in parallel on Unix on at most
+  # getOption("mc.cores", 2L) cores (mclapply()'s own default). The starts are
+  # drawn above, before forking, and each EM run is deterministic, so the
+  # number of cores does not change the fit.
   n_cores <- 1L
   if (.Platform$OS.type == "unix" && n_starts > 1L) {
     detected <- parallel::detectCores(logical = FALSE)
-    n_cores <- min(if (is.finite(detected)) detected else 1L, n_starts)
+    allowed <- getOption("mc.cores", 2L)
+    n_cores <- min(if (is.finite(detected)) detected else 1L, n_starts,
+                   if (is.numeric(allowed) && length(allowed) == 1L &&
+                       allowed >= 1) as.integer(allowed) else 1L)
     if (isTRUE(as.logical(Sys.getenv("_R_CHECK_LIMIT_CORES_", "FALSE")))) { # nocov start
       n_cores <- 1L
     } # nocov end
   }
 
+  # Screen phase: no covariates (fast), just find good transition inits. A
+  # start whose EM stops with an error is caught here, inside the worker, so
+  # the same starts are left out on one core and on several (an error that
+  # reached mclapply() would also take the other starts of its fork with it).
   .run_screen <- function(init) {
-    # Screen phase: no covariates (fast), just find good transition inits
-    .mmm_em(counts, init_state, k, screen_iter, tol, smooth, n_states,
-            init_posterior = init, from_ind = from_ind, cov_df = NULL)
+    tryCatch(
+      .mmm_em(counts, init_state, k, screen_iter, tol, smooth, n_states,
+              init_posterior = init, from_ind = from_ind, cov_df = NULL),
+      error = function(e) {
+        structure(list(message = conditionMessage(e)),
+                  class = "nestimate_mmm_start_error")
+      }
+    )
   }
 
   if (n_cores > 1L) {
     screen_results <- parallel::mclapply(inits, .run_screen,
                                           mc.cores = n_cores)
+    # a start whose fork died (NULL, or a "try-error" from the fork itself)
+    # is run again in this process, as on one core
+    lost <- vapply(screen_results, function(r) {
+      is.null(r) || inherits(r, "try-error")
+    }, logical(1))
+    screen_results[lost] <- lapply(inits[lost], .run_screen)
   } else {
     screen_results <- lapply(inits, .run_screen)
   }
 
-  # Handle failed parallel runs
+  # The starts that stopped with an error are left out, and counted
+  failed <- vapply(screen_results, inherits, logical(1),
+                   what = "nestimate_mmm_start_error")
+  if (any(failed)) {
+    first_error <- screen_results[[which(failed)[1L]]]$message
+    if (all(failed)) {
+      stop(errorCondition(sprintf(
+        "build_mmm(): every one of the %d starts of the EM failed. First error: %s",
+        length(failed), first_error),
+        class = "nestimate_mmm_failed", call = NULL))
+    }
+    warning(warningCondition(sprintf(
+      "build_mmm(): %d of the %d starts of the EM failed and were left out. First error: %s",
+      sum(failed), length(failed), first_error),
+      class = "nestimate_mmm_start_failed", call = NULL))
+    screen_results[failed] <- list(NULL)
+  }
   screen_lls <- vapply(screen_results, function(r) {
-    if (is.null(r)) -Inf else r$ll # nocov
+    if (is.null(r)) -Inf else r$ll
   }, numeric(1))
   screen_conv <- vapply(screen_results, function(r) {
-    if (is.null(r)) FALSE else r$converged # nocov
+    if (is.null(r)) FALSE else r$converged
   }, logical(1))
 
   # Refine: top candidates + any that converged early

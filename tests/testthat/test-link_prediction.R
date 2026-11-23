@@ -389,8 +389,9 @@ test_that("consensus ranking computed for multi-method predictions", {
   expect_true(is.data.frame(pred$consensus))
   expect_true(all(c("from", "to", "avg_rank", "n_methods", "consensus_rank")
                   %in% names(pred$consensus)))
-  # Consensus ranks are sequential
-  expect_equal(pred$consensus$consensus_rank, seq_len(nrow(pred$consensus)))
+  # Consensus ranks follow avg_rank; equal averages share a rank
+  expect_equal(pred$consensus$consensus_rank,
+               as.integer(rank(pred$consensus$avg_rank, ties.method = "min")))
   # avg_rank is non-decreasing (sorted)
   expect_true(all(diff(pred$consensus$avg_rank) >= -1e-10))
 })
@@ -534,4 +535,90 @@ test_that("predict_links refuses an mcml with a classed error", {
                      T3 = c("C", "D", "D", "A"))
   mc <- build_mcml(seqs, list(Z = c("A", "B"), G = c("C", "D")))
   expect_error(predict_links(mc), class = "nestimate_bad_input")
+})
+
+
+# Tied scores share a rank, and average precision and precision@k do not
+# depend on the order of tied pairs: on the path A-B-C-D, A-C and B-D are
+# symmetric and evaluate alike.
+test_that("tied link scores are ranked and evaluated alike", {
+  adjacency <- matrix(0, 4, 4, dimnames = list(LETTERS[1:4], LETTERS[1:4]))
+  adjacency["A", "B"] <- adjacency["B", "C"] <- adjacency["C", "D"] <- 1
+  adjacency <- adjacency + t(adjacency)
+  pred <- predict_links(adjacency, methods = "common_neighbors")
+  expect_identical(pred$predictions$rank, c(1L, 1L, 3L))
+  by_ac <- evaluate_links(pred, data.frame(from = "A", to = "C"), k = 1)
+  by_bd <- evaluate_links(pred, data.frame(from = "B", to = "D"), k = 1)
+  expect_equal(by_ac$average_precision, 0.5)
+  expect_equal(by_bd$average_precision, 0.5)
+  expect_equal(by_ac$precision_at_1, 0.5)
+  expect_equal(by_bd$precision_at_1, 0.5)
+  consensus <- predict_links(adjacency,
+                             methods = c("common_neighbors", "jaccard"))$consensus
+  expect_identical(consensus$consensus_rank, c(1L, 1L, 3L))
+})
+
+
+# Average precision groups pairs by the value of the score. On a four-node
+# star the default indices give scores that differ only in the last digits;
+# grouping them by their printed value stopped with "factor level [2] is
+# duplicated".
+test_that("evaluate_links() takes scores that are close but unequal", {
+  star <- matrix(0, 4, 4, dimnames = list(LETTERS[1:4], LETTERS[1:4]))
+  star["A", c("B", "C", "D")] <- 1
+  star <- star + t(star)
+  metrics <- evaluate_links(predict_links(star),
+                            data.frame(from = "B", to = "C"), k = 1:3)
+  expect_identical(nrow(metrics), 6L)
+  expect_false(anyNA(metrics$average_precision))
+  # three tied pairs, one of them known
+  tied <- subset(metrics, method == "common_neighbors")
+  expect_equal(tied$average_precision, 1 / 3)
+  expect_equal(tied$precision_at_1, 1 / 3)
+
+  close <- c(0.3, 0.1 + 0.2, 0.1 + 0.2 + 1e-16, 0.2, 0.1)
+  expect_identical(length(unique(close)), 5L)
+  # by score: F T F T F -> (1/2 + 2/4) / 2
+  expect_equal(.lp_compute_ap(close, c(FALSE, TRUE, FALSE, TRUE, FALSE)), 0.5)
+  # no ties: the mean precision at the rank of each known edge
+  expect_equal(.lp_compute_ap(c(.9, .8, .7, .6, .5, .4),
+                              c(TRUE, FALSE, TRUE, FALSE, FALSE, TRUE)),
+               mean(c(1, 2 / 3, 3 / 6)))
+  # ties: precision at each distinct score, weighted by its known edges
+  # (0.9: 0/1, weight 0; 0.5: 1/4, weight 1/2; 0.1: 2/5, weight 1/2)
+  expect_equal(.lp_compute_ap(c(.9, .5, .5, .5, .1),
+                              c(FALSE, TRUE, FALSE, FALSE, TRUE)), 0.325)
+})
+
+# print() shows the stored rank, which tied pairs share, not the row number.
+test_that("print.net_link_prediction() shows the shared ranks", {
+  star <- matrix(0, 4, 4, dimnames = list(LETTERS[1:4], LETTERS[1:4]))
+  star["A", c("B", "C", "D")] <- 1
+  star <- star + t(star)
+  single <- predict_links(star, methods = "common_neighbors")
+  shown <- capture.output(print(single))
+  expect_identical(single$predictions$rank, c(1L, 1L, 1L))
+  expect_identical(sum(grepl("^    1\\. ", shown)), 3L)
+  expect_false(any(grepl("^    [23]\\. ", shown)))
+
+  path <- matrix(0, 4, 4, dimnames = list(LETTERS[1:4], LETTERS[1:4]))
+  path["A", "B"] <- path["B", "C"] <- path["C", "D"] <- 1
+  path <- path + t(path)
+  both <- predict_links(path, methods = c("common_neighbors", "jaccard"))
+  expect_identical(both$consensus$consensus_rank, c(1L, 1L, 3L))
+  shown <- capture.output(print(both))
+  expect_identical(sum(grepl("^    1\\. ", shown)), 2L)
+  expect_identical(sum(grepl("^    3\\. ", shown)), 1L)
+  expect_false(any(grepl("^    2\\. ", shown)))
+})
+
+test_that("tied pairs are listed in one order on every system", {
+  nodes <- c("b", "A", "a", "B", "c")
+  W <- matrix(0, 5, 5, dimnames = list(nodes, nodes))
+  W[1, 2:5] <- W[2:5, 1] <- 1
+  p <- predict_links(W, methods = c("common_neighbors", "jaccard"))
+  # six tied pairs among the leaves: C-locale order, whatever the collation
+  expect_identical(p$consensus$from, c("A", "A", "A", "B", "a", "a"))
+  expect_identical(p$consensus$to, c("B", "a", "c", "c", "B", "c"))
+  expect_identical(p$consensus$consensus_rank, rep(1L, 6))
 })

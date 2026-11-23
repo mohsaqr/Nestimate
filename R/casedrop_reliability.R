@@ -197,6 +197,7 @@ casedrop_reliability <- function(x,
   x <- .tna_input(x, "casedrop_reliability()", need_data = TRUE,
                   actor = actor)
   .stop_latency_resampling(list(x), "casedrop_reliability()")
+  .stop_multilevel_resampling(list(x), "casedrop_reliability()")
   target <- match.arg(target)
   .check_permutation_block(actor, paired = FALSE)
 

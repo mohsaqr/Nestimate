@@ -715,3 +715,20 @@ test_that("starred labels are graded by p-value, as on the permutation graph", {
   expect_identical(sum(stars == "**"), sum(p >= 0.001 & p < 0.01))
   expect_identical(sum(stars == "*"), sum(p >= 0.01 & p < 0.05))
 })
+
+# ---- a scaled comparison's networks carry scaled edge tables ----
+test_that("scaled networks hold the scaled weights in their edge tables", {
+  f <- .cn_fixture()
+  for (sc in c("max", "minmax", "rank")) {
+    scaled <- compare_networks(x = f$early, y = f$late, scaling = sc)$networks
+    for (net in scaled) {
+      cells <- net$weights[cbind(net$edges$from, net$edges$to)]
+      expect_identical(net$edges$weight, unname(cells))
+    }
+    # the edges themselves are the estimated network's
+    expect_identical(scaled[[1L]]$edges[c("from", "to")],
+                     f$early$edges[c("from", "to")])
+  }
+  plain <- compare_networks(x = f$early, y = f$late)$networks[[1L]]
+  expect_identical(plain$edges, f$early$edges)
+})

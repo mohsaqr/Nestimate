@@ -1095,3 +1095,15 @@ test_that("the PH truncation warning respects max_scale", {
   expect_warning(persistent_homology(sc, max_dim = 1L),
                  class = "nestimate_truncated_complex")
 })
+
+test_that("verify_simplicial prints only through its print method", {
+  skip_if_not_installed("igraph")
+  mat <- .make_sc_mat()
+  expect_silent(res <- verify_simplicial(mat))
+  expect_s3_class(res, "net_simplicial_check")
+  expect_true(res$euler_matches)
+  out <- capture.output(print(res))
+  expect_length(out, 3L)
+  expect_match(out[1], "Cliques:  MATCH")
+  expect_match(out[3], "VERIFIED")
+})

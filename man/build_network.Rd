@@ -39,7 +39,10 @@ build_network(
 \arguments{
 \item{data}{The data the method reads (see its page), or a fitted
 clustering (\code{net_clustering}, \code{net_mmm}), to build one network per
-cluster with the clustering's method.}
+cluster with the clustering's method. Per-cluster \code{"latency"} networks
+are not available (a clustering keeps the sequences, not the event
+times): name another \code{method}, or the error has class
+\code{nestimate_latency_clusters}.}
 
 \item{method}{The estimator. Each has its own page with its arguments:
 \tabular{lll}{
@@ -81,9 +84,11 @@ every cell for the transition methods (tna's rule, so with no zero cell
 the smallest weight becomes 0) and over the non-zero weights, into
 (0, 1], for the other methods, \code{"max"} divides by the largest absolute
 weight, \code{"rank"} replaces the non-zero weights by their ranks, and
-\code{"normalize"} makes each row's absolute weights sum to 1. Zero weights
-stay zero under every option. Combine them as in \code{c("rank", "minmax")}.
-Default \code{NULL} (none).}
+\code{"normalize"} makes each row's absolute weights sum to 1; an undirected
+network whose matrix it makes asymmetric becomes directed, so both of
+a pair's values are kept as edges. Zero weights stay zero under every
+option. Combine them as in \code{c("rank", "minmax")}. Default \code{NULL}
+(none).}
 
 \item{threshold}{Weights whose absolute value is below this are set to
 zero. Default \code{0} (none).}
@@ -138,8 +143,8 @@ The \code{netobject}'s fields:
 \item{threshold}{The threshold applied.}
 \item{n_nodes}{Number of nodes.}
 \item{n_edges}{Number of non-zero edges.}
-\item{level}{Decomposition level used, or NULL; for \code{mgm}, the category
-count of each variable.}
+\item{level}{Decomposition level used, or NULL; for \code{mgm} built without
+a decomposition, the category count of each variable.}
 \item{build_args}{The resolved column/format arguments (\code{actor},
 \code{action}, \code{time}, \code{session}, \code{order}, \code{codes},
 \code{format}, \code{window_size}, \code{mode}) used for this build.}

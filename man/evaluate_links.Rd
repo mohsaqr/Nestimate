@@ -40,7 +40,10 @@ The AUC is the probability that a known edge scores higher than a pair
 that is not one (ties count half), so 0.5 is chance level. Average
 precision is the mean of the precisions at the rank of each known edge,
 and precision\eqn{@}k the share of known edges among the \code{k}
-highest-scoring pairs. Only the pairs listed in the predictions are
+highest-scoring pairs. Pairs with the same score are not ordered: average
+precision is taken over the distinct scores (as scikit-learn's
+\code{average_precision_score}), and a group of tied pairs across the \code{k}-th
+place counts by the share of its places within the top \code{k}. Only the pairs listed in the predictions are
 evaluated: with \code{exclude_existing = TRUE}, the default of
 \code{\link[=predict_links]{predict_links()}}, the network's current edges are not scored, so the
 known edges should be ones held out of the network (a later period, a

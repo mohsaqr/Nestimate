@@ -93,10 +93,12 @@
 #'   `"edge_diff"` / `"centrality_diff"` plots mark the difference tests'
 #'   p-values below it as differing. Default `0.05`.
 #' @param gamma The EBIC hyperparameter; larger values give sparser
-#'   networks. Default `0.5`. Replaced by the value stored in a `netobject`.
+#'   networks. Default `0.5`. For a `netobject`, the network's own value is
+#'   used (the estimator's default when none is stored) and a different one
+#'   is ignored with a warning of class `nestimate_ignored_argument`.
 #' @param nlambda The number of lambda values in the regularisation path,
-#'   at least 2. Default `100`. Replaced by the value stored in a
-#'   `netobject`.
+#'   at least 2. Default `100`. For a `netobject`, the network's own value,
+#'   as for `gamma`.
 #' @param centrality The centrality measures to compute. Default all four
 #'   built-in ones: `"strength"` (sum of absolute edge weights),
 #'   `"expected_influence"` (sum of signed edge weights), `"betweenness"`
@@ -109,8 +111,8 @@
 #'   `list(my_metric = ...)`. Default `NULL`; a measure in `centrality`
 #'   that is neither built in nor returned by it raises an error.
 #' @param cor_method The correlation method: `"pearson"` (default),
-#'   `"spearman"` or `"kendall"`. Replaced by the value stored in a
-#'   `netobject`.
+#'   `"spearman"` or `"kendall"`. For a `netobject`, the network's own value,
+#'   as for `gamma`.
 #' @param ncores The number of cores for the resampling, used through
 #'   [parallel::mclapply()], which forks the R process; on Windows it
 #'   accepts only 1, and any larger value raises an error. Default `1`
@@ -233,6 +235,11 @@ boot_glasso <- function(x,
     is.character(cor_method), length(cor_method) == 1,
     is.numeric(ncores), length(ncores) == 1, ncores >= 1
   )
+  # which glasso settings the caller gave, read before they are normalised
+  # (a netobject keeps its own; see the input dispatch)
+  given <- list(gamma = if (!missing(gamma)) gamma,
+                nlambda = if (!missing(nlambda)) nlambda,
+                cor_method = if (!missing(cor_method)) cor_method)
   iter <- as.integer(iter)
   cs_iter <- as.integer(cs_iter)
   nlambda <- as.integer(nlambda)
@@ -277,10 +284,28 @@ boot_glasso <- function(x,
     }
     data_mat <- x$data
     if (!is.matrix(data_mat)) data_mat <- as.matrix(data_mat)
-    # Extract params from netobject if available
-    if (!is.null(x$params$gamma)) gamma <- x$params$gamma
-    if (!is.null(x$params$nlambda)) nlambda <- as.integer(x$params$nlambda)
-    if (!is.null(x$params$cor_method)) cor_method <- x$params$cor_method
+    # The network's own settings: those stored in params, the estimator's
+    # defaults for the rest (a default build stores none), so the bootstrap
+    # resamples the network that was built. An explicit argument that
+    # disagrees is ignored with a warning.
+    defaults <- formals(.estimator_glasso)
+    own <- lapply(c(gamma = "gamma", nlambda = "nlambda",
+                    cor_method = "cor_method"),
+                  function(k) .param_get(x$params, k, eval(defaults[[k]])))
+    overridden <- names(given)[vapply(names(given), function(k) {
+      !is.null(given[[k]]) && !isTRUE(all.equal(given[[k]], own[[k]],
+                                                check.attributes = FALSE))
+    }, logical(1))]
+    if (length(overridden)) {
+      warning(warningCondition(sprintf(paste0(
+        "boot_glasso() resamples the network as it was built; ignored %s. ",
+        "Build the network with these settings to bootstrap them."),
+        paste(sprintf("`%s`", overridden), collapse = ", ")),
+        class = "nestimate_ignored_argument", call = NULL))
+    }
+    gamma <- own$gamma
+    nlambda <- as.integer(own$nlambda)
+    cor_method <- own$cor_method
     glasso_set <- .bg_glasso_settings(x$params)
     # build_network()'s threshold zeroes the same partial correlations when
     # the network is not scaled, so every fit below is thresholded as the

@@ -132,3 +132,20 @@ test_that("a relabelled latency network bootstraps under its labels", {
   expect_equal(edges$n_replies, 6)
   expect_equal(edges$n_sequences, 6)
 })
+
+# A resample of mostly instant replies resolves a percentile cap of 0, which
+# build_network() refuses too; the bootstrap stops instead of dropping the
+# draws as NaN.
+test_that("a resample with a zero percentile cap is refused", {
+  replies <- data.frame(id = rep(1:2, each = 2), state = rep(c("A", "B"), 2),
+                        t = c(0, 0, 0, 8))
+  net <- suppressMessages(build_latency(replies, action = "state", time = "t",
+                                        actor = "id"))
+  expect_error(suppressMessages(bootstrap_network(net, iter = 20, seed = 1)),
+               class = "nestimate_latency_zero_cap")
+  held <- suppressMessages(build_latency(replies, action = "state", time = "t",
+                                         actor = "id", cap = "8s"))
+  expect_s3_class(suppressMessages(bootstrap_network(held, iter = 20,
+                                                     seed = 1)),
+                  "net_bootstrap")
+})

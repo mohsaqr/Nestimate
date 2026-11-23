@@ -41,7 +41,9 @@
 #' every edge's weight is recomputed from the replies of the drawn sequences.
 #' A percentile cap the network resolved from its own replies is resolved
 #' again in every resample; a cap in seconds, or one pooled over the groups of
-#' a grouped build, keeps its value. Per-unit caps (`latency_scope` other than
+#' a grouped build, keeps its value. A resample whose resolved cap is 0
+#' seconds (its replies mostly instant) stops the bootstrap with an error of
+#' class `nestimate_latency_zero_cap`; give the cap in seconds. Per-unit caps (`latency_scope` other than
 #' `"global"`) and `actor` raise an error of class
 #' `nestimate_latency_resampling` or `nestimate_actor_unsupported`; to resample
 #' within groups, build the network with `group` and bootstrap the group. With
@@ -142,7 +144,10 @@
 #'   `nestimate_actor_missing`. A network without its data raises an error,
 #'   and one that rests on a single sequence, or one-hot data with no actor or
 #'   session, has nothing to resample and raises an error of class
-#'   `nestimate_single_sequence`. For the `print()` methods: the result of
+#'   `nestimate_single_sequence`. A sequence network with no observed
+#'   transition raises an error of class `nestimate_no_transition`, and a
+#'   network built with `level` one of class
+#'   `nestimate_multilevel_resampling`. For the `print()` methods: the result of
 #'   `bootstrap_network()`.
 #' @param iter The number of bootstrap replicates, at least 2. Default
 #'   `1000`.
@@ -326,6 +331,7 @@ bootstrap_network <- function(x,
   }
 
   # ---- netobject_group dispatch: bootstrap each element ----
+  .stop_multilevel_resampling(list(x), "bootstrap_network()")
   if (inherits(x, "netobject_group")) {
     .stop_single_unit_group(x)
     # the experimental note of a latency bootstrap is said once for the group
@@ -468,6 +474,7 @@ bootstrap_network <- function(x,
     transition_data <- .resampling_transition_data(data, x$metadata, params)
     trans_2d <- .precompute_per_sequence(transition_data, count_method, params,
                                          states)
+    .stop_no_transition(trans_2d, "bootstrap_network()")
     # Several actor columns are nested levels: every level is checked, and
     # only the outermost is resampled (Davison & Hinkley, 1997, section 3.8:
     # resampling inside the clusters as well overstates the variance).
@@ -502,6 +509,7 @@ bootstrap_network <- function(x,
     )
   } else {
     .stop_block_unsupported(actor, method)
+    .stop_no_transition_refit(x, method, "bootstrap_network()")
     boot_matrices <- .bootstrap_association(
       data = data, estimator = estimator, params = params, states = states,
       scaling = scaling, threshold = threshold, iter = iter,
@@ -743,6 +751,38 @@ bootstrap_network <- function(x,
   invisible(NULL)
 }
 
+# A sequence network with no observed transition (no sequence has two
+# adjacent observed states) gives all-zero resamples and zero-width
+# intervals; it is refused, as transition_entropy() and the landscapes do.
+#' @param counts Per-unit transition counts (.precompute_per_sequence()).
+#' @param verb The verb, for the message.
+#' @noRd
+.stop_no_transition <- function(counts, verb) {
+  if (is.null(counts) || sum(counts) > 0) return(invisible(NULL))
+  stop(errorCondition(sprintf(paste0(
+    "%s: no transition is observed (no sequence has two adjacent observed ",
+    "states), so there is nothing to resample."), verb),
+    class = c("nestimate_no_transition", "nestimate_bad_input"),
+    call = NULL))
+}
+
+# attention, ngram, gap and reverse networks are resampled by refitting, so
+# there are no per-unit counts to sum: the network's own estimator, run once
+# on its stored data, says whether any transition is observed.
+#' @param net A netobject.
+#' @param method Its resolved method.
+#' @param verb The verb, for the message.
+#' @noRd
+.stop_no_transition_refit <- function(net, method, verb) {
+  if (!method %in% c("attention", "ngram", "gap", "reverse") ||
+      !is.data.frame(net$data)) {
+    return(invisible(NULL))
+  }
+  fit <- do.call(get_estimator(method)$fn,
+                 c(list(data = net$data), net$params))
+  .stop_no_transition(fit$matrix, verb)
+}
+
 #' @noRd
 .stop_single_unit_group <- function(x) {
   invisible(Map(.stop_single_unit, x, label = names(x)))
@@ -808,7 +848,9 @@ bootstrap_network <- function(x,
 #' @noRd
 .bootstrap_transition <- function(data, method, params, states,
                                   scaling, threshold, iter) {
-  .bootstrap_counts(.precompute_per_sequence(data, method, params, states),
+  counts <- .precompute_per_sequence(data, method, params, states)
+  .stop_no_transition(counts, "bootstrap_network()")
+  .bootstrap_counts(counts,
                     method = method, states = states, scaling = scaling,
                     threshold = threshold, iter = iter)
 }
@@ -1669,6 +1711,18 @@ summary.wtna_boot_mixed <- function(object, ...) {
       stats::quantile(pairs$latency[rows][changed[rows]], params$latency_cap,
                       names = FALSE, type = 7)
     } else x$latency_cap_seconds
+    # a resample whose replies are mostly instant resolves a cap of 0, which
+    # build_network() refuses too: no reply speed can be scored against it
+    if (!(cap > 0)) {
+      stop(errorCondition(sprintf(paste0(
+        "bootstrap_network(): a resample's %s percentile of the reply ",
+        "latencies is 0 seconds, so its replies cannot be weighted. Build the ",
+        "network with the cap in seconds (e.g. latency_cap = \"%gs\") to ",
+        "resample it."), format(params$latency_cap),
+        signif(x$latency_cap_seconds, 3)),
+        class = c("nestimate_latency_zero_cap", "nestimate_bad_input"),
+        call = NULL))
+    }
     w <- 1 - (1 - floor) * pmin(pairs$latency[rows] / cap, 1)
     total <- numeric(k * k)
     sums <- rowsum(w, cell[rows], reorder = FALSE)

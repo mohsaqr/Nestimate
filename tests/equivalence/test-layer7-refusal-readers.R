@@ -114,7 +114,6 @@ test_that("an edge-list mcml layer is not read as sequences", {
 test_that("a latency network keeps its senders' sequences, which every sequence reader reads", {
   cells <- rbind(
     by_verb("latency", latency_results,
-            defect = c(build_clusters = "refuses (nestimate_bad_input) the sender sequences that build_mmm() and the other sequence readers read: .extract_sequence_data() admits relative/frequency/co_occurrence/attention only (R/cluster_data.R:505-512)"),
             note = same(names(latency_results), "a latency network's $data are the senders of each chat in order, a wide sequence table")),
     by_verb("latency", chain_results, allow_warning = same(names(chain_results), "nestimate_rows_normalized"),
             note = same(names(chain_results), "a chain reader row-normalises non-negative weights and says so with nestimate_rows_normalized"))

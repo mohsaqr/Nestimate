@@ -412,3 +412,126 @@ test_that("with actor, a proportion that drops no actor is not run", {
   expect_equal(corr[, 3L], rep(1, 10))     # 1 actor remains: still run
   expect_equal(unname(cs$cs), 0.9)
 })
+
+# A network built with `level` stores already-decomposed data without its id
+# column, so no resample can be decomposed again: the resampling verbs refuse
+# it instead of returning NaN, p = 1 and CS = 0 from draws that all failed.
+test_that("resampling verbs refuse a network built with level", {
+  .local_seed(2)
+  person <- rep(1:30, each = 6)
+  shared <- stats::rnorm(30)[person]
+  values <- data.frame(person, a = shared + stats::rnorm(180),
+                       b = shared + stats::rnorm(180), c = stats::rnorm(180))
+  within <- build_network(values, method = "cor",
+                          params = list(id = "person"), level = "within")
+  expect_error(bootstrap_network(within, iter = 5, seed = 1),
+               class = "nestimate_multilevel_resampling")
+  expect_error(centrality_stability(within, iter = 5, seed = 1),
+               class = "nestimate_multilevel_resampling")
+  expect_error(casedrop_reliability(within, iter = 5, seed = 1),
+               class = "nestimate_multilevel_resampling")
+  expect_error(network_reliability(within, iter = 5, seed = 1),
+               class = "nestimate_multilevel_resampling")
+})
+
+# mgm returns its per-variable category counts under the same name, `level`,
+# which used to replace the decomposition and let the refusal pass.
+test_that("an mgm network built with level keeps the decomposition", {
+  skip_if_not_installed("glmnet")
+  .local_seed(2)
+  person <- rep(1:30, each = 6)
+  shared <- stats::rnorm(30)[person]
+  values <- data.frame(person, a = shared + stats::rnorm(180),
+                       b = shared + stats::rnorm(180), c = stats::rnorm(180))
+  within <- build_network(values, method = "mgm", actor = "person",
+                          level = "within")
+  expect_identical(within$level, "within")
+  expect_error(bootstrap_network(within, iter = 5, seed = 1),
+               class = "nestimate_multilevel_resampling")
+  expect_error(centrality_stability(within, iter = 5, seed = 1),
+               class = "nestimate_multilevel_resampling")
+  expect_error(casedrop_reliability(within, iter = 5, seed = 1),
+               class = "nestimate_multilevel_resampling")
+  expect_error(network_reliability(within, iter = 5, seed = 1),
+               class = "nestimate_multilevel_resampling")
+  both <- build_network(values, method = "mgm", actor = "person",
+                        level = "both")
+  expect_identical(both$between$level, "between")
+  expect_identical(both$within$level, "within")
+  # without a decomposition the category counts stay where they were
+  pooled <- build_network(values, method = "mgm", metadata_cols = "person")
+  expect_equal(unname(pooled$level), c(1, 1, 1))
+})
+
+# A sequence network with no observed transition gives all-zero resamples;
+# the resampling verbs refuse it, as transition_entropy() and the
+# landscapes do.
+test_that("resampling verbs refuse a network with no observed transition", {
+  lone <- build_network(data.frame(T1 = c("A", "B", "C", "A"),
+                                   T2 = NA_character_), method = "relative")
+  expect_error(bootstrap_network(lone, iter = 5, seed = 1),
+               class = "nestimate_no_transition")
+  expect_error(permutation(lone, lone, iter = 5, seed = 1),
+               class = "nestimate_no_transition")
+  expect_error(network_reliability(lone, iter = 5, seed = 1),
+               class = "nestimate_no_transition")
+})
+
+# The refusal covers every sequence method on every verb: attention, ngram,
+# gap and reverse networks are resampled by refitting and used to pass it,
+# returning zero-width intervals, undefined reliability and p = 1.
+test_that("refitted sequence networks with no transition are refused too", {
+  lone <- data.frame(T1 = rep(c("A", "B"), 4), T2 = NA_character_,
+                     half = rep(c("x", "y"), each = 4))
+  refused <- function(method) {
+    net <- build_network(lone, method = method, state_cols = c("T1", "T2"))
+    grouped <- build_network(lone, method = method,
+                             state_cols = c("T1", "T2"), group = "half")
+    expect_error(bootstrap_network(net, iter = 3, seed = 1),
+                 class = "nestimate_no_transition")
+    expect_error(network_reliability(net, iter = 3, seed = 1),
+                 class = "nestimate_no_transition")
+    expect_error(permutation(net, net, iter = 3, seed = 1),
+                 class = "nestimate_no_transition")
+    expect_error(compare_networks(net, net, test = "permutation", iter = 3,
+                                  seed = 1),
+                 class = "nestimate_no_transition")
+    expect_error(bootstrap_network(grouped, iter = 3, seed = 1),
+                 class = "nestimate_no_transition")
+    expect_error(network_reliability(grouped, iter = 3, seed = 1),
+                 class = "nestimate_no_transition")
+    expect_error(permutation(grouped, iter = 3, seed = 1),
+                 class = "nestimate_no_transition")
+  }
+  invisible(lapply(c("attention", "ngram", "gap", "reverse"), refused))
+})
+
+test_that("a refitted sequence network with transitions is still resampled", {
+  seen <- data.frame(T1 = c("A", "B", "A", "B", "A", "B"),
+                     T2 = c("B", "A", "B", "B", "A", "A"),
+                     T3 = c("A", "A", "B", "A", "B", "B"))
+  net <- build_network(seen, method = "attention")
+  boot <- bootstrap_network(net, iter = 5, seed = 1)
+  expect_true(inherits(boot, "net_bootstrap"))
+  expect_true(any(boot$summary$sd > 0))
+  expect_true(inherits(network_reliability(net, iter = 5, seed = 1),
+                       "net_reliability"))
+  expect_true(inherits(permutation(net, net, iter = 5, seed = 1),
+                       "net_permutation"))
+})
+
+# level = "both" returns a netobject_ml, neither a netobject nor a group:
+# network_reliability() named the wrong reason (its type gate) for it.
+test_that("network_reliability() names the level of a two-level fit", {
+  .local_seed(2)
+  person <- rep(1:30, each = 6)
+  shared <- stats::rnorm(30)[person]
+  values <- data.frame(person, a = shared + stats::rnorm(180),
+                       b = shared + stats::rnorm(180), c = stats::rnorm(180))
+  both <- build_network(values, method = "cor",
+                        params = list(id = "person"), level = "both")
+  expect_error(network_reliability(both, iter = 5, seed = 1),
+               class = "nestimate_multilevel_resampling")
+  expect_error(network_reliability(list(1), iter = 5, seed = 1),
+               class = "nestimate_bad_input")
+})

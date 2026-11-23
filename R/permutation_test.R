@@ -173,7 +173,8 @@
 #' `nestimate_bad_input`.
 #' A network that rests on one sequence, or one-hot data with no actor or
 #' session, has nothing to shuffle and raises an error of class
-#' `nestimate_single_sequence`.
+#' `nestimate_single_sequence`. A sequence network with no observed
+#' transition raises an error of class `nestimate_no_transition`.
 #'
 #' Wide rows combined with `params = list(concat = k)` are shuffled as the
 #' merged sequences the estimator used, keeping their internal joins. A
@@ -614,6 +615,8 @@ permutation <- function(x, y = NULL,
     )
   } else {
     .stop_block_unsupported(actor, method)
+    .stop_no_transition_refit(x, method, "permutation()")
+    .stop_no_transition_refit(y, method, "permutation()")
     perm_result <- .permutation_association(
       x = x, y = y, nodes = nodes, method = method,
       iter = iter, paired = paired, nlambda = nlambda,
@@ -756,28 +759,35 @@ permutation <- function(x, y = NULL,
 }
 
 
-#' Refuse glasso networks estimated with different settings
+#' Refuse association networks estimated with different settings
 #'
 #' Every shuffled network is estimated with x's settings, so y must have
 #' been built with the same ones for its observed weights to belong to the
-#' same estimator.
+#' same estimator. Otherwise the observed difference holds the difference
+#' between the two settings, which no shuffle reproduces. The settings
+#' compared are the estimator's own arguments (its formals), each read from
+#' `params` or its default.
 #' @noRd
-.check_same_glasso_settings <- function(params_x, params_y) {
-  defaults <- formals(.estimator_glasso)
-  keys <- c("gamma", "nlambda", "lambda.min.ratio", "penalize.diagonal",
-            "refit", "cor_method", "threshold")
+.check_same_estimator_settings <- function(method, params_x, params_y) {
+  defaults <- formals(get_estimator(method)$fn)
+  keys <- setdiff(names(defaults),
+                  c("data", "id_col", "n", "input_type", "..."))
+  setting <- function(params, k) {
+    .param_get(params, k, if (is.name(defaults[[k]])) NULL else
+      eval(defaults[[k]]))
+  }
   differs <- vapply(keys, function(k) {
-    !isTRUE(all.equal(.param_get(params_x, k, eval(defaults[[k]])),
-                      .param_get(params_y, k, eval(defaults[[k]])),
+    !isTRUE(all.equal(setting(params_x, k), setting(params_y, k),
                       check.attributes = FALSE))
   }, logical(1))
   if (any(differs)) {
     stop(errorCondition(paste0(
-      "x and y are glasso networks built with different settings (",
+      "x and y are ", method, " networks built with different settings (",
       paste(keys[differs], collapse = ", "), "); build both with the same ",
       "`params` so their difference and its permutation null come from one ",
       "estimator."),
-      class = "nestimate_bad_input", call = NULL))
+      class = c("nestimate_estimator_mismatch", "nestimate_bad_input"),
+      call = NULL))
   }
   invisible(TRUE)
 }
@@ -1037,6 +1047,8 @@ permutation <- function(x, y = NULL,
     )
   } else {
     .stop_block_unsupported(actor, method)
+    .stop_no_transition_refit(x_src, method, "permutation()")
+    .stop_no_transition_refit(y_src, method, "permutation()")
     perm_result <- .permutation_association(
       x = x_src, y = y_src, nodes = nodes, method = method,
       iter = iter, paired = paired, nlambda = nlambda,
@@ -1129,6 +1141,8 @@ permutation <- function(x, y = NULL,
   # Pre-compute per-sequence counts for both groups
   trans_x <- .precompute_per_sequence(x$data, method, x$params, nodes)
   trans_y <- .precompute_per_sequence(y$data, method, y$params, nodes)
+  .stop_no_transition(trans_x, "permutation()")
+  .stop_no_transition(trans_y, "permutation()")
 
   n_x <- nrow(trans_x)
   n_y <- nrow(trans_y)
@@ -1708,7 +1722,11 @@ permutation <- function(x, y = NULL,
   m_sum <- 0
   m_sumsq <- 0
 
-  if (method == "glasso") .check_same_glasso_settings(x$params, y$params)
+  # sequence estimators keep column roles among their arguments, which two
+  # data sets may name differently, so only association settings are compared
+  if (method %in% .association_methods) {
+    .check_same_estimator_settings(method, x$params, y$params)
+  }
   estimate_from_rows <- .perm_row_estimator(method, params_x, nodes)
 
   # Running counters

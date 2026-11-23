@@ -394,3 +394,23 @@ test_that("scope with a cap in seconds is ignored, a bad scope refused", {
                              time = "at", latency_scope = "actor"),
                class = "nestimate_bad_input")
 })
+
+# Latency settings given in `params` are used when the argument is not
+# given, as the alias's arguments are; an explicit argument wins.
+test_that("latency settings in params are not overwritten by the defaults", {
+  replies <- data.frame(id = rep(1:6, each = 2), state = rep(c("A", "B"), 6),
+                        t = rep(c(0, 1), 6))
+  by_alias <- suppressMessages(build_latency(replies, action = "state",
+                                             time = "t", actor = "id",
+                                             cap = "2s", floor = 0.25,
+                                             aggregate = "sum"))
+  by_params <- suppressMessages(build_latency(replies, action = "state",
+    time = "t", actor = "id",
+    params = list(latency_cap = "2s", latency_floor = 0.25,
+                  latency_aggregate = "sum")))
+  expect_equal(by_params$weights, by_alias$weights)
+  expect_equal(by_params$latency_cap_seconds, 2)
+  explicit <- suppressMessages(build_latency(replies, action = "state",
+    time = "t", actor = "id", cap = "4s", params = list(latency_cap = "2s")))
+  expect_equal(explicit$latency_cap_seconds, 4)
+})

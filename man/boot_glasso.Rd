@@ -69,11 +69,13 @@ than repeated \code{cs_iter} times at each one.}
 p-values below it as differing. Default \code{0.05}.}
 
 \item{gamma}{The EBIC hyperparameter; larger values give sparser
-networks. Default \code{0.5}. Replaced by the value stored in a \code{netobject}.}
+networks. Default \code{0.5}. For a \code{netobject}, the network's own value is
+used (the estimator's default when none is stored) and a different one
+is ignored with a warning of class \code{nestimate_ignored_argument}.}
 
 \item{nlambda}{The number of lambda values in the regularisation path,
-at least 2. Default \code{100}. Replaced by the value stored in a
-\code{netobject}.}
+at least 2. Default \code{100}. For a \code{netobject}, the network's own value,
+as for \code{gamma}.}
 
 \item{centrality}{The centrality measures to compute. Default all four
 built-in ones: \code{"strength"} (sum of absolute edge weights),
@@ -89,8 +91,8 @@ ones: it takes the partial correlation matrix and returns a named list of centra
 that is neither built in nor returned by it raises an error.}
 
 \item{cor_method}{The correlation method: \code{"pearson"} (default),
-\code{"spearman"} or \code{"kendall"}. Replaced by the value stored in a
-\code{netobject}.}
+\code{"spearman"} or \code{"kendall"}. For a \code{netobject}, the network's own value,
+as for \code{gamma}.}
 
 \item{ncores}{The number of cores for the resampling, used through
 \code{\link[parallel:mclapply]{parallel::mclapply()}}, which forks the R process; on Windows it

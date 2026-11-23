@@ -80,7 +80,7 @@ test_that("weighted surface estimates agree with a hand-pooled slice", {
   m <- sequence_metrics(d)$longitudinal_entropy
   y <- sort(unique(surf$slices$value))[2]
   dist <- abs(m-y)
-  h <- max(sort(dist)[5],diff(range(m))/50)*1.01
+  h <- max(sort(dist)[5],diff(range(m))/50)
   w <- ifelse(dist<h,(1-(dist/h)^3)^3,0)
   # Each row's A->A and total outgoing A counts, weighted by observed length.
   aa <- c(1,0,0,0,1,1)
@@ -103,7 +103,7 @@ test_that("surface measures include prepared boundary states", {
   grid <- seq(endpoints[1],endpoints[2],length.out=3)
   expect_equal(sort(unique(surf$slices$value)),grid)
   distance <- abs(expected-grid[2])
-  bandwidth <- max(sort(distance)[5],diff(range(expected))/50)*1.01
+  bandwidth <- max(sort(distance)[5],diff(range(expected))/50)
   w <- ifelse(distance<bandwidth,(1-(distance/bandwidth)^3)^3,0)
   stay <- sum(w*c(1,0,2,0,1,0))/sum(w*c(2,2,3,1,2,2))
   row <- surf$slices[surf$slices$value==grid[2] & surf$slices$state=='A',]

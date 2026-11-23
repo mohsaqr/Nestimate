@@ -120,9 +120,11 @@ every cell for the transition methods (tna's rule, so with no zero cell
 the smallest weight becomes 0) and over the non-zero weights, into
 (0, 1], for the other methods, \code{"max"} divides by the largest absolute
 weight, \code{"rank"} replaces the non-zero weights by their ranks, and
-\code{"normalize"} makes each row's absolute weights sum to 1. Zero weights
-stay zero under every option. Combine them as in \code{c("rank", "minmax")}.
-Default \code{NULL} (none).}
+\code{"normalize"} makes each row's absolute weights sum to 1; an undirected
+network whose matrix it makes asymmetric becomes directed, so both of
+a pair's values are kept as edges. Zero weights stay zero under every
+option. Combine them as in \code{c("rank", "minmax")}. Default \code{NULL}
+(none).}
 
 \item{threshold}{Weights whose absolute value is below this are set to
 zero. Default \code{0} (none).}

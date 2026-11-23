@@ -108,7 +108,6 @@
 #'              dimnames = list(NULL, c("A","B","C")))
 #' w <- wtna(oh)
 #'
-#' \donttest{
 #' # Simple one-hot data
 #' df <- data.frame(
 #'   A = c(1, 0, 1, 0, 1),
@@ -126,7 +125,6 @@
 #'
 #' # With windowing
 #' net <- wtna(df, window_size = 2, mode = "non-overlapping")
-#' }
 #'
 #' @seealso \code{\link{build_network}}
 #'

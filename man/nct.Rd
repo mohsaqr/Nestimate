@@ -172,6 +172,7 @@ Malformed \code{iter}, \code{gamma}, \code{paired}, \code{abs}, \code{weighted} 
 error of class \code{nestimate_bad_input}.
 }
 \examples{
+\dontshow{if (requireNamespace("Matrix", quietly = TRUE)) withAutoprint(\{ # examplesIf}
 set.seed(1)
 x1 <- matrix(rnorm(100 * 4), 100, 4)
 x2 <- matrix(rnorm(100 * 4), 100, 4)
@@ -180,6 +181,7 @@ colnames(x1) <- colnames(x2) <- paste0("V", 1:4)
 res <- nct(x1, x2, iter = 20)
 res
 summary(res)
+\dontshow{\}) # examplesIf}
 }
 \references{
 van Borkulo, C. D., van Bork, R., Boschloo, L., Kossakowski,

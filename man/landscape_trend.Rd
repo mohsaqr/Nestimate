@@ -174,7 +174,8 @@ by the estimates.
 Along a covariate, sequences without its value or with fewer than two
 observed positions are left out, and the kernel's half-width is the distance
 to the \code{k}-th nearest sequence, but at least 1/50 of the covariate's
-range.
+range; when the \code{k} nearest all lie at that distance (a covariate with
+few distinct values), they weigh equally.
 }
 \section{Errors}{
 

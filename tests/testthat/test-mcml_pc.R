@@ -974,3 +974,37 @@ test_that("misassigned and reverse-keyed items warn with their own classes", {
       class = "nestimate_item_misfit"),
     class = "nestimate_reverse_keyed")
 })
+
+# The clusters, the composite macro and every loading_stability() replicate
+# are re-estimated with the node network's own estimator settings.
+test_that("build_mcml_pc() re-estimates clusters with the network's gamma", {
+  .local_seed(3)
+  sigma <- matrix(0.1, 8, 8)
+  sigma[1:4, 1:4] <- 0.2
+  sigma[5:8, 5:8] <- 0.2
+  diag(sigma) <- 1
+  values <- as.data.frame(matrix(stats::rnorm(150 * 8), 150, 8) %*% chol(sigma))
+  names(values) <- c(paste0("a", 1:4), paste0("b", 1:4))
+  clusters <- list(A = paste0("a", 1:4), B = paste0("b", 1:4))
+  net <- build_network(values, method = "glasso", gamma = 0)
+  fit <- suppressWarnings(build_mcml_pc(net, clusters))
+  by_cluster <- lapply(clusters, function(nodes) {
+    build_network(subset(values, select = nodes), method = "glasso",
+                  gamma = 0)$weights
+  })
+  expect_equal(fit$clusters$A$weights, by_cluster$A)
+  expect_equal(fit$clusters$B$weights, by_cluster$B)
+  expect_gt(fit$clusters$A$n_edges, 0L)
+})
+
+# scaling = "normalize" divides each row by its own total, so the network has
+# two weights per pair and is directed; the refusal names the scaling.
+test_that("a normalize-scaled association network is refused by name", {
+  d <- make_block_data(n = 200)
+  scaled <- build_network(d, method = "glasso", scaling = "normalize")
+  expect_true(scaled$directed)
+  expect_error(build_mcml_pc(scaled, clusters = block_clusters()),
+               class = "nestimate_asymmetric_network")
+  expect_error(build_mcml_pc(scaled, clusters = block_clusters()),
+               class = "nestimate_bad_input")
+})

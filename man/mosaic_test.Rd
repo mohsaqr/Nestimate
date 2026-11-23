@@ -140,8 +140,10 @@ net <- build_network(group_regulation_long, method = "frequency",
                      order = "Time")
 mosaic_test(net, method = c("chisq", "rao_scott"), actor = "Group")
 \donttest{
-# All tests, sequences nested in teams
-mosaic_test(net, actor = "Group")
+# Several tests, sequences nested in teams (the default runs them all,
+# the mixed model included)
+mosaic_test(net, method = c("rao_scott", "donner_klar", "cmh", "gee"),
+            actor = "Group")
 
 # Cell residuals of one test
 head(mosaic_test(net, method = "rao_scott", actor = "Group",

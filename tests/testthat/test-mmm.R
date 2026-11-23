@@ -923,3 +923,63 @@ test_that("classification_error is 1 - mean max posterior (Vermunt & Magidson)",
   expect_equal(q$classification_error, 0.8 / 3, tolerance = 1e-12)
   expect_equal(q$classification_error, 1 - q$avepp_overall, tolerance = 1e-12)
 })
+
+# A start whose EM stops with an error is left out, with a warning that
+# counts them, and the same starts are left out on one core and on two.
+# The error is injected into the screen runs (25 iterations) of the starts
+# whose first posterior is above 0.5.
+test_that("build_mmm() drops failed starts alike on one core and on two", {
+  seqs <- .make_mmm_data(n_per_group = 15, n_cols = 6, seed = 3)
+  real_em <- .mmm_em
+  old <- options(mc.cores = 1L)
+  on.exit(options(old), add = TRUE)
+  plain <- build_mmm(seqs, k = 2, n_starts = 8, seed = 11)
+
+  testthat::local_mocked_bindings(
+    .mmm_em = function(counts, init_state, n_comp, max_iter, ...,
+                       init_posterior = NULL) {
+      if (max_iter == 25L && init_posterior[1L, 1L] > 0.5) {
+        stop("injected start error", call. = FALSE)
+      }
+      real_em(counts, init_state, n_comp, max_iter, ...,
+              init_posterior = init_posterior)
+    }
+  )
+  fit_on <- function(cores) {
+    options(mc.cores = cores)
+    conditions <- list()
+    fit <- withCallingHandlers(
+      build_mmm(seqs, k = 2, n_starts = 8, seed = 11),
+      warning = function(w) {
+        conditions[[length(conditions) + 1L]] <<- w
+        invokeRestart("muffleWarning")
+      }
+    )
+    list(fit = fit, warnings = conditions)
+  }
+  serial <- fit_on(1L)
+  forked <- fit_on(2L)
+  expect_identical(length(serial$warnings), 1L)
+  expect_s3_class(serial$warnings[[1L]], "nestimate_mmm_start_failed")
+  expect_identical(conditionMessage(serial$warnings[[1L]]),
+                   conditionMessage(forked$warnings[[1L]]))
+  expect_match(conditionMessage(serial$warnings[[1L]]),
+               "of the 8 starts .* failed.*injected start error")
+  expect_identical(serial$fit, forked$fit)
+  expect_s3_class(serial$fit, "net_mmm")
+  expect_identical(dim(serial$fit$posterior), dim(plain$posterior))
+})
+
+test_that("build_mmm() stops when every start fails, on any core count", {
+  seqs <- .make_mmm_data(n_per_group = 15, n_cols = 6, seed = 3)
+  testthat::local_mocked_bindings(
+    .mmm_em = function(...) stop("injected start error", call. = FALSE)
+  )
+  old <- options(mc.cores = 1L)
+  on.exit(options(old), add = TRUE)
+  expect_error(build_mmm(seqs, k = 2, n_starts = 4, seed = 11),
+               class = "nestimate_mmm_failed")
+  options(mc.cores = 2L)
+  expect_error(build_mmm(seqs, k = 2, n_starts = 4, seed = 11),
+               class = "nestimate_mmm_failed")
+})

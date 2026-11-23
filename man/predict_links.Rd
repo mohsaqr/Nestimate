@@ -78,11 +78,13 @@ strings. The object's fields:
 \describe{
 \item{predictions}{Data frame, one row per node pair and index:
 \code{from}, \code{to}, \code{method}, \code{score}, \code{existing} (whether the pair already
-has an edge) and \code{rank}, sorted by score (highest first) within each
-index. An undirected network lists each pair once.}
+has an edge) and \code{rank} (pairs with the same score share the lowest
+of their ranks), sorted by score (highest first) within each index,
+tied pairs by name. An undirected network lists each pair once.}
 \item{consensus}{Data frame, one row per node pair: \code{from}, \code{to},
 \code{avg_rank} (the pair's mean rank over the indices that list it),
-\code{n_methods} (how many do) and \code{consensus_rank}, ordered by \code{avg_rank}.
+\code{n_methods} (how many do) and \code{consensus_rank} (shared by equal
+\code{avg_rank}s), ordered by \code{avg_rank}.
 \code{NULL} when only one index was computed.}
 \item{scores}{Named list of score matrices, one per index.}
 \item{adjacency}{The 0/1 adjacency matrix of the input network.}

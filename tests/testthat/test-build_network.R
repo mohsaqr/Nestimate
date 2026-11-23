@@ -2215,3 +2215,14 @@ test_that("no override = no behavior change (regression safety)", {
   expect_equal(net_null$weights, net_auto$weights)
   expect_equal(names(net_null$data), names(net_auto$data))
 })
+
+# Row-wise scaling gives an undirected network a value per cell; the
+# network is then directed and keeps both triangles in its edges.
+test_that("scaling = 'normalize' on an undirected network makes it directed", {
+  sequences <- as.data.frame(trajectories, stringsAsFactors = FALSE)
+  scaled <- build_cna(sequences, scaling = "normalize")
+  expect_true(scaled$directed)
+  expect_equal(scaled$n_edges, sum(scaled$weights != 0))
+  expect_false(build_cna(sequences)$directed)
+  expect_false(build_cna(sequences, scaling = "minmax")$directed)
+})

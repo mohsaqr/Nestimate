@@ -53,6 +53,7 @@ test_that("a decay function returning one value is a classed error", {
 })
 
 test_that("print.netobject shows no level label for an mgm network", {
+  skip_if_not_installed("glmnet")
   net <- suppressWarnings(build_network(srl_strategies, method = "mgm"))
   header <- capture.output(print(net))[1L]
   expect_false(grepl("-person]", header, fixed = TRUE))

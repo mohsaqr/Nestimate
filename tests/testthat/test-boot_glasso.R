@@ -1308,3 +1308,28 @@ test_that("failed resamples are counted, stored and reported", {
   expect_true(bf$n_failed > 0L)
   expect_output(print(bf), "Failed resamples")
 })
+
+# A netobject is resampled as it was built: its own gamma, nlambda and
+# cor_method (the estimator's defaults when none is stored), so the
+# original partial correlations are the network's weights.
+test_that("boot_glasso() keeps a network's own settings and warns on others", {
+  .local_seed(5)
+  values <- as.data.frame(matrix(stats::rnorm(400), ncol = 5))
+  values$V2 <- values$V2 + values$V1
+  values$V3 <- values$V3 + values$V2
+  net <- build_network(values, method = "glasso")
+  expect_warning(
+    boot <- boot_glasso(net, iter = 3, cs_iter = 2, centrality = "strength",
+                        seed = 1, gamma = 0, nlambda = 10,
+                        cor_method = "spearman"),
+    class = "nestimate_ignored_argument")
+  expect_equal(boot$original_pcor, net$weights, tolerance = 1e-10,
+               ignore_attr = TRUE)
+  tuned <- build_network(values, method = "glasso",
+                         params = list(gamma = 0, nlambda = 10))
+  expect_no_warning(
+    tuned_boot <- boot_glasso(tuned, iter = 3, cs_iter = 2,
+                              centrality = "strength", seed = 1, gamma = 0))
+  expect_equal(tuned_boot$original_pcor, tuned$weights, tolerance = 1e-10,
+               ignore_attr = TRUE)
+})

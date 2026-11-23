@@ -703,6 +703,54 @@ test_that("glasso shuffles are estimated like the observed networks", {
                  class = "nestimate_ignored_argument")
 })
 
+# ---- two association networks must share their estimator settings ----
+
+# Every shuffle is estimated with x's settings. With a Pearson x and a
+# Spearman y on the same rows the observed difference is the difference
+# between the two correlations, and no shuffle reproduces it.
+test_that("association networks built with different settings are refused", {
+  d <- .make_freq_data(n = 80, p = 4, seed = 1)
+  pearson <- build_network(d, method = "cor")
+  spearman <- build_network(d, method = "cor",
+                            params = list(cor_method = "spearman"))
+  expect_error(permutation(pearson, spearman, iter = 5L, seed = 1),
+               class = "nestimate_estimator_mismatch")
+  expect_error(permutation(pearson, spearman, paired = TRUE, iter = 5L,
+                           seed = 1),
+               class = "nestimate_estimator_mismatch")
+  expect_error(compare_networks(pearson, spearman, test = "permutation",
+                                iter = 5L, seed = 1),
+               class = "nestimate_estimator_mismatch")
+  expect_error(permutation(build_network(d, method = "pcor"),
+                           build_network(d, method = "pcor",
+                                         params = list(cor_method = "kendall")),
+                           iter = 5L, seed = 1),
+               class = "nestimate_estimator_mismatch")
+  # a default written out is the same setting as a default left out
+  written <- build_network(d, method = "cor",
+                           params = list(cor_method = "pearson"))
+  same <- permutation(pearson, written, paired = TRUE, iter = 5L, seed = 1)
+  expect_true(all(same$diff == 0))
+  expect_true(all(same$p_values == 1))
+  # the same rows under one setting: every swap reproduces the observed 0
+  both_spearman <- permutation(spearman, spearman, paired = TRUE, iter = 5L,
+                               seed = 1)
+  expect_true(all(both_spearman$p_values == 1))
+})
+
+test_that("ising networks built with different settings are refused", {
+  skip_if_not_installed("glmnet")
+  set.seed(4)
+  latent <- stats::rnorm(150)
+  b <- as.data.frame(lapply(1:4, function(i)
+    as.integer(latent + stats::rnorm(150) > 0)))
+  names(b) <- paste0("v", 1:4)
+  and_rule <- build_network(b, method = "ising")
+  or_rule <- build_network(b, method = "ising", params = list(rule = "OR"))
+  expect_error(permutation(and_rule, or_rule, iter = 3L, seed = 1),
+               class = "nestimate_estimator_mismatch")
+})
+
 # ---- adjust is validated upfront ----
 
 test_that("an unknown adjust is refused before anything runs", {

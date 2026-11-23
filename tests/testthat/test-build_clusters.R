@@ -1413,3 +1413,54 @@ test_that("relative MMM networks take scaling/threshold, refuse start", {
                                start = TRUE, seed = 1, n_starts = 1),
                class = "nestimate_bad_input")
 })
+
+# A latency network's $data are its senders' sequences, which the other
+# sequence readers (build_mmm(), path_counts(), ...) read; so does
+# build_clusters().
+test_that("build_clusters() clusters the sender sequences of a latency network", {
+  chats <- data.frame(id = rep(1:8, each = 4),
+                      sender = c(rep(c("A", "B", "A", "C"), 4),
+                                 rep(c("C", "C", "B", "A"), 4)),
+                      t = rep(c(0, 5, 9, 20), 8))
+  net <- suppressMessages(build_latency(chats, action = "sender", time = "t",
+                                        actor = "id"))
+  clusters <- build_clusters(net, k = 2)
+  expect_s3_class(clusters, "net_clustering")
+  expect_identical(as.integer(table(clusters$assignments)), c(4L, 4L))
+})
+
+# The clustering keeps the sequences, not the event times, so per-cluster
+# latency networks are refused by name at the entry points that rebuild
+# cluster networks (they used to stop with build_network()'s advice to give
+# an event log); another method builds them.
+test_that("per-cluster latency networks are refused, another method builds", {
+  chats <- data.frame(id = rep(1:8, each = 4),
+                      sender = c(rep(c("A", "B", "A", "C"), 4),
+                                 rep(c("C", "C", "B", "A"), 4)),
+                      t = rep(c(0, 5, 9, 20), 8))
+  net <- suppressMessages(build_latency(chats, action = "sender", time = "t",
+                                        actor = "id"))
+  clusters <- build_clusters(net, k = 2)
+  expect_error(build_network(clusters), class = "nestimate_latency_clusters")
+  expect_error(build_network(clusters, inherit = TRUE),
+               class = "nestimate_latency_clusters")
+  expect_error(build_network(clusters, method = "latency"),
+               class = "nestimate_bad_input")
+  expect_error(cluster_network(net, k = 2),
+               class = "nestimate_latency_clusters")
+  expect_error(cluster_network(net, k = 2, cluster_by = "mmm", n_starts = 1,
+                               seed = 1),
+               class = "nestimate_latency_clusters")
+  fit <- build_mmm(net, k = 2, n_starts = 1, seed = 1)
+  expect_error(build_network(fit), class = "nestimate_latency_clusters")
+
+  rebuilt <- build_network(clusters, method = "frequency")
+  expect_s3_class(rebuilt, "netobject_group")
+  expect_identical(length(rebuilt), 2L)
+  pooled <- Reduce(`+`, lapply(rebuilt, function(n) n$weights))
+  whole <- build_network(chats, method = "frequency", action = "sender",
+                         time = "t", actor = "id")$weights
+  expect_identical(sum(pooled), sum(whole))
+  expect_s3_class(cluster_network(net, k = 2, method = "relative"),
+                  "netobject_group")
+})

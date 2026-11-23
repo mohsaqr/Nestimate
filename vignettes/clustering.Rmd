@@ -36,8 +36,8 @@ Clusters represent subgroups within the data that share similar patterns. Such p
 To illustrate clustering, we will use the `human_long` dataset, which contains 10,796 coded human interactions from 429 human-AI pair programming sessions across 34 projects. Each row represents a single interaction event with a timestamp, session identifier, and action label.
 
 ```{r data}
-library(cograph)
 library(Nestimate)
+has_cograph <- requireNamespace("cograph", quietly = TRUE)
 data("human_long")
 head(human_long)
 ```
@@ -281,7 +281,7 @@ cluster_net <- build_network(clust)
 cluster_net
 ```
 
-```{r cluster-networks-plot, fig.alt = "Per-cluster transition networks"}
+```{r cluster-networks-plot, eval = has_cograph, fig.alt = "Per-cluster transition networks"}
 plot(cluster_net)
 ```
 

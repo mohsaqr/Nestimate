@@ -31,7 +31,10 @@ argument name or, failing that, its method; repeated names get a suffix
 first rebuilt as a network from its own sequences (see \code{\link[=as_netobject]{as_netobject()}}).
 A network without its sequence data (which \code{\link[=build_network]{build_network()}} keeps) raises
 an error, a network resting on one sequence an error of class
-\code{nestimate_single_sequence}, a network built with \code{method = "latency"}
+\code{nestimate_single_sequence}, a sequence network with no observed
+transition an error of class \code{nestimate_no_transition}, a network built
+with \code{level} an error of class \code{nestimate_multilevel_resampling}, a
+network built with \code{method = "latency"}
 an error of class \code{nestimate_latency_resampling}, and networks of
 different methods with \code{scale = "none"} a warning of class \code{nestimate_mixed_methods}. For the \code{print()},
 \code{summary()} and \code{plot()} methods: ignored.}

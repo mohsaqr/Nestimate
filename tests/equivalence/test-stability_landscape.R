@@ -62,18 +62,12 @@ test_that("the surface along longitudinal entropy follows the tricube-weighted p
     surface$slice <- match(surface$value, unique(surface$value))
     surface
   }
-  # The package widens the half-width by 1 % so the k-th nearest sequence keeps a positive weight.
-  expect_reference(subset(found, select = c(slice, state, value, depth, effective_n)), expected(1.01),
+  # The half-width is the distance to the k-th nearest sequence, as ?landscape_surface states (Cleveland 1979).
+  expect_reference(subset(found, select = c(slice, state, value, depth, effective_n)), expected(1),
                    reference = "independent: tricube-weighted pooled transitions on TraMineR's entropy, base R", covers = c("landscape_surface()", "summary.net_landscape_surface()"),
-                   quantity = "surface slices, half-width 1.01 x the k-th nearest distance", tolerance = 1e-10,
+                   quantity = "surface slices, half-width the k-th nearest distance as documented", tolerance = 1e-10,
                    key = c("slice", "state"),
                    note = "the axis is TraMineR::seqindic() Entr; the kernel and the depths are written from the definition")
-  expect_reference(subset(found, select = c(slice, state, depth, effective_n)),
-                   subset(expected(1), select = c(slice, state, depth, effective_n)),
-                   reference = "TraMineR", covers = c("landscape_surface()", "summary.net_landscape_surface()"),
-                   quantity = "surface slices, half-width as documented", tolerance = 1e-10, key = c("slice", "state"),
-                   defect = paste("the kernel half-width is 1.01 times the distance to the k-th nearest sequence, not that",
-                                  "distance as ?landscape_surface states; FINDINGS.md"))
 })
 
 # Stationary distribution of a transition matrix: the left eigenvector of eigenvalue 1, summing to 1.

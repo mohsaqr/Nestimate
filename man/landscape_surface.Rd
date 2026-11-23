@@ -135,7 +135,9 @@ estimate a new landscape.
 
 Sequences with fewer than two observed positions, or no value of the
 measure, are left out. The kernel's half-width is the distance to the
-\code{k}-th nearest sequence, but at least 1/50 of the measure's range. A state
+\code{k}-th nearest sequence, but at least 1/50 of the measure's range; when
+the \code{k} nearest all lie at that distance (many sequences share a value),
+they weigh equally. A state
 that does not occur in a slice has an \code{NA} depth and leaves a gap in the
 surface, and one that is never left in a slice has an infinite depth.
 }

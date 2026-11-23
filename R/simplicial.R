@@ -1370,8 +1370,8 @@ q_analysis <- function(sc) {
 #' its simplices
 #' against the cliques `igraph::cliques()` finds in the same thresholded
 #' graph, and its Euler characteristic against the alternating sum of its
-#' Betti numbers (the Euler-Poincare theorem). It prints the result of each
-#' check and the Betti numbers, and is meant for testing. It needs
+#' Betti numbers (the Euler-Poincare theorem). Its print method shows the
+#' result of each check and the Betti numbers; it is meant for testing. It needs
 #' \pkg{igraph}, and raises an error without it.
 #'
 #' @details
@@ -1386,10 +1386,12 @@ q_analysis <- function(sc) {
 #' @param threshold The smallest absolute edge weight an edge needs to
 #'   enter, as in [build_simplicial()]. Default `0`.
 #'
-#' @return A list, invisibly: `cliques_match` (whether the simplices equal
-#'   the cliques from `igraph::cliques()` exactly), `n_simplices_ours`,
-#'   `n_simplices_igraph`, `betti`, `euler` and `f_vector`. The two checks
-#'   are printed as a side effect.
+#' @return A list of class `net_simplicial_check`: `cliques_match` (whether
+#'   the simplices equal the cliques from `igraph::cliques()` exactly),
+#'   `n_simplices_ours`, `n_simplices_igraph`, `betti`, `euler`,
+#'   `euler_matches` (whether `euler` equals the alternating sum of `betti`)
+#'   and `f_vector`. For the print() method: `x`, invisibly, after printing
+#'   the two checks and the Betti numbers.
 #' @examplesIf requireNamespace("igraph", quietly = TRUE)
 #' mat <- matrix(c(0,.6,.5,.6,0,.4,.5,.4,0), 3, 3)
 #' colnames(mat) <- rownames(mat) <- c("A","B","C")
@@ -1422,28 +1424,33 @@ verify_simplicial <- function(mat, threshold = 0) {
   betti <- betti_numbers(sc)
   euler <- euler_characteristic(sc)
 
-  result <- list(
+  dims <- seq_along(betti) - 1L
+  euler_from_betti <- as.integer(sum((-1L)^dims * betti))
+
+  structure(list(
     cliques_match = identical(our_keys, ig_keys),
     n_simplices_ours = length(sc$simplices),
     n_simplices_igraph = length(ig_cliques),
     betti = betti,
     euler = euler,
+    euler_matches = identical(as.integer(euler), euler_from_betti),
     f_vector = sc$f_vector
-  )
+  ), class = "net_simplicial_check")
+}
 
-  clique_ok <- result$cliques_match
-  dims <- seq_along(betti) - 1L
-  euler_from_betti <- as.integer(sum((-1L)^dims * betti))
-  euler_ok <- euler == euler_from_betti
-
-  b_str <- paste(sprintf("%s=%d", names(betti), betti), collapse = " ")
+#' @rdname verify_simplicial
+#' @param x For the print() method: a `net_simplicial_check` from
+#'   verify_simplicial().
+#' @param ... For the print() method: not used.
+#' @export
+print.net_simplicial_check <- function(x, ...) {
+  b_str <- paste(sprintf("%s=%d", names(x$betti), x$betti), collapse = " ")
   cat(sprintf("  Cliques:  %s (%d simplices)\n",
-              if (clique_ok) "MATCH" else "MISMATCH", result$n_simplices_ours))
+              if (x$cliques_match) "MATCH" else "MISMATCH", x$n_simplices_ours))
   cat(sprintf("  Betti:    %s\n", b_str))
   cat(sprintf("  Euler:    %d (Euler-Poincare: %s)\n",
-              euler, if (euler_ok) "VERIFIED" else "FAILED"))
-
-  invisible(result)
+              x$euler, if (x$euler_matches) "VERIFIED" else "FAILED"))
+  invisible(x)
 }
 
 # =========================================================================

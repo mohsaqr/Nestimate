@@ -138,7 +138,6 @@ oh <- matrix(c(1,0,0, 0,1,0, 0,0,1, 1,0,0), nrow = 4, byrow = TRUE,
              dimnames = list(NULL, c("A","B","C")))
 w <- wtna(oh)
 
-\donttest{
 # Simple one-hot data
 df <- data.frame(
   A = c(1, 0, 1, 0, 1),
@@ -156,7 +155,6 @@ print(nets)   # the transition and the co-occurrence network
 
 # With windowing
 net <- wtna(df, window_size = 2, mode = "non-overlapping")
-}
 
 }
 \seealso{

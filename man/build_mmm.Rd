@@ -53,7 +53,11 @@ at least 2. Default \code{2}.}
 
 \item{n_starts}{How many starting configurations to try, a positive whole
 number. More starts make it likelier that the best local maximum is
-found. Default \code{50}.}
+found. Default \code{50}. On Unix the starts are screened in parallel on at
+most \code{getOption("mc.cores", 2L)} cores; the fit does not depend on the
+number of cores. A start whose EM stops with an error is left out with
+a warning of class \code{nestimate_mmm_start_failed} that counts them; when
+every start fails the error has class \code{nestimate_mmm_failed}.}
 
 \item{max_iter}{The most EM iterations a start may run, a positive whole
 number. Default \code{200}.}

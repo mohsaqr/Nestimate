@@ -29,8 +29,9 @@
 #' and each draw only re-sums them; the network's `scaling` and `threshold`
 #' are applied to every re-estimated network as to the original. For the
 #' other methods the estimator is re-run on each subset with the network's
-#' `params` (after the multilevel decomposition, when the network was built
-#' with a `level` and an id column and its estimator is undirected).
+#' `params`. A network built with `level` is refused (error class
+#' `nestimate_multilevel_resampling`): its stored data are already
+#' decomposed and carry no id column to decompose a subset again.
 #' The built-in measures are computed from the weight matrix
 #' directly, without igraph, as in [net_centrality()]: strength from row
 #' and column sums, betweenness and closeness from Floyd-Warshall shortest
@@ -214,6 +215,7 @@ centrality_stability <- function(x,
   x <- .tna_input(x, "centrality_stability()", need_data = TRUE,
                   actor = actor)
   .stop_latency_resampling(list(x), "centrality_stability()")
+  .stop_multilevel_resampling(list(x), "centrality_stability()")
   .check_permutation_block(actor, paired = FALSE)
 
   # ---- Input validation ----

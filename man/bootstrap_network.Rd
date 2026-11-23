@@ -48,7 +48,10 @@ from \code{tna::prepare_data()}); a model without it raises
 \code{nestimate_actor_missing}. A network without its data raises an error,
 and one that rests on a single sequence, or one-hot data with no actor or
 session, has nothing to resample and raises an error of class
-\code{nestimate_single_sequence}. For the \code{print()} methods: the result of
+\code{nestimate_single_sequence}. A sequence network with no observed
+transition raises an error of class \code{nestimate_no_transition}, and a
+network built with \code{level} one of class
+\code{nestimate_multilevel_resampling}. For the \code{print()} methods: the result of
 \code{bootstrap_network()}.}
 
 \item{iter}{The number of bootstrap replicates, at least 2. Default
@@ -211,7 +214,9 @@ A latency network (\code{method = "latency"}) is resampled by its sequences, and
 every edge's weight is recomputed from the replies of the drawn sequences.
 A percentile cap the network resolved from its own replies is resolved
 again in every resample; a cap in seconds, or one pooled over the groups of
-a grouped build, keeps its value. Per-unit caps (\code{latency_scope} other than
+a grouped build, keeps its value. A resample whose resolved cap is 0
+seconds (its replies mostly instant) stops the bootstrap with an error of
+class \code{nestimate_latency_zero_cap}; give the cap in seconds. Per-unit caps (\code{latency_scope} other than
 \code{"global"}) and \code{actor} raise an error of class
 \code{nestimate_latency_resampling} or \code{nestimate_actor_unsupported}; to resample
 within groups, build the network with \code{group} and bootstrap the group. With

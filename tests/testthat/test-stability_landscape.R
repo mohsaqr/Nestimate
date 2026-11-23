@@ -108,7 +108,7 @@ test_that("landscape_surface slices match an independent recomputation", {
   m <- met$self_loop_tendency[keep]
   y <- sort(unique(full$value))[3]
   d <- abs(m - y)
-  h <- max(sort(d)[20], diff(range(m)) / 50) * 1.01
+  h <- max(sort(d)[20], diff(range(m)) / 50)
   w <- ifelse(d < h, (1 - (d / h)^3)^3, 0)
   st <- c("Active", "Average", "Disengaged")
   tabs <- lapply(keep, \(i) {
@@ -164,7 +164,7 @@ test_that("landscape_trend over a covariate matches an independent slice", {
   m <- df$grade[keep]
   y <- sort(unique(tr$value))[2]
   d <- abs(m - y)
-  h <- max(sort(d)[25], diff(range(m)) / 50) * 1.01
+  h <- max(sort(d)[25], diff(range(m)) / 50)
   w <- ifelse(d < h, (1 - (d / h)^3)^3, 0)
   st <- c("Active", "Average", "Disengaged")
   tabs <- lapply(keep, \(i) {
@@ -229,4 +229,30 @@ test_that("print and plot methods run", {
   occ <- landscape_trend(trajectories, depth = "occupancy", window = 6,
                          iter = 5, seed = 1)
   expect_identical(plot(occ, type = "surface"), occ)
+})
+
+# A covariate with few distinct values: between two of them the k nearest
+# sequences all lie at the half-width itself, so the tricube weights were all
+# 0 and the depths NA. Those sequences now weigh equally, and the slice is
+# the landscape of the nearest value's sequences.
+test_that("landscape_trend over a covariate with few values has no empty slice", {
+  df <- data.frame(trajectories, grade = rep(c(1, 2, 3), length.out = 138))
+  net <- suppressMessages(build_network(df, method = "relative"))
+  tr <- suppressMessages(summary(landscape_trend(net, along = "grade", k = 30,
+                                                 n_grid = 6, iter = 0)))
+  expect_identical(nrow(tr), 6L * 3L)
+  expect_false(anyNA(tr$depth))
+  # the slice at 1.4 lies nearest to the 46 sequences with grade 1
+  expect_equal(sort(unique(tr$value)), c(1, 1.4, 1.8, 2.2, 2.6, 3))
+  seqs <- as.matrix(df[df$grade == 1, 1:15])
+  seqs <- seqs[rowSums(!is.na(seqs)) >= 2, ]
+  st <- c("Active", "Average", "Disengaged")
+  n <- table(factor(seqs[, -15], st), factor(seqs[, -1], st))
+  expect_equal(tr$depth[abs(tr$value - 1.4) < 1e-9],
+               unname(-log(1 - diag(n) / rowSums(n))), tolerance = 1e-12)
+  expect_equal(.ls_kernel_weights(c(0.5, 0.5, 0.5, 1.5), 3, 0.1),
+               c(1, 1, 1, 0))
+  # with a sequence inside the half-width the weights are the tricube's
+  expect_equal(.ls_kernel_weights(c(0.25, 0.5, 0.5, 1.5), 3, 0.1),
+               c((1 - 0.5^3)^3, 0, 0, 0))
 })

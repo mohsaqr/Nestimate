@@ -82,7 +82,6 @@ legit_edge <- "the edge list declares its row weights (params$row_weight), so ea
 legit_tna <- "a tna model is rebuilt as a Nestimate network with its data (.tna_input())"
 degenerate <- "every measure is constant on this network; the verb says so with nestimate_constant_measure and reports cs = 0"
 one_state_similarity <- "one state: the similarities that need a spread (correlations, CV ratio, RV, rank agreement) are NA, the module's rule for an undefined similarity"
-no_unit_resampled <- "silent result: resamples of a network with no observed transition are all zero, intervals of zero width (siblings: sequence readers, transition_entropy() and stability_landscape() refuse it)"
 
 test_that("the five sequence-resampling verbs refuse the same inputs with the same class", {
   # a mean of per-transition ones is 1 for every observed pair, so the mean layer's edge weights are constant
@@ -94,13 +93,12 @@ test_that("the five sequence-resampling verbs refuse the same inputs with the sa
                                     mean_layer = "net_bootstrap", mean_mcml = "net_bootstrap_group",
                                     density_macro = "net_bootstrap", edge_mcml = "net_bootstrap_group",
                                     one_state = "net_bootstrap", no_transition = bi),
-             defect = c(no_transition = no_unit_resampled),
              note = c(latency = legit_latency, latency_group = legit_latency, mean_layer = legit_aggregated, mean_mcml = legit_aggregated, density_macro = legit_aggregated,
                       edge_mcml = legit_edge, one_state = "one state: every resample gives P(A -> A) = 1, which is exact"),
              allow_warning = c(edge_mcml = "nestimate_edgelist_resampling")),
     rf_cells("permutation", c(core, edge_mcml = "net_permutation_group", one_state = "net_permutation",
                               no_transition = bi),
-             defect = c(no_transition = no_unit_resampled), note = c(edge_mcml = legit_edge)),
+             note = c(edge_mcml = legit_edge)),
     rf_cells("centrality_stability", c(core, edge_mcml = "net_stability_group", one_state = "net_stability",
                                        no_transition = "net_stability"),
              note = c(edge_mcml = legit_edge, one_state = degenerate, no_transition = degenerate),
@@ -114,7 +112,6 @@ test_that("the five sequence-resampling verbs refuse the same inputs with the sa
                                edge_mcml = "nestimate_constant_measure")),
     rf_cells("network_reliability", c(core, edge_mcml = "net_reliability", one_state = "net_reliability",
                                       no_transition = bi),
-             defect = c(no_transition = no_unit_resampled),
              note = c(edge_mcml = legit_edge, one_state = one_state_similarity))
   )
   rf_run(cells, inputs, verbs, covers)
@@ -127,7 +124,6 @@ test_that("compare_networks() refuses what its backends refuse, and the vertex b
                density_macro = bi, bare = bi, mlvar_temporal = bi, one_state = "net_network_comparison",
                no_transition = bi, cor = "net_network_comparison", glasso = "net_network_comparison",
                mgm = "net_network_comparison"),
-             defect = c(no_transition = no_unit_resampled),
              note = c(one_state = paste(one_state_similarity, "(permutation() answers it too)"),
                       cor = "a cor network keeps its data as a numeric matrix, which permutation() reads",
                       glasso = "a glasso network keeps its data as a numeric matrix, which permutation() reads",

@@ -278,7 +278,14 @@ compare_networks <- function(...,
   }
   .cn_check_scaling_domain(raw_mats, scaling)
   mats <- lapply(raw_mats, .apply_compare_scaling, scaling = scaling)
-  nets <- Map(function(net, W) { net$weights <- W; net }, nets, mats)
+  # a scaled network keeps its edges; their weights are the scaled matrix's
+  nets <- Map(function(net, W) {
+    net$weights <- W
+    if (scaling != "none" && is.data.frame(net$edges) && nrow(net$edges) > 0L) {
+      net$edges$weight <- W[cbind(net$edges$from, net$edges$to)]
+    }
+    net
+  }, nets, mats)
 
   pairs <- .cn_pairs(net_names, reference)
   pair_rows <- split(pairs, seq_len(nrow(pairs)))

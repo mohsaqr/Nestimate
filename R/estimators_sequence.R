@@ -666,6 +666,32 @@
   as.character(md[[".session_label"]])
 }
 
+# A network built with level = "within" or "between" stores its data after
+# the multilevel decomposition, without the id column the decomposition
+# needs, so a resample cannot be decomposed again: refused before any draw
+# (every draw used to fail and leave NaN, p = 1 and CS = 0).
+#' @noRd
+.stop_multilevel_resampling <- function(nets, verb) {
+  is_multilevel <- function(obj) {
+    if (inherits(obj, "netobject_ml")) return(TRUE)
+    if (inherits(obj, "netobject")) {
+      return(isTRUE(obj$level %in% c("within", "between")))
+    }
+    if (inherits(obj, "netobject_group")) {
+      return(any(vapply(obj, is_multilevel, logical(1))))
+    }
+    FALSE
+  }
+  if (!any(vapply(nets, is_multilevel, logical(1)))) return(invisible(NULL))
+  stop(errorCondition(sprintf(paste0(
+    "%s does not resample a network built with `level` (\"within\", ",
+    "\"between\" or \"both\"): its data are stored after the multilevel ",
+    "decomposition, without the id column a resample would need. Build the ",
+    "network without `level` to resample it."), verb),
+    class = c("nestimate_multilevel_resampling", "nestimate_bad_input"),
+    call = NULL))
+}
+
 #' Refuse to resample a latency network
 #'
 #' Only bootstrap_network() resamples latency networks (validated by

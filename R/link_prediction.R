@@ -65,11 +65,13 @@
 #' \describe{
 #'   \item{predictions}{Data frame, one row per node pair and index:
 #'     `from`, `to`, `method`, `score`, `existing` (whether the pair already
-#'     has an edge) and `rank`, sorted by score (highest first) within each
-#'     index. An undirected network lists each pair once.}
+#'     has an edge) and `rank` (pairs with the same score share the lowest
+#'     of their ranks), sorted by score (highest first) within each index,
+#'     tied pairs by name. An undirected network lists each pair once.}
 #'   \item{consensus}{Data frame, one row per node pair: `from`, `to`,
 #'     `avg_rank` (the pair's mean rank over the indices that list it),
-#'     `n_methods` (how many do) and `consensus_rank`, ordered by `avg_rank`.
+#'     `n_methods` (how many do) and `consensus_rank` (shared by equal
+#'     `avg_rank`s), ordered by `avg_rank`.
 #'     `NULL` when only one index was computed.}
 #'   \item{scores}{Named list of score matrices, one per index.}
 #'   \item{adjacency}{The 0/1 adjacency matrix of the input network.}
@@ -267,8 +269,11 @@ predict_links <- function(x,
     n_methods = as.integer(n_methods),
     stringsAsFactors = FALSE
   )
-  result <- result[order(result$avg_rank), , drop = FALSE]
-  result$consensus_rank <- seq_len(nrow(result))
+  # radix: tied pairs are listed in the same (C-locale) order on every system
+  result <- result[order(result$avg_rank, result$from, result$to,
+                         method = "radix"), , drop = FALSE]
+  result$consensus_rank <- as.integer(rank(result$avg_rank,
+                                           ties.method = "min"))
   rownames(result) <- NULL
   result
 }
@@ -483,8 +488,12 @@ predict_links <- function(x,
     if (exclude_existing) {
       df <- df[!df$existing, , drop = FALSE]
     }
-    df <- df[order(-df$score), , drop = FALSE]
-    df$rank <- seq_len(nrow(df))
+    # pairs with the same score share a rank (the lowest of their places);
+    # the pair names only fix the order in which tied pairs are listed
+    # (radix: the same C-locale order on every system)
+    df <- df[order(-df$score, df$from, df$to, method = "radix"), ,
+             drop = FALSE]
+    df$rank <- as.integer(rank(-df$score, ties.method = "min"))
     if (!is.null(top_n) && nrow(df) > top_n) {
       df <- df[seq_len(top_n), , drop = FALSE]
     }
@@ -510,7 +519,10 @@ predict_links <- function(x,
 #' that is not one (ties count half), so 0.5 is chance level. Average
 #' precision is the mean of the precisions at the rank of each known edge,
 #' and precision\eqn{@}k the share of known edges among the `k`
-#' highest-scoring pairs. Only the pairs listed in the predictions are
+#' highest-scoring pairs. Pairs with the same score are not ordered: average
+#' precision is taken over the distinct scores (as scikit-learn's
+#' `average_precision_score`), and a group of tied pairs across the `k`-th
+#' place counts by the share of its places within the top `k`. Only the pairs listed in the predictions are
 #' evaluated: with `exclude_existing = TRUE`, the default of
 #' [predict_links()], the network's current edges are not scored, so the
 #' known edges should be ones held out of the network (a later period, a
@@ -597,14 +609,13 @@ evaluate_links <- function(pred, true_edges, k = c(5L, 10L, 20L)) {
     # AUC via Wilcoxon-Mann-Whitney
     auc <- .lp_compute_auc(df$score, is_true)
 
-    # Average precision
-    ap <- .lp_compute_ap(is_true)
+    # Average precision, over the distinct scores
+    ap <- .lp_compute_ap(df$score, is_true)
 
-    # Precision@k
-    pk <- vapply(k, function(ki) {
-      if (ki > length(is_true)) return(NA_real_)
-      sum(is_true[seq_len(ki)]) / ki
-    }, numeric(1))
+    # Precision@k: a group of tied pairs across the k-th place counts by the
+    # share of its places that fall within the top k
+    pk <- vapply(k, function(ki) .lp_precision_at(df$score, is_true, ki),
+                 numeric(1))
     names(pk) <- paste0("precision_at_", k)
 
     c(list(method = m, auc = auc, average_precision = ap), as.list(pk))
@@ -634,11 +645,33 @@ evaluate_links <- function(pred, true_edges, k = c(5L, 10L, 20L)) {
 }
 
 #' @noRd
-.lp_compute_ap <- function(is_true) {
+# Average precision with ties (as scikit-learn's average_precision_score):
+# precision at each distinct score, the pairs scoring at least that much,
+# weighted by the known edges among the pairs with that score. Without ties
+# it is the mean precision at the rank of each known edge.
+.lp_compute_ap <- function(scores, is_true) {
   if (sum(is_true) == 0) return(0)
-  cum_true <- cumsum(is_true)
-  precision_at_i <- cum_true / seq_along(is_true)
-  sum(precision_at_i * is_true) / sum(is_true)
+  # one group per distinct score, highest first (by value: a factor of the
+  # scores would merge or duplicate values that print alike)
+  distinct <- sort(unique(scores), decreasing = TRUE)
+  level <- match(scores, distinct)
+  true_at <- vapply(seq_along(distinct), function(i) sum(is_true[level == i]),
+                    numeric(1))
+  n_at <- tabulate(level, length(distinct))
+  precision <- cumsum(true_at) / cumsum(n_at)
+  sum(precision * true_at) / sum(is_true)
+}
+
+# Precision among the k highest scores; the tied group across the k-th place
+# contributes its known edges in proportion to its places within the top k
+# (the expected precision over the orders of the tied pairs).
+.lp_precision_at <- function(scores, is_true, k) {
+  if (k > length(is_true)) return(NA_real_)
+  boundary <- sort(scores, decreasing = TRUE)[k]
+  above <- scores > boundary
+  tied <- scores == boundary
+  places <- k - sum(above)
+  (sum(is_true[above]) + places * sum(is_true[tied]) / sum(tied)) / k
 }
 
 
@@ -663,9 +696,10 @@ print.net_link_prediction <- function(x, ...) {
     n_total <- nrow(x$consensus)
     cat(sprintf("\n  Top predicted links (consensus across %d methods):\n",
                 length(x$methods)))
+    # the stored rank, which tied pairs share, not the row number
     cat(sprintf("    %d. %s %s %s  (avg rank: %.1f, agreed: %d/%d)\n",
-                seq_len(nrow(top)), top$from, arrow, top$to, top$avg_rank,
-                top$n_methods, length(x$methods)), sep = "")
+                as.integer(top$consensus_rank), top$from, arrow, top$to,
+                top$avg_rank, top$n_methods, length(x$methods)), sep = "")
     if (n_total > 10L) {
       cat(sprintf("    ... and %d more predictions\n", n_total - 10L))
     }
@@ -676,7 +710,7 @@ print.net_link_prediction <- function(x, ...) {
     if (nrow(top) > 0L) {
       cat(sprintf("\n  Top predicted links (%s):\n", x$methods[1]))
       cat(sprintf("    %d. %s %s %s  (score: %.4f)\n",
-                  seq_len(nrow(top)), top$from, arrow, top$to, top$score),
+                  as.integer(top$rank), top$from, arrow, top$to, top$score),
           sep = "")
       if (nrow(df) > 10L) {
         cat(sprintf("    ... and %d more predictions\n", nrow(df) - 10L))

@@ -613,6 +613,7 @@ test_that("an association network carries no guessed one-hot declaration", {
 })
 
 test_that("a binary MGM network resamples its rows, not one sequence", {
+  skip_if_not_installed("glmnet")
   a <- rep(c(1, 0, 1, 0, 1, 1, 0, 0, 1, 0), 6L)
   b <- a
   flip <- c(3L, 14L, 25L, 36L, 47L, 58L)
@@ -811,6 +812,7 @@ test_that("a fitted result is not read as sequences or transactions", {
 })
 
 test_that("build_mmm() refuses an association network", {
+  skip_if_not_installed("glmnet")
   scores <- data.frame(A = rep(c(1, 0, 1, 0, 1), 12L), B = rep(c(0, 1, 1, 0, 0), 12L),
                        C = rep(c(1, 1, 0, 0, 1), 12L))
   net <- build_network(scores, method = "mgm", type = rep("c", 3L),
@@ -868,6 +870,7 @@ test_that("association_rules() refuses a classed list of character fields", {
 })
 
 test_that("build_mmm() refuses a bare cograph_network of an association model", {
+  skip_if_not_installed("glmnet")
   scores <- data.frame(A = rep(c(1, 0, 1, 0, 1), 12L), B = rep(c(0, 1, 1, 0, 0), 12L),
                        C = rep(c(1, 1, 0, 0, 1), 12L))
   net <- build_network(scores, method = "mgm", type = rep("c", 3L),
@@ -1117,6 +1120,7 @@ test_that("a one-hot unit whose first window holds two codes has no first state"
 })
 
 test_that("build_clusters() refuses a bare cograph_network of an association model", {
+  skip_if_not_installed("glmnet")
   scores <- data.frame(A = rep(c(1, 0, 1, 0, 1), 12L), B = rep(c(0, 1, 1, 0, 0), 12L),
                        C = rep(c(1, 1, 0, 0, 1), 12L))
   net <- build_network(scores, method = "mgm", type = rep("c", 3L),

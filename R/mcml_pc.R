@@ -461,6 +461,7 @@ build_mcml_pc <- function(x,
   method_given <- !missing(method)
   method <- match.arg(method)
   net_cor_method <- NULL
+  estimator_params <- list()
 
   # ---- Resolve input: node-level network, raw data, estimator ----
   if (inherits(x, c("netobject", "cograph_network"))) {
@@ -476,6 +477,21 @@ build_mcml_pc <- function(x,
     # node network was estimated with, unless another one is asked for (see
     # below, once it is known whether anything is re-estimated).
     net_cor_method <- .param_get(x$params, "cor_method")
+    # and with its other estimator settings (glasso's gamma, ...), when the
+    # same estimator is used
+    estimator_params <- .pc_estimator_params(x, method)
+    if (isTRUE(x$directed) &&
+        .resolve_method_alias(x$method) %in% .association_methods &&
+        "normalize" %in% x$scaling) {
+      stop(errorCondition(
+        paste0(
+          "'x' was built with scaling = \"normalize\", which divides each ",
+          "row by its own total and leaves two different weights per pair; ",
+          "build_mcml_pc() needs one weight per pair. Build the network ",
+          "without that scaling."),
+        class = c("nestimate_asymmetric_network", "nestimate_bad_input"),
+        call = NULL))
+    }
     if (isTRUE(x$directed)) {
       stop(errorCondition(
         paste0(
@@ -608,7 +624,7 @@ build_mcml_pc <- function(x,
       # keep the input's row identities: the estimator drops incomplete rows
       # and renumbers, so composites() must not read the estimator's data
       rownames(composites) <- rownames(data)
-      .pc_estimate(composites, method, "pearson")
+      .pc_estimate(composites, method, "pearson", estimator_params)
     },
     rv = .wrap_netobject(.pc_block_macro(data, members, "rv"),
                          data = NULL, method = "pc_rv", directed = FALSE),
@@ -622,7 +638,8 @@ build_mcml_pc <- function(x,
     nodes <- members[[cl]]
     if (length(nodes) < 2) return(NULL)
     if (within == "reestimate" && has_data) {
-      .pc_estimate(data[, nodes, drop = FALSE], method, cor_method)
+      .pc_estimate(data[, nodes, drop = FALSE], method, cor_method,
+                   estimator_params)
     } else {
       .wrap_netobject(W[nodes, nodes, drop = FALSE], data = NULL,
                       method = "pc_subnetwork", directed = FALSE)
@@ -672,9 +689,22 @@ build_mcml_pc <- function(x,
 }
 
 
+#' The node network's estimator settings (glasso's gamma, nlambda, ...,
+#' a threshold given in params), for re-estimating clusters, composites and
+#' resamples with the same estimator; none when another estimator is used.
+#' Column roles, the correlation (passed on its own) and the input format
+#' are left out.
+#' @noRd
+.pc_estimator_params <- function(net, estimator) {
+  if (!identical(.resolve_method_alias(net$method), estimator)) return(list())
+  params <- .rebuild_params(net$params %||% list())
+  params[setdiff(names(params), c("cor_method", "format", "input_type", "n",
+                                  "cols", "id_col", "metadata_cols"))]
+}
+
 #' Estimate an association network, honoring cor_method incl. polychoric
 #' @noRd
-.pc_estimate <- function(data, estimator, cor_method) {
+.pc_estimate <- function(data, estimator, cor_method, params = list()) {
   if (identical(cor_method, "polychoric")) {
     if (!requireNamespace("lavaan", quietly = TRUE)) {
       stop(errorCondition(
@@ -687,10 +717,10 @@ build_mcml_pc <- function(x,
     attributes(S)[setdiff(names(attributes(S)),
                           c("dim", "dimnames"))] <- NULL
     n_obs <- sum(stats::complete.cases(df))
-    return(build_network(S, method = estimator, n = n_obs))
+    return(build_network(S, method = estimator, n = n_obs, params = params))
   }
   build_network(as.data.frame(data), method = estimator,
-                cor_method = cor_method)
+                cor_method = cor_method, params = params)
 }
 
 
@@ -1027,6 +1057,7 @@ loading_stability <- function(x, iter = 200L, ci_level = 0.05,
     estimator <- "cor"
   }
   cor_method <- x$meta$cor_method
+  estimator_params <- .pc_estimator_params(x$node_network, estimator)
   signed <- x$meta$signed
   node_order <- x$loadings$node
   n_rows <- nrow(data)
@@ -1050,7 +1081,7 @@ loading_stability <- function(x, iter = 200L, ci_level = 0.05,
   boot <- vapply(seq_len(iter), function(b) {
     rows <- sample.int(n_rows, n_rows, replace = TRUE)
     data_b <- data[rows, , drop = FALSE]
-    net_b <- .pc_estimate(data_b, estimator, cor_method)
+    net_b <- .pc_estimate(data_b, estimator, cor_method, estimator_params)
     ld_b <- suppressWarnings(
       .pc_network_loadings(net_b$weights, members, signed = signed)
     )
