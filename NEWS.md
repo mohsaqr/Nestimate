@@ -1,3 +1,118 @@
+# Nestimate 1.0.24
+
+## New features
+
+* `summary()` of a `magnitude_difference()` result returns its edges as a
+  data frame, largest difference first; `n =` keeps the first `n`.
+* `mark_phases()` divides each actor's events into `n` consecutive phases of
+  nearly equal length (event `k` of `L` goes to phase `ceiling(k * n / L)`)
+  and adds the phase as a column, so that `build_network(group = "phase")`
+  estimates one network per phase, for example the first and second halves
+  of each session.
+
+* `sequence_metrics()` compares every index between groups: per group `n`,
+  mean and SD; for two groups the difference and Hedges' g with its 95%
+  interval; eta squared, a permutation test of the one-way F and
+  BH-adjusted p-values. A grouped network is compared by its own groups,
+  and the sequences of one actor in several groups (the two halves of a
+  session) are compared within that actor; `group` and `actor` set them for
+  other input. `meta = TRUE` lists a grouped network's sequences, as
+  `sequence_metrics()` used to by default; ungrouped input is unchanged.
+  `indices =` returns only the named indices, in both outputs.
+
+* `sequence_plot(periods = , period_unit = )` groups a date column into
+  weeks (starting on Monday) or months, one block per week or month from
+  the first to the last, so actors observed over several weeks can be drawn
+  with one block per week. Dates can be `Date`, `POSIXct` or text such as
+  `"2026-03-05"`.
+
+* New dataset `daily_actions`: a simulated log of 30 students' learning
+  actions over seven days, with a different number of actions per student
+  and day, for sequence plots by period (`sequence_plot(periods = )`).
+
+## Other changes
+
+* One colour rule for states. With no colours set, every figure draws the
+  states in the Okabe-Ito colours dealt in the alphabetical order of the
+  states, so a state has one colour everywhere: networks now declare these
+  colours to `cograph::splot()` (which drew its own palette), and the
+  landscape cups and trend lines colour states by name (they dealt colours
+  by position). A group resolves one palette over all its states, and an
+  object computed from a network carries the network's palette, so a
+  cluster or group that lacks a state keeps the others' colours.
+  `plot()` of `stability_landscape()` and `landscape_trend()` gains
+  `state_colors =`; `plot_state_frequencies(colors =)` is now
+  `state_colors =` (`colors` still works, with a warning of class
+  `nestimate_deprecated`; `state_colors` is its last argument, so positional
+  calls bind as before). `?set_state_colors` states the rule. Also covered:
+  numeric state codes are dealt in numeric order (2 before 10) and no longer
+  draw a missing colour; a figure's named `state_colors =` is added to the
+  object's palette instead of replacing it; `abbreviate = TRUE` keeps the
+  palette; a palette entry for a state the object lacks no longer shifts the
+  defaults; clearing a group's palette returns to the defaults; mcml objects
+  deal their states as the network does and their cluster bands Okabe-Ito
+  (they used a separate non-Okabe-Ito set); `wtna()`, `as_netobject()`, tna
+  conversions, `as_networks()`, `build_mcml()`, `cluster_summary()`,
+  `as_tna()` and `as_htna()` of an mcml, `macro_network()`,
+  `subtract_networks()`, `as_netdifference()`, `entropy_bayes()` and grouped
+  `net_prune()` (which also kept only the names and class of the group) keep
+  the colours; `plot()` of `magnitude_difference()` colours states as every
+  figure does and gains `state_colors =`.
+* `plot()` of `bayes_compare()` draws the differences blue (`#4A6FE3`)
+  where the first network is higher and red (`#D33F6A`) where the second
+  is, as `compare_networks()` does, instead of cograph's green and red.
+* The silhouette and MDS plots of `build_clusters()`, the plots of
+  `cluster_choice()`, the plot of `compare_mmm()` and the plots of
+  `build_simplicial()`, `persistent_homology()` and `q_analysis()` use
+  Okabe-Ito colours instead of ggplot's default hues and viridis; in the MDS
+  plot and the line plots of `cluster_choice()` the clusters, distances or
+  methods also differ in point shape, and in the persistence plot the
+  dimensions also differ in linetype and point shape.
+* The pyramid plot of `sequence_compare()` leaves room for the counts
+  beyond the longest bars (they were cut off), widens the centre gap when
+  p-values are shown, and writes a residual only inside bars wide enough to
+  hold it. The pyramid and the heatmap use the package's diverging colours
+  (`#D33F6A` / `#4A6FE3`).
+* `summary()` of grouped `passage_time()` and `markov_stability()` results
+  returns one data frame with a `group` column and the columns of the
+  single-network table; it used to print R's default list summary.
+* `entropy_trajectory()` reads sequences as well as an event log: a
+  network built from sequences (a grouped network supplies its groups),
+  prepared data, or a wide table or character matrix, with the sequence
+  position as the time. `action` now defaults to `NULL`, which reads `data`
+  as sequences.
+
+## Bug fixes
+
+* A palette set with `set_state_colors()` is carried to the objects derived
+  from the network: `build_clusters()`, `build_mmm()`, the networks
+  `build_network()` builds from them, `cluster_network()`,
+  `net_edge_betweenness()` and `entropy_network()` (whose styling had
+  replaced the colours). The full palette is carried, the defaults dealt to
+  the states the user did not name included, so every figure draws each
+  state in one colour. They used to fall back to the default colours.
+  `bootstrap_network()`, `certainty()`, `permutation()` and `bayes_compare()`
+  results declare the source network's colours in their own `meta$splot`
+  contract, so `cograph::splot()` draws them in those colours too (it used
+  to use its tna palette for them).
+* `set_state_colors()` and `state_colors()` match the palette against the
+  names `cograph::splot()` draws: a node table's `labels` column first, then
+  `label`, then `name`. A network carrying both columns matched the colours
+  against `label`, so the names shown in the plot were reported as
+  unmatched and every state got a leftover Okabe-Ito colour.
+* `plot()` of `bayes_compare()` on a group of networks draws every
+  comparison, each titled with its name; it used to fail with a base-R
+  error ("'x' is a list, but does not have components 'x' and 'y'").
+* `subset()` and `[` on the tables of `compare_networks()`
+  (`edge_differences()`, `global_differences()` and the others) keep the
+  table's `digits`; they used to print the rows at two decimals, so a value
+  of 0.0653 asked for at three digits showed as 0.06.
+* `build_network()` of long data stores each sequence's averaged numeric
+  metadata (and the most frequent value of a categorical column) as a plain
+  vector instead of a one-dimensional array, so `landscape_trend(along = )`
+  can use it as a covariate; before, it failed with "non-conformable
+  arrays".
+
 # Nestimate 1.0.23
 
 ## Changes to results
