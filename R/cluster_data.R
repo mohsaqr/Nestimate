@@ -1027,7 +1027,8 @@ build_clusters <- function(data, k, dissimilarity = "hamming", method = "pam",
     ),
     class = "net_clustering"
   )
-  result
+  # the colours of the clustered network follow its clusters
+  .carry_state_colors(result, raw_data)
 }
 
 #' Cluster sequences (deprecated)
@@ -1324,6 +1325,7 @@ plot.net_clustering <- function(x, type = c("silhouette", "mds", "heatmap",
                              fill = .data$cluster)) +
       geom_col(width = 1) +
       coord_flip() +
+      scale_fill_manual(values = .okabe_values(nlevels(sil_df$cluster))) +
       labs(x = "Observation", y = "Silhouette Width",
            title = sprintf("Silhouette Plot (avg = %.3f)", x$silhouette),
            fill = "Cluster") +
@@ -1338,12 +1340,16 @@ plot.net_clustering <- function(x, type = c("silhouette", "mds", "heatmap",
       cluster = factor(x$assignments)
     )
 
+    # clusters differ in colour and in shape, never in colour alone
+    n_cl <- nlevels(mds_df$cluster)
     p <- ggplot(mds_df, aes(x = .data$dim1, y = .data$dim2,
-                             colour = .data$cluster)) +
+                             colour = .data$cluster, shape = .data$cluster)) +
       geom_point(size = 2.5) +
+      scale_colour_manual(values = .okabe_values(n_cl)) +
+      scale_shape_manual(values = .cluster_shapes(n_cl)) +
       labs(x = "MDS Dimension 1", y = "MDS Dimension 2",
            title = sprintf("MDS Projection (k = %d)", x$k),
-           colour = "Cluster") +
+           colour = "Cluster", shape = "Cluster") +
       theme_minimal(base_size = 12)
 
   } else {

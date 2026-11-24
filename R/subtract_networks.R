@@ -81,7 +81,8 @@ subtract_networks <- function(x, y) {
   # meta$splot contract (cograph renders by this hint, no class branch needed)
   out$meta$splot <- list(renderer = "difference", defaults = list(minimum = 0))
   class(out) <- c("netdifference", class(out))
-  out
+  # the nodes keep the colours of `x`, the network the difference is taken from
+  .stamp_node_fill(.carry_state_colors(out, inputs$x))
 }
 
 #' Convert a network comparison to a difference network
@@ -149,7 +150,8 @@ as_netdifference.net_bayes <- function(x, significant_only = TRUE, ...) {
   out$significant_only <- isTRUE(significant_only)
   out$meta$splot <- list(renderer = "difference", defaults = list(minimum = 0))
   class(out) <- c("netdifference", class(out))
-  out
+  # the nodes keep the colours of the first network compared
+  .stamp_node_fill(.carry_state_colors(out, x$x))
 }
 
 #' @rdname as_netdifference

@@ -501,6 +501,7 @@ plot.cluster_choice <- function(x,
   aes_obj <- if (!is.na(colour_axis))
     ggplot2::aes(x = .data$k, y = .data$silhouette,
                  colour = .data[[colour_axis]],
+                 shape  = .data[[colour_axis]],
                  group  = .data[[colour_axis]])
   else
     ggplot2::aes(x = .data$k, y = .data$silhouette)
@@ -509,9 +510,10 @@ plot.cluster_choice <- function(x,
     ggplot2::geom_line(linewidth = 1) +
     ggplot2::geom_point(size = 2.8) +
     ggplot2::scale_x_continuous(breaks = unique(df$k)) +
-    ggplot2::scale_colour_viridis_d(option = "D", end = 0.85) +
+    ggplot2::scale_colour_manual(values = .okabe_values(48L)) +
+    ggplot2::scale_shape_manual(values = .cluster_shapes(48L)) +
     ggplot2::labs(title = "Cluster Choice", x = "k", y = "silhouette",
-                  colour = colour_axis) +
+                  colour = colour_axis, shape = colour_axis) +
     ggplot2::theme_minimal(base_size = 12) +
     ggplot2::theme(legend.position = "bottom")
 }
@@ -600,7 +602,7 @@ plot.cluster_choice <- function(x,
 
   if (!is.na(colour_axis) &&
       colour_axis %in% c("dissimilarity", "method")) {
-    p <- p + ggplot2::scale_colour_viridis_d(option = "D", end = 0.85)
+    p <- p + ggplot2::scale_colour_manual(values = .okabe_values(48L))
   }
   p
 }
@@ -614,7 +616,7 @@ plot.cluster_choice <- function(x,
     ggplot2::geom_line(linewidth = 1) +
     ggplot2::geom_point(size = 2.5) +
     ggplot2::scale_x_continuous(breaks = unique(df$k)) +
-    ggplot2::scale_colour_viridis_d(option = "D", end = 0.85) +
+    ggplot2::scale_colour_manual(values = .okabe_values(48L)) +
     ggplot2::facet_wrap(~ method) +
     ggplot2::labs(title = "Cluster Choice", x = "k", y = "silhouette",
                   colour = "dissimilarity") +

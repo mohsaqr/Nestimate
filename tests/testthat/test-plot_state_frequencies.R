@@ -212,7 +212,7 @@ test_that("plot_state_frequencies respects custom colors", {
   nw <- build_network(as.data.frame(trajectories),
                       method = "relative", format = "wide")
   custom <- c("#000000", "#FFFFFF", "#FF0000", "#00FF00", "#0000FF")
-  p <- plot_state_frequencies(nw, colors = custom)
+  p <- plot_state_frequencies(nw, state_colors = custom)
   expect_s3_class(p$plot, "ggplot")
 })
 

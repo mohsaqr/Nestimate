@@ -1090,7 +1090,7 @@ net_edge_betweenness.netobject <- function(x, invert = TRUE, ...) {
   )
   out$meta$edge_betweenness <- out$edge_betweenness
   class(out) <- c("net_edge_betweenness", class(out))
-  out
+  .carry_state_colors(out, x)
 }
 
 #' @rdname net_edge_betweenness
@@ -1099,7 +1099,7 @@ net_edge_betweenness.netobject_group <- function(x, invert = TRUE, ...) {
   result <- lapply(x, net_edge_betweenness.netobject, invert = invert)
   names(result) <- names(x)
   class(result) <- "netobject_group"
-  result
+  .carry_state_colors(result, x)
 }
 
 #' @rdname net_edge_betweenness

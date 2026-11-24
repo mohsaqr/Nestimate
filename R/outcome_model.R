@@ -456,6 +456,9 @@ plot.net_outcome_model <- function(x, ...) {
                         colour = "#0072B2", fill = "#0072B2") +
     ggplot2::scale_shape_manual(values = c(`FALSE` = 21, `TRUE` = 19),
                                 name = sprintf("%s < 0.05", x$correction)) +
+    # odds ratios are drawn on a log axis, where an odds ratio and its
+    # reciprocal lie at the same distance from 1
+    (if (ratio) ggplot2::scale_x_log10() else NULL) +
     ggplot2::labs(
       x = sprintf("%s (%s%% CI)", if (ratio) "Odds ratio" else "Estimate",
                   format(100 * (x$ci_level %||% 0.95))),

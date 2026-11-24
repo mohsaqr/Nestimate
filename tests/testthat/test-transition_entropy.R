@@ -268,7 +268,11 @@ test_that("entropy_network inherits styling metadata from the source network", {
   expect_identical(ent$nodes, net$nodes)
   expect_identical(ent$inits, net$inits)
   ## meta inherited except for the added $splot styling contract
-  expect_identical(ent$meta[setdiff(names(ent$meta), "splot")], net$meta)
+  expect_identical(ent$meta[setdiff(names(ent$meta), "splot")],
+                   net$meta[setdiff(names(net$meta), "splot")])
+  # the source's colours survive the entropy styling
+  expect_identical(ent$meta$splot$defaults$node_fill,
+                   net$meta$splot$defaults$node_fill)
   expect_identical(ent$node_groups, net$node_groups)
   expect_equal(ent$method, "entropy")
   expect_false(identical(ent$weights, net$weights))
@@ -548,4 +552,74 @@ test_that("share scaling gives percentages of H summing to 100", {
   ## share is contribution-only
   expect_error(entropy_network(.P3, weight = "surprisal",
                                scaling = "share"), "contribution")
+})
+
+# ---- entropy_trajectory() on sequences ----
+
+test_that("entropy_trajectory reads a network the same as its event log", {
+  # asymmetric sequences: read backwards, their transitions and windows change
+  seqs <- data.frame(T1 = c("A", "A", "B", "A", "C", "B"),
+                     T2 = c("A", "B", "C", "A", "A", "B"),
+                     T3 = c("B", "B", "C", "A", "B", "C"),
+                     T4 = c("C", "C", "A", "B", "B", "A"),
+                     T5 = c("C", "A", "A", "C", "B", "B"),
+                     T6 = c("A", "A", "B", "C", "C", "C"),
+                     stringsAsFactors = FALSE)
+  net <- build_network(seqs, method = "relative")
+  log <- data.frame(id = rep(1:6, times = 6), pos = rep(1:6, each = 6),
+                    st = unlist(seqs, use.names = FALSE),
+                    stringsAsFactors = FALSE)
+  from_net <- entropy_trajectory(net, window = 10, step = 5)
+  from_log <- entropy_trajectory(log, action = "st", actor = "id",
+                                 time = "pos", window = 10, step = 5)
+  expect_equal(nrow(from_net$trajectory), 5L)
+  expect_equal(from_net$trajectory, from_log$trajectory)
+  # a wide table and a character matrix give the same windows as the network
+  expect_equal(entropy_trajectory(seqs, window = 10, step = 5)$trajectory,
+               from_net$trajectory)
+  expect_equal(entropy_trajectory(as.matrix(seqs), window = 10,
+                                  step = 5)$trajectory,
+               from_net$trajectory)
+})
+
+test_that("entropy_trajectory on a window of all transitions equals the plug-in rate", {
+  # hand value: one window holding every transition is the empirical
+  # conditional entropy of the pooled counts
+  seqs <- data.frame(T1 = c("A", "A", "C"), T2 = c("B", "B", "A"),
+                     T3 = c("C", "B", "B"), T4 = c("A", "C", "A"),
+                     stringsAsFactors = FALSE)
+  # 9 transitions, fewer than the smallest window: one window, with a warning
+  expect_warning(tr <- entropy_trajectory(seqs, window = 10, step = 1),
+                 class = "nestimate_short_stream")
+  # by hand: A->B 3, B->C 2, C->A 2, B->B 1, B->A 1 (read backwards the
+  # counts differ, so the order of the positions is tested too)
+  n_ij <- c(AB = 3, BC = 2, CA = 2, BB = 1, BA = 1)
+  n_i <- c(AB = 3, BC = 4, CA = 2, BB = 4, BA = 4)
+  h <- -sum(n_ij / 9 * log2(n_ij / n_i))
+  expect_equal(tr$trajectory$n_transitions, 9L)
+  expect_equal(tr$trajectory$entropy, h)
+})
+
+test_that("entropy_trajectory takes the groups of a grouped network", {
+  seqs <- data.frame(T1 = rep(c("A", "B", "C"), 4),
+                     T2 = rep(c("B", "C", "A"), 4),
+                     T3 = rep(c("C", "A", "B"), 4),
+                     cond = rep(c("x", "y"), each = 6),
+                     stringsAsFactors = FALSE)
+  nets <- build_network(seqs, method = "relative", group = "cond")
+  tr <- entropy_trajectory(nets, window = 10, step = 2)
+  expect_setequal(unique(tr$trajectory$group), c("x", "y"))
+  # each group has 6 sequences x 2 transitions = 12; windows of 10, step 2
+  expect_equal(as.vector(table(tr$trajectory$group)), c(2L, 2L))
+  expect_true(all(tr$trajectory$n_transitions == 10L))
+})
+
+test_that("entropy_trajectory refuses a network that holds no sequences", {
+  num <- data.frame(a = sin(1:40), b = cos(1:40), c = (1:40) %% 7)
+  cor_net <- build_network(num, method = "cor")
+  expect_error(entropy_trajectory(cor_net), class = "nestimate_bad_input")
+  seqs <- data.frame(T1 = c("A", "B"), T2 = c("B", "A"),
+                     stringsAsFactors = FALSE)
+  expect_error(entropy_trajectory(seqs, group = "nope"),
+               class = "nestimate_bad_input")
 })

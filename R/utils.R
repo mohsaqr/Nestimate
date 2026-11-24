@@ -208,8 +208,11 @@ NULL
     }
     if (!is.null(x$initial)) names(x$initial) <- remap(names(x$initial))
     # a palette set before relabelling follows its states to their labels
-    if (!is.null(x$state_colors)) {
+    if (!is.null(x[["state_colors"]])) {
       names(x$state_colors) <- remap(names(x$state_colors))
+    }
+    if (!is.null(x[["palette_base"]])) {
+      names(x$palette_base) <- remap(names(x$palette_base))
     }
     if (!is.null(x$predictability)) {
       names(x$predictability) <- remap(names(x$predictability))
@@ -550,7 +553,7 @@ safe_sd <- function(x) {
   ), class = c("netobject", "cograph_network"))
   # the declaration and the columns it names travel with the data
   if (!is.null(x$metadata)) out$metadata <- x$metadata
-  out
+  .stamp_node_fill(out)
 }
 
 

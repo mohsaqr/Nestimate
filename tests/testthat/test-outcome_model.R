@@ -99,3 +99,13 @@ test_that("degenerate and malformed input raise classed errors", {
                class = "nestimate_empty_model_frame")
   expect_error(outcome_model(d, "success", "hint", ci_level = 2), "`ci_level`")
 })
+
+test_that("plot() draws odds ratios on a log axis and estimates on a linear one", {
+  d <- data.frame(y = rep(c(0, 1), 30), a = c(1:30, 30:1) / 10,
+                  b = rep(c(0.2, 0.9, 0.5), 20), z = seq_len(60) / 7)
+  binom <- outcome_model(d, outcome = "y", predictors = c("a", "b"))
+  gauss <- outcome_model(d, outcome = "z", predictors = c("a", "b"))
+  trans <- function(p) p$scales$get_scales("x")$trans$name
+  expect_identical(trans(plot(binom)), "log-10")
+  expect_null(plot(gauss)$scales$get_scales("x"))
+})

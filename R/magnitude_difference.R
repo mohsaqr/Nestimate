@@ -137,7 +137,8 @@ utils::globalVariables(c(
 #'
 #' @return A `magnitude_difference` object. `print()` reports the metric,
 #'   the scale, the states, the number of edges and the minimum, quartiles,
-#'   mean and maximum of the magnitude differences; `plot()` draws them.
+#'   mean and maximum of the magnitude differences; `summary()` returns the
+#'   edges, largest difference first; `plot()` draws them.
 #'   The object's fields:
 #' \describe{
 #'   \item{edges}{One row per ordered pair of states (the self-transitions
@@ -155,6 +156,7 @@ utils::globalVariables(c(
 #'                             actor = "Actor", action = "Action",
 #'                             time = "Time")
 #' print(fit)
+#' summary(fit, n = 5)
 #' \donttest{
 #' # The polar portrait shows which edges row-normalization promotes.
 #' plot(fit)                       # stacked polar portrait
@@ -253,7 +255,7 @@ magnitude_difference <- function(data, actor = NULL, action = NULL,
 #' * `"stacked"`: `threshold` (the magnitude marked "small" in the colour key, default 10% of the largest), the radii `r_inner`, `r_outer` and `gap_rad`, and the labels `label_offset`, `label_size` and `src_label_size`;
 #' * `"circular"`: `self_loops` (default `TRUE`), `label_offset` and `edge_curve`.
 #' 
-#'  The `print()` method ignores it.
+#'  The `print()` and `summary()` methods ignore it.
 #' @param type For the `plot()` method: the kind of plot. `"stacked"`
 #'   (default) is a polar portrait with one sector per source state and one
 #'   wedge per edge, grey up to the smaller of the two scaled weights and
@@ -263,6 +265,11 @@ magnitude_difference <- function(data, actor = NULL, action = NULL,
 #'   sign and its width and opacity the magnitude.
 #' @param min_show For `type = "circular"`: edges whose magnitude difference
 #'   is below this fraction of the largest are left out. Default `0.01`.
+#' @param state_colors For the `plot()` method with `type = "stacked"`:
+#'   colours for the source states, for this figure only, named
+#'   (`c(state = "#0072B2")`) or one per state in `states` order. Default
+#'   `NULL`: Okabe-Ito dealt in alphabetical order, as every figure deals
+#'   them.
 #' @param title For the `plot()` method: the plot title. Default `NULL`,
 #'   which names the metric and the scale.
 #' @return For the `plot()` method: a `ggplot` object. The `print()` method
@@ -277,6 +284,28 @@ print.magnitude_difference <- function(x, ...) {
   cat("  magnitude-difference summary (", x$metric, "):\n", sep = "")
   print(summary(x$edges$value))
   invisible(x)
+}
+
+#' @rdname magnitude_difference
+#' @param object For the `summary()` method: a `magnitude_difference`
+#'   object.
+#' @param n For the `summary()` method: the number of edges to return, the
+#'   largest differences first. Default `NULL` returns every edge.
+#' @return For the `summary()` method: a data frame with one row per
+#'   ordered pair of states and the columns `from`, `to`, `ftna`, `tna`,
+#'   `signed` and `value`, sorted by `value` from largest to smallest (ties
+#'   by `from`, then `to`). A positive `signed` marks an edge the
+#'   probability view makes larger than the count view.
+#' @export
+summary.magnitude_difference <- function(object, n = NULL, ...) {
+  .assert("`n` must be NULL or a single positive whole number" =
+            is.null(n) || (is.numeric(n) && length(n) == 1L && !is.na(n) &&
+                             n >= 1 && n == round(n)))
+  ed <- object$edges
+  ed <- ed[order(-ed$value, ed$from, ed$to), , drop = FALSE]
+  if (!is.null(n)) ed <- utils::head(ed, n)
+  rownames(ed) <- NULL
+  ed
 }
 
 # --- diverging palette for the circular (chord) plot ----------------------
@@ -398,6 +427,7 @@ print.magnitude_difference <- function(x, ...) {
 }
 
 .magdiff_stacked <- function(ed, title = NULL, threshold = NULL,
+                             palette = NULL,
                              r_inner = 0.45, r_outer = 1.00,
                              gap_rad = 0.06, label_offset = 0.04,
                              label_size = 3.4, src_label_size = 4.1) {
@@ -408,9 +438,10 @@ print.magnitude_difference <- function(x, ...) {
 
   from_nodes <- sort(unique(ed$from))
   n_from <- length(from_nodes)
-  node_col <- stats::setNames(.okabe_ito[((seq_len(n_from) - 1L)
-                                    %% length(.okabe_ito)) + 1L],
-                       from_nodes)
+  # the states keep the colours every figure gives them, whichever have
+  # outgoing edges here
+  palette <- palette %||% .figure_palette(list(), unique(c(ed$from, ed$to)))
+  node_col <- stats::setNames(unname(palette[from_nodes]), from_nodes)
 
   # sector start / size - vectorized via cumsum (no for loop). unname() so
   # the from-state names do not propagate into per-sector data.frames (which
@@ -544,13 +575,15 @@ print.magnitude_difference <- function(x, ...) {
 #' @export
 plot.magnitude_difference <- function(x, type = c("stacked", "circular"),
                                       min_show = 0.01,
-                                      title = NULL, ...) {
+                                      title = NULL, state_colors = NULL,
+                                      ...) {
   type <- match.arg(type)
   if (is.null(title))
     title <- sprintf("Magnitude difference - %s (%s scaling)",
                       x$metric, x$scale)
   if (type == "stacked") {
-    .magdiff_stacked(x$edges, title = title, ...)
+    .magdiff_stacked(x$edges, title = title,
+                     palette = .figure_palette(x, x$states, state_colors), ...)
   } else {
     .magdiff_circular(x$edges, title = title, min_show = min_show, ...)
   }

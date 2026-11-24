@@ -455,7 +455,10 @@ test_that("named state_colors colours a combined group everywhere it appears", {
                toupper(grDevices::rgb(m[1L], m[2L], m[3L])))
   # keys the user did not name keep their defaults
   expect_equal(unname(mcml_fills(p, "Merged")[["a1"]]), .okabe_ito[1L])
-  expect_equal(unname(mcml_fills(p, "Summary")[["G3"]]), "#2A9D8F")
+  # a cluster band takes an Okabe-Ito colour the states leave
+  g3 <- unname(mcml_fills(p, "Summary")[["G3"]])
+  expect_true(g3 %in% .okabe_ito)
+  expect_false(g3 %in% c("#CC79A7", "#000000"))
 })
 
 test_that("named state_colors reaches an expanded cluster and rest_label", {
@@ -483,8 +486,8 @@ test_that("an unnamed state_colors stays positional for an mcml", {
   # states are keyed in sorted order: a1 a2 b1 b2 c1 c2
   expect_equal(unname(mcml_fills(p, "G1")[c("a1", "a2")]), cols[1:2])
   expect_equal(unname(mcml_fills(p, "G3")[c("c1", "c2")]), cols[5:6])
-  # clusters keep their own palette, untouched by a positional vector
-  expect_equal(unname(mcml_fills(p, "Summary")[["G1"]]), "#264653")
+  # clusters take Okabe-Ito colours, untouched by a positional vector
+  expect_true(unname(mcml_fills(p, "Summary")[["G1"]]) %in% .okabe_ito)
 })
 
 test_that("names this figure does not draw are dropped with a message", {

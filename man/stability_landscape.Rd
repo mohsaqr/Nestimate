@@ -20,7 +20,7 @@ stability_landscape(
 
 \method{print}{net_landscape}(x, digits = 2, ...)
 
-\method{plot}{net_landscape}(x, ...)
+\method{plot}{net_landscape}(x, state_colors = NULL, ...)
 }
 \arguments{
 \item{x}{The network or sequences: a transition network from
@@ -65,6 +65,13 @@ three states only; asking for it otherwise raises an error of class
 
 \item{digits}{For the \code{print()} method: decimal places (the circulation
 gets two more). Default \code{2}.}
+
+\item{state_colors}{For the \code{plot()} method: colours for the states, for
+this figure only. Named, \code{c(state = "#0072B2")}, it overrides the states
+it names; unnamed, it gives one colour per state in \code{states} order.
+Default \code{NULL}: the colours of the network the result came from (set
+with \code{\link[=set_state_colors]{set_state_colors()}}), Okabe-Ito for the rest, as every figure of
+that network draws them.}
 }
 \value{
 A \code{net_landscape} object. \code{print()} shows each state's depth with

@@ -8,6 +8,7 @@
 \alias{global_differences}
 \alias{network_metrics}
 \alias{print.net_table}
+\alias{[.net_table}
 \title{Tabulate the results of a network comparison}
 \usage{
 \method{summary}{net_network_comparison}(object, pair = NULL, digits = 2L, ...)
@@ -21,6 +22,8 @@ global_differences(x, pair = NULL, digits = 2L)
 network_metrics(x, digits = 2L)
 
 \method{print}{net_table}(x, digits = attr(x, "digits") \%||\% 2L, ...)
+
+\method{[}{net_table}(x, ...)
 }
 \arguments{
 \item{pair}{The comparisons to keep. Default \code{NULL}, all of them. Give
@@ -34,11 +37,12 @@ matches no comparison raises an error of class
 the \code{print()} method: the decimals shown, by default those the table
 was made with.}
 
-\item{...}{Ignored.}
+\item{...}{Ignored. For \code{[}: the row and column indices.}
 
 \item{x, object}{A \code{net_network_comparison} object from
-\code{\link[=compare_networks]{compare_networks()}}. For the \code{print()} method: a table returned by one
-of these verbs.}
+\code{\link[=compare_networks]{compare_networks()}}. For the \code{print()} method and for subsetting with
+\code{[} (as \code{\link[=subset]{subset()}} does): a table returned by one of these verbs, whose
+rows and columns keep its \code{digits}.}
 
 \item{measure}{The centrality measures to keep in \code{node_differences()}.
 Default \code{NULL}, all measures of the comparison; a measure the object

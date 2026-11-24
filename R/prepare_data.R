@@ -617,6 +617,10 @@ print.nestimate_data <- function(x, ...) {
 }
 
 
+#' A 1-d array (tapply's result) as a plain vector, names kept
+#' @noRd
+.plain_vector <- function(x) stats::setNames(as.vector(x), names(x))
+
 #' Aggregate extra columns per session
 #'
 #' Numeric columns: mean. Character/factor columns: mode (most frequent value);
@@ -629,7 +633,13 @@ print.nestimate_data <- function(x, ...) {
   agg_list <- lapply(extra_cols, function(col) {
     vals <- df[[col]]
     if (is.numeric(vals)) {
-      agg <- tapply(vals, df[[session_col]], mean, na.rm = TRUE)[sessions]
+      # tapply() returns a 1-d array; a plain vector keeps the metadata
+      # columns usable as covariates (landscape_trend(along = ) multiplied
+      # the array and failed with "non-conformable arrays").
+      # Looked up by name: numeric session keys (10, 20) would otherwise be
+      # read as positions in tapply()'s result.
+      agg <- .plain_vector(tapply(vals, df[[session_col]], mean,
+                                  na.rm = TRUE)[as.character(sessions)])
       agg[is.nan(agg)] <- NA_real_
       agg
     } else {
@@ -642,13 +652,15 @@ print.nestimate_data <- function(x, ...) {
         modes <- names(tab)[tab == max_count]
         if (length(modes) > 1L) {
           n_ties <<- n_ties + 1L
-          v[v %in% modes][1L]
+          # As text, like the untied case: a factor or Date element would
+          # otherwise be coerced to its code by tapply()'s simplification.
+          as.character(v[v %in% modes][1L])
         } else {
           modes
         }
-      })[sessions]
+      })[as.character(sessions)]
       if (n_ties > 0L) tie_counts[[col]] <<- n_ties
-      result
+      .plain_vector(result)
     }
   })
   names(agg_list) <- extra_cols

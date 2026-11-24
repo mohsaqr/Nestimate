@@ -173,6 +173,37 @@
   as.character(seq(first, last, by = 1))
 }
 
+# Dates grouped into weeks (starting Monday) or months, as a factor whose
+# levels run over every week or month from the first to the last, so an
+# empty one stays on the axis; `"day"` leaves the column as it is.
+#' @noRd
+.period_bin <- function(period, unit, periods) {
+  if (identical(unit, "day")) return(period)
+  dates <- if (inherits(period, "Date")) period
+           else if (inherits(period, "POSIXt")) as.Date(period)
+           else if (is.character(period) || is.factor(period)) {
+             text <- as.character(period)
+             ok <- grepl("^[0-9]{4}-[0-9]{2}-[0-9]{2}$", text)
+             if (all(ok | is.na(text))) as.Date(text, format = "%Y-%m-%d")
+             else NULL
+           } else NULL
+  if (is.null(dates) || all(is.na(dates))) {
+    .period_bad_input(sprintf(paste0(
+      "`period_unit = \"%s\"` needs `periods` to be a date column (a Date, ",
+      "a POSIXct or text such as \"2026-03-05\"); '%s' is not."),
+      unit, periods))
+  }
+  start <- if (unit == "week") {
+    dates - (as.integer(format(dates, "%u")) - 1L)
+  } else {
+    as.Date(format(dates, "%Y-%m-01"))
+  }
+  from <- min(start, na.rm = TRUE)
+  to <- max(start, na.rm = TRUE)
+  blocks <- seq(from, to, by = unit)
+  factor(as.character(start), levels = as.character(blocks))
+}
+
 # One row per actor, that actor's states in period-then-step order, NA
 # padded to the longest; an actor with no cell is an all-NA row.
 #' @noRd
@@ -302,7 +333,8 @@
                                    time_label, tick, legend, legend_size,
                                    legend_title, legend_ncol, legend_border,
                                    legend_bty, trim = NULL, group = NULL,
-                                   ncol = NULL, nrow = NULL, combined = TRUE) {
+                                   ncol = NULL, nrow = NULL, combined = TRUE,
+                                   period_unit = "day") {
   .assert(
     "`periods` must be a single column name" =
       is.character(periods) && length(periods) == 1L && !is.na(periods),
@@ -311,6 +343,7 @@
       row_gap < 1
   )
   src <- .period_source(src, periods, group)
+  src$period <- .period_bin(src$period, period_unit, periods)
   lay <- .period_layout(src$data, src$actor, src$period, fill, trim)
   levels_all <- lay$levels
   n_rows <- length(lay$actors)

@@ -74,7 +74,7 @@
 #'   any other method raises an error, because the model needs transition
 #'   counts. A `tna` model or a `group_tna` (package tna) is first rebuilt as a
 #'   network from its own sequences (see [as_netobject()]). For the `print()`
-#'   and `plot()` methods: a `net_bayes`, or for `print()` a `net_bayes_group`.
+#'   and `plot()` methods: a `net_bayes` or a `net_bayes_group`.
 #' @param y The second network, of the same kind as `x`. Default `NULL`:
 #'   with a `netobject_group` as `x`, every pair of its groups is compared.
 #'   With two `netobject_group`s, the groups sharing a name are compared,
@@ -374,7 +374,7 @@ bayes_compare <- function(x, y = NULL,
     meta            = list(splot = list(renderer = "permutation"))
   )
   class(result) <- c("net_bayes", "netdifference", "net_permutation")
-  result
+  .declare_source_fill(result, x)
 }
 
 
@@ -539,7 +539,7 @@ bayes_compare <- function(x, y = NULL,
     meta            = list(splot = list(renderer = "permutation"))
   )
   class(result) <- c("net_bayes", "netdifference", "net_permutation")
-  result
+  .declare_source_fill(result, x)
 }
 
 
@@ -648,10 +648,15 @@ bayes_compare <- function(x, y = NULL,
 #'   `net_bayes_group`, the tables of every comparison stacked, with a
 #'   `comparison` column first. For `plot()`: with cograph installed, it
 #'   draws the difference network with `cograph::splot()`, each edge
-#'   labelled with its posterior mean difference and credible interval, and
+#'   labelled with its posterior mean difference and credible interval,
+#'   blue (`#4A6FE3`) where `x` is higher and red (`#D33F6A`) where `y` is
+#'   (`edge_positive_color` and `edge_negative_color` change them), and
 #'   returns the `cograph_network` invisibly; without cograph, it returns a
 #'   `ggplot` chord diagram in which colour gives the direction of the
-#'   difference and width its size.
+#'   difference and width its size. For a `net_bayes_group`, `plot()` draws
+#'   every comparison in turn, each titled with its name, and returns their
+#'   results in a list named by comparison, invisibly; a group of one
+#'   comparison returns that comparison's result.
 #' @export
 print.net_bayes <- function(x, ...) {
   method_labels <- c(
@@ -730,6 +735,13 @@ plot.net_bayes <- function(x, significant_only = TRUE, title = NULL, ...) {
     if (is.null(args[["edge_ci_scale"]])) args[["edge_ci_scale"]] <- 1.0
     if (is.null(args[["edge_ci_style"]])) args[["edge_ci_style"]] <- 1
     if (is.null(args[["title_size"]])) args[["title_size"]] <- 0.82
+    # the package's difference colours: blue where x is higher, red where y is
+    if (is.null(args[["edge_positive_color"]])) {
+      args[["edge_positive_color"]] <- "#4A6FE3"
+    }
+    if (is.null(args[["edge_negative_color"]])) {
+      args[["edge_negative_color"]] <- "#D33F6A"
+    }
     if (is.null(args[["title"]])) {
       args[["title"]] <- title %||% "Bayesian network difference"
     }
@@ -762,6 +774,22 @@ print.net_bayes_group <- function(x, ...) {
   cat("Comparisons:", paste(names(x), collapse = ", "), "\n")
   cat("Use summary() for combined edge-level results.\n")
   invisible(x)
+}
+
+
+#' @rdname bayes_compare
+#' @export
+plot.net_bayes_group <- function(x, significant_only = TRUE, title = NULL,
+                                 ...) {
+  draw <- function(comparison, name) {
+    plot.net_bayes(comparison, significant_only = significant_only,
+                   title = title %||% name, ...)
+  }
+  if (length(x) == 1L) return(draw(x[[1L]], names(x)[1L]))
+  drawn <- Map(draw, x, names(x))
+  # without cograph each comparison is a ggplot, which draws only when printed
+  lapply(Filter(\(p) inherits(p, "ggplot"), drawn), print)
+  invisible(drawn)
 }
 
 

@@ -732,3 +732,16 @@ test_that("scaled networks hold the scaled weights in their edge tables", {
   plain <- compare_networks(x = f$early, y = f$late)$networks[[1L]]
   expect_identical(plain$edges, f$early$edges)
 })
+
+test_that("subsetting a comparison table keeps its digits", {
+  tab <- .cn_tidy(data.frame(key = c("a", "b"), value = c(0.98335, 0.065311)),
+                  digits = 3)
+  one <- subset(tab, key == "b")
+  expect_s3_class(one, "net_table")
+  expect_identical(attr(one, "digits"), 3L)
+  expect_match(paste(utils::capture.output(print(one)), collapse = "\n"),
+               "0.065", fixed = TRUE)
+  expect_identical(attr(tab[1, ], "digits"), 3L)
+  # a single column is a vector, not a table
+  expect_type(tab[["value"]], "double")
+})

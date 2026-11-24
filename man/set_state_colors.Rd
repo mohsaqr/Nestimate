@@ -53,11 +53,29 @@ network, so a member drawn on its own carries it too.
 }
 \description{
 \code{set_state_colors()} attaches a palette to a network object, so every
-figure drawn from it uses the same colours: \code{\link[=sequence_plot]{sequence_plot()}},
-\code{\link[=distribution_plot]{distribution_plot()}}, \code{\link[=plot_state_frequencies]{plot_state_frequencies()}} and \code{cograph::splot()}.
-A colour argument given to one of those plot verbs still wins for that
-figure, and the object keeps its palette. \code{state_colors(x) <- value} is
+figure drawn from it uses the same colours. \code{state_colors(x) <- value} is
 the replacement form, and \code{\link[=state_colors]{state_colors()}} reads back the colours in use.
+
+One rule holds for colours across the package:
+\itemize{
+\item With no colours set, the states are drawn in the Okabe-Ito colours,
+dealt in the alphabetical order of the states, so a state has the same
+colour in every figure whatever the order of the network's nodes.
+\item A palette set here replaces those colours for the states it names.
+\item Objects computed from the network carry its colours: groups and their
+members, \code{\link[=build_clusters]{build_clusters()}}, \code{\link[=build_mmm]{build_mmm()}} and the networks
+\code{\link[=build_network]{build_network()}} and \code{\link[=cluster_network]{cluster_network()}} build from them,
+\code{\link[=bootstrap_network]{bootstrap_network()}}, \code{\link[=certainty]{certainty()}}, \code{\link[=permutation]{permutation()}},
+\code{\link[=bayes_compare]{bayes_compare()}}, \code{\link[=net_edge_betweenness]{net_edge_betweenness()}}, \code{\link[=entropy_network]{entropy_network()}},
+\code{\link[=net_prune]{net_prune()}}, \code{\link[=stability_landscape]{stability_landscape()}}, \code{\link[=landscape_trend]{landscape_trend()}} and
+\code{\link[=landscape_surface]{landscape_surface()}}. A cluster or group that lacks a state keeps the
+colours of the others.
+\item Every figure that colours states follows them: \code{\link[=sequence_plot]{sequence_plot()}},
+\code{\link[=distribution_plot]{distribution_plot()}}, \code{\link[=plot_state_frequencies]{plot_state_frequencies()}}, the \code{plot()}
+methods of \code{\link[=stability_landscape]{stability_landscape()}} and \code{\link[=landscape_trend]{landscape_trend()}}, and
+\code{cograph::splot()} (through the network's \code{meta$splot} contract).
+\item \verb{state_colors =} on one of those figures changes that figure only.
+}
 }
 \examples{
 net <- build_network(group_regulation_long, method = "relative",

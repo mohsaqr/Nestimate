@@ -25,7 +25,14 @@ landscape_trend(
 
 \method{print}{net_landscape_trend}(x, digits = 2, ...)
 
-\method{plot}{net_landscape_trend}(x, type = c("lines", "surface"), theta = 10, phi = 30, ...)
+\method{plot}{net_landscape_trend}(
+  x,
+  type = c("lines", "surface"),
+  theta = 10,
+  phi = 30,
+  state_colors = NULL,
+  ...
+)
 }
 \arguments{
 \item{x}{The network or sequences: a transition network from
@@ -96,6 +103,13 @@ height scale, ridges included with \code{depth = "occupancy"}.}
 
 \item{theta, phi}{For \code{plot(type = "surface")}: the viewing angles.
 Defaults \code{10} and \code{30}.}
+
+\item{state_colors}{For the \code{plot()} method: colours for the states, for
+this figure only. Named, \code{c(state = "#0072B2")}, it overrides the states
+it names; unnamed, it gives one colour per state in \code{states} order.
+Default \code{NULL}: the colours of the network the result came from (set
+with \code{\link[=set_state_colors]{set_state_colors()}}), Okabe-Ito for the rest, as every figure of
+that network draws them.}
 }
 \value{
 A \code{net_landscape_trend} object. \code{print()} shows each state's

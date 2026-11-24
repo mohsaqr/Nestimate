@@ -207,7 +207,7 @@ distribution_plot <- function(x,
 
   # A palette attached with set_state_colors() is the object's own default;
   # an explicit `state_colors` still wins for this one figure.
-  state_colors <- state_colors %||% .stored_state_colors(x)
+  state_colors <- .with_override(x, state_colors)
 
   # Extract data and group from various input types. Panels are "clusters"
   # only when the grouping is the input's own clustering, not a `group` given.
@@ -352,7 +352,7 @@ distribution_plot <- function(x,
     graphics::mtext(y_label, side = 2, line = 2.5)
 
     panel_title <- if (G > 1L) {
-      base <- sprintf("Cluster %s", g)
+      base <- .group_panel_label(g)
       if (isTRUE(show_n)) sprintf("%s  (n = %d)", base,
                                   group_sizes[g_idx]) else base
     } else if (!is.null(main)) {

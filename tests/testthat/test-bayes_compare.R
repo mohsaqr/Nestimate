@@ -254,3 +254,48 @@ test_that("bayes_compare recounts bare cograph_networks and refuses mcml", {
   expect_error(bayes_compare(mc, mc, draws = 50),
                class = "nestimate_bad_input")
 })
+
+test_that("plot() draws every comparison of a grouped Bayesian comparison", {
+  skip_on_cran()
+  states <- c("A", "B", "C")
+  logs <- do.call(rbind, lapply(seq_len(30), \(i) data.frame(
+    id = i, t = seq_len(12),
+    act = states[(i + seq_len(12) * c(1, 2, 1)[i %% 3 + 1]) %% 3 + 1],
+    team = c("x", "y", "z")[i %% 3 + 1])))
+  grp <- build_network(logs, method = "relative", actor = "id",
+                       action = "act", time = "t", group = "team")
+  comparisons <- bayes_compare(grp, seed = 1, draws = 500)
+  expect_s3_class(comparisons, "net_bayes_group")
+  grDevices::pdf(NULL)
+  on.exit(grDevices::dev.off(), add = TRUE)
+  drawn <- plot(comparisons, significant_only = FALSE)
+  expect_type(drawn, "list")
+  expect_named(drawn, names(comparisons))
+  pair <- build_network(subset(logs, team != "z"), method = "relative",
+                        actor = "id", action = "act", time = "t",
+                        group = "team")
+  one <- bayes_compare(pair, seed = 1, draws = 500)
+  expect_s3_class(one, "net_bayes_group")
+  expect_length(one, 1L)
+  # a group of one comparison returns that comparison's plot, not a list
+  expect_false(identical(class(plot(one, significant_only = FALSE)), "list"))
+})
+
+test_that("plot() of a Bayesian comparison draws blue and red differences", {
+  skip_on_cran()
+  skip_if_not_installed("cograph")
+  states <- c("A", "B", "C")
+  logs <- do.call(rbind, lapply(seq_len(40), \(i) data.frame(
+    id = i, t = seq_len(12),
+    act = states[(i + seq_len(12) * (1 + i %% 2)) %% 3 + 1],
+    team = c("x", "y")[i %% 2 + 1])))
+  grp <- build_network(logs, method = "relative", actor = "id",
+                       action = "act", time = "t", group = "team")
+  grDevices::pdf(NULL)
+  on.exit(grDevices::dev.off(), add = TRUE)
+  drawn <- plot(bayes_compare(grp, seed = 1, draws = 500),
+                significant_only = FALSE)
+  colours <- unique(substr(drawn$edges$edge_color, 1, 7))
+  expect_true(all(colours %in% c("#4A6FE3", "#D33F6A")))
+  expect_true(any(drawn$edges$weight > 0) && any(drawn$edges$weight < 0))
+})

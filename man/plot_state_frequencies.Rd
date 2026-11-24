@@ -36,6 +36,7 @@ plot_state_frequencies(x, ...)
   combine = "auto",
   ncol = NULL,
   node_groups = NULL,
+  state_colors = NULL,
   ...
 )
 
@@ -55,6 +56,7 @@ plot_state_frequencies(x, ...)
   combine = "auto",
   ncol = NULL,
   node_groups = NULL,
+  state_colors = NULL,
   ...
 )
 
@@ -74,6 +76,7 @@ plot_state_frequencies(x, ...)
   combine = "auto",
   ncol = NULL,
   node_groups = NULL,
+  state_colors = NULL,
   ...
 )
 
@@ -93,6 +96,7 @@ plot_state_frequencies(x, ...)
   combine = "auto",
   ncol = NULL,
   node_groups = NULL,
+  state_colors = NULL,
   ...
 )
 
@@ -156,11 +160,8 @@ force one.}
 the bars: \code{"frequency"} (default), the most frequent first;
 \code{"alpha"}, alphabetical; or \code{"none"}, the order of the table.}
 
-\item{colors}{Fill colours for the states, overriding the palette
-attached to \code{x} with \code{\link[=set_state_colors]{set_state_colors()}} for this chart: an unnamed
-vector in state order (at least one per state) or a named lookup such
-as \code{c(plan = "#0072B2")} that overrides only the states named. Default
-\code{NULL}: the attached palette, or else the Okabe-Ito palette, recycled.}
+\item{colors}{Deprecated name of \code{state_colors}; it still works, with a
+warning of class \code{nestimate_deprecated}.}
 
 \item{label_size}{The size of the tile and bar labels; with
 \pkg{ggfittext} installed, the largest size, as labels shrink to fit
@@ -194,6 +195,13 @@ groups, such as \code{c(plan = "Regulation", monitor = "Regulation")}. The
 chart is then drawn and coloured by these groups, states not named
 keeping their own name; the returned table keeps one row per state.
 Default \code{NULL}.}
+
+\item{state_colors}{Fill colours for the states, overriding the palette
+attached to \code{x} with \code{\link[=set_state_colors]{set_state_colors()}} for this chart: an unnamed
+vector in state order (at least one per state) or a named lookup such
+as \code{c(plan = "#0072B2")} that overrides only the states named. Default
+\code{NULL}: the attached palette, or else Okabe-Ito, as every figure of \code{x}
+draws them.}
 
 \item{digits}{For \code{print()} of the result: decimal places of the
 percentages. Default \code{1}.}

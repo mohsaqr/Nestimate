@@ -108,6 +108,29 @@
 #'   [extract_sequences()]. Default `NULL`.
 #' @param actor,action,time The actor, action and timestamp columns of a
 #'   long event log; setting `action` marks `x` as one. Default `NULL`.
+#'   With `group` and sequences that are not an event log (a network, a
+#'   wide table), `actor` instead names the covariate that nests the
+#'   sequences (the session of a half-session, the student of a course), and
+#'   the permutation test shuffles the group labels within it (see
+#'   *Comparing groups*). For a network built with `actor`, the default
+#'   nests the sequences in that actor (its `.session_label`), so the two
+#'   halves of one session are compared within the session.
+#' @param group A covariate of the sequences holding each sequence's group:
+#'   for a grouped network its group column (for example `"phase"` after
+#'   [mark_phases()]), for a wide table one of its non-state columns. With
+#'   `group`, the result compares the indices between the groups instead of
+#'   listing them per sequence. A grouped network is compared by its own
+#'   groups by default; `meta = TRUE` lists its sequences instead. A name that is not a covariate of the
+#'   sequences, or fewer than two groups, raises an error of class
+#'   `nestimate_bad_input`. Default `NULL`.
+#' @param indices The indices to return, by name (for example
+#'   `c("valid_n", "transition_rate")`). Default `NULL` returns them all. A
+#'   name that is not an index raises an error of class
+#'   `nestimate_bad_input`.
+#' @param iter The number of permutations of the group comparison, a whole
+#'   number of at least 1. Default `1000`.
+#' @param adjust The method of [stats::p.adjust()] applied to the p-values of
+#'   the group comparison. Default `"BH"`.
 #' @param ... Further arguments passed to [prepare()] for a long event log,
 #'   such as `time_threshold` or `order`.
 #'
@@ -116,6 +139,29 @@
 #'   (`integrative_potential` only with `favorable`). With `meta = TRUE`,
 #'   the input's covariate columns, if it has any, come first.
 #'
+#'   With `group`, a data frame with one row per numeric index: `index`;
+#'   for each group `n_<group>` (the sequences with a value of the index),
+#'   `mean_<group>` and `sd_<group>`; with two groups, `difference` (the
+#'   second group's mean minus the first's, in sorted order),
+#'   `hedges_g` and its 95% interval `g_lower`, `g_upper`; for any number of
+#'   groups `eta_squared`, the one-way `statistic` (F), the permutation
+#'   `p_value` and the adjusted `p_adj`.
+#'
+#' @section Comparing groups:
+#' For each numeric index, the groups are compared with the one-way F
+#' statistic, which for two groups is the square of the t statistic. Its
+#' p-value is `(b + 1) / (iter + 1)`, where `b` counts the permutations of
+#' the group labels whose F is at least the observed one (Good, 2005); call
+#' [base::set.seed()] first for reproducible p-values. A sequence with a
+#' missing value of an index (a one-state sequence has no transition rate)
+#' takes no part in that index. With `actor`, the labels are shuffled within
+#' each actor whose sequences are in several groups and between the actors
+#' whose sequences are all in one group, as in [sequence_compare()]. With
+#' two groups, `hedges_g` is the standardised mean difference corrected for
+#' small-sample bias, with an interval from its normal approximation
+#' (Hedges, 1981). `eta_squared` is the share of the index's variance
+#' between the groups.
+#'
 #' @references
 #' Saqr, M., Tikka, S., & L\enc{ó}{o}pez-Pernas, S. (2026). codyna: Complex Dynamic
 #' Systems. R package version 1.0.0.
@@ -123,6 +169,13 @@
 #' Brzinsky-Fay, C. (2018). Unused resources: Sequence and trajectory
 #' indicators. International Symposium on Sequence Analysis and Related
 #' Methods, Monte Verit\enc{à}{a}.
+#'
+#' Good, P. (2005). \emph{Permutation, parametric and bootstrap tests of
+#' hypotheses}. Springer. \doi{10.1007/b138696}
+#'
+#' Hedges, L. V. (1981). Distribution theory for Glass's estimator of effect
+#' size and related estimators. \emph{Journal of Educational Statistics},
+#' 6(2), 107-128. \doi{10.3102/10769986006002107}
 #'
 #' Gabadinho, A., Ritschard, G., M\enc{ü}{u}ller, N. S., & Studer, M. (2011).
 #' Analyzing and visualizing state sequences in R with TraMineR. Journal of
@@ -133,20 +186,42 @@
 #'
 #' head(sequence_metrics(trajectories, favorable = "Active"))
 #'
+#' # compare the indices of the first and second halves of each session
+#' halves <- mark_phases(human_long, actor = "session_id",
+#'                       time = "order_in_session",
+#'                       labels = c("early", "late"))
+#' net <- build_network(halves, actor = "session_id", action = "cluster",
+#'                      group = "phase", method = "relative")
+#' set.seed(1)
+#' sequence_metrics(net, iter = 99)
+#'
 #' @seealso \code{\link{sequence_patterns}}, \code{\link{extract_sequences}}
 #' @export
 sequence_metrics <- function(x, favorable = NULL, omega = 1, meta = FALSE,
                              cols = NULL, actor = NULL, action = NULL,
-                             time = NULL, ...) {
+                             time = NULL, group = NULL, indices = NULL,
+                             iter = 1000L, adjust = "BH", ...) {
   .assert(
     "`favorable` must be NULL or character" = is.null(favorable) ||
       is.character(favorable),
     "`omega` must be a single finite number" = is.numeric(omega) &&
       length(omega) == 1L && is.finite(omega),
-    "`meta` must be TRUE or FALSE" = isTRUE(meta) || isFALSE(meta)
+    "`meta` must be TRUE or FALSE" = isTRUE(meta) || isFALSE(meta),
+    "`group` must be NULL or one column name" = is.null(group) ||
+      (is.character(group) && length(group) == 1L && !is.na(group)),
+    "`iter` must be a single whole number of at least 1" = is.numeric(iter) &&
+      length(iter) == 1L && is.finite(iter) && iter >= 1 && iter == round(iter),
+    "`adjust` must be one of p.adjust.methods" = is.character(adjust) &&
+      length(adjust) == 1L && adjust %in% stats::p.adjust.methods,
+    "`indices` must be NULL or index names" = is.null(indices) ||
+      (is.character(indices) && length(indices) > 0L && !anyNA(indices))
   )
-  seqs <- .as_sequences(x, cols = cols, actor = actor, action = action,
-                        time = time, ...)
+  # an event log's actor defines its sequences; for other input it is a
+  # covariate, so it is kept out of the states like `group`
+  is_log <- !is.null(action)
+  seqs <- .as_sequences(x, cols = cols, actor = if (is_log) actor,
+                        action = action, time = time,
+                        exclude = c(group, if (!is_log) actor), ...)
   alphabet <- seqs$alphabet
   a <- length(alphabet)
   codes <- matrix(match(seqs$states, alphabet), nrow = nrow(seqs$states))
@@ -199,9 +274,162 @@ sequence_metrics <- function(x, favorable = NULL, omega = 1, meta = FALSE,
   out$valid_proportion[empty] <- NA_real_
   out$cyclic_feedback_strength[empty] <- NA_real_
   if (length(fav) == 0L) out$integrative_potential <- NULL
+  if (!is.null(indices)) {
+    unknown <- setdiff(indices, names(out))
+    if (length(unknown) > 0L) {
+      stop(errorCondition(sprintf(
+        "unknown index(es) in `indices`: %s. Available: %s.",
+        paste(unknown, collapse = ", "), paste(names(out), collapse = ", ")),
+        class = "nestimate_bad_input", call = NULL))
+    }
+    out <- out[unique(indices)]
+  }
+  # a grouped network is compared by its own groups unless its sequences
+  # are asked for (meta = TRUE)
+  if (is.null(group) && !meta && inherits(x, "netobject_group")) {
+    group <- .group_col_name(x)
+  }
+  if (!is.null(group)) {
+    # a network built with an actor nests its sequences in that actor
+    nest <- if (!is.null(actor) && !is_log) actor
+            else if (".session_label" %in% names(seqs$units)) ".session_label"
+    return(.sm_compare(out, seqs$units, group = group, actor = nest,
+                       iter = as.integer(iter), adjust = adjust))
+  }
   if (meta && ncol(seqs$units) > 0L) out <- cbind(seqs$units, out)
   rownames(out) <- NULL
   out
+}
+
+
+#' Compare sequence indices between groups
+#'
+#' @param metrics The per-sequence index table of `sequence_metrics()`.
+#' @param units The sequences' covariates, aligned with `metrics`.
+#' @param group,actor Covariate names: the group, and `NULL` or the nesting.
+#' @param iter,adjust Permutations and p-value adjustment.
+#' @return One row per numeric index; see `sequence_metrics()`.
+#' @noRd
+.sm_compare <- function(metrics, units, group, actor, iter, adjust) {
+  if (!group %in% names(units)) {
+    stop(errorCondition(sprintf(paste0(
+      "`group` column '%s' is not a covariate of the sequences; available: %s."),
+      group, paste(names(units), collapse = ", ")),
+      class = "nestimate_bad_input", call = NULL))
+  }
+  labels <- as.character(units[[group]])
+  groups <- sort(unique(labels[!is.na(labels)]))
+  if (length(groups) < 2L) {
+    stop(errorCondition(
+      sprintf("`group` column '%s' has fewer than two groups.", group),
+      class = "nestimate_bad_input", call = NULL))
+  }
+  nest <- !is.null(actor) && actor %in% names(units)
+  design <- if (nest) {
+    .cs_actor_design(as.character(units[[actor]]), labels, actor)
+  } else NULL
+  index_cols <- names(metrics)[vapply(metrics, is.numeric, logical(1))]
+  values <- as.matrix(metrics[index_cols])
+
+  f_stats <- function(lab) {
+    vapply(seq_along(index_cols), function(j) {
+      .sm_f_statistic(values[, j], lab, groups)
+    }, numeric(1))
+  }
+  observed <- f_stats(labels)
+  permute_once <- function() {
+    if (nest) return(.cs_actor_permute(design))
+    shuffled <- labels
+    used <- which(!is.na(labels))
+    shuffled[used] <- labels[used[sample.int(length(used))]]
+    shuffled
+  }
+  permuted <- vapply(seq_len(iter), function(i) f_stats(permute_once()),
+                     numeric(length(index_cols)))
+  permuted <- matrix(permuted, nrow = length(index_cols))
+  # ties within floating-point noise count as at least as large
+  tol <- sqrt(.Machine$double.eps) * pmax(abs(observed), 1)
+  exceed <- rowSums(permuted >= observed - tol, na.rm = TRUE)
+  p_value <- ifelse(is.na(observed), NA_real_, (exceed + 1) / (iter + 1))
+
+  per_group <- lapply(groups, function(g) {
+    in_g <- !is.na(labels) & labels == g
+    stats <- vapply(seq_along(index_cols), function(j) {
+      v <- values[in_g, j]
+      v <- v[!is.na(v)]
+      c(length(v), if (length(v)) mean(v) else NA_real_,
+        if (length(v) > 1L) stats::sd(v) else NA_real_)
+    }, numeric(3))
+    stats::setNames(as.data.frame(t(stats)),
+                    paste0(c("n_", "mean_", "sd_"), g))
+  })
+  out <- cbind(data.frame(index = index_cols, stringsAsFactors = FALSE),
+               do.call(cbind, per_group))
+  if (length(groups) == 2L) {
+    g <- .sm_hedges_g(out[[paste0("n_", groups[1])]],
+                      out[[paste0("mean_", groups[1])]],
+                      out[[paste0("sd_", groups[1])]],
+                      out[[paste0("n_", groups[2])]],
+                      out[[paste0("mean_", groups[2])]],
+                      out[[paste0("sd_", groups[2])]])
+    out$difference <- out[[paste0("mean_", groups[2])]] -
+      out[[paste0("mean_", groups[1])]]
+    out <- cbind(out, g)
+  }
+  out$eta_squared <- vapply(seq_along(index_cols), function(j) {
+    .sm_eta_squared(values[, j], labels, groups)
+  }, numeric(1))
+  out$statistic <- observed
+  out$p_value <- p_value
+  out$p_adj <- stats::p.adjust(p_value, method = adjust)
+  count_cols <- grep("^n_", names(out), value = TRUE)
+  out[count_cols] <- lapply(out[count_cols], as.integer)
+  rownames(out) <- NULL
+  out
+}
+
+#' One-way F statistic of one index across the groups
+#' @noRd
+.sm_f_statistic <- function(y, lab, groups) {
+  keep <- !is.na(y) & !is.na(lab)
+  y <- y[keep]; lab <- factor(lab[keep], levels = groups)
+  n_k <- tabulate(lab, nbins = length(groups))
+  present <- n_k > 0L
+  if (sum(present) < 2L || length(y) <= sum(present)) return(NA_real_)
+  means <- rowsum(y, lab, reorder = TRUE)[, 1] / pmax(n_k, 1L)
+  grand <- mean(y)
+  ss_between <- sum(n_k[present] * (means[present] - grand)^2)
+  ss_within <- sum((y - means[as.integer(lab)])^2)
+  df_between <- sum(present) - 1L
+  df_within <- length(y) - sum(present)
+  if (ss_within <= 0) return(if (ss_between > 0) Inf else NA_real_)
+  (ss_between / df_between) / (ss_within / df_within)
+}
+
+#' Share of one index's variance between the groups
+#' @noRd
+.sm_eta_squared <- function(y, lab, groups) {
+  keep <- !is.na(y) & !is.na(lab)
+  y <- y[keep]; lab <- factor(lab[keep], levels = groups)
+  if (length(y) < 2L) return(NA_real_)
+  total <- sum((y - mean(y))^2)
+  if (total <= 0) return(NA_real_)
+  means <- tapply(y, lab, mean)
+  n_k <- tabulate(lab, nbins = length(groups))
+  sum(n_k * (means - mean(y))^2, na.rm = TRUE) / total
+}
+
+#' Hedges' g of the second group against the first, with a 95% interval
+#' @noRd
+.sm_hedges_g <- function(n1, m1, s1, n2, m2, s2) {
+  df <- n1 + n2 - 2
+  pooled <- sqrt(((n1 - 1) * s1^2 + (n2 - 1) * s2^2) / df)
+  d <- ifelse(pooled > 0, (m2 - m1) / pooled, NA_real_)
+  correction <- 1 - 3 / (4 * (n1 + n2) - 9)
+  g <- correction * d
+  se <- sqrt((n1 + n2) / (n1 * n2) + g^2 / (2 * (n1 + n2)))
+  z <- stats::qnorm(0.975)
+  data.frame(hedges_g = g, g_lower = g - z * se, g_upper = g + z * se)
 }
 
 

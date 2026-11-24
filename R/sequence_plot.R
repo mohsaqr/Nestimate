@@ -221,6 +221,13 @@
 #'   distribution view raises an error of class `nestimate_bad_input`).
 #'   `trim` then counts periods, not time points. Default `NULL` plots the
 #'   sequences as they are.
+#' @param period_unit With a date `periods` column (a `Date`, a `POSIXct` or
+#'   text in the form `"2026-03-05"`), the length of one block: `"day"`
+#'   (default), `"week"` (weeks starting on Monday, labelled by their
+#'   Monday) or `"month"` (labelled by their first day). Every week or month
+#'   from the first to the last is a block, so one in which nobody acted is
+#'   an empty block. `"week"` or `"month"` with a `periods` column that is
+#'   not a date raises an error of class `nestimate_bad_input`.
 #' @param fill With `periods`, how an actor's steps fill a block.
 #'   `"stretch"` (default) spreads them over the whole block, so one step
 #'   fills it and three steps take a third each; the cell width differs
@@ -535,6 +542,7 @@ sequence_plot <- function(x,
                           tree             = NULL,
                           group            = NULL,
                           periods          = NULL,
+                          period_unit      = c("day", "week", "month"),
                           fill             = c("stretch", "pad"),
                           actor            = NULL,
                           action           = NULL,
@@ -585,7 +593,7 @@ sequence_plot <- function(x,
   sort <- match.arg(sort)
   # A palette attached with set_state_colors() is the object's own default;
   # an explicit `state_colors` still wins for this one figure.
-  state_colors <- state_colors %||% .stored_state_colors(x)
+  state_colors <- .with_override(x, state_colors)
   .assert(
     "`combined` must be TRUE or FALSE" =
       is.logical(combined) && length(combined) == 1L && !is.na(combined),
@@ -708,7 +716,9 @@ sequence_plot <- function(x,
     # Okabe-Ito deals grey (#999999) to the eighth state.
     if (missing(na_color)) na_color <- "white"
     return(.sequence_plot_periods(
-      long %||% .seqplot_from_network(x, periods), periods = periods, fill = match.arg(fill), type = type, sort = sort,
+      long %||% .seqplot_from_network(x, periods), periods = periods,
+      period_unit = match.arg(period_unit), fill = match.arg(fill),
+      type = type, sort = sort,
       tree = tree, dendrogram_width = dendrogram_width, k = k,
       k_color = k_color, k_line_width = k_line_width, row_gap = row_gap,
       state_colors = state_colors, na_color = na_color,
@@ -1018,7 +1028,7 @@ sequence_plot <- function(x,
     }
 
     panel_title <- if (G > 1L) {
-      base <- sprintf("Cluster %s", g)
+      base <- .group_panel_label(g)
       if (isTRUE(show_n)) sprintf("%s  (n = %d)", base,
                                   group_sizes[g_idx]) else base
     } else .title_line(main, show_n, nN)

@@ -553,7 +553,8 @@ entropy_network <- function(x, base = 2,
       )
     )
   }
-  net
+  # the entropy styling replaced the contract: restore the source's colours
+  .stamp_node_fill(net)
 }
 
 # ---- entropy_trajectory() ----
@@ -577,8 +578,17 @@ entropy_network <- function(x, base = 2,
 #' than single windows. For the whole-process value with credible intervals,
 #' use [transition_entropy()] and [entropy_bayes()].
 #'
-#' @param data An event log: a data frame with one row per event.
-#' @param action The column holding each event's state.
+#' @param data An event log (a data frame with one row per event, read with
+#'   `action`), or sequences: a network built from sequences (a `netobject`,
+#'   a grouped `netobject_group`, a `tna` model), prepared data, or a wide
+#'   table or character matrix with one row per sequence and one column per
+#'   position. Sequences are read in position order: each row is one actor,
+#'   the position is the time, and the groups of a `netobject_group` become
+#'   `group`. A network whose data are not sequences of states (an
+#'   association or one-hot network) raises an error of class
+#'   `nestimate_bad_input`.
+#' @param action The column of an event log holding each event's state.
+#'   Default `NULL`, which reads `data` as sequences.
 #' @param actor The column identifying sequences: transitions are formed only
 #'   between consecutive events of the same actor (within the same group).
 #'   Default `NULL`, which reads the data as one sequence.
@@ -645,6 +655,10 @@ entropy_network <- function(x, base = 2,
 #' summary(tr)
 #' plot(tr)
 #'
+#' # sequences: the network of the engagement trajectories, by course
+#' net <- build_network(trajectories, method = "relative")
+#' entropy_trajectory(net, window = 300, step = 50)
+#'
 #' @seealso \code{\link{transition_entropy}} for the whole-process snapshot,
 #'   \code{\link{entropy_bayes}} for credible intervals on it.
 #'
@@ -657,9 +671,20 @@ entropy_network <- function(x, base = 2,
 #' 2nd ed. Wiley.
 #'
 #' @export
-entropy_trajectory <- function(data, action, actor = NULL, time = NULL,
+entropy_trajectory <- function(data, action = NULL, actor = NULL, time = NULL,
                                group = NULL, window = 500L, step = NULL,
                                base = 2) {
+  # sequences (a network, prepared data, a wide table) are turned into the
+  # event log the windows are built from: one actor per sequence, the
+  # position as the time
+  if (is.null(action)) {
+    log <- .te_sequence_log(data, group)
+    data <- log$data
+    action <- "action"
+    actor <- "actor"
+    time <- "time"
+    group <- log$group
+  }
   .assert(
     is.data.frame(data),
     is.character(action), length(action) == 1L, action %in% names(data),
@@ -793,6 +818,41 @@ entropy_trajectory <- function(data, action, actor = NULL, time = NULL,
     ),
     class = "net_entropy_trajectory"
   )
+}
+
+#' Sequences as the event log of entropy_trajectory()
+#'
+#' @param x Anything `.as_sequences()` reads.
+#' @param group `NULL` or a covariate column of the sequences.
+#' @return A list: `data`, a data frame with columns `actor`, `time`,
+#'   `action` (and `group`), one row per position; `group`, the group column
+#'   name or `NULL`.
+#' @noRd
+.te_sequence_log <- function(x, group = NULL) {
+  seqs <- .as_sequences(x, exclude = group)
+  states <- seqs$states
+  units <- seqs$units
+  # a grouped network carries its groups as a covariate of its sequences
+  if (is.null(group) && inherits(x, "netobject_group")) {
+    group <- .group_col_name(x)
+  }
+  if (!is.null(group) && !group %in% names(units)) {
+    stop(errorCondition(sprintf(
+      "`group` column '%s' is not a covariate of the sequences.", group),
+      class = "nestimate_bad_input", call = NULL))
+  }
+  n <- nrow(states)
+  n_pos <- ncol(states)
+  out <- data.frame(actor = rep(seq_len(n), times = n_pos),
+                    time = rep(seq_len(n_pos), each = n),
+                    action = as.vector(states),
+                    stringsAsFactors = FALSE)
+  if (!is.null(group)) {
+    out$group <- rep(as.character(units[[group]]), times = n_pos)
+    group <- "group"
+  }
+  stopifnot("one row per sequence and position" = nrow(out) == n * n_pos)
+  list(data = out, group = group)
 }
 
 #' @rdname entropy_trajectory
@@ -1301,6 +1361,9 @@ entropy_bayes <- function(x, prior = 0.5, draws = 4000, ci = 0.95,
   model$params   <- ep
   network$meta$splot <- list(defaults = style)
   model$meta$splot   <- list(defaults = style)
+  # the styling replaced the contract: restore the source network's colours
+  network <- .stamp_node_fill(.carry_state_colors(network, x))
+  model   <- .stamp_node_fill(.carry_state_colors(model, x))
 
   structure(
     list(

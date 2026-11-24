@@ -383,6 +383,22 @@ print.summary.net_mpt <- function(x, ...) {
 }
 
 #' @rdname passage_time
+#' @return For `summary()` of a `net_mpt_group`: a data frame with one row
+#'   per group and state, the `group` column followed by the columns of the
+#'   single-network summary table (`state`, `return_time`, `stationary`,
+#'   `mean_out`, `mean_in`).
+#' @export
+summary.net_mpt_group <- function(object, ...) {
+  tables <- lapply(names(object), function(g) {
+    tab <- summary(object[[g]])$table
+    cbind(group = rep(g, nrow(tab)), tab, stringsAsFactors = FALSE)
+  })
+  out <- do.call(rbind, tables)
+  rownames(out) <- NULL
+  out
+}
+
+#' @rdname passage_time
 #' @export
 plot.net_mpt <- function(x,
                           log_scale = TRUE,
@@ -643,6 +659,21 @@ summary.net_markov_stability <- function(object, ...) {
   cat(sprintf("Most accessible state (attractor): %s\n", attract))
   cat(sprintf("Most persistent state (stickiest): %s\n\n", sticky))
   df
+}
+
+#' @rdname markov_stability
+#' @return For `summary()` of a `net_markov_stability_group`: a data frame
+#'   with one row per group and state, the `group` column followed by the
+#'   columns of the single-network stability table.
+#' @export
+summary.net_markov_stability_group <- function(object, ...) {
+  tables <- lapply(names(object), function(g) {
+    tab <- object[[g]]$stability
+    cbind(group = rep(g, nrow(tab)), tab, stringsAsFactors = FALSE)
+  })
+  out <- do.call(rbind, tables)
+  rownames(out) <- NULL
+  out
 }
 
 #' @rdname markov_stability

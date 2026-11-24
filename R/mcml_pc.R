@@ -1496,7 +1496,8 @@ as_networks.mcml_pc <- function(x) {
   }
   result <- c(list(macro = x$macro), clusters[!is_singleton])
   class(result) <- "netobject_group"
-  result
+  # one palette over all the layers, so a variable has one colour in each
+  .stamp_group_palette(result)
 }
 
 #' @rdname as_networks

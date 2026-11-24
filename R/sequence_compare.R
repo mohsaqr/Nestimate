@@ -880,8 +880,9 @@ plot.net_sequence_comparison <- function(x, top_n = 10L,
 
   r_max <- max(abs(c(resid1, resid2)), na.rm = TRUE)
   x_max <- max(abs(c(pyramid$left, pyramid$right)), na.rm = TRUE)
-  gutter <- x_max * 0.06
   has_pval <- "p_value" %in% names(pat)
+  # the centre gap holds the p-values, so it is wider when they are shown
+  gutter <- x_max * if (has_pval) 0.12 else 0.06
   bar_hw <- 0.42
   y_num <- as.numeric(pyramid$pattern)
 
@@ -919,7 +920,11 @@ plot.net_sequence_comparison <- function(x, top_n = 10L,
   # Residual labels inside each bar (optional)
   if (show_residuals) {
     rect_df$x_center <- (rect_df$xmin + rect_df$xmax) / 2
-    rect_df$resid_label <- sprintf("%.2f", rect_df$resid)
+    # a residual is written only inside a bar wide enough to hold it; the
+    # count beside the bar is always shown
+    wide_enough <- (rect_df$xmax - rect_df$xmin) >= x_max * 0.2
+    rect_df$resid_label <- ifelse(wide_enough,
+                                  sprintf("%.2f", rect_df$resid), "")
     rect_df$text_color <- ifelse(abs(rect_df$resid) > r_max * 0.35,
                                   "white", "grey30")
   }
@@ -945,15 +950,18 @@ plot.net_sequence_comparison <- function(x, top_n = 10L,
                 aes(x = 0, y = yidx, label = p_label),
                 size = 2.5, color = p_df$p_color, fontface = p_df$p_face)
     } +
-    scale_fill_gradient2(low = "#CB181D", mid = "white", high = "#2171B5",
+    scale_fill_gradient2(low = "#D33F6A", mid = "white", high = "#4A6FE3",
                          midpoint = 0, limits = c(-3, 3),
                          oob = scales::squish,
                          name = "Standardized\nresidual") +
     scale_y_continuous(breaks = y_num,
                        labels = as.character(pat$pattern)) +
     scale_x_continuous(
-      labels = function(x) format(abs(x), scientific = FALSE)
+      labels = function(x) format(abs(x), scientific = FALSE),
+      # room for the counts printed beyond the longest bars
+      expand = ggplot2::expansion(mult = 0.15)
     ) +
+    coord_cartesian(clip = "off") +
     labs(x = "Proportion", y = NULL,
          title = "Sequence Pattern Comparison",
          subtitle = paste0(g1, "  <<--    -->>  ", g2)) +
@@ -997,7 +1005,7 @@ plot.net_sequence_comparison <- function(x, top_n = 10L,
     geom_tile(color = "white") +
     geom_text(aes(label = sprintf("%.2f", resid)),
               color = "white", size = 5, fontface = "bold") +
-    scale_fill_gradient2(low = "#CB181D", mid = "white", high = "#2171B5",
+    scale_fill_gradient2(low = "#D33F6A", mid = "white", high = "#4A6FE3",
                          midpoint = 0, limits = c(-r_lim, r_lim),
                          oob = scales::squish,
                          name = "Standardized\nresidual") +

@@ -437,6 +437,18 @@ cluster_summary <- function(x,
                                        "min", "density", "geomean"),
                             directed = TRUE,
                             compute_within = TRUE) {
+  # the result keeps the colours of the network it came from
+  call <- match.call(expand.dots = TRUE)
+  call[[1L]] <- .cluster_summary_impl
+  .carry_state_colors(eval(call, parent.frame()), x)
+}
+
+.cluster_summary_impl <- function(x,
+                            clusters = NULL,
+                            method = c("sum", "mean", "median", "max",
+                                       "min", "density", "geomean"),
+                            directed = TRUE,
+                            compute_within = TRUE) {
   if (!is.logical(directed) || length(directed) != 1L || is.na(directed)) {
     stop(errorCondition("'directed' must be TRUE or FALSE.",
       class = "nestimate_bad_input", call = NULL))
@@ -1075,6 +1087,37 @@ cluster_summary <- function(x,
 #' build_mcml(three, combine = list(AB = c("G1", "G2"))) # named merge
 #' build_mcml(three, expand = "G3")                      # C and D as clusters
 build_mcml <- function(x,
+                       clusters = NULL,
+                       method = c("sum", "mean", "median", "max",
+                                  "min", "density", "geomean"),
+                       type = c("tna", "frequency", "cooccurrence",
+                                "raw"),
+                       directed = TRUE,
+                       compute_within = TRUE,
+                       actor = NULL,
+                       action = NULL,
+                       time = NULL,
+                       order = NULL,
+                       session = NULL,
+                       time_threshold = 900,
+                       exclude = NULL,
+                       trim = NULL,
+                       end = FALSE,
+                       end_by = NULL,
+                       labels = NULL,
+                       combine = NULL,
+                       expand = NULL,
+                       from = NULL,
+                       to = NULL,
+                       weight = NULL,
+                       cols = NULL) {
+  # the result keeps the colours of the network it came from
+  call <- match.call(expand.dots = TRUE)
+  call[[1L]] <- .build_mcml_impl
+  .carry_state_colors(eval(call, parent.frame()), x)
+}
+
+.build_mcml_impl <- function(x,
                        clusters = NULL,
                        method = c("sum", "mean", "median", "max",
                                   "min", "density", "geomean"),
@@ -2500,6 +2543,13 @@ as_tna <- function(x, ...) {
 #' @rdname as_tna
 #' @export
 as_tna.mcml <- function(x, expand = NULL, ...) {
+  # the result keeps the colours of the network it came from
+  call <- match.call(expand.dots = TRUE)
+  call[[1L]] <- .as_tna_mcml_impl
+  .carry_state_colors(eval(call, parent.frame()), x)
+}
+
+.as_tna_mcml_impl <- function(x, expand = NULL, ...) {
   # `expand` replaces the collapsed macro layer with the mixed-resolution
   # network from macro_network(): the named clusters shown as their member
   # states, every other cluster still one node. The per-cluster layers are
@@ -2678,7 +2728,7 @@ as_tna.mcml <- function(x, expand = NULL, ...) {
       node_groups = NULL
     ),
     class = c("netobject", "cograph_network")
-  )
+  ) |> .stamp_node_fill()
 }
 
 #' @rdname as_tna
@@ -2784,6 +2834,14 @@ as_htna <- function(x, clusters = NULL, method = "relative", ...) {
 #'   raised. Default `NULL`.
 #' @export
 as_htna.mcml <- function(x, clusters = NULL, method = "relative",
+                         data = NULL, ...) {
+  # the result keeps the colours of the network it came from
+  call <- match.call(expand.dots = TRUE)
+  call[[1L]] <- .as_htna_mcml_impl
+  .carry_state_colors(eval(call, parent.frame()), x)
+}
+
+.as_htna_mcml_impl <- function(x, clusters = NULL, method = "relative",
                          data = NULL, ...) {
   # An mcml built from sequence/edgelist data stashes that source (see
   # build_mcml), so as_htna(mcml) works on its own; reuse it when `data`

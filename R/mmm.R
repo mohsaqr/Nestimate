@@ -990,7 +990,18 @@ build_mmm <- function(data,
     network_settings = network_settings,
     metadata       = metadata,
     htna_partition = htna_partition
-  ), class = "net_mmm")
+  ), class = "net_mmm") |>
+    # the colours of the clustered network follow its clusters and the
+    # chain of each cluster
+    .carry_state_colors(data) |>
+    .carry_to_models(data)
+}
+
+.carry_to_models <- function(fit, data) {
+  members <- vapply(fit$models, inherits, logical(1L), "netobject")
+  fit$models[members] <- lapply(fit$models[members], .carry_state_colors,
+                                from = data)
+  fit
 }
 
 # ---------------------------------------------------------------------------
@@ -1354,12 +1365,16 @@ plot.mmm_compare <- function(x, ...) {
     stringsAsFactors = FALSE
   )
 
-  p <- ggplot2::ggplot(df, ggplot2::aes(x = k, y = value, color = criterion)) +
+  # criteria differ in colour (Okabe-Ito) and in point shape
+  p <- ggplot2::ggplot(df, ggplot2::aes(x = k, y = value, color = criterion,
+                                        shape = criterion)) +
     ggplot2::geom_line(linewidth = 1) +
     ggplot2::geom_point(size = 3) +
     ggplot2::scale_x_continuous(breaks = x$k) +
+    ggplot2::scale_color_manual(values = .okabe_values(3L)) +
+    ggplot2::scale_shape_manual(values = .cluster_shapes(3L)) +
     ggplot2::labs(x = "k (components)", y = "Information Criterion",
-                  title = "MMM Model Selection", color = NULL) +
+                  title = "MMM Model Selection", color = NULL, shape = NULL) +
     ggplot2::theme_minimal(base_size = 12) +
     ggplot2::theme(legend.position = "bottom")
 

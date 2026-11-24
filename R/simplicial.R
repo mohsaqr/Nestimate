@@ -1628,7 +1628,7 @@ plot.simplicial_complex <- function(x, combined = TRUE, ...) {
   fdf <- data.frame(dim = factor(seq_along(x$f_vector) - 1L),
                      count = as.integer(x$f_vector))
   p1 <- ggplot2::ggplot(fdf, ggplot2::aes(x = dim, y = count)) +
-    ggplot2::geom_col(fill = "#4A7FB5", width = 0.7) +
+    ggplot2::geom_col(fill = "#0072B2", width = 0.7) +
     ggplot2::geom_text(ggplot2::aes(label = count), vjust = -0.3,
                         size = 3.5) +
     ggplot2::labs(title = "f-vector",
@@ -1638,10 +1638,8 @@ plot.simplicial_complex <- function(x, combined = TRUE, ...) {
 
   # --- Panel 2: degree ranking ---
   deg$node <- factor(deg$node, levels = deg$node)
-  p2 <- ggplot2::ggplot(deg, ggplot2::aes(x = node, y = total,
-                                            fill = total)) +
-    ggplot2::geom_col(show.legend = FALSE) +
-    ggplot2::scale_fill_gradient(low = "#81B1D3", high = "#E8734A") +
+  p2 <- ggplot2::ggplot(deg, ggplot2::aes(x = node, y = total)) +
+    ggplot2::geom_col(fill = "#E69F00") +
     ggplot2::geom_text(ggplot2::aes(label = total), vjust = -0.3,
                         size = 3.2) +
     ggplot2::labs(title = "Simplicial Degree",
@@ -1664,7 +1662,7 @@ plot.simplicial_complex <- function(x, combined = TRUE, ...) {
                                                   fill = count)) +
     ggplot2::geom_tile(color = "white", linewidth = 0.6) +
     ggplot2::geom_text(ggplot2::aes(label = count), size = 3.2) +
-    ggplot2::scale_fill_gradient(low = "#F7F7F7", high = "#E8734A",
+    ggplot2::scale_fill_gradient(low = "#FFFFFF", high = "#E69F00",
                                   guide = "none") +
     ggplot2::labs(title = "Degree by Dimension",
                   subtitle = "Simplex participation per node",
@@ -1676,7 +1674,7 @@ plot.simplicial_complex <- function(x, combined = TRUE, ...) {
                      betti = as.integer(betti))
   b_subtitle <- sprintf("Euler characteristic: %d", euler_characteristic(x))
   p4 <- ggplot2::ggplot(bdf, ggplot2::aes(x = dim, y = betti)) +
-    ggplot2::geom_col(fill = "#6AAB9C", width = 0.6) +
+    ggplot2::geom_col(fill = "#009E73", width = 0.6) +
     ggplot2::geom_text(ggplot2::aes(label = betti), vjust = -0.3,
                         size = 3.5) +
     ggplot2::labs(title = "Betti Numbers",
@@ -1714,15 +1712,27 @@ plot.persistent_homology <- function(x, combined = TRUE, ...) {
   }
   curve_x <- if (vr) "Distance Threshold" else "Weight Threshold"
 
+  # One Okabe-Ito colour, linetype and shape per dimension, shared by both
+  # panels, so dimensions never differ by colour alone
+  dim_levels <- paste0("B", sort(unique(c(x$persistence$dimension,
+                                          filt$dimension))))
+  n_dim <- length(dim_levels)
+  dim_colours <- stats::setNames(.okabe_values(n_dim), dim_levels)
+  dim_lines <- stats::setNames(rep_len(c("solid", "dashed", "dotted",
+                                         "dotdash"), n_dim), dim_levels)
+  dim_shapes <- stats::setNames(.cluster_shapes(n_dim), dim_levels)
+
   # --- Panel 1: Betti curve ---
   p1 <- ggplot2::ggplot(filt, ggplot2::aes(x = threshold, y = betti,
-                                              color = dim_label)) +
+                                              color = dim_label,
+                                              linetype = dim_label)) +
     ggplot2::geom_step(linewidth = 1.1, direction = "vh") +
-    ggplot2::scale_color_brewer(palette = "Set1") +
+    ggplot2::scale_color_manual(values = dim_colours) +
+    ggplot2::scale_linetype_manual(values = dim_lines) +
     ggplot2::labs(title = "Betti Curve",
                   subtitle = curve_subtitle,
                   x = curve_x, y = "Betti Number",
-                  color = NULL) +
+                  color = NULL, linetype = NULL) +
     .sc_theme() +
     ggplot2::theme(legend.position = "top")
 
@@ -1749,16 +1759,18 @@ plot.persistent_homology <- function(x, combined = TRUE, ...) {
 
     p2 <- ggplot2::ggplot(pers, ggplot2::aes(x = birth, y = death,
                                                 color = dim_label,
+                                                shape = dim_label,
                                                 size = persistence)) +
       ggplot2::geom_abline(slope = 1, intercept = 0, linetype = "dashed",
                             color = "grey60") +
       ggplot2::geom_point(alpha = 0.7) +
       ggplot2::scale_size_continuous(range = c(1.5, 6), guide = "none") +
-      ggplot2::scale_color_brewer(palette = "Set1") +
+      ggplot2::scale_color_manual(values = dim_colours) +
+      ggplot2::scale_shape_manual(values = dim_shapes) +
       ggplot2::coord_equal(xlim = c(0, lim), ylim = c(0, lim)) +
       ggplot2::labs(title = "Persistence Diagram",
                     subtitle = "Boundary-matrix reduction over Z/2",
-                    x = "Birth", y = "Death", color = NULL) +
+                    x = "Birth", y = "Death", color = NULL, shape = NULL) +
       .sc_theme() +
       ggplot2::theme(legend.position = "top")
   } else { # nocov start
@@ -1791,9 +1803,9 @@ plot.q_analysis <- function(x, combined = TRUE, ...) {
                     components = as.integer(x$q_vector))
 
   p1 <- ggplot2::ggplot(qdf, ggplot2::aes(x = q, y = components)) +
-    ggplot2::geom_step(linewidth = 1.2, color = "#4A7FB5",
+    ggplot2::geom_step(linewidth = 1.2, color = "#0072B2",
                         direction = "vh") +
-    ggplot2::geom_point(size = 3, color = "#E8734A") +
+    ggplot2::geom_point(size = 3, color = "#D55E00") +
     ggplot2::geom_text(ggplot2::aes(label = components), vjust = -1,
                         size = 3.5) +
     ggplot2::scale_x_continuous(breaks = qdf$q) +
@@ -1809,9 +1821,8 @@ plot.q_analysis <- function(x, combined = TRUE, ...) {
   svdf <- svdf[order(-svdf$dim, svdf$node), ]
   svdf$node <- factor(svdf$node, levels = svdf$node)
 
-  p2 <- ggplot2::ggplot(svdf, ggplot2::aes(x = node, y = dim, fill = dim)) +
-    ggplot2::geom_col(show.legend = FALSE, width = 0.7) +
-    ggplot2::scale_fill_gradient(low = "#81B1D3", high = "#E8734A") +
+  p2 <- ggplot2::ggplot(svdf, ggplot2::aes(x = node, y = dim)) +
+    ggplot2::geom_col(fill = "#E69F00", width = 0.7) +
     ggplot2::geom_text(ggplot2::aes(label = dim), vjust = -0.3,
                         size = 3.5) +
     ggplot2::labs(title = "Structure Vector",

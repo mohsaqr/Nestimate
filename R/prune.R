@@ -349,8 +349,9 @@ net_prune.netobject_group <- function(x, method = "threshold", threshold = 0.1,
                         lowest = lowest, level = level, boot = boots[[nm]],
                         ...)
   })
-  names(result) <- names(x)
-  class(result) <- class(x)
+  # the group's own attributes (its palette, grouping column, htna
+  # partition) belong to the pruned group too
+  attributes(result) <- attributes(x)
   result
 }
 
@@ -441,8 +442,7 @@ net_deprune.netobject <- function(x, ...) {
 #' @export
 net_deprune.netobject_group <- function(x, ...) {
   result <- lapply(x, net_deprune.netobject)
-  names(result) <- names(x)
-  class(result) <- class(x)
+  attributes(result) <- attributes(x)
   result
 }
 
@@ -503,8 +503,7 @@ net_reprune.netobject <- function(x, ...) {
 #' @export
 net_reprune.netobject_group <- function(x, ...) {
   result <- lapply(x, net_reprune.netobject)
-  names(result) <- names(x)
-  class(result) <- class(x)
+  attributes(result) <- attributes(x)
   result
 }
 

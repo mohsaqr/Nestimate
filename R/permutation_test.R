@@ -700,7 +700,7 @@ permutation <- function(x, y = NULL,
   }
 
   class(result) <- "net_permutation"
-  result
+  .declare_source_fill(result, x)
 }
 
 #' The estimator a shuffle uses to turn rows into a network
@@ -1109,7 +1109,7 @@ permutation <- function(x, y = NULL,
     if (!is.null(clus$levels)) result$actor_levels <- clus$levels
   }
   class(result) <- "net_permutation"
-  result
+  .declare_source_fill(result, x)
 }
 
 

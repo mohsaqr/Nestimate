@@ -6,6 +6,7 @@
 \alias{summary.net_bayes}
 \alias{plot.net_bayes}
 \alias{print.net_bayes_group}
+\alias{plot.net_bayes_group}
 \alias{summary.net_bayes_group}
 \title{Compare two transition networks with a Bayesian Dirichlet model}
 \usage{
@@ -28,6 +29,8 @@ bayes_compare(
 
 \method{print}{net_bayes_group}(x, ...)
 
+\method{plot}{net_bayes_group}(x, significant_only = TRUE, title = NULL, ...)
+
 \method{summary}{net_bayes_group}(object, ...)
 }
 \arguments{
@@ -40,7 +43,7 @@ raised. Both networks must use the same method and hold the same nodes;
 any other method raises an error, because the model needs transition
 counts. A \code{tna} model or a \code{group_tna} (package tna) is first rebuilt as a
 network from its own sequences (see \code{\link[=as_netobject]{as_netobject()}}). For the \code{print()}
-and \code{plot()} methods: a \code{net_bayes}, or for \code{print()} a \code{net_bayes_group}.}
+and \code{plot()} methods: a \code{net_bayes} or a \code{net_bayes_group}.}
 
 \item{y}{The second network, of the same kind as \code{x}. Default \code{NULL}:
 with a \code{netobject_group} as \code{x}, every pair of its groups is compared.
@@ -150,10 +153,15 @@ the per-edge data frame described under the \code{summary} field; for a
 \code{net_bayes_group}, the tables of every comparison stacked, with a
 \code{comparison} column first. For \code{plot()}: with cograph installed, it
 draws the difference network with \code{cograph::splot()}, each edge
-labelled with its posterior mean difference and credible interval, and
+labelled with its posterior mean difference and credible interval,
+blue (\verb{#4A6FE3}) where \code{x} is higher and red (\verb{#D33F6A}) where \code{y} is
+(\code{edge_positive_color} and \code{edge_negative_color} change them), and
 returns the \code{cograph_network} invisibly; without cograph, it returns a
 \code{ggplot} chord diagram in which colour gives the direction of the
-difference and width its size.
+difference and width its size. For a \code{net_bayes_group}, \code{plot()} draws
+every comparison in turn, each titled with its name, and returns their
+results in a list named by comparison, invisibly; a group of one
+comparison returns that comparison's result.
 }
 \description{
 \code{bayes_compare()} compares two transition networks edge by edge and

@@ -13,6 +13,10 @@ sequence_metrics(
   actor = NULL,
   action = NULL,
   time = NULL,
+  group = NULL,
+  indices = NULL,
+  iter = 1000L,
+  adjust = "BH",
   ...
 )
 }
@@ -37,7 +41,34 @@ group, metadata) before the indices. Default \code{FALSE}.}
 \code{\link[=extract_sequences]{extract_sequences()}}. Default \code{NULL}.}
 
 \item{actor, action, time}{The actor, action and timestamp columns of a
-long event log; setting \code{action} marks \code{x} as one. Default \code{NULL}.}
+long event log; setting \code{action} marks \code{x} as one. Default \code{NULL}.
+With \code{group} and sequences that are not an event log (a network, a
+wide table), \code{actor} instead names the covariate that nests the
+sequences (the session of a half-session, the student of a course), and
+the permutation test shuffles the group labels within it (see
+\emph{Comparing groups}). For a network built with \code{actor}, the default
+nests the sequences in that actor (its \code{.session_label}), so the two
+halves of one session are compared within the session.}
+
+\item{group}{A covariate of the sequences holding each sequence's group:
+for a grouped network its group column (for example \code{"phase"} after
+\code{\link[=mark_phases]{mark_phases()}}), for a wide table one of its non-state columns. With
+\code{group}, the result compares the indices between the groups instead of
+listing them per sequence. A grouped network is compared by its own
+groups by default; \code{meta = TRUE} lists its sequences instead. A name that is not a covariate of the
+sequences, or fewer than two groups, raises an error of class
+\code{nestimate_bad_input}. Default \code{NULL}.}
+
+\item{indices}{The indices to return, by name (for example
+\code{c("valid_n", "transition_rate")}). Default \code{NULL} returns them all. A
+name that is not an index raises an error of class
+\code{nestimate_bad_input}.}
+
+\item{iter}{The number of permutations of the group comparison, a whole
+number of at least 1. Default \code{1000}.}
+
+\item{adjust}{The method of \code{\link[stats:p.adjust]{stats::p.adjust()}} applied to the p-values of
+the group comparison. Default \code{"BH"}.}
 
 \item{...}{Further arguments passed to \code{\link[=prepare]{prepare()}} for a long event log,
 such as \code{time_threshold} or \code{order}.}
@@ -47,6 +78,14 @@ A data frame with one row per sequence, in the order of
 \code{\link[=extract_sequences]{extract_sequences()}}, and the columns described in \emph{Details}
 (\code{integrative_potential} only with \code{favorable}). With \code{meta = TRUE},
 the input's covariate columns, if it has any, come first.
+
+With \code{group}, a data frame with one row per numeric index: \code{index};
+for each group \verb{n_<group>} (the sequences with a value of the index),
+\verb{mean_<group>} and \verb{sd_<group>}; with two groups, \code{difference} (the
+second group's mean minus the first's, in sorted order),
+\code{hedges_g} and its 95\% interval \code{g_lower}, \code{g_upper}; for any number of
+groups \code{eta_squared}, the one-way \code{statistic} (F), the permutation
+\code{p_value} and the adjusted \code{p_adj}.
 }
 \description{
 \code{sequence_metrics()} computes descriptive indices for every sequence and
@@ -140,10 +179,36 @@ Leading and internal missing values follow the rule above, where codyna
 reads position 1 as the first state and counts missing positions as
 unfavourable and as possible transitions.
 }
+\section{Comparing groups}{
+
+For each numeric index, the groups are compared with the one-way F
+statistic, which for two groups is the square of the t statistic. Its
+p-value is \code{(b + 1) / (iter + 1)}, where \code{b} counts the permutations of
+the group labels whose F is at least the observed one (Good, 2005); call
+\code{\link[base:Random]{base::set.seed()}} first for reproducible p-values. A sequence with a
+missing value of an index (a one-state sequence has no transition rate)
+takes no part in that index. With \code{actor}, the labels are shuffled within
+each actor whose sequences are in several groups and between the actors
+whose sequences are all in one group, as in \code{\link[=sequence_compare]{sequence_compare()}}. With
+two groups, \code{hedges_g} is the standardised mean difference corrected for
+small-sample bias, with an interval from its normal approximation
+(Hedges, 1981). \code{eta_squared} is the share of the index's variance
+between the groups.
+}
+
 \examples{
 head(sequence_metrics(trajectories))
 
 head(sequence_metrics(trajectories, favorable = "Active"))
+
+# compare the indices of the first and second halves of each session
+halves <- mark_phases(human_long, actor = "session_id",
+                      time = "order_in_session",
+                      labels = c("early", "late"))
+net <- build_network(halves, actor = "session_id", action = "cluster",
+                     group = "phase", method = "relative")
+set.seed(1)
+sequence_metrics(net, iter = 99)
 
 }
 \references{
@@ -153,6 +218,13 @@ Systems. R package version 1.0.0.
 Brzinsky-Fay, C. (2018). Unused resources: Sequence and trajectory
 indicators. International Symposium on Sequence Analysis and Related
 Methods, Monte Verit\enc{à}{a}.
+
+Good, P. (2005). \emph{Permutation, parametric and bootstrap tests of
+hypotheses}. Springer. \doi{10.1007/b138696}
+
+Hedges, L. V. (1981). Distribution theory for Glass's estimator of effect
+size and related estimators. \emph{Journal of Educational Statistics},
+6(2), 107-128. \doi{10.3102/10769986006002107}
 
 Gabadinho, A., Ritschard, G., M\enc{ü}{u}ller, N. S., & Studer, M. (2011).
 Analyzing and visualizing state sequences in R with TraMineR. Journal of

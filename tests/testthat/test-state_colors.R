@@ -56,8 +56,11 @@ test_that("the palette is mirrored into the cograph producer contract", {
   # in node order, so cograph needs no name matching of its own
   expect_equal(stamped, unname(state_colors(net)$color[
     match(net$nodes$name, state_colors(net)$state)]))
-  # removing the palette removes the stamp
-  expect_null(set_state_colors(net, NULL)$meta$splot$defaults$node_fill)
+  # removing the palette restores the Okabe-Ito defaults, in sorted order
+  plain <- set_state_colors(net, NULL)
+  dealt <- sort(plain$nodes$label)
+  expect_equal(plain$meta$splot$defaults$node_fill,
+               unname(stats::setNames(.okabe_ito[seq_along(dealt)], dealt)[plain$nodes$label]))
 })
 
 test_that("set_state_colors works on every data-bearing class", {
@@ -145,4 +148,18 @@ test_that("a dark tile gets a light label in the drawn figure", {
   # the object puts one state on #000000, so both inks must be in use
   expect_true(any(state_colors(net)$color == "#000000"))
   expect_true(all(c("white", "grey15") %in% inks))
+})
+
+test_that("the palette matches the names cograph draws (nodes$labels first)", {
+  net <- make_net()
+  # a network whose drawn names (labels) differ from its label column, as
+  # some converters leave it
+  net$nodes$labels <- toupper(net$nodes$label)
+  net$nodes$label <- as.character(seq_len(nrow(net$nodes)))
+  drawn <- net$nodes$labels
+  coloured <- set_state_colors(net, stats::setNames("#0072B2", drawn[1]))
+  tb <- state_colors(coloured)
+  expect_equal(tb$state, drawn)
+  expect_equal(tb$source[tb$state == drawn[1]], "set")
+  expect_equal(coloured$meta$splot$defaults$node_fill[1], "#0072B2")
 })

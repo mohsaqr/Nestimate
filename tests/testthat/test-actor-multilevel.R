@@ -42,8 +42,10 @@ testthat::skip_on_cran()
 # (~1e-15 relative), so doubles compare to 1e-10. Integers, labels and layout stay exact.
 test_that("actor = NULL and one actor column reproduce the frozen outputs", {
   ref <- readRDS(test_path("fixtures", "actor-onelevel-reference.rds"))
-  strip_perm <- function(r) r[setdiff(names(r), c("x", "y"))]
-  strip_boot <- function(r) r[setdiff(names(r), c("original", "model"))]
+  # `meta` is cograph's rendering contract (the source network's colours),
+  # not a result
+  strip_perm <- function(r) r[setdiff(names(r), c("x", "y", "meta"))]
+  strip_boot <- function(r) r[setdiff(names(r), c("original", "model", "meta"))]
   d <- group_regulation_long
   net <- build_network(d, method = "relative", actor = "Actor",
                        action = "Action", time = "Time", group = "Achiever")

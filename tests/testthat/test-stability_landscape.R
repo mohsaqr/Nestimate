@@ -256,3 +256,59 @@ test_that("landscape_trend over a covariate with few values has no empty slice",
   expect_equal(.ls_kernel_weights(c(0.25, 0.5, 0.5, 1.5), 3, 0.1),
                c((1 - 0.5^3)^3, 0, 0, 0))
 })
+
+test_that("long input's per-sequence metadata works as a landscape covariate", {
+  # build_network() averages a numeric column per actor; the result must be a
+  # plain vector, which landscape_trend(along = ) can weight (a 1-d array
+  # from tapply() failed with "non-conformable arrays").
+  set.seed(4)
+  actors <- 40L
+  steps <- 8L
+  long <- data.frame(actor = rep(seq_len(actors), each = steps),
+                     step = rep(seq_len(steps), actors))
+  long$state <- sample(c("A", "B", "C"), nrow(long), replace = TRUE)
+  long$score <- rep(stats::runif(actors), each = steps) +
+    stats::rnorm(nrow(long), sd = 0.01)
+  net <- build_network(long, method = "relative", actor = "actor",
+                       action = "state", order = "step")
+  expect_null(dim(net$metadata$score))
+  expect_equal(unname(net$metadata$score),
+               as.vector(tapply(long$score, long$actor, mean)), tolerance = 1e-12)
+  trend <- landscape_trend(net, along = "score", iter = 0, k = 10)
+  expect_s3_class(trend, "net_landscape_trend")
+  expect_true(all(summary(trend)$along == "score"))
+})
+
+test_that("categorical metadata of long input is a plain vector too", {
+  long <- data.frame(actor = rep(1:6, each = 3), step = rep(1:3, 6),
+                     state = rep(c("A", "B", "C"), 6),
+                     school = rep(c("x", "y"), each = 9))
+  net <- build_network(long, method = "relative", actor = "actor",
+                       action = "state", order = "step")
+  expect_null(dim(net$metadata$school))
+  expect_identical(unname(net$metadata$school), rep(c("x", "y"), each = 3))
+})
+
+test_that("a tied most frequent value of factor or date metadata stays a label", {
+  long <- data.frame(actor = rep(1:3, each = 2), step = rep(1:2, 3),
+                     state = rep(c("A", "B"), 3),
+                     school = factor(c("x", "y", "y", "y", "x", "x")),
+                     when = as.Date("2026-01-01") + c(0, 1, 1, 1, 2, 2))
+  net <- suppressMessages(build_network(long, method = "relative",
+                                        actor = "actor", action = "state",
+                                        order = "step"))
+  # Actor 1 ties (x and y once each) and keeps its first value, as a label.
+  expect_identical(unname(net$metadata$school), c("x", "y", "x"))
+  expect_identical(unname(net$metadata$when),
+                   c("2026-01-01", "2026-01-02", "2026-01-03"))
+})
+
+test_that("per-session metadata is looked up by session, not by position", {
+  data <- data.frame(session = c(20, 20, 10, 10, 30),
+                     score = c(1, 3, 5, 7, 9),
+                     school = c("x", "x", "y", "y", "z"))
+  meta <- .aggregate_metadata(data, "session", c("score", "school"))
+  expect_equal(unname(meta$score), c(2, 6, 9))
+  expect_identical(unname(meta$school), c("x", "y", "z"))
+})
+

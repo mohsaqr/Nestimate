@@ -1,0 +1,16 @@
+bibentry(
+  bibtype = "Article",
+  title = "{Nestimate}: An {R} Package for Dynamic, Probabilistic, and High Order Network Analysis",
+  author = c(person("Mohammed", "Saqr"),
+             person("Sonsoles", "López-Pernas"),
+             person("Kamila", "Misiejuk")),
+  journal = "Applied Psychological Measurement",
+  year = "2026",
+  doi = "10.1177/01466216261472019",
+  textVersion = paste(
+    "Saqr, M., López-Pernas, S., & Misiejuk, K. (2026).",
+    "Nestimate: An R package for dynamic, probabilistic, and high order",
+    "network analysis. Applied Psychological Measurement.",
+    "https://doi.org/10.1177/01466216261472019"
+  )
+)

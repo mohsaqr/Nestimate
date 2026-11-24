@@ -13,6 +13,7 @@ sequence_plot(
   tree = NULL,
   group = NULL,
   periods = NULL,
+  period_unit = c("day", "week", "month"),
   fill = c("stretch", "pad"),
   actor = NULL,
   action = NULL,
@@ -150,6 +151,14 @@ defaults to the column name. Heatmap and index views only (the
 distribution view raises an error of class \code{nestimate_bad_input}).
 \code{trim} then counts periods, not time points. Default \code{NULL} plots the
 sequences as they are.}
+
+\item{period_unit}{With a date \code{periods} column (a \code{Date}, a \code{POSIXct} or
+text in the form \code{"2026-03-05"}), the length of one block: \code{"day"}
+(default), \code{"week"} (weeks starting on Monday, labelled by their
+Monday) or \code{"month"} (labelled by their first day). Every week or month
+from the first to the last is a block, so one in which nobody acted is
+an empty block. \code{"week"} or \code{"month"} with a \code{periods} column that is
+not a date raises an error of class \code{nestimate_bad_input}.}
 
 \item{fill}{With \code{periods}, how an actor's steps fill a block.
 \code{"stretch"} (default) spreads them over the whole block, so one step

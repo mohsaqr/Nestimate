@@ -6,6 +6,7 @@
 \alias{print.net_mpt_group}
 \alias{summary.net_mpt}
 \alias{print.summary.net_mpt}
+\alias{summary.net_mpt_group}
 \alias{plot.net_mpt}
 \alias{plot.net_mpt_group}
 \title{Compute the mean first passage times of a Markov chain}
@@ -19,6 +20,8 @@ passage_time(x, states = NULL, normalize = TRUE)
 \method{summary}{net_mpt}(object, ...)
 
 \method{print}{summary.net_mpt}(x, ...)
+
+\method{summary}{net_mpt_group}(object, ...)
 
 \method{plot}{net_mpt}(
   x,
@@ -114,6 +117,11 @@ diagonal of \code{matrix}), a named numeric vector: \eqn{1/\pi_i} in an
 irreducible chain, \code{Inf} for a transient state.}
 \item{states}{The state names.}
 }
+
+For \code{summary()} of a \code{net_mpt_group}: a data frame with one row
+per group and state, the \code{group} column followed by the columns of the
+single-network summary table (\code{state}, \code{return_time}, \code{stationary},
+\code{mean_out}, \code{mean_in}).
 }
 \description{
 \code{passage_time()} computes the mean first passage times of a Markov chain:

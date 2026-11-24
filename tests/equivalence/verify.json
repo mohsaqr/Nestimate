@@ -431,6 +431,9 @@
       "session_ids.net_mmm()": "returns the session identifiers of the sequences",
       "session_ids.netobject()": "returns the session identifiers of the sequences",
       "mark_first_state()": "adds a start-state label to the sequences; labels only",
+      "mark_phases()": "adds a phase label to each event of an event log; labels only",
+      "summary.net_markov_stability_group()": "stacks the summary() tables of the per-group results, which are covered; computes nothing of its own",
+      "summary.net_mpt_group()": "stacks the summary() tables of the per-group results, which are covered; computes nothing of its own",
       "mark_terminal_state()": "adds an end-state label to the sequences; labels only",
       "as_netdifference.default()": "raises a classed error (nestimate_bad_input) for an object that cannot be a difference network; returns no numbers",
       "pathways()": "returns the higher-order pathways of a model as character strings (\"A B -> C\") for plotting",
@@ -450,7 +453,9 @@
       "mosaic_plot.netobject()": "draws a mosaic plot (ggplot); the residuals it shades are those mosaic_test() returns and the tests compare",
       "mosaic_plot.netobject_group()": "draws a mosaic plot (ggplot); the residuals it shades are those mosaic_test() returns and the tests compare",
       "mosaic_plot.table()": "draws a mosaic plot (ggplot); the residuals it shades are those mosaic_test() returns and the tests compare",
-      "cluster_diagnostics.default()": "converts a tna model, group_tna or bare cograph_network to a native network and dispatches again; none of these carries a clustering, so every input it accepts ends in the error of class nestimate_bad_input (as ?cluster_diagnostics documents for any other object): it returns no numbers"
+      "cluster_diagnostics.default()": "converts a tna model, group_tna or bare cograph_network to a native network and dispatches again; none of these carries a clustering, so every input it accepts ends in the error of class nestimate_bad_input (as ?cluster_diagnostics documents for any other object): it returns no numbers",
+      "[.net_table()": "subsets a comparison table and keeps its display digits; computes nothing of its own",
+      "summary.magnitude_difference()": "returns the edge table magnitude_difference() computed, sorted by its value; computes nothing of its own"
     },
     "not_yet": {
       "as_netobject.psychnet()": "converts a psychnets result (the owner's package, not loaded by this suite) to a netobject, carrying its weights; returns numbers that are not yet compared"

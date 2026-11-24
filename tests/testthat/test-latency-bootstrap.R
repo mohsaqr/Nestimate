@@ -80,8 +80,11 @@ test_that("per-unit caps and actor are refused with a class", {
 
 test_that("a latency bootstrap asks splot() for widths by rank", {
   boot <- bootstrap_network(lb_net(), iter = 20, seed = 1)
-  expect_identical(boot$meta$splot$defaults, list(edge_scale_mode = "rank"))
-  expect_identical(boot$model$meta$splot$defaults, list(edge_scale_mode = "rank"))
+  expect_identical(boot$meta$splot$defaults$edge_scale_mode, "rank")
+  expect_identical(boot$model$meta$splot$defaults$edge_scale_mode, "rank")
+  # beside the width mode, the network's colours
+  expect_identical(boot$meta$splot$defaults$node_fill,
+                   lb_net()$meta$splot$defaults$node_fill)
 })
 
 test_that("a latency bootstrap says it is experimental, once per call", {

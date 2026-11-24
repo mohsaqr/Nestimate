@@ -5,6 +5,7 @@
 \alias{print.net_markov_stability}
 \alias{print.net_markov_stability_group}
 \alias{summary.net_markov_stability}
+\alias{summary.net_markov_stability_group}
 \alias{plot.net_markov_stability}
 \alias{plot.net_markov_stability_group}
 \title{Describe the stability of each state of a Markov chain}
@@ -16,6 +17,8 @@ markov_stability(x, normalize = TRUE)
 \method{print}{net_markov_stability_group}(x, ...)
 
 \method{summary}{net_markov_stability}(object, ...)
+
+\method{summary}{net_markov_stability_group}(object, ...)
 
 \method{plot}{net_markov_stability}(
   x,
@@ -86,6 +89,10 @@ mean first passage time from the others to the state).
 times to 2.}
 \item{mpt}{The \code{net_mpt} from \code{\link[=passage_time]{passage_time()}} the times come from.}
 }
+
+For \code{summary()} of a \code{net_markov_stability_group}: a data frame
+with one row per group and state, the \code{group} column followed by the
+columns of the single-network stability table.
 }
 \description{
 \code{markov_stability()} describes how stable each state of a Markov chain

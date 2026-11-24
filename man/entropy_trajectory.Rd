@@ -9,7 +9,7 @@
 \usage{
 entropy_trajectory(
   data,
-  action,
+  action = NULL,
   actor = NULL,
   time = NULL,
   group = NULL,
@@ -31,9 +31,18 @@ entropy_trajectory(
 )
 }
 \arguments{
-\item{data}{An event log: a data frame with one row per event.}
+\item{data}{An event log (a data frame with one row per event, read with
+\code{action}), or sequences: a network built from sequences (a \code{netobject},
+a grouped \code{netobject_group}, a \code{tna} model), prepared data, or a wide
+table or character matrix with one row per sequence and one column per
+position. Sequences are read in position order: each row is one actor,
+the position is the time, and the groups of a \code{netobject_group} become
+\code{group}. A network whose data are not sequences of states (an
+association or one-hot network) raises an error of class
+\code{nestimate_bad_input}.}
 
-\item{action}{The column holding each event's state.}
+\item{action}{The column of an event log holding each event's state.
+Default \code{NULL}, which reads \code{data} as sequences.}
 
 \item{actor}{The column identifying sequences: transitions are formed only
 between consecutive events of the same actor (within the same group).
@@ -142,6 +151,10 @@ tr <- entropy_trajectory(group_regulation_long,
 tr
 summary(tr)
 plot(tr)
+
+# sequences: the network of the engagement trajectories, by course
+net <- build_network(trajectories, method = "relative")
+entropy_trajectory(net, window = 300, step = 50)
 
 }
 \references{

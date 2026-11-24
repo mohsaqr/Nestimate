@@ -77,6 +77,15 @@
 macro_network <- function(x, expand = NULL, method = "relative",
                           scaling = NULL, threshold = 0, params = list(),
                           ...) {
+  # the result keeps the colours of the network it came from
+  call <- match.call(expand.dots = TRUE)
+  call[[1L]] <- .macro_network_impl
+  .carry_state_colors(eval(call, parent.frame()), x)
+}
+
+.macro_network_impl <- function(x, expand = NULL, method = "relative",
+                          scaling = NULL, threshold = 0, params = list(),
+                          ...) {
   .assert(
     "`x` must be an mcml or an mcml_pc" =
       inherits(x, "mcml") || inherits(x, "mcml_pc"),

@@ -28,7 +28,15 @@ test_that("a network grouped by two columns works with the sequence verbs", {
   expect_equal(nrow(extract_sequences(ng)), 2000L)
   sp <- sequence_patterns(ng, len = 2)
   expect_true("support_High-A" %in% names(sp))
-  expect_equal(nrow(sequence_metrics(ng)), 2000L)
+  # its sequences, one row each, with meta = TRUE
+  expect_equal(nrow(sequence_metrics(ng, meta = TRUE)), 2000L)
+  # by default the indices are compared across its groups (more than two:
+  # no Hedges' g, an F test across all of them)
+  set.seed(1)
+  cmp <- sequence_metrics(ng, iter = 9)
+  expect_true("eta_squared" %in% names(cmp))
+  expect_false("hedges_g" %in% names(cmp))
+  expect_true(any(grepl("^mean_", names(cmp))))
 })
 
 test_that("sequence_metrics: a row with no observed state is NA throughout", {

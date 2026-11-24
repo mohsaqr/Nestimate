@@ -160,7 +160,7 @@ build_network <- function(data, method, ..., group = NULL, scaling = NULL,
   # out stays missing (the rebuild of a clustering reads which were set).
   call <- match.call(expand.dots = TRUE)
   call[[1L]] <- .build_network_impl
-  eval(call, parent.frame())
+  .finalize_palette(eval(call, parent.frame()))
 }
 
 # The estimation behind build_network(), with the arguments of every kind of
@@ -223,9 +223,11 @@ build_network <- function(data, method, ..., group = NULL, scaling = NULL,
   # --- Early dispatch for net_clustering objects ---
   if (inherits(data, "net_clustering")) {
     if (missing(method)) method <- data$network_method %||% "relative"
-    return(do.call(.build_network_clustering,
-                   c(list(data, method = method, inherit = inherit),
-                     shaping_args, list(...))))
+    return(.carry_state_colors(
+      do.call(.build_network_clustering,
+              c(list(data, method = method, inherit = inherit),
+                shaping_args, list(...))),
+      data))
   }
 
   # --- Early dispatch for net_mmm objects ---
@@ -267,7 +269,8 @@ build_network <- function(data, method, ..., group = NULL, scaling = NULL,
       })
       names(nets) <- paste0("Cluster ", seq_len(k_comp))
       class(nets) <- "netobject_group"
-      return(.attach_mmm_clustering(nets, data, full_data = raw_data))
+      return(.carry_state_colors(
+        .attach_mmm_clustering(nets, data, full_data = raw_data), data))
     }
     # params identical to the fitted components' own are not a change;
     # scaling and threshold only reshape the fitted weights, so they apply
@@ -297,8 +300,10 @@ build_network <- function(data, method, ..., group = NULL, scaling = NULL,
     }, data$models, seq_along(data$models))
     if (is.null(names(nets))) names(nets) <- paste0("Cluster ", seq_along(nets))
     class(nets) <- "netobject_group"
-    return(.attach_mmm_clustering(nets, data,
-                                  full_data = data$data %||% data$models[[1L]]$data))
+    return(.carry_state_colors(
+      .attach_mmm_clustering(nets, data,
+                             full_data = data$data %||% data$models[[1L]]$data),
+      data))
   }
 
   .assert("`method` must be a single character string" =

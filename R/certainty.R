@@ -246,7 +246,7 @@ certainty <- function(x,
     prior             = prior
   )
   class(result) <- c("net_certainty", "net_bootstrap")
-  result
+  .declare_source_fill(result, x)
 }
 
 

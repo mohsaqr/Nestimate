@@ -196,8 +196,10 @@ utils::globalVariables(c("time", "y", "key", "prop"))
   cn     <- ch$macro_keys
   state_pal <- stats::setNames(
     .state_palette(state_colors, length(states), states), states)
-  base_cl   <- c("#264653", "#2A9D8F", "#E76F51", "#E9C46A", "#8AB17D",
-                 "#5B5F97", "#B5838D", "#6D6875")
+  # cluster bands take the Okabe-Ito colours the states leave (the package
+  # rule: Okabe-Ito everywhere when no colours are set)
+  base_cl   <- setdiff(.okabe_ito, state_pal)
+  if (!length(base_cl)) base_cl <- .okabe_ito
   cluster_pal <- .apply_named_colors(
     stats::setNames(rep_len(base_cl, length(cn)), cn), state_colors)
   # A cluster opened by `expand` has no Summary colour; give each such

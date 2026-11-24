@@ -3,6 +3,7 @@
 \name{magnitude_difference}
 \alias{magnitude_difference}
 \alias{print.magnitude_difference}
+\alias{summary.magnitude_difference}
 \alias{plot.magnitude_difference}
 \title{Measure how far frequency and probability networks disagree}
 \usage{
@@ -18,7 +19,16 @@ magnitude_difference(
 
 \method{print}{magnitude_difference}(x, ...)
 
-\method{plot}{magnitude_difference}(x, type = c("stacked", "circular"), min_show = 0.01, title = NULL, ...)
+\method{summary}{magnitude_difference}(object, n = NULL, ...)
+
+\method{plot}{magnitude_difference}(
+  x,
+  type = c("stacked", "circular"),
+  min_show = 0.01,
+  title = NULL,
+  state_colors = NULL,
+  ...
+)
 }
 \arguments{
 \item{data}{The event log (long format, with \code{action} set) or wide
@@ -68,7 +78,13 @@ object.}
 \item \code{"circular"}: \code{self_loops} (default \code{TRUE}), \code{label_offset} and \code{edge_curve}.
 }
 
-The \code{print()} method ignores it.}
+The \code{print()} and \code{summary()} methods ignore it.}
+
+\item{object}{For the \code{summary()} method: a \code{magnitude_difference}
+object.}
+
+\item{n}{For the \code{summary()} method: the number of edges to return, the
+largest differences first. Default \code{NULL} returns every edge.}
 
 \item{type}{For the \code{plot()} method: the kind of plot. \code{"stacked"}
 (default) is a polar portrait with one sector per source state and one
@@ -83,11 +99,18 @@ is below this fraction of the largest are left out. Default \code{0.01}.}
 
 \item{title}{For the \code{plot()} method: the plot title. Default \code{NULL},
 which names the metric and the scale.}
+
+\item{state_colors}{For the \code{plot()} method with \code{type = "stacked"}:
+colours for the source states, for this figure only, named
+(\code{c(state = "#0072B2")}) or one per state in \code{states} order. Default
+\code{NULL}: Okabe-Ito dealt in alphabetical order, as every figure deals
+them.}
 }
 \value{
 A \code{magnitude_difference} object. \code{print()} reports the metric,
 the scale, the states, the number of edges and the minimum, quartiles,
-mean and maximum of the magnitude differences; \code{plot()} draws them.
+mean and maximum of the magnitude differences; \code{summary()} returns the
+edges, largest difference first; \code{plot()} draws them.
 The object's fields:
 \describe{
 \item{edges}{One row per ordered pair of states (the self-transitions
@@ -101,6 +124,12 @@ chosen metric).}
 
 For the \code{plot()} method: a \code{ggplot} object. The \code{print()} method
 returns \code{x} invisibly.
+
+For the \code{summary()} method: a data frame with one row per
+ordered pair of states and the columns \code{from}, \code{to}, \code{ftna}, \code{tna},
+\code{signed} and \code{value}, sorted by \code{value} from largest to smallest (ties
+by \code{from}, then \code{to}). A positive \code{signed} marks an edge the
+probability view makes larger than the count view.
 }
 \description{
 \code{magnitude_difference()} measures, edge by edge, how far the two usual
@@ -125,6 +154,7 @@ fit <- magnitude_difference(group_regulation_long,
                             actor = "Actor", action = "Action",
                             time = "Time")
 print(fit)
+summary(fit, n = 5)
 \donttest{
 # The polar portrait shows which edges row-normalization promotes.
 plot(fit)                       # stacked polar portrait

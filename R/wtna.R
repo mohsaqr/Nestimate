@@ -175,12 +175,15 @@ wtna <- function(data,
                                     window_size = window_size, mode = mode, actor = actor),
       method = "wtna_both"
     )
+    result$transition <- .stamp_node_fill(result$transition)
+    result$cooccurrence <- .stamp_node_fill(result$cooccurrence)
     class(result) <- "wtna_mixed"
     return(result)
   }
 
-  .wtna_finalize(weights, type, codes, data, method, initial = initial,
-                 window_size = window_size, mode = mode, actor = actor)
+  .stamp_node_fill(
+    .wtna_finalize(weights, type, codes, data, method, initial = initial,
+                   window_size = window_size, mode = mode, actor = actor))
 }
 
 

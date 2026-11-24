@@ -463,9 +463,11 @@ stability_landscape <- function(x, states = NULL, iter = 1000L,
   if (!is.null(seed)) .local_seed(seed)
   fits <- Map(\(s, nm) .ls_fit(s$states, states, as.integer(iter), ci_level,
                                nm, s$sequence_weights), seqs, names(parts))
-  structure(list(fits = fits, states = states, iter = as.integer(iter),
-                 ci_level = ci_level),
-            class = "net_landscape")
+  .carry_state_colors(
+    structure(list(fits = fits, states = states, iter = as.integer(iter),
+                   ci_level = ci_level),
+              class = "net_landscape"),
+    x)
 }
 
 #' @rdname stability_landscape
@@ -528,11 +530,18 @@ print.net_landscape <- function(x, digits = 2, ...) {
   out[!duplicated(out$x), ]
 }
 
+#' @param state_colors For the `plot()` method: colours for the states, for
+#'   this figure only. Named, `c(state = "#0072B2")`, it overrides the states
+#'   it names; unnamed, it gives one colour per state in `states` order.
+#'   Default `NULL`: the colours of the network the result came from (set
+#'   with [set_state_colors()]), Okabe-Ito for the rest, as every figure of
+#'   that network draws them.
 #' @rdname stability_landscape
 #' @export
-plot.net_landscape <- function(x, ...) {
+plot.net_landscape <- function(x, state_colors = NULL, ...) {
   states <- x$states
   k <- length(states)
+  pal <- .figure_palette(x, states, state_colors)
   short <- \(s) substr(s, 1L, 3L)
   cups <- summary(x)
   cups$group <- factor(cups$group, levels = names(x$fits))
@@ -572,7 +581,7 @@ plot.net_landscape <- function(x, ...) {
     ggplot2::geom_text(
       data = cups, ggplot2::aes(x = x, y = label_y, label = label),
       size = 3.1, vjust = 1, lineheight = 0.95) +
-    ggplot2::scale_fill_manual(values = rep_len(.okabe_ito, k)) +
+    ggplot2::scale_fill_manual(values = pal) +
     ggplot2::scale_shape_manual(values = rep_len(c(21, 22, 24, 23, 25), k)) +
     ggplot2::scale_x_continuous(breaks = seq(0, k - 1), labels = states,
                                 expand = ggplot2::expansion(add = 0.05)) +
@@ -850,9 +859,11 @@ landscape_surface <- function(x, measure = "longitudinal_entropy",
       nrow(slices) %/% length(states), min(slices$effective_n)),
       class = "nestimate_thin_slice"))
   }
-  structure(list(slices = slices, states = states, measure = measure,
-                 groups = names(parts), k = as.integer(k)),
-            class = "net_landscape_surface")
+  .carry_state_colors(
+    structure(list(slices = slices, states = states, measure = measure,
+                   groups = names(parts), k = as.integer(k)),
+              class = "net_landscape_surface"),
+    x)
 }
 
 #' @rdname landscape_surface
@@ -1336,7 +1347,8 @@ landscape_trend <- function(x, along = "phase",
                  window = as.integer(window), k = as.integer(k),
                  iter = as.integer(iter), ci_level = ci_level,
                  groups = names(parts)),
-            class = "net_landscape_trend")
+            class = "net_landscape_trend") |>
+    .carry_state_colors(x)
 }
 
 #' @noRd
@@ -1385,10 +1397,17 @@ print.net_landscape_trend <- function(x, digits = 2, ...) {
   invisible(x)
 }
 
+#' @param state_colors For the `plot()` method: colours for the states, for
+#'   this figure only. Named, `c(state = "#0072B2")`, it overrides the states
+#'   it names; unnamed, it gives one colour per state in `states` order.
+#'   Default `NULL`: the colours of the network the result came from (set
+#'   with [set_state_colors()]), Okabe-Ito for the rest, as every figure of
+#'   that network draws them.
 #' @rdname landscape_trend
 #' @export
 plot.net_landscape_trend <- function(x, type = c("lines", "surface"),
-                                     theta = 10, phi = 30, ...) {
+                                     theta = 10, phi = 30,
+                                     state_colors = NULL, ...) {
   type <- match.arg(type)
   if (type == "surface") return(.ls_trend_surface(x, theta, phi))
   hc <- .ls_height_col(x)
@@ -1405,6 +1424,7 @@ plot.net_landscape_trend <- function(x, type = c("lines", "surface"),
   tab$state <- factor(tab$state, levels = x$states)
   tab$group <- factor(tab$group, levels = x$groups)
   kk <- length(x$states)
+  pal <- .figure_palette(x, x$states, state_colors)
   # the panel follows the estimates; bands wider than that are clipped
   lims <- range(tab$h)
   lims <- lims + c(-0.15, 0.15) * max(diff(lims), 0.5)
@@ -1434,8 +1454,8 @@ plot.net_landscape_trend <- function(x, type = c("lines", "surface"),
     ggplot2::geom_point(size = 2.2, fill = "white") +
     ggplot2::geom_text(data = last, ggplot2::aes(label = state), hjust = -0.15,
                        size = 3.4, show.legend = FALSE) +
-    ggplot2::scale_colour_manual(values = rep_len(.okabe_ito, kk)) +
-    ggplot2::scale_fill_manual(values = rep_len(.okabe_ito, kk)) +
+    ggplot2::scale_colour_manual(values = pal) +
+    ggplot2::scale_fill_manual(values = pal) +
     ggplot2::scale_shape_manual(values = rep_len(c(21, 22, 24, 23, 25), kk)) +
     ggplot2::scale_linetype_manual(
       values = rep_len(c("solid", "dashed", "dotdash", "longdash", "twodash"),

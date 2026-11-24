@@ -143,8 +143,11 @@ test_that("every alias refuses `method` with a classed error", {
 test_that("a latency network asks splot() for widths by rank, other methods ask nothing", {
   course <- subset(grl, Course == "A")
   net <- build_latency(course, action = "Action", time = "Time", actor = "Actor")
-  expect_identical(net$meta$splot$defaults, list(edge_scale_mode = "rank"))
-  expect_null(build_tna(trajectories)$meta$splot)
+  expect_identical(net$meta$splot$defaults$edge_scale_mode, "rank")
+  # other methods ask for no width mode; they only declare the node colours
+  tna_defaults <- build_tna(trajectories)$meta$splot$defaults
+  expect_null(tna_defaults$edge_scale_mode)
+  expect_identical(sort(names(tna_defaults)), c("label_color", "node_fill"))
   grouped <- build_network(grl, method = "latency", action = "Action", time = "Time",
                            actor = "Actor", group = "Course")
   invisible(lapply(grouped, function(n) {

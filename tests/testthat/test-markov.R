@@ -372,3 +372,34 @@ test_that("hitting-time route equals Kemeny-Snell on an irreducible chain", {
     M <- .mpt_full(P, pi); dimnames(M) <- dimnames(P); M
   }, tolerance = 1e-10)
 })
+
+# ---- summary() of grouped results: one tidy table ----
+
+test_that("summary of grouped passage times and stability stacks the groups", {
+  seqs <- data.frame(T1 = c("A", "B", "C", "A", "B", "C"),
+                     T2 = c("B", "B", "A", "C", "A", "C"),
+                     T3 = c("C", "A", "B", "B", "C", "A"),
+                     T4 = c("A", "C", "C", "A", "B", "B"),
+                     cond = rep(c("x", "y"), each = 3),
+                     stringsAsFactors = FALSE)
+  nets <- build_network(seqs, method = "relative", group = "cond")
+
+  pt <- passage_time(nets)
+  pt_tab <- summary(pt)
+  expect_true(is.data.frame(pt_tab))
+  expect_identical(names(pt_tab)[1], "group")
+  expect_equal(nrow(pt_tab), 2L * 3L)
+  # each group's rows are that group's own summary, unchanged
+  expect_equal(pt_tab[pt_tab$group == "y", -1], summary(pt[["y"]])$table,
+               ignore_attr = TRUE)
+
+  ms <- markov_stability(nets)
+  ms_tab <- summary(ms)
+  expect_true(is.data.frame(ms_tab))
+  expect_identical(names(ms_tab), c("group", names(ms[["x"]]$stability)))
+  expect_equal(ms_tab[ms_tab$group == "x", -1], ms[["x"]]$stability,
+               ignore_attr = TRUE)
+  # invariant: stationary probabilities sum to 1 within each group
+  expect_equal(as.vector(tapply(ms_tab$stationary_prob, ms_tab$group, sum)),
+               c(1, 1))
+})

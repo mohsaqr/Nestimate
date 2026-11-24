@@ -235,9 +235,10 @@
     if (!all(has_meta)) .stop_tna_actor(what %||% "This function")
   }
   if (inherits(x, "group_tna")) {
-    return(.group_tna_to_netobjects(x, what = what, need_data = need_data))
+    return(.finalize_palette(
+      .group_tna_to_netobjects(x, what = what, need_data = need_data)))
   }
-  .tna_to_netobject(x, what = what, need_data = need_data)
+  .finalize_palette(.tna_to_netobject(x, what = what, need_data = need_data))
 }
 
 # The same for the default method of a generic, which also sees a bare

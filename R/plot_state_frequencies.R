@@ -2488,11 +2488,14 @@ knit_print.nestimate_facet_list <- function(x, ...) {
 #' @param sort_states The order of the states in the legend, the tiles and
 #'   the bars: `"frequency"` (default), the most frequent first;
 #'   `"alpha"`, alphabetical; or `"none"`, the order of the table.
-#' @param colors Fill colours for the states, overriding the palette
+#' @param state_colors Fill colours for the states, overriding the palette
 #'   attached to `x` with [set_state_colors()] for this chart: an unnamed
 #'   vector in state order (at least one per state) or a named lookup such
 #'   as `c(plan = "#0072B2")` that overrides only the states named. Default
-#'   `NULL`: the attached palette, or else the Okabe-Ito palette, recycled.
+#'   `NULL`: the attached palette, or else Okabe-Ito, as every figure of `x`
+#'   draws them.
+#' @param colors Deprecated name of `state_colors`; it still works, with a
+#'   warning of class `nestimate_deprecated`.
 #' @param label_size The size of the tile and bar labels; with
 #'   \pkg{ggfittext} installed, the largest size, as labels shrink to fit
 #'   their tiles. Default `3.5`.
@@ -2579,12 +2582,14 @@ plot_state_frequencies.netobject <- function(x,
                                               combine = "auto",
                                               ncol = NULL,
                                               node_groups = NULL,
+                                              state_colors = NULL,
                                               ...) {
+  state_colors <- .colors_alias(state_colors, colors)
   .plot_state_frequencies_impl(
     x, source_class = "netobject", hierarchical = FALSE,
     style = style, metric = metric, label = label, legend = legend,
     legend_dir = legend_dir, legend_frame = legend_frame,
-    sort_states = sort_states, colors = colors, label_size = label_size,
+    sort_states = sort_states, colors = state_colors, label_size = label_size,
     abbreviate = abbreviate, include_macro = include_macro,
     combine = combine, ncol = ncol, node_groups = node_groups, ...)
 }
@@ -2606,12 +2611,14 @@ plot_state_frequencies.htna <- function(x,
                                          combine = "auto",
                                          ncol = NULL,
                                          node_groups = NULL,
+                                         state_colors = NULL,
                                          ...) {
+  state_colors <- .colors_alias(state_colors, colors)
   .plot_state_frequencies_impl(
     x, source_class = "htna", hierarchical = FALSE,
     style = style, metric = metric, label = label, legend = legend,
     legend_dir = legend_dir, legend_frame = legend_frame,
-    sort_states = sort_states, colors = colors, label_size = label_size,
+    sort_states = sort_states, colors = state_colors, label_size = label_size,
     abbreviate = abbreviate, include_macro = include_macro,
     combine = combine, ncol = ncol, node_groups = node_groups, ...)
 }
@@ -2633,13 +2640,15 @@ plot_state_frequencies.mcml <- function(x,
                                          combine = "auto",
                                          ncol = NULL,
                                          node_groups = NULL,
+                                         state_colors = NULL,
                                          ...) {
   .plot_state_freq_check_unused_dots("plot_state_frequencies.mcml", ...)
+  state_colors <- .colors_alias(state_colors, colors)
   .plot_state_frequencies_impl(
     x, source_class = "mcml", hierarchical = TRUE,
     style = style, metric = metric, label = label, legend = legend,
     legend_dir = legend_dir, legend_frame = legend_frame,
-    sort_states = sort_states, colors = colors, label_size = label_size,
+    sort_states = sort_states, colors = state_colors, label_size = label_size,
     abbreviate = abbreviate, include_macro = include_macro,
     combine = combine, ncol = ncol, node_groups = node_groups, ...)
 }
@@ -2661,12 +2670,14 @@ plot_state_frequencies.netobject_group <- function(x,
                                                     combine = "auto",
                                                     ncol = NULL,
                                                     node_groups = NULL,
-                                                          ...) {
+                                                          state_colors = NULL,
+                                                    ...) {
+  state_colors <- .colors_alias(state_colors, colors)
   .plot_state_frequencies_impl(
     x, source_class = "netobject_group", hierarchical = FALSE,
     style = style, metric = metric, label = label, legend = legend,
     legend_dir = legend_dir, legend_frame = legend_frame,
-    sort_states = sort_states, colors = colors, label_size = label_size,
+    sort_states = sort_states, colors = state_colors, label_size = label_size,
     abbreviate = abbreviate, include_macro = include_macro,
     combine = combine, ncol = ncol, node_groups = node_groups, ...)
 }
@@ -2728,7 +2739,7 @@ plot_state_frequencies.default <- function(x, ...) {
   sort_states  <- match.arg(sort_states)
   # A palette attached with set_state_colors() is the object's own default;
   # an explicit `colors` still wins for this one figure.
-  colors       <- colors %||% .stored_state_colors(x)
+  colors       <- .with_override(x, colors)
   # Nothing below reads `...` (the mcml method has already refused it).
   .warn_ignored_dots("plot_state_frequencies()", ...)
 
@@ -2749,6 +2760,11 @@ plot_state_frequencies.default <- function(x, ...) {
   }
 
   freq_df <- .abbreviate_states(freq_df, abbreviate)
+  abbreviations <- attr(freq_df, "abbreviations")
+  if (!is.null(abbreviations) && .is_named_colors(colors)) {
+    hit <- names(colors) %in% names(abbreviations)
+    names(colors)[hit] <- unname(abbreviations[names(colors)[hit]])
+  }
 
   # Demote per_facet to a shared bottom legend when every group has the
   # same state vocabulary -- repeating the same legend in every panel is
@@ -2786,12 +2802,17 @@ plot_state_frequencies.default <- function(x, ...) {
   if (isFALSE(abbreviate) || is.null(abbreviate)) return(freq_df)
   minlen <- if (isTRUE(abbreviate)) 3L else as.integer(abbreviate[[1L]])
   .assert(minlen >= 1L)
-  short <- abbreviate(as.character(freq_df$state), minlength = minlen)
+  full <- as.character(freq_df$state)
+  short <- abbreviate(full, minlength = minlen)
   freq_df$state <- unname(short)
   agg <- aggregate(count ~ group + state, data = freq_df, FUN = sum)
   totals <- ave(agg$count, agg$group, FUN = sum)
   agg$proportion <- agg$count / totals
-  agg[, c("group", "state", "count", "proportion")]
+  out <- agg[, c("group", "state", "count", "proportion")]
+  # full name -> abbreviation, so a palette keyed by the states follows them
+  first <- !duplicated(full)
+  attr(out, "abbreviations") <- stats::setNames(unname(short)[first], full[first])
+  out
 }
 
 
@@ -3126,4 +3147,15 @@ knit_print.state_freq <- function(x, options = list(), ...) {
                           label, label_size,
                           legend, legend_dir, legend_frame))
   }
+}
+
+
+# `colors` was the name of `state_colors` in plot_state_frequencies(); it keeps
+# working, with a warning, and `state_colors` wins when both are given.
+.colors_alias <- function(state_colors, colors) {
+  if (is.null(colors)) return(state_colors)
+  warning(warningCondition(
+    "`colors` is deprecated; use `state_colors`, the name every figure uses.",
+    class = "nestimate_deprecated"))
+  state_colors %||% colors
 }

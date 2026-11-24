@@ -90,3 +90,18 @@ test_that("both plot types return a warning-free ggplot", {
   expect_s3_class(p_stacked, "ggplot")
   expect_s3_class(p_circular, "ggplot")
 })
+
+test_that("summary() returns the edges, largest difference first", {
+  seqs <- data.frame(T1 = c("A", "A", "B", "C"), T2 = c("B", "C", "A", "A"),
+                     T3 = c("A", "A", "C", "B"), stringsAsFactors = FALSE)
+  fit <- magnitude_difference(seqs)
+  full <- summary(fit)
+  expect_s3_class(full, "data.frame")
+  expect_equal(nrow(full), 9L)
+  expect_named(full, c("from", "to", "ftna", "tna", "signed", "value"))
+  expect_false(is.unsorted(rev(full$value)))
+  top <- summary(fit, n = 2)
+  expect_equal(nrow(top), 2L)
+  expect_equal(top$value[1], max(full$value))
+  expect_error(summary(fit, n = 0), class = "nestimate_bad_input")
+})

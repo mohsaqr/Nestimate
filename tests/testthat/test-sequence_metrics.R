@@ -100,3 +100,94 @@ test_that("a return to the first state emerges above half the opening spell", {
   stays <- as.data.frame(t(c(rep("A", 7), "B", rep("A", 3))))
   expect_true(is.na(sequence_metrics(stays)$emergent_state))
 })
+
+# ---- group = : comparing the indices between groups ----
+
+.sm_groups_data <- function() {
+  data.frame(T1 = c("A", "A", "B", "A", "B", "B", "A", "B"),
+             T2 = c("A", "B", "B", "A", "A", "B", "B", "A"),
+             T3 = c("B", "B", "A", "A", "B", "A", "B", "A"),
+             T4 = c("B", "A", "A", "B", "A", "A", "A", "B"),
+             cond = rep(c("x", "y"), each = 4),
+             stringsAsFactors = FALSE)
+}
+
+test_that("sequence_metrics(group =) reproduces hand-computed means, F and Hedges' g", {
+  d <- .sm_groups_data()
+  per_seq <- sequence_metrics(d, meta = TRUE)
+  set.seed(1)
+  cmp <- sequence_metrics(d, group = "cond", iter = 50)
+  expect_true(is.data.frame(cmp))
+  row <- cmp[cmp$index == "transition_rate", ]
+  x <- per_seq$transition_rate[per_seq$cond == "x"]
+  y <- per_seq$transition_rate[per_seq$cond == "y"]
+  expect_equal(row$mean_x, mean(x))
+  expect_equal(row$sd_y, sd(y))
+  expect_equal(row$difference, mean(y) - mean(x))
+  # two groups: F is the square of the pooled-variance t statistic
+  tt <- stats::t.test(y, x, var.equal = TRUE)
+  expect_equal(row$statistic, unname(tt$statistic)^2)
+  # Hedges' g by hand
+  sp <- sqrt(((4 - 1) * var(x) + (4 - 1) * var(y)) / 6)
+  g <- (1 - 3 / (4 * 8 - 9)) * (mean(y) - mean(x)) / sp
+  expect_equal(row$hedges_g, g)
+  expect_true(row$g_lower < g && g < row$g_upper)
+  # p-values are permutation p-values, never below 1 / (iter + 1)
+  ok <- !is.na(cmp$p_value)
+  expect_true(all(cmp$p_value[ok] >= 1 / 51 & cmp$p_value[ok] <= 1))
+  expect_equal(cmp$p_adj, stats::p.adjust(cmp$p_value, "BH"))
+})
+
+test_that("sequence_metrics(group =) leaves the per-sequence output unchanged without group", {
+  d <- .sm_groups_data()
+  expect_identical(names(sequence_metrics(d)),
+                   names(sequence_metrics(d[, 1:4])))
+  # invariant: eta squared lies in [0, 1]
+  set.seed(2)
+  cmp <- sequence_metrics(d, group = "cond", iter = 20)
+  ok <- !is.na(cmp$eta_squared)
+  expect_true(all(cmp$eta_squared[ok] >= 0 & cmp$eta_squared[ok] <= 1))
+})
+
+test_that("a grouped network is compared by its own groups, nested in its actor", {
+  halves <- mark_phases(human_long, actor = "session_id",
+                        time = "order_in_session", labels = c("early", "late"))
+  net <- build_network(halves, actor = "session_id", action = "cluster",
+                       group = "phase", method = "relative")
+  set.seed(3)
+  by_default <- sequence_metrics(net, iter = 20)
+  set.seed(3)
+  explicit <- sequence_metrics(net, group = "phase", actor = "session_id",
+                               iter = 20)
+  # the defaults are the network's group column and its actor
+  expect_identical(by_default, explicit)
+  expect_identical(by_default$index[1], "valid_n")
+  expect_true(all(c("n_early", "n_late", "hedges_g", "p_adj") %in%
+                    names(by_default)))
+  expect_equal(by_default$n_early[by_default$index == "unique_states"], 425L)
+  expect_equal(by_default$n_late[by_default$index == "unique_states"], 429L)
+  # meta = TRUE still lists the sequences, one row each
+  per_seq <- sequence_metrics(net, meta = TRUE)
+  expect_equal(nrow(per_seq), 854L)
+  expect_true(all(c("phase", "session_id", "transition_rate") %in%
+                    names(per_seq)))
+})
+
+test_that("sequence_metrics(group =) refuses an unknown or single group", {
+  d <- .sm_groups_data()
+  expect_error(sequence_metrics(d, group = "nope"), class = "nestimate_bad_input")
+  d$cond <- "x"
+  expect_error(sequence_metrics(d, group = "cond"), class = "nestimate_bad_input")
+})
+
+test_that("indices = returns the named indices only, per sequence and compared", {
+  d <- .sm_groups_data()
+  per_seq <- sequence_metrics(d, indices = c("transition_rate", "valid_n"))
+  expect_identical(names(per_seq), c("transition_rate", "valid_n"))
+  expect_equal(per_seq$valid_n, sequence_metrics(d)$valid_n)
+  set.seed(4)
+  cmp <- sequence_metrics(d, group = "cond", indices = "transition_rate",
+                          iter = 9)
+  expect_identical(cmp$index, "transition_rate")
+  expect_error(sequence_metrics(d, indices = "nope"), class = "nestimate_bad_input")
+})

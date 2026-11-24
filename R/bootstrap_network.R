@@ -626,7 +626,7 @@ bootstrap_network <- function(x,
     result$clustering_edges <- clus$edges
   }
   class(result) <- "net_bootstrap"
-  result
+  .declare_source_fill(result, original)
 }
 
 

@@ -233,6 +233,21 @@
 #             clusters, combined groups), so only the caller knows the full key
 #             space. Callers report the leftovers once with
 #             .report_unused_colors().
+# The colours a figure of an object draws its states with, named by state:
+# the object's resolved palette (set with set_state_colors(), or carried from
+# the network it came from), Okabe-Ito dealt in sorted order for any state it
+# does not name, then the figure's own `state_colors` override (named:
+# partial; unnamed: one per state in `keys` order).
+.figure_palette <- function(x, keys, override = NULL) {
+  keys <- as.character(keys)
+  if (!is.null(override) && !.is_named_colors(override)) {
+    return(stats::setNames(.state_palette(override, length(keys), keys), keys))
+  }
+  known <- .with_override(x, override) %||% override %||% character(0)
+  dealt <- .order_keys(keys)
+  stats::setNames(.fill_state_colors(dealt, known), dealt)[keys]
+}
+
 .state_palette <- function(user_colors, n_states, states = NULL) {
   if (is.null(user_colors)) return(rep_len(.okabe_ito, n_states))
   .assert("`state_colors` must be a character vector of colours" =
@@ -270,13 +285,27 @@
 # distinct: nine states with three pinned leaves six unnamed and six spare
 # colours, so nothing repeats. Returns an unnamed vector parallel to `keys`.
 .fill_state_colors <- function(keys, user_colors) {
+  # keys are names: an integer key would index the palette by position
+  keys  <- as.character(keys)
   named <- keys %in% names(user_colors)
   out   <- character(length(keys))
   out[named]  <- unname(user_colors[keys[named]])
-  spare       <- setdiff(.okabe_ito, unname(user_colors))
+  # only the colours of keys drawn here are reserved: a palette entry for a
+  # state this object lacks must not shift the defaults of the others
+  spare       <- setdiff(.okabe_ito, unique(out[named]))
   if (!length(spare)) spare <- .okabe_ito
   out[!named] <- rep_len(spare, sum(!named))
   out
+}
+
+# The order in which default colours are dealt: alphabetical, or numeric
+# when every key is a number (2 before 10), as a sequence plot of the raw
+# codes orders them.
+.order_keys <- function(keys) {
+  keys <- unique(as.character(keys))
+  numeric_keys <- length(keys) > 0L &&
+    all(grepl("^-?[0-9]+([.][0-9]+)?$", keys))
+  if (numeric_keys) keys[order(as.numeric(keys))] else sort(keys)
 }
 
 
@@ -310,7 +339,8 @@
   if (is.null(user_colors) || !.is_named_colors(user_colors)) {
     return(invisible(NULL))
   }
-  nm     <- names(user_colors)[nzchar(names(user_colors))]
+  nm     <- attr(user_colors, "user_names") %||% names(user_colors)
+  nm     <- nm[nzchar(nm)]
   unused <- setdiff(nm, keys)
   if (length(unused) == 0L) {
     return(invisible(NULL))
@@ -497,4 +527,26 @@
     legend.margin     = if (identical(legend_frame, "border"))
                           ggplot2::margin(4, 6, 4, 6) else ggplot2::margin()
   )
+}
+
+#' Panel title of one group in a grouped sequence or distribution plot
+#'
+#' @param g The group's label.
+#' @return `"Cluster <g>"` for a bare number (the groups of a clustering),
+#'   otherwise the label itself (named groups such as `"early"`).
+#' @noRd
+.group_panel_label <- function(g) {
+  g <- as.character(g)
+  ifelse(grepl("^[0-9]+$", g), sprintf("Cluster %s", g), g)
+}
+
+#' Okabe-Ito colours for n categories, recycled past the nine of the palette
+#' @noRd
+.okabe_values <- function(n) unname(rep_len(.okabe_ito, max(1L, n)))
+
+#' Point shapes for n categories, recycled, so categories never differ by
+#' colour alone
+#' @noRd
+.cluster_shapes <- function(n) {
+  rep_len(c(16L, 17L, 15L, 18L, 8L, 3L, 4L, 0L, 1L), max(1L, n))
 }

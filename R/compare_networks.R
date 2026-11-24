@@ -1003,8 +1003,9 @@ print.net_network_comparison <- function(x, digits = 2L, ...) {
 #' the `plot()` method.
 #'
 #' @param x,object A `net_network_comparison` object from
-#'   [compare_networks()]. For the `print()` method: a table returned by one
-#'   of these verbs.
+#'   [compare_networks()]. For the `print()` method and for subsetting with
+#'   `[` (as [subset()] does): a table returned by one of these verbs, whose
+#'   rows and columns keep its `digits`.
 #' @param pair The comparisons to keep. Default `NULL`, all of them. Give
 #'   the pair names as printed (`"A vs B"`), the two network names in either
 #'   order (`c("A", "B")`), one network name (`"A"`, every pair it takes part
@@ -1018,7 +1019,7 @@ print.net_network_comparison <- function(x, digits = 2L, ...) {
 #' @param digits The decimals kept in the numeric columns. Default `2`. For
 #'   the `print()` method: the decimals shown, by default those the table
 #'   was made with.
-#' @param ... Ignored.
+#' @param ... Ignored. For `[`: the row and column indices.
 #' @return Each verb returns a data frame of class `net_table`. Its `print()`
 #'   shows whole numbers without decimals, exact zeros as `0`, other values
 #'   with `digits` decimals and p-values and probabilities of direction with
@@ -1158,6 +1159,17 @@ print.net_table <- function(x, digits = attr(x, "digits") %||% 2L, ...) {
   shown[] <- lapply(shown, function(v) { v <- as.character(v); v[is.na(v)] <- "NA"; v })
   print.data.frame(shown, row.names = FALSE, right = TRUE)
   invisible(x)
+}
+
+#' @rdname comparison_tables
+#' @export
+`[.net_table` <- function(x, ...) {
+  # `[.data.frame` keeps the class but drops other attributes, so subset()
+  # would print the rows at 2 decimals whatever `digits` the table was made
+  # with; carry the setting over to any data-frame result
+  out <- NextMethod()
+  if (is.data.frame(out)) attr(out, "digits") <- attr(x, "digits")
+  out
 }
 
 # Format numbers for print/plot labels: anything that rounds to zero at
