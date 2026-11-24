@@ -296,6 +296,10 @@ cluster_levels <- as_tna(cluster_net)
 splot(cluster_levels)
 ```
 
+# How to cite this article
+
+Saqr, M., López-Pernas, S., & Misiejuk, K. (2026). *Network estimation and visualization with Nestimate + cograph*. Nestimate. [HTML](https://pak.dynasite.org/Nestimate/articles/cograph-tutorial-nestimate.html) · [PDF](https://pak.dynasite.org/Nestimate/pdf/cograph-tutorial-nestimate.pdf)
+
 # References
 
 Epskamp, S., Borsboom, D., & Fried, E. I. (2018). Estimating psychological networks and their accuracy: A tutorial paper. *Behavior Research Methods*, 50(1), 195--212. https://doi.org/10.3758/s13428-017-0862-1

@@ -186,6 +186,10 @@ number of transitions out of each state can be checked with
 `build_network(clusters, method = "frequency")` before the measures are
 interpreted.
 
+## How to cite this article
+
+Saqr, M., López-Pernas, S., & Misiejuk, K. (2026). *Markov stability analysis*. Nestimate. [HTML](https://pak.dynasite.org/Nestimate/articles/markov-stability.html) · [PDF](https://pak.dynasite.org/Nestimate/pdf/markov-stability.pdf)
+
 ## References
 
 Hamming, R. W. (1950). Error detecting and error correcting codes. *Bell

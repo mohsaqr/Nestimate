@@ -254,7 +254,7 @@ articles:
   - starts_with("articles/stability-landscapes")
 
 
-- title: Citing the articles
-  desc: Authors and references for every article
+- title: Resources
+  desc: Every article with its reference and PDF
   contents:
   - articles/cite-articles

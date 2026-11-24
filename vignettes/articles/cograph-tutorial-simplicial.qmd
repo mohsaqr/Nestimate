@@ -376,6 +376,10 @@ Euler-Poincaré relation between the simplex counts and the Betti numbers.
 verify_simplicial(net, threshold = 0.12)
 ```
 
+## How to cite this article
+
+Saqr, M., López-Pernas, S., & Misiejuk, K. (2026). *Higher-order network analysis with simplicial complexes: From transition networks to topological analysis*. Nestimate. [HTML](https://pak.dynasite.org/Nestimate/articles/cograph-tutorial-simplicial.html) · [PDF](https://pak.dynasite.org/Nestimate/pdf/cograph-tutorial-simplicial.pdf)
+
 ## References
 
 Atkin, R. H. (1974). *Mathematical structure in human affairs*. Heinemann Educational.

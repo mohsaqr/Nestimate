@@ -624,6 +624,10 @@ article. The stability of the estimates (bootstrap, Bayesian certainty,
 split-half reliability, case-dropping of edges and centralities) is
 covered in the model assessment article.
 
+# How to cite this article
+
+Saqr, M., López-Pernas, S., & Misiejuk, K. (2026). *Stability of engagement: States, landscapes and students*. Nestimate. [HTML](https://pak.dynasite.org/Nestimate/articles/stability-landscapes.html) · [PDF](https://pak.dynasite.org/Nestimate/pdf/stability-landscapes.pdf)
+
 # References
 
 Brzinsky-Fay, C. (2018). Unused resources: Sequence and trajectory

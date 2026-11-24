@@ -246,6 +246,10 @@ net_glasso <- build_network(chatgpt_srl, method = "glasso",
 net_glasso
 ```
 
+# How to cite this article
+
+Saqr, M., López-Pernas, S., & Misiejuk, K. (2026). *Network estimation and analysis with Nestimate*. Nestimate. [HTML](https://pak.dynasite.org/Nestimate/articles/transition-networks.html) · [PDF](https://pak.dynasite.org/Nestimate/pdf/transition-networks.pdf)
+
 # References
 
 Borsboom, D., Deserno, M. K., Rhemtulla, M., Epskamp, S., Fried, E. I., McNally, R. J., Robinaugh, D. J., Perugini, M., Dalege, J., Costantini, G., Isvoranu, A.-M., Wysocki, A. C., van Borkulo, C. D., van Bork, R., & Waldorp, L. J. (2021). Network analysis of multivariate data in psychological science. *Nature Reviews Methods Primers*, 1, 58. <https://doi.org/10.1038/s43586-021-00055-w>

@@ -316,6 +316,10 @@ both views share, and the coloured tip the difference.
 | Markov order | AIC and BIC: 1; permutation test: 3 |
 | Edges differing by more than 0.2 between counts and probabilities | 9 of 64, all from rare actions |
 
+## How to cite this article
+
+Saqr, M., López-Pernas, S., & Misiejuk, K. (2026). *Model assessment for transition networks*. Nestimate. [HTML](https://pak.dynasite.org/Nestimate/articles/tutorial_model_assessment.html) · [PDF](https://pak.dynasite.org/Nestimate/pdf/tutorial_model_assessment.pdf)
+
 ## References
 
 Besag, J., & Mondal, D. (2013). Exact goodness-of-fit tests for Markov chains. *Biometrics*, 69(2), 488--496. https://doi.org/10.1111/biom.12009

@@ -349,6 +349,10 @@ sequence_plot(engagement, k = 3)
 `state_colors =` in a single call, as in the previous section, changes that
 figure only.
 
+## How to cite this article
+
+Saqr, M., López-Pernas, S., & Misiejuk, K. (2026). *Sequence plots*. Nestimate. [HTML](https://pak.dynasite.org/Nestimate/articles/sequence-plots.html) · [PDF](https://pak.dynasite.org/Nestimate/pdf/sequence-plots.pdf)
+
 ## References
 
 Gabadinho, A., Ritschard, G., Müller, N. S., & Studer, M. (2011).

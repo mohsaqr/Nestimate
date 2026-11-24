@@ -355,6 +355,10 @@ The clusters were formed to differ, so differences between their networks
 are expected by construction; the test shows which transitions the
 clusters differ in, not whether such groups exist in the population.
 
+## How to cite this article
+
+Saqr, M., López-Pernas, S., & Misiejuk, K. (2026). *Sequence clustering*. Nestimate. [HTML](https://pak.dynasite.org/Nestimate/articles/clustering.html) · [PDF](https://pak.dynasite.org/Nestimate/pdf/clustering.pdf)
+
 ## References
 
 Biernacki, C., Celeux, G., & Govaert, G. (2000). Assessing a mixture model

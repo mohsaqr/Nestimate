@@ -1,196 +1,27 @@
 ---
-title: "Articles and how to cite them"
+title: "Resources"
 ---
 
-Every article on this site is listed below with its authors and a
-reference that can be copied into a manuscript. The articles are web
-pages without a DOI, so they are cited as web documents (APA 7th edition,
-section 10.16): authors, year, title in italics, the site
-name, and the address.
+Saqr, M., López-Pernas, S., & Misiejuk, K. (2026). *Network estimation and analysis with Nestimate*. Nestimate. [HTML](transition-networks.html) · [PDF](../pdf/transition-networks.pdf)
 
-An article documents how a method is used; the method itself is
-described in the package paper. When an analysis uses Nestimate, cite the
-package paper, and cite an article in addition when the analysis follows
-it:
+Saqr, M. (2026). *Transition matrix entropy*. Nestimate. [HTML](transition-entropy.html) · [PDF](../pdf/transition-entropy.pdf)
 
-> Saqr, M., López-Pernas, S., & Misiejuk, K. (2026). Nestimate: An R
-> package for dynamic, probabilistic, and high order network analysis.
-> *Applied Psychological Measurement*.
-> https://doi.org/10.1177/01466216261472019
+Saqr, M., López-Pernas, S., & Misiejuk, K. (2026). *Markov stability analysis*. Nestimate. [HTML](markov-stability.html) · [PDF](../pdf/markov-stability.pdf)
 
-`citation("Nestimate")` prints the same reference in R, and
-`toBibtex(citation("Nestimate"))` gives its BibTeX entry.
+Saqr, M., López-Pernas, S., & Misiejuk, K. (2026). *Comparing sequences between groups: Early vs late human-AI interactions*. Nestimate. [HTML](sequence-comparison.html) · [PDF](../pdf/sequence-comparison.pdf)
 
-The articles are revised with the package. To point a reader to the text
-you read, add the package version and the date you accessed it, for
-example "(Nestimate 1.0.24; accessed 24 November 2026)".
+Saqr, M., López-Pernas, S., & Misiejuk, K. (2026). *Sequence plots*. Nestimate. [HTML](sequence-plots.html) · [PDF](../pdf/sequence-plots.pdf)
 
-## Articles
+Saqr, M., López-Pernas, S., & Misiejuk, K. (2026). *Sequence clustering*. Nestimate. [HTML](clustering.html) · [PDF](../pdf/clustering.pdf)
 
-| Article | Authors |
-|---|---|
-| [Network estimation and analysis with Nestimate](transition-networks.html) | Mohammed Saqr, Sonsoles López-Pernas, Kamila Misiejuk |
-| [Transition matrix entropy](transition-entropy.html) | Mohammed Saqr |
-| [Markov stability analysis](markov-stability.html) | Mohammed Saqr, Sonsoles López-Pernas, Kamila Misiejuk |
-| [Comparing sequences between groups](sequence-comparison.html) | Mohammed Saqr, Sonsoles López-Pernas, Kamila Misiejuk |
-| [Sequence plots](sequence-plots.html) | Mohammed Saqr, Sonsoles López-Pernas, Kamila Misiejuk |
-| [Sequence clustering](clustering.html) | Mohammed Saqr, Sonsoles López-Pernas, Kamila Misiejuk |
+Saqr, M., López-Pernas, S., & Misiejuk, K. (2026). *Network estimation and visualization with Nestimate + cograph*. Nestimate. [HTML](cograph-tutorial-nestimate.html) · [PDF](../pdf/cograph-tutorial-nestimate.pdf)
 
-**References**
+Saqr, M., López-Pernas, S., & Misiejuk, K. (2026). *Higher-order network analysis with simplicial complexes: From transition networks to topological analysis*. Nestimate. [HTML](cograph-tutorial-simplicial.html) · [PDF](../pdf/cograph-tutorial-simplicial.pdf)
 
-Saqr, M., López-Pernas, S., & Misiejuk, K. (2026). *Network estimation
-and analysis with Nestimate*. Nestimate.
-https://pak.dynasite.org/Nestimate/articles/transition-networks.html
+Saqr, M., López-Pernas, S., & Misiejuk, K. (2026). *Model assessment for transition networks*. Nestimate. [HTML](tutorial_model_assessment.html) · [PDF](../pdf/tutorial_model_assessment.pdf)
 
-Saqr, M. (2026). *Transition matrix entropy*. Nestimate.
-https://pak.dynasite.org/Nestimate/articles/transition-entropy.html
+Saqr, M., López-Pernas, S., & Misiejuk, K. (2026). *Nested sequences and the permutation test*. Nestimate. [HTML](permutation-nested-data.html) · [PDF](../pdf/permutation-nested-data.pdf)
 
-Saqr, M., López-Pernas, S., & Misiejuk, K. (2026). *Markov stability
-analysis*. Nestimate.
-https://pak.dynasite.org/Nestimate/articles/markov-stability.html
+Saqr, M., López-Pernas, S., & Misiejuk, K. (2026). *Comparing networks with compare_networks()*. Nestimate. [HTML](compare-networks.html) · [PDF](../pdf/compare-networks.pdf)
 
-Saqr, M., López-Pernas, S., & Misiejuk, K. (2026). *Comparing sequences
-between groups: Early vs late human-AI interactions*. Nestimate.
-https://pak.dynasite.org/Nestimate/articles/sequence-comparison.html
-
-Saqr, M., López-Pernas, S., & Misiejuk, K. (2026). *Sequence plots*. Nestimate.
-https://pak.dynasite.org/Nestimate/articles/sequence-plots.html
-
-Saqr, M., López-Pernas, S., & Misiejuk, K. (2026). *Sequence clustering*. Nestimate.
-https://pak.dynasite.org/Nestimate/articles/clustering.html
-
-## Tutorials
-
-| Tutorial | Authors |
-|---|---|
-| [Network estimation and visualization with Nestimate + cograph](cograph-tutorial-nestimate.html) | Mohammed Saqr, Sonsoles López-Pernas, Kamila Misiejuk |
-| [Higher-order network analysis with simplicial complexes](cograph-tutorial-simplicial.html) | Mohammed Saqr, Sonsoles López-Pernas, Kamila Misiejuk |
-| [Model assessment for transition networks](tutorial_model_assessment.html) | Mohammed Saqr, Sonsoles López-Pernas, Kamila Misiejuk |
-| [Nested sequences and the permutation test](permutation-nested-data.html) | Mohammed Saqr, Sonsoles López-Pernas, Kamila Misiejuk |
-| [Comparing networks with compare_networks()](compare-networks.html) | Mohammed Saqr, Sonsoles López-Pernas, Kamila Misiejuk |
-
-**References**
-
-Saqr, M., López-Pernas, S., & Misiejuk, K. (2026). *Network estimation
-and visualization with Nestimate + cograph*. Nestimate.
-https://pak.dynasite.org/Nestimate/articles/cograph-tutorial-nestimate.html
-
-Saqr, M., López-Pernas, S., & Misiejuk, K. (2026). *Higher-order network
-analysis with simplicial complexes: From transition networks to
-topological analysis*. Nestimate.
-https://pak.dynasite.org/Nestimate/articles/cograph-tutorial-simplicial.html
-
-Saqr, M., López-Pernas, S., & Misiejuk, K. (2026). *Model assessment for
-transition networks*. Nestimate.
-https://pak.dynasite.org/Nestimate/articles/tutorial_model_assessment.html
-
-Saqr, M., López-Pernas, S., & Misiejuk, K. (2026). *Nested sequences and
-the permutation test*. Nestimate.
-https://pak.dynasite.org/Nestimate/articles/permutation-nested-data.html
-
-Saqr, M., López-Pernas, S., & Misiejuk, K. (2026). *Comparing networks
-with compare_networks()*. Nestimate.
-https://pak.dynasite.org/Nestimate/articles/compare-networks.html
-
-## Experimental
-
-| Article | Authors |
-|---|---|
-| [Stability of engagement: states, landscapes and students](stability-landscapes.html) | Mohammed Saqr, Sonsoles López-Pernas, Kamila Misiejuk |
-
-**Reference**
-
-Saqr, M., López-Pernas, S., & Misiejuk, K. (2026). *Stability of
-engagement: States, landscapes and students*. Nestimate.
-https://pak.dynasite.org/Nestimate/articles/stability-landscapes.html
-
-## BibTeX
-
-The same references for LaTeX and reference managers. Add a `note` field
-with the version and access date.
-
-```bibtex
-@misc{nestimate_transition_networks,
-  author       = {Saqr, Mohammed and L{\'o}pez-Pernas, Sonsoles and Misiejuk, Kamila},
-  title        = {Network Estimation and Analysis with {Nestimate}},
-  year         = {2026},
-  url          = {https://pak.dynasite.org/Nestimate/articles/transition-networks.html}
-}
-
-@misc{nestimate_transition_entropy,
-  author       = {Saqr, Mohammed},
-  title        = {Transition Matrix Entropy},
-  year         = {2026},
-  url          = {https://pak.dynasite.org/Nestimate/articles/transition-entropy.html}
-}
-
-@misc{nestimate_markov_stability,
-  author       = {Saqr, Mohammed and L{\'o}pez-Pernas, Sonsoles and Misiejuk, Kamila},
-  title        = {Markov Stability Analysis},
-  year         = {2026},
-  url          = {https://pak.dynasite.org/Nestimate/articles/markov-stability.html}
-}
-
-@misc{nestimate_sequence_comparison,
-  author       = {Saqr, Mohammed and L{\'o}pez-Pernas, Sonsoles and Misiejuk, Kamila},
-  title        = {Comparing Sequences Between Groups: Early vs Late Human-{AI} Interactions},
-  year         = {2026},
-  url          = {https://pak.dynasite.org/Nestimate/articles/sequence-comparison.html}
-}
-
-@misc{nestimate_sequence_plots,
-  author       = {Saqr, Mohammed and L{\'o}pez-Pernas, Sonsoles and Misiejuk, Kamila},
-  title        = {Sequence Plots},
-  year         = {2026},
-  url          = {https://pak.dynasite.org/Nestimate/articles/sequence-plots.html}
-}
-
-@misc{nestimate_clustering,
-  author       = {Saqr, Mohammed and L{\'o}pez-Pernas, Sonsoles and Misiejuk, Kamila},
-  title        = {Sequence Clustering},
-  year         = {2026},
-  url          = {https://pak.dynasite.org/Nestimate/articles/clustering.html}
-}
-
-@misc{nestimate_cograph_tutorial,
-  author       = {Saqr, Mohammed and L{\'o}pez-Pernas, Sonsoles and Misiejuk, Kamila},
-  title        = {Network Estimation and Visualization with {Nestimate} + {cograph}},
-  year         = {2026},
-  url          = {https://pak.dynasite.org/Nestimate/articles/cograph-tutorial-nestimate.html}
-}
-
-@misc{nestimate_simplicial_tutorial,
-  author       = {Saqr, Mohammed and L{\'o}pez-Pernas, Sonsoles and Misiejuk, Kamila},
-  title        = {Higher-Order Network Analysis with Simplicial Complexes: From Transition Networks to Topological Analysis},
-  year         = {2026},
-  url          = {https://pak.dynasite.org/Nestimate/articles/cograph-tutorial-simplicial.html}
-}
-
-@misc{nestimate_model_assessment,
-  author       = {Saqr, Mohammed and L{\'o}pez-Pernas, Sonsoles and Misiejuk, Kamila},
-  title        = {Model Assessment for Transition Networks},
-  year         = {2026},
-  url          = {https://pak.dynasite.org/Nestimate/articles/tutorial_model_assessment.html}
-}
-
-@misc{nestimate_permutation_nested,
-  author       = {Saqr, Mohammed and L{\'o}pez-Pernas, Sonsoles and Misiejuk, Kamila},
-  title        = {Nested Sequences and the Permutation Test},
-  year         = {2026},
-  url          = {https://pak.dynasite.org/Nestimate/articles/permutation-nested-data.html}
-}
-
-@misc{nestimate_compare_networks,
-  author       = {Saqr, Mohammed and L{\'o}pez-Pernas, Sonsoles and Misiejuk, Kamila},
-  title        = {Comparing Networks with \texttt{compare\_networks()}},
-  year         = {2026},
-  url          = {https://pak.dynasite.org/Nestimate/articles/compare-networks.html}
-}
-
-@misc{nestimate_stability_landscapes,
-  author       = {Saqr, Mohammed and L{\'o}pez-Pernas, Sonsoles and Misiejuk, Kamila},
-  title        = {Stability of Engagement: States, Landscapes and Students},
-  year         = {2026},
-  url          = {https://pak.dynasite.org/Nestimate/articles/stability-landscapes.html}
-}
-```
+Saqr, M., López-Pernas, S., & Misiejuk, K. (2026). *Stability of engagement: States, landscapes and students*. Nestimate. [HTML](stability-landscapes.html) · [PDF](../pdf/stability-landscapes.pdf)

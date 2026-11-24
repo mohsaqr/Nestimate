@@ -314,6 +314,10 @@ approximation is 1 + (m − 1) × ICC for m observations per actor. `actor`
 applies to transition networks (`relative`, `frequency`,
 `co_occurrence`).
 
+## How to cite this article
+
+Saqr, M., López-Pernas, S., & Misiejuk, K. (2026). *Nested sequences and the permutation test*. Nestimate. [HTML](https://pak.dynasite.org/Nestimate/articles/permutation-nested-data.html) · [PDF](https://pak.dynasite.org/Nestimate/pdf/permutation-nested-data.pdf)
+
 ## References
 
 Breslow, N. E., & Clayton, D. G. (1993). Approximate inference in

@@ -455,6 +455,10 @@ plot(over_time, type = "edges", pair = "late")
 `pair` selects the comparisons a view or a table shows, by the pair name,
 the two network names or one network name.
 
+## How to cite this article
+
+Saqr, M., López-Pernas, S., & Misiejuk, K. (2026). *Comparing networks with compare_networks()*. Nestimate. [HTML](https://pak.dynasite.org/Nestimate/articles/compare-networks.html) · [PDF](https://pak.dynasite.org/Nestimate/pdf/compare-networks.pdf)
+
 ## References
 
 Banerjee, A., Chandrasekhar, A. G., Duflo, E., & Jackson, M. O. (2013).
