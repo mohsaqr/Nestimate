@@ -1,7 +1,16 @@
 ---
-title: "Tutorial: Model assessment for transition networks"
-subtitle: "Split-half reliability, case-dropping stability, and Markov-order adequacy"
-author: "Mohammed Saqr, Sonsoles López-Pernas, Kamila Misiejuk"
+title: "Model Assessment for Transition Networks"
+subtitle: "Bootstrap, Bayesian certainty, pruning, split-half reliability, case-dropping stability, Markov order and the count view"
+author:
+  - name: Mohammed Saqr
+    url: https://saqr.me
+    affiliation: University of Eastern Finland
+  - name: Sonsoles López-Pernas
+    url: https://sonsoles.me
+    affiliation: University of Eastern Finland
+  - name: Kamila Misiejuk
+    url: https://kamilamisiejuk.com
+    affiliation: FernUniversität in Hagen, Germany
 format:
   html:
     toc: true
@@ -12,225 +21,328 @@ execute:
   message: false
 ---
 
+## Introduction
 
-# Tutorial: Model assessment for transition networks
+A transition network summarises many sequences in one matrix of
+transition probabilities (Saqr et al., 2025; Saqr, López-Pernas, & Tikka,
+2025a; Tikka, López-Pernas, & Saqr, 2025). Whether a centrality ranking, a path or a group difference read
+from that matrix holds beyond the sample depends on how much the matrix
+changes when the data change, and on whether the model's assumptions hold
+(Saqr, López-Pernas, & Misiejuk, 2026a; Misiejuk et al., 2026). Nestimate
+(Saqr, López-Pernas, & Misiejuk, 2026b) assesses a network in eight ways,
+and cograph draws the networks.
 
-### Split-half reliability, case-dropping stability, and Markov-order adequacy
+| Question | Function |
+|----------|----------|
+| How precisely is each edge estimated when sequences are resampled? | `bootstrap_network()` |
+| How precisely do the observed counts determine each edge? | `certainty()` |
+| Which edges remain when the uncertain ones are removed? | `net_prune()` |
+| Do two random halves of the data give the same network? | `network_reliability()` |
+| Do the edge weights hold when sequences are dropped? | `casedrop_reliability()` |
+| Does the centrality ranking hold when sequences are dropped? | `centrality_stability()` |
+| Does the next state depend only on the current one? | `markov_order_test()` |
+| Which edges are large as probabilities but small as counts? | `magnitude_difference()` |
 
-```{r}
+## Data
+
+`ai_long` holds the coded AI turns of 428 human-AI pair-programming
+("vibe coding") sessions, one row per action: 8,551 actions, each coded as
+one of eight AI actions. Vibe coding, programming by conversation with an
+AI assistant (Sarkar & Drosos, 2025), has been studied with transition
+networks, which describe what the student and the AI do in turn (Saqr,
+Misiejuk, & López-Pernas, 2026). The network holds one sequence per session, ordered by
+`order_in_session`.
+
+```{r data}
 library(Nestimate)
+library(cograph)
+net <- build_network(ai_long, method = "relative", action = "code",
+                     actor = "session_id", time = "order_in_session")
+state_frequencies(net)
 ```
 
-## The questions to ask
+`Execute` (38%), `Investigate` (27%) and `Plan` (19%) make up most of the
+actions; `Ask` (1.2%), `Report` (2.1%) and `Repair` (3.0%) are rare. An edge
+leaving a rare action is estimated from few transitions.
 
-A fitted transition network summarises a lot of sequence data into a small matrix of edge weights. Before interpreting any result drawn from that matrix — a centrality ranking, a pathway, a difference between two groups — you need to know how much of the matrix is signal and how much is an artefact of this particular sample. Five complementary analyses answer that question from different angles: four ask whether the matrix is stable when the data changes, and one asks whether the probability view overstates edges that originate in rare states.
-
-- **Split-half reliability.** If I randomly split my cases into two halves and estimate the network on each half, do the two networks agree? This is the classical internal-consistency check (Epskamp, Borsboom & Fried, 2018).
-- **Edge-weight case-dropping stability.** If I drop a fraction of my cases and re-estimate the network, do the same edges keep roughly the same weights? This asks whether the *map* of connections is stable.
-- **Centrality case-dropping stability.** Same case-dropping procedure, but now we ask whether the *ranking* of nodes by centrality is preserved. The formal summary is the CS-coefficient (Epskamp, Borsboom & Fried, 2018).
-- **Markov-order adequacy.** The transition network assumes that the next state depends only on the current state. Does the data actually respect that assumption, or is history beyond one step carrying information?
-- **Count versus probability.** Row-normalisation turns transition counts into conditional probabilities. An edge leaving a rare state can be negligible in counts yet dominate its row in probability. Which edges does the probability view promote this way, and by how much?
-
-Each function below answers one question. Run them together when you need the full picture; run just the relevant one when you only need one. None of them replaces the others.
-
-------------------------------------------------------------------------
-
-## The data
-
-`ai_long` contains coded actions from AI-side turns in a human–AI vibe-coding study. Each row is one action, tagged with the session it belongs to and a timestamp.
-
-```{r}
-data(ai_long)
-dim(ai_long)
-head(ai_long, 3)
-```
-
-```{r}
-table(ai_long$code)
-```
-
-Eight codes, 8,551 actions, spread over several hundred sessions. The most common actions are `Execute` and `Investigate`; `Ask` and `Report` are rare. That imbalance is one reason we want stability checks — rare codes produce unreliable edges because there are few observations of them.
-
-------------------------------------------------------------------------
-
-## Building the baseline network
-
-The stability assessments all work on the same network, so we estimate it once. We use the row-stochastic transition network (`method = "relative"`): each edge is the probability of going from one code to another.
-
-```{r}
-net <- build_network(
-  ai_long,
-  method = "relative",
-  action = "code",
-  actor  = "session_id",
-  time   = "timestamp"
-)
+```{r network}
 net
 ```
 
-The network has eight nodes (one per code) and a full 8×8 weight matrix of transition probabilities. The question now is: how much of that matrix can we trust?
+The strongest transitions are from `Delegate` to `Plan` (0.62) and from
+`Execute` to itself (0.51). Most sessions open with `Investigate` (72%).
 
-------------------------------------------------------------------------
+```{r network-plot, fig.height = 6}
+splot(net)
+```
+
+## Bootstrap
+
+`bootstrap_network()` resamples the sessions with replacement, re-estimates
+the network in each resample, and reports for each edge its mean, its 95%
+percentile interval and a p-value (Efron, 1979; Saqr et al., 2025). With
+the default `inference = "stability"`, the p-value is the share of
+resamples in which the edge falls outside 0.75 to 1.25 times its estimate,
+so a significant edge keeps its size; with `inference = "threshold"` it is
+the share in which the edge falls below `edge_threshold`, so a significant
+edge is present.
+
+```{r bootstrap}
+boot <- bootstrap_network(net, iter = 1000, seed = 1)
+boot
+head(summary(boot), 8)
+```
+
+21 of the 64 edges keep their size in 95% of the resamples. The
+strongest edges are estimated precisely: `Execute` to `Execute` has a 95%
+interval of [0.48, 0.53]. Edges from rare actions are wider: `Ask` to
+`Explain`, estimated from the 99 transitions out of `Ask`, has an interval of
+[0.38, 0.60] and is significant only at the 5% level.
+
+`splot()` draws the significant edges solid and the others dashed; the
+forest plot shows every edge's estimate and interval, ordered by size,
+with the significant edges marked.
+
+```{r bootstrap-plot, fig.height = 6}
+splot(boot)
+```
+
+```{r bootstrap-forest, fig.height = 12}
+plot_bootstrap_forest(boot, show_ci = TRUE)
+```
+
+The width of an interval follows how often its source action occurs: the
+median width is 0.08 for the edges leaving `Ask` and `Report`, the two
+rarest actions, against 0.015 for `Execute` and 0.014 for `Investigate`,
+the two most frequent.
+
+```{r bootstrap-threshold}
+bootstrap_network(net, iter = 1000, seed = 1, inference = "threshold",
+                  edge_threshold = 0.05)
+```
+
+26 edges stay above 0.05 in 95% of the resamples. The two rules answer
+different questions: whether an edge exists, and whether its size is
+estimated precisely.
+
+## Bayesian certainty
+
+`certainty()` gives each edge a posterior distribution instead of
+resampling. The transitions out of each action are modelled as a
+Dirichlet-multinomial process: with a Dirichlet prior added to the counts,
+each edge probability has a Beta posterior, so its mean, standard
+deviation and credible interval are computed exactly (Johnston &
+Jendoubi, 2026). The default prior, 0.5 added to every cell, is the
+Jeffreys prior (Jeffreys, 1946). An edge is certain under the same two
+rules as in the bootstrap, with the posterior mass in place of the share
+of resamples.
+
+```{r certainty}
+edge_certainty <- certainty(net)
+edge_certainty
+head(summary(edge_certainty), 8)
+```
+
+26 edges are certain against 21 significant in the bootstrap; the two
+agree on 57 of the 64 edges. The credible intervals are narrower than the
+bootstrap intervals (median width 0.043 against 0.048), because the
+posterior treats every transition as independent, while the bootstrap
+resamples whole sessions and so includes the differences between them.
+The more the sessions differ from each other, the wider the bootstrap
+intervals are relative to the credible intervals.
+
+`certainty()` returns the same layout as `bootstrap_network()`, so the
+same plots draw it.
+
+```{r certainty-plot, fig.height = 6}
+splot(edge_certainty)
+```
+
+```{r certainty-forest, fig.height = 12}
+plot_bootstrap_forest(edge_certainty, show_ci = TRUE)
+```
+
+## Pruning
+
+`net_prune()` removes edges from the network. `method = "bootstrap"`
+removes the edges the bootstrap finds non-significant; `"disparity"`
+keeps the edges that carry a larger share of their state's outgoing
+weight than expected when the weight is spread at random over the state's
+edges (Serrano, Boguñá, & Vespignani, 2009); `"threshold"` removes the
+edges below a fixed weight. Self-loops are never removed.
+
+```{r prune}
+pruned <- net_prune(net, method = "bootstrap", boot = boot)
+summary(pruned)
+summary(net_prune(net, method = "disparity", level = 0.05))
+```
+
+The bootstrap keeps 27 of the 64 edges: the 19 significant edges between
+different actions and the 8 self-loops. The disparity filter at the 5%
+level keeps 16, the edges that take a large share of their row.
+
+```{r prune-plot, fig.height = 6}
+splot(pruned)
+```
 
 ## Split-half reliability
 
-**Question.** If I split my sessions randomly in half and fit the network on each half, how close are the two halves?
+`network_reliability()` splits the sessions at random into two halves,
+estimates the network in each, and compares the two weight matrices: the
+mean, median and largest absolute difference between corresponding edges,
+and the correlation of the edge weights.
 
-```{r}
-rel <- network_reliability(net, iter = 500L, seed = 1)
-rel
+```{r reliability}
+reliability <- network_reliability(net, iter = 500, seed = 1)
+reliability
+plot(reliability)
 ```
 
-`network_reliability()` runs 500 random 50/50 splits. For each split it fits the network on each half and compares the two 8×8 weight matrices along four metrics:
+Over 500 splits, the edge weights of the two halves correlate at 0.97 on
+average (SD 0.01), and corresponding edges differ by 0.023 on average. The
+largest difference in a split averages 0.14. The histograms show the
+distribution of each measure over the splits.
 
-- `mean_dev` / `median_dev` / `max_dev` — absolute differences between corresponding cells of the two matrices. Smaller is better. Because our weights are probabilities in `[0, 1]`, the mean absolute difference is interpretable on the same scale: a `mean_dev` of 0.02 means the two halves disagree by 2 percentage points on the typical edge.
-- `cor` — Pearson correlation between the two weight vectors. Closer to 1 is better. This is the single most-cited psychometric summary of split-half reliability.
+## Edge stability under case-dropping
 
-The numbers above show the average over iterations. The distribution matters too — if `cor` averages 0.95 but occasionally dips to 0.4, that is a very different story from a tight distribution centred on 0.95.
+`casedrop_reliability()` drops increasing proportions of the sessions,
+re-estimates the network, and correlates its edge weights with those of
+the full data. The CS-coefficient is the largest proportion that can be
+dropped while the correlation stays above 0.7 in 95% of the resamples
+(Epskamp, Borsboom, & Fried, 2018).
 
-```{r}
-plot(rel)
+```{r casedrop}
+edge_stability <- casedrop_reliability(net, iter = 200, seed = 1)
+edge_stability
+plot(edge_stability)
 ```
 
+The CS-coefficient is 0.90, the largest proportion tested: with 90% of the
+sessions removed, the edge weights still correlate at 0.85 on average with
+those of the full data. `summary()` returns the same measures per drop
+proportion with their quantiles.
 
-Each panel is the histogram of one metric across the 500 iterations, with a dashed line at the mean. The correlation panel is the one to read first: values concentrated near 1.0 say the split-half networks are near-identical, values spread over a wide range say the network shape depends on which sessions happen to be in which half.
-
-------------------------------------------------------------------------
-
-## Edge-weight stability under case-dropping
-
-**Question.** If I randomly drop a fraction of my sessions (10%, 20%, …, 75%) and re-estimate the network, how correlated is the resulting edge vector with the edge vector from the full data?
-
-```{r}
-edge_stab <- casedrop_reliability(net, iter = 200L, seed = 1)
-edge_stab
+```{r casedrop-summary}
+head(summary(edge_stability), 9)
 ```
-
-The printed summary reports the **CS-coefficient** — the largest drop proportion at which the correlation with the original network stays above 0.7 in at least 95% of iterations. A CS-coefficient of 0.75 means we can drop up to three-quarters of sessions and still recover essentially the same edge map; a CS-coefficient of 0.1 means dropping even 10% of sessions changes the edge map materially. Epskamp, Borsboom and Fried (2018) recommend interpreting CS \> 0.5 as “very stable”, 0.25–0.5 as “moderate”, and below 0.25 as “do not interpret”.
-
-`summary()` returns the per-drop-proportion table (mean, SD and quantiles of each agreement metric), which is useful for seeing *where* the stability breaks down rather than just the single summary.
-
-```{r}
-summary(edge_stab)
-```
-
-```{r}
-plot(edge_stab)
-```
-
-
-The curve should stay near 1 for small drops and decline as we drop more. A curve that drops sharply at low proportions means a few influential sessions are carrying the edge estimates — a warning that the network is not a population-level summary but a description of those particular sessions.
-
-------------------------------------------------------------------------
 
 ## Centrality stability under case-dropping
 
-**Question.** The edges are one thing; the *rankings* of nodes by centrality are what most applied readers focus on (which code is the most “central”, which is the least, etc.). If I case-drop, do those rankings survive?
+`centrality_stability()` drops sessions in the same way and correlates
+the centralities of the reduced data with those of the full data, one
+CS-coefficient per measure. Epskamp et al. (2018) suggest that the
+CS-coefficient should not be below 0.25 and preferably above 0.5.
 
-```{r}
-cent_stab <- centrality_stability(
-  net,
-  measures = c("InStrength", "OutStrength", "Betweenness"),
-  iter     = 200L,
-  seed     = 1
-)
-cent_stab
+```{r centrality}
+centrality <- centrality_stability(net, measures = c("InStrength",
+                                                     "OutStrength",
+                                                     "Betweenness"),
+                                   iter = 200, seed = 1)
+centrality
+plot(centrality)
 ```
 
-`centrality_stability()` produces one CS-coefficient per centrality measure. The machinery is the same as `casedrop_reliability()` — drop cases, re-estimate, correlate — but the correlation is computed between the centrality vectors, not the edge vectors. A node can have stable edges and unstable centrality (or vice versa) because centrality sums many edges and rank ties can flip even when individual edges barely move.
+In-strength and out-strength reach 0.90 and betweenness 0.70: the
+rankings by strength hold with 90% of the sessions removed, the ranking by
+betweenness with 70%. Betweenness depends on which shortest paths exist
+and changes more when a few edges change.
 
-The interpretation thresholds are the same: above 0.5 is stable enough to report, 0.25–0.5 means report with caution, below 0.25 means do not rank.
+## Markov order
 
-```{r}
-plot(cent_stab)
+A transition network is a first-order Markov model: it assumes the next
+action depends only on the current one. `markov_order_test()` tests at
+each order *k* whether order *k* describes the sequences better than order
+*k* − 1. The statistic is a likelihood ratio $G^2$; its null distribution
+comes from permuting the next action within each context of the preceding
+*k* − 1 actions. The permutation is conditional rather than exact, because
+the overlapping windows of one sequence are not independent (Besag &
+Mondal, 2013).
+
+```{r markov-order}
+markov_order <- markov_order_test(net, max_order = 3, n_perm = 200, seed = 1)
+markov_order
+plot(markov_order)
 ```
 
+The AIC and the BIC both select order 1. The permutation test rejects
+every order up to 3: each observed $G^2$ lies above all 200 permuted
+values (p = 0.005, the smallest possible with 200 permutations), so it
+selects order 3. At order 3 the asymptotic chi-square p-value is 0.35,
+because most of the 1,470 degrees of freedom belong to contexts that occur
+a few times; the permutation null does not rely on that approximation.
+The previous action carries most of the information, and longer histories
+add some that the criteria judge not worth their parameters.
 
-Each curve is one centrality measure. When two measures diverge — for example, `InStrength` stays stable but `Betweenness` collapses — that is a statement about which kind of finding the data can support. Strength centralities are sums over all incoming/outgoing edges and average out sampling noise; betweenness depends on shortest paths and can rewire with small changes, so it is often the first to become unstable.
+## Counts and probabilities
 
-------------------------------------------------------------------------
+The network gives each edge as a probability, the share of a state's
+transitions that go to another state. A frequency network gives it as a
+count (Saqr, López-Pernas, & Tikka, 2025b). An edge leaving a rare state
+can be a large probability and a small count. `magnitude_difference()`
+estimates both networks, rescales the counts to the range of the
+probabilities, and returns the difference per edge.
 
-## Markov-order adequacy
-
-**Question.** A transition network treats the next action as depending only on the current action. Is that assumption actually warranted for this data, or does the previous-previous action (or further back) carry information the network is throwing away?
-
-`markov_order_test()` tests this directly. For each order $k$ from 1 to `max_order`, it asks whether moving from a $k$-th-order Markov model to a $(k+1)$-th-order one explains significantly more variance in the sequence. The test statistic is the classical likelihood-ratio $G^2$ computed on $(k+1)$-grams, with a reference distribution built by exact within-context permutation — no parametric bootstrap, no plug-in MLE. Details are in `?markov_order_test`.
-
-`markov_order_test()` reads the sequences straight out of the network — pass the `net` object and it pulls one sequence per session from the model.
-
-```{r}
-mo <- markov_order_test(net, max_order = 3L, n_perm = 200L, seed = 1)
-mo
+```{r magnitude}
+magnitude <- magnitude_difference(ai_long, action = "code",
+                                  actor = "session_id",
+                                  time = "order_in_session")
+magnitude
+summary(magnitude, n = 8)
 ```
 
-`summary()` returns the test table, which reports, for each order $k$, the log-likelihood, degrees of freedom, observed $G^2$ statistic, permutation p-value, and whether the increment from $k$ to $k+1$ is significant at $\alpha = 0.05$.
+The median difference is 0.03, and 9 of the 64 edges differ by more than
+0.2. The largest differences all leave rare actions: `Delegate` to `Plan`
+is a probability of 0.62 but 0.07 on the count scale, `Ask` to `Explain`
+0.48 against 0.02, and `Repair` to `Execute` 0.47 against 0.05.
 
-```{r}
-summary(mo)
+```{r magnitude-plot}
+plot(magnitude)
 ```
 
-Two orders to pay attention to: the **permutation-selected** order (smallest $k$ whose increment is not significant — the highest order the data provides evidence for) and the **BIC-selected** order (smallest BIC, a penalised-likelihood criterion). They often agree. When they disagree — BIC says “keep it simple, order 1”, permutation says “order 2 is really different from order 1” — the correct reading is that the effect is real but small; whether to use the larger model depends on what you plan to do with it.
+Each sector is one source action. The grey part of a wedge is the value
+both views share, and the coloured tip the difference.
 
-```{r}
-plot(mo)
-```
+## Summary
 
-
-The left panel shows log-likelihood, AIC, and BIC by order, with both selected orders marked. The right panel shows the permutation null for each order with the observed $G^2$ overlaid — a red line far out in the right tail of the null is the visual signature of a significant order increment.
-
-**Why this matters for the transition network.** If `mo$optimal_order` is 1, the order-1 transition network captures the sequence dynamics and any pathway longer than one step is a composition of independent steps. If it is 2 or higher, the network is a *first-order approximation* to a process with memory, and longer pathways are overstated or understated depending on which specific higher-order patterns the data contains. That is the situation where a higher-order model (`build_hon()`, `build_mogen()`) is indicated, not a signal to abandon the first-order network but to supplement it.
-
-------------------------------------------------------------------------
-
-## Count versus probability: magnitude difference
-
-**Question.** The network above is the row-normalised (probability) view. The same transitions also have a raw-count (frequency) view, and the two rank edges differently: an edge leaving a rare state can be a rounding error in counts yet dominate its row in probability. Which edges does normalisation promote this way, and how far?
-
-`magnitude_difference()` builds both views from the data and reports, per edge, the gap between them on a common scale. It takes the event log directly, not the fitted network, because it needs both the counts and the probabilities.
-
-```{r}
-md <- magnitude_difference(ai_long, action = "code",
-                           actor = "session_id", time = "timestamp")
-md
-```
-
-The default metric is `abs_diff` (absolute difference) with both matrices placed on the TNA probability scale (`scale = "tna_range"`), so the numbers are in probability units. The summary shows that the median edge moves only about 0.03 between the two views — most of the network reads the same either way — but the maximum is 0.55. A handful of edges are interpreted completely differently depending on which summary you read.
-
-The plot makes the promoted edges visible. Each sector is one source state; the grey base is the value shared by both views and the coloured tip is the magnitude difference, so a long coloured tip marks an edge the probability view inflates.
-
-```{r}
-plot(md)
-```
-
-The longest tips sit on the rare source states — transitions such as `Delegate -> Plan`, `Ask -> Explain`, and `Repair -> Execute` are near-zero in raw counts (a few events each) but carry probabilities of 0.4–0.6 because their source state is visited so seldom that a single successor dominates its row. The reading is concrete: a high transition probability out of a rare state is not the same evidence as a high transition probability out of a common one. When you report a strong edge, check whether its source is frequent enough for that probability to mean what it appears to mean — `magnitude_difference()` tells you exactly which edges need that caveat.
-
-------------------------------------------------------------------------
-
-## Reading the assessments together
-
-No single number answers “is my network good”. Each assessment answers a different kind of “good”:
-
-| Assessment | Answers | Threshold |
-|----|----|----|
-| `network_reliability` | Does the network survive a 50/50 split? | `cor` \> 0.8 typical, \> 0.9 strong |
-| `casedrop_reliability` | Which edges persist when I drop cases? | CS \> 0.5 stable, \> 0.25 moderate |
-| `centrality_stability` | Can I trust the rankings I’ll report? | CS \> 0.5 stable, \> 0.25 moderate |
-| `markov_order_test` | Is the first-order assumption adequate? | Smallest non-rejected order |
-| `magnitude_difference` | Which edges does the probability view inflate over counts? | Large `signed` flags a rare-source edge |
-
-The typical workflow is:
-
-1.  Run `markov_order_test()` first. If the optimal order is 1, you can proceed with a first-order transition network and the three stability checks apply directly. If it is higher, decide whether to continue with a first-order approximation (and report the order test as a caveat) or to move to a higher-order model.
-2.  Run `casedrop_reliability()` and `centrality_stability()`. If both CS-coefficients are above 0.5, report the network and any centrality ranking it supports. If one is below 0.25, re-plan: more data, a different estimator, or a simpler claim.
-3.  Run `network_reliability()` as a sanity check that the full network does not depend on the particular partition you happen to have. A high `cor` here with unstable case-dropping is possible — it means the full network is internally consistent at this sample size, but generalising it beyond these cases is not warranted.
-
-When reporting a transition-network analysis in a paper, all four numbers (optimal Markov order, CS-coefficient for edges, CS-coefficient for the reported centrality measure, split-half correlation) belong in a short methods paragraph. Reviewers and replicators will ask for them in review if they are absent.
-
-------------------------------------------------------------------------
+| Assessment | Result for `ai_long` |
+|------------|----------------------|
+| Bootstrap, edges keeping their size | 21 of 64 |
+| Bayesian certainty, certain edges | 26 of 64; agrees with the bootstrap on 57 |
+| Edges kept by bootstrap pruning | 27 (19 between actions, 8 self-loops) |
+| Split-half correlation of the edge weights | 0.97 |
+| Edge CS-coefficient | 0.90 |
+| Centrality CS-coefficients | in-strength 0.90, out-strength 0.90, betweenness 0.70 |
+| Markov order | AIC and BIC: 1; permutation test: 3 |
+| Edges differing by more than 0.2 between counts and probabilities | 9 of 64, all from rare actions |
 
 ## References
 
-Epskamp, S., Borsboom, D., & Fried, E. I. (2018). Estimating psychological networks and their accuracy: A tutorial paper. *Behavior Research Methods*, 50(1), 195–212.
+Besag, J., & Mondal, D. (2013). Exact goodness-of-fit tests for Markov chains. *Biometrics*, 69(2), 488--496. https://doi.org/10.1111/biom.12009
 
-Saqr, M. (2026). Human–AI vibe coding interaction study. <https://saqr.me/blog/2026/human-ai-interaction-cograph/>
+Efron, B. (1979). Bootstrap methods: Another look at the jackknife. *The Annals of Statistics*, 7(1), 1--26. https://doi.org/10.1214/aos/1176344552
 
+Epskamp, S., Borsboom, D., & Fried, E. I. (2018). Estimating psychological networks and their accuracy: A tutorial paper. *Behavior Research Methods*, 50(1), 195--212. https://doi.org/10.3758/s13428-017-0862-1
+
+Jeffreys, H. (1946). An invariant form for the prior probability in estimation problems. *Proceedings of the Royal Society of London. Series A*, 186(1007), 453--461. https://doi.org/10.1098/rspa.1946.0056
+
+Johnston, L., & Jendoubi, T. (2026). How delivery mode reshapes resource engagement: A Bayesian differential network analysis. *TNA Workshop 2026*.
+
+Misiejuk, K., López-Pernas, S., Araujo Oliveira, E., & Saqr, M. (2026). Modeling dynamics of learning and learners with the transition network analysis toolkit. In *Artificial intelligence in education. Late breaking results* (pp. 9--15). Springer. https://doi.org/10.1007/978-3-032-29794-5_2
+
+Saqr, M., López-Pernas, S., & Misiejuk, K. (2026a). Dynalytics: The birth of a framework for rigorous analytics of dynamical systems. In M. Saqr, K. Misiejuk, & S. López-Pernas (Eds.), *Innovations in analytics of learning dynamics* (pp. 3--17). Springer. https://doi.org/10.1007/978-3-032-34157-0_1
+
+Saqr, M., López-Pernas, S., & Misiejuk, K. (2026b). Nestimate: An R package for dynamic, probabilistic, and high order network analysis. *Applied Psychological Measurement*. https://doi.org/10.1177/01466216261472019
+
+Saqr, M., López-Pernas, S., & Tikka, S. (2025a). Mapping relational dynamics with transition network analysis: A primer and tutorial. In M. Saqr & S. López-Pernas (Eds.), *Advanced learning analytics methods: AI, precision and complexity* (pp. 371--411). Springer. https://doi.org/10.1007/978-3-031-95365-1_15
+
+Saqr, M., López-Pernas, S., & Tikka, S. (2025b). Capturing the breadth and dynamics of the temporal processes with frequency transition network analysis: A primer and tutorial. In M. Saqr & S. López-Pernas (Eds.), *Advanced learning analytics methods: AI, precision and complexity* (pp. 413--446). Springer. https://doi.org/10.1007/978-3-031-95365-1_16
+
+Saqr, M., López-Pernas, S., Törmänen, T., Kaliisa, R., Misiejuk, K., & Tikka, S. (2025). Transition network analysis: A novel framework for modeling, visualizing, and identifying the temporal patterns of learners and learning processes. In *Proceedings of the 15th International Learning Analytics and Knowledge Conference (LAK25)* (pp. 351--361). ACM. https://doi.org/10.1145/3706468.3706513
+
+Saqr, M., Misiejuk, K., & López-Pernas, S. (2026). Human-AI collaboration or obedient and often clueless AI in instruct, serve, repeat dynamics? *The Internet and Higher Education*, 70, 101087. https://doi.org/10.1016/j.iheduc.2026.101087
+
+Sarkar, A., & Drosos, I. (2025). Vibe coding: Programming through conversation with artificial intelligence. In *Proceedings of the 36th Annual Conference of the Psychology of Programming Interest Group (PPIG 2025)*. https://doi.org/10.48550/arXiv.2506.23253
+
+Serrano, M. Á., Boguñá, M., & Vespignani, A. (2009). Extracting the multiscale backbone of complex weighted networks. *Proceedings of the National Academy of Sciences*, 106(16), 6483--6488. https://doi.org/10.1073/pnas.0808904106
+
+Tikka, S., López-Pernas, S., & Saqr, M. (2025). tna: An R package for transition network analysis. *Applied Psychological Measurement*, 49(6), 326--328. https://doi.org/10.1177/01466216251348840

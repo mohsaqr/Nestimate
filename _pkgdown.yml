@@ -160,6 +160,7 @@ reference:
       - actor_endpoints
       - mark_first_state
       - mark_terminal_state
+      - mark_phases
 
   - title: Utilities
     desc: Helper functions and extractors
@@ -216,6 +217,7 @@ reference:
     contents:
       - ai_long
       - human_long
+      - daily_actions
       - srl_strategies
       - learning_activities
       - group_regulation_long
@@ -245,7 +247,6 @@ articles:
   - starts_with("articles/tutorial_model_assessment")
   - starts_with("articles/permutation-nested-data")
   - starts_with("articles/compare-networks")
-  - starts_with("articles/stability-complete")
 
 - title: Experimental
   desc: New methods whose interface may still change

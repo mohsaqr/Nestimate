@@ -30,155 +30,215 @@ knitr::opts_chunk$set(
 )
 ```
 
-```{r}
-library(Nestimate)
-```
+In a complex-systems view of learning, a state is stable when students who
+reach it tend to remain in it and students who leave it tend to return
+(Saqr, Dever, et al. 2025; Saqr, López-Pernas & Tikka 2026). López-Pernas
+and Saqr (2024) described student engagement in these terms, as the
+momentum of achievement and the inertia of disengagement. Markov chain
+theory measures stability from a transition network (Kemeny & Snell 1976).
+For a first-order chain with transition matrix $P$ and stationary
+distribution $\pi$:
 
-Nestimate provides two functions for Markov-chain stability analysis of
-transition networks:
+- the *persistence* of state $i$ is $P_{ii}$, the probability of remaining
+  in it at the next step;
+- the *sojourn time* is $1 / (1 - P_{ii})$, the expected number of
+  consecutive steps spent in it once entered;
+- the *stationary probability* $\pi_i$ is the long-run share of steps spent
+  in it, and the *return time* $1 / \pi_i$ is the expected number of steps
+  between two visits;
+- the *mean first passage time* $m_{ij}$ is the expected number of steps to
+  reach state $j$ for the first time from state $i$.
 
-- **`passage_time()`** -- computes the full matrix of mean first passage times
-  (MFPT). Entry M[i, j] is the expected number of steps to travel from state
-  *i* to state *j* for the first time. The diagonal equals the mean recurrence
-  time 1/pi.
-- **`markov_stability()`** -- computes per-state stability metrics: persistence,
-  stationary probability, return time, sojourn time, and mean accessibility.
-
-Both functions accept a `netobject`, `cograph_network`, `tna` object,
-row-stochastic matrix, or a raw wide sequence data frame.
-
----
+In Nestimate (Saqr, López-Pernas & Misiejuk 2026), `passage_time()` returns
+the matrix of mean first passage times and `markov_stability()` the
+per-state measures. Both accept a network, a transition matrix, or a group
+of networks.
 
 ## Data
 
-`trajectories` contains 138 learners recorded at 15 time-steps each with three
-engagement states: Active, Average, and Disengaged.
+`trajectories` records the engagement state of 138 students in each of the
+15 successive courses of a program. The states are the three engagement
+states of Saqr and López-Pernas (2021): `Active`, `Average` and
+`Disengaged`. Saqr and López-Pernas (2021) and Saqr, López-Pernas, Jovanović
+and Gašević (2023) followed such engagement trajectories across the courses
+of a full program. The data have one row per student and one column per
+course; a missing value occurs only as a run at the end of a row and marks
+the point at which a student left the program.
 
-```{r}
-dim(trajectories)
-table(as.vector(trajectories), useNA = "always")
+## The transition network
+
+`build_network()` estimates the probability of moving from each state to
+each state between consecutive courses.
+
+```{r network}
+library(Nestimate)
+net <- build_network(trajectories, method = "relative")
+net
 ```
 
----
+Each row of the matrix sums to 1. A student who is `Active` in one course
+is `Active` in the next with probability 0.698, `Average` with probability
+0.267 and `Disengaged` with probability 0.035. The measures below are
+computed from this matrix, so they assume that the transition probabilities
+are the same in every course and that the next state depends only on the
+current one.
 
-## Selecting mostly-active learners
+## Mean first passage times
 
-Does a learner who is mostly engaged stay out of disengagement for longer, or
-only visit it less often? To compare, we keep learners who were Active **more
-than half the time** (> 7 of 15 steps; missing weeks do not count as Active).
-
-```{r}
-sub <- subset(trajectories, rowSums(trajectories == "Active", na.rm = TRUE) > 7)
-nrow(sub)
+```{r passage}
+pt <- passage_time(net)
+print(pt, digits = 2)
+plot(pt)
 ```
 
----
+Row $i$, column $j$ of the matrix is the expected number of courses for a
+student in state $i$ to reach state $j$ for the first time; the diagonal is
+the return time. A student in `Active` takes 3.6 courses on average to
+reach `Average` and 10.4 courses to reach `Disengaged`. In the reverse
+direction, a student in `Disengaged` takes 6.2 courses to reach `Active`
+and 2.8 courses to reach `Average`. Decline from `Active` to `Disengaged`
+is therefore slower than recovery in the opposite direction, and both pass
+mostly through `Average`. The values are expectations under the fitted
+chain; a value longer than the 15 courses of the program describes the
+chain, not a time that was observed.
 
-## Sequence plots
+## Stability of the states
 
-```{r fig.height=7}
-sequence_plot(trajectories, type = "heatmap")
+```{r stability}
+ms <- markov_stability(net)
+summary(ms)
+plot(ms)
 ```
 
-```{r fig.height=5}
-sequence_plot(sub, type = "heatmap")
+`persistence`, `stationary_prob`, `return_time` and `sojourn_time` are the
+measures defined above. `avg_time_to_others` is the mean passage time from
+the state to the other states, and `avg_time_from_others` the mean passage
+time from the other states to it; a state with a short
+`avg_time_from_others` is reached quickly from anywhere.
+
+`Active` is the most persistent state: its persistence is 0.698 and its
+sojourn time 3.31 courses. `Average` is the most accessible: it is reached
+from the other states in 3.20 courses on average, and it has the largest
+stationary probability, 0.443. `Disengaged` is the least persistent
+(0.483, a sojourn of 1.93 courses) and the least accessible (9.16
+courses), and it is the state students spend the least time in (0.185).
+
+## Groups of students
+
+A single chain for all students averages over students whose engagement
+develops differently. Sequence clustering groups the students by the
+similarity of their sequences (Saqr, López-Pernas, Helske, et al. 2024),
+and a transition network can then be estimated for each group (López-Pernas,
+Tikka & Saqr 2025). `build_clusters()` computes the Hamming distance
+between sequences, the number of courses in which two students are in
+different states (Hamming 1950), and partitions the students around
+medoids (Kaufman & Rousseeuw 1990). Three clusters are used here as a
+working choice.
+
+```{r clusters}
+clusters <- build_clusters(trajectories, k = 3, seed = 2026)
+clusters
 ```
 
----
+The three clusters have 47, 74 and 17 students. The average silhouette is
+0.36 (Rousseeuw 1987), a moderate separation. `build_network()` on the
+clustering estimates one transition network per cluster, and
+`state_distribution()` shows the states that make up each cluster.
 
-## Transition networks
-
-```{r}
-net_all <- build_network(trajectories, method = "relative")
-net_sub <- build_network(sub, method = "relative")
-
-net_all
-net_sub
+```{r cluster-networks}
+cluster_networks <- build_network(clusters)
+state_distribution(cluster_networks)
 ```
 
-In the mostly-active group nearly every state transitions predominantly back
-to Active, and the probability of entering Disengaged is almost zero.
+Cluster 1 is mostly `Active` (75% of its observed courses), cluster 2
+mostly `Average` (60%), and cluster 3 mostly `Disengaged` (80%).
 
----
+`passage_time()` and `markov_stability()` accept the group of networks and
+compute the measures for each cluster. `summary()` returns one table with a
+row for each cluster and state.
 
-## Mean First Passage Times
-
-```{r}
-pt_all <- passage_time(net_all)
-pt_sub <- passage_time(net_sub)
+```{r cluster-passage, fig.width = 10, fig.height = 4}
+cluster_pt <- passage_time(cluster_networks)
+summary(cluster_pt)
+plot(cluster_pt)
 ```
 
-```{r}
-print(pt_all, digits = 2)
+```{r cluster-stability}
+cluster_ms <- markov_stability(cluster_networks)
+summary(cluster_ms)
+plot(cluster_ms)
 ```
 
-```{r}
-print(pt_sub, digits = 2)
-```
+In cluster 1, `Active` has persistence 0.805 and a sojourn time of 5.12
+courses, and it is reached from the other states in 1.82 courses on
+average. `Disengaged` is reached from the other states in 25.35 courses on
+average, longer than the program: under this cluster's chain, students
+rarely reach it. In cluster 2, `Average` is the most persistent state
+(0.674, a sojourn of 3.06 courses) and the most accessible (1.89 courses),
+and `Active` takes 8.94 courses to reach. In cluster 3, `Disengaged` has
+persistence 0.889 and a sojourn time of 9.00 courses.
 
-**Active to Disengaged** rises from 10.4 to 52.0 steps -- a mostly-active
-learner takes five times as long to reach disengagement. The diagonal equals the mean
-recurrence time (how many steps between consecutive visits to the same state).
+The estimates of cluster 3 rest on few observations. Its 17 students
+contribute 2 transitions out of `Active` and 8 out of `Average`, so the
+persistence of those two states (0.500 each) and the long passage times to
+`Active` (39.50 courses from the other states) are not reliable. The
+number of transitions out of each state can be checked with
+`build_network(clusters, method = "frequency")` before the measures are
+interpreted.
 
-```{r fig.height=4}
-plot(pt_all, title = "Full sample (n = 138)")
-```
+## References
 
-```{r fig.height=4}
-plot(pt_sub, title = "Mostly-active learners (n = 42)")
-```
+Hamming, R. W. (1950). Error detecting and error correcting codes. *Bell
+System Technical Journal*, 29(2), 147–160.
+<https://doi.org/10.1002/j.1538-7305.1950.tb00463.x>
 
-In the mostly-active heatmap the Active column is uniformly dark (quickly
-reachable from any state) and the Disengaged column is uniformly pale
-(nearly unreachable).
+Kaufman, L., & Rousseeuw, P. J. (1990). *Finding groups in data: An
+introduction to cluster analysis*. Wiley.
+<https://doi.org/10.1002/9780470316801>
 
----
+Kemeny, J. G., & Snell, J. L. (1976). *Finite Markov chains*. Springer.
 
-## Stationary distribution
+López-Pernas, S., & Saqr, M. (2024). How the dynamics of engagement explain
+the momentum of achievement and the inertia of disengagement: A complex
+systems theory approach. *Computers in Human Behavior*, 153, 108126.
+<https://doi.org/10.1016/j.chb.2023.108126>
 
-The stationary distribution is the long-run share of time spent in each
-state. `markov_stability()` reports it per state as `stationary_prob`,
-beside the other per-state metrics described in the next section.
+López-Pernas, S., Tikka, S., & Saqr, M. (2025). Mining patterns and clusters
+with transition network analysis: A heterogeneity approach. In M. Saqr & S.
+López-Pernas (Eds.), *Advanced learning analytics methods: AI, precision and
+complexity* (pp. 447–468). Springer.
+<https://doi.org/10.1007/978-3-031-95365-1_17>
 
-```{r}
-ms_all <- markov_stability(net_all)
-ms_sub <- markov_stability(net_sub)
+Rousseeuw, P. J. (1987). Silhouettes: A graphical aid to the interpretation
+and validation of cluster analysis. *Journal of Computational and Applied
+Mathematics*, 20, 53–65. <https://doi.org/10.1016/0377-0427(87)90125-7>
 
-summary(ms_all)
-summary(ms_sub)
-```
+Saqr, M., & López-Pernas, S. (2021). The longitudinal trajectories of online
+engagement over a full program. *Computers & Education*, 175, 104325.
+<https://doi.org/10.1016/j.compedu.2021.104325>
 
-In the mostly-active group ~79% of long-run time is spent Active (vs 37% in
-the full sample).
+Saqr, M., Dever, D., López-Pernas, S., Gernigon, C., Marchand, G., &
+Kaplan, A. (2025). Complex dynamic systems in education: Beyond the static,
+the linear and the causal reductionism. In M. Saqr & S. López-Pernas (Eds.),
+*Advanced learning analytics methods: AI, precision and complexity*
+(pp. 289–311). Springer. <https://doi.org/10.1007/978-3-031-95365-1_12>
 
----
+Saqr, M., López-Pernas, S., Helske, S., Durand, M., Murphy, K., Studer, M.,
+& Ritschard, G. (2024). Sequence analysis in education: Principles,
+technique, and tutorial with R. In M. Saqr & S. López-Pernas (Eds.),
+*Learning analytics methods and tutorials: A practical guide using R*
+(pp. 321–354). Springer. <https://doi.org/10.1007/978-3-031-54464-4_10>
 
-## Markov Stability
+Saqr, M., López-Pernas, S., Jovanović, J., & Gašević, D. (2023). Intense,
+turbulent, or wallowing in the mire: A longitudinal study of cross-course
+online tactics, strategies, and trajectories. *The Internet and Higher
+Education*, 57, 100902. <https://doi.org/10.1016/j.iheduc.2022.100902>
 
-The per-state table printed above contains:
+Saqr, M., López-Pernas, S., & Misiejuk, K. (2026). Nestimate: An R package
+for dynamic, probabilistic, and high order network analysis. *Applied
+Psychological Measurement*. <https://doi.org/10.1177/01466216261472019>
 
-| Column | Meaning |
-|--------|---------|
-| `persistence` | P[i,i] -- probability of staying at the next step |
-| `stationary_prob` | Long-run proportion of time in this state |
-| `return_time` | Expected steps between consecutive visits (1/pi) |
-| `sojourn_time` | Expected consecutive steps before leaving (1/(1-P[i,i])) |
-| `avg_time_to_others` | Mean MFPT leaving this state to all others |
-| `avg_time_from_others` | Mean MFPT from all other states arriving here |
-
-```{r fig.height=6}
-plot(ms_all, title = "Full sample")
-```
-
-```{r fig.height=6}
-plot(ms_sub, title = "Mostly-active learners")
-```
-
-Among the mostly-active learners, Active leads on persistence (0.82) and
-sojourn time (5.5 steps) -- once a learner is active they stay active -- and
-it is also the most accessible state (`avg_time_from_others` 1.5 steps).
-Disengaged has `avg_time_from_others` of 51.6 steps -- effectively
-unreachable. In the full sample the most accessible state is Average
-(3.2 steps), and Disengaged is reached in 9.2 steps on average.
-
----
+Saqr, M., López-Pernas, S., & Tikka, S. (2026). Modeling stability and change
+from a complex systems perspective. In M. Saqr, K. Misiejuk, & S. López-Pernas
+(Eds.), *Innovations in analytics of learning dynamics* (pp. 51–61). Springer.
+<https://doi.org/10.1007/978-3-032-34157-0_4>

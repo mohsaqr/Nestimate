@@ -21,340 +21,410 @@ vignette: >
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
-  fig.width = 7,
-  fig.height = 5,
+  fig.width = 9,
+  fig.height = 4.5,
+  out.width = "100%",
   fig.alt = "Visualization"
 )
+has_cograph <- requireNamespace("cograph", quietly = TRUE)
 ```
 
-## Introduction
+A transition network estimated from all sequences describes an average
+process, which may describe none of the units that produced it.
+Clustering divides the sequences into groups whose members resemble each
+other more than they resemble the members of other groups, and a network
+can then be estimated for each group (López-Pernas, Tikka & Saqr 2025).
+Nestimate (Saqr, López-Pernas & Misiejuk 2026) clusters sequences by the
+dissimilarity between them or with a mixture of Markov models, and turns
+either clustering into one network per cluster.
 
-Clusters represent subgroups within the data that share similar patterns. Such patterns may reflect similar temporal dynamics (when we are analyzing sequence data, for example) or relationships between variables (as is the case in psychological networks). Units within the same cluster are more similar to each other, while units in different clusters differ more substantially. In this vignette, we demonstrate how to perform clustering on sequence data using `Nestimate`.
+| Step | Function |
+|------|----------|
+| Cluster by dissimilarity | `build_clusters()` |
+| Compare numbers of clusters, distances and methods | `cluster_choice()` |
+| Check a clustering | `cluster_diagnostics()` |
+| Cluster with a mixture Markov model | `build_mmm()`, `cluster_mmm()`, `compare_mmm()` |
+| One network per cluster | `build_network()` on a clustering |
+| Clustering and networks in one call | `cluster_network()` |
+| Compare the clusters' networks | `permutation()` |
 
 ## Data
 
-To illustrate clustering, we will use the `human_long` dataset, which contains 10,796 coded human interactions from 429 human-AI pair programming sessions across 34 projects. Each row represents a single interaction event with a timestamp, session identifier, and action label.
+`human_long` holds the coded human turns of 429 human-AI pair-programming
+("vibe coding") sessions, one row per action, coded into three clusters of
+codes: `Directive`, `Evaluative` and `Metacognitive`. The network holds one
+sequence per session, ordered by `order_in_session`; the `timestamp`
+column has the resolution of a day and would split the sessions that run
+over two days. Sessions range from 1 to 164 actions. Vibe coding, programming by conversation with an AI assistant
+(Sarkar & Drosos 2025), has been studied with transition networks and
+sequence analysis (Saqr, Misiejuk & López-Pernas 2026; Misiejuk et al.
+2026).
 
 ```{r data}
 library(Nestimate)
-has_cograph <- requireNamespace("cograph", quietly = TRUE)
-data("human_long")
-head(human_long)
+net <- build_network(human_long, method = "tna", action = "cluster",
+                     actor = "session_id", time = "order_in_session")
 ```
 
-We can build a transition network using this dataset using `build_network`. We need to determine the `actor` (`session_id`), the `action` (`cluster`), and the `time` (`timestamp`). We will use the overall network object as the starting point to find subgroups since it structures the raw data into the appropriate units of analysis to perform clustering.
+## Clustering by dissimilarity
 
-```{r}
-net <- build_network(human_long,
-                     method = "tna",
-                     action = "cluster",
-                     actor  = "session_id",
-                     time   = "timestamp")
+`build_clusters()` computes a distance between every pair of sequences
+and groups the sequences that are close (Saqr, López-Pernas, Helske, et
+al. 2024). It takes the network, which stores the sequences, or the
+sequences themselves. By default it uses the Hamming distance, the number
+of positions at which two sequences differ (Hamming 1950), and partitions
+the sequences around medoids (PAM; Kaufman & Rousseeuw 1990), each
+cluster represented by its most central sequence.
+
+```{r hamming}
+clusters_hamming <- build_clusters(net, k = 3)
+clusters_hamming
 ```
 
-## Dissimilarity-based Clustering
+The print shows each cluster's size, mean within-cluster distance and
+medoid, and the average silhouette width, which compares each sequence's
+distance to its own cluster with its distance to the nearest other one:
+near 1 for well-separated clusters, near 0 for overlapping ones (Rousseeuw
+1987). The three clusters hold 183, 106 and 140 sessions, with a
+silhouette of 0.22.
 
-Dissimilarity-based clustering groups units of analysis (in our case, sessions, since that is what we provided as `actor`) by directly comparing their observed sequences. In our case, each session is represented by its sequence of actions, and similarity between sessions is defined using a distance metric that quantifies how different two sequences are.
+`dissimilarity` selects the distance (Studer & Ritschard 2016):
 
-To implement this method using `Nestimate`, we can use the `build_clusters()` function, which takes either  raw sequence data or a network object such as the `net` object that we estimated (which also stores the original sequences):
+| Distance | What it compares |
+|----------|------------------|
+| `hamming` | the states at each position |
+| `lv`, `osa`, `dl` | the edits (insertions, deletions, substitutions, transpositions) that turn one sequence into the other |
+| `lcs` | the longest common subsequence |
+| `qgram`, `cosine`, `jaccard` | the patterns of q consecutive states the sequences contain |
+| `jw` | the Jaro-Winkler similarity of the sequences as strings |
 
-```{r cluster-basic}
-clust <- build_clusters(net, k = 3)
+`method` selects the clustering: `"pam"` (default) or a hierarchical
+clustering, which merges the closest sequences or groups step by step:
+`"ward.D2"` (Ward's criterion, Ward 1963, as implemented by Murtagh &
+Legendre 2014), `"ward.D"`, `"complete"`, `"average"`, `"single"`,
+`"mcquitty"` and `"centroid"`. The Hamming distance can also weight the
+positions (`weighted = TRUE`, with `lambda` setting how fast the weight
+decays), so that early differences count more.
 
-clust
-```
-The default clustering mechanism uses **Hamming distance** (number of positions where sequences differ) with **PAM** (Partitioning Around Medoids).
+### Distance and sequence length
 
-The printed result reports the cluster sizes, the mean within-cluster distance and medoid of each cluster, and the average silhouette width, which reflects the quality of the clustering (higher values indicate better separation between clusters). `session_ids()` returns which cluster each session belongs to, one row per session, keyed by the `session_id` it was built from, so the assignments can be joined back to the raw data:
+The Hamming and edit distances count positions or edits, so for sequences
+of unequal length they are driven by length. `sequence_metrics()`
+compares the clusters of a grouped network on any index, here the number
+of actions (`valid_n`).
 
-```{r cluster-components}
-head(session_ids(clust))
-```
-
-### Visualizing Clusters
-
-The silhouette plot shows how well each sequence fits its assigned cluster. Values near 1 indicate good fit; values near 0 suggest the sequence is between clusters; negative values indicate possible misclassification.
-
-```{r cluster-plot, fig.alt = "Silhouette plot showing cluster quality"}
-plot(clust, type = "silhouette")
-```
-The MDS (multidimensional scaling) plot projects the distance matrix to 2D, showing cluster separation.
-
-
-```{r cluster-mds, fig.alt = "MDS plot showing cluster separation"}
-plot(clust, type = "mds")
-```
-
-### Distance Metrics
-
-A distance metric defines how (dis)similarity between sequences is measured. In other words, it quantifies how different two sequences are from each other. `Nestimate` currently supports 9 distance metrics for comparing sequences:
-
-| Metric | Description | Best for |
-|--------|-------------|----------|
-| `hamming` | Positions where sequences differ | Equal-length sequences |
-| `lv` | Levenshtein (edit distance) | Variable-length, insertions/deletions |
-| `osa` | Optimal string alignment | Edit distance + transpositions |
-| `dl` | Damerau-Levenshtein | Full edit + adjacent transpositions |
-| `lcs` | Longest common subsequence | Preserving order, ignoring gaps |
-| `qgram` | Q-gram frequency difference | Pattern-based similarity |
-| `cosine` | Cosine of q-gram vectors | Normalized pattern similarity |
-| `jaccard` | Jaccard index of q-grams | Set-based pattern overlap |
-| `jw` | Jaro-Winkler | Short strings, typo detection |
-
-Different metrics may produce different clustering results. You need to choose this based on your research question:
-
-- **Hamming**: compares sequences position by position (best for aligned sequences of equal length).
-- **Edit distances** (lv, osa, dl): allow insertions and deletions (best when sequences may be shifted or vary in length).
-- **LCS**: captures shared subsequences (best when overall patterns matter more than exact alignment).
-
-We can specify which distance metric we want to use through the `dissimilarity` argument:
-
-```{r cluster-metrics}
-# Levenshtein distance (allows insertions/deletions)
-clust_lv <- build_clusters(net, k = 3, dissimilarity = "lv")
-clust_lv
-
-# Longest common subsequence
-clust_lcs <- build_clusters(net, k = 3, dissimilarity = "lcs")
-clust_lcs
+```{r hamming-length}
+set.seed(2026)
+sequence_metrics(build_network(clusters_hamming), indices = "valid_n")
 ```
 
-Some distance metrics may take additional arguments. For example, the Hamming distance accepts **temporal weighting** to emphasize earlier or later positions:
+The three Hamming clusters are sessions of about 10, 57 and 22 actions:
+the clustering separates short, long and medium sessions. The cosine
+distance compares the profiles of the patterns two sequences contain,
+normalised by their length, and groups sessions by what they contain.
 
-```{r cluster-weighted}
-# Emphasize earlier positions (higher lambda = faster decay)
-clust_weighted <- build_clusters(net, 
-                               k = 3,
-                               dissimilarity = "hamming",
-                               weighted = TRUE,
-                               lambda = 0.5)
-clust_weighted
+## Choosing the clustering
+
+`cluster_choice()` fits every combination of `k`, `dissimilarity` and
+`method` it is given and returns one row per configuration with the
+average silhouette, the mean within-cluster distance, the cluster sizes
+and the ratio of the largest to the smallest cluster; `<-- best` marks the
+highest silhouette. Its `plot()` method draws the sweep as lines
+(`type = "lines"`, silhouette against `k`), bars (`"bars"`, one per
+configuration), a heatmap (`"heatmap"`), the trade-off between silhouette
+and size ratio (`"tradeoff"`) or panels per method (`"facet"`).
+
+### Number of clusters and method
+
+```{r choice-k}
+choice_k <- cluster_choice(net, k = 2:4, method = c("pam", "ward.D2",
+                                                    "average"))
+choice_k
+plot(choice_k, type = "lines")
 ```
 
+With the Hamming distance, the highest silhouettes (0.78) belong to
+average linkage and Ward's criterion, which put 9 or 11 sessions in one
+cluster and the rest in the other. A small cluster of very long sessions
+lies far from everything else and raises the silhouette without describing
+the data, which the size ratio (up to 420) shows. PAM gives balanced
+clusters with lower silhouettes.
 
-### Clustering Methods
-By default, Nestimate uses PAM (Partitioning Around Medoids) to form clusters, which assigns each sequence to the cluster represented by the most central sequence (the medoid). Besides PAM, `Nestimate` supports hierarchical clustering methods, which build clusters step by step by progressively merging similar units into a tree-like structure (a dendrogram):
+### Distance
 
-- `ward.D2` (“Ward’s Method, Squared Distances”): Minimizes the increase in within-cluster variance using squared distances. Typically produces compact, well-separated clusters.
-- `ward.D` (“Ward’s Method”): An alternative implementation of Ward’s approach using a different distance formulation. Similar behavior, but results may vary slightly.
-- `complete` (“Complete Linkage”): Defines the distance between clusters as the maximum distance between their members. Produces tight, compact clusters.
-- `average` (“Average Linkage”): Uses the average distance between all pairs of points across clusters. Provides a balance between compactness and flexibility.
-- `single` (“Single Linkage”): Uses the minimum distance between points in two clusters. Can capture chain-like structures but may lead to - loosely connected clusters.
-- `mcquitty` (“McQuitty’s Method” / “WPGMA”): A weighted version of average linkage that gives equal weight to clusters regardless of size.
-- `centroid` (“Centroid Linkage”): Defines cluster distance based on the distance between cluster centroids (means). Can produce intuitive groupings but may introduce inconsistencies in the hierarchy.
-
-To use any of these methods instead of PAM, we need to provide the `method` argument to `build_clusters`.
-```{r cluster-methods}
-# Ward's method (minimizes within-cluster variance)
-clust_ward <- build_clusters(net, k = 3, method = "ward.D2")
-clust_ward
-
-# Complete linkage
-clust_complete <- build_clusters(net, k = 3, method = "complete")
-clust_complete
+```{r choice-distance}
+choice_distance <- cluster_choice(net, k = 2,
+                                  dissimilarity = c("hamming", "lv", "lcs",
+                                                    "qgram", "cosine",
+                                                    "jaccard"),
+                                  method = "pam")
+choice_distance
+plot(choice_distance, type = "bars", abbrev = TRUE)
 ```
 
+With two clusters and PAM, the Hamming, edit and longest-common-subsequence
+distances have the highest silhouettes (0.49 to 0.50), and their clusters
+are again separated by length. The cosine distance has a lower silhouette
+(0.42) and the most balanced clusters (170 and 259 sessions).
 
-### Choosing k, dissimilarity, and method
+### Cosine distance
 
-`cluster_choice()` sweeps any combination of `k`, `dissimilarity`, and `method` in a single call and returns one row per configuration with silhouette, mean within-cluster distance, and cluster-size balance. Pass a vector to any axis to sweep it; `dissimilarity = "all"` and `method = "all"` expand to every supported option.
-
-```{r choose-k}
-ch <- cluster_choice(net, k = 2:4,
-                      method = c("pam", "ward.D2", "complete", "average"))
-ch
+```{r choice-cosine}
+choice_cosine <- cluster_choice(net, k = 2:4, dissimilarity = "cosine",
+                                method = c("pam", "ward.D2"))
+choice_cosine
+plot(choice_cosine, type = "tradeoff")
 ```
 
-`plot()` accepts an explicit `type =` so you can pick the chart that suits the sweep shape (`"lines"`, `"bars"`, `"heatmap"`, `"tradeoff"`, `"facet"`, or the default `"auto"`).
+The trade-off plot places each configuration by its silhouette and its
+size ratio; the preferred configurations are high and to the left. Two
+clusters with PAM have the highest silhouette, 0.42, with clusters of 170
+and 259 sessions. Three clusters with Ward's criterion have a similar
+silhouette (0.42), but one of their clusters holds four sessions.
 
-```{r choose-k-plot, fig.alt = "Silhouette across k for each clustering method"}
-plot(ch, type = "lines")
+```{r clusters}
+clusters <- build_clusters(net, k = 2, dissimilarity = "cosine")
+clusters
 ```
 
-To compare several dissimilarities at a fixed `k`, pass a vector and use the `bars` plot type. `dissimilarity = "all"` expands to every supported metric (`hamming`, `osa`, `lv`, `dl`, `lcs`, `qgram`, `cosine`, `jaccard`, `jw`); some metrics require denser sequences than others, so for this short-sequence sample we name a curated subset directly. `abbrev = TRUE` shortens the metric names on the tick labels.
+## Diagnostics
 
-```{r choose-d}
-ch_d <- cluster_choice(net, k = 2,
-                        dissimilarity = c("hamming", "lv", "lcs"),
-                        method = "ward.D2")
-ch_d
+`cluster_diagnostics()` reports one row per cluster for any clustering:
+for a dissimilarity clustering the size, the mean within-cluster distance
+and the silhouette, for a mixture Markov model the mixing share, the
+average posterior probability and the classification error.
+
+```{r diagnostics}
+diagnostics <- cluster_diagnostics(clusters)
+diagnostics
+plot(diagnostics, type = "silhouette")
 ```
 
-```{r choose-d-plot, fig.alt = "Silhouette per dissimilarity at k = 2"}
-plot(ch_d, type = "bars", abbrev = TRUE)
+The second cluster is well separated (silhouette 0.56) and the first less
+so (0.20); the silhouette plot shows some sessions of the first cluster
+with negative values, closer to the other cluster than to their own.
+
+```{r mds, fig.height = 5}
+plot(clusters, type = "mds")
 ```
 
-A high silhouette can come from one big cluster and a tiny outlier cluster. The `tradeoff` type plots silhouette against the cluster-size ratio so you can see both axes at once.
+The multidimensional scaling plot places the sessions in two dimensions
+so that their distances approximate the cosine distances, with a colour
+and a shape per cluster. The second cluster is compact; the first spreads
+widely.
 
-```{r choose-tradeoff, fig.alt = "Quality vs cluster-size balance"}
-plot(ch_d, type = "tradeoff", abbrev = TRUE)
+## What the clusters contain
+
+`sequence_plot()` draws the sessions of each cluster and the share of
+each state at each position; `trim = 0.9` keeps the positions that hold
+90% of the actions, since few sessions are long.
+
+```{r clusters-index, fig.height = 5}
+sequence_plot(clusters, type = "index", ncol = 2, nrow = 1, trim = 0.9)
 ```
 
-Higher silhouette indicates better-defined clusters. The `<-- best` marker in the printed table is the silhouette-max row; `summary(ch)` returns the same sweep as a data frame whose `best` column marks that row. We select `ward.D2` with 2 clusters here.
-
-```{r}
-clust <- build_clusters(net, k = 2, method = "ward.D2", seed = 42)
-summary(clust)
+```{r clusters-distribution}
+sequence_plot(clusters, type = "distribution", ncol = 2, nrow = 1,
+              trim = 0.9)
 ```
 
-### Validating the choice with `cluster_diagnostics()`
+`sequence_metrics()` compares the clusters on the indices that describe
+them.
 
-Once a clustering is fit, `cluster_diagnostics()` returns a uniform diagnostic surface that works for both distance-based fits (`net_clustering`) and model-based fits (`net_mmm`, `net_mmm_clustering`). The print method shows per-cluster size, mean within-distance, and silhouette for distance-based fits; AvePP, mixing share, and per-cluster classification error for MMM fits.
-
-```{r cluster-diagnostics}
-diag <- cluster_diagnostics(clust)
-diag
+```{r clusters-indices}
+set.seed(2026)
+sequence_metrics(build_network(clusters),
+                 indices = c("valid_n", "transition_rate",
+                             "longitudinal_entropy", "dominant_proportion"))
 ```
 
-```{r cluster-diagnostics-plot, fig.alt = "Per-observation silhouette by cluster"}
-plot(diag, type = "silhouette")
+The first cluster (170 sessions) alternates between directives and
+evaluations: it changes state more often (transition rate 0.57 against
+0.44) and spreads its actions more evenly (entropy 0.85 against 0.70). The
+second (259 sessions) is dominated by directives, which take 68% of a
+session against 53% (`dominant_proportion`). The first cluster's sessions
+are also longer (34 against 20 actions, Hedges' g = -0.61), so the clusters
+differ in length as well as in content.
+
+## Mixture Markov models
+
+A mixture Markov model groups the sequences by their transitions: it fits
+one Markov chain per cluster and assigns each sequence to the chain that
+most probably generated it (Helske et al. 2024). `compare_mmm()` fits the
+model for several numbers of clusters and compares them with the BIC
+(Schwarz 1978), the AIC and the ICL (Biernacki, Celeux & Govaert 2000),
+lower being better, and the average posterior probability of the assigned
+cluster (AvePP). Each model is estimated from 50 random starts; `seed`
+makes them reproducible.
+
+```{r mmm-choice}
+mixture_choice <- compare_mmm(net, k = 2:5, seed = 2026)
+mixture_choice
+plot(mixture_choice)
 ```
 
-`as.data.frame(diag)` returns the per-cluster table as a data frame for downstream use.
+The BIC and the ICL are lowest with two clusters, which also have the
+highest AvePP (0.80). The AIC keeps decreasing with more clusters, and the
+five-cluster model does not converge.
 
-
-
-
-## Mixture Markov Models
-
-Instead of clustering sequences based on how similar they are to one another, we can cluster them together based on their transition dynamics. Mixture Markov models (MMM) fit separate Markov models, and sequences are assigned to the cluster whose transition structure best matches their observed behavior.
-
-To implement MMM, we can use `build_mmm()`, which returns a `net_mmm` object with full model details:
-```{r}
-mmm_fit <- build_mmm(net, k = 2)
-summary(mmm_fit)
+```{r mmm}
+mixture <- build_mmm(net, k = 2, seed = 2026)
+mixture
 ```
 
-The `net_mmm` object contains posterior probabilities, model fit statistics (BIC, AIC, ICL), and one transition matrix per cluster; `build_network(mmm_fit)` turns those into per-cluster networks (see below). `cluster_diagnostics()` works on it too, with MMM-specific columns (mixing share, average posterior probability, per-cluster classification error):
+In the first cluster (155 sessions) an evaluation is followed by another
+evaluation with probability 0.47 and a directive by an evaluation with
+probability 0.30. In the second (274 sessions) directives follow
+directives (0.65) and metacognitive actions follow metacognitive actions
+(0.31) more often. The model and the cosine clustering describe a similar
+division: sessions that alternate between directing and evaluating, and
+sessions that mostly direct.
 
 ```{r mmm-diagnostics}
-diag_mmm <- cluster_diagnostics(mmm_fit)
-diag_mmm
+mixture_diagnostics <- cluster_diagnostics(mixture)
+mixture_diagnostics
+plot(mixture_diagnostics, type = "posterior")
 ```
 
-The `posterior` plot type shows the distribution of each sequence's max posterior probability, faceted by cluster. Tight distributions near 1 indicate clean assignment; spread-out distributions indicate fuzzy clusters.
+The average posterior probability is 0.83 in the first cluster and 0.77
+in the second, and 20% of the sessions are expected to be misclassified.
+The posterior plot shows each cluster's distribution of the sessions'
+posterior probabilities; mass near 1 means clear assignments.
 
-```{r mmm-diagnostics-plot, fig.alt = "Posterior certainty per MMM cluster"}
-plot(diag_mmm, type = "posterior")
+```{r mmm-sequences, fig.height = 5}
+sequence_plot(mixture, type = "index", ncol = 2, nrow = 1, trim = 0.9)
 ```
 
-## Building Networks per Cluster
+`cluster_mmm()` fits the same model and returns the same `net_mmm`
+object; it is the name under which the mixture model is reached from
+`cluster_network()`.
 
-Once sequences are grouped, the goal is usually to compare *how
-transitions behave within each group*. A single transition network
-estimated on all sequences averages across the groups and hides the
-contrast. Estimating one network per cluster preserves each group's
-distinct dynamics — same nodes, different edge weights.
+## Networks per cluster
 
-The result is a `netobject_group`: a list of `netobject`s sharing the
-same node set, one per cluster. Every group network supports the same
-downstream operations as a single `netobject` — plotting via `plot()`,
-resampling via `bootstrap_network()`, group-level edge comparison via
-`permutation()`.
+A clustering becomes one network per cluster in two ways.
+`build_network()` on a clustering, from `build_clusters()` or
+`build_mmm()`, estimates a network for each cluster from the clustered
+sequences and returns a group of networks.
 
-Two paths produce the same `netobject_group`:
-
-1. **Manual** — fit clustering with `build_clusters()` or `cluster_mmm()`,
-   then pass the fitted clustering to `build_network()`.
-2. **Shortcut** — `cluster_network()` collapses fitting and network
-   materialization into one call for either distance or MMM clustering.
-
-Distance clustering groups sessions by sequence similarity. Model-based MMM
-clustering groups them by which Markov model best explains each sequence's
-transitions.
-
-| Function | Clustering method | Returns |
-|----------|------------------|---------|
-| `build_clusters()` | Distance-based (Hamming, LCS, etc.) | `net_clustering` |
-| `cluster_mmm()` | Model-based (MMM) | `net_mmm` |
-| `cluster_network()` | Distance-based or MMM | `netobject_group` |
-
-### From `build_clusters()` to per-cluster networks
-
-`build_clusters()` returns clustering only; pass it to `build_network()`
-to get one network per cluster as a `netobject_group` (group networks).
-The shortcut `cluster_network()` (below) does both steps in one call.
-
-```{r cluster-networks}
-clust <- build_clusters(net, k = 2, method = "ward.D2")
-cluster_net <- build_network(clust)
-cluster_net
+```{r networks-build}
+cluster_networks <- build_network(clusters)
+cluster_networks
 ```
 
-```{r cluster-networks-plot, eval = has_cograph, fig.alt = "Per-cluster transition networks"}
-plot(cluster_net)
+```{r networks-plot, eval = has_cograph, fig.height = 5}
+plot(cluster_networks)
 ```
 
-### Shortcut: `cluster_network()` (distance-based)
+`cluster_network()` does the clustering and the networks in one call:
+`cluster_by` takes the clustering method (`"pam"`, a hierarchical method,
+or `"mmm"` for the mixture model) and `dissimilarity` the distance.
 
-Combines `build_clusters()` + `build_network()` into one call.
-
-```{r cluster-network-shortcut}
-## `cograph::cluster_network()` also exists with a different signature
-## (matrix aggregation); qualify with `Nestimate::` to avoid masking.
-grp_dist <- Nestimate::cluster_network(net, k = 2, cluster_by = "ward.D2")
-grp_dist
+```{r networks-shortcut}
+one_call <- cluster_network(net, k = 2, cluster_by = "pam",
+                            dissimilarity = "cosine")
+one_call
+cluster_diagnostics(one_call)
 ```
 
-### Fitted MMM clustering and its networks
+With the same settings, the two routes give the same clusters and the
+same networks, and `cluster_diagnostics()` reads either. The two-step route
+keeps the clustering as its own object, to plot its silhouettes or its
+MDS projection and to describe the clusters before any network is
+estimated; the one-call route goes straight to the networks.
+`cluster_network()` builds the per-cluster networks afresh with the
+network's method; `inherit = TRUE` also gives them the source network's
+threshold, scaling and estimator settings. For the mixture model,
+`cluster_network(net, k = 2, cluster_by = "mmm", seed = 2026)` and
+`build_network(mixture)` return the fitted chains as networks.
 
-`cluster_mmm()` returns the fitted clustering object. Passing that fit to
-`build_network()` materializes one transition network per fitted cluster.
-
-```{r cluster-mmm}
-fit_mmm <- cluster_mmm(net, k = 2)
-grp_mmm <- build_network(fit_mmm)
-grp_mmm
+```{r networks-mmm}
+build_network(mixture)
 ```
 
-`cluster_diagnostics()` works directly on either fitted clustering object:
+## Comparing the clusters
 
-```{r}
-cluster_diagnostics(grp_dist)
-cluster_diagnostics(fit_mmm)
+`permutation()` compares the transition probabilities of the clusters
+edge by edge, by shuffling the cluster labels of the sessions.
+
+```{r comparison}
+set.seed(2026)
+permutation(cluster_networks, iter = 1000)
 ```
 
-Each element of the group is a full `netobject` named by its cluster (`Cluster 1`, `Cluster 2`), so every verb that takes a network also takes the group and returns one result per cluster.
+The clusters were formed to differ, so differences between their networks
+are expected by construction; the test shows which transitions the
+clusters differ in, not whether such groups exist in the population.
 
-### Comparing Clusters
+## References
 
-Clustering maximizes the separation between groups by construction, so some difference between the cluster networks is guaranteed. A permutation test asks which transition probabilities differ by more than reassigning sessions to clusters at random would produce:
-```{r}
-comparison <- permutation(grp_dist, iter = 100)
-comparison
-```
+Biernacki, C., Celeux, G., & Govaert, G. (2000). Assessing a mixture model
+for clustering with the integrated completed likelihood. *IEEE
+Transactions on Pattern Analysis and Machine Intelligence*, 22(7),
+719–725. <https://doi.org/10.1109/34.865189>
 
-## Workflow Summary
+Hamming, R. W. (1950). Error detecting and error correcting codes. *Bell
+System Technical Journal*, 29(2), 147–160.
+<https://doi.org/10.1002/j.1538-7305.1950.tb00463.x>
 
-The end-to-end path from raw sequence data to validated per-cluster networks:
+Helske, J., Helske, S., Saqr, M., López-Pernas, S., & Murphy, K. (2024). A
+modern approach to transition analysis and process mining with Markov
+models in education. In M. Saqr & S. López-Pernas (Eds.), *Learning
+analytics methods and tutorials: A practical guide using R* (pp. 381–427).
+Springer. <https://doi.org/10.1007/978-3-031-54464-4_12>
 
-```{r workflow, eval = FALSE}
-# 1. Build the network from long-format data
-net <- build_network(human_long, method = "tna",
-                     actor = "session_id",
-                     action = "cluster",
-                     time   = "timestamp")
+Kaufman, L., & Rousseeuw, P. J. (1990). *Finding groups in data: An
+introduction to cluster analysis*. Wiley.
+<https://doi.org/10.1002/9780470316801>
 
-# 2. Sweep the parameter space
-ch <- cluster_choice(net, k = 2:5,
-                     dissimilarity = c("hamming", "lcs", "cosine"),
-                     method = c("pam", "ward.D2"))
-plot(ch, type = "facet", abbrev = TRUE)
+López-Pernas, S., Tikka, S., & Saqr, M. (2025). Mining patterns and
+clusters with transition network analysis: A heterogeneity approach. In M.
+Saqr & S. López-Pernas (Eds.), *Advanced learning analytics methods: AI,
+precision and complexity* (pp. 447–468). Springer.
+<https://doi.org/10.1007/978-3-031-95365-1_17>
 
-# 3. Pick a configuration and fit
-clust <- build_clusters(net, k = 2,
-                         dissimilarity = "hamming",
-                         method = "ward.D2")
+Misiejuk, K., López-Pernas, S., Oliveira, E., Rinja, D., & Saqr, M.
+(2026). It takes two to vibe code: Profiling student-AI programming
+interactions processes and their high order structure. In *Proceedings of
+the 26th Koli Calling International Conference on Computing Education
+Research* (pp. 1–11). ACM. <https://doi.org/10.1145/3856208.3856254>
 
-# 4. Validate
-diag <- cluster_diagnostics(clust)
-diag
-plot(diag, type = "silhouette")
+Murtagh, F., & Legendre, P. (2014). Ward's hierarchical agglomerative
+clustering method: Which algorithms implement Ward's criterion? *Journal
+of Classification*, 31(3), 274–295. <https://doi.org/10.1007/s00357-014-9161-z>
 
-# 5. Build per-cluster networks
-grp <- build_network(clust)
+Rousseeuw, P. J. (1987). Silhouettes: A graphical aid to the
+interpretation and validation of cluster analysis. *Journal of
+Computational and Applied Mathematics*, 20, 53–65.
+<https://doi.org/10.1016/0377-0427(87)90125-7>
 
-# 6. Optional: model-based second opinion
-mmm <- build_mmm(net, k = 2)
-plot(cluster_diagnostics(mmm), type = "posterior")
-```
+Saqr, M., López-Pernas, S., & Misiejuk, K. (2026). Nestimate: An R package
+for dynamic, probabilistic, and high order network analysis. *Applied
+Psychological Measurement*. <https://doi.org/10.1177/01466216261472019>
+
+Saqr, M., López-Pernas, S., Helske, S., Durand, M., Murphy, K., Studer, M.,
+& Ritschard, G. (2024). Sequence analysis in education: Principles,
+technique, and tutorial with R. In M. Saqr & S. López-Pernas (Eds.),
+*Learning analytics methods and tutorials: A practical guide using R*
+(pp. 321–354). Springer. <https://doi.org/10.1007/978-3-031-54464-4_10>
+
+Saqr, M., Misiejuk, K., & López-Pernas, S. (2026). Human-AI
+collaboration or obedient and often clueless AI in instruct, serve, repeat
+dynamics? *The Internet and Higher Education*, 70, 101087.
+<https://doi.org/10.1016/j.iheduc.2026.101087>
+
+Sarkar, A., & Drosos, I. (2025). Vibe coding: Programming through
+conversation with artificial intelligence. In *Proceedings of the 36th
+Annual Conference of the Psychology of Programming Interest Group (PPIG
+2025)*. <https://doi.org/10.48550/arXiv.2506.23253>
+
+Schwarz, G. (1978). Estimating the dimension of a model. *The Annals of
+Statistics*, 6(2), 461–464. <https://doi.org/10.1214/aos/1176344136>
+
+Studer, M., & Ritschard, G. (2016). What matters in differences between
+life trajectories: A comparative review of sequence dissimilarity
+measures. *Journal of the Royal Statistical Society: Series A (Statistics
+in Society)*, 179(2), 481–511. <https://doi.org/10.1111/rssa.12125>
+
+Ward, J. H. (1963). Hierarchical grouping to optimize an objective
+function. *Journal of the American Statistical Association*, 58(301),
+236–244. <https://doi.org/10.1080/01621459.1963.10500845>

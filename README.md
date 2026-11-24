@@ -376,11 +376,17 @@ summary(boot_gl)
 
 ## Citation
 
-If you use Nestimate in your research, please cite:
+If you use Nestimate in your research, please cite (`citation("Nestimate")`):
 
-> Saqr, M., Lopez-Pernas, S., Tormanen, T., Kaliisa, R., Misiejuk, K., & Tikka, S. (2025). Transition Network Analysis: A Novel Framework for Modeling, Visualizing, and Identifying the Temporal Patterns of Learners and Learning. *Proceedings of the 15th Learning Analytics and Knowledge Conference*. doi: [10.1145/3706468.3706513](https://doi.org/10.1145/3706468.3706513)
+> Saqr, M., López-Pernas, S., & Misiejuk, K. (2026). Nestimate: An R package for dynamic, probabilistic, and high order network analysis. *Applied Psychological Measurement*. <https://doi.org/10.1177/01466216261472019>
 
-> Saqr, M., Beck, E., & Lopez-Pernas, S. (2024). Psychological Networks. In M. Saqr & S. Lopez-Pernas (Eds.), *Learning Analytics Methods and Tutorials* (pp. 513–546). Springer. doi: [10.1007/978-3-031-54464-4_19](https://doi.org/10.1007/978-3-031-54464-4_19)
+and, for the methods:
+
+> Saqr, M., López-Pernas, S., Törmänen, T., Kaliisa, R., Misiejuk, K., & Tikka, S. (2025). Transition network analysis: A novel framework for modeling, visualizing, and identifying the temporal patterns of learners and learning processes. In *Proceedings of the 15th International Learning Analytics and Knowledge Conference (LAK25)* (pp. 351–361). ACM. <https://doi.org/10.1145/3706468.3706513>
+
+> Saqr, M., Beck, E., & López-Pernas, S. (2024). Psychological networks: A modern approach to analysis of learning and complex learning processes. In M. Saqr & S. López-Pernas (Eds.), *Learning analytics methods and tutorials: A practical guide using R* (pp. 639–671). Springer. <https://doi.org/10.1007/978-3-031-54464-4_19>
+
+> Saqr, M., & López-Pernas, S. (Eds.). (2024). *Learning analytics methods and tutorials: A practical guide using R*. Springer. <https://doi.org/10.1007/978-3-031-54464-4>
 
 ## License
 

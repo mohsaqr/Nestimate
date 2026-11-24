@@ -25,10 +25,6 @@ knitr::opts_chunk$set(
 has_cograph <- requireNamespace("cograph", quietly = TRUE)
 ```
 
-```{r}
-library(Nestimate)
-```
-
 How predictable is a sequential process? The entropy rate of its transition
 matrix answers with a single number: the average uncertainty, in bits, about
 the next state given the current one (Shannon, 1948; Cover & Thomas, 2006,
@@ -37,16 +33,18 @@ ch. 4),
 $$H = -\sum_i \pi_i \sum_j P_{ij} \log_2 P_{ij},$$
 
 where $P$ is the transition matrix and $\pi$ its stationary distribution
-(the eigenvector of $P^\top$ at $\lambda = 1$). This is the quantity Krejtz
+(the eigenvector of $P^\top$ at $\lambda = 1$; Kemeny & Snell, 1976). This is the quantity Krejtz
 et al. (2015) introduced to behavioral research as gaze transition entropy
 and Krejtz et al. (2025) track in real time as mobile transition matrix
-entropy. Nestimate computes it for any transition network, decomposes it
+entropy. Nestimate (Saqr et al., 2026) computes it for any transition
+network (Saqr et al., 2025a, 2025b), decomposes it
 per state and per edge, tracks it over time, and estimates it with Bayesian
 credible intervals.
 
 Throughout we use the bundled `group_regulation_long` data: 27,533
 timestamped regulation actions by students collaborating in groups, coded
-into nine states.
+into nine states, synthetically generated from the `group_regulation`
+dataset of the tna package (Tikka et al., 2025).
 
 # The entropy of a transition network
 
@@ -54,6 +52,7 @@ into nine states.
 sequence data.
 
 ```{r fit}
+library(Nestimate)
 net <- build_network(group_regulation_long, method = "relative",
                      actor = "Actor", action = "Action", time = "Time")
 te <- transition_entropy(net)
@@ -135,7 +134,7 @@ plot(tr)
 ```
 
 Each faint line is one 500-transition window stepped by 100; the bold
-curve is the loess trend per achievement group. Declining entropy is
+curve is the loess trend (Cleveland, 1979) per achievement group. Declining entropy is
 routinization — the group settling into predictable regulation; rising
 entropy is exploration; a level shift marks a phase change. The `change`
 column of the summary (last window minus first) gives each group's net
@@ -146,10 +145,10 @@ two coincide.
 
 # Bayesian estimation
 
-Plug-in entropy treats an edge observed three times exactly like one
-observed three thousand times. `entropy_bayes()` places an independent
-Dirichlet posterior on each row of the transition matrix (Jeffreys prior
-0.5 by default) and pushes Monte Carlo draws through the entropy
+Plug-in entropy is biased in small samples (Paninski, 2003) and treats an
+edge observed three times exactly like one observed three thousand times. `entropy_bayes()` places an independent
+Dirichlet posterior on each row of the transition matrix (the Jeffreys (1946)
+prior, 0.5, by default) and pushes Monte Carlo draws through the entropy
 formula, so every quantity — the entropy rate, each state's branching
 entropy, each edge's contribution — arrives with a credible interval that
 reflects how much data supports it.
@@ -193,16 +192,26 @@ level.
 
 # References
 
-Cover, T. M., & Thomas, J. A. (2006). *Elements of Information Theory*
-(2nd ed., ch. 4). Wiley.
+Cleveland, W. S. (1979). Robust locally weighted regression and smoothing scatterplots. *Journal of the American Statistical Association*, 74(368), 829–836. https://doi.org/10.1080/01621459.1979.10481038
 
-Krejtz, K., Duchowski, A., Szmidt, T., Krejtz, I., González Perilli, F.,
-Pires, A., Vilaró, A., & Villalobos, N. (2015). Gaze transition entropy.
-*ACM Transactions on Applied Perception*, 13(1), 4:1–4:20.
+Cover, T. M., & Thomas, J. A. (2006). *Elements of information theory* (2nd ed.). Wiley. https://doi.org/10.1002/047174882X
 
-Krejtz, K., Hughes, C. J., Stasiak, I., Duchowski, A., & Krejtz, I.
-(2025). Real-time mobile transition matrix entropy based on eye and head
-movements. *Proceedings of ETRA '25*.
+Jeffreys, H. (1946). An invariant form for the prior probability in estimation problems. *Proceedings of the Royal Society of London. Series A. Mathematical and Physical Sciences*, 186(1007), 453–461. https://doi.org/10.1098/rspa.1946.0056
 
-Shannon, C. E. (1948). A mathematical theory of communication. *Bell
-System Technical Journal*, 27, 379–423.
+Kemeny, J. G., & Snell, J. L. (1976). *Finite Markov chains*. Springer.
+
+Krejtz, K., Duchowski, A., Szmidt, T., Krejtz, I., González Perilli, F., Pires, A., Vilaró, A., & Villalobos, N. (2015). Gaze transition entropy. *ACM Transactions on Applied Perception*, 13(1), 1–20. https://doi.org/10.1145/2834121
+
+Krejtz, K., Hughes, C. J., Stasiak, I., Duchowski, A., & Krejtz, I. (2025). Real-time mobile transition matrix entropy based on eye and head movements. In *Proceedings of the 2025 Symposium on Eye Tracking Research and Applications (ETRA '25)* (pp. 1–8). ACM. https://doi.org/10.1145/3715669.3723128
+
+Paninski, L. (2003). Estimation of entropy and mutual information. *Neural Computation*, 15(6), 1191–1253. https://doi.org/10.1162/089976603321780272
+
+Saqr, M., López-Pernas, S., & Misiejuk, K. (2026). Nestimate: An R package for dynamic, probabilistic, and high order network analysis. *Applied Psychological Measurement*. https://doi.org/10.1177/01466216261472019
+
+Saqr, M., López-Pernas, S., & Tikka, S. (2025a). Mapping relational dynamics with transition network analysis: A primer and tutorial. In M. Saqr & S. López-Pernas (Eds.), *Advanced learning analytics methods: AI, precision and complexity* (pp. 371–411). Springer. https://doi.org/10.1007/978-3-031-95365-1_15
+
+Saqr, M., López-Pernas, S., Törmänen, T., Kaliisa, R., Misiejuk, K., & Tikka, S. (2025b). Transition network analysis: A novel framework for modeling, visualizing, and identifying the temporal patterns of learners and learning processes. In *Proceedings of the 15th International Learning Analytics and Knowledge Conference (LAK25)* (pp. 351–361). ACM. https://doi.org/10.1145/3706468.3706513
+
+Shannon, C. E. (1948). A mathematical theory of communication. *Bell System Technical Journal*, 27(3), 379–423. https://doi.org/10.1002/j.1538-7305.1948.tb01338.x
+
+Tikka, S., López-Pernas, S., & Saqr, M. (2025). tna: An R package for transition network analysis. *Applied Psychological Measurement*, 49(6), 326–328. https://doi.org/10.1177/01466216251348840

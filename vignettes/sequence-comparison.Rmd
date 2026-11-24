@@ -1,5 +1,5 @@
 ---
-title: "Sequence Pattern Comparison: Early vs Late Human-AI Interactions"
+title: "Comparing Sequences Between Groups: Early vs Late Human-AI Interactions"
 author:
   - name: Mohammed Saqr
     url: https://saqr.me
@@ -12,120 +12,492 @@ author:
     affiliation: FernUniversität in Hagen, Germany
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Sequence Pattern Comparison: Early vs Late Human-AI Interactions}
+  %\VignetteIndexEntry{Comparing Sequences Between Groups: Early vs Late Human-AI Interactions}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
-
-<style>
-img { border: 0; }
-body, .main-container { max-width: 1200px; width: 100%; }
-</style>
 
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
-  fig.width = 12,
+  fig.width = 10,
   fig.height = 5,
   fig.align = "center",
   out.width = "100%",
-  dpi = 300,
+  dpi = 150,
   message = FALSE,
   warning = FALSE
 )
-library(Nestimate)
-set.seed(20260413)
 ```
 
-## 1. The dataset
+Two groups of sequences can differ at several levels: in how often each
+state occurs, in which state follows which, in summary indices of each
+sequence, and in the patterns of states they contain. Nestimate (Saqr,
+López-Pernas & Misiejuk 2026) compares sequences at each of these levels.
+This vignette applies them to one question: whether people direct an AI
+coding assistant differently in the first and the second half of a
+session. Temporal patterns within a learning episode have been used to
+study how students' interactions and self-regulation develop over time
+(Saqr, Nouri & Fors 2019).
 
-Do people steer an AI coding assistant differently at the start of a session than at the end? `human_long` is a bundled dataset in `Nestimate` containing the coded human turns of **429 human-AI coding sessions across 34 projects**. Every row is a single action taken during a session, with a `cluster` label grouping the nine action codes into three broad types: `Directive`, `Evaluative` and `Metacognitive`.
+| Question | Function |
+|----------|----------|
+| States: are they used in different proportions? | `mosaic_test()` |
+| Transitions: do their probabilities differ? | `permutation()` |
+| Sequences: do their summary indices differ? | `sequence_metrics(group = )` |
+| Patterns: does a pattern occur more often? | `sequence_compare()` |
+| Patterns: does a pattern occur in more sequences? | `sequence_patterns()` |
+| Jointly: which patterns or indices distinguish the groups? | `pattern_outcome()`, `outcome_model()` |
 
-```{r load}
-data(human_long, package = "Nestimate")
-head(human_long)
-```
+## Data
 
-## 2. Split by time — early vs late interactions
+`human_long` holds the coded human turns of 429 human-AI pair-programming
+("vibe coding") sessions across 34 projects, one row per coded action
+(Saqr, Misiejuk & López-Pernas 2026; Misiejuk et al. 2026). The
+nine action codes are grouped into three clusters, `Directive`,
+`Evaluative` and `Metacognitive`, in the column `cluster`, which is the
+state used here. `order_in_session` gives the position of each action
+within its session.
 
-For each session, the first half of its actions is labeled `"early"` and the second half `"late"`. Base R `ave()` does both jobs — per-session count and per-session position — and then a single `ifelse()` writes the label.
+`mark_phases()` orders the actions of each session by `order_in_session`
+and divides them into consecutive phases of nearly equal length. With
+`n = 2`, the first half of each session is labelled `early` and the second
+half `late`; with an odd number of actions, the middle one belongs to the
+second half.
 
 ```{r split}
-dat <- human_long[order(human_long$session_id, human_long$order_in_session), ]
-n_per <- ave(dat$order_in_session, dat$session_id, FUN = length)
-pos   <- ave(dat$order_in_session, dat$session_id, FUN = seq_along)
-dat$half <- ifelse(pos <= n_per %/% 2, "early", "late")
-table(dat$half)
+library(Nestimate)
+halves <- mark_phases(human_long, actor = "session_id",
+                      time = "order_in_session", n = 2,
+                      labels = c("early", "late"))
 ```
 
-## 3. Build the grouped network
-
-`build_network()` is the canonical entry point. Passing `group = "half"` produces a `netobject_group` with one netobject per half; each stores the session-half sequences that `sequence_compare()` counts patterns in.
+`build_network()` with `group = "phase"` estimates one transition network
+per half and keeps the half-session sequences, which every function below
+reads.
 
 ```{r build}
-net <- build_network(
-  data   = dat,
-  actor  = "session_id",
-  action = "cluster",
-  group  = "half",
-  method = "relative"
-)
+net <- build_network(halves, actor = "session_id", action = "cluster",
+                     group = "phase", method = "relative")
 net
 ```
 
-## 4. Compare patterns between early and late
+There are 425 early and 429 late half-sessions; the four sessions with a
+single action have no early half.
 
-`sequence_compare()` accepts a `netobject_group` directly — group labels are read from the list names, no separate `group` argument needed. Pattern lengths 3–5 (the default `sub = 3:5`), minimum frequency 25, chi-square test with FDR correction (the default `adjust = "fdr"`).
+### Nested data
+
+Every session contributes one early and one late half, and the actions of
+a session come from the same person, project and AI assistant. The
+observations are therefore nested in sessions, and a test that treats the
+actions or the half-sessions as independent overstates the evidence when
+sessions differ from each other. Each function below has an argument for
+the nesting: `actor` for the tests based on counts and permutations, which
+then correct for the clustering or shuffle the labels only within a
+session (Anderson & ter Braak 2003; Good 2005), and `group` for the
+regression models, which then include a random intercept for each session
+(Bates et al. 2015).
+
+## States
+
+The first comparison concerns the share of each state, ignoring order.
+`sequence_plot()` with `type = "distribution"` shows the share of each
+state at each position of the half-sessions. With `na = FALSE` the shares
+are taken among the observed actions, and `trim = 0.9` keeps the positions
+that hold 90% of the actions, since few half-sessions are longer.
+
+```{r distribution, fig.height = 4.5}
+sequence_plot(net, type = "distribution", na = FALSE, trim = 0.9)
+```
+
+Early halves start almost entirely with directives; late halves start
+with all three states, and metacognitive actions take a larger share of
+the late halves.
+
+`mosaic_test()` cross-tabulates the half against the state and tests the
+association with every method for clustered counts. With `actor =
+"session_id"`, the sessions are the clusters.
+
+```{r mosaic-test}
+mosaic_test(net, actor = "session_id")
+```
+
+The Pearson chi-square test treats the 10,796 actions as independent. The
+Rao-Scott test corrects it for the clustering with a second-order
+adjustment (Rao & Scott 1984); the design effect, 1.21, is the factor by
+which the clustering inflates the variance. The Cochran-Mantel-Haenszel
+test stratifies by session and compares the halves within each of the 421
+sessions that have both (Landis, Heyman & Koch 1978). The GEE test uses a
+cluster-robust covariance (Liang & Zeger 1986), and the GLMM test a
+mixed model with a random intercept per session. The Donner-Klar test
+needs one variable that is constant within each cluster (Donner & Klar
+1994), and the half varies within every session, so it is not computed.
+The four tests that apply all reject independence (Rao-Scott F(1.97,
+844.7) = 28.72, CMH = 74.24, GEE = 58.17, GLMM = 69.34; every p < 0.001).
+
+```{r mosaic-plot, fig.height = 4.5}
+mosaic_plot(net)
+```
+
+In the mosaic plot, the width of a column is the share of actions in each
+half and the height of a tile the share of each state within the half. The
+fill is the standardised residual: blue tiles hold more actions than
+independence predicts and red tiles fewer. Directives are
+over-represented early; evaluations and metacognitive actions late.
+
+## Transitions
+
+The second comparison concerns the transition probabilities, the
+probability of each state following each state. `permutation()` compares
+the two networks edge by edge and as a whole by shuffling the `early` and
+`late` labels and recomputing the differences, which is the comparison
+used in transition network analysis (Saqr et al. 2025). With `actor =
+"session_id"`, the labels are shuffled only within each session.
+
+```{r transitions}
+set.seed(2026)
+transitions <- permutation(net, iter = 1000, actor = "session_id")
+summary(transitions)
+```
+
+`weight_x` and `weight_y` are the transition probabilities of the early
+and the late half, `diff` their difference, and `effect_size` the
+difference divided by the standard deviation of the permuted differences.
+Eight of the nine transitions differ. The global statistic M, the sum of
+the absolute edge differences, is 0.515, and no permutation reached it
+(p = 0.001, the smallest value 1,000 permutations can give). The largest
+difference concerns a metacognitive action followed by another: its
+probability is 0.18 in the first half and 0.32 in the second.
+
+## Sequence indices
+
+The third comparison summarises each half-session with indices of its
+composition and dynamics, such as the number of distinct states, the
+evenness of the states (longitudinal entropy), the share of consecutive
+actions that change state (transition rate) and the mean length of a spell
+in one state (Gabadinho et al. 2011). `sequence_metrics()` computes them for
+every sequence; for a grouped network it compares each index between the
+groups. For each index it reports the number of half-sessions, the mean
+and the standard deviation of each half; the difference between the means
+(late minus early); Hedges' g, the standardised difference corrected for
+small samples, with its 95% interval (Hedges 1981); eta squared, the share
+of the index's variance between the halves; and a permutation p-value of
+the one-way F statistic, adjusted with the Benjamini-Hochberg method. The
+network was built with `actor = "session_id"`, so the labels are shuffled
+within each session.
+
+```{r indices}
+set.seed(2026)
+sequence_metrics(net)
+```
+
+Most indices differ between the halves. The largest differences concern
+the opening state: in the late halves it holds a smaller share of the
+half-session (`initial_state_proportion`, 0.67 against 0.51, g = -0.78
+[-0.92, -0.64]) and is left sooner (`initial_state_persistence`, g = -0.70).
+Late halves change state more often (`transition_rate`, 0.41 against 0.55,
+g = 0.60 [0.46, 0.74]), spend less time in their dominant state
+(`dominant_proportion`, g = -0.53) and in each spell (`mean_spell_duration`,
+2.22 against 1.86 actions, g = -0.41), and spread their actions more evenly
+(`longitudinal_entropy`, 0.61 against 0.74, g = 0.47; `simpson_diversity`,
+g = 0.50). `self_loop_tendency` is one minus the transition rate, so its test
+is the same. Three rows need no interpretation. The late half is never
+shorter than the early half, because `mark_phases()` puts the middle action
+of an odd-length session in the second half, so `valid_n` differs although
+the means are almost equal (12.4 against 12.8, g = 0.03). `valid_proportion`
+is 1 for every half-session and cannot be compared. The two indices of the
+emergent state are defined only for the half-sessions that have one (161
+early, 240 late) and do not differ.
+
+## Patterns
+
+A pattern is a sequence of consecutive states, such as
+`Directive->Directive->Evaluative`, a k-gram of length 3. The halves can
+differ in how often a pattern occurs, which weighs each half-session by how
+often it repeats the pattern, and in how many half-sessions contain it,
+which counts each half-session once.
+
+### How often a pattern occurs
+
+For each pattern length in `sub` (3 to 5 by default), `sequence_compare()`
+counts every pattern in each half and keeps the patterns that occur at
+least `min_freq` times in both. The standardised residual compares a half's
+count with the count expected if pattern and half were independent, in
+approximately standard-normal units (Haberman 1973). The permutation test
+shuffles the labels within sessions (`actor`), and the p-values are
+adjusted with the false discovery rate (Benjamini & Hochberg 1995).
 
 ```{r compare}
-res <- sequence_compare(net, min_freq = 25L, test = "chisq")
-res
+set.seed(20260413)
+counts <- sequence_compare(net, min_freq = 25L, test = "permutation",
+                           iter = 1000L, actor = "session_id")
+head(summary(counts), 8)
 ```
 
-`summary()` returns the full per-pattern table, one row per pattern, ranked by the test statistic:
+`freq_early` and `freq_late` are the counts, `resid_early` and
+`resid_late` the residuals, and `effect_size` the number of standard
+deviations by which the observed statistic exceeds the mean of the
+permuted ones. Of the 100 patterns tested, 18 differ at a false discovery
+rate of 0.05: 11 are more frequent early and 7 late. Directives followed by
+a metacognitive action are more frequent early
+(`Directive->Directive->Directive->Metacognitive`, 278 against 149), and
+patterns that start with an evaluation and continue with directives are
+more frequent late (`Evaluative->Directive->Directive`, 265 against 379).
 
-```{r top-table}
-head(summary(res), 10)
+```{r compare-pyramid}
+plot(counts, style = "pyramid", show_residuals = TRUE)
 ```
 
-### How to read the residuals
+The pyramid shows the patterns with the largest differences, the first
+half on the left and the second on the right, each pattern's count beside
+its bar, its residual inside the bar when the bar is wide enough, and its
+p-value in the middle. The heatmap shows the same residuals as a grid of
+patterns by halves, the layout used for more than two groups.
 
-For every pattern, the standardized residual is computed from a 2x2 contingency table `(this pattern vs. everything else)`:
-
-$$\text{stdres}_{ij} = \frac{O_{ij} - E_{ij}}{\sqrt{E_{ij} \cdot (1 - r_i/N) \cdot (1 - c_j/N)}}$$
-
-- **Positive on `early`** → over-represented in the first half of sessions
-- **Positive on `late`** → over-represented in the second half
-- `|z| > 1.96` corresponds to `p < 0.05`; `|z| > 3` is very strong evidence
-
-## 5. Pyramid plot
-
-Back-to-back bars with residual labels inside each segment. Both sides use the same standardized-residual color scale.
-
-```{r pyramid}
-plot(res, style = "pyramid", show_residuals = TRUE)
+```{r compare-heatmap}
+plot(counts, style = "heatmap")
 ```
 
-## 6. Heatmap
+By default the patterns are ranked by the test statistic;
+`sort = "frequency"` ranks them by their total count instead, which shows
+the most common patterns whatever their difference.
 
-Same top patterns, same color scale, alternative layout. Works for any number of groups (pyramid requires exactly 2).
-
-```{r heatmap}
-plot(res, style = "heatmap")
+```{r compare-frequency}
+plot(counts, style = "pyramid", sort = "frequency", show_residuals = TRUE)
 ```
 
-## 7. Sort by frequency
+### How many sequences contain a pattern
 
-By default patterns are ranked by test statistic. Pass `sort = "frequency"` to rank by total occurrence count instead — useful for focusing on the most common patterns regardless of their group difference.
+Support is the share of sequences that contain a pattern at least once
+(Agrawal & Srikant 1995). `sequence_patterns()` reports the support of each
+pattern and, for a group of networks, compares it between the groups with
+Fisher's exact test and an odds ratio with its 95% interval; the odds
+ratios are those of the late half, and `p_adj` is adjusted with the
+Benjamini-Hochberg method. Fisher's test treats the half-sessions as
+independent samples, so these p-values do not take the sessions into
+account. Four kinds of pattern are compared.
 
-```{r sort-freq}
-plot(res, style = "pyramid", sort = "frequency", show_residuals = TRUE)
+#### Contiguous patterns
+
+```{r ngram}
+ngrams <- sequence_patterns(net, type = "ngram", len = 3:4, min_freq = 25)
+head(ngrams, 6)
+```
+
+Of the 95 patterns, 20 differ in support at an adjusted level of 0.05: 8 occur
+in a larger share of early halves and 12 in a larger share of late halves.
+`Directive->Directive->Directive` occurs in 88% of the early halves and 59%
+of the late halves (odds ratio 0.20 [0.13, 0.28]), and
+`Evaluative->Directive->Directive` in 37% and 54% (2.01 [1.51, 2.67]).
+
+#### Two states with others between them
+
+A gapped pattern fixes two states and allows any states between them:
+`Evaluative->*->Directive` is an evaluation followed by a directive two
+positions later, `Evaluative->**->Directive` three positions later.
+
+```{r gapped}
+gaps <- sequence_patterns(net, type = "gapped", gap = 1:2, min_freq = 25)
+head(gaps, 8)
+```
+
+Of the 18 gapped patterns, 10 differ. An evaluation is followed by a
+directive two or three positions later in more late halves (47% against
+65%, odds ratio 2.05 [1.54, 2.72]; 39% against 60%, 2.33 [1.76, 3.10]), and
+a directive by a directive two positions later in more early halves (92%
+against 77%, 0.27 [0.17, 0.42]).
+
+#### Repetitions of one state
+
+A repeated pattern is a repetition of one state. Comparing repetitions of
+increasing length shows whether a group persists in a state for longer.
+
+```{r repeated}
+repeats <- sequence_patterns(net, type = "repeated", len = 2:5,
+                             min_freq = 10)
+repeats
+```
+
+Of the 12 repetitions, 7 differ. Repetitions of two to four directives
+occur in a larger share of early halves. Repetitions of metacognitive
+actions occur in a
+larger share of late halves, and the odds ratio grows with the length of
+the repetition: 1.94 for two, 2.56 for three, 3.77 for four and 10.10 for five.
+The repetition of five occurs in 1 early and 10 late half-sessions, so its
+interval is wide ([1.43, 439.30]). Repetitions of evaluations do not differ.
+
+#### The instances of one template
+
+`pattern =` searches for the instances of one template, in which `*`
+matches any one state, and `start`, `end` and `contain` restrict the
+search to patterns that begin, end or include given states.
+
+```{r template}
+sequence_patterns(net, pattern = "Evaluative->*->Directive")
+```
+
+All three instances of `Evaluative->*->Directive` occur in a larger share
+of late halves: an evaluation followed by a directive and another
+directive (37% against 54%), by another evaluation and a directive (27%
+against 35%), and by a metacognitive action and a directive (10% against
+14%).
+
+## Joint models
+
+The comparisons above test each pattern on its own, and patterns overlap:
+every half that contains `Directive->Directive->Directive` also contains
+`Directive->Directive`. `pattern_outcome()` fits one logistic regression
+in which the half is the outcome and the presence of each selected pattern
+is a predictor, so each pattern's odds ratio is adjusted for the others,
+with a random intercept per session (`group = "session_id"`). It follows
+`analyze_outcome()` in codyna (Tikka, López-Pernas & Saqr 2026): the `n`
+patterns with the largest chi-square statistic are selected and entered
+together.
+
+```{r outcome}
+joint <- pattern_outcome(net, outcome = "phase", len = 2:3, n = 8,
+                         group = "session_id")
+joint
+```
+
+`estimate` is the log odds ratio of the late half, adjusted for the other
+patterns, and `odds_ratio` with `or_lower` and `or_upper` its exponent and
+95% Wald interval. Four of the eight patterns remain associated with the
+half. A half that contains `Directive->Directive->Directive` (odds ratio
+0.17 [0.11, 0.25]) or `Directive->Directive->Metacognitive` (0.53 [0.38,
+0.74]) is less likely to be a late half; a half with
+`Evaluative->Directive->Directive` (2.42 [1.53, 3.81]) or
+`Metacognitive->Metacognitive` (2.13 [1.37, 3.30]) is more likely to be
+one. The other four have intervals that include 1 once the patterns above
+are in the model. The session variance is again estimated as zero. The
+patterns were selected by their association with the outcome before the
+model was fitted, so the p-values overstate the evidence.
+
+The same kind of model relates the half to several sequence indices at
+once. `outcome_model()` fits a logistic regression of the half on the
+indices returned by `sequence_metrics()` with `meta = TRUE`, which keeps
+the half and the session of each sequence, with a random intercept per
+session (`group = "session_id"`; Bates et al. 2015). Three indices are
+entered: `unique_states`, `longitudinal_entropy` and `transition_rate`.
+
+```{r indices-model}
+indices <- sequence_metrics(net, meta = TRUE)
+index_model <- outcome_model(indices, outcome = "phase",
+                             predictors = c("unique_states",
+                                            "longitudinal_entropy",
+                                            "transition_rate"),
+                             group = "session_id")
+index_model
+```
+
+The model uses 841 half-sessions from 423 sessions; the 13 half-sessions
+with a single action have no transition rate. The odds ratios are those of
+a late half per unit of each index, each adjusted for the other two. A
+half with a higher entropy (odds ratio 21.1 per unit, 95% interval [4.3,
+104.1]) or a higher transition rate (6.35 [2.55, 15.79]) is more likely to
+be a late half: late halves spread their actions more evenly over the
+states and switch between them more often. For the same entropy and
+transition rate, a half with more distinct states is less likely to be a
+late half (0.36 [0.20, 0.65]). The variance of the session intercepts is
+estimated as zero (a singular fit), so the halves of one session are no
+more alike than halves of different sessions once the indices are known.
+
+```{r indices-plot, fig.height = 3.5}
+plot(index_model)
 ```
 
 
-## 8. Note on the test choice
+## Summary
 
-The split-within-session design makes the two halves of one session non-independent (same human, same AI, same project). `test = "permutation"` shuffles group labels at the sequence level and assumes the sequences are exchangeable, which paired halves are not, so it is not used here.
+The levels agree. Early in a session, people give more directives, in long
+repetitions that stay in the opening state; later, they change state more
+often, spread their actions more evenly over the states, follow an
+evaluation with a directive more often and repeat metacognitive actions
+more often. The state tests, the permutation tests of the transitions,
+indices and pattern counts,
+and the mixed models take the sessions into account; the Fisher tests of
+pattern support do not.
 
-`test = "chisq"` answers the k-gram-level question "do the rates differ between halves?". It does not model the pairing either: every k-gram occurrence is treated as an independent count, so its p-values are best read as a ranking of the patterns that differ most, not as exact error rates. The permutation test is the right choice when the groups are independent cohorts (e.g., two projects), where each sequence belongs to one group only.
+## References
+
+Agrawal, R., & Srikant, R. (1995). Mining sequential patterns. In
+*Proceedings of the Eleventh International Conference on Data Engineering*
+(pp. 3–14). IEEE. <https://doi.org/10.1109/ICDE.1995.380415>
+
+Anderson, M. J., & ter Braak, C. J. F. (2003). Permutation tests for
+multi-factorial analysis of variance. *Journal of Statistical Computation
+and Simulation*, 73(2), 85–113. <https://doi.org/10.1080/00949650215733>
+
+Bates, D., Mächler, M., Bolker, B., & Walker, S. (2015). Fitting linear
+mixed-effects models using lme4. *Journal of Statistical Software*, 67(1).
+<https://doi.org/10.18637/jss.v067.i01>
+
+Benjamini, Y., & Hochberg, Y. (1995). Controlling the false discovery rate:
+A practical and powerful approach to multiple testing. *Journal of the
+Royal Statistical Society: Series B (Methodological)*, 57(1), 289–300.
+<https://doi.org/10.1111/j.2517-6161.1995.tb02031.x>
+
+Donner, A., & Klar, N. (1994). Methods for comparing event rates in
+intervention studies when the unit of allocation is a cluster. *American
+Journal of Epidemiology*, 140(3), 279–289.
+<https://doi.org/10.1093/oxfordjournals.aje.a117247>
+
+Gabadinho, A., Ritschard, G., Müller, N. S., & Studer, M. (2011).
+Analyzing and visualizing state sequences in R with TraMineR. *Journal of
+Statistical Software*, 40(4). <https://doi.org/10.18637/jss.v040.i04>
+
+Good, P. (2005). *Permutation, parametric and bootstrap tests of
+hypotheses*. Springer. <https://doi.org/10.1007/b138696>
+
+Haberman, S. J. (1973). The analysis of residuals in cross-classified
+tables. *Biometrics*, 29(1), 205–220. <https://doi.org/10.2307/2529686>
+
+Hedges, L. V. (1981). Distribution theory for Glass's estimator of effect
+size and related estimators. *Journal of Educational Statistics*, 6(2),
+107–128. <https://doi.org/10.3102/10769986006002107>
+
+Landis, J. R., Heyman, E. R., & Koch, G. G. (1978). Average partial
+association in three-way contingency tables: A review and discussion of
+alternative tests. *International Statistical Review*, 46(3), 237–254.
+<https://doi.org/10.2307/1402373>
+
+Liang, K.-Y., & Zeger, S. L. (1986). Longitudinal data analysis using
+generalized linear models. *Biometrika*, 73(1), 13–22.
+<https://doi.org/10.1093/biomet/73.1.13>
+
+Misiejuk, K., López-Pernas, S., Oliveira, E., Rinja, D., & Saqr, M.
+(2026). It takes two to vibe code: Profiling student-AI programming
+interactions processes and their high order structure. In *Proceedings of
+the 26th Koli Calling International Conference on Computing Education
+Research* (pp. 1–11). ACM. <https://doi.org/10.1145/3856208.3856254>
+
+Rao, J. N. K., & Scott, A. J. (1984). On chi-squared tests for multiway
+contingency tables with cell proportions estimated from survey data. *The
+Annals of Statistics*, 12(1), 46–60. <https://doi.org/10.1214/aos/1176346391>
+
+Saqr, M., López-Pernas, S., & Misiejuk, K. (2026). Nestimate: An R package
+for dynamic, probabilistic, and high order network analysis. *Applied
+Psychological Measurement*. <https://doi.org/10.1177/01466216261472019>
+
+Saqr, M., López-Pernas, S., Törmänen, T., Kaliisa, R., Misiejuk, K., &
+Tikka, S. (2025). Transition network analysis: A novel framework for
+modeling, visualizing, and identifying the temporal patterns of learners
+and learning processes. In *Proceedings of the 15th International Learning
+Analytics and Knowledge Conference (LAK25)* (pp. 351–361). ACM.
+<https://doi.org/10.1145/3706468.3706513>
+
+Saqr, M., Misiejuk, K., & López-Pernas, S. (2026). Human-AI
+collaboration or obedient and often clueless AI in instruct, serve, repeat
+dynamics? *The Internet and Higher Education*, 70, 101087.
+<https://doi.org/10.1016/j.iheduc.2026.101087>
+
+Saqr, M., Nouri, J., & Fors, U. (2019). Time to focus on the temporal
+dimension of learning: A learning analytics study of the temporal patterns
+of students' interactions and self-regulation. *International Journal of
+Technology Enhanced Learning*, 11(4), 398–412.
+<https://doi.org/10.1504/IJTEL.2019.102549>
+
+Tikka, S., López-Pernas, S., & Saqr, M. (2026). *Analyzing complex dynamic
+systems with the R package codyna* [Preprint].
+<https://doi.org/10.13140/RG.2.2.19126.56646>

@@ -1,103 +1,529 @@
 ---
-title: "Comparing two networks with compare_networks()"
+title: "Comparing networks with compare_networks()"
+author:
+  - name: Mohammed Saqr
+    url: https://saqr.me
+    affiliation: University of Eastern Finland
+  - name: Sonsoles López-Pernas
+    url: https://sonsoles.me
+    affiliation: University of Eastern Finland
+  - name: Kamila Misiejuk
+    url: https://kamilamisiejuk.com
+    affiliation: FernUniversität in Hagen, Germany
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, fig.width = 9, fig.height = 6)
-library(Nestimate)
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE,
+                      fig.width = 9, fig.height = 6)
 ```
 
-High and low achievers in `group_regulation_long` are compared with a
-permutation test (1,000 permutations).
+Do two groups, or two periods, produce different networks?
+`compare_networks()` in Nestimate (Saqr, López-Pernas, & Misiejuk, 2026)
+compares two or more networks edge by edge, node by node and on global
+metrics, and returns one object from which every table and plot is drawn.
+By default the comparison is descriptive; `test` adds a permutation test,
+a Bayesian comparison or a bootstrap of the network structure.
 
-```{r}
+| Table | Verb |
+|-------|------|
+| One row per pair of networks | `summary()` |
+| One row per pair and edge | `edge_differences()` |
+| One row per pair, node and centrality measure | `node_differences()` |
+| One row per pair and global metric | `global_differences()` |
+| One row per network and structural metric | `network_metrics()` |
+
+## Data
+
+`group_regulation_long` records the regulation actions of 2,000 students
+working in 200 teams of 10, generated synthetically from the
+`group_regulation` data of the tna package (Tikka, López-Pernas, & Saqr,
+2025). Achievement (`Achiever`, High or Low) is recorded per team.
+`build_network()` with `group = "Achiever"` estimates one transition
+network per level.
+
+```{r data}
+library(Nestimate)
 achievers <- build_network(group_regulation_long, method = "relative",
                            actor = "Actor", action = "Action",
                            time = "Time", group = "Achiever")
-cmp <- compare_networks(achievers, test = "permutation", iter = 1000, seed = 1)
-cmp
-summary(cmp)
+achievers
 ```
 
-The networks are similar overall (Pearson 0.92, cosine 0.95, Jaccard
-0.75) but differ in 42 of 78 transitions and 16 of 27 node measures. The
-global test is significant (M = 2.61, p = 0.001).
+## Describing the difference
 
-## networks
-```{r}
-plot(cmp, type = "networks")
+```{r describe}
+comparison <- compare_networks(achievers)
+comparison
+summary(comparison)
 ```
 
-The two networks side by side.
+The comparison takes the difference High minus Low for each of the 81
+cells of the weight matrices, self-loops included. 78 cells differ; High
+is higher in 51% of them and Low in 46%. The mean absolute difference is
+0.03 and the largest, `discuss` to `consensus`, 0.21. The two networks are
+alike overall: the edge weights correlate at 0.92 (Pearson and Spearman),
+the cosine similarity is 0.95, and the Jaccard similarity of the edges
+present in each network is 0.75.
 
-## difference
-```{r}
-plot(cmp, type = "difference")
+```{r global}
+global_differences(comparison)
 ```
 
-High minus Low for each transition: blue is higher in High, red higher in
-Low; the line style also carries the sign.
+`global_differences()` reports 22 metrics in five groups: deviations of
+the weights (mean, median, root mean square and largest absolute
+difference), correlations, dissimilarities (Euclidean, Manhattan,
+Canberra, Bray-Curtis, Frobenius), similarities (cosine, Jaccard, Dice,
+overlap and the RV coefficient, a correlation between matrices; Robert &
+Escoufier, 1976), and the agreement of the ranks and signs of the
+weights.
 
-## edges
-```{r}
-plot(cmp, type = "edges")
+```{r global-plot, fig.height = 7}
+plot(comparison, type = "global")
 ```
 
-The largest differences: `discuss` to `consensus` (0.42 vs 0.21) and
-`synthesis` to `consensus` (0.58 vs 0.39) are higher in High; `synthesis`
-to `adapt` is higher in Low (0.14 vs 0.30). All have p = 0.001.
+Each panel is one group of metrics, with a dotted line at the value of
+identical networks: 1 for correlations and similarities, 0 for
+deviations and dissimilarities.
 
-## nodes
-```{r}
-plot(cmp, type = "nodes")
+```{r metrics}
+network_metrics(comparison)
 ```
 
-Centrality differences per state. `synthesis` has higher betweenness in
-High (7 vs 0, p = 0.003); `adapt` in Low (4 vs 1, p = 0.001).
+`network_metrics()` describes each network on its own. Both are almost
+complete (76 and 75 of 81 possible edges, density 1 rounded), and their
+in-strengths are spread more widely in High (SD 0.91) than in Low (0.72).
 
-## global
-```{r}
-plot(cmp, type = "global")
+### Edges
+
+```{r edges}
+head(edge_differences(comparison), 8)
 ```
 
-The 22 similarity and distance metrics of `global_differences(cmp)`,
-grouped by category.
+`edge_differences()` gives one row per cell: the two weights, their
+difference, its absolute value, the relative difference
+(`|a - b| / (|a| + |b|)`), the ratio, the ranks of the edge in each
+network, `status` (present in both networks, in one, or in neither) and
+`higher`, the network in which the edge is larger. `adapt` to `coregulate`
+exists only in Low (0 against 0.03).
 
-## heatmap
-```{r}
-plot(cmp, type = "heatmap")
+```{r edges-plot}
+plot(comparison, type = "edges")
 ```
 
-Every cell of the High minus Low difference matrix, with its value.
+The edge view draws the 20 largest differences as a line between the two
+weights, a diamond for High and a square for Low. The line is solid blue
+where High is higher and dashed red where Low is higher, and is labelled
+with the difference. `discuss` to `consensus` (0.42 in High, 0.21 in Low) and
+`synthesis` to `consensus` (0.58 against 0.39) are the largest differences
+in favour of High, and `synthesis` to `adapt` (0.14 against 0.30) in
+favour of Low.
 
-## scatter
-```{r}
-plot(cmp, type = "scatter")
+```{r networks-plot}
+plot(comparison, type = "networks")
 ```
 
-Each transition's weight in High against Low; points on the diagonal
-are equal in both (Pearson 0.92).
-
-## inference
-```{r}
-plot(cmp, type = "inference")
+```{r difference-plot}
+plot(comparison, type = "difference")
 ```
 
-Edge differences with their permutation p-values; filled markers are
-significant at 0.05.
+The networks view draws each network once; the difference view draws the
+signed difference network, blue for transitions stronger in High and red
+for transitions stronger in Low.
+
+```{r heatmap-plot}
+plot(comparison, type = "heatmap")
+```
+
+```{r scatter-plot}
+plot(comparison, type = "scatter")
+```
+
+The heatmap prints every cell of the difference matrix. The scatter plot
+sets each transition's weight in High against its weight in Low; points on
+the diagonal are equal in both.
+
+### Nodes
+
+```{r nodes}
+node_differences(comparison, measure = "InStrength")
+```
+
+`node_differences()` compares the centralities of each state, by default
+in-strength, out-strength and betweenness. `consensus` receives the most
+in both networks, more in High (2.95 against 2.42), and `adapt` and
+`coregulate` receive more in Low.
+
+```{r nodes-plot}
+plot(comparison, type = "nodes")
+```
+
+## Permutation test
+
+The descriptive tables show where the networks differ, not whether a
+difference is larger than sampling would produce. `test = "permutation"`
+reassigns the sequences to the two groups 1,000 times, re-estimates both
+networks each time, and compares the observed difference of each edge and
+node measure with the reassigned ones (Saqr et al., 2025). Two global
+statistics test whether the networks differ at all: M, the sum of the
+absolute differences over all cells, and S, the largest.
+
+```{r permutation}
+tested <- compare_networks(achievers, test = "permutation", iter = 1000,
+                           seed = 1)
+summary(tested)
+```
+
+42 of the 78 transitions and 16 of the 27 node measures differ at the 5%
+level, and both global statistics are significant (M = 2.61, S = 0.21,
+p = 0.001, the smallest p-value 1,000 permutations can give). `adjust`
+corrects the edge p-values for multiple testing, for example
+`adjust = "BH"`.
+
+```{r inference-plot, fig.height = 7}
+plot(tested, type = "inference")
+```
+
+The inference view draws each edge difference as a bar from zero, with its
+p-value on the right; a filled marker is significant at 0.05.
+
+## Differences in centralities
+
+`measures = "all"` compares nine centralities. In- and out-strength are
+the sums of a state's incoming and outgoing transition probabilities
+(Opsahl, Agneessens, & Skvoretz, 2010). Closeness is the inverse of the
+summed shortest-path distances to a state (`ClosenessIn`), from it
+(`ClosenessOut`) or ignoring direction (`Closeness`), and betweenness the
+number of shortest paths that pass through it (Freeman, 1978); a heavier
+edge is a shorter step. `BetweennessRSP` counts randomised shortest paths,
+which include routes slightly longer than the shortest (Kivimäki et al.,
+2016). `Diffusion` sums the weights of the walks of up to n steps that
+start at a state (Banerjee et al., 2013), and `Clustering` is the weighted
+clustering coefficient (Onnela et al., 2005). The permutation test gives
+each a p-value.
+
+```{r centralities}
+centralities <- compare_networks(achievers, measures = "all",
+                                 test = "permutation", iter = 1000, seed = 1)
+summary(centralities)
+```
+
+55 of the 81 node measures (nine states, nine measures) differ at the 5%
+level: all nine closeness values, eight each for randomised-shortest-path
+betweenness and clustering, seven each for in-strength and in-closeness,
+five each for out-strength and diffusion, four for betweenness and two for
+out-closeness.
+
+```{r betweenness}
+node_differences(centralities, measure = "Betweenness")
+```
+
+`consensus` lies on most shortest paths in both networks, more in High
+(30 against 25, p = 0.001). `synthesis` lies on 7 shortest paths in High
+and none in Low (p = 0.003), and `emotion` on 5 against 3 (p = 0.001);
+`adapt` lies on more in Low (4 against 1, p = 0.001). `coregulate`,
+`discuss` and `plan` differ by 2 or 3 paths without significance.
+
+```{r betweenness-rsp}
+node_differences(centralities, measure = "BetweennessRSP")
+```
+
+Counting near-shortest routes as well, every state except `adapt` lies on
+more routes in High, and all eight differences are significant;
+`consensus` has 121 against 88.
+
+```{r closeness}
+node_differences(centralities, measure = "Closeness", digits = 3)
+```
+
+Closeness is higher in High for every state except `coregulate`.
+
+```{r centralities-plot, fig.height = 8}
+plot(centralities, type = "nodes",
+     measure = c("Betweenness", "BetweennessRSP", "Closeness", "Diffusion"))
+```
+
+The node view draws each state's value in both networks, a diamond for
+High and a square for Low, joined by a solid blue line where High is higher
+and a dashed red line where Low is higher; stars mark the significant
+differences.
+
+## Edge betweenness
+
+Betweenness can also be computed for edges: the number of shortest paths
+between states that pass through an edge (Girvan & Newman, 2002). An edge
+with a high value carries many of the routes through the network.
+`net_edge_betweenness()` returns one network per group whose weights are
+these counts, and `permutation()` tests the difference of every edge: it
+reassigns the sequences between the groups, re-estimates both transition
+networks and recomputes their edge betweenness each time.
+
+```{r edge-betweenness}
+edge_betweenness <- net_edge_betweenness(achievers)
+edge_betweenness
+routes <- permutation(edge_betweenness, iter = 1000, seed = 1)
+routes
+subset(summary(routes), sig)
+```
+
+Shortest paths run over 24 edges in High and 29 in Low, and 10 of the 29
+edges tested differ in the number of paths they carry. In Low, 9 shortest
+paths pass through `discuss` to `adapt` and none in High; in High,
+`discuss` to `synthesis` carries 15 against 8 and `synthesis` to `adapt`
+9 against 3.
+
+```{r edge-betweenness-plot}
+library(cograph)
+splot(routes, edge_positive_color = "#4A6FE3",
+      edge_negative_color = "#D33F6A")
+```
+
+cograph draws the edges that differ, blue where High carries more paths
+and red where Low does.
+
+`bayes_compare()` is the Bayesian route. Edge betweenness is not a simple
+function of single transition probabilities, so it draws whole transition
+matrices from the Dirichlet posterior of each network, with the Jeffreys
+prior added to the counts, and recomputes edge betweenness on every one of
+10,000 draws. `diff` is the posterior mean difference in the number of
+shortest paths, with its 95% credible interval; an edge is credibly
+different when the interval excludes zero.
+
+```{r edge-betweenness-bayes}
+routes_posterior <- bayes_compare(edge_betweenness, seed = 1)
+routes_posterior
+head(summary(routes_posterior), 8)
+```
+
+2 of the 78 edges are credibly different: `discuss` to `consensus` carries
+2.9 more shortest paths in High (95% interval 1 to 4), and `coregulate` to
+`consensus` carries one path in Low and almost none in High. Betweenness
+counts whole paths, so its posterior intervals run between whole numbers
+and are wide. `discuss` to `adapt`, which carries 7.1 paths in Low and none
+in High on average, has an interval from −9 to 0: every draw has it lower
+in High (`p_difference` = 1), but the interval reaches zero, so it is not
+credibly different. The permutation test found 10 edges, the Bayesian
+comparison 2; the two answer the question in different ways, by
+reassigning whole sequences and by drawing transition probabilities
+independently.
+
+```{r edge-betweenness-bayes-plot}
+plot(routes_posterior)
+```
+
+## Bayesian comparison
+
+`test = "bayes"` models the transitions out of each state with a Dirichlet
+posterior in each network, with the Jeffreys prior of 0.5 added to every
+count (Jeffreys, 1946; Johnston & Jendoubi, 2026), and draws the
+difference of every edge from the two posteriors (Gelman et al., 2013).
+It reports the posterior mean difference, its 95% credible interval and
+the probability of direction, the posterior probability that the
+difference has the sign of its mean (Makowski et al., 2019). `bayes_p` is
+`2 * (1 - pd)`, a two-sided p-value equivalent.
+
+```{r bayes}
+bayesian <- compare_networks(achievers, test = "bayes", iter = 1000,
+                             seed = 1)
+summary(bayesian)
+```
+
+39 transitions have a 95% credible interval that excludes zero, against
+42 significant in the permutation test; the two agree on 76 of the 81
+cells. The posterior treats the transitions as independent counts, while
+the permutation test reassigns whole sequences.
+
+```{r bayes-plot, fig.height = 7}
+plot(bayesian, type = "inference")
+```
+
+### Practical equivalence
+
+A credible interval that excludes zero says the difference is not zero,
+not that it is large enough to matter. `rope` sets a region of practical
+equivalence around zero on the difference scale (Kruschke, 2018); here a
+difference of up to 0.02 in a transition probability is treated as
+negligible. Each edge is classed as `different` when its 95% credible
+interval lies entirely outside the region, `equivalent` when it lies
+entirely inside, and `undecided` otherwise.
+
+```{r rope}
+equivalence <- compare_networks(achievers, test = "bayes", iter = 1000,
+                                seed = 1, rope = 0.02)
+subset(edge_differences(equivalence), bayes_decision == "different")
+```
+
+19 transitions are different, 22 practically equivalent and 40
+undecided. The different ones include the largest differences of the
+descriptive comparison, such as `discuss` to `consensus` and `synthesis`
+to `adapt`.
+
+### `bayes_compare()`
+
+`bayes_compare()` runs the same model on its own, with 10,000 posterior
+draws by default. An edge is credibly different when its 95% interval
+excludes zero, its posterior mean difference exceeds 0.01 in absolute
+value, and the interval bound nearest zero exceeds 0.001.
+
+```{r bayes-compare}
+posterior <- bayes_compare(achievers, seed = 1)
+head(summary(posterior), 8)
+```
+
+The table gives each transition's weight and count in both networks, the
+posterior mean difference, an effect size (the difference divided by its
+posterior standard deviation), the credible interval and the probability
+that the difference has the sign of its mean (`p_difference`). 38
+transitions are credibly different. `adapt` to `coregulate` occurs 11
+times in Low and never in High; its interval, [−0.049, −0.008], excludes
+zero.
+
+```{r bayes-compare-plot, fig.height = 7}
+plot(posterior)
+```
+
+The plot draws the credibly different transitions as a difference
+network, blue where High is higher and red where Low is higher, each edge
+labelled with its posterior mean difference and credible interval.
+
+## Bootstrap of the structure
+
+`test = "bootstrap"` resamples the nodes of each network (Snijders &
+Borgatti, 1999; Davison & Hinkley, 1997) and compares four structural
+measures: density, mean weight, centralization and reciprocity. It reads
+only the weight matrices, so it also works for matrices without data.
+
+```{r bootstrap}
+structural <- compare_networks(achievers, test = "bootstrap", iter = 1000,
+                               seed = 1)
+subset(global_differences(structural), category == "Structure (bootstrap)")
+```
+
+None of the four measures differs (p between 0.69 and 0.99): the two
+networks have the same overall structure, and they differ in which
+transitions carry the weight.
 
 ## Accounting for nesting
-```{r}
-nested <- compare_networks(achievers, test = "permutation", iter = 1000,
-                           seed = 1, actor = "Group")
-nested
-tail(global_differences(nested, digits = 3), 5)
-```
 
 Students are nested in teams, and the achievement level is given per
 team. With `actor = "Group"`, the permutation test reassigns whole teams
 instead of single students, and `global_differences()` gains three
-`Nesting` rows. The ICC is −0.002, which indicates little evidence of a
-nesting effect; the design effect is 1.01 for the transitions and 1.17
-for M. The networks still differ overall (M = 2.61, p = 0.001), and 42
-transitions remain significant.
+`Nesting` rows.
+
+```{r nested}
+nested <- compare_networks(achievers, test = "permutation", iter = 1000,
+                           seed = 1, actor = "Group")
+subset(global_differences(nested, digits = 3),
+       category %in% c("Global Test (permutation)", "Nesting"))
+```
+
+The intraclass correlation is −0.002, and the design effect is 1.03 for
+the transitions and 1.20 for M. The networks still differ overall
+(M = 2.61, p = 0.001), and 42 transitions remain significant. The
+article on nested data describes these quantities.
+
+## More than two networks
+
+`mark_phases()` divides each student's actions into three phases of equal
+length, and `build_network()` estimates one network per phase. Every
+student contributes to all three phases, so with `actor = "Actor"` the
+permutation test reassigns each student's sequences between phases within
+the student. `reference = "early"` compares the other two phases with the
+first instead of comparing every pair.
+
+```{r phases}
+phased <- mark_phases(group_regulation_long, actor = "Actor", time = "Time",
+                      n = 3, labels = c("early", "middle", "late"))
+phases <- build_network(phased, method = "relative", actor = "Actor",
+                        action = "Action", time = "Time", group = "phase")
+over_time <- compare_networks(phases, reference = "early",
+                              test = "permutation", iter = 1000, seed = 1,
+                              actor = "Actor")
+summary(over_time)
+```
+
+The three phases are nearly identical: the edge weights correlate at 0.99
+with those of the early phase, and the largest difference is 0.08. Neither
+global test is significant (p = 0.71 and 0.72 for M). Six and four of the
+78 transitions differ at the 5% level, about the four that 78 tests at
+that level produce by chance; `adjust = "BH"` corrects the edge p-values
+for the number of tests.
+
+```{r phases-plot}
+plot(over_time, type = "edges", pair = "late")
+```
+
+`pair` selects the comparisons a view or a table shows, by the pair name,
+the two network names or one network name.
+
+## References
+
+Banerjee, A., Chandrasekhar, A. G., Duflo, E., & Jackson, M. O. (2013).
+The diffusion of microfinance. *Science*, 341(6144), 1236498.
+<https://doi.org/10.1126/science.1236498>
+
+Davison, A. C., & Hinkley, D. V. (1997). *Bootstrap methods and their
+application*. Cambridge University Press.
+<https://doi.org/10.1017/CBO9780511802843>
+
+Freeman, L. C. (1978). Centrality in social networks: Conceptual
+clarification. *Social Networks*, 1(3), 215–239.
+<https://doi.org/10.1016/0378-8733(78)90021-7>
+
+Gelman, A., Carlin, J. B., Stern, H. S., Dunson, D. B., Vehtari, A., &
+Rubin, D. B. (2013). *Bayesian data analysis* (3rd ed.). CRC Press.
+
+Girvan, M., & Newman, M. E. J. (2002). Community structure in social and
+biological networks. *Proceedings of the National Academy of Sciences*,
+99(12), 7821–7826. <https://doi.org/10.1073/pnas.122653799>
+
+Jeffreys, H. (1946). An invariant form for the prior probability in
+estimation problems. *Proceedings of the Royal Society of London. Series
+A*, 186(1007), 453–461. <https://doi.org/10.1098/rspa.1946.0056>
+
+Johnston, L., & Jendoubi, T. (2026). How delivery mode reshapes resource
+engagement: A Bayesian differential network analysis. *TNA Workshop
+2026*.
+
+Kivimäki, I., Lebichot, B., Saramäki, J., & Saerens, M. (2016). Two
+betweenness centrality measures based on randomized shortest paths.
+*Scientific Reports*, 6, 19668. <https://doi.org/10.1038/srep19668>
+
+Kruschke, J. K. (2018). Rejecting or accepting parameter values in
+Bayesian estimation. *Advances in Methods and Practices in Psychological
+Science*, 1(2), 270–280. <https://doi.org/10.1177/2515245918771304>
+
+Makowski, D., Ben-Shachar, M. S., Chen, S. H. A., & Lüdecke, D. (2019).
+Indices of effect existence and significance in the Bayesian framework.
+*Frontiers in Psychology*, 10, 2767.
+<https://doi.org/10.3389/fpsyg.2019.02767>
+
+Onnela, J.-P., Saramäki, J., Kertész, J., & Kaski, K. (2005). Intensity
+and coherence of motifs in weighted complex networks. *Physical Review E*,
+71(6), 065103. <https://doi.org/10.1103/PhysRevE.71.065103>
+
+Opsahl, T., Agneessens, F., & Skvoretz, J. (2010). Node centrality in
+weighted networks: Generalizing degree and shortest paths. *Social
+Networks*, 32(3), 245–251. <https://doi.org/10.1016/j.socnet.2010.03.006>
+
+Robert, P., & Escoufier, Y. (1976). A unifying tool for linear
+multivariate statistical methods: The RV-coefficient. *Journal of the
+Royal Statistical Society: Series C (Applied Statistics)*, 25(3), 257–265.
+<https://doi.org/10.2307/2347233>
+
+Saqr, M., López-Pernas, S., & Misiejuk, K. (2026). Nestimate: An R package
+for dynamic, probabilistic, and high order network analysis. *Applied
+Psychological Measurement*. <https://doi.org/10.1177/01466216261472019>
+
+Saqr, M., López-Pernas, S., Törmänen, T., Kaliisa, R., Misiejuk, K., &
+Tikka, S. (2025). Transition network analysis: A novel framework for
+modeling, visualizing, and identifying the temporal patterns of learners and
+learning processes. In *Proceedings of the 15th International Learning
+Analytics and Knowledge Conference (LAK25)* (pp. 351–361). ACM.
+<https://doi.org/10.1145/3706468.3706513>
+
+Snijders, T. A. B., & Borgatti, S. P. (1999). Non-parametric standard
+errors and tests for network statistics. *Connections*, 22(2), 161–170.
+
+Tikka, S., López-Pernas, S., & Saqr, M. (2025). tna: An R package for
+transition network analysis. *Applied Psychological Measurement*, 49(6),
+326–328. <https://doi.org/10.1177/01466216251348840>
