@@ -112,6 +112,10 @@ test_that("summary() gives the tests, as.data.frame() the edges", {
   expect_identical(nrow(ed), 10L)
   expect_equal(ed$difference, abs(ed$weight_1 - ed$weight_2))
   expect_true(all(ed$p_value >= 1 / (nct_iter + 1) & ed$p_value <= 1))
+  expect_identical(summary(fit, table = "edges"), ed)
+  # print() lists the six largest differences, not every edge
+  shown <- capture.output(print(fit))
+  expect_true(any(grepl("Largest edge differences \\(6 of 10\\)", shown)))
   gl <- summary(fit)
   expect_named(gl, c("test", "statistic", "observed", "p_value", "significant"))
   expect_identical(gl$statistic, c("M", "S"))
@@ -130,7 +134,7 @@ test_that("print reports the three tests", {
   expect_output(print(fit), "Network Comparison Test")
   expect_output(print(fit), "S  global strength")
   expect_output(print(fit), "M  network structure")
-  expect_output(print(fit), "Edges, largest difference first")
+  expect_output(print(fit, n = Inf), "Edges, largest difference first")
 })
 
 test_that("M and S follow the NCT notation; the old fields fail loudly", {

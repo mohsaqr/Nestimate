@@ -67,6 +67,7 @@ leaving a rare action is estimated from few transitions.
 
 ```{r network}
 net
+extract_initial_probs(net)
 ```
 
 The strongest transitions are from `Delegate` to `Plan` (0.62) and from

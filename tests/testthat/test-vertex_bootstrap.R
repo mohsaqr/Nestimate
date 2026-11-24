@@ -163,10 +163,12 @@ test_that("vertex_compare returns a tidy two-network comparison", {
 
   expect_s3_class(cmp, "net_vertex_comparison")
   expect_identical(
-    names(cmp$summary),
-    c("statistic", "observed_g1", "observed_g2", "diff", "se_diff",
+    names(summary(cmp)),
+    c("statistic", "observed_x", "observed_y", "diff", "se_diff",
       "z", "p_value", "ci_lower", "ci_upper")
   )
+  # the labels name the networks in the printout, not in the columns
+  expect_output(print(cmp), "g1 \\(.* vs g2")
   expect_identical(nrow(cmp$summary), 4L)
   # z consistent with diff / se where defined
   defined <- !is.na(cmp$summary$z)

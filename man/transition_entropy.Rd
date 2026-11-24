@@ -7,7 +7,6 @@
 \alias{summary.net_transition_entropy_group}
 \alias{plot.net_transition_entropy_group}
 \alias{summary.net_transition_entropy}
-\alias{print.summary.net_transition_entropy}
 \alias{plot.net_transition_entropy}
 \title{Compute the transition entropy of a Markov chain}
 \usage{
@@ -17,13 +16,11 @@ transition_entropy(x, base = 2, normalize = TRUE)
 
 \method{print}{net_transition_entropy_group}(x, ...)
 
-\method{summary}{net_transition_entropy_group}(object, ...)
+\method{summary}{net_transition_entropy_group}(object, table = c("states", "chain"), ...)
 
 \method{plot}{net_transition_entropy_group}(x, title = "Transition Entropy", fill = "#0072B2", ...)
 
-\method{summary}{net_transition_entropy}(object, ...)
-
-\method{print}{summary.net_transition_entropy}(x, digits = 3, ...)
+\method{summary}{net_transition_entropy}(object, table = c("states", "chain"), ...)
 
 \method{plot}{net_transition_entropy}(x, title = "Transition Entropy", fill = "#0072B2", ...)
 }
@@ -40,7 +37,7 @@ message. For a frame without such a run, build the network with
 entries raises an error of class \code{nestimate_not_markov}. A \code{group_tna}
 (package tna) gives one result per group, as a \code{netobject_group} does. For
 the \code{print()} and \code{plot()} methods: a \code{transition_entropy()} result;
-\code{print()} also takes a group result or the result of \code{summary()}.}
+\code{print()} also takes a group result.}
 
 \item{base}{The logarithm base, which sets the unit: \code{2} (default) for
 bits, \code{exp(1)} for nats, \code{10} for hartleys. Any finite number greater
@@ -51,13 +48,15 @@ count matrix) are divided by their sums, with a warning. With \code{FALSE},
 such rows raise an error. Default \code{TRUE}. A state with no outgoing
 transitions (a row summing to zero) is an error either way.}
 
-\item{digits}{For the \code{print()} methods of a result and of its summary:
-decimal places of the values. Default \code{3}. A result's normalised values
-always print with three decimals, the summary's percentages with one.}
+\item{digits}{For the \code{print()} methods: decimal places of the values.
+Default \code{3}. The normalised values always print with three decimals.}
 
 \item{...}{For the \code{print()}, \code{summary()} and \code{plot()} methods: not used.}
 
 \item{object}{For \code{summary()}: a \code{transition_entropy()} result.}
+
+\item{table}{For \code{summary()}: \code{"states"} (default), the per-state table,
+or \code{"chain"}, the chain-level quantities.}
 
 \item{title}{For \code{plot()}: the plot title. Default \code{"Transition Entropy"}.}
 
@@ -68,19 +67,18 @@ Okabe-Ito blue.}
 A \code{net_transition_entropy} object, or for a \code{netobject_group} a
 \code{net_transition_entropy_group}: a named list of them, one per group.
 \code{print()} shows the entropy rate, stationary entropy and redundancy, raw
-and normalised, and for a group the entropy rate of each group. For a
-group, \code{summary()} returns a data frame with one row per group (\code{group},
-\code{n_states}, the raw and normalised entropy rate and stationary entropy,
-\code{redundancy} and \code{unit}), and \code{plot()} draws the bar chart below in one
-panel per group.
-\code{summary()} returns a \code{summary.net_transition_entropy} object, printed by
-its own \code{print()} method, that holds \code{table}, one row per state
-(stationary probability, raw and normalised branching entropy, the
-state's additive contribution \eqn{\pi_i H(P_{i\cdot})} to the entropy
-rate and that contribution as a percentage of it), sorted by contribution,
-largest first; \code{chain}, one row per chain-level quantity (entropy rate,
-stationary entropy, redundancy and the ceiling, raw and normalised),
-with the unit; and the logarithm \code{base}.
+and normalised, and for a group the entropy rate of each group.
+\code{summary()} returns a data frame. With \code{table = "states"} (default),
+one row per state (\code{state}, the stationary probability, raw and
+normalised branching entropy, the state's additive contribution
+\eqn{\pi_i H(P_{i\cdot})} to the entropy rate and that contribution as
+a percentage of it), sorted by contribution, largest first; for a group,
+with a \code{group} column first. With \code{table = "chain"}, one row per
+chain-level quantity (entropy rate, stationary entropy, redundancy and
+the ceiling, raw and normalised, with the unit); for a group, one row
+per group (\code{group}, \code{n_states}, the raw and normalised entropy rate and
+stationary entropy, \code{redundancy} and \code{unit}). For a group, \code{plot()}
+draws the bar chart below in one panel per group.
 \code{plot()} returns a \code{ggplot} bar chart of each state's branching entropy,
 with bar widths proportional to the stationary probability (so a bar's
 area is proportional to the state's contribution), a dashed line at the

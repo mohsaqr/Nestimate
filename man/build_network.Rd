@@ -8,6 +8,7 @@
 \alias{summary.netobject}
 \alias{summary.netobject_group}
 \alias{print.summary.netobject}
+\alias{[.summary.netobject_group}
 \alias{print.summary.netobject_group}
 \title{Estimate a network}
 \usage{
@@ -22,7 +23,7 @@ build_network(
   inherit = FALSE
 )
 
-\method{print}{netobject}(x, ...)
+\method{print}{netobject}(x, n = 10L, ...)
 
 \method{print}{netobject_group}(x, digits = 3L, ...)
 
@@ -30,9 +31,11 @@ build_network(
 
 \method{summary}{netobject}(object, ...)
 
-\method{summary}{netobject_group}(object, combined = TRUE, ...)
+\method{summary}{netobject_group}(object, combined = TRUE, format = c("long", "wide"), ...)
 
 \method{print}{summary.netobject}(x, ...)
+
+\method{[}{summary.netobject_group}(x, i, j, ...)
 
 \method{print}{summary.netobject_group}(x, ...)
 }
@@ -110,14 +113,28 @@ fitted chains, which take only its \code{threshold} and \code{scaling}.}
 \item{x}{For the \code{print()} methods: a \code{netobject}, \code{netobject_group} or
 \code{netobject_ml}, or the result of \code{summary()} on one.}
 
+\item{n}{For \code{print()} of a \code{netobject}: the number of edges listed,
+strongest first, self-loops included. Default \code{10}; \code{Inf} lists them
+all, as does \code{\link[=extract_edges]{extract_edges()}} with \code{include_self = TRUE};
+\code{\link[=extract_transition_matrix]{extract_transition_matrix()}} the weight matrix and
+\code{\link[=extract_initial_probs]{extract_initial_probs()}} the initial probabilities.}
+
 \item{digits}{For \code{print()} of a \code{netobject_group}: decimal places of the
 weight range. Default \code{3}.}
 
 \item{object}{For \code{summary()}: a \code{netobject} or \code{netobject_group}.}
 
 \item{combined}{For \code{summary()} of a \code{netobject_group}: \code{TRUE} (default)
-joins the groups' metrics into one data frame with a column per group;
-\code{FALSE} returns a named list of the per-group tables.}
+joins the groups' metrics into one data frame; \code{FALSE} returns a named
+list of the per-group tables.}
+
+\item{format}{For \code{summary()} of a \code{netobject_group} with
+\code{combined = TRUE}: \code{"long"} (default), one row per metric and group
+(\code{metric}, \code{group}, \code{value}), or \code{"wide"}, one row per metric with a
+column per group. Both print as a metric-by-group grid.}
+
+\item{i, j}{For \code{[} on a grouped summary: rows and columns, as for a data
+frame. A subset is a plain data frame.}
 }
 \value{
 A \code{netobject} (class \code{c("netobject", "cograph_network")}). Print it
@@ -125,7 +142,8 @@ for an overview; \code{\link[=extract_edges]{extract_edges()}} gives one row per
 and \code{\link[=extract_initial_probs]{extract_initial_probs()}} the weights and initial-state
 probabilities, and \code{cograph::splot()} draws it. \code{\link[=summary]{summary()}} returns the
 descriptive metrics, one row per metric (a \code{netobject_group} gives one
-column per group). The \code{print()} methods return their input invisibly.
+row per metric and group, with a \code{group} column). The \code{print()} methods
+return their input invisibly.
 The \code{netobject}'s fields:
 \describe{
 \item{data}{The state columns of the cleaned input data, as a data frame.}

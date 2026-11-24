@@ -2,6 +2,12 @@
 % Please edit documentation in R/centrality_measures.R
 \name{net_centrality}
 \alias{net_centrality}
+\alias{print.net_centrality}
+\alias{summary.net_centrality}
+\alias{print.net_centrality_group}
+\alias{summary.net_centrality_group}
+\alias{[.net_centrality_group}
+\alias{[.net_centrality}
 \alias{plot.net_centrality}
 \alias{plot.net_centrality_group}
 \title{Compute centrality measures for a network}
@@ -14,8 +20,21 @@ net_centrality(
   invert = TRUE,
   normalize_diffusion = TRUE,
   centrality_fn = NULL,
+  format = c("long", "wide"),
   ...
 )
+
+\method{print}{net_centrality}(x, n = 20L, digits = 2L, ...)
+
+\method{summary}{net_centrality}(object, ...)
+
+\method{print}{net_centrality_group}(x, n = 20L, digits = 2L, ...)
+
+\method{summary}{net_centrality_group}(object, ...)
+
+\method{[}{net_centrality_group}(x, i, j, ...)
+
+\method{[}{net_centrality}(x, i, j, ...)
 
 \method{plot}{net_centrality}(
   x,
@@ -78,7 +97,22 @@ when \code{normalize = FALSE}. Default \code{TRUE}.}
 and returns a named list of centrality vectors, one per measure; list
 their names in \code{measures}. Default \code{NULL}.}
 
+\item{format}{For a \code{netobject_group} or an \code{mcml}: \code{"long"} (default),
+one row per network and node, or \code{"wide"}, one row per node with a
+\verb{<measure>_<network>} column per measure and network. Ignored for a
+single network.}
+
 \item{...}{Not used.}
+
+\item{n}{For \code{print()}: the number of rows shown. Default \code{20}.}
+
+\item{digits}{For \code{print()}: the decimals shown. Default \code{2}.}
+
+\item{object}{For \code{summary()}: a \code{net_centrality} or
+\code{net_centrality_group} result.}
+
+\item{i, j}{For \code{[}: rows and columns, as for a data frame. A subset of a
+centrality result is a plain data frame.}
 
 \item{reorder}{For the \code{plot()} methods: whether to sort the nodes in each
 measure's panel by their value (for a group, by their mean value across
@@ -119,8 +153,13 @@ networks, whose bars are coloured by which network is higher.}
 For a \code{netobject} or \code{cograph_network}: a \code{net_centrality} data
 frame with one row per node, a \code{state} column and one column per
 requested measure (the node names are also the row names). For a
-\code{netobject_group} or an \code{mcml}: a \code{net_centrality_group}, a list of such
-data frames, one per network. \code{plot()} draws the measures per node.
+\code{netobject_group} or an \code{mcml}: a \code{net_centrality_group} data frame with
+one row per network and node, a \code{group} column (the network's name), a
+\code{state} column and one column per measure; with \code{format = "wide"}, one
+row per node. The settings are attributes (\code{measures}, \code{groups},
+\code{format}, ...). \code{print()} shows the first \code{n} rows rounded, \code{summary()}
+returns every row as a plain data frame, and \code{plot()} draws the
+measures per node.
 
 For the \code{plot()} methods: a \code{ggplot} object.
 }

@@ -2,6 +2,9 @@
 % Please edit documentation in R/sequence_metrics.R
 \name{sequence_metrics}
 \alias{sequence_metrics}
+\alias{print.net_sequence_metrics}
+\alias{summary.net_sequence_metrics}
+\alias{[.net_sequence_metrics}
 \title{Compute descriptive indices for each sequence}
 \usage{
 sequence_metrics(
@@ -17,8 +20,15 @@ sequence_metrics(
   indices = NULL,
   iter = 1000L,
   adjust = "BH",
+  format = c("long", "wide"),
   ...
 )
+
+\method{print}{net_sequence_metrics}(x, n = 10L, digits = 2L, ...)
+
+\method{summary}{net_sequence_metrics}(object, ...)
+
+\method{[}{net_sequence_metrics}(x, i, j, ...)
 }
 \arguments{
 \item{x}{The sequence data, in any form \code{\link[=extract_sequences]{extract_sequences()}} accepts.}
@@ -70,8 +80,24 @@ number of at least 1. Default \code{1000}.}
 \item{adjust}{The method of \code{\link[stats:p.adjust]{stats::p.adjust()}} applied to the p-values of
 the group comparison. Default \code{"BH"}.}
 
+\item{format}{The layout of a group comparison: \code{"long"} (default), one
+row per index and group, or \code{"wide"}, one row per index with a column
+per group. Ignored without \code{group}.}
+
 \item{...}{Further arguments passed to \code{\link[=prepare]{prepare()}} for a long event log,
 such as \code{time_threshold} or \code{order}.}
+
+\item{n}{For \code{print()} of a group comparison: the number of indices
+shown. Default \code{10}.}
+
+\item{digits}{For \code{print()}: the decimals of the means, SDs and effect
+sizes. Default \code{2}; p-values show 3 significant digits.}
+
+\item{object}{For \code{summary()}: a group comparison from
+\code{sequence_metrics(group = )}.}
+
+\item{i, j}{For \code{[}: rows and columns, as for a data frame. A subset of a
+group comparison is a plain data frame.}
 }
 \value{
 A data frame with one row per sequence, in the order of
@@ -79,13 +105,19 @@ A data frame with one row per sequence, in the order of
 (\code{integrative_potential} only with \code{favorable}). With \code{meta = TRUE},
 the input's covariate columns, if it has any, come first.
 
-With \code{group}, a data frame with one row per numeric index: \code{index};
-for each group \verb{n_<group>} (the sequences with a value of the index),
-\verb{mean_<group>} and \verb{sd_<group>}; with two groups, \code{difference} (the
-second group's mean minus the first's, in sorted order),
-\code{hedges_g} and its 95\% interval \code{g_lower}, \code{g_upper}; for any number of
-groups \code{eta_squared}, the one-way \code{statistic} (F), the permutation
-\code{p_value} and the adjusted \code{p_adj}.
+With \code{group}, a data frame of class \code{c("net_sequence_metrics", "data.frame")} with one row per numeric index and group: \code{index},
+\code{group}, \code{n} (the group's sequences with a value of the index), \code{mean}
+and \code{sd}; then the index's comparison, which repeats on each of its
+rows: with two groups \code{difference} (the second group's mean minus the
+first's, in sorted order), \code{hedges_g} and its 95\% interval \code{g_lower},
+\code{g_upper}; for any number of groups \code{eta_squared}, the one-way
+\code{statistic} (F), the permutation \code{p_value} and the adjusted \code{p_adj}.
+With \code{format = "wide"}, one row per index with \verb{n_<group>},
+\verb{mean_<group>} and \verb{sd_<group>} columns instead. The settings are
+attributes (\code{groups}, \code{group}, \code{actor}, \code{iter}, \code{adjust}, \code{format},
+\code{n_indices}). \code{print()} shows the first \code{n} indices, rounded;
+\code{summary()} returns the whole table as a plain data frame, and a subset
+is a plain data frame.
 }
 \description{
 \code{sequence_metrics()} computes descriptive indices for every sequence and

@@ -54,8 +54,7 @@ test_that("the rounded summaries of passage_time() and markov_stability() equal 
                      covers = c("markov_stability()", "summary.net_markov_stability()"),
                      quantity = sprintf("return, sojourn and passage times, chain %d", i), tolerance = 5e-3,
                      key = "state")
-    # summary.net_mpt() returns a list of a table and the object; the table is read with `$` (API gap).
-    table <- summary(passage_time(matrix_p))$table
+    table <- summary(passage_time(matrix_p))
     expect_reference(subset(table, select = c(state, stationary)),
                      data.frame(state = rownames(matrix_p), stationary = stationary), reference = "markovchain",
                      covers = c("passage_time()", "summary.net_mpt()"),

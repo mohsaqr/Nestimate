@@ -139,8 +139,8 @@ names (\code{"network"} for a single one).}
 \description{
 \code{landscape_trend()} traces the landscape of \code{\link[=stability_landscape]{stability_landscape()}} along
 a second axis and returns the height of every state, with a bootstrap
-interval, at each point of that axis. The axis is either the programme
-phase, \code{along = "phase"}: the landscape is estimated from the transitions
+interval, at each point of that axis. The axis is either time,
+\code{along = "phase"}: the landscape is estimated from the transitions
 inside a window of \code{window} time steps that slides one step at a time; or
 a numeric per-sequence covariate such as a grade, \code{along = "grade"}: at
 each value of the covariate it comes from the \code{k} nearest sequences,

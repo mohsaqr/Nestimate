@@ -125,11 +125,8 @@ test_that("A10-F03: redundancy_norm equals (Hpi - h)/Hpi, footer matches", {
   expect_false(grepl("Normalised: raw / log_2(n_states); 0 = deterministic, 1 = uniform.",
                       print_txt, fixed = TRUE))
 
-  sum_txt <- paste(capture.output(print(summary(te))), collapse = "\n")
-  expect_true(grepl("relative redundancy (H(pi) - h(P)) / H(pi)",
-                    sum_txt, fixed = TRUE))
-  expect_false(grepl("Normalised values are raw / log_2(n_states), in [0, 1].",
-                      sum_txt, fixed = TRUE))
+  # summary() returns the per-state table as a data frame; the footer is
+  # print()'s, checked above
 })
 
 test_that("A10-F04: transition_entropy @return lists every real slot", {

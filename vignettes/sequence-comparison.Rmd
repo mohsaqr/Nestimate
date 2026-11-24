@@ -232,13 +232,16 @@ adjusted with the false discovery rate (Benjamini & Hochberg 1995).
 set.seed(20260413)
 counts <- sequence_compare(net, min_freq = 25L, test = "permutation",
                            iter = 1000L, actor = "session_id")
-head(summary(counts), 8)
+counts
 ```
 
-`freq_early` and `freq_late` are the counts, `resid_early` and
-`resid_late` the residuals, and `effect_size` the number of standard
-deviations by which the observed statistic exceeds the mean of the
-permuted ones. Of the 100 patterns tested, 18 differ at a false discovery
+The printout shows one row per pattern and half: `count` is how often the
+pattern occurs in the half, `prop` its share of the half's patterns of that
+length, `resid` the standardised residual, and `effect` the number of
+standard deviations by which the observed statistic exceeds the mean of the
+permuted ones; `effect` and `p` belong to the pattern and repeat on its two
+rows. `summary(counts, format = "long")` returns that table for every
+pattern, and `summary(counts)` one row per pattern. Of the 100 patterns tested, 18 differ at a false discovery
 rate of 0.05: 11 are more frequent early and 7 late. Directives followed by
 a metacognitive action are more frequent early
 (`Directive->Directive->Directive->Metacognitive`, 278 against 149), and
@@ -282,7 +285,7 @@ account. Four kinds of pattern are compared.
 
 ```{r ngram}
 ngrams <- sequence_patterns(net, type = "ngram", len = 3:4, min_freq = 25)
-head(ngrams, 6)
+ngrams
 ```
 
 Of the 95 patterns, 20 differ in support at an adjusted level of 0.05: 8 occur
@@ -299,7 +302,7 @@ positions later, `Evaluative->**->Directive` three positions later.
 
 ```{r gapped}
 gaps <- sequence_patterns(net, type = "gapped", gap = 1:2, min_freq = 25)
-head(gaps, 8)
+gaps
 ```
 
 Of the 18 gapped patterns, 10 differ. An evaluation is followed by a

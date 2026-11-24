@@ -81,7 +81,8 @@
 #'   and [extract_initial_probs()] the weights and initial-state
 #'   probabilities, and `cograph::splot()` draws it. [summary()] returns the
 #'   descriptive metrics, one row per metric (a `netobject_group` gives one
-#'   column per group). The `print()` methods return their input invisibly.
+#'   row per metric and group, with a `group` column). The `print()` methods
+#'   return their input invisibly.
 #'   The `netobject`'s fields:
 #' \describe{
 #'   \item{data}{The state columns of the cleaned input data, as a data frame.}
@@ -1390,10 +1391,20 @@ build_network <- function(data, method, ..., group = NULL, scaling = NULL,
 #'   weight range. Default `3`.
 #' @param object For `summary()`: a `netobject` or `netobject_group`.
 #' @param combined For `summary()` of a `netobject_group`: `TRUE` (default)
-#'   joins the groups' metrics into one data frame with a column per group;
-#'   `FALSE` returns a named list of the per-group tables.
+#'   joins the groups' metrics into one data frame; `FALSE` returns a named
+#'   list of the per-group tables.
+#' @param format For `summary()` of a `netobject_group` with
+#'   `combined = TRUE`: `"long"` (default), one row per metric and group
+#'   (`metric`, `group`, `value`), or `"wide"`, one row per metric with a
+#'   column per group. Both print as a metric-by-group grid.
+#' @param n For `print()` of a `netobject`: the number of edges listed,
+#'   strongest first, self-loops included. Default `10`; `Inf` lists them
+#'   all, as does [extract_edges()] with `include_self = TRUE`;
+#'   [extract_transition_matrix()] the weight matrix and
+#'   [extract_initial_probs()] the initial probabilities.
 #' @export
-print.netobject <- function(x, ...) {
+print.netobject <- function(x, n = 10L, ...) {
+  .check_print_args(n, 0L)
   method_labels <- c(
     relative      = "Transition Network (relative probabilities)",
     frequency     = "Transition Network (frequency counts)",
@@ -1443,28 +1454,29 @@ print.netobject <- function(x, ...) {
     }
   }
 
-  # ---- Weight matrix ----
-  cat("\n  Weight matrix:\n")
-  digits <- if (all(nz == floor(nz))) 0L else 3L
-  mat_r  <- round(mat, digits)
-  labels <- x$nodes$label
-  dimnames(mat_r) <- list(labels, labels)
-  formatted <- capture.output(print(mat_r))
-  cat(paste0("  ", formatted, collapse = "\n"), "\n")
-
-  # ---- Initial probabilities ----
-  if (!is.null(x$initial) && length(x$initial) > 0) {
-    cat("\n  Initial probabilities:\n")
-    init  <- x$initial
-    ord   <- order(init, decreasing = TRUE)
-    bar_w <- 40L
-    max_v <- max(init)
-    vapply(ord, function(i) {
-      bars <- if (max_v > 0) strrep("\u2588", round(init[i] / max_v * bar_w)) else ""
-      cat(sprintf("  %-12s  %.3f  %s\n", names(init)[i], init[i], bars))
-      invisible("")
-    }, character(1L))
+  # ---- Strongest edges (the matrix and the initial probabilities have
+  # their own extractors, named below) ----
+  edges <- extract_edges(x, include_self = TRUE)
+  if (nrow(edges) > 0L) {
+    edges <- edges[order(-abs(edges$weight), edges$from, edges$to), ,
+                   drop = FALSE]
+    shown <- utils::head(edges, n)
+    digits <- if (all(nz == floor(nz))) 0L else 3L
+    cat(sprintf("\n  Strongest edges (%d of %d):\n", nrow(shown),
+                nrow(edges)))
+    shown$weight <- round(shown$weight, digits)
+    shown <- shown[c("from", "to", "weight")]
+    formatted <- capture.output(print(shown, row.names = FALSE,
+                                      right = FALSE))
+    cat(paste0("  ", formatted, collapse = "\n"), "\n")
+  } else {
+    cat("\n  No edges: every weight is zero.\n")
   }
+  cat(paste0("\n  extract_edges(include_self = TRUE) lists every edge; ",
+             "extract_transition_matrix() gives the weight matrix",
+             if (length(x$initial) > 0L) {
+               ";\n  extract_initial_probs() the initial probabilities"
+             }, ".\n"))
 
   # ---- Predictability (R\u00b2) ----
   if (!is.null(x$predictability) && length(x$predictability) > 0) {

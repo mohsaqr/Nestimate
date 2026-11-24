@@ -131,6 +131,9 @@
 #'   number of at least 1. Default `1000`.
 #' @param adjust The method of [stats::p.adjust()] applied to the p-values of
 #'   the group comparison. Default `"BH"`.
+#' @param format The layout of a group comparison: `"long"` (default), one
+#'   row per index and group, or `"wide"`, one row per index with a column
+#'   per group. Ignored without `group`.
 #' @param ... Further arguments passed to [prepare()] for a long event log,
 #'   such as `time_threshold` or `order`.
 #'
@@ -139,13 +142,20 @@
 #'   (`integrative_potential` only with `favorable`). With `meta = TRUE`,
 #'   the input's covariate columns, if it has any, come first.
 #'
-#'   With `group`, a data frame with one row per numeric index: `index`;
-#'   for each group `n_<group>` (the sequences with a value of the index),
-#'   `mean_<group>` and `sd_<group>`; with two groups, `difference` (the
-#'   second group's mean minus the first's, in sorted order),
-#'   `hedges_g` and its 95% interval `g_lower`, `g_upper`; for any number of
-#'   groups `eta_squared`, the one-way `statistic` (F), the permutation
-#'   `p_value` and the adjusted `p_adj`.
+#'   With `group`, a data frame of class `c("net_sequence_metrics",
+#'   "data.frame")` with one row per numeric index and group: `index`,
+#'   `group`, `n` (the group's sequences with a value of the index), `mean`
+#'   and `sd`; then the index's comparison, which repeats on each of its
+#'   rows: with two groups `difference` (the second group's mean minus the
+#'   first's, in sorted order), `hedges_g` and its 95% interval `g_lower`,
+#'   `g_upper`; for any number of groups `eta_squared`, the one-way
+#'   `statistic` (F), the permutation `p_value` and the adjusted `p_adj`.
+#'   With `format = "wide"`, one row per index with `n_<group>`,
+#'   `mean_<group>` and `sd_<group>` columns instead. The settings are
+#'   attributes (`groups`, `group`, `actor`, `iter`, `adjust`, `format`,
+#'   `n_indices`). `print()` shows the first `n` indices, rounded;
+#'   `summary()` returns the whole table as a plain data frame, and a subset
+#'   is a plain data frame.
 #'
 #' @section Comparing groups:
 #' For each numeric index, the groups are compared with the one-way F
@@ -200,7 +210,9 @@
 sequence_metrics <- function(x, favorable = NULL, omega = 1, meta = FALSE,
                              cols = NULL, actor = NULL, action = NULL,
                              time = NULL, group = NULL, indices = NULL,
-                             iter = 1000L, adjust = "BH", ...) {
+                             iter = 1000L, adjust = "BH",
+                             format = c("long", "wide"), ...) {
+  format <- match.arg(format)
   .assert(
     "`favorable` must be NULL or character" = is.null(favorable) ||
       is.character(favorable),
@@ -294,7 +306,8 @@ sequence_metrics <- function(x, favorable = NULL, omega = 1, meta = FALSE,
     nest <- if (!is.null(actor) && !is_log) actor
             else if (".session_label" %in% names(seqs$units)) ".session_label"
     return(.sm_compare(out, seqs$units, group = group, actor = nest,
-                       iter = as.integer(iter), adjust = adjust))
+                       iter = as.integer(iter), adjust = adjust,
+                       format = format))
   }
   if (meta && ncol(seqs$units) > 0L) out <- cbind(seqs$units, out)
   rownames(out) <- NULL
@@ -310,7 +323,8 @@ sequence_metrics <- function(x, favorable = NULL, omega = 1, meta = FALSE,
 #' @param iter,adjust Permutations and p-value adjustment.
 #' @return One row per numeric index; see `sequence_metrics()`.
 #' @noRd
-.sm_compare <- function(metrics, units, group, actor, iter, adjust) {
+.sm_compare <- function(metrics, units, group, actor, iter, adjust,
+                        format = "long") {
   if (!group %in% names(units)) {
     stop(errorCondition(sprintf(paste0(
       "`group` column '%s' is not a covariate of the sequences; available: %s."),
@@ -382,10 +396,107 @@ sequence_metrics <- function(x, favorable = NULL, omega = 1, meta = FALSE,
   out$statistic <- observed
   out$p_value <- p_value
   out$p_adj <- stats::p.adjust(p_value, method = adjust)
-  count_cols <- grep("^n_", names(out), value = TRUE)
+  count_cols <- paste0("n_", groups)
   out[count_cols] <- lapply(out[count_cols], as.integer)
   rownames(out) <- NULL
-  out
+  table <- if (identical(format, "wide")) out else .sm_long(out, groups)
+  .result_df(table, "net_sequence_metrics", groups = groups, group = group,
+             actor = actor, iter = iter, adjust = adjust, format = format,
+             n_indices = nrow(out))
+}
+
+#' One row per index and group
+#'
+#' @param wide The wide comparison: `index`, per group `n_`, `mean_`,
+#'   `sd_<group>`, then the index-level columns.
+#' @param groups The group names, in the order of the columns.
+#' @return `index`, `group`, `n`, `mean`, `sd`, then the index-level
+#'   columns, which repeat on each group's row; indices in the order of
+#'   `wide`, groups in `groups` order within each.
+#' @noRd
+.sm_long <- function(wide, groups) {
+  n_idx <- nrow(wide)
+  n_grp <- length(groups)
+  row_id <- rep(seq_len(n_idx), each = n_grp)
+  group_id <- rep(seq_len(n_grp), times = n_idx)
+  pick <- function(prefix) {
+    columns <- lapply(paste0(prefix, groups), function(cn) wide[[cn]])
+    vapply(seq_along(row_id), function(k) {
+      columns[[group_id[k]]][row_id[k]]
+    }, if (identical(prefix, "n_")) integer(1L) else numeric(1L))
+  }
+  long <- data.frame(index = wide$index[row_id], group = groups[group_id],
+                     n = pick("n_"), mean = pick("mean_"), sd = pick("sd_"),
+                     stringsAsFactors = FALSE)
+  per_index <- setdiff(names(wide),
+                       c("index", paste0(c("n_", "mean_", "sd_"),
+                                         rep(groups, each = 3L))))
+  long[per_index] <- lapply(wide[per_index], `[`, row_id)
+  stopifnot(nrow(long) == n_idx * n_grp)
+  long
+}
+
+
+#' @rdname sequence_metrics
+#' @param n For `print()` of a group comparison: the number of indices
+#'   shown. Default `10`.
+#' @param digits For `print()`: the decimals of the means, SDs and effect
+#'   sizes. Default `2`; p-values show 3 significant digits.
+#' @export
+print.net_sequence_metrics <- function(x, n = 10L, digits = 2L, ...) {
+  .check_print_args(n, digits)
+  groups <- attr(x, "groups", exact = TRUE)
+  if (is.null(groups)) {
+    # a subset made with `[` keeps the class but not the settings
+    print(.plain_df(x), ...)
+    return(invisible(x))
+  }
+  n_indices <- attr(x, "n_indices", exact = TRUE)
+  actor <- attr(x, "actor", exact = TRUE)
+  cat(sprintf("Sequence metrics by %s  [%d indices | %d groups: %s]\n",
+              attr(x, "group", exact = TRUE), n_indices, length(groups),
+              paste(groups, collapse = ", ")))
+  cat(sprintf("  permutation of the one-way F: %d iter (%s)%s\n",
+              attr(x, "iter", exact = TRUE), attr(x, "adjust", exact = TRUE),
+              if (is.null(actor)) "" else
+                sprintf(", within %s", sub("^\\.session_label$",
+                                           "session", actor))))
+  table <- summary(x)
+  shown <- utils::head(unique(table$index), n)
+  top <- table[table$index %in% shown, , drop = FALSE]
+  # display only: short headers fit the console; summary() keeps the names
+  short <- c(difference = "diff", hedges_g = "g", g_lower = "g_lo",
+             g_upper = "g_hi", eta_squared = "eta_sq", statistic = "F",
+             p_value = "p")
+  hit <- names(top) %in% names(short)
+  names(top)[hit] <- short[names(top)[hit]]
+  cat("\n")
+  .print_result_rows(top, digits, p_cols = c("p", "p_adj"))
+  if (n_indices > n) {
+    cat(sprintf("  ... and %d more indices (%d rows); summary() returns them all\n",
+                n_indices - n,
+                nrow(table) - sum(table$index %in% shown)))
+  }
+  invisible(x)
+}
+
+
+#' @rdname sequence_metrics
+#' @param object For `summary()`: a group comparison from
+#'   `sequence_metrics(group = )`.
+#' @export
+summary.net_sequence_metrics <- function(object, ...) {
+  .plain_df(object)
+}
+
+
+#' @rdname sequence_metrics
+#' @param i,j For `[`: rows and columns, as for a data frame. A subset of a
+#'   group comparison is a plain data frame.
+#' @export
+`[.net_sequence_metrics` <- function(x, i, j, ...) {
+  out <- NextMethod()
+  if (is.data.frame(out)) .plain_df(out) else out
 }
 
 #' One-way F statistic of one index across the groups

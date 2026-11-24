@@ -389,11 +389,20 @@ centrality <- function(x, ...) {
 #'   and returns a named list of centrality vectors, one per measure; list
 #'   their names in `measures`. Default `NULL`.
 #' @param ... Not used.
+#' @param format For a `netobject_group` or an `mcml`: `"long"` (default),
+#'   one row per network and node, or `"wide"`, one row per node with a
+#'   `<measure>_<network>` column per measure and network. Ignored for a
+#'   single network.
 #' @return For a `netobject` or `cograph_network`: a `net_centrality` data
 #'   frame with one row per node, a `state` column and one column per
 #'   requested measure (the node names are also the row names). For a
-#'   `netobject_group` or an `mcml`: a `net_centrality_group`, a list of such
-#'   data frames, one per network. `plot()` draws the measures per node.
+#'   `netobject_group` or an `mcml`: a `net_centrality_group` data frame with
+#'   one row per network and node, a `group` column (the network's name), a
+#'   `state` column and one column per measure; with `format = "wide"`, one
+#'   row per node. The settings are attributes (`measures`, `groups`,
+#'   `format`, ...). `print()` shows the first `n` rows rounded, `summary()`
+#'   returns every row as a plain data frame, and `plot()` draws the
+#'   measures per node.
 #'
 #' @references
 #' Freeman, L. C. (1978). Centrality in social networks: conceptual
@@ -427,7 +436,9 @@ centrality <- function(x, ...) {
 net_centrality <- function(x, measures = NULL, loops = FALSE,
                             normalize = FALSE, invert = TRUE,
                             normalize_diffusion = TRUE,
-                            centrality_fn = NULL, ...) {
+                            centrality_fn = NULL,
+                            format = c("long", "wide"), ...) {
+  format <- match.arg(format)
   # a tna model or group_tna is rebuilt as a Nestimate network (R/tna_input.R)
   x <- .tna_input(x, "net_centrality()")
   if (isFALSE(loops)) {
@@ -437,7 +448,7 @@ net_centrality <- function(x, measures = NULL, loops = FALSE,
   centrality(x, measures = measures, loops = loops,
              normalize = normalize, invert = invert,
              normalize_diffusion = normalize_diffusion,
-             centrality_fn = centrality_fn, ...)
+             centrality_fn = centrality_fn, format = format, ...)
 }
 
 
@@ -481,17 +492,70 @@ centrality.netobject <- function(x, measures = NULL, loops = FALSE,
 centrality.netobject_group <- function(x, measures = NULL, loops = FALSE,
                                         normalize = FALSE, invert = TRUE,
                                         normalize_diffusion = TRUE,
-                                        centrality_fn = NULL, ...) {
-  out <- lapply(x, function(net) {
+                                        centrality_fn = NULL,
+                                        format = "long", ...) {
+  per_net <- lapply(x, function(net) {
     centrality.netobject(net, measures = measures, loops = loops,
                          normalize = normalize, invert = invert,
                          normalize_diffusion = normalize_diffusion,
                          centrality_fn = centrality_fn)
   })
-  names(out) <- names(x)
-  attr(out, "measures") <- .resolve_measures(measures)
-  class(out) <- c("net_centrality_group", "list")
-  out
+  groups <- names(x)
+  measures <- .resolve_measures(measures)
+  # by position: a group named "" or a repeated name has no unique `[[`
+  stacked <- do.call(rbind, Map(function(one, g) {
+    one <- .plain_df(one)
+    one$state <- as.character(one$state)
+    cbind(data.frame(group = rep(g, nrow(one)), stringsAsFactors = FALSE), one)
+  }, per_net, groups))
+  stopifnot(nrow(stacked) == sum(vapply(per_net, nrow, integer(1L))))
+  table <- if (identical(format, "wide")) {
+    .centrality_wide(stacked, groups, measures)
+  } else stacked
+  .result_df(table, "net_centrality_group", measures = measures,
+             groups = groups, format = format, normalized = normalize,
+             invert = invert, normalize_diffusion = normalize_diffusion,
+             members = stacked[c("group", "state")])
+}
+
+#' One row per state, a column per measure and network
+#'
+#' @param stacked The long table: `group`, `state`, one column per measure.
+#' @param groups,measures The network names and the measures, in order.
+#' @return `state`, then `<measure>_<group>` for every measure and group;
+#'   states in order of first appearance, `NA` where a network lacks one.
+#' @noRd
+.centrality_wide <- function(stacked, groups, measures) {
+  states <- unique(stacked$state)
+  wide <- data.frame(state = states, stringsAsFactors = FALSE)
+  cells <- unlist(lapply(measures, function(m) {
+    stats::setNames(lapply(groups, function(g) {
+      rows <- stacked[stacked$group == g, , drop = FALSE]
+      rows[[m]][match(states, rows$state)]
+    }), paste0(m, "_", groups))
+  }), recursive = FALSE)
+  wide[names(cells)] <- cells
+  wide
+}
+
+#' The long table of a grouped centrality result, whatever its layout
+#' @noRd
+.centrality_long <- function(x) {
+  table <- .plain_df(x)
+  if (!identical(attr(x, "format", exact = TRUE), "wide")) return(table)
+  groups <- attr(x, "groups", exact = TRUE)
+  measures <- attr(x, "measures", exact = TRUE)
+  members <- attr(x, "members", exact = TRUE)
+  long <- do.call(rbind, lapply(groups, function(g) {
+    cols <- paste0(measures, "_", g)
+    # each network's own states, in its order (a state may be NA throughout)
+    states <- members$state[members$group == g]
+    one <- table[match(states, table$state), c("state", cols), drop = FALSE]
+    names(one) <- c("state", measures)
+    cbind(data.frame(group = g, stringsAsFactors = FALSE), one)
+  }))
+  rownames(long) <- NULL
+  long
 }
 
 
@@ -528,7 +592,74 @@ centrality.mcml <- function(x, measures = NULL, loops = FALSE,
   centrality.netobject_group(as_tna(x), measures = measures, loops = loops,
                               normalize = normalize, invert = invert,
                               normalize_diffusion = normalize_diffusion,
-                              centrality_fn = centrality_fn)
+                              centrality_fn = centrality_fn, ...)
+}
+
+#' @rdname net_centrality
+#' @param n For `print()`: the number of rows shown. Default `20`.
+#' @param digits For `print()`: the decimals shown. Default `2`.
+#' @export
+print.net_centrality <- function(x, n = 20L, digits = 2L, ...) {
+  .check_print_args(n, digits)
+  table <- .plain_df(x)
+  rownames(table) <- NULL
+  .print_result_rows(utils::head(table, n), digits)
+  if (nrow(table) > n) {
+    cat(sprintf("  ... and %d more rows; summary() returns them all\n",
+                nrow(table) - n))
+  }
+  invisible(x)
+}
+
+#' @rdname net_centrality
+#' @param object For `summary()`: a `net_centrality` or
+#'   `net_centrality_group` result.
+#' @export
+summary.net_centrality <- function(object, ...) {
+  table <- .plain_df(object)
+  rownames(table) <- NULL
+  table
+}
+
+#' @rdname net_centrality
+#' @export
+print.net_centrality_group <- function(x, n = 20L, digits = 2L, ...) {
+  .check_print_args(n, digits)
+  groups <- attr(x, "groups", exact = TRUE)
+  if (!is.null(groups)) {
+    cat(sprintf("Centralities of %d networks (%s): %s\n\n", length(groups),
+                paste(groups, collapse = ", "),
+                paste(attr(x, "measures", exact = TRUE), collapse = ", ")))
+  }
+  table <- .plain_df(x)
+  .print_result_rows(utils::head(table, n), digits)
+  if (nrow(table) > n) {
+    cat(sprintf("  ... and %d more rows; summary() returns them all\n",
+                nrow(table) - n))
+  }
+  invisible(x)
+}
+
+#' @rdname net_centrality
+#' @export
+summary.net_centrality_group <- function(object, ...) {
+  .plain_df(object)
+}
+
+#' @rdname net_centrality
+#' @param i,j For `[`: rows and columns, as for a data frame. A subset of a
+#'   centrality result is a plain data frame.
+#' @export
+`[.net_centrality_group` <- function(x, i, j, ...) {
+  out <- NextMethod()
+  if (is.data.frame(out)) .plain_df(out) else out
+}
+
+#' @rdname net_centrality
+#' @export
+`[.net_centrality` <- function(x, i, j, ...) {
+  out <- NextMethod()
+  if (is.data.frame(out)) .plain_df(out) else out
 }
 
 #' @rdname net_centrality
@@ -629,8 +760,10 @@ plot.net_centrality_group <- function(x, reorder = TRUE, ncol = 3L,
   scales <- match.arg(scales)
   profile_scale <- match.arg(profile_scale)
   scales <- if (scales == "free_x") "free_x" else "fixed"
-  d <- do.call(rbind, lapply(names(x), function(g) {
-    z <- .centrality_plot_data(x[[g]])
+  long <- .centrality_long(x)
+  d <- do.call(rbind, lapply(attr(x, "groups", exact = TRUE), function(g) {
+    one <- long[long$group == g, setdiff(names(long), "group"), drop = FALSE]
+    z <- .centrality_plot_data(one)
     z$group <- g
     z
   }))

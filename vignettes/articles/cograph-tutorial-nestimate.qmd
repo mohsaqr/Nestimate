@@ -92,6 +92,7 @@ weight matrix sums to 1.
 net <- build_network(group_regulation_long, action = "Action",
                      actor = "Actor", time = "Time", method = "relative")
 net
+extract_initial_probs(net)
 ```
 
 The strongest transitions lead to `consensus`: from `cohesion` (0.50),

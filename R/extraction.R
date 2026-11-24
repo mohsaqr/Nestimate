@@ -8,7 +8,8 @@
 #' `tna`, `ftna`, `ctna` or `atna` model, an `mcml` (one matrix per layer) or
 #' a bare matrix, and can rescale the rows to sum to 1.
 #'
-#' @param model The network: a `netobject`, a `tna`-family model, an `mcml`,
+#' @param model The network: a `netobject`, a group of networks
+#'   (`netobject_group`), a `tna`-family model, an `mcml`,
 #'   a list holding the matrix as `weights` (or, failing that,
 #'   `transition_matrix` or `transition`), or a weight matrix. Anything else
 #'   raises an error.
@@ -24,6 +25,10 @@
 #'   returns a data frame with one row per non-zero entry (self-transitions
 #'   included) and the columns `from`, `to` and `weight`, sorted by
 #'   decreasing absolute weight.
+#'
+#'   For a group of networks (`netobject_group`): a named list of such
+#'   matrices, one per network; [extract_edges()] gives the same weights as
+#'   one data frame with a `group` column.
 #'
 #'   For an `mcml`: a named list of such matrices, `macro` first and then
 #'   one per cluster.
@@ -45,6 +50,12 @@
 #' @export
 extract_transition_matrix <- function(model, type = c("raw", "scaled")) {
   type <- match.arg(type)
+
+  # a group of networks: one matrix per network; extract_edges() gives
+  # the same weights as one table with a `group` column
+  if (inherits(model, "netobject_group")) {
+    return(lapply(model, extract_transition_matrix, type = type))
+  }
 
   # mcml dispatch: return named list of matrices per layer
   if (inherits(model, "mcml")) {
@@ -147,8 +158,9 @@ summary.nest_transition_matrix <- function(object, ...) {
 #' states of the weight matrix, with a warning: those values are a
 #' placeholder, not an estimate.
 #'
-#' @param model The network: a `netobject`, a `tna`-family model, an `mcml`,
-#'   or a list holding an `initial` element. Input from which neither
+#' @param model The network: a `netobject`, a group of networks
+#'   (`netobject_group`), a `tna`-family model, an `mcml`, or a list
+#'   holding an `initial` element. Input from which neither
 #'   initial probabilities nor a weight matrix can be read raises an error.
 #'
 #' @return For a single network: a named numeric vector of initial-state
@@ -156,6 +168,10 @@ summary.nest_transition_matrix <- function(object, ...) {
 #'   differs from 1 by more than 1e-6), of class `c("nest_initial_probs",
 #'   "numeric")`. `summary()` returns a data frame with one row per state and
 #'   the columns `state` and `prob`, sorted by decreasing probability.
+#'
+#'   For a group of networks (`netobject_group`): a data frame with one row
+#'   per network and state and the columns `group`, `state` and `prob`, the
+#'   states in each network's order.
 #'
 #'   For an `mcml`: a named list of plain numeric vectors, `macro` first and
 #'   then one per cluster, taken as stored in each layer (`inits`).
@@ -171,6 +187,17 @@ summary.nest_transition_matrix <- function(object, ...) {
 #'
 #' @export
 extract_initial_probs <- function(model) {
+  # a group of networks: one table, one row per network and state
+  if (inherits(model, "netobject_group")) {
+    # by position: a group named "" or a repeated name has no unique `[[`
+    stacked <- do.call(rbind, Map(function(net, g) {
+      probs <- extract_initial_probs(net)
+      data.frame(group = g, state = names(probs), prob = unname(as.numeric(probs)),
+                 stringsAsFactors = FALSE)
+    }, unclass(model), names(model)))
+    rownames(stacked) <- NULL
+    return(stacked)
+  }
   # mcml dispatch: return named list of init vectors per layer
   if (inherits(model, "mcml")) {
     result <- list(macro = model$macro$inits)
@@ -281,8 +308,9 @@ summary.nest_initial_probs <- function(object, ...) {
 #' decides which; a `tna` model is directed unless it is a co-occurrence
 #' model, and a bare matrix is undirected when it is symmetric.
 #'
-#' @param model The network: a `netobject`, a `tna`-family model, an `mcml`
-#'   or a weight matrix, as for [extract_transition_matrix()].
+#' @param model The network: a `netobject`, a group of networks
+#'   (`netobject_group`), a `tna`-family model, an `mcml` or a weight
+#'   matrix, as for [extract_transition_matrix()].
 #' @param threshold Cells whose absolute weight is at most `threshold` are
 #'   dropped. A single finite number of at least 0, otherwise an error is
 #'   raised (class `nestimate_bad_input` for a negative value); default `0`.
@@ -305,6 +333,10 @@ summary.nest_initial_probs <- function(object, ...) {
 #'   \item{median_latency}{For a `"latency"` network only: the median time
 #'     of those replies, in seconds.}
 #' }
+#'
+#'   For a group of networks (`netobject_group`): one such data frame with
+#'   a `group` column first, one row per network and edge, the networks in
+#'   their order and each sorted by `sort_by`.
 #'
 #'   For an `mcml`: a named list of such data frames, `macro` first and then
 #'   one per cluster.
@@ -352,6 +384,19 @@ extract_edges <- function(model,
     stop(errorCondition(
       "'sort_by' must be one of 'weight', 'from', 'to', or NULL.",
       class = "nestimate_bad_input", call = NULL))
+  }
+
+  # a group of networks: one table, one row per network and edge
+  if (inherits(model, "netobject_group")) {
+    # by position: a group named "" or a repeated name has no unique `[[`
+    stacked <- do.call(rbind, Map(function(net, g) {
+      one <- extract_edges(net, threshold = threshold,
+                           include_self = include_self, sort_by = sort_by)
+      cbind(data.frame(group = rep(g, nrow(one)), stringsAsFactors = FALSE),
+            one)
+    }, unclass(model), names(model)))
+    rownames(stacked) <- NULL
+    return(stacked)
   }
 
   # mcml dispatch: return named list of edge data frames per layer

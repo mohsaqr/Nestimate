@@ -5,7 +5,6 @@
 \alias{print.net_mpt}
 \alias{print.net_mpt_group}
 \alias{summary.net_mpt}
-\alias{print.summary.net_mpt}
 \alias{summary.net_mpt_group}
 \alias{plot.net_mpt}
 \alias{plot.net_mpt_group}
@@ -17,11 +16,9 @@ passage_time(x, states = NULL, normalize = TRUE)
 
 \method{print}{net_mpt_group}(x, ...)
 
-\method{summary}{net_mpt}(object, ...)
+\method{summary}{net_mpt}(object, table = c("states", "pairs"), ...)
 
-\method{print}{summary.net_mpt}(x, ...)
-
-\method{summary}{net_mpt_group}(object, ...)
+\method{summary}{net_mpt_group}(object, table = c("states", "pairs"), ...)
 
 \method{plot}{net_mpt}(
   x,
@@ -77,6 +74,12 @@ each group's result (for example \code{digits}). Otherwise not used.}
 
 \item{object}{For the \code{summary()} method: a \code{net_mpt}.}
 
+\item{table}{For \code{summary()}: \code{"states"} (default), one row per state
+(\code{state}, \code{return_time}, \code{stationary}, \code{mean_out}, \code{mean_in}), or
+\code{"pairs"}, one row per ordered pair of states (\code{from}, \code{to},
+\code{passage_time}, the mean number of steps from \code{from} to first reach
+\code{to}; for \code{from} equal to \code{to}, the mean return time).}
+
 \item{log_scale}{For the \code{plot()} methods: whether to colour the tiles by
 the logarithm of the passage time, so that short and long times can
 both be told apart; the legend and the tile labels still show steps.
@@ -93,13 +96,13 @@ green) and \code{"#ccffcc"} (pale green).}
 A \code{net_mpt} object; for a \code{netobject_group}, a \code{net_mpt_group},
 a named list holding one \code{net_mpt} per group. \code{print()} shows the
 passage-time matrix and the stationary distribution. \code{summary()}
-returns a \code{summary.net_mpt} object, a list holding the per-state table
-(\code{table}) and the summarised \code{net_mpt} (\code{object}); its \code{print()} shows
-the table, one row per state: \code{state}, \code{return_time} (mean recurrence time),
+returns a data frame with one row per state: \code{state}, \code{return_time} (mean recurrence time),
 \code{stationary} (\eqn{\pi_i}), \code{mean_out} (the mean number of steps from
 the state to the others) and
 \code{mean_in} (the mean number of steps from the others to the state),
-rounded to 2 decimals (\code{stationary} to 4). \code{plot()} returns a \code{ggplot}
+rounded to 2 decimals (\code{stationary} to 4); with \code{table = "pairs"}, one
+row per ordered pair of states, the diagonal included (\code{from}, \code{to},
+\code{passage_time}). \code{plot()} returns a \code{ggplot}
 heatmap of the matrix, rows the starting state and columns the target;
 for a \code{net_mpt_group}, one panel per group on a shared colour scale.
 The \code{print()} methods return their input invisibly. A \code{net_mpt} holds:
@@ -119,9 +122,8 @@ irreducible chain, \code{Inf} for a transient state.}
 }
 
 For \code{summary()} of a \code{net_mpt_group}: a data frame with one row
-per group and state, the \code{group} column followed by the columns of the
-single-network summary table (\code{state}, \code{return_time}, \code{stationary},
-\code{mean_out}, \code{mean_in}).
+per group and state (or pair, with \code{table = "pairs"}), the \code{group}
+column followed by the columns of the single-network table.
 }
 \description{
 \code{passage_time()} computes the mean first passage times of a Markov chain:

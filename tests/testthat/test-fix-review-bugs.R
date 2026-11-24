@@ -46,9 +46,12 @@ test_that("entropy_bayes() reads the output of wtna()", {
 
 test_that("grouped entropy results have summary() and plot()", {
   te <- transition_entropy(roles(method = "relative", group = "Achiever"))
-  s <- summary(te)
+  s <- summary(te, table = "chain")
   expect_true(is.data.frame(s))
   expect_identical(s$group, c("High", "Low"))
+  states <- summary(te)
+  expect_identical(unique(states$group), c("High", "Low"))
+  expect_true(all(c("state", "row_entropy") %in% names(states)))
   expect_equal(s$entropy_rate, c(te$High$entropy_rate, te$Low$entropy_rate))
   expect_true(inherits(plot(te), "ggplot"))
 

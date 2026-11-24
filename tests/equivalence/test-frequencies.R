@@ -88,7 +88,7 @@ test_that("summary() of a transition network equals igraph's metrics of the weig
                           tolerance = tolerance, key = "metric",
                           reason = "Nestimate counts self-loops as edges over n(n - 1) possible ones, as igraph::edge_density(loops = FALSE) does, but caps the density at 1; this complete graph with loops gives igraph 1.25.")
   grouped <- cbind(group = rep(c("a", "b"), length.out = nrow(wide)), wide)
-  summary_group <- summary(build_network(grouped, method = "relative", group = "group"))
+  summary_group <- summary(build_network(grouped, method = "relative", group = "group"), format = "wide")
   first <- tn_row_normalise(tn_pair_counts(tn_sequences(subset(wide, grouped$group == "a")), states))
   graph_a <- igraph::graph_from_adjacency_matrix(first, mode = "directed", weighted = TRUE, diag = TRUE)
   expect_reference(subset(summary_group, metric %in% c("Node Count", "Edge Count", "Reciprocity")),

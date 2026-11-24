@@ -2,6 +2,9 @@
 % Please edit documentation in R/sequence_patterns.R
 \name{sequence_patterns}
 \alias{sequence_patterns}
+\alias{print.net_sequence_patterns}
+\alias{summary.net_sequence_patterns}
+\alias{[.net_sequence_patterns}
 \title{Discover sequential patterns}
 \usage{
 sequence_patterns(
@@ -23,8 +26,15 @@ sequence_patterns(
   actor = NULL,
   action = NULL,
   time = NULL,
+  format = c("long", "wide"),
   ...
 )
+
+\method{print}{net_sequence_patterns}(x, n = 10L, digits = 2L, ...)
+
+\method{summary}{net_sequence_patterns}(object, ...)
+
+\method{[}{net_sequence_patterns}(x, i, j, ...)
 }
 \arguments{
 \item{x}{The sequences, in any form \code{\link[=extract_sequences]{extract_sequences()}} accepts:
@@ -89,8 +99,24 @@ first in the output order. Default \code{NULL} (all).}
 \item{actor, action, time}{The actor, action and timestamp columns of a
 long event log; setting \code{action} marks \code{x} as one. Default \code{NULL}.}
 
+\item{format}{With \code{group}: \code{"long"} (default), one row per pattern and
+group, or \code{"wide"}, one row per pattern with a column per group.
+Ignored without \code{group}.}
+
 \item{...}{Further arguments passed to \code{\link[=prepare]{prepare()}} for a long event log,
 such as \code{time_threshold} or \code{order}.}
+
+\item{n}{For \code{print()} of a group comparison: the number of patterns
+shown. Default \code{10}.}
+
+\item{digits}{For \code{print()}: the decimals shown. Default \code{2}; p-values
+show 3 significant digits.}
+
+\item{object}{For \code{summary()}: a group comparison from
+\code{sequence_patterns(group = )}.}
+
+\item{i, j}{For \code{[}: rows and columns, as for a data frame. A subset of a
+group comparison is a plain data frame.}
 }
 \value{
 A data frame with one row per pattern, ordered by \code{support}
@@ -108,10 +134,17 @@ same length.}
 \item{lift}{Support relative to the independent presence of its
 states.}
 }
-With \code{group}, the columns \verb{support_<group>} (the support within each
-group) follow; then \code{odds_ratio}, \code{or_lower} and \code{or_upper} for two
+With \code{group}, a data frame of class \code{c("net_sequence_patterns", "data.frame")} with one row per pattern and group: the columns above,
+then \code{group} and \code{group_support} (the share of the group's sequences
+that contain the pattern); then the pattern's test, which repeats on
+each group's row: \code{odds_ratio}, \code{or_lower} and \code{or_upper} for two
 groups, or \code{chisq} and \code{cramers_v} for more; then \code{p_value} and
-\code{p_adj}. The rows are then ordered by \code{p_value} (then \code{support}).
+\code{p_adj}. Patterns are ordered by \code{p_value} (then \code{support}). With
+\code{format = "wide"}, one row per pattern with a \verb{support_<group>} column
+per group instead. The settings are attributes (\code{group}, \code{groups},
+\code{n_patterns}, \code{format}, \code{test}, \code{adjust}). \code{print()} shows the first
+\code{n} patterns, rounded; \code{summary()} returns every row as a plain data
+frame, and a subset is a plain data frame.
 
 A state name that contains \code{"->"} or consists only of asterisks
 (reserved for wildcards) raises an error of class

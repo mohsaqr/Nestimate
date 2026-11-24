@@ -16,11 +16,11 @@ chain_structure(x, normalize = TRUE, tol = 1e-10)
 
 \method{plot}{chain_structure}(x, show_values = TRUE, digits = 2L, ...)
 
-\method{summary}{chain_structure}(object, ...)
+\method{summary}{chain_structure}(object, table = c("states", "absorption"), ...)
 
 \method{print}{chain_structure_group}(x, ...)
 
-\method{summary}{chain_structure_group}(object, ...)
+\method{summary}{chain_structure_group}(object, table = c("states", "absorption"), ...)
 
 \method{print}{summary_chain_structure}(x, ...)
 }
@@ -61,6 +61,9 @@ Default \code{2}.}
 
 \item{object}{For the \code{summary()} methods: a \code{chain_structure} or
 \code{chain_structure_group} object.}
+
+\item{table}{For \code{summary()}: \code{"states"} (default), one row per state,
+or \code{"absorption"}, one row per transient state and closed class.}
 }
 \value{
 A \code{chain_structure} object, or for a \code{netobject_group} a
@@ -170,16 +173,22 @@ that state's column is all 1s.
 \item \code{return_probability}, the diagonal of the hitting matrix;
 \item \code{sojourn_steps}, \code{1 / (1 - persistence)} (\code{Inf} for an absorbing state);
 \item \code{stationary_probability}, for an irreducible chain;
-\item for a chain with transient states: \code{mean_absorption_time}, the steps to enter a closed class, and \code{absorption_probability}, the probability of ending in the closed class; with several closed classes, one \verb{absorbed_in_<class>} column per class. Both are \code{NA} for states that are not transient.
+\item for a chain with transient states: \code{mean_absorption_time}, the steps to enter a closed class (\code{NA} for states that are not transient).
 }
 
 Probabilities are rounded to 4 decimals and step counts to 2.
+
+\code{summary(table = "absorption")} returns one row per transient state and
+closed class: \code{state}, \code{class} (the class's states joined by \code{+}) and
+\code{probability}, the probability of ending in that class, unrounded; no
+rows when the chain has no transient state.
 Columns are ordered for readability: identifiers first, classification
 second, per-state results last.
 
 \code{summary()} of a \code{chain_structure_group} stacks these tables into one
-data frame with a \code{group} column first, one row per group and state; a
-column that only some groups have is \code{NA} for the others.
+data frame with a \code{group} column first, one row per group and state (or
+state and class); a column that only some groups have is \code{NA} for the
+others.
 }
 
 \examples{

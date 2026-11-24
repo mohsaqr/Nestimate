@@ -317,7 +317,7 @@ utils::globalVariables(c("u", "y", "ymin", "ymax", "label", "state", "group", "v
 #' cycle, which stationarity makes equal on all three edges (Schnakenberg
 #' 1976): zero for a chain whose every transition is as common as its
 #' reverse. The depths pool every sequence and every time step; whether they
-#' change over the programme or along a covariate is what [landscape_trend()]
+#' change over time or along a covariate is what [landscape_trend()]
 #' shows, and how long the process takes to get from one state to another is
 #' given by [passage_time()].
 #'
@@ -707,7 +707,7 @@ plot.net_landscape <- function(x, state_colors = NULL, ...) {
 #' the surface adds is which cup deepens as stability rises. A slice's
 #' `effective_n` (\eqn{(\sum w)^2 / \sum w^2}) shows how many sequences it
 #' rests on, and a warning of class `nestimate_thin_slice` flags slices
-#' resting on fewer than five. For change over the programme rather than
+#' resting on fewer than five. For change over time rather than
 #' across sequences, use [landscape_trend()].
 #'
 #' @details
@@ -1092,8 +1092,8 @@ plot.net_landscape_surface <- function(x, max_stay = 50, theta = 10, phi = 30,
 #' @description
 #' `landscape_trend()` traces the landscape of [stability_landscape()] along
 #' a second axis and returns the height of every state, with a bootstrap
-#' interval, at each point of that axis. The axis is either the programme
-#' phase, `along = "phase"`: the landscape is estimated from the transitions
+#' interval, at each point of that axis. The axis is either time,
+#' `along = "phase"`: the landscape is estimated from the transitions
 #' inside a window of `window` time steps that slides one step at a time; or
 #' a numeric per-sequence covariate such as a grade, `along = "grade"`: at
 #' each value of the covariate it comes from the `k` nearest sequences,
@@ -1362,7 +1362,7 @@ summary.net_landscape_trend <- function(object, ...) object$table
 #' @export
 print.net_landscape_trend <- function(x, digits = 2, ...) {
   axis <- if (identical(x$along, "phase"))
-    sprintf("programme phase (%d-step windows)", x$window) else
+    sprintf("time (%d-step windows)", x$window) else
     sprintf("%s (%d nearest sequences per slice)", x$along, x$k)
   cat(sprintf("Stability landscape along %s: %d states, %d network%s, %d resamples\n\n",
               axis, length(x$states), length(x$groups),
@@ -1432,7 +1432,7 @@ plot.net_landscape_trend <- function(x, type = c("lines", "surface"),
   last <- do.call(rbind, lapply(split(tab, list(tab$group, tab$state),
                                       drop = TRUE), \(r) r[which.max(r$value), ]))
   xlab <- if (identical(x$along, "phase"))
-    sprintf("Programme phase (centre of a %d-step window)", x$window) else
+    sprintf("Time step (centre of a %d-step window)", x$window) else
     x$along
   y_scale <- if (x$depth == "stay") {
     ggplot2::scale_y_continuous(
@@ -1511,7 +1511,8 @@ plot.net_landscape_trend <- function(x, type = c("lines", "surface"),
   ramp <- grDevices::colorRampPalette(c("#009E73", "#F0E442", "#E69F00"))(100L)
   old_par <- graphics::par(mfrow = c(1L, length(surfs)), mar = c(2, 3, 3, 3))
   on.exit(graphics::par(old_par), add = TRUE)
-  ylab <- if (identical(x$along, "phase")) "Course (window centre)" else x$along
+  ylab <- if (identical(x$along, "phase")) "Time step (window centre)" else
+    x$along
   zlab <- if (x$depth == "stay") "-depth (log stay)" else "Potential"
   invisible(Map(\(s, g) {
     z <- s$z

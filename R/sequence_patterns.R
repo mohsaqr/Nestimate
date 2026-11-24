@@ -91,6 +91,9 @@
 #'   [extract_sequences()]. Default `NULL`.
 #' @param actor,action,time The actor, action and timestamp columns of a
 #'   long event log; setting `action` marks `x` as one. Default `NULL`.
+#' @param format With `group`: `"long"` (default), one row per pattern and
+#'   group, or `"wide"`, one row per pattern with a column per group.
+#'   Ignored without `group`.
 #' @param ... Further arguments passed to [prepare()] for a long event log,
 #'   such as `time_threshold` or `order`.
 #'
@@ -124,10 +127,18 @@
 #'     \item{lift}{Support relative to the independent presence of its
 #'       states.}
 #'   }
-#'   With `group`, the columns `support_<group>` (the support within each
-#'   group) follow; then `odds_ratio`, `or_lower` and `or_upper` for two
+#'   With `group`, a data frame of class `c("net_sequence_patterns",
+#'   "data.frame")` with one row per pattern and group: the columns above,
+#'   then `group` and `group_support` (the share of the group's sequences
+#'   that contain the pattern); then the pattern's test, which repeats on
+#'   each group's row: `odds_ratio`, `or_lower` and `or_upper` for two
 #'   groups, or `chisq` and `cramers_v` for more; then `p_value` and
-#'   `p_adj`. The rows are then ordered by `p_value` (then `support`).
+#'   `p_adj`. Patterns are ordered by `p_value` (then `support`). With
+#'   `format = "wide"`, one row per pattern with a `support_<group>` column
+#'   per group instead. The settings are attributes (`group`, `groups`,
+#'   `n_patterns`, `format`, `test`, `adjust`). `print()` shows the first
+#'   `n` patterns, rounded; `summary()` returns every row as a plain data
+#'   frame, and a subset is a plain data frame.
 #'
 #'   A state name that contains `"->"` or consists only of asterisks
 #'   (reserved for wildcards) raises an error of class
@@ -163,7 +174,8 @@ sequence_patterns <- function(x, type = c("ngram", "gapped", "repeated"),
                               contain = NULL, pattern = NULL, group = NULL,
                               reference = NULL, adjust = "BH", top = NULL,
                               cols = NULL, actor = NULL, action = NULL,
-                              time = NULL, ...) {
+                              time = NULL, format = c("long", "wide"), ...) {
+  format <- match.arg(format)
   # a group_tna brings its groups, as a netobject_group does
   if (inherits(x, "group_tna")) {
     x <- .tna_input(x, "sequence_patterns()", need_data = TRUE)
@@ -228,7 +240,99 @@ sequence_patterns <- function(x, type = c("ngram", "gapped", "repeated"),
   out$states <- NULL
   if (!is.null(top)) out <- utils::head(out, top)
   rownames(out) <- NULL
-  out
+  if (is.null(labels)) return(out)
+  groups <- sub("^support_", "", grep("^support_", names(out), value = TRUE))
+  table <- if (identical(format, "wide")) out else .sp_long(out, groups)
+  .result_df(table, "net_sequence_patterns",
+             group = if (group_is_column || last_obs) group else "group",
+             groups = groups, n_patterns = nrow(out), format = format,
+             test = if (length(groups) == 2L) "fisher" else "chisq",
+             adjust = adjust)
+}
+
+
+#' One row per pattern and group
+#'
+#' @param wide The grouped pattern table, one `support_<group>` per group.
+#' @param groups The group names, in the order of those columns.
+#' @return The pattern columns, then `group` and `group_support`, then the
+#'   pattern's test columns, which repeat on each group's row.
+#' @noRd
+.sp_long <- function(wide, groups) {
+  n_pat <- nrow(wide)
+  n_grp <- length(groups)
+  row_id <- rep(seq_len(n_pat), each = n_grp)
+  group_id <- rep(seq_len(n_grp), times = n_pat)
+  support_cols <- paste0("support_", groups)
+  before <- names(wide)[seq_len(match(support_cols[1L], names(wide)) - 1L)]
+  after <- setdiff(names(wide), c(before, support_cols))
+  long <- wide[row_id, before, drop = FALSE]
+  long$group <- groups[group_id]
+  support <- as.matrix(wide[support_cols])
+  long$group_support <- if (n_pat) support[cbind(row_id, group_id)] else
+    numeric(0)
+  long[after] <- lapply(wide[after], `[`, row_id)
+  rownames(long) <- NULL
+  stopifnot(nrow(long) == n_pat * n_grp)
+  long
+}
+
+
+#' @rdname sequence_patterns
+#' @param n For `print()` of a group comparison: the number of patterns
+#'   shown. Default `10`.
+#' @param digits For `print()`: the decimals shown. Default `2`; p-values
+#'   show 3 significant digits.
+#' @export
+print.net_sequence_patterns <- function(x, n = 10L, digits = 2L, ...) {
+  .check_print_args(n, digits)
+  groups <- attr(x, "groups", exact = TRUE)
+  if (is.null(groups)) {
+    print(.plain_df(x), ...)
+    return(invisible(x))
+  }
+  n_patterns <- attr(x, "n_patterns", exact = TRUE)
+  cat(sprintf("Sequence patterns by %s  [%d patterns | %d groups: %s]\n",
+              attr(x, "group", exact = TRUE), n_patterns, length(groups),
+              paste(groups, collapse = ", ")))
+  cat(sprintf("  presence test: %s (%s)\n",
+              if (identical(attr(x, "test", exact = TRUE), "fisher")) {
+                sprintf("Fisher's exact, odds ratio against %s", groups[1L])
+              } else "chi-square, Cramer's V",
+              attr(x, "adjust", exact = TRUE)))
+  if (n_patterns == 0L) return(invisible(x))
+  table <- summary(x)
+  shown <- utils::head(unique(table$pattern), n)
+  top <- table[table$pattern %in% shown, , drop = FALSE]
+  # display only: the columns that describe the comparison
+  top <- top[setdiff(names(top), c("length", "occurrences", "proportion",
+                                   "lift"))]
+  cat("\n")
+  .print_result_rows(top, digits)
+  if (n_patterns > n) {
+    cat(sprintf("  ... and %d more patterns (%d rows); summary() returns them all\n",
+                n_patterns - n, nrow(table) - nrow(top)))
+  }
+  invisible(x)
+}
+
+
+#' @rdname sequence_patterns
+#' @param object For `summary()`: a group comparison from
+#'   `sequence_patterns(group = )`.
+#' @export
+summary.net_sequence_patterns <- function(object, ...) {
+  .plain_df(object)
+}
+
+
+#' @rdname sequence_patterns
+#' @param i,j For `[`: rows and columns, as for a data frame. A subset of a
+#'   group comparison is a plain data frame.
+#' @export
+`[.net_sequence_patterns` <- function(x, i, j, ...) {
+  out <- NextMethod()
+  if (is.data.frame(out)) .plain_df(out) else out
 }
 
 

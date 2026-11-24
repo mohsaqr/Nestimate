@@ -151,10 +151,11 @@ utils::globalVariables(c(
 #'   is shuffled on its own.
 #'
 #' @return A `net_sequence_comparison` object. `print()` shows the numbers
-#'   of patterns and groups, the settings and the first 10 rows of the
-#'   pattern table, and returns its input invisibly; `summary()` returns the
-#'   pattern table, a data frame with one row per pattern; `plot()` draws
-#'   the residuals of the top patterns (see *Plot styles*). The object
+#'   of patterns and groups, the settings and the first `n` patterns, one
+#'   row per pattern and group, rounded, and returns its input invisibly;
+#'   `summary()` returns the pattern table, a data frame with one row per
+#'   pattern (`format = "long"`: one row per pattern and group); `plot()`
+#'   draws the residuals of the top patterns (see *Plot styles*). The object
 #'   holds:
 #' \describe{
 #'   \item{patterns}{The pattern table, one row per k-gram kept. Always:
@@ -446,6 +447,7 @@ sequence_compare <- function(x, group = NULL, sub = 3:5,
                              design = design$design))
   }
 
+  # the shape htna (CRAN) reads: a list with `$patterns` one row per pattern
   structure(list(
     patterns   = as.data.frame(results, stringsAsFactors = FALSE),
     groups     = groups,
@@ -725,6 +727,16 @@ sequence_compare <- function(x, group = NULL, sub = 3:5,
 #' @rdname sequence_compare
 #' @param ... Not used.
 #' @param object For the `summary()` method: a `net_sequence_comparison`.
+#' @param format For `summary()`: `"wide"` (default), the pattern table,
+#'   one row per pattern with a `freq_`, `prop_` and `resid_` column per
+#'   group; `"long"`, one row per pattern and group, with columns `pattern`,
+#'   `length`, `group`, `count`, `proportion`, `residual` and the pattern's
+#'   `effect_size` (or `statistic`) and `p_value`.
+#' @param n For `print()`: the number of patterns shown, the first ones of
+#'   the pattern table. Default `10`.
+#' @param digits For `print()`: the decimals of the counts' shares,
+#'   residuals and effect sizes. Default `2`; p-values show 3 significant
+#'   digits.
 #' @param top_n For `plot()`: the number of patterns drawn, the first ones
 #'   after ranking by `sort`. Default `10`.
 #' @param style For `plot()`: `"auto"` (default) draws the back-to-back
@@ -744,33 +756,45 @@ sequence_compare <- function(x, group = NULL, sub = 3:5,
 #'   standardised residual inside it. Default `FALSE`. The heatmap always
 #'   prints the residuals.
 #' @export
-print.net_sequence_comparison <- function(x, ...) {
+print.net_sequence_comparison <- function(x, n = 10L, digits = 2L, ...) {
+  .check_print_args(n, digits)
+  params <- x$params
+  groups <- x$groups
+  n_patterns <- x$n_patterns
   cat(sprintf("Sequence Comparison  [%d patterns | %d groups: %s]\n",
-              x$n_patterns, length(x$groups), paste(x$groups, collapse = ", ")))
+              n_patterns, length(groups), paste(groups, collapse = ", ")))
   cat(sprintf("  Lengths: %s  |  min_freq: %d",
-              paste(x$params$sub, collapse = ", "), x$params$min_freq))
-  test <- x$params$test
+              paste(params$sub, collapse = ", "), params$min_freq))
+  test <- params$test
   if (identical(test, "permutation")) {
-    cat(sprintf("  |  permutation: %d iter (%s)",
-                x$params$iter, x$params$adjust))
-    if (length(x$params$actor) == 1L) {
-      cat(sprintf(", actor: %s (%d actors, %s)", x$params$actor,
-                  x$params$n_actors, x$params$design))
-    } else if (length(x$params$actor) > 1L) {
-      cat(sprintf(", actor: %s", x$params$design))
+    cat(sprintf("  |  permutation: %d iter (%s)", params$iter, params$adjust))
+    if (length(params$actor) == 1L) {
+      cat(sprintf(", actor: %s (%d actors, %s)", params$actor,
+                  params$n_actors, params$design))
+    } else if (length(params$actor) > 1L) {
+      cat(sprintf(", actor: %s", params$design))
     }
   } else if (identical(test, "chisq")) {
-    cat(sprintf("  |  chi-square  (%s)", x$params$adjust))
+    cat(sprintf("  |  chi-square  (%s)", params$adjust))
   }
   cat("\n")
+  if (n_patterns == 0L) return(invisible(x))
 
-  if (x$n_patterns > 0) {
-    top <- utils::head(x$patterns, 10)
-    cat("\n")
-    print(top, row.names = FALSE)
-    if (x$n_patterns > 10) {
-      cat(sprintf("  ... and %d more patterns\n", x$n_patterns - 10))
-    }
+  table <- summary(x, format = "long")
+  shown_patterns <- utils::head(unique(table$pattern), n)
+  top <- table[table$pattern %in% shown_patterns, , drop = FALSE]
+  # display only: the length is read off the pattern, short headers fit
+  # the console; summary() keeps the full names
+  top$length <- NULL
+  short <- c(proportion = "prop", residual = "resid",
+             effect_size = "effect", statistic = "stat", p_value = "p")
+  hit <- names(top) %in% names(short)
+  names(top)[hit] <- short[names(top)[hit]]
+  cat("\n")
+  .print_result_rows(top, digits, p_cols = c("p_value", "p"))
+  if (n_patterns > n) {
+    cat(sprintf("  ... and %d more patterns (%d rows); summary() returns them all\n",
+                n_patterns - n, nrow(table) - nrow(top)))
   }
   invisible(x)
 }
@@ -778,9 +802,57 @@ print.net_sequence_comparison <- function(x, ...) {
 
 #' @rdname sequence_compare
 #' @export
-summary.net_sequence_comparison <- function(object, ...) {
+summary.net_sequence_comparison <- function(object,
+                                            format = c("wide", "long"), ...) {
+  format <- match.arg(format)
+  if (identical(format, "long")) {
+    return(.sc_long(object$patterns, object$groups))
+  }
   object$patterns
 }
+
+
+
+
+
+
+
+#' One row per pattern and group
+#'
+#' @param patterns The wide pattern table: `pattern`, `length`, per group
+#'   `freq_<group>`, `prop_<group>`, `resid_<group>`, then the test columns.
+#' @param groups The group names, in the order of its columns.
+#' @return A data frame with columns `pattern`, `length`, `group`, `count`,
+#'   `proportion`, `residual`, then the per-pattern test columns
+#'   (`effect_size`, `statistic`, `p_value`) that the table holds. Rows keep
+#'   the pattern order of `patterns`, groups in `groups` order within each.
+#' @noRd
+.sc_long <- function(patterns, groups) {
+  n_pat <- nrow(patterns)
+  n_grp <- length(groups)
+  row_id <- rep(seq_len(n_pat), each = n_grp)
+  group_id <- rep(seq_len(n_grp), times = n_pat)
+  pick <- function(prefix) {
+    block <- as.matrix(patterns[paste0(prefix, groups)])
+    block[cbind(row_id, group_id)]
+  }
+  long <- data.frame(
+    pattern    = patterns$pattern[row_id],
+    length     = patterns$length[row_id],
+    group      = groups[group_id],
+    count      = pick("freq_"),
+    proportion = pick("prop_"),
+    residual   = pick("resid_"),
+    stringsAsFactors = FALSE
+  )
+  test_cols <- intersect(c("effect_size", "statistic", "p_value"),
+                         names(patterns))
+  long[test_cols] <- lapply(patterns[test_cols], `[`, row_id)
+  stopifnot(nrow(long) == n_pat * n_grp)
+  long
+}
+
+
 
 
 #' @rdname sequence_compare

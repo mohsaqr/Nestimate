@@ -137,6 +137,6 @@ test_that("landscape_trend refuses single-state sequences by class", {
 test_that("landscape_trend labels the phase axis in one spelling", {
   lt <- landscape_trend(.hra_net(), iter = 0)
   expect_identical(plot(lt)$labels$x,
-                   "Programme phase (centre of a 5-step window)")
-  expect_match(capture.output(print(lt))[1], "programme phase", fixed = TRUE)
+                   "Time step (centre of a 5-step window)")
+  expect_match(capture.output(print(lt))[1], "along time (", fixed = TRUE)
 })

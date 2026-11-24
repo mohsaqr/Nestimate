@@ -96,7 +96,7 @@ test_that("centrality.netobject returns correct undirected defaults (L163-177)",
                     names(net_centrality(net_ud, measures = "all"))))
 })
 
-test_that("centrality.netobject_group returns list of data frames (L185-188)", {
+test_that("centrality of a netobject_group is one data frame with a group column", {
   seqs <- data.frame(
     V1 = c("A","B","A","C","B","A"),
     V2 = c("B","C","B","A","C","B"),
@@ -105,10 +105,29 @@ test_that("centrality.netobject_group returns list of data frames (L185-188)", {
   )
   nets <- build_network(seqs, method = "relative", group = "grp")
   c3 <- expect_warnings_of_class(net_centrality(nets), "nestimate_constant_measure")
-  expect_true(is.list(c3))
   expect_s3_class(c3, "net_centrality_group")
-  expect_equal(length(c3), 2)
-  expect_true(all(vapply(c3, is.data.frame, logical(1))))
+  expect_s3_class(c3, "data.frame")
+  expect_identical(names(c3)[1:2], c("group", "state"))
+  expect_identical(unique(c3$group), c("X", "Y"))
+  # invariant: each network's rows are that network's own centralities
+  one <- suppressWarnings(suppressMessages(net_centrality(nets[["X"]])))
+  x_rows <- subset(c3, group == "X")
+  expect_equal(x_rows$Betweenness, one$Betweenness)
+  expect_identical(x_rows$state, as.character(one$state))
+  # wide holds the same numbers, one row per state
+  wide <- suppressWarnings(suppressMessages(
+    net_centrality(nets, format = "wide")))
+  expect_identical(nrow(wide), length(unique(c3$state)))
+  expect_equal(wide$Betweenness_Y[match(subset(c3, group == "Y")$state,
+                                        wide$state)],
+               subset(c3, group == "Y")$Betweenness)
+  expect_identical(class(summary(c3)), "data.frame")
+  # a subset is a plain data frame, which plots as one network's table
+  x_only <- subset(c3, group == "X")
+  expect_identical(class(x_only), "data.frame")
+  expect_identical(class(head(c3, 2)), "data.frame")
+  shown <- capture.output(print(c3))
+  expect_match(shown[1L], "Centralities of 2 networks \\(X, Y\\)")
 })
 
 test_that(".betweenness returns zeros for n < 3 (L53)", {
@@ -534,4 +553,25 @@ test_that("network_reliability() names the level of a two-level fit", {
                class = "nestimate_multilevel_resampling")
   expect_error(network_reliability(list(1), iter = 5, seed = 1),
                class = "nestimate_bad_input")
+})
+
+test_that("a wide grouped centrality keeps each network's states on the way back", {
+  seqs <- data.frame(V1 = c("A", "B", "A", "C", "B", "A"),
+                     V2 = c("B", "C", "B", "A", "C", "B"),
+                     V3 = c("C", "A", "C", "B", "A", "C"),
+                     grp = c("X", "X", "X", "Y", "Y", "Y"))
+  nets <- build_network(seqs, method = "relative", group = "grp")
+  # a measure that is NA for one state, so that state has no value at all
+  odd <- function(mat) {
+    v <- rowSums(mat)
+    v[1L] <- NA
+    list(Odd = stats::setNames(v, rownames(mat)))
+  }
+  long <- suppressWarnings(suppressMessages(
+    net_centrality(nets, measures = "Odd", centrality_fn = odd)))
+  wide <- suppressWarnings(suppressMessages(
+    net_centrality(nets, measures = "Odd", centrality_fn = odd,
+                   format = "wide")))
+  expect_true(anyNA(summary(long)$Odd))
+  expect_equal(Nestimate:::.centrality_long(wide), summary(long))
 })

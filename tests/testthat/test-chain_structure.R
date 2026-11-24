@@ -90,6 +90,16 @@ test_that("chain_structure dispatches over netobject_group", {
   expect_true(all(c("group", "state", "classification") %in% colnames(s)))
   expect_equal(nrow(s),
                sum(vapply(cs_grp, function(x) length(x$states), integer(1))))
+  absorption <- summary(cs_grp, table = "absorption")
+  expect_identical(names(absorption)[1:4],
+                   c("group", "state", "class", "probability"))
+  # irreducible chains have no transient state, so no absorption rows
+  regulation <- build_network(group_regulation_long, method = "relative",
+                              action = "Action", actor = "Actor",
+                              time = "Time", group = "Course")
+  none <- summary(chain_structure(regulation), table = "absorption")
+  expect_s3_class(none, "data.frame")
+  expect_identical(nrow(none), 0L)
   expect_invisible(print(cs_grp))
 })
 
@@ -126,8 +136,12 @@ test_that("absorption runs into every closed class and rows sum to 1", {
   expect_equal(unname(ap["D", ]), c(0.5, 0.5))
   expect_equal(unname(rowSums(ap)), 1)
   expect_equal(unname(cs$mean_absorption_time), 2)
-  s <- summary(cs)
-  expect_equal(s$`absorbed_in_B+C`[s$state == "D"], 0.5)
+  absorption <- summary(cs, table = "absorption")
+  expect_identical(names(absorption), c("state", "class", "probability"))
+  expect_identical(absorption$class, c("A", "B+C"))
+  expect_equal(absorption$probability, c(0.5, 0.5))
+  expect_false(any(grepl("^absorbed_in|^absorption_probability",
+                         names(summary(cs)))))
 
   # No absorbing state at all: transient E feeds two 2-cycles equally;
   # it still has an absorption analysis over the closed classes.

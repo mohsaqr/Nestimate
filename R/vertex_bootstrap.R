@@ -483,9 +483,9 @@ plot.net_vertex_bootstrap <- function(x, bins = 30, ...) {
 #' @param seed A seed passed to [set.seed()] once, before both bootstraps
 #'   run, so the comparison can be repeated; the session's random-number
 #'   stream then continues from it. Default `NULL` uses the current stream.
-#' @param labels Two names for the networks, used in the print header, the
-#'   plot axis and the column names `observed_<label>` (made syntactic with
-#'   [make.names()]). Default `c("x", "y")`.
+#' @param labels Two names for the networks, used in the print header and
+#'   the plot axis. The columns are always `observed_x` (the first network)
+#'   and `observed_y` (the second). Default `c("x", "y")`.
 #' @param directed Whether the networks are directed, which decides how
 #'   collisions are filled and whether `reciprocity` is available; one value
 #'   applies to both networks, not to a precomputed result. Default `NULL`
@@ -498,7 +498,7 @@ plot.net_vertex_bootstrap <- function(x, bins = 30, ...) {
 #'   summary table
 #'   with significance stars; `summary()` returns that table as a data frame
 #'   with one row per statistic and the columns `statistic`, the two
-#'   observed values (`observed_<label>`), `diff` (first minus second),
+#'   observed values (`observed_x`, `observed_y`), `diff` (first minus second),
 #'   `se_diff`, `z`, `p_value` (two-sided), `ci_lower` and `ci_upper`;
 #'   `plot()` draws the differences with their intervals. When a statistic
 #'   has no bootstrap variation in either network (both standard errors 0),
@@ -601,7 +601,6 @@ vertex_compare <- function(x, y,
     stringsAsFactors = FALSE,
     row.names = NULL
   )
-  names(summary_df)[2:3] <- paste0("observed_", make.names(labels))
 
   result <- list(
     summary = summary_df,

@@ -13,7 +13,8 @@ extract_transition_matrix(model, type = c("raw", "scaled"))
 \method{summary}{nest_transition_matrix}(object, ...)
 }
 \arguments{
-\item{model}{The network: a \code{netobject}, a \code{tna}-family model, an \code{mcml},
+\item{model}{The network: a \code{netobject}, a group of networks
+(\code{netobject_group}), a \code{tna}-family model, an \code{mcml},
 a list holding the matrix as \code{weights} (or, failing that,
 \code{transition_matrix} or \code{transition}), or a weight matrix. Anything else
 raises an error.}
@@ -38,6 +39,10 @@ ordinary matrix in arithmetic and indexing; \code{summary()}
 returns a data frame with one row per non-zero entry (self-transitions
 included) and the columns \code{from}, \code{to} and \code{weight}, sorted by
 decreasing absolute weight.
+
+For a group of networks (\code{netobject_group}): a named list of such
+matrices, one per network; \code{\link[=extract_edges]{extract_edges()}} gives the same weights as
+one data frame with a \code{group} column.
 
 For an \code{mcml}: a named list of such matrices, \code{macro} first and then
 one per cluster.

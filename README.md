@@ -5,7 +5,7 @@
 <!-- badges: start -->
 [![R-CMD-check](https://github.com/mohsaqr/Nestimate/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/mohsaqr/Nestimate/actions/workflows/R-CMD-check.yaml)
 [![CRAN status](https://www.r-pkg.org/badges/version/Nestimate)](https://CRAN.R-project.org/package=Nestimate)
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://choosealicense.com/licenses/mit/)
 <!-- badges: end -->
 
 Nestimate is an R package for estimating, validating, and comparing networks from behavioral sequence data, psychological scales, and longitudinal panel data. A single entry point — `build_network()` — dispatches to 14 built-in estimators. Every network type shares the same validation pipeline: bootstrap confidence intervals, permutation testing, split-half reliability, and centrality stability.
@@ -260,7 +260,8 @@ distribution_plot(clust, geom = "bar")
 
 ```r
 res <- sequence_compare(group_nets, sub = 2:4, test = "chisq", adjust = "fdr")
-summary(res)                        # per-pattern frequencies + p-values
+res                                 # one row per pattern and group, rounded
+summary(res)                        # every row as a data frame
 plot(res)                           # back-to-back pyramid chart
 plot(res, style = "heatmap")        # heatmap for many patterns
 ```

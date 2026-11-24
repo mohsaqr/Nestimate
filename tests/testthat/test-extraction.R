@@ -281,3 +281,38 @@ test_that("extract_edges on an undirected pcor network: one row per non-zero pai
   expect_true(any(e$weight < 0))
   expect_equal(sum(e$weight), sum(w[upper.tri(w)]))
 })
+
+test_that("the extractors read a group of networks", {
+  seqs <- data.frame(V1 = c("A", "B", "A", "C", "B", "A"),
+                     V2 = c("B", "C", "B", "A", "C", "B"),
+                     V3 = c("C", "A", "C", "B", "A", "C"),
+                     grp = c("X", "X", "X", "Y", "Y", "Y"))
+  nets <- build_network(seqs, method = "relative", group = "grp")
+  edges <- extract_edges(nets)
+  expect_identical(names(edges)[1:4], c("group", "from", "to", "weight"))
+  # invariant: each network's rows are that network's own edges
+  x_rows <- subset(edges, group == "X")
+  x_alone <- extract_edges(nets[["X"]])
+  expect_identical(x_rows$from, x_alone$from)
+  expect_equal(x_rows$weight, x_alone$weight)
+  expect_identical(nrow(edges), nrow(x_alone) + nrow(extract_edges(nets[["Y"]])))
+  inits <- extract_initial_probs(nets)
+  expect_identical(names(inits), c("group", "state", "prob"))
+  expect_equal(as.vector(tapply(inits$prob, inits$group, sum)), c(1, 1))
+  mats <- extract_transition_matrix(nets)
+  expect_identical(names(mats), c("X", "Y"))
+  expect_s3_class(mats$X, "nest_transition_matrix")
+})
+
+test_that("a group named \"\" is read by position, not by name", {
+  d <- data.frame(V1 = c("A", "B", "A", "C"), V2 = c("B", "C", "B", "A"),
+                  V3 = c("C", "A", "C", "B"), grp = c("", "", "x", "x"))
+  nets <- build_network(d, method = "relative", group = "grp")
+  edges <- extract_edges(nets)
+  expect_identical(sort(unique(edges$group)), c("", "x"))
+  expect_equal(subset(edges, group == "")$weight,
+               extract_edges(nets[[1L]])$weight)
+  expect_identical(sort(unique(extract_initial_probs(nets)$group)), c("", "x"))
+  cents <- suppressWarnings(suppressMessages(net_centrality(nets)))
+  expect_identical(sort(unique(cents$group)), c("", "x"))
+})

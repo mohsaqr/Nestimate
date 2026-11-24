@@ -130,11 +130,12 @@ tr <- entropy_trajectory(group_regulation_long,
                          action = "Action", actor = "Actor", time = "Time",
                          group = "Achiever", window = 500, step = 100)
 summary(tr)
-plot(tr)
+plot(tr, seed = 1)
 ```
 
-Each faint line is one 500-transition window stepped by 100; the bold
-curve is the loess trend (Cleveland, 1979) per achievement group. Declining entropy is
+Each point is one 500-transition window stepped by 100; the curve is the
+loess trend (Cleveland, 1979) per achievement group, and the band its 95%
+interval from 200 resamples of the actors. Declining entropy is
 routinization — the group settling into predictable regulation; rising
 entropy is exploration; a level shift marks a phase change. The `change`
 column of the summary (last window minus first) gives each group's net

@@ -68,9 +68,9 @@ that records none) treats an asymmetric matrix as directed.}
 run, so the comparison can be repeated; the session's random-number
 stream then continues from it. Default \code{NULL} uses the current stream.}
 
-\item{labels}{Two names for the networks, used in the print header, the
-plot axis and the column names \verb{observed_<label>} (made syntactic with
-\code{\link[=make.names]{make.names()}}). Default \code{c("x", "y")}.}
+\item{labels}{Two names for the networks, used in the print header and
+the plot axis. The columns are always \code{observed_x} (the first network)
+and \code{observed_y} (the second). Default \code{c("x", "y")}.}
 
 \item{digits}{For the \code{print()} method: the number of decimals shown.
 Default \code{3}.}
@@ -86,7 +86,7 @@ networks' sizes and the first network's number of replicates, then the
 summary table
 with significance stars; \code{summary()} returns that table as a data frame
 with one row per statistic and the columns \code{statistic}, the two
-observed values (\verb{observed_<label>}), \code{diff} (first minus second),
+observed values (\code{observed_x}, \code{observed_y}), \code{diff} (first minus second),
 \code{se_diff}, \code{z}, \code{p_value} (two-sided), \code{ci_lower} and \code{ci_upper};
 \code{plot()} draws the differences with their intervals. When a statistic
 has no bootstrap variation in either network (both standard errors 0),

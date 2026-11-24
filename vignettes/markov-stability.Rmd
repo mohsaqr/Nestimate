@@ -76,7 +76,7 @@ net <- build_network(trajectories, method = "relative")
 net
 ```
 
-Each row of the matrix sums to 1. A student who is `Active` in one course
+The probabilities leaving each state sum to 1. A student who is `Active` in one course
 is `Active` in the next with probability 0.698, `Average` with probability
 0.267 and `Disengaged` with probability 0.035. The measures below are
 computed from this matrix, so they assume that the transition probabilities

@@ -75,7 +75,7 @@
 #'   entries raises an error of class `nestimate_not_markov`. A `group_tna`
 #'   (package tna) gives one result per group, as a `netobject_group` does. For
 #'   the `print()` and `plot()` methods: a `transition_entropy()` result;
-#'   `print()` also takes a group result or the result of `summary()`.
+#'   `print()` also takes a group result.
 #' @param base The logarithm base, which sets the unit: `2` (default) for
 #'   bits, `exp(1)` for nats, `10` for hartleys. Any finite number greater
 #'   than 1; another value raises an error of class `nestimate_bad_input`.
@@ -87,19 +87,18 @@
 #' @return A `net_transition_entropy` object, or for a `netobject_group` a
 #'   `net_transition_entropy_group`: a named list of them, one per group.
 #'   `print()` shows the entropy rate, stationary entropy and redundancy, raw
-#'   and normalised, and for a group the entropy rate of each group. For a
-#'   group, `summary()` returns a data frame with one row per group (`group`,
-#'   `n_states`, the raw and normalised entropy rate and stationary entropy,
-#'   `redundancy` and `unit`), and `plot()` draws the bar chart below in one
-#'   panel per group.
-#'   `summary()` returns a `summary.net_transition_entropy` object, printed by
-#'   its own `print()` method, that holds `table`, one row per state
-#'   (stationary probability, raw and normalised branching entropy, the
-#'   state's additive contribution \eqn{\pi_i H(P_{i\cdot})} to the entropy
-#'   rate and that contribution as a percentage of it), sorted by contribution,
-#'   largest first; `chain`, one row per chain-level quantity (entropy rate,
-#'   stationary entropy, redundancy and the ceiling, raw and normalised),
-#'   with the unit; and the logarithm `base`.
+#'   and normalised, and for a group the entropy rate of each group.
+#'   `summary()` returns a data frame. With `table = "states"` (default),
+#'   one row per state (`state`, the stationary probability, raw and
+#'   normalised branching entropy, the state's additive contribution
+#'   \eqn{\pi_i H(P_{i\cdot})} to the entropy rate and that contribution as
+#'   a percentage of it), sorted by contribution, largest first; for a group,
+#'   with a `group` column first. With `table = "chain"`, one row per
+#'   chain-level quantity (entropy rate, stationary entropy, redundancy and
+#'   the ceiling, raw and normalised, with the unit); for a group, one row
+#'   per group (`group`, `n_states`, the raw and normalised entropy rate and
+#'   stationary entropy, `redundancy` and `unit`). For a group, `plot()`
+#'   draws the bar chart below in one panel per group.
 #'   `plot()` returns a `ggplot` bar chart of each state's branching entropy,
 #'   with bar widths proportional to the stationary probability (so a bar's
 #'   area is proportional to the state's contribution), a dashed line at the
@@ -615,9 +614,10 @@ entropy_network <- function(x, base = 2,
 #'   group: `group`, `windows`, the `mean`, `sd`, `min` and `max` of the
 #'   window entropies, the entropy of the `first` and `last` windows, and
 #'   their difference `change` (negative when the transitions became more
-#'   predictable). `plot()` returns a `ggplot` with the per-window entropy as
-#'   faint lines and a loess-smoothed trend (with its standard-error band) per
-#'   group, in Okabe-Ito colours. The object's fields:
+#'   predictable). `plot()` returns a `ggplot` with a loess-smoothed trend
+#'   per group and its bootstrap confidence band, each group in an Okabe-Ito
+#'   colour that no state uses and named at the end of its trend; more groups
+#'   than those colours are drawn one panel each. The object's fields:
 #' \describe{
 #'   \item{trajectory}{Data frame, one row per window: `group`, `window`
 #'     (index within the group), `time` (the window's midpoint; a row number
@@ -629,6 +629,12 @@ entropy_network <- function(x, base = 2,
 #'     the ceiling is never zero; in \eqn{[0, 1]}).}
 #'   \item{window, step, base}{The settings used.}
 #'   \item{states}{The states of the whole log.}
+#'   \item{stream}{The transitions in time order within each group (state
+#'     codes, time, group and actor), from which `plot()` resamples.}
+#'   \item{state_palette}{The colours of the states (the input network's
+#'     own, or Okabe-Ito dealt over the sorted states). `plot()` draws the
+#'     groups in the Okabe-Ito colours these leave, so a group never takes a
+#'     state's colour.}
 #' }
 #'
 #' @details
@@ -646,6 +652,33 @@ entropy_network <- function(x, base = 2,
 #' `window` at the end of a stream is dropped; a group whose stream is
 #' shorter than `window` gets one window covering all of it, with a warning.
 #' Fewer than two transitions in all raise an error.
+#'
+#' The band of `plot()` is a bootstrap over actors (Davison & Hinkley, 1997):
+#' each resample draws a group's actors with replacement, rebuilds its
+#' windows from their transitions in time order and fits the same loess
+#' trend. The band is the basic bootstrap interval of the trend at each
+#' time: the central `ci_level` of the resampled trends, reflected about the
+#' observed trend. It takes the spread of the resampled trends around the
+#' observed one as the spread of the observed trend around the true one, so
+#' a systematic shift of the resamples is carried to the other side of the
+#' trend rather than kept. The plug-in entropy of a window is biased
+#' downward (Miller, 1955), by about \eqn{(c - r) / (2N \ln b)} for
+#' \eqn{c} observed transition types from \eqn{r} states in \eqn{N}
+#' transitions, and resampled actors (repeated transitions) shift it
+#' further down, so percentile limits tend to sit below the trend. In a
+#' simulation (40 datasets of 100 actors with 20 steps of a stationary
+#' 4-state chain, `window = 300`, `step = 100`) the 95% band covered the
+#' true entropy rate at mid-study in 38 of the 40, missing once on each
+#' side. Whole actors are resampled
+#' because the windows overlap (each transition sits in about
+#' `window / step` of them) and an actor's
+#' transitions depend on each other, so a band from the loess standard
+#' error, which treats the windows as independent, would be too narrow.
+#' A resample whose trend cannot be fitted (too few windows, or a loess
+#' warning) is left out of the band, and the plot warns how many were, with
+#' class `nestimate_dropped_resamples`; a time reached by fewer than half of
+#' the `iter` resamples has no band. A group with one actor has no band
+#' (warning class `nestimate_single_actor_band`).
 #'
 #' @examples
 #' tr <- entropy_trajectory(group_regulation_long,
@@ -670,10 +703,18 @@ entropy_network <- function(x, base = 2,
 #' Cover, T.M. & Thomas, J.A. (2006). \emph{Elements of Information Theory},
 #' 2nd ed. Wiley.
 #'
+#' Davison, A.C. & Hinkley, D.V. (1997). \emph{Bootstrap Methods and Their
+#' Application}. Cambridge University Press.
+#'
+#' Miller, G.A. (1955). Note on the bias of information estimates. In H.
+#' Quastler (Ed.), \emph{Information Theory in Psychology} (pp. 95--100).
+#' Free Press.
+#'
 #' @export
 entropy_trajectory <- function(data, action = NULL, actor = NULL, time = NULL,
                                group = NULL, window = 500L, step = NULL,
                                base = 2) {
+  input <- data
   # sequences (a network, prepared data, a wide table) are turned into the
   # event log the windows are built from: one actor per sequence, the
   # position as the time
@@ -709,6 +750,14 @@ entropy_trajectory <- function(data, action = NULL, actor = NULL, time = NULL,
       "`time` column '%s' must be numeric, a Date or a POSIXct, not %s; ",
       "parse it first (for example with prepare())."),
       time, class(data[[time]])[1L]),
+      class = "nestimate_bad_input", call = NULL))
+  }
+  # A missing time cannot be placed in the stream (it would sort last and
+  # end a transition at no time), so it is refused like a missing group.
+  if (!is.null(time) && anyNA(data[[time]])) {
+    stop(errorCondition(sprintf(paste0(
+      "`time` column '%s' has %d missing values; drop these rows or give ",
+      "them a time first."), time, sum(is.na(data[[time]]))),
       class = "nestimate_bad_input", call = NULL))
   }
   window <- as.integer(window)
@@ -752,6 +801,7 @@ entropy_trajectory <- function(data, action = NULL, actor = NULL, time = NULL,
   to_i   <- to_i[by_time]
   tr_t   <- tr_t[by_time]
   tr_g   <- tr_g[by_time]
+  tr_a   <- tr_a[by_time]
 
   if (length(from_i) < 2L) {
     stop(errorCondition(
@@ -759,50 +809,22 @@ entropy_trajectory <- function(data, action = NULL, actor = NULL, time = NULL,
       class = "nestimate_bad_input", call = NULL))
   }
 
-  pair_enc <- (from_i - 1L) * S + to_i
-
-  ## One window's empirical conditional entropy + bookkeeping
-  win_stats <- function(idx) {
-    cnt <- tabulate(pair_enc[idx], nbins = S * S)
-    ni  <- tabulate(from_i[idx],   nbins = S)
-    nz  <- which(cnt > 0)
-    fi  <- ((nz - 1L) %/% S) + 1L
-    N   <- length(idx)
-    h   <- -sum(cnt[nz] / N * log(cnt[nz] / ni[fi], base = base))
-    n_states <- length(unique(c(from_i[idx], to_i[idx])))
-    ceiling_ <- log(max(n_states, 2L), base = base)
-    c(h, h / ceiling_, N, n_states)
+  # The time-ordered stream is kept with the result: plot() resamples its
+  # actors for the confidence band of the trend.
+  stream <- list(from = from_i, to = to_i, time = tr_t, group = tr_g,
+                 actor = tr_a, n_states = S)
+  # The colours of the states, as every figure of the input draws them (a
+  # network's own palette, or Okabe-Ito dealt over the sorted states):
+  # plot() gives the groups the colours the states leave.
+  state_palette <- if (inherits(input, c("netobject", "netobject_group",
+                                         "mcml"))) {
+    .resolve_state_colors(input)
+  } else {
+    dealt <- .order_keys(states)
+    stats::setNames(.fill_state_colors(dealt, character(0)), dealt)
   }
-
-  per_group <- lapply(split(seq_along(pair_enc), tr_g), function(gi) {
-    n_tr <- length(gi)
-    if (n_tr < window) {
-      warning(warningCondition(sprintf(
-        "Group stream (%d transitions) shorter than window (%d); using one window.",
-        n_tr, window), class = "nestimate_short_stream", call = NULL))
-      starts <- 1L
-      w_len  <- n_tr
-    } else {
-      starts <- seq.int(1L, n_tr - window + 1L, by = step)
-      w_len  <- window
-    }
-    stats <- vapply(starts,
-                    function(s) win_stats(gi[s:(s + w_len - 1L)]),
-                    numeric(4))
-    t_start <- tr_t[gi[starts]]
-    t_end   <- tr_t[gi[starts + w_len - 1L]]
-    data.frame(
-      group         = tr_g[gi[1L]],
-      window        = seq_along(starts),
-      time          = t_start + (t_end - t_start) / 2,
-      time_start    = t_start,
-      time_end      = t_end,
-      n_transitions = as.integer(stats[3, ]),
-      n_states      = as.integer(stats[4, ]),
-      entropy       = stats[1, ],
-      entropy_norm  = stats[2, ],
-      stringsAsFactors = FALSE
-    )
+  per_group <- lapply(split(seq_along(from_i), tr_g), function(gi) {
+    .te_windows(stream, gi, window, step, base, warn = TRUE)
   })
   trajectory <- do.call(rbind, per_group)
   rownames(trajectory) <- NULL
@@ -814,10 +836,101 @@ entropy_trajectory <- function(data, action = NULL, actor = NULL, time = NULL,
       step       = step,
       base       = base,
       states     = states,
-      time_col   = time
+      time_col   = time,
+      stream     = stream,
+      state_palette = state_palette
     ),
     class = "net_entropy_trajectory"
   )
+}
+
+# The windows of one group's transitions. `gi` indexes the stream in time
+# order (an index may repeat, as in a bootstrap draw); each window's entropy
+# is the empirical conditional entropy of its transitions.
+#' @noRd
+.te_windows <- function(stream, gi, window, step, base, warn = TRUE) {
+  S <- stream$n_states
+  from_i <- stream$from
+  to_i <- stream$to
+  tr_t <- stream$time
+  pair_enc <- (from_i - 1L) * S + to_i
+  win_stats <- function(idx) {
+    cnt <- tabulate(pair_enc[idx], nbins = S * S)
+    ni  <- tabulate(from_i[idx],   nbins = S)
+    nz  <- which(cnt > 0)
+    fi  <- ((nz - 1L) %/% S) + 1L
+    N   <- length(idx)
+    h   <- -sum(cnt[nz] / N * log(cnt[nz] / ni[fi], base = base))
+    n_states <- length(unique(c(from_i[idx], to_i[idx])))
+    ceiling_ <- log(max(n_states, 2L), base = base)
+    c(h, h / ceiling_, N, n_states)
+  }
+  n_tr <- length(gi)
+  if (n_tr < window) {
+    if (warn) {
+      warning(warningCondition(sprintf(
+        "Group stream (%d transitions) shorter than window (%d); using one window.",
+        n_tr, window), class = "nestimate_short_stream", call = NULL))
+    }
+    starts <- 1L
+    w_len  <- n_tr
+  } else {
+    starts <- seq.int(1L, n_tr - window + 1L, by = step)
+    w_len  <- window
+  }
+  stats <- vapply(starts, function(s) win_stats(gi[s:(s + w_len - 1L)]),
+                  numeric(4))
+  t_start <- tr_t[gi[starts]]
+  t_end   <- tr_t[gi[starts + w_len - 1L]]
+  data.frame(
+    group         = stream$group[gi[1L]],
+    window        = seq_along(starts),
+    time          = t_start + (t_end - t_start) / 2,
+    time_start    = t_start,
+    time_end      = t_end,
+    n_transitions = as.integer(stats[3, ]),
+    n_states      = as.integer(stats[4, ]),
+    entropy       = stats[1, ],
+    entropy_norm  = stats[2, ],
+    stringsAsFactors = FALSE
+  )
+}
+
+# The stream rows of the drawn actors (`picks` indexes `by_actor`, the rows
+# of each actor). The stream is stored in time order (ties: actor, then
+# input order), so sorting the rows restores that order: a draw of every
+# actor once is the data whatever the order of the picks, and the copies of
+# an actor drawn twice sit side by side.
+#' @noRd
+.te_draw_rows <- function(by_actor, picks) {
+  sort(unlist(by_actor[picks], use.names = FALSE))
+}
+
+# The band of one group from its fitted bootstrap trends (`draws`, a list
+# of numeric vectors on `grid`; the unfitted draws are already left out).
+# At each time the band uses the draws whose windows reach it (a draw's
+# windows span a slightly different range); a time reached by fewer than
+# half of all `iter` draws, at the edges or when many draws were left out,
+# has no band. NULL when no time has one.
+#' @noRd
+.te_band <- function(g, draws, iter, grid, estimate, ci_level, colour_key) {
+  if (!length(draws)) return(NULL)
+  draws <- matrix(unlist(draws, use.names = FALSE), nrow = length(grid))
+  probs <- c((1 - ci_level) / 2, 1 - (1 - ci_level) / 2)
+  covered <- rowSums(!is.na(draws)) >= iter / 2
+  if (!any(covered)) return(NULL)
+  quantiles <- apply(draws[covered, , drop = FALSE], 1L, function(values) {
+    stats::quantile(values[!is.na(values)], probs = probs, names = FALSE)
+  })
+  # The basic bootstrap interval: the plug-in entropy of a window is biased
+  # downward, and each resample adds that bias again, so the resampled
+  # trends sit below the trend; reflecting their quantiles about the trend
+  # corrects for it, where percentile limits would not.
+  estimate <- estimate[covered]
+  data.frame(group = g, colour_key = colour_key, time = grid[covered],
+             lower = 2 * estimate - quantiles[2L, ],
+             upper = 2 * estimate - quantiles[1L, ],
+             stringsAsFactors = FALSE)
 }
 
 #' Sequences as the event log of entropy_trajectory()
@@ -864,8 +977,20 @@ entropy_trajectory <- function(data, action = NULL, actor = NULL, time = NULL,
 #' @param object For `summary()`: an `entropy_trajectory()` result.
 #' @param normalized For `plot()`: whether to draw `entropy_norm` instead of
 #'   the raw entropy. Default `FALSE`.
+#' @param iter For `plot()`: the number of bootstrap resamples behind the
+#'   confidence band of each trend. Default `200`; `0` draws the trends
+#'   without a band.
+#' @param ci_level For `plot()`: the coverage of the band. Default `0.95`.
+#' @param seed For `plot()`: a seed for the resampling. It applies to this
+#'   call only: the session's random state is restored afterwards. Default
+#'   `NULL`.
 #' @param span For `plot()`: the loess span of the trend line. Default
-#'   `0.4`.
+#'   `0.4`. A group gets a trend line when `span` times its number of
+#'   windows is at least 4 (10 windows at the default); a group with fewer
+#'   windows is drawn as its windows joined by a line, with a
+#'   `nestimate_sparse_trajectory` warning naming it. A group with enough
+#'   windows whose loess fit still warns is drawn the same way, with a
+#'   `nestimate_trend_not_fitted` warning giving loess's message.
 #' @param title For `plot()`: the plot title. Default
 #'   `"Transition entropy over time"`.
 #' @export
@@ -912,9 +1037,15 @@ summary.net_entropy_trajectory <- function(object, ...) {
 #' @export
 plot.net_entropy_trajectory <- function(x, normalized = FALSE, span = 0.4,
                                         title = "Transition entropy over time",
-                                        ...) {
+                                        iter = 200L, ci_level = 0.95,
+                                        seed = NULL, ...) {
+  .assert(is.numeric(iter), length(iter) == 1L, iter >= 0,
+          is.numeric(ci_level), length(ci_level) == 1L, ci_level > 0,
+          ci_level < 1)
+  iter <- as.integer(iter)
   tr <- x$trajectory
-  tr$y <- if (normalized) tr$entropy_norm else tr$entropy
+  measure <- if (normalized) "entropy_norm" else "entropy"
+  tr$y <- tr[[measure]]
   ylab <- if (normalized) "Normalised entropy" else
     sprintf("Entropy (%s per transition)", .te_unit(x$base))
   xlab <- if (inherits(tr$time, "POSIXct")) "Time" else
@@ -924,25 +1055,241 @@ plot.net_entropy_trajectory <- function(x, normalized = FALSE, span = 0.4,
 
   n_groups <- length(unique(tr$group))
   single <- n_groups == 1L
-  # More groups than palette colours: one panel per group, all in the
-  # single-group colour, instead of a colour scale that cannot cover them.
-  faceted <- n_groups > length(.okabe_ito)
+  # The groups (clusters, conditions) take the Okabe-Ito colours the states
+  # leave, as the clusters of an mcml do, so a group is never drawn in the
+  # colour of a state.
+  group_colours <- setdiff(.okabe_ito, unname(x$state_palette))
+  # More groups than those colours: one panel per group, all in one colour,
+  # instead of a colour scale that cannot cover them. When the states take
+  # every colour, the groups are told apart by their panels alone, drawn in
+  # black.
+  faceted <- n_groups > max(length(group_colours), 1L)
+  if (!length(group_colours)) group_colours <- "#000000"
   tr$colour_key <- if (faceted) tr$group[1L] else tr$group
+  keys <- sort(unique(tr$colour_key))
+  group_colours <- stats::setNames(group_colours[seq_along(keys)], keys)
+
+  # The trend of each group is a loess curve on a grid of 80 times. loess fits
+  # without near-singularities once span x windows reaches 4 (a probe over
+  # 2-16 windows at spans 0.4 and 0.75 gave warnings below it); a group with
+  # fewer windows, or whose fit still warns, keeps its windows as points and
+  # a plain line, and is named, rather than losing its curve (and, with one
+  # window, everything) silently.
+  groups <- unique(tr$group)
+  # Lists over the groups are looked up by position: a group label can be
+  # "", which `[[` cannot find by name.
+  at <- function(g) match(g, groups)
+  grids <- lapply(groups, function(g) {
+    times <- as.numeric(tr$time[tr$group == g])
+    seq(min(times), max(times), length.out = 80L)
+  })
+  # `partial = TRUE` (a bootstrap draw) keeps NA where the grid runs past
+  # the draw's own windows; the observed trend covers its whole grid.
+  # A fitted trend is a numeric vector; a trend that is not fitted is the
+  # reason, a string: "few" (too few windows), or loess's own warning (a
+  # near-singular neighbourhood). The fit stops at that warning, since loess
+  # can go on to fail outright (degenerate times), and the warning is
+  # reported by the plot rather than passed on raw: the observed group is
+  # drawn as its windows and named, a bootstrap draw is left out of the band
+  # and counted.
+  trend_of <- function(times, values, grid, partial = FALSE) {
+    if (length(values) * span < 4 - 1e-8) return("few")
+    fitted <- tryCatch(
+      stats::predict(stats::loess(values ~ times, span = span),
+                     newdata = data.frame(times = grid)),
+      warning = function(w) sprintf("loess warned: %s", conditionMessage(w)))
+    if (is.character(fitted)) return(fitted)
+    if (!partial && anyNA(fitted)) return("the fit does not span the windows")
+    as.numeric(fitted)
+  }
+  trends <- lapply(groups, function(g) {
+    own <- tr$group == g
+    trend_of(as.numeric(tr$time[own]), tr$y[own], grids[[at(g)]])
+  })
+  fitted_trend <- vapply(trends, is.numeric, logical(1))
+  smoothed <- groups[fitted_trend]
+  sparse <- groups[!fitted_trend & vapply(trends, identical, logical(1),
+                                          "few")]
+  unfit <- setdiff(groups, c(smoothed, sparse))
+  windows <- table(factor(tr$group, levels = groups))
+  if (length(unfit) > 0L) {
+    warning(warningCondition(sprintf(paste(
+      "loess could not fit a trend line to %s, so %s drawn as windows only.",
+      "A larger `span`, or a smaller `window` in entropy_trajectory(), may",
+      "give a curve."),
+      paste(sprintf("%s (%d windows; %s)", unfit,
+                    as.integer(windows[at(unfit)]),
+                    unlist(trends[at(unfit)])), collapse = ", "),
+      if (length(unfit) == 1L) "it is" else "they are"),
+      class = "nestimate_trend_not_fitted", call = NULL))
+  }
+  if (length(sparse) > 0L) {
+    counts <- as.integer(windows[at(sparse)])
+    named <- sprintf("%s (%d window%s)", sparse, counts,
+                     ifelse(counts == 1L, "", "s"))
+    listed <- if (length(named) == 1L) named else
+      paste(paste(named[-length(named)], collapse = ", "), "and",
+            named[length(named)])
+    warning(warningCondition(sprintf(paste(
+      "%s %s too few windows for a trend line at span = %s (it needs %d);",
+      "%s drawn as %s windows only. A smaller `window` in",
+      "entropy_trajectory() or a larger `span` gives a curve."),
+      listed, if (length(sparse) == 1L) "has" else "have", format(span),
+      as.integer(ceiling(4 / span - 1e-8)),
+      if (length(sparse) == 1L) "it is" else "they are",
+      if (length(sparse) == 1L) "its" else "their"),
+      class = "nestimate_sparse_trajectory", call = NULL))
+  }
+
+  as_time <- function(values) {
+    if (inherits(tr$time, "POSIXct")) {
+      as.POSIXct(values, origin = "1970-01-01", tz = attr(tr$time, "tzone"))
+    } else if (inherits(tr$time, "Date")) {
+      as.Date(values, origin = "1970-01-01")
+    } else {
+      values
+    }
+  }
+  key_of <- function(g) tr$colour_key[match(g, tr$group)]
+  trend <- do.call(rbind, lapply(smoothed, function(g) {
+    data.frame(group = g, colour_key = key_of(g), time = grids[[at(g)]],
+               y = trends[[at(g)]], stringsAsFactors = FALSE)
+  }))
+
+  # The band: the actors of each group are resampled with replacement, the
+  # windows rebuilt from their transitions in time order, and the same loess
+  # trend fitted; the band holds the central `ci_level` of those trends at
+  # each time. Resampling whole actors keeps the dependence that overlapping
+  # windows and an actor's own transitions carry, which a band from the loess
+  # standard error ignores.
+  band <- NULL
+  if (iter > 0L && length(smoothed) > 0L && !is.null(x$stream)) {
+    if (!is.null(seed)) .local_seed(seed)
+    stream <- x$stream
+    by_actor_of <- lapply(smoothed, function(g) {
+      split(which(stream$group == g), stream$actor[stream$group == g])
+    })
+    # Resampling actors measures how the trend varies between actors; a
+    # group with one actor has no such variation (every resample is the
+    # data), so it gets no band rather than one of zero width.
+    lone <- smoothed[lengths(by_actor_of) < 2L]
+    if (length(lone) > 0L) {
+      warning(warningCondition(sprintf(paste(
+        "%s %s one actor, so %s no confidence band: the band resamples",
+        "actors."), paste(lone, collapse = ", "),
+        if (length(lone) == 1L) "has" else "have",
+        if (length(lone) == 1L) "it has" else "they have"),
+        class = "nestimate_single_actor_band", call = NULL))
+    }
+    banded <- which(lengths(by_actor_of) >= 2L)
+    per_group <- lapply(banded, function(k) {
+      g <- smoothed[[k]]
+      by_actor <- by_actor_of[[k]]
+      draws <- lapply(seq_len(iter), function(r) {
+        gi <- .te_draw_rows(by_actor, sample.int(length(by_actor),
+                                                 length(by_actor),
+                                                 replace = TRUE))
+        windows_r <- .te_windows(stream, gi, x$window, x$step, x$base,
+                                 warn = FALSE)
+        trend_of(as.numeric(windows_r$time), windows_r[[measure]],
+                 grids[[at(g)]], partial = TRUE)
+      })
+      # A draw whose trend could not be fitted is left out and counted.
+      kept <- vapply(draws, is.numeric, logical(1))
+      list(band = .te_band(g, draws[kept], iter, grids[[at(g)]],
+                           trends[[at(g)]], ci_level, key_of(g)),
+           dropped = sum(!kept))
+    })
+    band <- do.call(rbind, lapply(per_group, `[[`, "band"))
+    dropped <- stats::setNames(
+      vapply(per_group, `[[`, integer(1), "dropped"), smoothed[banded])
+    if (any(dropped > 0L)) {
+      warning(warningCondition(sprintf(paste(
+        "The band leaves out the resamples whose trend could not be fitted",
+        "(too few windows in the resample, or a loess warning): %s. At each",
+        "time it uses the resamples that reach it, and it is drawn only where",
+        "at least half of the %d do."),
+        paste(sprintf("%s %d of %d", names(dropped)[dropped > 0L],
+                      dropped[dropped > 0L], iter), collapse = ", "), iter),
+        class = "nestimate_dropped_resamples", call = NULL))
+    }
+  }
+  if (!is.null(trend)) trend$time <- as_time(trend$time)
+  if (!is.null(band)) band$time <- as_time(band$time)
+
+  in_smooth <- tr$group %in% smoothed
+  # A line needs two windows; a one-window group is its point.
+  joined <- tr$group %in% names(windows)[as.numeric(windows) >= 2]
   p <- ggplot2::ggplot(tr, ggplot2::aes(x = .data$time, y = .data$y,
-                                        colour = .data$colour_key)) +
-    ggplot2::geom_line(alpha = 0.35, linewidth = 0.35) +
-    ggplot2::geom_smooth(method = "loess", span = span, se = TRUE,
-                         linewidth = 0.9, alpha = 0.15) +
-    ggplot2::scale_colour_manual(values = .okabe_ito, name = NULL) +
+                                        colour = .data$colour_key))
+  if (!is.null(band)) {
+    p <- p + ggplot2::geom_ribbon(
+      data = band, ggplot2::aes(x = .data$time, ymin = .data$lower,
+                                ymax = .data$upper, fill = .data$colour_key),
+      inherit.aes = FALSE, alpha = 0.2, show.legend = FALSE)
+  }
+  if (!is.null(trend)) {
+    p <- p + ggplot2::geom_line(data = trend, linewidth = 0.9)
+  }
+  p <- p +
+    ggplot2::geom_line(data = tr[joined & !in_smooth, , drop = FALSE],
+                       linewidth = 0.9) +
+    # A dark outline keeps the pale palette colours (yellow) visible on white.
+    ggplot2::geom_point(data = tr[!in_smooth, , drop = FALSE],
+                        ggplot2::aes(fill = .data$colour_key), shape = 21,
+                        size = 2, stroke = 0.4, colour = "grey20",
+                        show.legend = length(sparse) > 0L) +
+    # Colours are dealt over every group, including one drawn only as a
+    # point, and the line and point keys share one legend.
+    ggplot2::scale_colour_manual(values = group_colours, limits = keys,
+                                 name = NULL) +
+    ggplot2::scale_fill_manual(values = group_colours, limits = keys,
+                               name = NULL) +
     ggplot2::labs(x = xlab,
       y = ylab, title = title,
-      subtitle = sprintf("Sliding window: %d transitions, step %d",
-                         x$window, x$step)) +
+      subtitle = sprintf("Sliding window: %d transitions, step %d%s",
+                         x$window, x$step,
+                         if (is.null(band)) "" else sprintf(
+                           "; band: %.0f%% of %d resamples of the actors",
+                           100 * ci_level, iter))) +
     ggplot2::theme_minimal(base_size = 12) +
     ggplot2::theme(plot.title = ggplot2::element_text(face = "bold"),
                    legend.position = if (single || faceted) "none" else
                      "bottom")
   if (faceted) p <- p + ggplot2::facet_wrap(ggplot2::vars(.data$group))
+  # With several groups in one panel, each is named at its last window, so a
+  # group is found by its label and not by its colour alone.
+  if (!single && !faceted) {
+    room_for_labels <- if (inherits(tr$time, "POSIXct")) {
+      function(e) ggplot2::scale_x_datetime(expand = e)
+    } else if (inherits(tr$time, "Date")) {
+      function(e) ggplot2::scale_x_date(expand = e)
+    } else {
+      function(e) ggplot2::scale_x_continuous(expand = e)
+    }
+    ends <- do.call(rbind, lapply(groups, function(g) {
+      if (g %in% smoothed) {
+        own <- trend[trend$group == g, , drop = FALSE]
+      } else {
+        own <- tr[tr$group == g, c("group", "colour_key", "time", "y")]
+      }
+      own[which.max(as.numeric(own$time)), c("group", "time", "y"),
+          drop = FALSE]
+    }))
+    # Labels that would print over each other are moved apart vertically, by
+    # at least 4% of the drawn range, keeping their order.
+    gap <- 0.04 * diff(range(c(tr$y, band$lower, band$upper)))
+    ends <- ends[order(ends$y), , drop = FALSE]
+    ends$y <- Reduce(function(previous, y) max(y, previous + gap), ends$y,
+                     accumulate = TRUE)
+    p <- p +
+      ggplot2::geom_text(data = ends, ggplot2::aes(x = .data$time,
+                                                   y = .data$y,
+                                                   label = .data$group),
+                         inherit.aes = FALSE, colour = "grey20",
+                         hjust = -0.15, size = 3.5) +
+      room_for_labels(ggplot2::expansion(mult = c(0.03, 0.14)))
+  }
   p
 }
 
@@ -1550,9 +1897,10 @@ plot.net_entropy_bayes <- function(x, top = 25,
 }
 
 #' @rdname transition_entropy
-#' @param digits For the `print()` methods of a result and of its summary:
-#'   decimal places of the values. Default `3`. A result's normalised values
-#'   always print with three decimals, the summary's percentages with one.
+#' @param digits For the `print()` methods: decimal places of the values.
+#'   Default `3`. The normalised values always print with three decimals.
+#' @param table For `summary()`: `"states"` (default), the per-state table,
+#'   or `"chain"`, the chain-level quantities.
 #' @param ... For the `print()`, `summary()` and `plot()` methods: not used.
 #' @param object For `summary()`: a `transition_entropy()` result.
 #' @param title For `plot()`: the plot title. Default `"Transition Entropy"`.
@@ -1596,7 +1944,17 @@ print.net_transition_entropy_group <- function(x, ...) {
 
 #' @rdname transition_entropy
 #' @export
-summary.net_transition_entropy_group <- function(object, ...) {
+summary.net_transition_entropy_group <- function(object,
+                                                 table = c("states", "chain"),
+                                                 ...) {
+  table <- match.arg(table)
+  if (identical(table, "states")) {
+    per_state <- do.call(rbind, Map(function(o, g) {
+      cbind(data.frame(group = g, stringsAsFactors = FALSE), summary(o))
+    }, object, names(object)))
+    rownames(per_state) <- NULL
+    return(per_state)
+  }
   rows <- Map(function(o, g) {
     data.frame(
       group                   = g,
@@ -1668,7 +2026,10 @@ plot.net_transition_entropy_group <- function(x,
 
 #' @rdname transition_entropy
 #' @export
-summary.net_transition_entropy <- function(object, ...) {
+summary.net_transition_entropy <- function(object,
+                                           table = c("states", "chain"),
+                                           ...) {
+  table <- match.arg(table)
   contrib  <- object$stationary * object$row_entropy
   total    <- object$entropy_rate
   pct      <- if (total > 0) 100 * contrib / total else contrib * 0
@@ -1704,46 +2065,9 @@ summary.net_transition_entropy <- function(object, ...) {
     stringsAsFactors = FALSE
   )
 
-  structure(
-    list(
-      table = per_state,
-      chain = chain,
-      base  = object$base
-    ),
-    class = "summary.net_transition_entropy"
-  )
+  if (identical(table, "chain")) chain else per_state
 }
 
-#' @rdname transition_entropy
-#' @export
-print.summary.net_transition_entropy <- function(x, digits = 3, ...) {
-  unit <- x$chain$unit[1L]
-
-  cat(sprintf("Transition Entropy Summary (%s)\n\n", unit))
-
-  cat("Per-state contribution to h(P):\n")
-  tbl <- x$table
-  tbl$stationary       <- round(tbl$stationary,       digits)
-  tbl$row_entropy      <- round(tbl$row_entropy,      digits)
-  tbl$row_entropy_norm <- round(tbl$row_entropy_norm, digits)
-  tbl$contribution     <- round(tbl$contribution,     digits)
-  tbl$contribution_pct <- round(tbl$contribution_pct, 1)
-  print(tbl, row.names = FALSE)
-
-  cat("\nChain-level summary:\n")
-  ch <- x$chain
-  ch$raw        <- round(ch$raw,        digits)
-  ch$normalised <- round(ch$normalised, digits)
-  ch$unit       <- NULL
-  print(ch, row.names = FALSE)
-
-  cat(sprintf(paste0(
-    "\nNormalised: row entropy, h(P) and H(pi) are raw / log_%g(n_states), ",
-    "in [0, 1];\n",
-    "  redundancy is the relative redundancy (H(pi) - h(P)) / H(pi).\n"),
-    x$base))
-  invisible(x)
-}
 
 #' @rdname transition_entropy
 #' @export

@@ -19,11 +19,13 @@ summary.netobject <- function(object, ...) {
 
 #' @rdname build_network
 #' @export
-summary.netobject_group <- function(object, combined = TRUE, ...) {
+summary.netobject_group <- function(object, combined = TRUE,
+                                    format = c("long", "wide"), ...) {
   .assert("`object` must be a netobject_group" =
             inherits(object, "netobject_group"),
           "`combined` must be TRUE or FALSE" =
             is.logical(combined) && length(combined) == 1L && !is.na(combined))
+  format <- match.arg(format)
 
   per_group <- lapply(object, summary)
 
@@ -35,11 +37,21 @@ summary.netobject_group <- function(object, combined = TRUE, ...) {
   metric <- per_group[[1L]]$metric
   values <- vapply(per_group, function(s) s$value,
                    numeric(length(metric)))
-  out <- data.frame(metric = metric, values, check.names = FALSE,
-                    stringsAsFactors = FALSE)
-  names(out)[-1L] <- names(per_group)
+  values <- matrix(values, nrow = length(metric))
+  groups <- names(per_group)
+  out <- if (identical(format, "wide")) {
+    wide <- data.frame(metric = metric, values, check.names = FALSE,
+                       stringsAsFactors = FALSE)
+    names(wide)[-1L] <- groups
+    wide
+  } else {
+    # one row per metric and group, metrics in their order
+    data.frame(metric = rep(metric, each = length(groups)),
+               group = rep(groups, times = length(metric)),
+               value = as.vector(t(values)), stringsAsFactors = FALSE)
+  }
   structure(out, class = c("summary.netobject_group", "data.frame"),
-            combined = TRUE)
+            combined = TRUE, format = format, groups = groups)
 }
 
 
@@ -175,6 +187,15 @@ print.summary.netobject <- function(x, ...) {
 }
 
 #' @rdname build_network
+#' @param i,j For `[` on a grouped summary: rows and columns, as for a data
+#'   frame. A subset is a plain data frame.
+#' @export
+`[.summary.netobject_group` <- function(x, i, j, ...) {
+  out <- NextMethod()
+  if (is.data.frame(out)) .plain_df(out) else out
+}
+
+#' @rdname build_network
 #' @export
 print.summary.netobject_group <- function(x, ...) {
   if (isFALSE(attr(x, "combined"))) {
@@ -186,7 +207,18 @@ print.summary.netobject_group <- function(x, ...) {
     return(invisible(x))
   }
   cat("Network metrics by group:\n")
-  out <- x
+  out <- .plain_df(x)
+  if (identical(attr(x, "format", exact = TRUE), "long")) {
+    # display only: laid out metric by group for reading; the object is long
+    groups <- attr(x, "groups", exact = TRUE)
+    metric <- unique(out$metric)
+    grid <- data.frame(metric = metric, stringsAsFactors = FALSE)
+    grid[groups] <- lapply(groups, function(g) {
+      rows <- out[out$group == g, , drop = FALSE]
+      rows$value[match(metric, rows$metric)]
+    })
+    out <- grid
+  }
   numeric_cols <- vapply(out, is.numeric, logical(1L))
   out[numeric_cols] <- lapply(out[numeric_cols],
                               function(v) .format_metric_values(out$metric, v))

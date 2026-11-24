@@ -170,21 +170,21 @@ test_that("print/summary/plot dispatch correctly", {
   te <- transition_entropy(.P3, base = 2)
   expect_output(print(te), "Transition Entropy")
   s <- summary(te)
-  expect_s3_class(s, "summary.net_transition_entropy")
-  expect_true(is.data.frame(s$table))
-  expect_true(is.data.frame(s$chain))
+  expect_identical(class(s), "data.frame")
   ## Tidy table has 6 columns including normalised + percent
-  expect_named(s$table, c("state", "stationary", "row_entropy",
-                          "row_entropy_norm",
-                          "contribution", "contribution_pct"))
+  expect_named(s, c("state", "stationary", "row_entropy",
+                    "row_entropy_norm",
+                    "contribution", "contribution_pct"))
   ## Sorted by contribution_pct descending
-  expect_equal(s$table$contribution_pct,
-               sort(s$table$contribution_pct, decreasing = TRUE))
+  expect_equal(s$contribution_pct,
+               sort(s$contribution_pct, decreasing = TRUE))
   ## Contributions sum to entropy_rate; pct sums to 100
-  expect_equal(sum(s$table$contribution), te$entropy_rate, tolerance = 1e-10)
-  expect_equal(sum(s$table$contribution_pct), 100, tolerance = 1e-10)
+  expect_equal(sum(s$contribution), te$entropy_rate, tolerance = 1e-10)
+  expect_equal(sum(s$contribution_pct), 100, tolerance = 1e-10)
   ## Chain table has 4 rows: h(P), H(pi), redundancy, ceiling
-  expect_equal(nrow(s$chain), 4L)
+  chain <- summary(te, table = "chain")
+  expect_identical(class(chain), "data.frame")
+  expect_equal(nrow(chain), 4L)
   g <- plot(te)
   expect_true(inherits(g, "gg"))
 })
@@ -401,6 +401,12 @@ test_that("entropy_bayes S3 methods dispatch", {
 
 # ---- entropy_trajectory() ----
 
+# The positions of a plot's layers of one geom class.
+.te_layer <- function(plot, geom) {
+  which(vapply(plot$layers, function(layer) inherits(layer$geom, geom),
+               logical(1)))
+}
+
 .make_stream <- function(P, n, states = rownames(P), seed = 1) {
   set.seed(seed)
   s <- integer(n)
@@ -451,23 +457,297 @@ test_that("trajectory respects actor boundaries and group split", {
                     length(seq.int(1L, 1499 - 300 + 1, by = 300))))
 })
 
-test_that("trajectory plot draws more groups than palette colours", {
-  d <- .make_stream(.P3, 6000, seed = 5)
-  d$who <- rep(sprintf("a%02d", 1:10), each = 600)
-  d$grp <- rep(sprintf("G%02d", 1:10), each = 600)
-  tr <- entropy_trajectory(d, action = "act", actor = "who", time = "t",
-                           group = "grp", window = 100, step = 50)
-  built <- ggplot2::ggplot_build(plot(tr))
-  # one panel per group, every line in the one single-group colour
-  expect_equal(nrow(built$layout$layout), 10L)
-  expect_equal(unique(built$data[[1L]]$colour), .okabe_ito[1L])
-  # nine groups keep one panel with a colour per group
-  nine <- subset(d, grp != "G10")
-  tr9 <- entropy_trajectory(nine, action = "act", actor = "who", time = "t",
+test_that("trajectory groups take the colours the states leave", {
+  # three states (A, B, C) take the first three Okabe-Ito colours, so the
+  # groups are dealt the six that remain
+  spare <- setdiff(.okabe_ito, .okabe_ito[1:3])
+  d <- .make_stream(.P3, 4200, seed = 5)
+  d$who <- rep(sprintf("a%02d", 1:7), each = 600)
+  d$grp <- rep(sprintf("G%02d", 1:7), each = 600)
+  six <- subset(d, grp != "G07")
+  tr6 <- entropy_trajectory(six, action = "act", actor = "who", time = "t",
                             group = "grp", window = 100, step = 50)
-  built9 <- ggplot2::ggplot_build(plot(tr9))
-  expect_equal(nrow(built9$layout$layout), 1L)
-  expect_length(unique(built9$data[[1L]]$colour), 9L)
+  expect_identical(unname(tr6$state_palette), .okabe_ito[1:3])
+  drawn6 <- plot(tr6, iter = 0)
+  built6 <- ggplot2::ggplot_build(drawn6)
+  colours6 <- unique(built6$data[[.te_layer(drawn6, "GeomLine")[1L]]]$colour)
+  expect_equal(nrow(built6$layout$layout), 1L)
+  expect_setequal(colours6, spare)
+  expect_length(intersect(colours6, .okabe_ito[1:3]), 0L)
+  # one more group than those colours: one panel each, one colour
+  tr7 <- entropy_trajectory(d, action = "act", actor = "who", time = "t",
+                            group = "grp", window = 100, step = 50)
+  drawn7 <- plot(tr7, iter = 0)
+  built7 <- ggplot2::ggplot_build(drawn7)
+  expect_equal(nrow(built7$layout$layout), 7L)
+  expect_equal(unique(built7$data[[.te_layer(drawn7, "GeomLine")[1L]]]$colour),
+               spare[1L])
+  # a network's own state colours are the ones the groups avoid
+  net <- build_network(subset(d, grp %in% c("G01", "G02")), method = "relative",
+                       actor = "who", action = "act", time = "t",
+                       group = "grp")
+  net <- set_state_colors(net, c(A = "#0072B2", B = "#D55E00", C = "#CC79A7"))
+  from_net <- entropy_trajectory(net, window = 100, step = 50)
+  drawn <- plot(from_net, iter = 0)
+  colours <- unique(ggplot2::ggplot_build(drawn)$data[[
+    .te_layer(drawn, "GeomLine")[1L]]]$colour)
+  expect_length(intersect(colours, c("#0072B2", "#D55E00", "#CC79A7")), 0L)
+})
+
+test_that("no group of a trajectory plot disappears, and a sparse one is named", {
+  # Four groups of very different lengths: 2000, 1200, 800 and 260 events, so
+  # with window 250 and step 100 they get 18, 10, 6 and 1 windows.
+  sizes <- c(G1 = 2000, G2 = 1200, G3 = 800, G4 = 260)
+  d <- .make_stream(.P3, sum(sizes), seed = 9)
+  d$grp <- rep(names(sizes), sizes)
+  d$who <- d$grp
+  tr <- entropy_trajectory(d, action = "act", actor = "who", time = "t",
+                           group = "grp", window = 250, step = 100)
+  windows <- table(tr$trajectory$group)
+  expect_equal(as.vector(windows[c("G1", "G2", "G3", "G4")]), c(18, 10, 6, 1))
+
+  # one actor per group, so the band is left out: this test is about which
+  # groups get a trend
+  expect_warning(plotted <- plot(tr, iter = 0),
+                 class = "nestimate_sparse_trajectory")
+  warned <- tryCatch(plot(tr, iter = 0), warning = conditionMessage)
+  expect_match(warned, "G3 (6 windows) and G4 (1 window)", fixed = TRUE)
+  expect_match(warned, "it needs 10", fixed = TRUE)
+
+  built <- ggplot2::ggplot_build(plotted)
+  colour_of <- stats::setNames(setdiff(.okabe_ito, .okabe_ito[1:3])[1:4],
+                               names(sizes))
+  lines <- .te_layer(plotted, "GeomLine")
+  points <- .te_layer(plotted, "GeomPoint")
+  layer_groups <- function(layer) {
+    drawn <- built$data[[layer]]
+    colours <- if ("fill" %in% names(drawn) && all(drawn$colour == "grey20"))
+      drawn$fill else drawn$colour
+    names(colour_of)[match(unique(colours), colour_of)]
+  }
+  # trend lines only where span x windows >= 4; the other groups keep every
+  # window as a point (G3 also joined by a line), so every group is drawn
+  expect_setequal(layer_groups(lines[1L]), c("G1", "G2"))
+  expect_setequal(layer_groups(points), c("G3", "G4"))
+  expect_equal(nrow(built$data[[points]]),
+               as.numeric(windows["G3"] + windows["G4"]))
+  expect_setequal(layer_groups(lines[2L]), "G3")
+  expect_setequal(unique(c(layer_groups(points), layer_groups(lines[1L]))),
+                  names(sizes))
+  # every group is named on the plot at the end of its trend or windows
+  labels <- built$data[[.te_layer(plotted, "GeomText")]]
+  expect_setequal(labels$label, names(sizes))
+  # no other condition while the plot is drawn
+  expect_no_warning(ggplot2::ggplotGrob(plotted))
+
+  # a larger span gives G3 its curve; G4's one window stays a point
+  expect_warning(wider <- plot(tr, span = 0.7, iter = 0),
+                 class = "nestimate_sparse_trajectory")
+  built <- ggplot2::ggplot_build(wider)
+  expect_setequal(layer_groups(.te_layer(wider, "GeomLine")[1L]),
+                  c("G1", "G2", "G3"))
+  # enough windows everywhere: no warning
+  even <- subset(d, grp != "G4" & grp != "G3")
+  tr2 <- entropy_trajectory(even, action = "act", actor = "who", time = "t",
+                            group = "grp", window = 250, step = 100)
+  expect_no_warning(ggplot2::ggplotGrob(plot(tr2, iter = 0)))
+})
+
+# The stream of `n_actors` actors, each `length` events of the chain P, in
+# `groups` groups; actors' events interleave in time.
+.actor_streams <- function(P, actors, length, seed) {
+  set.seed(seed)
+  states <- rownames(P)
+  stationary <- Re(eigen(t(P))$vectors[, 1L])
+  stationary <- stationary / sum(stationary)
+  do.call(rbind, lapply(names(actors), function(g) {
+    do.call(rbind, lapply(seq_len(actors[[g]]), function(a) {
+      s <- integer(length)
+      s[1L] <- sample.int(nrow(P), 1L, prob = stationary)
+      for (k in 2:length) s[k] <- sample.int(nrow(P), 1L, prob = P[s[k - 1L], ])
+      data.frame(grp = g, who = sprintf("%s-%03d", g, a),
+                 t = seq_len(length) + stats::runif(1), act = states[s],
+                 stringsAsFactors = FALSE)
+    }))
+  }))
+}
+
+test_that("the trajectory band is a bootstrap over actors and covers the rate", {
+  d <- .actor_streams(.P3, c(G1 = 80), length = 60, seed = 21)
+  tr <- entropy_trajectory(d, action = "act", actor = "who", time = "t",
+                           group = "grp", window = 1000, step = 100)
+  drawn <- plot(tr, seed = 1)
+  built <- ggplot2::ggplot_build(drawn)
+  band <- built$data[[.te_layer(drawn, "GeomRibbon")]]
+  trend <- built$data[[.te_layer(drawn, "GeomLine")[1L]]]
+  expect_true(all(band$ymin <= band$ymax))
+  expect_true(all(band$ymax - band$ymin > 0))
+  # the band covers at least the middle of the grid, and the trend lies in
+  # it at the times it covers
+  inside <- merge(trend[, c("x", "y")], band[, c("x", "ymin", "ymax")],
+                  by = "x")
+  expect_gte(nrow(inside), 40L)
+  expect_gte(mean(inside$y >= inside$ymin - 1e-12 &
+                    inside$y <= inside$ymax + 1e-12), 0.9)
+  # the band holds the chain's true entropy rate in its middle
+  stationary <- Re(eigen(t(.P3))$vectors[, 1L])
+  stationary <- stationary / sum(stationary)
+  rate <- -sum(stationary * rowSums(.P3 * log2(.P3)))
+  middle <- band[ceiling(nrow(band) / 2), ]
+  expect_true(middle$ymin <= rate && rate <= middle$ymax)
+  expect_match(drawn$labels$subtitle, "band: 95% of 200 resamples",
+               fixed = TRUE)
+})
+
+test_that("the band widens with fewer actors and is reproducible", {
+  d <- .actor_streams(.P3, c(many = 80, few = 20), length = 60, seed = 22)
+  tr <- entropy_trajectory(d, action = "act", actor = "who", time = "t",
+                           group = "grp", window = 100, step = 20)
+  drawn <- plot(tr, seed = 3)
+  band <- ggplot2::ggplot_build(drawn)$data[[.te_layer(drawn, "GeomRibbon")]]
+  width <- tapply(band$ymax - band$ymin, band$fill, mean)
+  colour_of <- stats::setNames(setdiff(.okabe_ito, .okabe_ito[1:3])[1:2],
+                               c("few", "many"))
+  expect_gt(width[[colour_of[["few"]]]], width[[colour_of[["many"]]]])
+
+  # the same seed gives the same band, and the caller's stream is untouched
+  again <- plot(tr, seed = 3)
+  expect_identical(
+    ggplot2::ggplot_build(again)$data[[.te_layer(again, "GeomRibbon")]],
+    band)
+  set.seed(99); expected <- stats::runif(1)
+  set.seed(99); invisible(plot(tr, seed = 3)); observed <- stats::runif(1)
+  expect_identical(observed, expected)
+
+  # iter = 0: no band
+  bare <- plot(tr, iter = 0)
+  expect_length(.te_layer(bare, "GeomRibbon"), 0L)
+  expect_false(grepl("band", bare$labels$subtitle))
+  expect_error(plot(tr, ci_level = 1.2), class = "nestimate_bad_input")
+})
+
+# Actors of two lengths (10 or 80 actions), so a resample of the actors holds
+# a different number of transitions, and of windows, than the data.
+.uneven_actors <- function(times = NULL) {
+  set.seed(5)
+  lengths <- sample(c(10L, 80L), 30L, replace = TRUE)
+  do.call(rbind, lapply(seq_along(lengths), function(a) {
+    n <- lengths[[a]]
+    data.frame(grp = "G", who = sprintf("a%02d", a),
+               t = if (is.null(times)) seq_len(n) + stats::runif(1) else
+                 times(n),
+               act = sample(c("A", "B", "C"), n, replace = TRUE),
+               stringsAsFactors = FALSE)
+  }))
+}
+
+test_that("resamples left out of the band are counted and reported", {
+  tr <- entropy_trajectory(.uneven_actors(), action = "act", actor = "who",
+                           time = "t", group = "grp", window = 200,
+                           step = 100)
+  # 10 windows: the data has a trend at span 0.4, most resamples do not
+  expect_identical(nrow(tr$trajectory), 10L)
+  expect_warning(drawn <- plot(tr, iter = 50, seed = 1),
+                 class = "nestimate_dropped_resamples")
+  expect_no_error(ggplot2::ggplot_build(drawn))
+  # with no resamples there is nothing to report
+  expect_no_warning(plot(tr, iter = 0))
+})
+
+test_that("a trend loess cannot fit is named with its reason, not an error", {
+  # Three distinct times: loess warns, and its prediction would then fail.
+  tr <- entropy_trajectory(
+    .uneven_actors(times = function(n) rep(c(1, 2), length.out = n)),
+    action = "act", actor = "who", time = "t", group = "grp", window = 50,
+    step = 25)
+  expect_gte(nrow(tr$trajectory) * 0.4, 4)
+  expect_warning(drawn <- plot(tr, iter = 0),
+                 class = "nestimate_trend_not_fitted")
+  built <- ggplot2::ggplot_build(drawn)
+  points <- built$data[[.te_layer(drawn, "GeomPoint")]]
+  expect_identical(nrow(points), nrow(tr$trajectory))
+})
+
+# Actors observed at the same times, so the stream has ties between actors.
+.synchronised_actors <- function(states = c("A", "B", "C"), groups = NULL,
+                                 n_actors = 20L, length = 40L) {
+  set.seed(1)
+  do.call(rbind, lapply(seq_len(n_actors), function(a) {
+    data.frame(who = sprintf("a%02d", a), t = seq_len(length),
+               g = if (is.null(groups)) "all" else
+                 groups[[1L + (a > n_actors / 2)]],
+               act = sample(states, length, replace = TRUE),
+               stringsAsFactors = FALSE)
+  }))
+}
+
+test_that("a resample drawing every actor once rebuilds the data's windows", {
+  # windows that cut through times shared by several actors
+  tr <- entropy_trajectory(.synchronised_actors(), action = "act",
+                           actor = "who", time = "t", window = 50, step = 7)
+  stream <- tr$stream
+  by_actor <- split(seq_along(stream$actor), stream$actor)
+  every_once <- rev(seq_along(by_actor))
+  windows <- .te_windows(stream, .te_draw_rows(by_actor, every_once),
+                         tr$window, tr$step, tr$base, warn = FALSE)
+  expect_equal(windows$entropy, tr$trajectory$entropy, tolerance = 1e-12)
+  # an actor drawn twice: its copies sit together, in time order
+  twice <- .te_draw_rows(by_actor, c(1L, 1L))
+  expect_identical(twice, rep(by_actor[[1L]], each = 2L))
+})
+
+test_that("the band is the basic interval, reflected about the trend", {
+  grid <- seq_len(5L)
+  # resampled trends shifted 0.1 below an observed trend of 1
+  draws <- lapply(seq(0.85, 0.95, length.out = 101L), rep, times = 5L)
+  band <- .te_band("G", draws, 101L, grid, rep(1, 5L), 0.95, "G")
+  expect_equal(band$lower, rep(2 - 0.9475, 5L), tolerance = 1e-12)
+  expect_equal(band$upper, rep(2 - 0.8525, 5L), tolerance = 1e-12)
+  # a time reached by fewer than half of all the draws has no band
+  draws[seq_len(60L)] <- lapply(draws[seq_len(60L)], replace, 1L, NA)
+  expect_identical(.te_band("G", draws, 101L, grid, rep(1, 5L), 0.95,
+                            "G")$time, 2:5)
+})
+
+test_that("a group with one actor gets no band, and says so", {
+  tr <- entropy_trajectory(.make_stream(.P3, 1500, seed = 8), action = "act",
+                           actor = "who", time = "t", window = 100,
+                           step = 50)
+  expect_warning(drawn <- plot(tr, seed = 1),
+                 class = "nestimate_single_actor_band")
+  expect_length(.te_layer(drawn, "GeomRibbon"), 0L)
+  expect_false(grepl("band", drawn$labels$subtitle))
+})
+
+test_that("a missing time is refused", {
+  d <- .synchronised_actors()
+  d$t[[5L]] <- NA
+  expect_error(entropy_trajectory(d, action = "act", actor = "who",
+                                  time = "t"),
+               class = "nestimate_bad_input")
+})
+
+test_that("a group labelled \"\" gets its trend", {
+  tr <- entropy_trajectory(.synchronised_actors(groups = c("", "x")),
+                           action = "act", actor = "who", time = "t",
+                           group = "g", window = 50, step = 10)
+  drawn <- plot(tr, iter = 0)
+  trend <- ggplot2::ggplot_build(drawn)$data[[
+    .te_layer(drawn, "GeomLine")[1L]]]
+  expect_identical(length(unique(trend$colour)), 2L)
+})
+
+test_that("groups are faceted when the states take every colour", {
+  tr <- entropy_trajectory(.synchronised_actors(LETTERS[1:9], c("x", "y")),
+                           action = "act", actor = "who", time = "t",
+                           group = "g", window = 50, step = 10)
+  expect_setequal(unname(tr$state_palette), .okabe_ito)
+  expect_no_warning(drawn <- plot(tr, iter = 0))
+  expect_s3_class(drawn$facet, "FacetWrap")
+  colours <- unique(unlist(lapply(ggplot2::ggplot_build(drawn)$data,
+                                  function(layer) layer$colour)))
+  expect_identical(intersect(colours, setdiff(.okabe_ito, "#000000")),
+                   character(0))
 })
 
 test_that("trajectory falls back to one window on short streams", {
@@ -491,7 +771,8 @@ test_that("trajectory validates input and S3 methods dispatch", {
   expect_true(is.data.frame(s))
   expect_named(s, c("group", "windows", "mean", "sd", "min", "max",
                     "first", "last", "change"))
-  g <- plot(tr)
+  # 8 windows at span 0.4 are too few for a trend line: said, not silent.
+  expect_warning(g <- plot(tr), class = "nestimate_sparse_trajectory")
   expect_true(inherits(g, "gg"))
   ## entropy_norm within [0, 1]
   expect_true(all(tr$trajectory$entropy_norm >= 0 - 1e-12))

@@ -84,6 +84,7 @@ library(cograph)
 net <- build_network(human_long, method = "relative", action = "code",
                      actor = "session_id", time = "order_in_session")
 net
+extract_initial_probs(net)
 ```
 
 Most sessions open with `Specify` (82%) or `Command` (13%). The strongest

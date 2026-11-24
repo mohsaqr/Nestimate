@@ -391,7 +391,7 @@ test_that("print.netobject works for transition", {
   out <- capture.output(print(net))
   expect_true(any(grepl("Transition Network", out)))
   expect_true(any(grepl("directed", out)))
-  expect_true(any(grepl("Weight matrix:", out)))
+  expect_true(any(grepl("Strongest edges \\(", out)))
   expect_true(any(grepl("Weights:", out)))
 })
 

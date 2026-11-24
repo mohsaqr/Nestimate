@@ -114,7 +114,7 @@ test_that("a state containing the separator is refused", {
 
 .sp_grouped <- function(d, ...) {
   sequence_patterns(d, cols = c("T1", "T2"), len = 1:2, min_freq = 1,
-                    min_support = 0, group = "g", ...)
+                    min_support = 0, group = "g", format = "wide", ...)
 }
 
 test_that("two groups: Fisher p-value and per-group support", {
@@ -162,11 +162,13 @@ test_that("group as column, vector and grouped network agree", {
   d <- .sp_two()
   from_column <- .sp_grouped(d)
   from_vector <- sequence_patterns(d[c("T1", "T2")], len = 1:2, min_freq = 1,
-                                   min_support = 0, group = d$g)
-  expect_identical(from_vector, from_column)
+                                   min_support = 0, group = d$g,
+                                   format = "wide")
+  # the tables agree; only the recorded group name differs ("g", "group")
+  expect_identical(summary(from_vector), summary(from_column))
   nets <- build_network(d, method = "relative", group = "g")
   from_network <- sequence_patterns(nets, len = 1:2, min_freq = 1,
-                                    min_support = 0)
+                                    min_support = 0, format = "wide")
   expect_identical(sort(from_network$pattern), sort(from_column$pattern))
   expect_equal(from_network$p_value[order(from_network$pattern)],
                from_column$p_value[order(from_column$pattern)])
@@ -232,7 +234,7 @@ test_that("a malformed template is refused by class", {
 
 test_that("last_obs groups by the final state and removes it", {
   res <- sequence_patterns(.sp_terminal(), group = "last_obs", len = 1:2,
-                           min_freq = 1, min_support = 0)
+                           min_freq = 1, min_support = 0, format = "wide")
   expect_false(any(grepl("pass|fail", res$pattern)))
   ab <- res[res$pattern == "A->B", ]
   # A->B occurs in sequences 1 and 3, both ending in pass
@@ -274,7 +276,8 @@ test_that("a repeated length or gap counts each occurrence once", {
 test_that("no matching pattern keeps the grouped columns, silently", {
   d <- data.frame(T1 = c("A", "B", "A"), T2 = c("B", "A", "A"))
   two <- expect_silent(sequence_patterns(d[1:2, ], group = c("x", "y"),
-                                         len = 3, min_freq = 1))
+                                         len = 3, min_freq = 1,
+                                         format = "wide"))
   expect_identical(nrow(two), 0L)
   expect_true(all(c("support_x", "support_y", "odds_ratio", "or_lower",
                     "or_upper", "p_value", "p_adj") %in% names(two)))
@@ -290,4 +293,35 @@ test_that("a template with a trailing separator is refused", {
                class = "nestimate_bad_input")
   expect_error(sequence_patterns(d, pattern = "->B", min_freq = 1),
                class = "nestimate_bad_input")
+})
+
+
+test_that("a group comparison is a data frame, one row per pattern and group", {
+  d <- data.frame(T1 = c("A", "A", "B", "A", "B", "B", "A", "B"),
+                  T2 = c("B", "B", "B", "A", "A", "A", "B", "A"),
+                  g = rep(c("g1", "g2"), each = 4), stringsAsFactors = FALSE)
+  long <- sequence_patterns(d, cols = c("T1", "T2"), len = 1:2,
+                            min_freq = 1, min_support = 0, group = "g")
+  wide <- sequence_patterns(d, cols = c("T1", "T2"), len = 1:2,
+                            min_freq = 1, min_support = 0, group = "g",
+                            format = "wide")
+  expect_s3_class(long, "net_sequence_patterns")
+  expect_s3_class(long, "data.frame")
+  expect_true(all(c("group", "group_support") %in% names(long)))
+  expect_false(any(grepl("^support_", names(long))))
+  expect_identical(nrow(long), 2L * nrow(wide))
+  # invariant: each group's long rows are that group's wide column
+  g1 <- subset(long, group == "g1")
+  expect_identical(g1$pattern, wide$pattern)
+  expect_identical(g1$group_support, wide$support_g1)
+  expect_identical(subset(long, group == "g2")$group_support, wide$support_g2)
+  expect_identical(g1$p_adj, wide$p_adj)
+  expect_identical(class(summary(long)), "data.frame")
+  expect_identical(class(head(long, 2)), "data.frame")
+  shown <- capture.output(print(long, n = 1L))
+  expect_match(shown[1L], "Sequence patterns by g")
+  expect_true(any(grepl("more patterns", shown)))
+  # without group the result is the plain per-pattern table
+  expect_identical(class(sequence_patterns(d, cols = c("T1", "T2"),
+                                           min_freq = 1)), "data.frame")
 })

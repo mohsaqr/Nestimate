@@ -116,7 +116,7 @@ test_that("sequence_metrics(group =) reproduces hand-computed means, F and Hedge
   d <- .sm_groups_data()
   per_seq <- sequence_metrics(d, meta = TRUE)
   set.seed(1)
-  cmp <- sequence_metrics(d, group = "cond", iter = 50)
+  cmp <- sequence_metrics(d, group = "cond", iter = 50, format = "wide")
   expect_true(is.data.frame(cmp))
   row <- cmp[cmp$index == "transition_rate", ]
   x <- per_seq$transition_rate[per_seq$cond == "x"]
@@ -159,13 +159,15 @@ test_that("a grouped network is compared by its own groups, nested in its actor"
   set.seed(3)
   explicit <- sequence_metrics(net, group = "phase", actor = "session_id",
                                iter = 20)
-  # the defaults are the network's group column and its actor
-  expect_identical(by_default, explicit)
+  # the defaults are the network's group column and its actor (recorded as
+  # the network's session label, which names the same sessions)
+  expect_identical(summary(by_default), summary(explicit))
   expect_identical(by_default$index[1], "valid_n")
-  expect_true(all(c("n_early", "n_late", "hedges_g", "p_adj") %in%
-                    names(by_default)))
-  expect_equal(by_default$n_early[by_default$index == "unique_states"], 425L)
-  expect_equal(by_default$n_late[by_default$index == "unique_states"], 429L)
+  expect_true(all(c("index", "group", "n", "mean", "sd", "hedges_g",
+                    "p_adj") %in% names(by_default)))
+  unique_states <- subset(by_default, index == "unique_states")
+  expect_identical(unique_states$group, c("early", "late"))
+  expect_identical(unique_states$n, c(425L, 429L))
   # meta = TRUE still lists the sequences, one row each
   per_seq <- sequence_metrics(net, meta = TRUE)
   expect_equal(nrow(per_seq), 854L)
@@ -188,6 +190,52 @@ test_that("indices = returns the named indices only, per sequence and compared",
   set.seed(4)
   cmp <- sequence_metrics(d, group = "cond", indices = "transition_rate",
                           iter = 9)
-  expect_identical(cmp$index, "transition_rate")
+  expect_identical(cmp$index, c("transition_rate", "transition_rate"))
   expect_error(sequence_metrics(d, indices = "nope"), class = "nestimate_bad_input")
+})
+
+test_that("the group comparison is a data frame, one row per index and group", {
+  d <- .sm_groups_data()
+  set.seed(5)
+  long <- sequence_metrics(d, group = "cond", iter = 20)
+  set.seed(5)
+  wide <- sequence_metrics(d, group = "cond", iter = 20, format = "wide")
+  expect_s3_class(long, "net_sequence_metrics")
+  expect_s3_class(long, "data.frame")
+  expect_identical(names(long)[1:5], c("index", "group", "n", "mean", "sd"))
+  expect_identical(nrow(long), 2L * nrow(wide))
+  expect_identical(attr(long, "groups"), c("x", "y"))
+  # invariant: each group's long rows are that group's wide columns
+  x_rows <- subset(long, group == "x")
+  y_rows <- subset(long, group == "y")
+  expect_identical(x_rows$index, wide$index)
+  expect_identical(x_rows$n, wide$n_x)
+  expect_identical(y_rows$mean, wide$mean_y)
+  expect_identical(x_rows$sd, wide$sd_x)
+  expect_identical(y_rows$p_adj, wide$p_adj)
+  expect_identical(x_rows$hedges_g, wide$hedges_g)
+  # every row as a plain data frame; a subset is plain too
+  expect_identical(class(summary(long)), "data.frame")
+  expect_identical(dim(summary(long)), dim(long))
+  expect_identical(class(head(long, 2)), "data.frame")
+  expect_identical(class(x_rows), "data.frame")
+})
+
+test_that("print() of the group comparison is rounded and has a group column", {
+  d <- .sm_groups_data()
+  set.seed(6)
+  cmp <- sequence_metrics(d, group = "cond", iter = 20)
+  shown <- capture.output(print(cmp, n = 2L))
+  expect_match(shown[1L], "Sequence metrics by cond  \\[\\d+ indices \\| 2 groups: x, y\\]")
+  header <- shown[grepl("^ index", shown)]
+  expect_length(header, 1L)
+  expect_match(header, "group")
+  rows <- shown[grepl("^ valid_n ", shown)]
+  expect_length(rows, 2L)
+  expect_true(any(grepl("more indices", shown)))
+  capture.output(shown_value <- withVisible(print(cmp)))
+  expect_false(shown_value$visible)
+  expect_error(print(cmp, n = 0), class = "nestimate_bad_input")
+  expect_error(sequence_metrics(d, group = "cond", format = "tall"),
+               "should be one of")
 })

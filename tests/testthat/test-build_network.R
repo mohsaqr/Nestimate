@@ -357,7 +357,8 @@ test_that("print.netobject produces expected output for glasso", {
 
   out <- capture.output(print(net))
   expect_true(any(grepl("Partial Correlation Network \\(EBICglasso\\)", out)))
-  expect_true(any(grepl("Weight matrix:", out)))
+  expect_true(any(grepl("Strongest edges \\(|No edges: every weight is zero",
+                        out)))
   expect_true(any(grepl("Sample size: 80", out)))
   expect_true(any(grepl("Gamma:", out)))
   expect_true(any(grepl("Lambda:", out)))
@@ -2225,4 +2226,18 @@ test_that("scaling = 'normalize' on an undirected network makes it directed", {
   expect_equal(scaled$n_edges, sum(scaled$weights != 0))
   expect_false(build_cna(sequences)$directed)
   expect_false(build_cna(sequences, scaling = "minmax")$directed)
+})
+
+test_that("print() of a network lists its strongest edges, n of them", {
+  seqs <- data.frame(V1 = c("A", "B", "A", "C", "B", "A"),
+                     V2 = c("B", "C", "B", "A", "C", "B"),
+                     V3 = c("C", "A", "C", "B", "A", "C"))
+  net <- build_network(seqs, method = "relative")
+  out <- capture.output(print(net, n = 2L))
+  n_edges <- nrow(extract_edges(net, include_self = TRUE))
+  expect_true(any(grepl(sprintf("Strongest edges \\(2 of %d\\)", n_edges),
+                        out)))
+  expect_false(any(grepl("Weight matrix", out)))
+  expect_true(any(grepl("extract_transition_matrix()", out, fixed = TRUE)))
+  expect_error(print(net, n = 0), class = "nestimate_bad_input")
 })

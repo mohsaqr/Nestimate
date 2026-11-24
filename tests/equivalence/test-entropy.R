@@ -108,7 +108,7 @@ test_that("group summaries of transition_entropy() and chain_structure() equal m
     data.frame(group = label, entropy_rate = rate, stationary_entropy = stationary_entropy,
                redundancy = stationary_entropy - rate)
   }))
-  expect_reference(summary(transition_entropy(networks)), chain, reference = "markovchain",
+  expect_reference(summary(transition_entropy(networks), table = "chain"), chain, reference = "markovchain",
                    covers = c("transition_entropy()", "summary.net_transition_entropy_group()"),
                    quantity = "chain entropies per group", tolerance = 1e-8, key = "group",
                    note = "stationary distribution from markovchain::steadyStates(); entropies from entropy::entropy.plugin()")

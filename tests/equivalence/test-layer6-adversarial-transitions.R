@@ -191,7 +191,8 @@ test_that("summary() of a grouped network equals igraph's metrics for every grou
     })
     expected <- data.frame(metric = adv_igraph_summary(adv_relative(adv_counts(sets$absorbing)))$metric, per_group,
                            check.names = FALSE)
-    expect_reference(summary(build_network(data, method = "relative", group = "grp")), expected, reference = "igraph",
+    expect_reference(summary(build_network(data, method = "relative", group = "grp"), format = "wide"), expected,
+                     reference = "igraph",
                      covers = "summary.netobject_group()", quantity = sprintf("grouped network metrics, %s", name),
                      tolerance = sums, key = "metric")
   }))

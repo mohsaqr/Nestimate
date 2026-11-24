@@ -147,11 +147,20 @@ test_that("print.net_mpt runs without error", {
 test_that("summary.net_mpt returns expected data frame", {
   pt <- passage_time(.P3)
   sm <- summary(pt)
-  expect_s3_class(sm, "summary.net_mpt")
-  expect_true(is.data.frame(sm$table))
-  expect_equal(nrow(sm$table), 3L)
-  expect_named(sm$table, c("state", "return_time", "stationary",
-                            "mean_out", "mean_in"))
+  expect_identical(class(sm), "data.frame")
+  expect_equal(nrow(sm), 3L)
+  expect_named(sm, c("state", "return_time", "stationary",
+                     "mean_out", "mean_in"))
+  # one row per ordered pair of distinct states, the matrix's off-diagonal
+  pairs <- summary(pt, table = "pairs")
+  expect_named(pairs, c("from", "to", "passage_time"))
+  expect_equal(nrow(pairs), 3L * 3L)
+  expect_equal(pairs$passage_time[pairs$from == "A" & pairs$to == "B"],
+               pt$matrix["A", "B"])
+  # the diagonal is kept: the mean return time
+  expect_equal(pairs$passage_time[pairs$from == "A" & pairs$to == "A"],
+               pt$matrix["A", "A"])
+  expect_error(summary(pt, table = "rows"), "should be one of")
 })
 
 # ---- plot.net_mpt ----
@@ -210,9 +219,11 @@ test_that("print.net_markov_stability runs without error", {
   expect_output(print(ms), "Markov Stability")
 })
 
-test_that("summary.net_markov_stability prints attractor info", {
+test_that("markov_stability names the attractor when printed, not in summary()", {
   ms <- markov_stability(.P3)
-  expect_output(summary(ms), "Most accessible")
+  expect_output(print(ms), "attractor: ")
+  expect_silent(tab <- summary(ms))
+  expect_identical(tab, ms$stability)
 })
 
 test_that("plot.net_markov_stability returns a ggplot", {
@@ -390,8 +401,11 @@ test_that("summary of grouped passage times and stability stacks the groups", {
   expect_identical(names(pt_tab)[1], "group")
   expect_equal(nrow(pt_tab), 2L * 3L)
   # each group's rows are that group's own summary, unchanged
-  expect_equal(pt_tab[pt_tab$group == "y", -1], summary(pt[["y"]])$table,
+  expect_equal(pt_tab[pt_tab$group == "y", -1], summary(pt[["y"]]),
                ignore_attr = TRUE)
+  pairs <- summary(pt, table = "pairs")
+  expect_identical(names(pairs), c("group", "from", "to", "passage_time"))
+  expect_equal(nrow(pairs), 2L * 3L * 3L)
 
   ms <- markov_stability(nets)
   ms_tab <- summary(ms)

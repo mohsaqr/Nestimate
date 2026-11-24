@@ -123,7 +123,7 @@ tendency in particular is closely tied to the stay probabilities). What
 the surface adds is which cup deepens as stability rises. A slice's
 \code{effective_n} (\eqn{(\sum w)^2 / \sum w^2}) shows how many sequences it
 rests on, and a warning of class \code{nestimate_thin_slice} flags slices
-resting on fewer than five. For change over the programme rather than
+resting on fewer than five. For change over time rather than
 across sequences, use \code{\link[=landscape_trend]{landscape_trend()}}.
 }
 \details{

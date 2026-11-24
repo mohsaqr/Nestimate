@@ -188,13 +188,13 @@ utils::globalVariables(c("fill", "label", "txt_col"))
 #' @return A `net_mpt` object; for a `netobject_group`, a `net_mpt_group`,
 #'   a named list holding one `net_mpt` per group. `print()` shows the
 #'   passage-time matrix and the stationary distribution. `summary()`
-#'   returns a `summary.net_mpt` object, a list holding the per-state table
-#'   (`table`) and the summarised `net_mpt` (`object`); its `print()` shows
-#'   the table, one row per state: `state`, `return_time` (mean recurrence time),
+#'   returns a data frame with one row per state: `state`, `return_time` (mean recurrence time),
 #'   `stationary` (\eqn{\pi_i}), `mean_out` (the mean number of steps from
 #'   the state to the others) and
 #'   `mean_in` (the mean number of steps from the others to the state),
-#'   rounded to 2 decimals (`stationary` to 4). `plot()` returns a `ggplot`
+#'   rounded to 2 decimals (`stationary` to 4); with `table = "pairs"`, one
+#'   row per ordered pair of states, the diagonal included (`from`, `to`,
+#'   `passage_time`). `plot()` returns a `ggplot`
 #'   heatmap of the matrix, rows the starting state and columns the target;
 #'   for a `net_mpt_group`, one panel per group on a shared colour scale.
 #'   The `print()` methods return their input invisibly. A `net_mpt` holds:
@@ -354,12 +354,24 @@ print.net_mpt_group <- function(x, ...) {
 }
 
 #' @rdname passage_time
+#' @param table For `summary()`: `"states"` (default), one row per state
+#'   (`state`, `return_time`, `stationary`, `mean_out`, `mean_in`), or
+#'   `"pairs"`, one row per ordered pair of states (`from`, `to`,
+#'   `passage_time`, the mean number of steps from `from` to first reach
+#'   `to`; for `from` equal to `to`, the mean return time).
 #' @export
-summary.net_mpt <- function(object, ...) {
+summary.net_mpt <- function(object, table = c("states", "pairs"), ...) {
+  table <- match.arg(table)
   M  <- object$matrix
   n  <- nrow(M)
   st <- object$states
 
+  if (identical(table, "pairs")) {
+    # every cell, the diagonal included (the mean return time)
+    return(data.frame(from = rep(st, times = n), to = rep(st, each = n),
+                      passage_time = as.vector(M),
+                      stringsAsFactors = FALSE))
+  }
   df <- data.frame(
     state       = st,
     return_time = round(object$return_times, 2),
@@ -371,26 +383,19 @@ summary.net_mpt <- function(object, ...) {
     stringsAsFactors = FALSE
   )
   rownames(df) <- NULL
-  structure(list(table = df, object = object), class = "summary.net_mpt")
-}
-
-#' @rdname passage_time
-#' @export
-print.summary.net_mpt <- function(x, ...) {
-  cat("Mean First Passage Times - Summary\n\n")
-  print(x$table, row.names = FALSE)
-  invisible(x)
+  df
 }
 
 #' @rdname passage_time
 #' @return For `summary()` of a `net_mpt_group`: a data frame with one row
-#'   per group and state, the `group` column followed by the columns of the
-#'   single-network summary table (`state`, `return_time`, `stationary`,
-#'   `mean_out`, `mean_in`).
+#'   per group and state (or pair, with `table = "pairs"`), the `group`
+#'   column followed by the columns of the single-network table.
 #' @export
-summary.net_mpt_group <- function(object, ...) {
+summary.net_mpt_group <- function(object, table = c("states", "pairs"),
+                                  ...) {
+  table <- match.arg(table)
   tables <- lapply(names(object), function(g) {
-    tab <- summary(object[[g]])$table
+    tab <- summary(object[[g]], table = table)
     cbind(group = rep(g, nrow(tab)), tab, stringsAsFactors = FALSE)
   })
   out <- do.call(rbind, tables)
@@ -522,11 +527,11 @@ plot.net_mpt_group <- function(x,
 #'   `print()`, which ignores it).
 #' @return A `net_markov_stability` object; for a `netobject_group`, a
 #'   `net_markov_stability_group`, a named list holding one such object per
-#'   group. `print()` shows the per-state table and returns its input
-#'   invisibly. `summary()` prints the most accessible state (the lowest
-#'   mean passage time from the other states) and the most persistent one
-#'   (the longest sojourn time), and returns the per-state table as a data
-#'   frame. `plot()` returns a `ggplot` with one panel of bars per metric and
+#'   group. `print()` names the attractor (the state with the lowest mean
+#'   passage time from the other states) and the stickiest state (the
+#'   longest sojourn time) in its header, shows the per-state table and
+#'   returns its input invisibly. `summary()` returns the per-state table as a data frame and
+#'   prints nothing. `plot()` returns a `ggplot` with one panel of bars per metric and
 #'   the states ordered by stationary probability; with `combined = FALSE`,
 #'   invisibly, a list of one-panel plots named by metric. For a group,
 #'   `plot()` draws one panel per metric with one row per state and one
@@ -631,8 +636,12 @@ markov_stability <- function(x, normalize = TRUE) {
 #'   class `nestimate_ignored_argument`.
 #' @export
 print.net_markov_stability <- function(x, ...) {
-  cat("Markov Stability Analysis\n\n")
-  print(x$stability, row.names = FALSE)
+  df <- x$stability
+  cat(sprintf(paste0("Markov Stability Analysis (%d states) | attractor: %s",
+                     " | stickiest: %s\n\n"), nrow(df),
+              df$state[which.min(df$avg_time_from_others)],
+              df$state[which.max(df$sojourn_time)]))
+  print(df, row.names = FALSE)
   invisible(x)
 }
 
@@ -653,12 +662,7 @@ print.net_markov_stability_group <- function(x, ...) {
 #' @param object For the `summary()` method: a `net_markov_stability`.
 #' @export
 summary.net_markov_stability <- function(object, ...) {
-  df      <- object$stability
-  attract <- df$state[which.min(df$avg_time_from_others)]
-  sticky  <- df$state[which.max(df$sojourn_time)]
-  cat(sprintf("Most accessible state (attractor): %s\n", attract))
-  cat(sprintf("Most persistent state (stickiest): %s\n\n", sticky))
-  df
+  object$stability
 }
 
 #' @rdname markov_stability

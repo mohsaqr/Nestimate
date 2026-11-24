@@ -351,3 +351,20 @@ test_that("restoring a group keeps the clustering attributes intact", {
   expect_identical(attr(nets, "group_col"), "cluster")
   expect_identical(attr(nets, "actor_levels"), src$actor_levels)
 })
+
+test_that("sequence_compare() keeps the shape htna (CRAN 0.3.7) reads", {
+  # htna's tests read names(res), res$patterns$pattern, res$groups and the
+  # per-group freq_ columns of summary(res). Changing any of them breaks htna
+  # on CRAN.
+  seqs <- data.frame(T1 = c("A", "B", "A", "B"), T2 = c("B", "A", "B", "A"),
+                     T3 = c("A", "B", "B", "A"))
+  res <- sequence_compare(seqs, group = c("x", "x", "y", "y"), sub = 2L,
+                          min_freq = 1L, test = "none")
+  expect_s3_class(res, "net_sequence_comparison")
+  expect_true(all(c("patterns", "groups", "n_patterns", "params") %in%
+                    names(res)))
+  expect_s3_class(res$patterns, "data.frame")
+  expect_true("pattern" %in% names(res$patterns))
+  expect_setequal(res$groups, c("x", "y"))
+  expect_true(all(c("freq_x", "freq_y") %in% names(summary(res))))
+})

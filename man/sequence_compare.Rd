@@ -18,9 +18,9 @@ sequence_compare(
   actor = NULL
 )
 
-\method{print}{net_sequence_comparison}(x, ...)
+\method{print}{net_sequence_comparison}(x, n = 10L, digits = 2L, ...)
 
-\method{summary}{net_sequence_comparison}(object, ...)
+\method{summary}{net_sequence_comparison}(object, format = c("wide", "long"), ...)
 
 \method{plot}{net_sequence_comparison}(
   x,
@@ -87,9 +87,22 @@ below the one before it), raise an error of class
 sequence, \code{nestimate_actor_misaligned}. Default \code{NULL}: every sequence
 is shuffled on its own.}
 
+\item{n}{For \code{print()}: the number of patterns shown, the first ones of
+the pattern table. Default \code{10}.}
+
+\item{digits}{For \code{print()}: the decimals of the counts' shares,
+residuals and effect sizes. Default \code{2}; p-values show 3 significant
+digits.}
+
 \item{...}{Not used.}
 
 \item{object}{For the \code{summary()} method: a \code{net_sequence_comparison}.}
+
+\item{format}{For \code{summary()}: \code{"wide"} (default), the pattern table,
+one row per pattern with a \code{freq_}, \code{prop_} and \code{resid_} column per
+group; \code{"long"}, one row per pattern and group, with columns \code{pattern},
+\code{length}, \code{group}, \code{count}, \code{proportion}, \code{residual} and the pattern's
+\code{effect_size} (or \code{statistic}) and \code{p_value}.}
 
 \item{top_n}{For \code{plot()}: the number of patterns drawn, the first ones
 after ranking by \code{sort}. Default \code{10}.}
@@ -116,10 +129,11 @@ prints the residuals.}
 }
 \value{
 A \code{net_sequence_comparison} object. \code{print()} shows the numbers
-of patterns and groups, the settings and the first 10 rows of the
-pattern table, and returns its input invisibly; \code{summary()} returns the
-pattern table, a data frame with one row per pattern; \code{plot()} draws
-the residuals of the top patterns (see \emph{Plot styles}). The object
+of patterns and groups, the settings and the first \code{n} patterns, one
+row per pattern and group, rounded, and returns its input invisibly;
+\code{summary()} returns the pattern table, a data frame with one row per
+pattern (\code{format = "long"}: one row per pattern and group); \code{plot()}
+draws the residuals of the top patterns (see \emph{Plot styles}). The object
 holds:
 \describe{
 \item{patterns}{The pattern table, one row per k-gram kept. Always:

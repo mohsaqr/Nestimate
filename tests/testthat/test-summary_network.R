@@ -82,3 +82,33 @@ test_that("flipping every sign leaves the counts and distances unchanged", {
   expect_equal(vapply(metrics, \(m) .metric(-W, FALSE, m), 0),
                vapply(metrics, \(m) .metric(W, FALSE, m), 0))
 })
+
+
+test_that("summary() of a group is long, one row per metric and group", {
+  seqs <- data.frame(V1 = c("A", "B", "A", "C", "B", "A"),
+                     V2 = c("B", "C", "B", "A", "C", "B"),
+                     V3 = c("C", "A", "C", "B", "A", "C"),
+                     grp = c("X", "X", "X", "Y", "Y", "Y"))
+  nets <- build_network(seqs, method = "relative", group = "grp")
+  long <- summary(nets)
+  wide <- summary(nets, format = "wide")
+  expect_identical(names(long), c("metric", "group", "value"))
+  expect_identical(names(wide), c("metric", "X", "Y"))
+  expect_identical(nrow(long), 2L * nrow(wide))
+  # invariant: each group's long values are its own summary
+  expect_equal(subset(long, group == "X")$value, summary(nets[["X"]])$value)
+  expect_equal(subset(long, group == "Y")$value, wide$Y)
+  # both print as the same metric-by-group grid
+  expect_identical(capture.output(print(long)), capture.output(print(wide)))
+})
+
+test_that("a subset of a grouped summary is a plain data frame", {
+  seqs <- data.frame(V1 = c("A", "B", "A", "C", "B", "A"),
+                     V2 = c("B", "C", "B", "A", "C", "B"),
+                     V3 = c("C", "A", "C", "B", "A", "C"),
+                     grp = c("X", "X", "X", "Y", "Y", "Y"))
+  metrics <- summary(build_network(seqs, method = "relative", group = "grp"))
+  only_x <- subset(metrics, group == "X")
+  expect_identical(class(only_x), "data.frame")
+  expect_identical(unique(only_x$group), "X")
+})

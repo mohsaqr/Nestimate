@@ -253,3 +253,8 @@ articles:
   contents:
   - starts_with("articles/stability-landscapes")
 
+
+- title: Citing the articles
+  desc: Authors and references for every article
+  contents:
+  - articles/cite-articles

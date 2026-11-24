@@ -7,8 +7,9 @@
 extract_edges(model, threshold = 0, include_self = FALSE, sort_by = "weight")
 }
 \arguments{
-\item{model}{The network: a \code{netobject}, a \code{tna}-family model, an \code{mcml}
-or a weight matrix, as for \code{\link[=extract_transition_matrix]{extract_transition_matrix()}}.}
+\item{model}{The network: a \code{netobject}, a group of networks
+(\code{netobject_group}), a \code{tna}-family model, an \code{mcml} or a weight
+matrix, as for \code{\link[=extract_transition_matrix]{extract_transition_matrix()}}.}
 
 \item{threshold}{Cells whose absolute weight is at most \code{threshold} are
 dropped. A single finite number of at least 0, otherwise an error is
@@ -35,6 +36,10 @@ the edge holds (an integer).}
 \item{median_latency}{For a \code{"latency"} network only: the median time
 of those replies, in seconds.}
 }
+
+For a group of networks (\code{netobject_group}): one such data frame with
+a \code{group} column first, one row per network and edge, the networks in
+their order and each sorted by \code{sort_by}.
 
 For an \code{mcml}: a named list of such data frames, \code{macro} first and then
 one per cluster.

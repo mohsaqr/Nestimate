@@ -242,7 +242,7 @@ The first cluster (170 sessions) alternates between directives and
 evaluations: it changes state more often (transition rate 0.57 against
 0.44) and spreads its actions more evenly (entropy 0.85 against 0.70). The
 second (259 sessions) is dominated by directives, which take 68% of a
-session against 53% (`dominant_proportion`). The first cluster's sessions
+session against 52% (`dominant_proportion`). The first cluster's sessions
 are also longer (34 against 20 actions, Hedges' g = -0.61), so the clusters
 differ in length as well as in content.
 

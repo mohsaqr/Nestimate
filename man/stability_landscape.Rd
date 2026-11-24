@@ -131,7 +131,7 @@ the net probability flux \eqn{\pi_i P_{ij} - \pi_j P_{ji}} around the
 cycle, which stationarity makes equal on all three edges (Schnakenberg
 1976): zero for a chain whose every transition is as common as its
 reverse. The depths pool every sequence and every time step; whether they
-change over the programme or along a covariate is what \code{\link[=landscape_trend]{landscape_trend()}}
+change over time or along a covariate is what \code{\link[=landscape_trend]{landscape_trend()}}
 shows, and how long the process takes to get from one state to another is
 given by \code{\link[=passage_time]{passage_time()}}.
 }

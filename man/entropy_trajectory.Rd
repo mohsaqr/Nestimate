@@ -27,6 +27,9 @@ entropy_trajectory(
   normalized = FALSE,
   span = 0.4,
   title = "Transition entropy over time",
+  iter = 200L,
+  ci_level = 0.95,
+  seed = NULL,
   ...
 )
 }
@@ -83,10 +86,25 @@ of class \code{nestimate_bad_input}.}
 the raw entropy. Default \code{FALSE}.}
 
 \item{span}{For \code{plot()}: the loess span of the trend line. Default
-\code{0.4}.}
+\code{0.4}. A group gets a trend line when \code{span} times its number of
+windows is at least 4 (10 windows at the default); a group with fewer
+windows is drawn as its windows joined by a line, with a
+\code{nestimate_sparse_trajectory} warning naming it. A group with enough
+windows whose loess fit still warns is drawn the same way, with a
+\code{nestimate_trend_not_fitted} warning giving loess's message.}
 
 \item{title}{For \code{plot()}: the plot title. Default
 \code{"Transition entropy over time"}.}
+
+\item{iter}{For \code{plot()}: the number of bootstrap resamples behind the
+confidence band of each trend. Default \code{200}; \code{0} draws the trends
+without a band.}
+
+\item{ci_level}{For \code{plot()}: the coverage of the band. Default \code{0.95}.}
+
+\item{seed}{For \code{plot()}: a seed for the resampling. It applies to this
+call only: the session's random state is restored afterwards. Default
+\code{NULL}.}
 }
 \value{
 A \code{net_entropy_trajectory} object. \code{print()} shows each group's
@@ -95,9 +113,10 @@ input invisibly. \code{summary()} returns a data frame with one row per
 group: \code{group}, \code{windows}, the \code{mean}, \code{sd}, \code{min} and \code{max} of the
 window entropies, the entropy of the \code{first} and \code{last} windows, and
 their difference \code{change} (negative when the transitions became more
-predictable). \code{plot()} returns a \code{ggplot} with the per-window entropy as
-faint lines and a loess-smoothed trend (with its standard-error band) per
-group, in Okabe-Ito colours. The object's fields:
+predictable). \code{plot()} returns a \code{ggplot} with a loess-smoothed trend
+per group and its bootstrap confidence band, each group in an Okabe-Ito
+colour that no state uses and named at the end of its trend; more groups
+than those colours are drawn one panel each. The object's fields:
 \describe{
 \item{trajectory}{Data frame, one row per window: \code{group}, \code{window}
 (index within the group), \code{time} (the window's midpoint; a row number
@@ -109,6 +128,12 @@ time, or row number, of the window's first and last transition),
 the ceiling is never zero; in \eqn{[0, 1]}).}
 \item{window, step, base}{The settings used.}
 \item{states}{The states of the whole log.}
+\item{stream}{The transitions in time order within each group (state
+codes, time, group and actor), from which \code{plot()} resamples.}
+\item{state_palette}{The colours of the states (the input network's
+own, or Okabe-Ito dealt over the sorted states). \code{plot()} draws the
+groups in the Okabe-Ito colours these leave, so a group never takes a
+state's colour.}
 }
 }
 \description{
@@ -143,6 +168,33 @@ The transitions of all actors are pooled in time order within each group
 \code{window} at the end of a stream is dropped; a group whose stream is
 shorter than \code{window} gets one window covering all of it, with a warning.
 Fewer than two transitions in all raise an error.
+
+The band of \code{plot()} is a bootstrap over actors (Davison & Hinkley, 1997):
+each resample draws a group's actors with replacement, rebuilds its
+windows from their transitions in time order and fits the same loess
+trend. The band is the basic bootstrap interval of the trend at each
+time: the central \code{ci_level} of the resampled trends, reflected about the
+observed trend. It takes the spread of the resampled trends around the
+observed one as the spread of the observed trend around the true one, so
+a systematic shift of the resamples is carried to the other side of the
+trend rather than kept. The plug-in entropy of a window is biased
+downward (Miller, 1955), by about \eqn{(c - r) / (2N \ln b)} for
+\eqn{c} observed transition types from \eqn{r} states in \eqn{N}
+transitions, and resampled actors (repeated transitions) shift it
+further down, so percentile limits tend to sit below the trend. In a
+simulation (40 datasets of 100 actors with 20 steps of a stationary
+4-state chain, \code{window = 300}, \code{step = 100}) the 95\% band covered the
+true entropy rate at mid-study in 38 of the 40, missing once on each
+side. Whole actors are resampled
+because the windows overlap (each transition sits in about
+\code{window / step} of them) and an actor's
+transitions depend on each other, so a band from the loess standard
+error, which treats the windows as independent, would be too narrow.
+A resample whose trend cannot be fitted (too few windows, or a loess
+warning) is left out of the band, and the plot warns how many were, with
+class \code{nestimate_dropped_resamples}; a time reached by fewer than half of
+the \code{iter} resamples has no band. A group with one actor has no band
+(warning class \code{nestimate_single_actor_band}).
 }
 \examples{
 tr <- entropy_trajectory(group_regulation_long,
@@ -164,6 +216,13 @@ Movements. \emph{ETRA '25}. doi:10.1145/3715669.3723128
 
 Cover, T.M. & Thomas, J.A. (2006). \emph{Elements of Information Theory},
 2nd ed. Wiley.
+
+Davison, A.C. & Hinkley, D.V. (1997). \emph{Bootstrap Methods and Their
+Application}. Cambridge University Press.
+
+Miller, G.A. (1955). Note on the bias of information estimates. In H.
+Quastler (Ed.), \emph{Information Theory in Psychology} (pp. 95--100).
+Free Press.
 }
 \seealso{
 \code{\link{transition_entropy}} for the whole-process snapshot,

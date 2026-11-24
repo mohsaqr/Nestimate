@@ -34,8 +34,7 @@ test_that("row entropies, entropy rate and stationary entropy equal entropy::ent
                        redundancy = found$redundancy), expected$chain, reference = "entropy",
                      covers = "transition_entropy()", quantity = sprintf("chain entropies, %s", label), tolerance = 1e-10,
                      note = "stationary distribution from markovchain::steadyStates()")
-    # summary() returns a list holding a per-state table (API gap: read with `$`).
-    expect_reference(summary(found)$table,
+    expect_reference(summary(found),
                      data.frame(state = rownames(input$p), stationary = expected$stationary, row_entropy = expected$rows,
                                 contribution = expected$stationary * expected$rows),
                      reference = "entropy", covers = c("transition_entropy()", "summary.net_transition_entropy()"),

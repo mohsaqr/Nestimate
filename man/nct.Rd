@@ -19,9 +19,9 @@ nct(
   na_method = c("pairwise", "listwise")
 )
 
-\method{print}{net_nct}(x, n = Inf, ...)
+\method{print}{net_nct}(x, n = 6L, ...)
 
-\method{summary}{net_nct}(object, ...)
+\method{summary}{net_nct}(object, table = c("tests", "edges"), ...)
 
 \method{as.data.frame}{net_nct}(x, row.names = NULL, optional = FALSE, ...)
 }
@@ -72,12 +72,17 @@ incomplete). Complete data are unaffected by the choice.}
 object.}
 
 \item{n}{For the \code{print()} method: the number of edges to list, largest
-difference first. Default \code{Inf} (all).}
+difference first. Default \code{6}; \code{Inf} lists them all, as does
+\code{summary(x, table = "edges")}.}
 
 \item{...}{For the \code{print()}, \code{summary()} and \code{as.data.frame()} methods:
 ignored.}
 
 \item{object}{For the \code{summary()} method: a \code{net_nct} object.}
+
+\item{table}{For the \code{summary()} method: \code{"tests"} (default), the global
+tests, or \code{"edges"}, one row per node pair (the table described
+below).}
 
 \item{row.names, optional}{For the \code{as.data.frame()} method: ignored, kept
 for compatibility with the base generic.}
@@ -117,8 +122,9 @@ For the \code{summary()} method: a data frame with one row per global
 test and the columns \code{test} (\code{"network structure"}, and
 \code{"global strength"}, or \code{"global expected influence"} when
 \code{abs = FALSE}), \code{statistic} (\code{"M"}, \code{"S"}), \code{observed}, \code{p_value} and
-\code{significant} (\code{p_value < 0.05}, a fixed level). The \code{as.data.frame()}
-method gives one row per node pair, with the columns \code{from}, \code{to},
+\code{significant} (\code{p_value < 0.05}, a fixed level). With
+\code{table = "edges"} (and the \code{as.data.frame()} method), one row per node
+pair, with the columns \code{from}, \code{to},
 \code{weight_1} and \code{weight_2} (the edge in each group's network),
 \code{difference} (statistic E), \code{p_value} and \code{significant}
 (\code{p_value < 0.05}).

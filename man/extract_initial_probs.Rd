@@ -13,8 +13,9 @@ extract_initial_probs(model)
 \method{summary}{nest_initial_probs}(object, ...)
 }
 \arguments{
-\item{model}{The network: a \code{netobject}, a \code{tna}-family model, an \code{mcml},
-or a list holding an \code{initial} element. Input from which neither
+\item{model}{The network: a \code{netobject}, a group of networks
+(\code{netobject_group}), a \code{tna}-family model, an \code{mcml}, or a list
+holding an \code{initial} element. Input from which neither
 initial probabilities nor a weight matrix can be read raises an error.}
 
 \item{x}{For the \code{print()} method: a \code{nest_initial_probs}.}
@@ -29,6 +30,10 @@ For a single network: a named numeric vector of initial-state
 probabilities that sums to 1 (stored values are rescaled when their sum
 differs from 1 by more than 1e-6), of class \code{c("nest_initial_probs", "numeric")}. \code{summary()} returns a data frame with one row per state and
 the columns \code{state} and \code{prob}, sorted by decreasing probability.
+
+For a group of networks (\code{netobject_group}): a data frame with one row
+per network and state and the columns \code{group}, \code{state} and \code{prob}, the
+states in each network's order.
 
 For an \code{mcml}: a named list of plain numeric vectors, \code{macro} first and
 then one per cluster, taken as stored in each layer (\code{inits}).

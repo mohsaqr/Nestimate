@@ -66,11 +66,11 @@ class \code{nestimate_ignored_argument}.}
 \value{
 A \code{net_markov_stability} object; for a \code{netobject_group}, a
 \code{net_markov_stability_group}, a named list holding one such object per
-group. \code{print()} shows the per-state table and returns its input
-invisibly. \code{summary()} prints the most accessible state (the lowest
-mean passage time from the other states) and the most persistent one
-(the longest sojourn time), and returns the per-state table as a data
-frame. \code{plot()} returns a \code{ggplot} with one panel of bars per metric and
+group. \code{print()} names the attractor (the state with the lowest mean
+passage time from the other states) and the stickiest state (the
+longest sojourn time) in its header, shows the per-state table and
+returns its input invisibly. \code{summary()} returns the per-state table as a data frame and
+prints nothing. \code{plot()} returns a \code{ggplot} with one panel of bars per metric and
 the states ordered by stationary probability; with \code{combined = FALSE},
 invisibly, a list of one-panel plots named by metric. For a group,
 \code{plot()} draws one panel per metric with one row per state and one

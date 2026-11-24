@@ -589,18 +589,29 @@ plot.chain_structure <- function(x, show_values = TRUE, digits = 2L, ...) {
 #' * `return_probability`, the diagonal of the hitting matrix;
 #' * `sojourn_steps`, `1 / (1 - persistence)` (`Inf` for an absorbing state);
 #' * `stationary_probability`, for an irreducible chain;
-#' * for a chain with transient states: `mean_absorption_time`, the steps to enter a closed class, and `absorption_probability`, the probability of ending in the closed class; with several closed classes, one `absorbed_in_<class>` column per class. Both are `NA` for states that are not transient.
-#' 
-#'  Probabilities are rounded to 4 decimals and step counts to 2.
+#' * for a chain with transient states: `mean_absorption_time`, the steps to enter a closed class (`NA` for states that are not transient).
+#'
+#' Probabilities are rounded to 4 decimals and step counts to 2.
+#'
+#' `summary(table = "absorption")` returns one row per transient state and
+#' closed class: `state`, `class` (the class's states joined by `+`) and
+#' `probability`, the probability of ending in that class, unrounded; no
+#' rows when the chain has no transient state.
 #' Columns are ordered for readability: identifiers first, classification
 #' second, per-state results last.
 #'
 #' `summary()` of a `chain_structure_group` stacks these tables into one
-#' data frame with a `group` column first, one row per group and state; a
-#' column that only some groups have is `NA` for the others.
+#' data frame with a `group` column first, one row per group and state (or
+#' state and class); a column that only some groups have is `NA` for the
+#' others.
+#' @param table For `summary()`: `"states"` (default), one row per state,
+#'   or `"absorption"`, one row per transient state and closed class.
 #' @export
-summary.chain_structure <- function(object, ...) {
+summary.chain_structure <- function(object,
+                                    table = c("states", "absorption"), ...) {
+  table <- match.arg(table)
   state_names <- object$states
+  if (identical(table, "absorption")) return(.cs_absorption_table(object))
   P <- object$P
   H <- object$hitting_probabilities
 
@@ -626,16 +637,8 @@ summary.chain_structure <- function(object, ...) {
   }
 
   if (!is.null(object$absorption_probabilities)) {
-    abs_states <- colnames(object$absorption_probabilities)
-    abs_probs <- object$absorption_probabilities
-    # Loop: adds one column per closed class to `out`, in class order.
-    for (a in abs_states) {
-      colname <- if (length(abs_states) == 1L) "absorption_probability"
-                 else sprintf("absorbed_in_%s", a)
-      vals <- rep(NA_real_, length(state_names))
-      vals[match(rownames(abs_probs), state_names)] <- round(abs_probs[, a], 4)
-      out[[colname]] <- vals
-    }
+    # the probabilities of ending in each closed class are their own table,
+    # summary(table = "absorption"), one row per transient state and class
     abs_time <- rep(NA_real_, length(state_names))
     abs_time[match(names(object$mean_absorption_time), state_names)] <-
       round(object$mean_absorption_time, 2)
@@ -650,6 +653,28 @@ summary.chain_structure <- function(object, ...) {
   attr(out, "is_reversible") <- object$is_reversible
   attr(out, "n_classes") <- length(object$communicating_classes)
   attr(out, "absorbing_states") <- object$absorbing_states
+  out
+}
+
+#' One row per transient state and closed class: the absorption probability
+#'
+#' @param object A `chain_structure`.
+#' @return `state`, `class`, `probability` (unrounded); no rows when the
+#'   chain has no transient state.
+#' @noRd
+.cs_absorption_table <- function(object) {
+  ap <- object$absorption_probabilities
+  if (is.null(ap) || nrow(ap) == 0L) {
+    return(data.frame(state = character(0), class = character(0),
+                      probability = numeric(0), stringsAsFactors = FALSE))
+  }
+  out <- data.frame(state = rep(rownames(ap), times = ncol(ap)),
+                    class = rep(colnames(ap), each = nrow(ap)),
+                    probability = as.vector(ap), stringsAsFactors = FALSE)
+  # states in the chain's order, classes in theirs within each state
+  out <- out[order(match(out$state, object$states),
+                   match(out$class, colnames(ap))), , drop = FALSE]
+  rownames(out) <- NULL
   out
 }
 
@@ -668,10 +693,14 @@ print.chain_structure_group <- function(x, ...) {
 
 #' @rdname chain_structure
 #' @export
-summary.chain_structure_group <- function(object, ...) {
+summary.chain_structure_group <- function(object,
+                                          table = c("states", "absorption"),
+                                          ...) {
+  table <- match.arg(table)
   parts <- lapply(names(object), function(nm) {
-    s <- summary(object[[nm]])
-    s$group <- nm
+    s <- summary(object[[nm]], table = table)
+    # a chain with no transient state has no absorption rows
+    s$group <- rep(nm, nrow(s))
     s
   })
   # Union of columns across groups, preserving order

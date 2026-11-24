@@ -431,18 +431,23 @@ nct <- function(data1, data2, iter = 1000L, gamma = 0.5,
 #'   ignored.
 #' @param object For the `summary()` method: a `net_nct` object.
 #' @param n For the `print()` method: the number of edges to list, largest
-#'   difference first. Default `Inf` (all).
+#'   difference first. Default `6`; `Inf` lists them all, as does
+#'   `summary(x, table = "edges")`.
+#' @param table For the `summary()` method: `"tests"` (default), the global
+#'   tests, or `"edges"`, one row per node pair (the table described
+#'   below).
 #' @return For the `summary()` method: a data frame with one row per global
 #'   test and the columns `test` (`"network structure"`, and
 #'   `"global strength"`, or `"global expected influence"` when
 #'   `abs = FALSE`), `statistic` (`"M"`, `"S"`), `observed`, `p_value` and
-#'   `significant` (`p_value < 0.05`, a fixed level). The `as.data.frame()`
-#'   method gives one row per node pair, with the columns `from`, `to`,
+#'   `significant` (`p_value < 0.05`, a fixed level). With
+#'   `table = "edges"` (and the `as.data.frame()` method), one row per node
+#'   pair, with the columns `from`, `to`,
 #'   `weight_1` and `weight_2` (the edge in each group's network),
 #'   `difference` (statistic E), `p_value` and `significant`
 #'   (`p_value < 0.05`).
 #' @export
-print.net_nct <- function(x, n = Inf, ...) {
+print.net_nct <- function(x, n = 6L, ...) {
   cat(.nct_display(x, n = n), sep = "\n")
   invisible(x)
 }
@@ -507,7 +512,9 @@ print.net_nct <- function(x, n = Inf, ...) {
 
 #' @rdname nct
 #' @export
-summary.net_nct <- function(object, ...) {
+summary.net_nct <- function(object, table = c("tests", "edges"), ...) {
+  table <- match.arg(table)
+  if (identical(table, "edges")) return(as.data.frame.net_nct(object))
   p <- c(object$structure$p_value, object$strength$p_value)
   data.frame(
     test = c("network structure",
