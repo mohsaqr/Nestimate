@@ -644,7 +644,8 @@ safe_sd <- function(x) {
   }
   do.call(on.exit, list(as.call(list(restore)), add = TRUE, after = FALSE),
           envir = envir)
-  set.seed(seed)
+  # seed = NULL draws from the caller's stream but still restores it
+  if (!is.null(seed)) set.seed(seed)
   invisible(NULL)
 }
 

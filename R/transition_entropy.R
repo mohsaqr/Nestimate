@@ -1039,9 +1039,13 @@ plot.net_entropy_trajectory <- function(x, normalized = FALSE, span = 0.4,
                                         title = "Transition entropy over time",
                                         iter = 200L, ci_level = 0.95,
                                         seed = NULL, ...) {
-  .assert(is.numeric(iter), length(iter) == 1L, iter >= 0,
-          is.numeric(ci_level), length(ci_level) == 1L, ci_level > 0,
-          ci_level < 1)
+  .assert(
+    "`iter` must be a single whole number of 0 or more" =
+      is.numeric(iter) && length(iter) == 1L && is.finite(iter) &&
+      iter >= 0 && iter == round(iter) && iter <= .Machine$integer.max,
+    "`ci_level` must be a single number between 0 and 1" =
+      is.numeric(ci_level) && length(ci_level) == 1L && ci_level > 0 &&
+      ci_level < 1)
   iter <- as.integer(iter)
   tr <- x$trajectory
   measure <- if (normalized) "entropy_norm" else "entropy"
@@ -1164,7 +1168,8 @@ plot.net_entropy_trajectory <- function(x, normalized = FALSE, span = 0.4,
   # standard error ignores.
   band <- NULL
   if (iter > 0L && length(smoothed) > 0L && !is.null(x$stream)) {
-    if (!is.null(seed)) .local_seed(seed)
+    # with or without `seed`, the session's random stream is left as it was
+    .local_seed(seed)
     stream <- x$stream
     by_actor_of <- lapply(smoothed, function(g) {
       split(which(stream$group == g), stream$actor[stream$group == g])

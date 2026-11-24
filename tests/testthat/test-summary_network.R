@@ -112,3 +112,12 @@ test_that("a subset of a grouped summary is a plain data frame", {
   expect_identical(class(only_x), "data.frame")
   expect_identical(unique(only_x$group), "X")
 })
+
+test_that("a grouped summary prints when a group is named \"\"", {
+  d <- data.frame(V1 = c("A", "B", "A", "C"), V2 = c("B", "C", "B", "A"),
+                  V3 = c("C", "A", "C", "B"), grp = c("", "", "x", "x"))
+  metrics <- summary(build_network(d, method = "relative", group = "grp"))
+  shown <- capture.output(print(metrics))
+  expect_true(any(grepl("Node Count", shown)))
+  expect_identical(sort(unique(metrics$group)), c("", "x"))
+})

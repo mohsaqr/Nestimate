@@ -1,4 +1,4 @@
-# Nestimate 1.0.25
+# Nestimate 1.1.0
 
 Changes since the CRAN release 0.9.24.
 

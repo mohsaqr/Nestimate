@@ -51,9 +51,8 @@ needs its position columns named as a numbered run, as in
 \code{\link[=build_network]{build_network()}}; build the network first for any other layout. A
 \code{netobject_group} gives one result per group. An association network
 (\code{cor}, \code{pcor}, \code{glasso}, \code{ising}, \code{mgm}) or negative weights raise an
-error of class \code{nestimate_not_markov}. For the \code{print()} methods: a
-\code{net_mpt}, a \code{net_mpt_group}, or the result of \code{summary()}; for the
-\code{plot()} methods: a \code{net_mpt} or \code{net_mpt_group}.}
+error of class \code{nestimate_not_markov}. For the \code{print()} and \code{plot()}
+methods: a \code{net_mpt} or \code{net_mpt_group}.}
 
 \item{states}{The states to keep in the result. The times are computed
 on the whole chain and then subset, so they still count paths through

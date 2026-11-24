@@ -171,9 +171,8 @@ utils::globalVariables(c("fill", "label", "txt_col"))
 #'   [build_network()]; build the network first for any other layout. A
 #'   `netobject_group` gives one result per group. An association network
 #'   (`cor`, `pcor`, `glasso`, `ising`, `mgm`) or negative weights raise an
-#'   error of class `nestimate_not_markov`. For the `print()` methods: a
-#'   `net_mpt`, a `net_mpt_group`, or the result of `summary()`; for the
-#'   `plot()` methods: a `net_mpt` or `net_mpt_group`.
+#'   error of class `nestimate_not_markov`. For the `print()` and `plot()`
+#'   methods: a `net_mpt` or `net_mpt_group`.
 #' @param object For the `summary()` method: a `net_mpt`.
 #' @param states The states to keep in the result. The times are computed
 #'   on the whole chain and then subset, so they still count paths through

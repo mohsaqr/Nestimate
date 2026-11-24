@@ -210,13 +210,13 @@ print.summary.netobject_group <- function(x, ...) {
   out <- .plain_df(x)
   if (identical(attr(x, "format", exact = TRUE), "long")) {
     # display only: laid out metric by group for reading; the object is long
+    # by position: a group named "" or a repeated name cannot index a column
     groups <- attr(x, "groups", exact = TRUE)
     metric <- unique(out$metric)
-    grid <- data.frame(metric = metric, stringsAsFactors = FALSE)
-    grid[groups] <- lapply(groups, function(g) {
-      rows <- out[out$group == g, , drop = FALSE]
-      rows$value[match(metric, rows$metric)]
-    })
+    values <- matrix(out$value, nrow = length(metric), byrow = TRUE)
+    grid <- data.frame(metric = metric, values, check.names = FALSE,
+                       stringsAsFactors = FALSE)
+    names(grid) <- c("metric", groups)
     out <- grid
   }
   numeric_cols <- vapply(out, is.numeric, logical(1L))

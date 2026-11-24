@@ -904,3 +904,17 @@ test_that("entropy_trajectory refuses a network that holds no sequences", {
   expect_error(entropy_trajectory(seqs, group = "nope"),
                class = "nestimate_bad_input")
 })
+
+test_that("plot() of a trajectory leaves the session's random stream alone", {
+  skip_on_cran()
+  tr <- entropy_trajectory(group_regulation_long, action = "Action",
+                           actor = "Actor", time = "Time", window = 500,
+                           step = 100)
+  set.seed(7)
+  without_plot <- stats::runif(1)
+  set.seed(7)
+  p <- plot(tr, iter = 20)
+  expect_identical(stats::runif(1), without_plot)
+  expect_error(plot(tr, iter = Inf), class = "nestimate_bad_input")
+  expect_error(plot(tr, iter = 2.5), class = "nestimate_bad_input")
+})
