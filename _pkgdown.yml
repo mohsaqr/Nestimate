@@ -192,6 +192,7 @@ reference:
       - state_distribution
       - mosaic_plot
       - mosaic_analysis
+      - mosaic_test
       - extract_sequences
       - sequence_patterns
       - sequence_metrics
