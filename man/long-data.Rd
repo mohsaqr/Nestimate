@@ -48,8 +48,10 @@ An object of class \code{data.frame} with 10796 rows and 9 columns.
 An object of class \code{data.frame} with 8551 rows and 9 columns.
 }
 \source{
-Saqr, M. (2026). Human-AI vibe coding interaction study.
-\href{https://saqr.me/blog/2026/human-ai-interaction-cograph/}{saqr.me}
+Saqr, M. (2026). Coded turns of human-AI vibe coding sessions
+(data set). Zenodo. \doi{10.5281/zenodo.24528524}. Described in Saqr, M.
+(2026), Human-AI vibe coding interaction study,
+\href{https://saqr.me/blog/2026/human-ai-interaction-cograph/}{saqr.me}.
 }
 \usage{
 human_long

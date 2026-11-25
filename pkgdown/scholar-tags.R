@@ -39,6 +39,10 @@ add_scholar_tags <- function(docs, site) {
               meta("citation_pdf_url", sprintf("%s/pdf/%s.pdf", site, slug)),
               meta("citation_abstract_html_url",
                    sprintf("%s/articles/%s.html", site, slug)))
+    # the DOI of the article's Zenodo record, from its "How to cite" line
+    text <- readLines(source, warn = FALSE, encoding = "UTF-8")
+    doi <- regmatches(text, regexpr("10\\.5281/zenodo\\.[0-9]+", text))
+    if (length(doi)) tags <- c(tags, meta("citation_doi", doi[[1L]]))
     html <- readLines(page, warn = FALSE, encoding = "UTF-8")
     if (any(grepl('name="citation_title"', html, fixed = TRUE))) return(FALSE)
     at <- grep("</head>", html, fixed = TRUE)[1L]

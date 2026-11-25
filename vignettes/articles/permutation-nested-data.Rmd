@@ -316,7 +316,7 @@ applies to transition networks (`relative`, `frequency`,
 
 ## How to cite this article
 
-Saqr, M., López-Pernas, S., & Misiejuk, K. (2026). *Nested sequences and the permutation test*. Nestimate. [HTML](https://pak.dynasite.org/Nestimate/articles/permutation-nested-data.html) · [PDF](https://pak.dynasite.org/Nestimate/pdf/permutation-nested-data.pdf)
+Saqr, M., López-Pernas, S., & Misiejuk, K. (2026). *Nested sequences and the permutation test*. Nestimate. <https://doi.org/10.5281/zenodo.24528518> · [HTML](https://pak.dynasite.org/Nestimate/articles/permutation-nested-data.html) · [PDF](https://pak.dynasite.org/Nestimate/pdf/permutation-nested-data.pdf)
 
 ## References
 

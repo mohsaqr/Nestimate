@@ -43,8 +43,10 @@
 #'   \code{ai_long}    \tab AI turns only, 8,551 rows \cr
 #' }
 #'
-#' @source Saqr, M. (2026). Human-AI vibe coding interaction study.
-#'   \href{https://saqr.me/blog/2026/human-ai-interaction-cograph/}{saqr.me}
+#' @source Saqr, M. (2026). Coded turns of human-AI vibe coding sessions
+#'   (data set). Zenodo. \doi{10.5281/zenodo.24528524}. Described in Saqr, M.
+#'   (2026), Human-AI vibe coding interaction study,
+#'   \href{https://saqr.me/blog/2026/human-ai-interaction-cograph/}{saqr.me}.
 #'
 #' @examples
 #' net <- build_network(human_long, method = "tna",

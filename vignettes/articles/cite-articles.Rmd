@@ -2,26 +2,26 @@
 title: "Resources"
 ---
 
-Saqr, M., López-Pernas, S., & Misiejuk, K. (2026). *Network estimation and analysis with Nestimate*. Nestimate. [HTML](transition-networks.html) · [PDF](../pdf/transition-networks.pdf)
+Saqr, M., López-Pernas, S., & Misiejuk, K. (2026). *Network estimation and analysis with Nestimate*. Nestimate. <https://doi.org/10.5281/zenodo.24528510> · [HTML](transition-networks.html) · [PDF](../pdf/transition-networks.pdf)
 
-Saqr, M. (2026). *Transition matrix entropy*. Nestimate. [HTML](transition-entropy.html) · [PDF](../pdf/transition-entropy.pdf)
+Saqr, M. (2026). *Transition matrix entropy*. Nestimate. <https://doi.org/10.5281/zenodo.24528508> · [HTML](transition-entropy.html) · [PDF](../pdf/transition-entropy.pdf)
 
-Saqr, M., López-Pernas, S., & Misiejuk, K. (2026). *Markov stability analysis*. Nestimate. [HTML](markov-stability.html) · [PDF](../pdf/markov-stability.pdf)
+Saqr, M., López-Pernas, S., & Misiejuk, K. (2026). *Markov stability analysis*. Nestimate. <https://doi.org/10.5281/zenodo.24528502> · [HTML](markov-stability.html) · [PDF](../pdf/markov-stability.pdf)
 
-Saqr, M., López-Pernas, S., & Misiejuk, K. (2026). *Comparing sequences between groups: Early vs late human-AI interactions*. Nestimate. [HTML](sequence-comparison.html) · [PDF](../pdf/sequence-comparison.pdf)
+Saqr, M., López-Pernas, S., & Misiejuk, K. (2026). *Comparing sequences between groups: Early vs late human-AI interactions*. Nestimate. <https://doi.org/10.5281/zenodo.24528504> · [HTML](sequence-comparison.html) · [PDF](../pdf/sequence-comparison.pdf)
 
-Saqr, M., López-Pernas, S., & Misiejuk, K. (2026). *Sequence plots*. Nestimate. [HTML](sequence-plots.html) · [PDF](../pdf/sequence-plots.pdf)
+Saqr, M., López-Pernas, S., & Misiejuk, K. (2026). *Sequence plots*. Nestimate. <https://doi.org/10.5281/zenodo.24528506> · [HTML](sequence-plots.html) · [PDF](../pdf/sequence-plots.pdf)
 
-Saqr, M., López-Pernas, S., & Misiejuk, K. (2026). *Sequence clustering*. Nestimate. [HTML](clustering.html) · [PDF](../pdf/clustering.pdf)
+Saqr, M., López-Pernas, S., & Misiejuk, K. (2026). *Sequence clustering*. Nestimate. <https://doi.org/10.5281/zenodo.24528491> · [HTML](clustering.html) · [PDF](../pdf/clustering.pdf)
 
-Saqr, M., López-Pernas, S., & Misiejuk, K. (2026). *Network estimation and visualization with Nestimate + cograph*. Nestimate. [HTML](cograph-tutorial-nestimate.html) · [PDF](../pdf/cograph-tutorial-nestimate.pdf)
+Saqr, M., López-Pernas, S., & Misiejuk, K. (2026). *Network estimation and visualization with Nestimate + cograph*. Nestimate. <https://doi.org/10.5281/zenodo.24528512> · [HTML](cograph-tutorial-nestimate.html) · [PDF](../pdf/cograph-tutorial-nestimate.pdf)
 
-Saqr, M., López-Pernas, S., & Misiejuk, K. (2026). *Higher-order network analysis with simplicial complexes: From transition networks to topological analysis*. Nestimate. [HTML](cograph-tutorial-simplicial.html) · [PDF](../pdf/cograph-tutorial-simplicial.pdf)
+Saqr, M., López-Pernas, S., & Misiejuk, K. (2026). *Higher-order network analysis with simplicial complexes: From transition networks to topological analysis*. Nestimate. <https://doi.org/10.5281/zenodo.24528514> · [HTML](cograph-tutorial-simplicial.html) · [PDF](../pdf/cograph-tutorial-simplicial.pdf)
 
-Saqr, M., López-Pernas, S., & Misiejuk, K. (2026). *Model assessment for transition networks*. Nestimate. [HTML](tutorial_model_assessment.html) · [PDF](../pdf/tutorial_model_assessment.pdf)
+Saqr, M., López-Pernas, S., & Misiejuk, K. (2026). *Model assessment for transition networks*. Nestimate. <https://doi.org/10.5281/zenodo.24528522> · [HTML](tutorial_model_assessment.html) · [PDF](../pdf/tutorial_model_assessment.pdf)
 
-Saqr, M., López-Pernas, S., & Misiejuk, K. (2026). *Nested sequences and the permutation test*. Nestimate. [HTML](permutation-nested-data.html) · [PDF](../pdf/permutation-nested-data.pdf)
+Saqr, M., López-Pernas, S., & Misiejuk, K. (2026). *Nested sequences and the permutation test*. Nestimate. <https://doi.org/10.5281/zenodo.24528518> · [HTML](permutation-nested-data.html) · [PDF](../pdf/permutation-nested-data.pdf)
 
-Saqr, M., López-Pernas, S., & Misiejuk, K. (2026). *Comparing networks with compare_networks()*. Nestimate. [HTML](compare-networks.html) · [PDF](../pdf/compare-networks.pdf)
+Saqr, M., López-Pernas, S., & Misiejuk, K. (2026). *Comparing networks with compare_networks()*. Nestimate. <https://doi.org/10.5281/zenodo.24528516> · [HTML](compare-networks.html) · [PDF](../pdf/compare-networks.pdf)
 
-Saqr, M., López-Pernas, S., & Misiejuk, K. (2026). *Stability of engagement: States, landscapes and students*. Nestimate. [HTML](stability-landscapes.html) · [PDF](../pdf/stability-landscapes.pdf)
+Saqr, M., López-Pernas, S., & Misiejuk, K. (2026). *Stability of engagement: States, landscapes and students*. Nestimate. <https://doi.org/10.5281/zenodo.24528520> · [HTML](stability-landscapes.html) · [PDF](../pdf/stability-landscapes.pdf)
