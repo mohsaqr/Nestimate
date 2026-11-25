@@ -27,7 +27,7 @@
 
     <a class="navbar-brand me-2" href="index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.3</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -70,31 +70,28 @@
 </h1>
 </div>
 <blockquote>
-<p>Unified network estimation, analysis, and validation for behavioral, psychological, and panel data.</p>
+<p>Network estimation, comparison and testing for sequence, event-log, panel and cross-sectional data.</p>
 </blockquote>
 <!-- badges: start -->
 
-<p>Nestimate is an R package for estimating, validating, and comparing networks from behavioral sequence data, psychological scales, and longitudinal panel data. A single entry point — <code><a href="reference/build_network.html">build_network()</a></code> — dispatches to 14 built-in estimators. Every network type shares the same validation pipeline: bootstrap confidence intervals, permutation testing, split-half reliability, and centrality stability.</p>
+<p>Nestimate estimates, compares and tests networks from sequence, event-log, panel and cross-sectional data. One function, <code><a href="reference/build_network.html">build_network()</a></code>, gives 15 estimators: transition, frequency, co-occurrence, attention, n-gram, gap, reply and latency networks, two window-based networks for one-hot data, and correlation, partial correlation, graphical lasso, Ising and mixed graphical models. Bootstrap intervals, permutation tests, split-half reliability and centrality stability apply to every network whose data can be resampled. Further functions cover sequence patterns and indices, transition entropy, Markov chains, stability landscapes, clustering, mixture Markov models and higher-order networks.</p>
 <div class="section level3">
-<h3 id="full-tutorials">Full tutorials<a class="anchor" aria-label="anchor" href="#full-tutorials"></a>
+<h3 id="articles">Articles<a class="anchor" aria-label="anchor" href="#articles"></a>
 </h3>
 <ul>
-<li><a href="https://pak.dynasite.org/Nestimate/articles/cograph-tutorial-nestimate.html">Network Estimation &amp; Visualization</a></li>
-<li><a href="https://pak.dynasite.org/Nestimate/articles/cograph-tutorial-simplicial.html">Higher-Order &amp; Simplicial Complexes</a></li>
-<li><a href="https://pak.dynasite.org/Nestimate/articles/tutorial_model_assessment.html">Model Assessment</a></li>
-<li><a href="https://pak.dynasite.org/Nestimate/articles/permutation-nested-data.html">Permutation Tests for Nested Data</a></li>
-<li><a href="https://pak.dynasite.org/Nestimate/articles/compare-networks.html">Comparing Networks</a></li>
-</ul>
-</div>
-<div class="section level3">
-<h3 id="quick-guides">Quick guides<a class="anchor" aria-label="anchor" href="#quick-guides"></a>
-</h3>
-<ul>
-<li><a href="https://pak.dynasite.org/Nestimate/articles/transition-networks.html">Transition Networks</a></li>
-<li><a href="https://pak.dynasite.org/Nestimate/articles/sequence-plots.html">Sequence Plots &amp; Comparison</a></li>
-<li><a href="https://pak.dynasite.org/Nestimate/articles/clustering.html">Clustering &amp; Multi-Level Analysis</a></li>
-<li><a href="https://pak.dynasite.org/Nestimate/articles/markov-stability.html">Markov Stability</a></li>
-<li><a href="https://pak.dynasite.org/Nestimate/articles/sequence-comparison.html">Sequence Pattern Comparison</a></li>
+<li><a href="https://pak.dynasite.org/Nestimate/articles/transition-networks.html">Network estimation and analysis with Nestimate</a></li>
+<li><a href="https://pak.dynasite.org/Nestimate/articles/transition-entropy.html">Transition matrix entropy</a></li>
+<li><a href="https://pak.dynasite.org/Nestimate/articles/markov-stability.html">Markov stability analysis</a></li>
+<li><a href="https://pak.dynasite.org/Nestimate/articles/sequence-comparison.html">Comparing sequences between groups</a></li>
+<li><a href="https://pak.dynasite.org/Nestimate/articles/sequence-plots.html">Sequence plots</a></li>
+<li><a href="https://pak.dynasite.org/Nestimate/articles/clustering.html">Sequence clustering</a></li>
+<li><a href="https://pak.dynasite.org/Nestimate/articles/cograph-tutorial-nestimate.html">Network estimation and visualization with Nestimate + cograph</a></li>
+<li><a href="https://pak.dynasite.org/Nestimate/articles/cograph-tutorial-simplicial.html">Higher-order network analysis with simplicial complexes</a></li>
+<li><a href="https://pak.dynasite.org/Nestimate/articles/tutorial_model_assessment.html">Model assessment for transition networks</a></li>
+<li><a href="https://pak.dynasite.org/Nestimate/articles/permutation-nested-data.html">Nested sequences and the permutation test</a></li>
+<li><a href="https://pak.dynasite.org/Nestimate/articles/compare-networks.html">Comparing networks with compare_networks()</a></li>
+<li><a href="https://pak.dynasite.org/Nestimate/articles/stability-landscapes.html">Stability of engagement: states, landscapes and students</a></li>
+<li><a href="https://pak.dynasite.org/Nestimate/reference/">Function reference</a></li>
 </ul>
 </div>
 <div class="section level2">
@@ -121,71 +118,105 @@
 </tr></thead>
 <tbody>
 <tr>
-<td>Dynamic / Transition Networks</td>
+<td>Transition and co-occurrence networks</td>
 <td>
-<code><a href="reference/build_network.html">build_network()</a></code>, <code><a href="reference/wtna.html">wtna()</a></code>, <code><a href="reference/cooccurrence.html">cooccurrence()</a></code>
+<code><a href="reference/build_network.html">build_network()</a></code>, <code><a href="reference/build_tna.html">build_tna()</a></code>, <code><a href="reference/build_ftna.html">build_ftna()</a></code>, <code><a href="reference/build_atna.html">build_atna()</a></code>, <code><a href="reference/build_cna.html">build_cna()</a></code>, <code><a href="reference/build_ngram.html">build_ngram()</a></code>, <code><a href="reference/build_gap.html">build_gap()</a></code>, <code><a href="reference/build_reverse.html">build_reverse()</a></code>, <code><a href="reference/build_latency.html">build_latency()</a></code>, <code><a href="reference/wtna.html">wtna()</a></code>, <code><a href="reference/cooccurrence.html">cooccurrence()</a></code>
 </td>
 </tr>
 <tr>
-<td>Psychological Networks</td>
-<td><code>build_network(method = "glasso/pcor/cor/ising/mgm")</code></td>
+<td>Psychological networks</td>
+<td>
+<code><a href="reference/build_cor.html">build_cor()</a></code>, <code><a href="reference/build_pcor.html">build_pcor()</a></code>, <code><a href="reference/build_glasso.html">build_glasso()</a></code>, <code><a href="reference/build_ising.html">build_ising()</a></code>, <code><a href="reference/build_mgm.html">build_mgm()</a></code>
+</td>
 </tr>
 <tr>
 <td>Multilevel VAR</td>
 <td><code><a href="reference/build_mlvar.html">build_mlvar()</a></code></td>
 </tr>
 <tr>
-<td>Idiographic Networks</td>
+<td>Idiographic networks</td>
 <td><code><a href="reference/build_gimme.html">build_gimme()</a></code></td>
 </tr>
 <tr>
-<td>Cluster &amp; Group Networks</td>
+<td>Phases and groups</td>
 <td>
-<code><a href="reference/build_clusters.html">build_clusters()</a></code>, <code><a href="reference/build_mmm.html">build_mmm()</a></code>, <code><a href="reference/build_mcml.html">build_mcml()</a></code>
+<code><a href="reference/mark_phases.html">mark_phases()</a></code>, <code>build_network(group = )</code>
 </td>
 </tr>
 <tr>
-<td>Higher-Order Networks</td>
+<td>Clusters and mixtures</td>
 <td>
-<code><a href="reference/build_hon.html">build_hon()</a></code>, <code><a href="reference/build_honem.html">build_honem()</a></code>, <code><a href="reference/build_hypa.html">build_hypa()</a></code>, <code><a href="reference/build_mogen.html">build_mogen()</a></code>
+<code><a href="reference/build_clusters.html">build_clusters()</a></code>, <code><a href="reference/build_mmm.html">build_mmm()</a></code>, <code><a href="reference/build_mcml.html">build_mcml()</a></code>, <code><a href="reference/cluster_choice.html">cluster_choice()</a></code>
 </td>
 </tr>
 <tr>
-<td>Topological Analysis</td>
+<td>Higher-order networks</td>
+<td>
+<code><a href="reference/build_hon.html">build_hon()</a></code>, <code><a href="reference/build_honem.html">build_honem()</a></code>, <code><a href="reference/build_hypa.html">build_hypa()</a></code>, <code><a href="reference/build_mogen.html">build_mogen()</a></code>, <code><a href="reference/build_hypergraph.html">build_hypergraph()</a></code>
+</td>
+</tr>
+<tr>
+<td>Topological analysis</td>
 <td>
 <code><a href="reference/build_simplicial.html">build_simplicial()</a></code>, <code><a href="reference/persistent_homology.html">persistent_homology()</a></code>, <code><a href="reference/q_analysis.html">q_analysis()</a></code>
 </td>
 </tr>
 <tr>
-<td>Sequence Visualization</td>
+<td>Sequence plots</td>
 <td>
-<code><a href="reference/sequence_plot.html">sequence_plot()</a></code>, <code><a href="reference/distribution_plot.html">distribution_plot()</a></code>
+<code><a href="reference/sequence_plot.html">sequence_plot()</a></code>, <code><a href="reference/distribution_plot.html">distribution_plot()</a></code>, <code><a href="reference/plot_state_frequencies.html">plot_state_frequencies()</a></code>, <code><a href="reference/mosaic_plot.html">mosaic_plot()</a></code>
 </td>
 </tr>
 <tr>
-<td>Sequence Pattern Comparison</td>
-<td><code><a href="reference/sequence_compare.html">sequence_compare()</a></code></td>
+<td>Sequence patterns and indices</td>
+<td>
+<code><a href="reference/extract_sequences.html">extract_sequences()</a></code>, <code><a href="reference/sequence_patterns.html">sequence_patterns()</a></code>, <code><a href="reference/sequence_metrics.html">sequence_metrics()</a></code>, <code><a href="reference/pattern_outcome.html">pattern_outcome()</a></code>, <code><a href="reference/sequence_compare.html">sequence_compare()</a></code>
+</td>
 </tr>
 <tr>
-<td>Association Mining</td>
+<td>Transition entropy</td>
+<td>
+<code><a href="reference/transition_entropy.html">transition_entropy()</a></code>, <code><a href="reference/entropy_network.html">entropy_network()</a></code>, <code><a href="reference/entropy_bayes.html">entropy_bayes()</a></code>, <code><a href="reference/entropy_trajectory.html">entropy_trajectory()</a></code>
+</td>
+</tr>
+<tr>
+<td>Markov chains</td>
+<td>
+<code><a href="reference/markov_order_test.html">markov_order_test()</a></code>, <code><a href="reference/markov_stability.html">markov_stability()</a></code>, <code><a href="reference/passage_time.html">passage_time()</a></code>, <code><a href="reference/chain_structure.html">chain_structure()</a></code>
+</td>
+</tr>
+<tr>
+<td>Stability landscapes</td>
+<td>
+<code><a href="reference/stability_landscape.html">stability_landscape()</a></code>, <code><a href="reference/landscape_surface.html">landscape_surface()</a></code>, <code><a href="reference/landscape_trend.html">landscape_trend()</a></code>
+</td>
+</tr>
+<tr>
+<td>Network comparison</td>
+<td>
+<code><a href="reference/compare_networks.html">compare_networks()</a></code>, <code><a href="reference/permutation.html">permutation()</a></code>, <code><a href="reference/bayes_compare.html">bayes_compare()</a></code>, <code><a href="reference/vertex_compare.html">vertex_compare()</a></code>, <code><a href="reference/nct.html">nct()</a></code>
+</td>
+</tr>
+<tr>
+<td>Counts nested in actors</td>
+<td>
+<code><a href="reference/mosaic_test.html">mosaic_test()</a></code>, <code><a href="reference/mosaic_analysis.html">mosaic_analysis()</a></code>
+</td>
+</tr>
+<tr>
+<td>Association rules</td>
 <td><code><a href="reference/association_rules.html">association_rules()</a></code></td>
 </tr>
 <tr>
-<td>Link Prediction</td>
+<td>Link prediction</td>
 <td>
 <code><a href="reference/predict_links.html">predict_links()</a></code>, <code><a href="reference/evaluate_links.html">evaluate_links()</a></code>
 </td>
 </tr>
 <tr>
-<td>Markov Chain Analysis</td>
+<td>Resampling</td>
 <td>
-<code><a href="reference/markov_stability.html">markov_stability()</a></code>, <code><a href="reference/passage_time.html">passage_time()</a></code>
-</td>
-</tr>
-<tr>
-<td>Statistical Validation</td>
-<td>
-<code><a href="reference/bootstrap_network.html">bootstrap_network()</a></code>, <code><a href="reference/permutation.html">permutation()</a></code>, <code><a href="reference/nct.html">nct()</a></code>, <code><a href="reference/network_reliability.html">network_reliability()</a></code>, <code><a href="reference/centrality_stability.html">centrality_stability()</a></code>
+<code><a href="reference/bootstrap_network.html">bootstrap_network()</a></code>, <code><a href="reference/network_reliability.html">network_reliability()</a></code>, <code><a href="reference/centrality_stability.html">centrality_stability()</a></code>, <code><a href="reference/casedrop_reliability.html">casedrop_reliability()</a></code>, <code><a href="reference/boot_glasso.html">boot_glasso()</a></code>
 </td>
 </tr>
 </tbody>
@@ -193,12 +224,9 @@
 <hr>
 </div>
 <div class="section level2">
-<h2 id="dynamic-networks">Dynamic Networks<a class="anchor" aria-label="anchor" href="#dynamic-networks"></a>
+<h2 id="transition-networks">Transition Networks<a class="anchor" aria-label="anchor" href="#transition-networks"></a>
 </h2>
-<p>All dynamic network methods use <code><a href="reference/build_network.html">build_network()</a></code>. Pass an event log and name its <code>action</code>, <code>actor</code>, and <code>time</code> columns — no preprocessing needed.</p>
-<div class="section level3">
-<h3 id="estimation-methods">Estimation Methods<a class="anchor" aria-label="anchor" href="#estimation-methods"></a>
-</h3>
+<p><code><a href="reference/build_network.html">build_network()</a></code> reads an event log when its <code>action</code>, <code>actor</code> and <code>time</code> columns are named, and wide sequences (one row per sequence, one column per position) as they are.</p>
 <table class="table">
 <colgroup>
 <col width="26%">
@@ -223,17 +251,47 @@
 <td>
 <code>"ftna"</code>, <code>"counts"</code>
 </td>
-<td>Raw transition counts (directed)</td>
+<td>Transition counts (directed)</td>
 </tr>
 <tr>
 <td><code>"attention"</code></td>
 <td><code>"atna"</code></td>
-<td>Decay-weighted transitions emphasising recent events (directed)</td>
+<td>Decay-weighted transitions (directed)</td>
 </tr>
 <tr>
 <td><code>"co_occurrence"</code></td>
 <td><code>"cna"</code></td>
-<td>Co-occurrence from sequential data (undirected)</td>
+<td>Co-occurrence within sequences (undirected)</td>
+</tr>
+<tr>
+<td><code>"ngram"</code></td>
+<td><code>"n-gram"</code></td>
+<td>Transitions between n-grams (directed)</td>
+</tr>
+<tr>
+<td><code>"gap"</code></td>
+<td></td>
+<td>Transitions across gaps, weighted by 1/distance (directed)</td>
+</tr>
+<tr>
+<td><code>"reverse"</code></td>
+<td></td>
+<td>Reply network, the transpose of <code>"frequency"</code> (directed)</td>
+</tr>
+<tr>
+<td><code>"latency"</code></td>
+<td></td>
+<td>Reply network weighted by reply speed (directed)</td>
+</tr>
+<tr>
+<td><code>"wtna"</code></td>
+<td></td>
+<td>Transitions between windows of one-hot data (directed)</td>
+</tr>
+<tr>
+<td><code>"wtna_cooccurrence"</code></td>
+<td></td>
+<td>Co-occurrence within windows of one-hot data (undirected)</td>
 </tr>
 </tbody>
 </table>
@@ -243,17 +301,33 @@
 <span><span class="va">net</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/build_network.html">build_network</a></span><span class="op">(</span><span class="va">human_long</span>, method <span class="op">=</span> <span class="st">"tna"</span>,</span>
 <span>                     action <span class="op">=</span> <span class="st">"code"</span>, actor <span class="op">=</span> <span class="st">"session_id"</span>, time <span class="op">=</span> <span class="st">"timestamp"</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Per-group networks in one call: high vs low achievers</span></span>
+<span><span class="co"># One network per group: high and low achievers</span></span>
 <span><span class="va">group_nets</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/build_network.html">build_network</a></span><span class="op">(</span><span class="va">group_regulation_long</span>, method <span class="op">=</span> <span class="st">"tna"</span>,</span>
 <span>                            action <span class="op">=</span> <span class="st">"Action"</span>, actor <span class="op">=</span> <span class="st">"Actor"</span>,</span>
-<span>                            time <span class="op">=</span> <span class="st">"Time"</span>, group <span class="op">=</span> <span class="st">"Achiever"</span><span class="op">)</span></span></code></pre></div>
-<p>Further estimators (<code>"ngram"</code>, <code>"gap"</code>, <code>"reverse"</code>, the window-based <code>"wtna"</code> family) are listed by <code><a href="reference/list_estimators.html">list_estimators()</a></code>.</p>
+<span>                            time <span class="op">=</span> <span class="st">"Time"</span>, group <span class="op">=</span> <span class="st">"Achiever"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Replies weighted by how fast they came</span></span>
+<span><span class="va">latency</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/build_network.html">build_network</a></span><span class="op">(</span><span class="va">group_regulation_long</span>, method <span class="op">=</span> <span class="st">"latency"</span>,</span>
+<span>                         action <span class="op">=</span> <span class="st">"Action"</span>, actor <span class="op">=</span> <span class="st">"Actor"</span>, time <span class="op">=</span> <span class="st">"Time"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="reference/list_estimators.html">list_estimators</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<div class="section level3">
+<h3 id="phases">Phases<a class="anchor" aria-label="anchor" href="#phases"></a>
+</h3>
+<p><code><a href="reference/mark_phases.html">mark_phases()</a></code> splits each actor’s events into <code>n</code> phases, which <code>build_network(group = "phase")</code> turns into one network per phase.</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">halves</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/mark_phases.html">mark_phases</a></span><span class="op">(</span><span class="va">human_long</span>, actor <span class="op">=</span> <span class="st">"session_id"</span>,</span>
+<span>                      time <span class="op">=</span> <span class="st">"order_in_session"</span>, n <span class="op">=</span> <span class="fl">2</span>,</span>
+<span>                      labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"early"</span>, <span class="st">"late"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">phase_nets</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/build_network.html">build_network</a></span><span class="op">(</span><span class="va">halves</span>, method <span class="op">=</span> <span class="st">"relative"</span>, actor <span class="op">=</span> <span class="st">"session_id"</span>,</span>
+<span>                            action <span class="op">=</span> <span class="st">"cluster"</span>, time <span class="op">=</span> <span class="st">"order_in_session"</span>,</span>
+<span>                            group <span class="op">=</span> <span class="st">"phase"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
-<h3 id="window-based-tna">Window-Based TNA<a class="anchor" aria-label="anchor" href="#window-based-tna"></a>
+<h3 id="window-based-networks">Window-Based Networks<a class="anchor" aria-label="anchor" href="#window-based-networks"></a>
 </h3>
-<p><code><a href="reference/wtna.html">wtna()</a></code> builds networks from binary (one-hot) data using temporal windows — directed transitions between windows, undirected co-occurrence within windows, or a mixed network combining both.</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<p><code><a href="reference/wtna.html">wtna()</a></code> builds networks from one-hot data in time windows: transitions between windows, co-occurrence within windows, or both.</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">net_wtna</span>  <span class="op">&lt;-</span> <span class="fu"><a href="reference/wtna.html">wtna</a></span><span class="op">(</span><span class="va">learning_activities</span>, actor <span class="op">=</span> <span class="st">"student"</span>,</span>
 <span>                  method <span class="op">=</span> <span class="st">"transition"</span>, type <span class="op">=</span> <span class="st">"relative"</span><span class="op">)</span></span>
 <span><span class="va">net_mixed</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/wtna.html">wtna</a></span><span class="op">(</span><span class="va">learning_activities</span>, actor <span class="op">=</span> <span class="st">"student"</span>,</span>
@@ -262,9 +336,9 @@
 <div class="section level3">
 <h3 id="co-occurrence-networks">Co-occurrence Networks<a class="anchor" aria-label="anchor" href="#co-occurrence-networks"></a>
 </h3>
-<p><code><a href="reference/cooccurrence.html">cooccurrence()</a></code> builds undirected co-occurrence networks from 6 input formats (delimited fields, long/bipartite, binary matrix, wide sequence, lists) with 8 similarity methods (Jaccard, cosine, association strength, Dice, and more).</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># From a long-format data frame: codes co-occurring within a session</span></span>
+<p><code><a href="reference/cooccurrence.html">cooccurrence()</a></code> builds undirected co-occurrence networks from six input formats (delimited fields, long, binary matrix, wide sequences, lists) with eight similarity measures (Jaccard, cosine, association strength, Dice and others; van Eck &amp; Waltman, 2009).</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Codes that occur in the same session</span></span>
 <span><span class="va">net_co</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/cooccurrence.html">cooccurrence</a></span><span class="op">(</span><span class="va">human_long</span>, field <span class="op">=</span> <span class="st">"code"</span>, by <span class="op">=</span> <span class="st">"session_id"</span>,</span>
 <span>                       similarity <span class="op">=</span> <span class="st">"jaccard"</span>, threshold <span class="op">=</span> <span class="fl">0.1</span><span class="op">)</span></span></code></pre></div>
 <hr>
@@ -289,89 +363,89 @@
 </tr>
 <tr>
 <td><code>"pcor"</code></td>
-<td>Partial correlations (precision matrix inversion)</td>
+<td>Partial correlations</td>
 </tr>
 <tr>
 <td><code>"glasso"</code></td>
-<td>EBICglasso — sparse regularised partial correlations</td>
+<td>EBIC graphical lasso: regularised partial correlations</td>
 </tr>
 <tr>
 <td><code>"ising"</code></td>
-<td>L1-regularised logistic regression for binary items</td>
+<td>L1-regularised logistic regressions for binary items</td>
 </tr>
 <tr>
 <td><code>"mgm"</code></td>
-<td>Mixed Graphical Model — continuous + categorical variables together</td>
+<td>Mixed graphical model for continuous and categorical variables</td>
 </tr>
 </tbody>
 </table>
-<p>The estimation itself (EBICglasso, Ising, MGM) is delegated to the ‘psychnets’ package; no igraph, qgraph, or bootnet is needed.</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<p>The graphical lasso, Ising and mixed graphical models are estimated by the ‘psychnets’ package.</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">net_gl</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/build_network.html">build_network</a></span><span class="op">(</span><span class="va">srl_strategies</span>, method <span class="op">=</span> <span class="st">"glasso"</span><span class="op">)</span></span>
 <span><span class="va">net_gl</span></span>
 <span></span>
-<span><span class="fu"><a href="reference/predictability.html">predictability</a></span><span class="op">(</span><span class="va">net_gl</span><span class="op">)</span>   <span class="co"># R-squared per node from network structure</span></span></code></pre></div>
+<span><span class="fu"><a href="reference/predictability.html">predictability</a></span><span class="op">(</span><span class="va">net_gl</span><span class="op">)</span>   <span class="co"># variance of each node explained by its neighbours</span></span></code></pre></div>
 <hr>
 </div>
 <div class="section level2">
 <h2 id="multilevel-var">Multilevel VAR<a class="anchor" aria-label="anchor" href="#multilevel-var"></a>
 </h2>
-<p><code><a href="reference/build_mlvar.html">build_mlvar()</a></code> estimates three networks simultaneously from ESM/EMA diary data — the three pillars of mlVAR analysis in a single function call:</p>
+<p><code><a href="reference/build_mlvar.html">build_mlvar()</a></code> estimates three networks from experience-sampling data:</p>
 <ul>
 <li>
-<strong>Temporal</strong> (directed) — lagged fixed effects: what predicts what across time</li>
+<strong>Temporal</strong> (directed): lagged fixed effects</li>
 <li>
-<strong>Contemporaneous</strong> (undirected) — partial correlations of within-person residuals: what moves together right now</li>
+<strong>Contemporaneous</strong> (undirected): partial correlations of within-person residuals</li>
 <li>
-<strong>Between-subjects</strong> (undirected) — partial correlations of person means: who differs from whom</li>
+<strong>Between-person</strong> (undirected): partial correlations of person means</li>
 </ul>
-<p>The estimates match <code>mlVAR::mlVAR()</code> with <code>estimator = "lmer"</code> and fixed temporal and contemporaneous effects. <code><a href="reference/build_mlvar.html">build_mlvar()</a></code> needs a long panel with one row per beep (<code>id</code>, optional <code>day</code>, <code>beep</code>, and the variables); see <code><a href="reference/build_mlvar.html">?build_mlvar</a></code> for a runnable simulated panel.</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># esm: one row per person-beep, columns id, day, beep, happy, calm, tired</span></span>
+<p>The estimates equal those of <code>mlVAR::mlVAR()</code> with <code>estimator = "lmer"</code> and fixed temporal and contemporaneous effects. The data are one row per beep (<code>id</code>, optional <code>day</code>, <code>beep</code> and the variables); <code><a href="reference/build_mlvar.html">?build_mlvar</a></code> has a runnable simulated panel.</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># esm: one row per person and beep, columns id, day, beep, happy, calm, tired</span></span>
 <span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/build_mlvar.html">build_mlvar</a></span><span class="op">(</span><span class="va">esm</span>, vars <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"happy"</span>, <span class="st">"calm"</span>, <span class="st">"tired"</span><span class="op">)</span>,</span>
 <span>                   id <span class="op">=</span> <span class="st">"id"</span>, day <span class="op">=</span> <span class="st">"day"</span>, beep <span class="op">=</span> <span class="st">"beep"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">fit</span>           <span class="co"># the temporal, contemporaneous and between-person networks</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span>
-<span><span class="fu"><a href="reference/coefs.html">coefs</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span>    <span class="co"># tidy data.frame: beta, SE, t, p, CI for every edge</span></span></code></pre></div>
+<span><span class="fu"><a href="reference/coefs.html">coefs</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span>    <span class="co"># one row per edge: beta, SE, t, p and interval</span></span></code></pre></div>
 <hr>
 </div>
 <div class="section level2">
 <h2 id="idiographic-networks">Idiographic Networks<a class="anchor" aria-label="anchor" href="#idiographic-networks"></a>
 </h2>
-<p><code><a href="reference/build_gimme.html">build_gimme()</a></code> estimates a separate network for each person using the Group Iterative Mean Estimation (GIMME) algorithm, then aggregates to a group-level picture. Use this when between-person heterogeneity matters and a single group network would average over meaningfully different individuals.</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># panel: one row per person-time point, columns id, V1, ..., V4 (see ?build_gimme)</span></span>
+<p><code><a href="reference/build_gimme.html">build_gimme()</a></code> estimates a network for each person with GIMME (Group Iterative Multiple Model Estimation), with paths shared by the group and paths of each person.</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># panel: one row per person and time point, columns id, V1, ..., V4 (see ?build_gimme)</span></span>
 <span><span class="va">fit_g</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/build_gimme.html">build_gimme</a></span><span class="op">(</span><span class="va">panel</span>, vars <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"V1"</span>, <span class="st">"V2"</span>, <span class="st">"V3"</span>, <span class="st">"V4"</span><span class="op">)</span>, id <span class="op">=</span> <span class="st">"id"</span><span class="op">)</span></span>
-<span><span class="va">fit_g</span>   <span class="co"># group-level paths and the per-person networks</span></span></code></pre></div>
+<span><span class="va">fit_g</span>   <span class="co"># group paths and the network of each person</span></span></code></pre></div>
 <hr>
 </div>
 <div class="section level2">
-<h2 id="cluster--group-networks">Cluster &amp; Group Networks<a class="anchor" aria-label="anchor" href="#cluster--group-networks"></a>
+<h2 id="clusters-and-mixtures">Clusters and Mixtures<a class="anchor" aria-label="anchor" href="#clusters-and-mixtures"></a>
 </h2>
 <div class="section level3">
 <h3 id="sequence-clustering">Sequence Clustering<a class="anchor" aria-label="anchor" href="#sequence-clustering"></a>
 </h3>
-<p><code><a href="reference/build_clusters.html">build_clusters()</a></code> partitions sequences into <code>k</code> groups using pairwise distance matrices. Supports 9 distance metrics, PAM and 8 hierarchical linkage methods. Both <code><a href="reference/build_clusters.html">build_clusters()</a></code> and <code><a href="reference/build_mmm.html">build_mmm()</a></code> results pass directly to <code><a href="reference/build_network.html">build_network()</a></code>, which returns one network per cluster.</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<p><code><a href="reference/build_clusters.html">build_clusters()</a></code> partitions sequences into <code>k</code> groups from a distance matrix (9 distances; PAM or 8 hierarchical linkages). <code><a href="reference/cluster_choice.html">cluster_choice()</a></code> compares numbers of clusters. The result of <code><a href="reference/build_clusters.html">build_clusters()</a></code> or <code><a href="reference/build_mmm.html">build_mmm()</a></code> passed to <code><a href="reference/build_network.html">build_network()</a></code> gives one network per cluster.</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">clust</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/build_clusters.html">build_clusters</a></span><span class="op">(</span><span class="va">net</span>, k <span class="op">=</span> <span class="fl">3</span>, dissimilarity <span class="op">=</span> <span class="st">"hamming"</span>, method <span class="op">=</span> <span class="st">"ward.D2"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">clust</span>, type <span class="op">=</span> <span class="st">"silhouette"</span><span class="op">)</span></span>
 <span><span class="va">cluster_nets</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/build_network.html">build_network</a></span><span class="op">(</span><span class="va">clust</span>, method <span class="op">=</span> <span class="st">"tna"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
-<h3 id="mixed-markov-models">Mixed Markov Models<a class="anchor" aria-label="anchor" href="#mixed-markov-models"></a>
+<h3 id="mixture-markov-models">Mixture Markov Models<a class="anchor" aria-label="anchor" href="#mixture-markov-models"></a>
 </h3>
-<p><code><a href="reference/build_mmm.html">build_mmm()</a></code> discovers latent subgroups of sequences that share similar transition dynamics via EM — without pre-labelling groups. BIC/AIC/ICL model selection via <code><a href="reference/compare_mmm.html">compare_mmm()</a></code>.</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">mmm</span>   <span class="op">&lt;-</span> <span class="fu"><a href="reference/build_mmm.html">build_mmm</a></span><span class="op">(</span><span class="va">net</span>, k <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
-<span><span class="fu"><a href="reference/compare_mmm.html">compare_mmm</a></span><span class="op">(</span><span class="va">net</span>, k <span class="op">=</span> <span class="fl">2</span><span class="op">:</span><span class="fl">4</span><span class="op">)</span>   <span class="co"># BIC / AIC / ICL per k</span></span>
+<p><code><a href="reference/build_mmm.html">build_mmm()</a></code> fits a mixture of Markov chains by EM; <code><a href="reference/compare_mmm.html">compare_mmm()</a></code> gives BIC, AIC and ICL per number of components.</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">mmm</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/build_mmm.html">build_mmm</a></span><span class="op">(</span><span class="va">net</span>, k <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
+<span><span class="fu"><a href="reference/compare_mmm.html">compare_mmm</a></span><span class="op">(</span><span class="va">net</span>, k <span class="op">=</span> <span class="fl">2</span><span class="op">:</span><span class="fl">4</span><span class="op">)</span></span>
 <span><span class="va">mmm_nets</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/build_network.html">build_network</a></span><span class="op">(</span><span class="va">mmm</span>, method <span class="op">=</span> <span class="st">"tna"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
-<h3 id="mcml">MCML<a class="anchor" aria-label="anchor" href="#mcml"></a>
+<h3 id="multi-cluster-multi-level-networks">Multi-Cluster Multi-Level Networks<a class="anchor" aria-label="anchor" href="#multi-cluster-multi-level-networks"></a>
 </h3>
-<p><code><a href="reference/build_mcml.html">build_mcml()</a></code> decomposes a network into macro (between-cluster) and micro (within-cluster) layers when nodes belong to known groups — here the three code families of <code>human_long</code>.</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<p><code><a href="reference/build_mcml.html">build_mcml()</a></code> splits a network into a between-cluster (macro) and within-cluster layers when the states belong to known groups, here the three code families of <code>human_long</code>.</p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">families</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>Directive     <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Command"</span>, <span class="st">"Request"</span>, <span class="st">"Specify"</span><span class="op">)</span>,</span>
 <span>                 Evaluative    <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Correct"</span>, <span class="st">"Frustrate"</span>, <span class="st">"Refine"</span>, <span class="st">"Verify"</span><span class="op">)</span>,</span>
 <span>                 Metacognitive <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Inquire"</span>, <span class="st">"Interrupt"</span><span class="op">)</span><span class="op">)</span></span>
@@ -385,38 +459,41 @@
 <div class="section level2">
 <h2 id="higher-order-networks">Higher-Order Networks<a class="anchor" aria-label="anchor" href="#higher-order-networks"></a>
 </h2>
-<p>Capture dependencies beyond first-order transitions:</p>
 <table class="table">
 <colgroup>
-<col width="41%">
-<col width="58%">
+<col width="47%">
+<col width="52%">
 </colgroup>
 <thead><tr>
 <th>Function</th>
-<th>What it finds</th>
+<th>Estimates</th>
 </tr></thead>
 <tbody>
 <tr>
 <td><code><a href="reference/build_hon.html">build_hon()</a></code></td>
-<td>Variable-length memory paths</td>
+<td>Higher-order network with variable-length memory</td>
 </tr>
 <tr>
 <td><code><a href="reference/build_honem.html">build_honem()</a></code></td>
-<td>Higher-order network embedding</td>
+<td>Embedding of a higher-order network</td>
 </tr>
 <tr>
 <td><code><a href="reference/build_hypa.html">build_hypa()</a></code></td>
-<td>Statistically anomalous paths (over/under-represented)</td>
+<td>Paths more or less frequent than a strength-preserving null</td>
 </tr>
 <tr>
 <td><code><a href="reference/build_mogen.html">build_mogen()</a></code></td>
-<td>Optimal Markov order per node</td>
+<td>Multi-order generative model and its optimal order</td>
+</tr>
+<tr>
+<td><code><a href="reference/build_hypergraph.html">build_hypergraph()</a></code></td>
+<td>Hypergraph of states that occur together</td>
 </tr>
 </tbody>
 </table>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">hon</span>  <span class="op">&lt;-</span> <span class="fu"><a href="reference/build_hon.html">build_hon</a></span><span class="op">(</span><span class="va">net</span>, max_order <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
-<span><span class="fu"><a href="reference/pathways.html">pathways</a></span><span class="op">(</span><span class="va">hon</span><span class="op">)</span>                      <span class="co"># arrow-notation path strings</span></span>
+<span><span class="fu"><a href="reference/pathways.html">pathways</a></span><span class="op">(</span><span class="va">hon</span><span class="op">)</span>                      <span class="co"># paths in arrow notation</span></span>
 <span><span class="va">hypa</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/build_hypa.html">build_hypa</a></span><span class="op">(</span><span class="va">net</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">hypa</span><span class="op">)</span>                      <span class="co"># over- and under-represented paths with p-values</span></span></code></pre></div>
 <hr>
@@ -424,112 +501,161 @@
 <div class="section level2">
 <h2 id="topological-analysis">Topological Analysis<a class="anchor" aria-label="anchor" href="#topological-analysis"></a>
 </h2>
-<p>Go beyond edges — find cliques, holes, and high-order connectivity using tools from algebraic topology.</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">sc</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/build_simplicial.html">build_simplicial</a></span><span class="op">(</span><span class="va">net</span>, type <span class="op">=</span> <span class="st">"clique"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="reference/betti_numbers.html">betti_numbers</a></span><span class="op">(</span><span class="va">sc</span><span class="op">)</span>          <span class="co"># connected components, cycles, voids</span></span>
-<span><span class="fu"><a href="reference/euler_characteristic.html">euler_characteristic</a></span><span class="op">(</span><span class="va">sc</span><span class="op">)</span></span>
-<span><span class="va">ph</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/persistent_homology.html">persistent_homology</a></span><span class="op">(</span><span class="va">net</span><span class="op">)</span>  <span class="co"># track topology across thresholds</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">ph</span><span class="op">)</span></span>
-<span><span class="va">qa</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/q_analysis.html">q_analysis</a></span><span class="op">(</span><span class="va">sc</span><span class="op">)</span>       <span class="co"># Atkin's Q-connectivity structure vectors</span></span></code></pre></div>
-<hr>
-</div>
-<div class="section level2">
-<h2 id="sequence-visualization">Sequence Visualization<a class="anchor" aria-label="anchor" href="#sequence-visualization"></a>
-</h2>
-<p>Visualize raw sequence data as index plots or state distribution charts — before or after clustering.</p>
+<p>Simplicial complexes built from a network: Betti numbers, the Euler characteristic, persistent homology across thresholds and Atkin’s Q-analysis.</p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Sequence heatmap: one row per sequence, coloured by state, sorted by similarity</span></span>
-<span><span class="fu"><a href="reference/sequence_plot.html">sequence_plot</a></span><span class="op">(</span><span class="va">net</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># After clustering: faceted by cluster</span></span>
-<span><span class="va">clust</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/build_clusters.html">build_clusters</a></span><span class="op">(</span><span class="va">net</span>, k <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
-<span><span class="fu"><a href="reference/sequence_plot.html">sequence_plot</a></span><span class="op">(</span><span class="va">clust</span>, type <span class="op">=</span> <span class="st">"index"</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># State distribution over time</span></span>
-<span><span class="fu"><a href="reference/distribution_plot.html">distribution_plot</a></span><span class="op">(</span><span class="va">net</span>, geom <span class="op">=</span> <span class="st">"area"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="reference/distribution_plot.html">distribution_plot</a></span><span class="op">(</span><span class="va">clust</span>, geom <span class="op">=</span> <span class="st">"bar"</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">sc</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/build_simplicial.html">build_simplicial</a></span><span class="op">(</span><span class="va">net</span>, type <span class="op">=</span> <span class="st">"clique"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="reference/betti_numbers.html">betti_numbers</a></span><span class="op">(</span><span class="va">sc</span><span class="op">)</span>          <span class="co"># components, cycles, voids</span></span>
+<span><span class="fu"><a href="reference/euler_characteristic.html">euler_characteristic</a></span><span class="op">(</span><span class="va">sc</span><span class="op">)</span></span>
+<span><span class="va">ph</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/persistent_homology.html">persistent_homology</a></span><span class="op">(</span><span class="va">net</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">ph</span><span class="op">)</span></span>
+<span><span class="va">qa</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/q_analysis.html">q_analysis</a></span><span class="op">(</span><span class="va">sc</span><span class="op">)</span>       <span class="co"># Q-connectivity structure vectors</span></span></code></pre></div>
 <hr>
 </div>
 <div class="section level2">
-<h2 id="sequence-pattern-comparison">Sequence Pattern Comparison<a class="anchor" aria-label="anchor" href="#sequence-pattern-comparison"></a>
+<h2 id="sequence-plots">Sequence Plots<a class="anchor" aria-label="anchor" href="#sequence-plots"></a>
 </h2>
-<p><code><a href="reference/sequence_compare.html">sequence_compare()</a></code> extracts all k-gram patterns from grouped sequences, counts per-group frequencies, and tests statistical differences via permutation — answering the question “do these groups actually behave differently, and where?”</p>
+<p>Index plots and state distributions, for the whole data, by group or by cluster.</p>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/sequence_compare.html">sequence_compare</a></span><span class="op">(</span><span class="va">group_nets</span>, sub <span class="op">=</span> <span class="fl">2</span><span class="op">:</span><span class="fl">4</span>, test <span class="op">=</span> <span class="st">"chisq"</span>, adjust <span class="op">=</span> <span class="st">"fdr"</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="fu"><a href="reference/sequence_plot.html">sequence_plot</a></span><span class="op">(</span><span class="va">net</span><span class="op">)</span>                       <span class="co"># one row per sequence, sorted by similarity</span></span>
+<span><span class="fu"><a href="reference/sequence_plot.html">sequence_plot</a></span><span class="op">(</span><span class="va">clust</span>, type <span class="op">=</span> <span class="st">"index"</span><span class="op">)</span>     <span class="co"># one panel per cluster</span></span>
+<span><span class="fu"><a href="reference/distribution_plot.html">distribution_plot</a></span><span class="op">(</span><span class="va">net</span>, geom <span class="op">=</span> <span class="st">"area"</span><span class="op">)</span>    <span class="co"># state distribution over positions</span></span>
+<span><span class="fu"><a href="reference/sequence_plot.html">sequence_plot</a></span><span class="op">(</span><span class="va">daily_actions</span>, actor <span class="op">=</span> <span class="st">"student"</span>, action <span class="op">=</span> <span class="st">"action"</span>,</span>
+<span>              periods <span class="op">=</span> <span class="st">"day"</span><span class="op">)</span>           <span class="co"># actions per day</span></span></code></pre></div>
+<hr>
+</div>
+<div class="section level2">
+<h2 id="sequence-patterns-and-indices">Sequence Patterns and Indices<a class="anchor" aria-label="anchor" href="#sequence-patterns-and-indices"></a>
+</h2>
+<p><code><a href="reference/sequence_patterns.html">sequence_patterns()</a></code> counts contiguous, gapped and repeated patterns and tests them between groups. <code><a href="reference/sequence_metrics.html">sequence_metrics()</a></code> computes 23 indices per sequence (entropy, turbulence, complexity, spells and others) and compares them between groups. <code><a href="reference/sequence_compare.html">sequence_compare()</a></code> tests k-gram frequencies between groups.</p>
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="reference/sequence_patterns.html">sequence_patterns</a></span><span class="op">(</span><span class="va">trajectories</span>, len <span class="op">=</span> <span class="fl">2</span><span class="op">:</span><span class="fl">3</span>, top <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span>
+<span><span class="fu"><a href="reference/sequence_patterns.html">sequence_patterns</a></span><span class="op">(</span><span class="va">group_regulation_long</span>, actor <span class="op">=</span> <span class="st">"Actor"</span>, action <span class="op">=</span> <span class="st">"Action"</span>,</span>
+<span>                  time <span class="op">=</span> <span class="st">"Time"</span>, len <span class="op">=</span> <span class="fl">2</span>, group <span class="op">=</span> <span class="st">"Achiever"</span>, top <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="reference/sequence_metrics.html">sequence_metrics</a></span><span class="op">(</span><span class="va">trajectories</span><span class="op">)</span></span>
+<span><span class="fu"><a href="reference/sequence_metrics.html">sequence_metrics</a></span><span class="op">(</span><span class="va">phase_nets</span>, iter <span class="op">=</span> <span class="fl">99</span><span class="op">)</span>     <span class="co"># early versus late halves</span></span>
+<span></span>
+<span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/sequence_compare.html">sequence_compare</a></span><span class="op">(</span><span class="va">group_nets</span>, sub <span class="op">=</span> <span class="fl">2</span><span class="op">:</span><span class="fl">4</span>, test <span class="op">=</span> <span class="st">"chisq"</span>, adjust <span class="op">=</span> <span class="st">"fdr"</span><span class="op">)</span></span>
 <span><span class="va">res</span>                                 <span class="co"># one row per pattern and group, rounded</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">res</span><span class="op">)</span>                        <span class="co"># every row as a data frame</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">res</span><span class="op">)</span>                           <span class="co"># back-to-back pyramid chart</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">res</span>, style <span class="op">=</span> <span class="st">"heatmap"</span><span class="op">)</span>        <span class="co"># heatmap for many patterns</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">res</span><span class="op">)</span>                           <span class="co"># back-to-back pyramid</span></span></code></pre></div>
 <hr>
 </div>
 <div class="section level2">
-<h2 id="association-rule-mining">Association Rule Mining<a class="anchor" aria-label="anchor" href="#association-rule-mining"></a>
+<h2 id="transition-entropy">Transition Entropy<a class="anchor" aria-label="anchor" href="#transition-entropy"></a>
 </h2>
-<p><code><a href="reference/association_rules.html">association_rules()</a></code> mines “if A then B” patterns from sequences or binary matrices using the Apriori algorithm. Returns support, confidence, lift, and conviction for every rule above a threshold.</p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<p><code><a href="reference/transition_entropy.html">transition_entropy()</a></code> gives the entropy rate of a transition network and each state’s share of it (Cover &amp; Thomas, 2006; Krejtz et al., 2015). <code><a href="reference/entropy_trajectory.html">entropy_trajectory()</a></code> follows the entropy over sliding windows, with a bootstrap band per group.</p>
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">traj_net</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/build_network.html">build_network</a></span><span class="op">(</span><span class="va">trajectories</span>, method <span class="op">=</span> <span class="st">"relative"</span><span class="op">)</span></span>
+<span><span class="va">te</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/transition_entropy.html">transition_entropy</a></span><span class="op">(</span><span class="va">traj_net</span><span class="op">)</span></span>
+<span><span class="va">te</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">te</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">tr</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/entropy_trajectory.html">entropy_trajectory</a></span><span class="op">(</span><span class="va">group_regulation_long</span>, action <span class="op">=</span> <span class="st">"Action"</span>,</span>
+<span>                         actor <span class="op">=</span> <span class="st">"Actor"</span>, time <span class="op">=</span> <span class="st">"Time"</span>, group <span class="op">=</span> <span class="st">"Achiever"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">tr</span><span class="op">)</span></span></code></pre></div>
+<hr>
+</div>
+<div class="section level2">
+<h2 id="markov-chains">Markov Chains<a class="anchor" aria-label="anchor" href="#markov-chains"></a>
+</h2>
+<p><code><a href="reference/markov_order_test.html">markov_order_test()</a></code> tests how many previous states the next one depends on. <code><a href="reference/markov_stability.html">markov_stability()</a></code> reports, per state, persistence, sojourn time, stationary probability, return time and how quickly it is reached from the other states. <code><a href="reference/passage_time.html">passage_time()</a></code> gives the mean first-passage time between every pair of states, and <code><a href="reference/chain_structure.html">chain_structure()</a></code> the communicating classes and absorption.</p>
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="reference/markov_order_test.html">markov_order_test</a></span><span class="op">(</span><span class="va">trajectories</span>, max_order <span class="op">=</span> <span class="fl">2</span>, n_perm <span class="op">=</span> <span class="fl">99</span>, seed <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">stab</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/markov_stability.html">markov_stability</a></span><span class="op">(</span><span class="va">net</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">stab</span><span class="op">)</span>             <span class="co"># one row per state</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">stab</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">pt</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/passage_time.html">passage_time</a></span><span class="op">(</span><span class="va">net</span><span class="op">)</span></span>
+<span><span class="va">pt</span>                        <span class="co"># expected steps from state i to state j</span></span>
+<span></span>
+<span><span class="fu"><a href="reference/chain_structure.html">chain_structure</a></span><span class="op">(</span><span class="va">traj_net</span><span class="op">)</span></span></code></pre></div>
+<hr>
+</div>
+<div class="section level2">
+<h2 id="stability-landscapes">Stability Landscapes<a class="anchor" aria-label="anchor" href="#stability-landscapes"></a>
+</h2>
+<p><code><a href="reference/stability_landscape.html">stability_landscape()</a></code> draws each state as a cup whose depth is the log of the expected stay in it, with bootstrap intervals. <code><a href="reference/landscape_trend.html">landscape_trend()</a></code> follows the depths over windows of positions or along a covariate.</p>
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">land</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/stability_landscape.html">stability_landscape</a></span><span class="op">(</span><span class="va">traj_net</span>,</span>
+<span>  states <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Disengaged"</span>, <span class="st">"Average"</span>, <span class="st">"Active"</span><span class="op">)</span>, iter <span class="op">=</span> <span class="fl">50</span>, seed <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
+<span><span class="va">land</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">land</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">trend</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/landscape_trend.html">landscape_trend</a></span><span class="op">(</span><span class="va">traj_net</span>, along <span class="op">=</span> <span class="st">"phase"</span>,</span>
+<span>  states <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Disengaged"</span>, <span class="st">"Average"</span>, <span class="st">"Active"</span><span class="op">)</span>, iter <span class="op">=</span> <span class="fl">50</span>, seed <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">trend</span><span class="op">)</span></span></code></pre></div>
+<hr>
+</div>
+<div class="section level2">
+<h2 id="comparing-networks">Comparing Networks<a class="anchor" aria-label="anchor" href="#comparing-networks"></a>
+</h2>
+<p><code><a href="reference/compare_networks.html">compare_networks()</a></code> compares every pair of networks in a group: edge, node and global differences, with a permutation or Bayesian test. <code><a href="reference/permutation.html">permutation()</a></code> tests the edge differences between two networks, and <code><a href="reference/nct.html">nct()</a></code> is the Network Comparison Test for psychological networks (van Borkulo et al., 2022).</p>
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">courses</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/build_network.html">build_network</a></span><span class="op">(</span><span class="va">group_regulation_long</span>, method <span class="op">=</span> <span class="st">"relative"</span>,</span>
+<span>                         actor <span class="op">=</span> <span class="st">"Actor"</span>, action <span class="op">=</span> <span class="st">"Action"</span>, time <span class="op">=</span> <span class="st">"Time"</span>,</span>
+<span>                         group <span class="op">=</span> <span class="st">"Course"</span><span class="op">)</span></span>
+<span><span class="va">cmp</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/compare_networks.html">compare_networks</a></span><span class="op">(</span><span class="va">courses</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">cmp</span><span class="op">)</span></span>
+<span><span class="fu"><a href="reference/comparison_tables.html">edge_differences</a></span><span class="op">(</span><span class="va">cmp</span>, pair <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"A"</span>, <span class="st">"B"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">cmp</span>, type <span class="op">=</span> <span class="st">"difference"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">perm</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/permutation.html">permutation</a></span><span class="op">(</span><span class="va">group_nets</span>, iter <span class="op">=</span> <span class="fl">1000</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">perm</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">nct_res</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/nct.html">nct</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">srl_strategies</span>, <span class="fl">125</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">tail</a></span><span class="op">(</span><span class="va">srl_strategies</span>, <span class="fl">125</span><span class="op">)</span>, iter <span class="op">=</span> <span class="fl">500</span><span class="op">)</span></span>
+<span><span class="va">nct_res</span>                   <span class="co"># structure, global strength and edge tests</span></span></code></pre></div>
+<div class="section level3">
+<h3 id="counts-nested-in-actors">Counts Nested in Actors<a class="anchor" aria-label="anchor" href="#counts-nested-in-actors"></a>
+</h3>
+<p><code><a href="reference/mosaic_test.html">mosaic_test()</a></code> tests a state-by-group table when the counts are nested in actors (Rao-Scott, Donner-Klar, CMH, GEE or a mixed model); <code><a href="reference/mosaic_plot.html">mosaic_plot()</a></code> draws it with residuals.</p>
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">counts</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/build_network.html">build_network</a></span><span class="op">(</span><span class="va">group_regulation_long</span>, method <span class="op">=</span> <span class="st">"frequency"</span>,</span>
+<span>                        actor <span class="op">=</span> <span class="st">"Actor"</span>, action <span class="op">=</span> <span class="st">"Action"</span>, time <span class="op">=</span> <span class="st">"Time"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="reference/mosaic_test.html">mosaic_test</a></span><span class="op">(</span><span class="va">counts</span>, method <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"chisq"</span>, <span class="st">"rao_scott"</span><span class="op">)</span>, actor <span class="op">=</span> <span class="st">"Group"</span><span class="op">)</span></span></code></pre></div>
+<hr>
+</div>
+</div>
+<div class="section level2">
+<h2 id="association-rules">Association Rules<a class="anchor" aria-label="anchor" href="#association-rules"></a>
+</h2>
+<p><code><a href="reference/association_rules.html">association_rules()</a></code> mines “if A then B” rules from sequences or binary matrices with the Apriori algorithm, with support, confidence, lift and conviction.</p>
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">rules</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/association_rules.html">association_rules</a></span><span class="op">(</span><span class="va">net</span>, min_support <span class="op">=</span> <span class="fl">0.05</span>, min_confidence <span class="op">=</span> <span class="fl">0.6</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">rules</span><span class="op">)</span>                    <span class="co"># tidy data.frame, sorted by lift</span></span>
-<span><span class="fu"><a href="reference/pathways.html">pathways</a></span><span class="op">(</span><span class="va">rules</span><span class="op">)</span>                   <span class="co"># rules as arrow-notation strings</span></span></code></pre></div>
-<p>A binary transaction matrix (rows = transactions, columns = items) is accepted as well.</p>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">rules</span><span class="op">)</span>                    <span class="co"># one row per rule, sorted by lift</span></span>
+<span><span class="fu"><a href="reference/pathways.html">pathways</a></span><span class="op">(</span><span class="va">rules</span><span class="op">)</span>                   <span class="co"># rules in arrow notation</span></span></code></pre></div>
 <hr>
 </div>
 <div class="section level2">
 <h2 id="link-prediction">Link Prediction<a class="anchor" aria-label="anchor" href="#link-prediction"></a>
 </h2>
-<p><code><a href="reference/predict_links.html">predict_links()</a></code> scores all unobserved node pairs using structural similarity, identifying which missing connections are most likely to exist. <code><a href="reference/evaluate_links.html">evaluate_links()</a></code> computes AUC, precision, and recall against held-out edges.</p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Keep only transitions with probability &gt;= 0.1, then predict the rest</span></span>
+<p><code><a href="reference/predict_links.html">predict_links()</a></code> scores every unobserved pair of states by structural similarity; <code><a href="reference/evaluate_links.html">evaluate_links()</a></code> gives AUC, precision and recall against held-out edges.</p>
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Keep transitions with probability &gt;= 0.1, then predict the rest</span></span>
 <span><span class="va">sparse</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/build_network.html">build_network</a></span><span class="op">(</span><span class="va">human_long</span>, method <span class="op">=</span> <span class="st">"tna"</span>, action <span class="op">=</span> <span class="st">"code"</span>,</span>
 <span>                        actor <span class="op">=</span> <span class="st">"session_id"</span>, time <span class="op">=</span> <span class="st">"timestamp"</span>,</span>
 <span>                        threshold <span class="op">=</span> <span class="fl">0.1</span><span class="op">)</span></span>
 <span><span class="va">preds</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/predict_links.html">predict_links</a></span><span class="op">(</span><span class="va">sparse</span><span class="op">)</span>    <span class="co"># common neighbours, Adamic-Adar, Katz, ...</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">preds</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Do the predictions recover the weaker transitions (&gt;= 0.05) that were cut?</span></span>
+<span><span class="co"># Do the predictions recover the transitions between 0.05 and 0.1 that were cut?</span></span>
 <span><span class="fu"><a href="reference/evaluate_links.html">evaluate_links</a></span><span class="op">(</span><span class="va">preds</span>, <span class="fu"><a href="reference/extract_edges.html">extract_edges</a></span><span class="op">(</span><span class="va">net</span>, threshold <span class="op">=</span> <span class="fl">0.05</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <hr>
 </div>
 <div class="section level2">
-<h2 id="markov-chain-analysis">Markov Chain Analysis<a class="anchor" aria-label="anchor" href="#markov-chain-analysis"></a>
+<h2 id="resampling">Resampling<a class="anchor" aria-label="anchor" href="#resampling"></a>
 </h2>
-<p><code><a href="reference/markov_stability.html">markov_stability()</a></code> reports, per state, how sticky it is (persistence, sojourn time), how much of the long run it takes (stationary probability, return time) and how quickly it is reached from the other states. <code><a href="reference/passage_time.html">passage_time()</a></code> computes the mean first-passage time between every pair of states.</p>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">stab</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/markov_stability.html">markov_stability</a></span><span class="op">(</span><span class="va">net</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">stab</span><span class="op">)</span>             <span class="co"># one row per state</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">stab</span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">pt</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/passage_time.html">passage_time</a></span><span class="op">(</span><span class="va">net</span><span class="op">)</span></span>
-<span><span class="va">pt</span>                        <span class="co"># expected steps to reach state j from state i</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">pt</span><span class="op">)</span></span></code></pre></div>
-<hr>
-</div>
-<div class="section level2">
-<h2 id="statistical-validation">Statistical Validation<a class="anchor" aria-label="anchor" href="#statistical-validation"></a>
-</h2>
-<p>Every network type shares the same validation pipeline.</p>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Bootstrap confidence intervals</span></span>
-<span><span class="va">boot</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/bootstrap_network.html">bootstrap_network</a></span><span class="op">(</span><span class="va">net</span>, iter <span class="op">=</span> <span class="fl">1000</span><span class="op">)</span></span>
+<p>Bootstrap intervals, split-half reliability and centrality stability resample sequences or actors. They apply to every network whose data can be resampled; latency networks take only the bootstrap, and one-hot data need an actor or session to resample.</p>
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">boot</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/bootstrap_network.html">bootstrap_network</a></span><span class="op">(</span><span class="va">net</span>, iter <span class="op">=</span> <span class="fl">1000</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">boot</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Permutation test: do high and low achievers differ?</span></span>
-<span><span class="va">perm</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/permutation.html">permutation</a></span><span class="op">(</span><span class="va">group_nets</span>, iter <span class="op">=</span> <span class="fl">1000</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">perm</span><span class="op">)</span></span>
+<span><span class="fu"><a href="reference/network_reliability.html">network_reliability</a></span><span class="op">(</span><span class="va">net</span><span class="op">)</span>          <span class="co"># split-half reliability</span></span>
+<span><span class="fu"><a href="reference/centrality_stability.html">centrality_stability</a></span><span class="op">(</span><span class="va">net</span><span class="op">)</span>         <span class="co"># CS-coefficient by case-dropping</span></span>
 <span></span>
-<span><span class="co"># Network Comparison Test (NCT): formal test of structure + global strength</span></span>
-<span><span class="va">nct_res</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/nct.html">nct</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">srl_strategies</span>, <span class="fl">125</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">tail</a></span><span class="op">(</span><span class="va">srl_strategies</span>, <span class="fl">125</span><span class="op">)</span>, iter <span class="op">=</span> <span class="fl">500</span><span class="op">)</span></span>
-<span><span class="va">nct_res</span>                   <span class="co"># M (structure), S (global strength), per-edge p-values</span></span>
-<span></span>
-<span><span class="co"># Split-half reliability</span></span>
-<span><span class="fu"><a href="reference/network_reliability.html">network_reliability</a></span><span class="op">(</span><span class="va">net</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Centrality stability (CS-coefficient)</span></span>
-<span><span class="fu"><a href="reference/centrality_stability.html">centrality_stability</a></span><span class="op">(</span><span class="va">net</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Glasso-specific bootstrap (edge inclusion + centrality CIs)</span></span>
 <span><span class="va">boot_gl</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/boot_glasso.html">boot_glasso</a></span><span class="op">(</span><span class="va">net_gl</span>, iter <span class="op">=</span> <span class="fl">1000</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">boot_gl</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">boot_gl</span><span class="op">)</span>                  <span class="co"># edge inclusion and centrality intervals</span></span></code></pre></div>
 <table class="table">
 <colgroup>
 <col width="52%">
@@ -542,15 +668,7 @@
 <tbody>
 <tr>
 <td><code><a href="reference/bootstrap_network.html">bootstrap_network()</a></code></td>
-<td>Bootstrap CIs and p-values for each edge</td>
-</tr>
-<tr>
-<td><code><a href="reference/permutation.html">permutation()</a></code></td>
-<td>Edge-level comparison between two networks</td>
-</tr>
-<tr>
-<td><code><a href="reference/nct.html">nct()</a></code></td>
-<td>Formal Network Comparison Test (global strength + structure)</td>
+<td>Bootstrap intervals and p-values for each edge</td>
 </tr>
 <tr>
 <td><code><a href="reference/network_reliability.html">network_reliability()</a></code></td>
@@ -558,11 +676,15 @@
 </tr>
 <tr>
 <td><code><a href="reference/centrality_stability.html">centrality_stability()</a></code></td>
-<td>CS-coefficient via case-dropping</td>
+<td>CS-coefficient by case-dropping (Epskamp et al., 2018)</td>
+</tr>
+<tr>
+<td><code><a href="reference/casedrop_reliability.html">casedrop_reliability()</a></code></td>
+<td>Edge-weight correlation as cases are dropped</td>
 </tr>
 <tr>
 <td><code><a href="reference/boot_glasso.html">boot_glasso()</a></code></td>
-<td>Edge inclusion, centrality CIs, difference tests for glasso networks</td>
+<td>Edge inclusion, centrality intervals and difference tests for graphical lasso networks</td>
 </tr>
 </tbody>
 </table>
@@ -583,44 +705,39 @@
 <tbody>
 <tr>
 <td><code>human_long</code></td>
-<td>10,796 human actions across 429 human-AI coding sessions</td>
+<td>10,796 human actions in 429 human-AI coding sessions</td>
 </tr>
 <tr>
 <td><code>ai_long</code></td>
-<td>8,551 AI actions from 428 of the same sessions</td>
-</tr>
-<tr>
-<td><code>srl_strategies</code></td>
-<td>Simulated SRL strategy frequencies — 250 students, 9 strategies</td>
-</tr>
-<tr>
-<td><code>chatgpt_srl</code></td>
-<td>1,000 ChatGPT-generated responses scored on 5 SRL scales</td>
-</tr>
-<tr>
-<td><code>learning_activities</code></td>
-<td>Simulated binary learning activity indicators — 200 students × 30 time points, 6 activities</td>
+<td>8,551 AI actions in 428 of the same sessions</td>
 </tr>
 <tr>
 <td><code>group_regulation_long</code></td>
-<td>27,533 group regulation actions with achievement and course covariates</td>
+<td>27,533 group regulation actions with achievement, group and course</td>
 </tr>
 <tr>
 <td><code>trajectories</code></td>
-<td>138 students × 15 weeks of engagement states (<code>NA</code> = drop-out)</td>
+<td>138 students × 15 courses of engagement states (<code>NA</code> = drop-out)</td>
+</tr>
+<tr>
+<td><code>daily_actions</code></td>
+<td>Simulated: 2,280 learning actions of 30 students over seven days</td>
+</tr>
+<tr>
+<td><code>srl_strategies</code></td>
+<td>Simulated: 9 self-regulated learning strategies of 250 students</td>
+</tr>
+<tr>
+<td><code>chatgpt_srl</code></td>
+<td>1,000 ChatGPT-generated responses scored on 5 self-regulated learning scales</td>
+</tr>
+<tr>
+<td><code>learning_activities</code></td>
+<td>Simulated: 6 binary learning activities of 200 students × 30 time points</td>
 </tr>
 </tbody>
 </table>
 <hr>
-</div>
-<div class="section level2">
-<h2 id="documentation">Documentation<a class="anchor" aria-label="anchor" href="#documentation"></a>
-</h2>
-<ul>
-<li><a href="https://pak.dynasite.org/Nestimate/articles/transition-networks.html">Transition Networks</a></li>
-<li><a href="https://pak.dynasite.org/Nestimate/articles/clustering.html">Clustering &amp; Multilevel</a></li>
-<li><a href="https://pak.dynasite.org/Nestimate/reference/">Full Reference</a></li>
-</ul>
 </div>
 <div class="section level2">
 <h2 id="citation">Citation<a class="anchor" aria-label="anchor" href="#citation"></a>
@@ -629,16 +746,18 @@
 <blockquote>
 <p>Saqr, M., López-Pernas, S., &amp; Misiejuk, K. (2026). Nestimate: An R package for dynamic, probabilistic, and high order network analysis. <em>Applied Psychological Measurement</em>. <a href="https://doi.org/10.1177/01466216261472019" class="external-link uri">https://doi.org/10.1177/01466216261472019</a></p>
 </blockquote>
-<p>and, for the methods:</p>
-<blockquote>
-<p>Saqr, M., López-Pernas, S., Törmänen, T., Kaliisa, R., Misiejuk, K., &amp; Tikka, S. (2025). Transition network analysis: A novel framework for modeling, visualizing, and identifying the temporal patterns of learners and learning processes. In <em>Proceedings of the 15th International Learning Analytics and Knowledge Conference (LAK25)</em> (pp. 351–361). ACM. <a href="https://doi.org/10.1145/3706468.3706513" class="external-link uri">https://doi.org/10.1145/3706468.3706513</a></p>
-</blockquote>
-<blockquote>
-<p>Saqr, M., Beck, E., &amp; López-Pernas, S. (2024). Psychological networks: A modern approach to analysis of learning and complex learning processes. In M. Saqr &amp; S. López-Pernas (Eds.), <em>Learning analytics methods and tutorials: A practical guide using R</em> (pp. 639–671). Springer. <a href="https://doi.org/10.1007/978-3-031-54464-4_19" class="external-link uri">https://doi.org/10.1007/978-3-031-54464-4_19</a></p>
-</blockquote>
-<blockquote>
-<p>Saqr, M., &amp; López-Pernas, S. (Eds.). (2024). <em>Learning analytics methods and tutorials: A practical guide using R</em>. Springer. <a href="https://doi.org/10.1007/978-3-031-54464-4" class="external-link uri">https://doi.org/10.1007/978-3-031-54464-4</a></p>
-</blockquote>
+<p>Saqr, M., López-Pernas, S., &amp; Misiejuk, K. (2026). <em>Network estimation and analysis with Nestimate</em>. Nestimate. <a href="https://pak.dynasite.org/Nestimate/articles/transition-networks.html">HTML</a> · <a href="https://pak.dynasite.org/Nestimate/pdf/transition-networks.pdf">PDF</a></p>
+<p>Saqr, M. (2026). <em>Transition matrix entropy</em>. Nestimate. <a href="https://pak.dynasite.org/Nestimate/articles/transition-entropy.html">HTML</a> · <a href="https://pak.dynasite.org/Nestimate/pdf/transition-entropy.pdf">PDF</a></p>
+<p>Saqr, M., López-Pernas, S., &amp; Misiejuk, K. (2026). <em>Markov stability analysis</em>. Nestimate. <a href="https://pak.dynasite.org/Nestimate/articles/markov-stability.html">HTML</a> · <a href="https://pak.dynasite.org/Nestimate/pdf/markov-stability.pdf">PDF</a></p>
+<p>Saqr, M., López-Pernas, S., &amp; Misiejuk, K. (2026). <em>Comparing sequences between groups: Early vs late human-AI interactions</em>. Nestimate. <a href="https://pak.dynasite.org/Nestimate/articles/sequence-comparison.html">HTML</a> · <a href="https://pak.dynasite.org/Nestimate/pdf/sequence-comparison.pdf">PDF</a></p>
+<p>Saqr, M., López-Pernas, S., &amp; Misiejuk, K. (2026). <em>Sequence plots</em>. Nestimate. <a href="https://pak.dynasite.org/Nestimate/articles/sequence-plots.html">HTML</a> · <a href="https://pak.dynasite.org/Nestimate/pdf/sequence-plots.pdf">PDF</a></p>
+<p>Saqr, M., López-Pernas, S., &amp; Misiejuk, K. (2026). <em>Sequence clustering</em>. Nestimate. <a href="https://pak.dynasite.org/Nestimate/articles/clustering.html">HTML</a> · <a href="https://pak.dynasite.org/Nestimate/pdf/clustering.pdf">PDF</a></p>
+<p>Saqr, M., López-Pernas, S., &amp; Misiejuk, K. (2026). <em>Network estimation and visualization with Nestimate + cograph</em>. Nestimate. <a href="https://pak.dynasite.org/Nestimate/articles/cograph-tutorial-nestimate.html">HTML</a> · <a href="https://pak.dynasite.org/Nestimate/pdf/cograph-tutorial-nestimate.pdf">PDF</a></p>
+<p>Saqr, M., López-Pernas, S., &amp; Misiejuk, K. (2026). <em>Higher-order network analysis with simplicial complexes: From transition networks to topological analysis</em>. Nestimate. <a href="https://pak.dynasite.org/Nestimate/articles/cograph-tutorial-simplicial.html">HTML</a> · <a href="https://pak.dynasite.org/Nestimate/pdf/cograph-tutorial-simplicial.pdf">PDF</a></p>
+<p>Saqr, M., López-Pernas, S., &amp; Misiejuk, K. (2026). <em>Model assessment for transition networks</em>. Nestimate. <a href="https://pak.dynasite.org/Nestimate/articles/tutorial_model_assessment.html">HTML</a> · <a href="https://pak.dynasite.org/Nestimate/pdf/tutorial_model_assessment.pdf">PDF</a></p>
+<p>Saqr, M., López-Pernas, S., &amp; Misiejuk, K. (2026). <em>Nested sequences and the permutation test</em>. Nestimate. <a href="https://pak.dynasite.org/Nestimate/articles/permutation-nested-data.html">HTML</a> · <a href="https://pak.dynasite.org/Nestimate/pdf/permutation-nested-data.pdf">PDF</a></p>
+<p>Saqr, M., López-Pernas, S., &amp; Misiejuk, K. (2026). <em>Comparing networks with compare_networks()</em>. Nestimate. <a href="https://pak.dynasite.org/Nestimate/articles/compare-networks.html">HTML</a> · <a href="https://pak.dynasite.org/Nestimate/pdf/compare-networks.pdf">PDF</a></p>
+<p>Saqr, M., López-Pernas, S., &amp; Misiejuk, K. (2026). <em>Stability of engagement: States, landscapes and students</em>. Nestimate. <a href="https://pak.dynasite.org/Nestimate/articles/stability-landscapes.html">HTML</a> · <a href="https://pak.dynasite.org/Nestimate/pdf/stability-landscapes.pdf">PDF</a></p>
 </div>
 <div class="section level2">
 <h2 id="license">License<a class="anchor" aria-label="anchor" href="#license"></a>

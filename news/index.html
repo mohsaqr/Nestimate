@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.3</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -43,10 +43,10 @@
     </div>
 
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="1.1.2" id="nestimate-112">Nestimate 1.1.2<a class="anchor" aria-label="anchor" href="#nestimate-112"></a></h2>
+<h2 class="pkg-version" data-toc-text="1.1.3" id="nestimate-113">Nestimate 1.1.3<a class="anchor" aria-label="anchor" href="#nestimate-113"></a></h2>
 <p>Changes since the CRAN release 0.9.24.</p>
 <div class="section level3">
-<h3 id="breaking-results-with-a-new-shape-1-1-2">Breaking: results with a new shape<a class="anchor" aria-label="anchor" href="#breaking-results-with-a-new-shape-1-1-2"></a></h3>
+<h3 id="breaking-results-with-a-new-shape-1-1-3">Breaking: results with a new shape<a class="anchor" aria-label="anchor" href="#breaking-results-with-a-new-shape-1-1-3"></a></h3>
 <p>These results are now tidy data frames, one row per observation, with a <code>group</code> column where there are groups. <code>format = "wide"</code> returns the old one-column-per-group table; <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> returns every row as a plain data frame, and <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> shows the first <code>n</code> rows.</p>
 <ul><li>
 <code>sequence_metrics(group = )</code>: one row per index and group, with the difference, Hedges’ g and its interval, eta squared and p-values.</li>
@@ -68,7 +68,7 @@
 <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> of a network lists its strongest edges instead of the weight matrix.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="rerun-an-analysis-made-with-if-it-uses-1-1-2">Rerun an analysis made with 0.9.24 if it uses<a class="anchor" aria-label="anchor" href="#rerun-an-analysis-made-with-if-it-uses-1-1-2"></a></h3>
+<h3 id="rerun-an-analysis-made-with-if-it-uses-1-1-3">Rerun an analysis made with 0.9.24 if it uses<a class="anchor" aria-label="anchor" href="#rerun-an-analysis-made-with-if-it-uses-1-1-3"></a></h3>
 <ul><li>data whose column roles came from their names, or long-log times not in a whole format with a four-digit year. Declare <code>action</code>, <code>actor</code>, <code>time</code>, <code>state_cols</code>, <code>metadata_cols</code> or <code>cols</code>; one-hot data needs <code>format = "onehot"</code> or <code>codes</code>.</li>
 <li>wide data with metadata, <code>actor</code>, <code>time</code> or <code>order</code> columns, which were read as states.</li>
 <li>
@@ -92,7 +92,7 @@
 <li>corrected estimates in centrality (<code>BetweennessRSP</code>, betweenness ties, min-max normalisation), <code><a href="../reference/net_prune.html">net_prune()</a></code>, <code><a href="../reference/build_mmm.html">build_mmm()</a></code>, <code><a href="../reference/build_clusters.html">build_clusters()</a></code>, <code><a href="../reference/build_mcml.html">build_mcml()</a></code>, <code><a href="../reference/passage_time.html">passage_time()</a></code>, <code><a href="../reference/chain_structure.html">chain_structure()</a></code>, <code><a href="../reference/markov_stability.html">markov_stability()</a></code>, <code><a href="../reference/entropy_bayes.html">entropy_bayes()</a></code>, <code><a href="../reference/hypergraph_centrality.html">hypergraph_centrality()</a></code>, <code><a href="../reference/q_analysis.html">q_analysis()</a></code>, <code><a href="../reference/persistent_homology.html">persistent_homology()</a></code>, <code><a href="../reference/betti_numbers.html">betti_numbers()</a></code>, <code><a href="../reference/bottleneck_distance.html">bottleneck_distance()</a></code>, <code><a href="../reference/pathways.html">pathways()</a></code>, <code><a href="../reference/mogen_transitions.html">mogen_transitions()</a></code>, <code><a href="../reference/extract_initial_probs.html">extract_initial_probs()</a></code> and <code><a href="../reference/mosaic_analysis.html">mosaic_analysis()</a></code>.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="new-features-1-1-2">New features<a class="anchor" aria-label="anchor" href="#new-features-1-1-2"></a></h3>
+<h3 id="new-features-1-1-3">New features<a class="anchor" aria-label="anchor" href="#new-features-1-1-3"></a></h3>
 <ul><li>
 <code>build_network(method = "latency")</code>: a reply network weighted by reply speed (Templeton et al. 2022).</li>
 <li>
@@ -125,7 +125,7 @@
 <li>New dataset <code>daily_actions</code>.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="other-changes-1-1-2">Other changes<a class="anchor" aria-label="anchor" href="#other-changes-1-1-2"></a></h3>
+<h3 id="other-changes-1-1-3">Other changes<a class="anchor" aria-label="anchor" href="#other-changes-1-1-3"></a></h3>
 <ul><li>
 <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> of <code><a href="../reference/sequence_compare.html">sequence_compare()</a></code> shows one row per pattern and group, rounded, with a <code>group</code> column; <code>summary(format = "long")</code> returns that table for every pattern. The result and <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> keep their shape.</li>
 <li>One colour rule for states: with no colours set, every figure draws the states in Okabe-Ito colours dealt in alphabetical order, and objects derived from a network keep its palette. The clusters of an mcml and the groups of an <code><a href="../reference/entropy_trajectory.html">entropy_trajectory()</a></code> plot take the colours the states leave. <code>plot_state_frequencies(colors = )</code> is now <code>state_colors =</code> (<code>colors</code> still works, with a warning).</li>
@@ -141,7 +141,7 @@
 <code>seed =</code> no longer moves the session’s random stream.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="bug-fixes-1-1-2">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-1-1-2"></a></h3>
+<h3 id="bug-fixes-1-1-3">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-1-1-3"></a></h3>
 <ul><li>
 <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> of <code><a href="../reference/entropy_trajectory.html">entropy_trajectory()</a></code> dropped a group with few windows; it is now drawn as its windows and named in a warning.</li>
 <li>
