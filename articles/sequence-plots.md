@@ -445,7 +445,7 @@ that figure only.
 ## How to cite this article
 
 Saqr, M., López-Pernas, S., & Misiejuk, K. (2026). *Sequence plots*.
-Nestimate.
+Nestimate. <https://doi.org/10.5281/zenodo.24528506> ·
 [HTML](https://pak.dynasite.org/Nestimate/articles/sequence-plots.html)
 · [PDF](https://pak.dynasite.org/Nestimate/pdf/sequence-plots.pdf)
 

@@ -539,7 +539,7 @@ the clusters differ in, not whether such groups exist in the population.
 ## How to cite this article
 
 Saqr, M., López-Pernas, S., & Misiejuk, K. (2026). *Sequence
-clustering*. Nestimate.
+clustering*. Nestimate. <https://doi.org/10.5281/zenodo.24528491> ·
 [HTML](https://pak.dynasite.org/Nestimate/articles/clustering.html) ·
 [PDF](https://pak.dynasite.org/Nestimate/pdf/clustering.pdf)
 

@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.3</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -43,124 +43,92 @@
     </div>
 
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="1.1.3" id="nestimate-113">Nestimate 1.1.3<a class="anchor" aria-label="anchor" href="#nestimate-113"></a></h2>
-<p>Changes since the CRAN release 0.9.24.</p>
+<h2 class="pkg-version" data-toc-text="1.1.4" id="nestimate-114">Nestimate 1.1.4<a class="anchor" aria-label="anchor" href="#nestimate-114"></a></h2>
+<p>This version collects everything since 0.9.24, the last release on CRAN. Some results are refined and some functions now ask you to say what your columns are; see “Refined results” and “What works differently”.</p>
 <div class="section level3">
-<h3 id="breaking-results-with-a-new-shape-1-1-3">Breaking: results with a new shape<a class="anchor" aria-label="anchor" href="#breaking-results-with-a-new-shape-1-1-3"></a></h3>
-<p>These results are now tidy data frames, one row per observation, with a <code>group</code> column where there are groups. <code>format = "wide"</code> returns the old one-column-per-group table; <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> returns every row as a plain data frame, and <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> shows the first <code>n</code> rows.</p>
+<h3 id="new-1-1-4">New<a class="anchor" aria-label="anchor" href="#new-1-1-4"></a></h3>
 <ul><li>
-<code>sequence_metrics(group = )</code>: one row per index and group, with the difference, Hedges’ g and its interval, eta squared and p-values.</li>
+<strong>Latency networks.</strong> <code>build_network(method = "latency")</code> builds a reply network in which faster replies carry more weight (Templeton et al. 2022).</li>
 <li>
-<code>sequence_patterns(group = )</code>: one row per pattern and group, with <code>group_support</code>.</li>
+<strong>Stability landscapes.</strong> <code><a href="../reference/stability_landscape.html">stability_landscape()</a></code> draws each state as a cup whose depth shows how long people stay in it. <code><a href="../reference/landscape_trend.html">landscape_trend()</a></code> follows the depths over time or along a covariate, and <code><a href="../reference/landscape_surface.html">landscape_surface()</a></code> draws them along a measure of stability.</li>
 <li>
-<code><a href="../reference/net_centrality.html">net_centrality()</a></code> of a group of networks: one data frame with <code>group</code> and <code>state</code> columns; it returned a list of data frames.</li>
+<strong>Sequence patterns and indices.</strong> <code><a href="../reference/sequence_patterns.html">sequence_patterns()</a></code> finds the patterns in sequences and tests them between groups. <code><a href="../reference/sequence_metrics.html">sequence_metrics()</a></code> computes 23 indices for each sequence (entropy, turbulence, complexity, spells and others) and compares them between groups. <code><a href="../reference/pattern_outcome.html">pattern_outcome()</a></code> relates patterns to an outcome, and <code><a href="../reference/extract_sequences.html">extract_sequences()</a></code> returns the sequences behind any input.</li>
 <li>
-<code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> of a grouped network: one row per metric and group.</li>
+<strong>Phases.</strong> <code><a href="../reference/mark_phases.html">mark_phases()</a></code> splits each person’s events into phases, so <code>build_network(group = "phase")</code> gives one network per phase.</li>
 <li>
-<code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> of <code><a href="../reference/passage_time.html">passage_time()</a></code>, <code><a href="../reference/transition_entropy.html">transition_entropy()</a></code> and <code><a href="../reference/chain_structure.html">chain_structure()</a></code> returns one data frame; <code>table =</code> gives the second table (<code>"pairs"</code>, <code>"chain"</code>, <code>"absorption"</code>). They returned a list. Grouped results stack the table with a <code>group</code> column.</li>
+<strong>Nested data.</strong> <code><a href="../reference/mosaic_test.html">mosaic_test()</a></code> tests counts nested in people or teams, and <code><a href="../reference/mosaic_plot.html">mosaic_plot()</a></code> and <code><a href="../reference/mosaic_analysis.html">mosaic_analysis()</a></code> take <code>nested</code> and <code>actor</code>. <code><a href="../reference/permutation.html">permutation()</a></code>, <code><a href="../reference/centrality_stability.html">centrality_stability()</a></code> and <code><a href="../reference/casedrop_reliability.html">casedrop_reliability()</a></code> take <code>actor</code> to resample whole people.</li>
 <li>
-<code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> of <code><a href="../reference/markov_stability.html">markov_stability()</a></code> returns the table and prints nothing.</li>
+<strong>Entropy over time.</strong> <code><a href="../reference/entropy_trajectory.html">entropy_trajectory()</a></code> reads sequences as well as event logs, and its plot shows a bootstrap band around each trend.</li>
 <li>
-<code><a href="../reference/vertex_compare.html">vertex_compare()</a></code> names its columns <code>observed_x</code> and <code>observed_y</code>.</li>
+<strong>Sequence plots by period.</strong> <code><a href="../reference/sequence_plot.html">sequence_plot()</a></code> can show actions per day, week or month (<code>periods</code>), and both <code><a href="../reference/sequence_plot.html">sequence_plot()</a></code> and <code><a href="../reference/distribution_plot.html">distribution_plot()</a></code> can drop rare columns (<code>trim</code>).</li>
 <li>
-<code>summary(nct(), table = "edges")</code> returns the edge table; <code><a href="../reference/nct.html">nct()</a></code> stores the M and S tests as <code>$structure</code> and <code>$strength</code>.</li>
+<strong>tna models</strong> can be passed wherever a network or sequences are accepted.</li>
 <li>
-<code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> of a network lists its strongest edges instead of the weight matrix.</li>
+<strong>New dataset</strong> <code>daily_actions</code>: the learning actions of 30 students over seven days (simulated).</li>
+<li>Smaller additions: <code><a href="../reference/hypergraph_cluster.html">node_clusters()</a></code>, <code><a href="../reference/hypergraph_transduction.html">label_predictions()</a></code> and <code><a href="../reference/hypergraph_transduction.html">label_scores()</a></code>; <code><a href="../reference/nct.html">nct()</a></code> handles missing values and constant variables; <code><a href="../reference/extract_edges.html">extract_edges()</a></code> and <code><a href="../reference/extract_initial_probs.html">extract_initial_probs()</a></code> read a group of networks; the <code>build_*()</code> shortcuts take <code>group</code>, <code>scaling</code>, <code>threshold</code> and <code>params</code>; <code><a href="../reference/build_mcml.html">build_mcml()</a></code> reads edge lists; <code><a href="../reference/cooccurrence.html">cooccurrence()</a></code> and <code><a href="../reference/association_rules.html">association_rules()</a></code> read 0/1 tables (<code>format = "binary"</code>); <code><a href="../reference/compare_networks.html">compare_networks()</a></code> marks significant differences in its difference plot; <code>window_size</code> in <code>build_network(params = )</code> now works as in tna.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="rerun-an-analysis-made-with-if-it-uses-1-1-3">Rerun an analysis made with 0.9.24 if it uses<a class="anchor" aria-label="anchor" href="#rerun-an-analysis-made-with-if-it-uses-1-1-3"></a></h3>
-<ul><li>data whose column roles came from their names, or long-log times not in a whole format with a four-digit year. Declare <code>action</code>, <code>actor</code>, <code>time</code>, <code>state_cols</code>, <code>metadata_cols</code> or <code>cols</code>; one-hot data needs <code>format = "onehot"</code> or <code>codes</code>.</li>
-<li>wide data with metadata, <code>actor</code>, <code>time</code> or <code>order</code> columns, which were read as states.</li>
+<h3 id="refined-results-1-1-4">Refined results<a class="anchor" aria-label="anchor" href="#refined-results-1-1-4"></a></h3>
+<p>These functions give refined results since 0.9.24.</p>
+<ul><li>
+<code><a href="../reference/nct.html">nct()</a></code> reported the structure test as the strength test and the other way round, and <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> swapped the in- and out-strength spreads.</li>
 <li>
-<code><a href="../reference/permutation.html">permutation()</a></code> or <code>compare_networks(test = "permutation")</code> on networks built with different estimator settings (say Pearson and Spearman): the difference was reported as a difference between the groups. Such pairs are now refused.</li>
+<code><a href="../reference/build_mlvar.html">build_mlvar()</a></code> drew temporal edges in the wrong direction (from outcome to predictor).</li>
 <li>
-<code><a href="../reference/boot_glasso.html">boot_glasso()</a></code>, <code><a href="../reference/build_mcml_pc.html">build_mcml_pc()</a></code> or <code><a href="../reference/loading_stability.html">loading_stability()</a></code>: they now use the network’s own estimator settings.</li>
+<code><a href="../reference/sequence_compare.html">sequence_compare()</a></code> effect sizes changed with <code>min_freq</code>.</li>
 <li>
-<code><a href="../reference/casedrop_reliability.html">casedrop_reliability()</a></code> or <code><a href="../reference/centrality_stability.html">centrality_stability()</a></code>: failed subsets count as below <code>threshold</code>, and <code><a href="../reference/casedrop_reliability.html">casedrop_reliability()</a></code> compares only the existing edges of a transition network (<code>target = "all"</code> gives the earlier values).</li>
+<code><a href="../reference/build_hypa.html">build_hypa()</a></code> flagged anomalies in first-order data, which has none; it now uses a strength-preserving null. <code>build_hon(method = "hon")</code> now matches pyHON, and <code>method = "hon+"</code> missed some rules.</li>
 <li>
-<code><a href="../reference/build_mogen.html">build_mogen()</a></code> or <code><a href="../reference/markov_order_test.html">markov_order_test()</a></code>: <code>dof = "paths"</code> is the default (<code>dof = "observed"</code> gives the earlier values).</li>
+<code><a href="../reference/permutation.html">permutation()</a></code> and <code>compare_networks(test = "permutation")</code> accepted two networks estimated in different ways (say Pearson and Spearman) and reported the difference as a difference between the groups. They now refuse.</li>
 <li>
-<code>build_hon(method = "hon")</code>, which now follows pyHON, or <code><a href="../reference/build_hypa.html">build_hypa()</a></code>, whose null is strength-preserving (the earlier null flagged anomalies in first-order data).</li>
-<li>
-<code><a href="../reference/nct.html">nct()</a></code>, whose <code>$structure</code> and <code>$strength</code> held each other’s values in 0.9.24, or strengths from <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>, whose in and out spreads were swapped.</li>
-<li>
-<code><a href="../reference/build_mlvar.html">build_mlvar()</a></code> temporal edges, which now run from predictor to outcome.</li>
-<li>
-<code><a href="../reference/sequence_compare.html">sequence_compare()</a></code> effect sizes, which depended on <code>min_freq</code>.</li>
-<li>
-<code><a href="../reference/predict_links.html">predict_links()</a></code> ties, <code><a href="../reference/evaluate_links.html">evaluate_links()</a></code>, <code>scaling = "normalize"</code> on an undirected network (now directed when the result is asymmetric) or the kernel width of <code><a href="../reference/landscape_surface.html">landscape_surface()</a></code> and <code><a href="../reference/landscape_trend.html">landscape_trend()</a></code>.</li>
-<li>corrected estimates in centrality (<code>BetweennessRSP</code>, betweenness ties, min-max normalisation), <code><a href="../reference/net_prune.html">net_prune()</a></code>, <code><a href="../reference/build_mmm.html">build_mmm()</a></code>, <code><a href="../reference/build_clusters.html">build_clusters()</a></code>, <code><a href="../reference/build_mcml.html">build_mcml()</a></code>, <code><a href="../reference/passage_time.html">passage_time()</a></code>, <code><a href="../reference/chain_structure.html">chain_structure()</a></code>, <code><a href="../reference/markov_stability.html">markov_stability()</a></code>, <code><a href="../reference/entropy_bayes.html">entropy_bayes()</a></code>, <code><a href="../reference/hypergraph_centrality.html">hypergraph_centrality()</a></code>, <code><a href="../reference/q_analysis.html">q_analysis()</a></code>, <code><a href="../reference/persistent_homology.html">persistent_homology()</a></code>, <code><a href="../reference/betti_numbers.html">betti_numbers()</a></code>, <code><a href="../reference/bottleneck_distance.html">bottleneck_distance()</a></code>, <code><a href="../reference/pathways.html">pathways()</a></code>, <code><a href="../reference/mogen_transitions.html">mogen_transitions()</a></code>, <code><a href="../reference/extract_initial_probs.html">extract_initial_probs()</a></code> and <code><a href="../reference/mosaic_analysis.html">mosaic_analysis()</a></code>.</li>
+<code><a href="../reference/boot_glasso.html">boot_glasso()</a></code>, <code><a href="../reference/build_mcml_pc.html">build_mcml_pc()</a></code> and <code><a href="../reference/loading_stability.html">loading_stability()</a></code> ignored the network’s own estimator settings.</li>
+<li>Numbers were corrected in centrality (<code>BetweennessRSP</code>, betweenness ties, min-max normalisation), <code><a href="../reference/net_prune.html">net_prune()</a></code>, <code><a href="../reference/build_mmm.html">build_mmm()</a></code>, <code><a href="../reference/build_clusters.html">build_clusters()</a></code>, <code><a href="../reference/build_mcml.html">build_mcml()</a></code>, <code><a href="../reference/passage_time.html">passage_time()</a></code>, <code><a href="../reference/chain_structure.html">chain_structure()</a></code>, <code><a href="../reference/markov_stability.html">markov_stability()</a></code>, <code><a href="../reference/entropy_bayes.html">entropy_bayes()</a></code>, <code><a href="../reference/hypergraph_centrality.html">hypergraph_centrality()</a></code>, <code><a href="../reference/q_analysis.html">q_analysis()</a></code>, <code><a href="../reference/persistent_homology.html">persistent_homology()</a></code>, <code><a href="../reference/betti_numbers.html">betti_numbers()</a></code>, <code><a href="../reference/bottleneck_distance.html">bottleneck_distance()</a></code>, <code><a href="../reference/pathways.html">pathways()</a></code>, <code><a href="../reference/mogen_transitions.html">mogen_transitions()</a></code>, <code><a href="../reference/extract_initial_probs.html">extract_initial_probs()</a></code>, <code><a href="../reference/mosaic_analysis.html">mosaic_analysis()</a></code>, <code><a href="../reference/predict_links.html">predict_links()</a></code> (ties), <code><a href="../reference/evaluate_links.html">evaluate_links()</a></code>, and the smoothing of <code><a href="../reference/landscape_surface.html">landscape_surface()</a></code> and <code><a href="../reference/landscape_trend.html">landscape_trend()</a></code>.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="new-features-1-1-3">New features<a class="anchor" aria-label="anchor" href="#new-features-1-1-3"></a></h3>
+<h3 id="what-works-differently-1-1-4">What works differently<a class="anchor" aria-label="anchor" href="#what-works-differently-1-1-4"></a></h3>
 <ul><li>
-<code>build_network(method = "latency")</code>: a reply network weighted by reply speed (Templeton et al. 2022).</li>
+<strong>Say which column is which.</strong> Nestimate no longer guesses a column’s role from its name. Give <code>action</code>, <code>actor</code> and <code>time</code> for an event log, or <code>state_cols</code> for wide data, and <code>format = "onehot"</code> for 0/1 code columns. Extra columns in wide data (metadata, <code>actor</code>, <code>time</code>, <code>order</code>) are no longer read as states. Times must include a four-digit year.</li>
 <li>
-<code>tna</code> and <code>group_tna</code> models are accepted wherever a network or sequences are.</li>
+<strong>Results are tables.</strong> These used to return lists or wide tables and now return one data frame, one row per item, with a <code>group</code> column when groups are compared: <code>sequence_metrics(group = )</code>, <code>sequence_patterns(group = )</code>, <code><a href="../reference/net_centrality.html">net_centrality()</a></code> on several networks, and <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> of a grouped network, <code><a href="../reference/passage_time.html">passage_time()</a></code>, <code><a href="../reference/transition_entropy.html">transition_entropy()</a></code>, <code><a href="../reference/chain_structure.html">chain_structure()</a></code>, <code><a href="../reference/markov_stability.html">markov_stability()</a></code> and <code><a href="../reference/nct.html">nct()</a></code>. <code>format = "wide"</code> gives the old layout; <code>table =</code> picks the second table where there is one. Printing shows the first rows, <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> all of them.</li>
 <li>
-<code><a href="../reference/stability_landscape.html">stability_landscape()</a></code>, <code><a href="../reference/landscape_surface.html">landscape_surface()</a></code> and <code><a href="../reference/landscape_trend.html">landscape_trend()</a></code> draw a transition network as a ball-in-cup landscape.</li>
+<strong>Printing a network</strong> lists its strongest edges instead of the whole weight matrix.</li>
 <li>
-<code><a href="../reference/extract_sequences.html">extract_sequences()</a></code>, <code><a href="../reference/sequence_patterns.html">sequence_patterns()</a></code>, <code><a href="../reference/sequence_metrics.html">sequence_metrics()</a></code> and <code><a href="../reference/pattern_outcome.html">pattern_outcome()</a></code>: the sequences, patterns and indices behind any input. <code><a href="../reference/sequence_metrics.html">sequence_metrics()</a></code> compares every index between groups, within actors when an actor appears in several groups.</li>
+<strong>New defaults.</strong> <code><a href="../reference/build_mogen.html">build_mogen()</a></code> and <code><a href="../reference/markov_order_test.html">markov_order_test()</a></code> use <code>dof = "paths"</code> (<code>dof = "observed"</code> gives the old values). <code><a href="../reference/casedrop_reliability.html">casedrop_reliability()</a></code> compares only the edges a transition network has (<code>target = "all"</code> gives the old values), and it and <code><a href="../reference/centrality_stability.html">centrality_stability()</a></code> count a subset that fails as below the threshold.</li>
 <li>
-<code><a href="../reference/mark_phases.html">mark_phases()</a></code> splits each actor’s events into <code>n</code> phases, for <code>build_network(group = "phase")</code>.</li>
+<strong>Renamed.</strong> <code><a href="../reference/vertex_compare.html">vertex_compare()</a></code> columns are <code>observed_x</code> and <code>observed_y</code>; <code>plot_state_frequencies(colors = )</code> is <code>state_colors =</code> (the old name still works, with a warning).</li>
 <li>
-<code><a href="../reference/mosaic_test.html">mosaic_test()</a></code>, and <code>nested</code>, <code>actor</code> and <code>report</code> in <code><a href="../reference/mosaic_plot.html">mosaic_plot()</a></code> and <code><a href="../reference/mosaic_analysis.html">mosaic_analysis()</a></code>, for counts nested in actors.</li>
+<strong>Refused inputs.</strong> Functions that read sequences refuse one-hot networks and association networks (correlation, partial correlation, glasso, Ising, mixed graphical models); resampling functions refuse a single sequence and networks built with <code>level</code>; latency networks can only be bootstrapped; Markov measures refuse correlation networks; <code><a href="../reference/entropy_trajectory.html">entropy_trajectory()</a></code> refuses missing times.</li>
 <li>
-<code><a href="../reference/hypergraph_cluster.html">node_clusters()</a></code>, <code><a href="../reference/hypergraph_transduction.html">label_predictions()</a></code> and <code><a href="../reference/hypergraph_transduction.html">label_scores()</a></code>.</li>
-<li>
-<code>actor</code> drops whole actors in <code><a href="../reference/centrality_stability.html">centrality_stability()</a></code> and <code><a href="../reference/casedrop_reliability.html">casedrop_reliability()</a></code>, and takes nested levels in <code><a href="../reference/permutation.html">permutation()</a></code>.</li>
-<li>
-<code><a href="../reference/entropy_trajectory.html">entropy_trajectory()</a></code> reads sequences as well as an event log, and its <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> draws a bootstrap confidence band around each trend.</li>
-<li>
-<code><a href="../reference/sequence_plot.html">sequence_plot()</a></code> gains <code>periods</code> (weeks or months), <code>period_unit</code> and <code>fill</code>; it and <code><a href="../reference/distribution_plot.html">distribution_plot()</a></code> gain <code>cols</code> and a two-part <code>trim</code>.</li>
-<li>
-<code><a href="../reference/extract_edges.html">extract_edges()</a></code> and <code><a href="../reference/extract_initial_probs.html">extract_initial_probs()</a></code> read a group of networks; <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> of <code><a href="../reference/magnitude_difference.html">magnitude_difference()</a></code> returns its edges.</li>
-<li>
-<code><a href="../reference/compare_networks.html">compare_networks()</a></code> stars the tested differences in <code>plot(type = "difference")</code>.</li>
-<li>
-<code><a href="../reference/nct.html">nct()</a></code> gains <code>na_method</code> and accepts missing values and constant variables.</li>
-<li>
-<code>build_network(params = list(window_size = ))</code> counts sequences between blocks of positions, as <code><a href="https://sonsoles.me/tna/reference/build_model.html" class="external-link">tna::tna()</a></code> does (it was ignored).</li>
-<li>The <code>build_*()</code> shortcuts take <code>group</code>, <code>scaling</code>, <code>threshold</code> and <code>params</code> as named arguments; <code><a href="../reference/build_mcml.html">build_mcml()</a></code> gains <code>from</code>, <code>to</code>, <code>weight</code> and <code>cols</code>; <code><a href="../reference/cooccurrence.html">cooccurrence()</a></code> and <code><a href="../reference/association_rules.html">association_rules()</a></code> gain <code>format = "binary"</code>.</li>
-<li>New dataset <code>daily_actions</code>.</li>
-</ul></div>
-<div class="section level3">
-<h3 id="other-changes-1-1-3">Other changes<a class="anchor" aria-label="anchor" href="#other-changes-1-1-3"></a></h3>
-<ul><li>
-<code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> of <code><a href="../reference/sequence_compare.html">sequence_compare()</a></code> shows one row per pattern and group, rounded, with a <code>group</code> column; <code>summary(format = "long")</code> returns that table for every pattern. The result and <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> keep their shape.</li>
-<li>One colour rule for states: with no colours set, every figure draws the states in Okabe-Ito colours dealt in alphabetical order, and objects derived from a network keep its palette. The clusters of an mcml and the groups of an <code><a href="../reference/entropy_trajectory.html">entropy_trajectory()</a></code> plot take the colours the states leave. <code>plot_state_frequencies(colors = )</code> is now <code>state_colors =</code> (<code>colors</code> still works, with a warning).</li>
-<li>Plots that used ggplot’s default hues, viridis or green and red use Okabe-Ito and the package’s blue-red diverging colours, with shapes or linetypes where colour alone told groups apart.</li>
-<li>Sequence verbs refuse one-hot and association networks; resampling verbs refuse one-sequence data and networks built with <code>level</code>, and all but <code><a href="../reference/bootstrap_network.html">bootstrap_network()</a></code> refuse latency networks; Markov measures refuse correlation networks.</li>
-<li>
-<code><a href="../reference/entropy_trajectory.html">entropy_trajectory()</a></code> refuses a <code>time</code> column with missing values.</li>
+<code>scaling = "normalize"</code> on an undirected network returns a directed network when the rows no longer match the columns.</li>
+<li>Arguments of <code><a href="../reference/sequence_plot.html">sequence_plot()</a></code> after <code>group</code> must be named.</li>
 <li>
 <code>prepare_onehot()</code> and <code>plot_mosaic()</code> are no longer exported.</li>
 <li>
-<code><a href="../reference/sequence_plot.html">sequence_plot()</a></code> arguments after <code>group</code> must be named.</li>
-<li>
-<code>seed =</code> no longer moves the session’s random stream.</li>
+<code>seed =</code> no longer changes your session’s random numbers.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="bug-fixes-1-1-3">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-1-1-3"></a></h3>
+<h3 id="colours-1-1-4">Colours<a class="anchor" aria-label="anchor" href="#colours-1-1-4"></a></h3>
+<p>Every figure colours states the same way: with no colours set, states get colour-blind-safe Okabe-Ito colours in alphabetical order, and anything derived from a network keeps its colours. Plots that used rainbow, viridis or red-green now use these colours, with shapes or line types where colour alone separated groups.</p>
+</div>
+<div class="section level3">
+<h3 id="other-fixes-1-1-4">Other fixes<a class="anchor" aria-label="anchor" href="#other-fixes-1-1-4"></a></h3>
 <ul><li>
-<code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> of <code><a href="../reference/entropy_trajectory.html">entropy_trajectory()</a></code> dropped a group with few windows; it is now drawn as its windows and named in a warning.</li>
+<code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> of <code><a href="../reference/entropy_trajectory.html">entropy_trajectory()</a></code> dropped groups with few windows.</li>
 <li>
-<code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> of <code><a href="../reference/bayes_compare.html">bayes_compare()</a></code> on a group of networks failed.</li>
+<code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> of <code><a href="../reference/bayes_compare.html">bayes_compare()</a></code> failed on a group of networks.</li>
 <li>
-<code><a href="../reference/build_network.html">build_network()</a></code> stored averaged metadata as a one-dimensional array, so <code>landscape_trend(along = )</code> failed.</li>
-<li>Colours set with <code><a href="../reference/set_state_colors.html">set_state_colors()</a></code> were lost by <code><a href="../reference/build_clusters.html">build_clusters()</a></code>, <code><a href="../reference/build_mmm.html">build_mmm()</a></code>, <code><a href="../reference/cluster_network.html">cluster_network()</a></code> and other derived objects, and were matched against the wrong name column.</li>
+<code>landscape_trend(along = )</code> failed on averaged metadata.</li>
+<li>Colours set with <code><a href="../reference/set_state_colors.html">set_state_colors()</a></code> were lost after clustering.</li>
 <li>
-<code><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset()</a></code> of <code><a href="../reference/compare_networks.html">compare_networks()</a></code> tables printed at two decimals.</li>
-<li>One-state data failed in <code><a href="../reference/bootstrap_network.html">bootstrap_network()</a></code>, <code><a href="../reference/path_dependence.html">path_dependence()</a></code> and <code><a href="../reference/predict_links.html">predict_links()</a></code>.</li>
+<code><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset()</a></code> of <code><a href="../reference/compare_networks.html">compare_networks()</a></code> tables printed only two decimals.</li>
+<li>Data with a single state failed in <code><a href="../reference/bootstrap_network.html">bootstrap_network()</a></code>, <code><a href="../reference/path_dependence.html">path_dependence()</a></code> and <code><a href="../reference/predict_links.html">predict_links()</a></code>.</li>
 <li>
-<code>labels =</code> did not relabel stored data.</li>
+<code>labels =</code> did not relabel the stored data.</li>
 <li>
-<code><a href="../reference/sequence_plot.html">sequence_plot()</a></code> and <code><a href="../reference/distribution_plot.html">distribution_plot()</a></code> refused a <code>data.table</code> or tibble.</li>
+<code><a href="../reference/sequence_plot.html">sequence_plot()</a></code> and <code><a href="../reference/distribution_plot.html">distribution_plot()</a></code> refused a data.table or tibble.</li>
 <li>
-<code><a href="../reference/cluster_network.html">cluster_network()</a></code> did not pass its arguments.</li>
-<li>
-<code>build_hon(method = "hon+")</code> missed some higher-order rules.</li>
-<li>The pyramid plot of <code><a href="../reference/sequence_compare.html">sequence_compare()</a></code> cut off its counts.</li>
+<code><a href="../reference/cluster_network.html">cluster_network()</a></code> ignored its arguments.</li>
+<li>The pyramid plot of <code><a href="../reference/sequence_compare.html">sequence_compare()</a></code> cut off its counts, and its printout now shows one row per pattern and group.</li>
 </ul></div>
 </div>
     <div class="section level2">

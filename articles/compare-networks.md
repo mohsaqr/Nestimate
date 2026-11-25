@@ -973,6 +973,7 @@ name, the two network names or one network name.
 
 Saqr, M., López-Pernas, S., & Misiejuk, K. (2026). *Comparing networks
 with compare_networks()*. Nestimate.
+<https://doi.org/10.5281/zenodo.24528516> ·
 [HTML](https://pak.dynasite.org/Nestimate/articles/compare-networks.html)
 · [PDF](https://pak.dynasite.org/Nestimate/pdf/compare-networks.pdf)
 

@@ -268,7 +268,7 @@ interpreted.
 ## How to cite this article
 
 Saqr, M., López-Pernas, S., & Misiejuk, K. (2026). *Markov stability
-analysis*. Nestimate.
+analysis*. Nestimate. <https://doi.org/10.5281/zenodo.24528502> ·
 [HTML](https://pak.dynasite.org/Nestimate/articles/markov-stability.html)
 · [PDF](https://pak.dynasite.org/Nestimate/pdf/markov-stability.pdf)
 

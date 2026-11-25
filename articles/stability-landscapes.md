@@ -1048,6 +1048,7 @@ centralities) is covered in the model assessment article.
 
 Saqr, M., López-Pernas, S., & Misiejuk, K. (2026). *Stability of
 engagement: States, landscapes and students*. Nestimate.
+<https://doi.org/10.5281/zenodo.24528520> ·
 [HTML](https://pak.dynasite.org/Nestimate/articles/stability-landscapes.html)
 · [PDF](https://pak.dynasite.org/Nestimate/pdf/stability-landscapes.pdf)
 

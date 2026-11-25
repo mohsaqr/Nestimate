@@ -268,6 +268,7 @@ level.
 ## How to cite this article
 
 Saqr, M. (2026). *Transition matrix entropy*. Nestimate.
+<https://doi.org/10.5281/zenodo.24528508> ·
 [HTML](https://pak.dynasite.org/Nestimate/articles/transition-entropy.html)
 · [PDF](https://pak.dynasite.org/Nestimate/pdf/transition-entropy.pdf)
 

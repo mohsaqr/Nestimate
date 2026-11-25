@@ -637,6 +637,7 @@ net_glasso
 
 Saqr, M., López-Pernas, S., & Misiejuk, K. (2026). *Network estimation
 and analysis with Nestimate*. Nestimate.
+<https://doi.org/10.5281/zenodo.24528510> ·
 [HTML](https://pak.dynasite.org/Nestimate/articles/transition-networks.html)
 · [PDF](https://pak.dynasite.org/Nestimate/pdf/transition-networks.pdf)
 

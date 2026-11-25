@@ -619,6 +619,7 @@ both views share, and the coloured tip the difference.
 
 Saqr, M., López-Pernas, S., & Misiejuk, K. (2026). *Model assessment for
 transition networks*. Nestimate.
+<https://doi.org/10.5281/zenodo.24528522> ·
 [HTML](https://pak.dynasite.org/Nestimate/articles/tutorial_model_assessment.html)
 ·
 [PDF](https://pak.dynasite.org/Nestimate/pdf/tutorial_model_assessment.pdf)

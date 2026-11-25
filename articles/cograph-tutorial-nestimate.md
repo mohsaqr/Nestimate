@@ -473,6 +473,7 @@ splot(cluster_levels)
 
 Saqr, M., López-Pernas, S., & Misiejuk, K. (2026). *Network estimation
 and visualization with Nestimate + cograph*. Nestimate.
+<https://doi.org/10.5281/zenodo.24528512> ·
 [HTML](https://pak.dynasite.org/Nestimate/articles/cograph-tutorial-nestimate.html)
 ·
 [PDF](https://pak.dynasite.org/Nestimate/pdf/cograph-tutorial-nestimate.pdf)

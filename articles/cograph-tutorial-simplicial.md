@@ -650,6 +650,7 @@ verify_simplicial(net, threshold = 0.12)
 Saqr, M., López-Pernas, S., & Misiejuk, K. (2026). *Higher-order network
 analysis with simplicial complexes: From transition networks to
 topological analysis*. Nestimate.
+<https://doi.org/10.5281/zenodo.24528514> ·
 [HTML](https://pak.dynasite.org/Nestimate/articles/cograph-tutorial-simplicial.html)
 ·
 [PDF](https://pak.dynasite.org/Nestimate/pdf/cograph-tutorial-simplicial.pdf)

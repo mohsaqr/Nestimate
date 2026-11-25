@@ -805,6 +805,7 @@ not.
 
 Saqr, M., López-Pernas, S., & Misiejuk, K. (2026). *Comparing sequences
 between groups: Early vs late human-AI interactions*. Nestimate.
+<https://doi.org/10.5281/zenodo.24528504> ·
 [HTML](https://pak.dynasite.org/Nestimate/articles/sequence-comparison.html)
 · [PDF](https://pak.dynasite.org/Nestimate/pdf/sequence-comparison.pdf)
 
