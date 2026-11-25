@@ -1,4 +1,4 @@
-# Evaluate Link Predictions Against Known Edges
+# Evaluate link predictions against known edges
 
 `evaluate_links()` measures how well each index of a
 [`predict_links()`](https://pak.dynasite.org/Nestimate/reference/predict_links.md)
@@ -10,8 +10,12 @@ The AUC is the probability that a known edge scores higher than a pair
 that is not one (ties count half), so 0.5 is chance level. Average
 precision is the mean of the precisions at the rank of each known edge,
 and precision\\@\\k the share of known edges among the `k`
-highest-scoring pairs. Only the pairs listed in the predictions are
-evaluated: with `exclude_existing = TRUE`, the default of
+highest-scoring pairs. Pairs with the same score are not ordered:
+average precision is taken over the distinct scores (as scikit-learn's
+`average_precision_score`), and a group of tied pairs across the `k`-th
+place counts by the share of its places within the top `k`. Only the
+pairs listed in the predictions are evaluated: with
+`exclude_existing = TRUE`, the default of
 [`predict_links()`](https://pak.dynasite.org/Nestimate/reference/predict_links.md),
 the network's current edges are not scored, so the known edges should be
 ones held out of the network (a later period, a removed subset), and
@@ -55,7 +59,8 @@ evaluate_links(pred, true_edges, k = c(5L, 10L, 20L))
 A data frame with one row per index: `method`, `auc`,
 `average_precision` (`0` when no evaluated pair is a known edge), and
 one `precision_at_<k>` column per value of `k`. A prediction with no
-listed pairs (every possible link already exists) gives `NULL`.
+listed pairs (every possible link already exists) gives a zero-row data
+frame with these columns.
 
 ## Examples
 
@@ -71,17 +76,17 @@ pred <- predict_links(net, exclude_existing = FALSE)
 # Evaluate against the network's own edges as the known truth
 evaluate_links(pred, extract_edges(net, threshold = 0.001))
 #>                    method       auc average_precision precision_at_5
-#> 1        common_neighbors 0.5833333         0.4618602            0.4
-#> 2     resource_allocation 0.5833333         0.4618602            0.4
-#> 3             adamic_adar 0.5833333         0.4618602            0.4
-#> 4                 jaccard 0.3333333         0.3242384            0.0
-#> 5 preferential_attachment 0.6875000         0.7002999            0.8
-#> 6                    katz 0.7916667         0.6196293            0.4
+#> 1        common_neighbors 0.5833333         0.4500000          0.500
+#> 2     resource_allocation 0.5833333         0.4500000          0.500
+#> 3             adamic_adar 0.5833333         0.4500000          0.500
+#> 4                 jaccard 0.3333333         0.3213790          0.100
+#> 5 preferential_attachment 0.6875000         0.5500000          0.625
+#> 6                    katz 0.7916667         0.6304924          0.400
 #>   precision_at_10 precision_at_20
-#> 1             0.4             0.4
-#> 2             0.4             0.4
-#> 3             0.4             0.4
-#> 4             0.3             0.4
-#> 5             0.5             0.4
-#> 6             0.7             0.4
+#> 1       0.4666667             0.4
+#> 2       0.4666667             0.4
+#> 3       0.4666667             0.4
+#> 4       0.3000000             0.4
+#> 5       0.5500000             0.4
+#> 6       0.7000000             0.4
 ```

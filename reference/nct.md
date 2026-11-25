@@ -1,4 +1,4 @@
-# Network Comparison Test
+# Compare two networks with the network comparison test
 
 `nct()` tests whether two networks estimated from two samples of the
 same variables differ, at the three levels of van Borkulo et al. (2022):
@@ -37,10 +37,10 @@ nct(
 )
 
 # S3 method for class 'net_nct'
-print(x, n = Inf, ...)
+print(x, n = 6L, ...)
 
 # S3 method for class 'net_nct'
-summary(object, ...)
+summary(object, table = c("tests", "edges"), ...)
 
 # S3 method for class 'net_nct'
 as.data.frame(x, row.names = NULL, optional = FALSE, ...)
@@ -118,8 +118,8 @@ as.data.frame(x, row.names = NULL, optional = FALSE, ...)
 - n:
 
   For the [`print()`](https://rdrr.io/r/base/print.html) method: the
-  number of edges to list, largest difference first. Default `Inf`
-  (all).
+  number of edges to list, largest difference first. Default `6`; `Inf`
+  lists them all, as does `summary(x, table = "edges")`.
 
 - ...:
 
@@ -132,6 +132,12 @@ as.data.frame(x, row.names = NULL, optional = FALSE, ...)
 
   For the [`summary()`](https://rdrr.io/r/base/summary.html) method: a
   `net_nct` object.
+
+- table:
+
+  For the [`summary()`](https://rdrr.io/r/base/summary.html) method:
+  `"tests"` (default), the global tests, or `"edges"`, one row per node
+  pair (the table described below).
 
 - row.names, optional:
 
@@ -201,11 +207,11 @@ data frame with one row per global test and the columns `test`
 (`"network structure"`, and `"global strength"`, or
 `"global expected influence"` when `abs = FALSE`), `statistic` (`"M"`,
 `"S"`), `observed`, `p_value` and `significant` (`p_value < 0.05`, a
-fixed level). The
-[`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html) method
-gives one row per node pair, with the columns `from`, `to`, `weight_1`
-and `weight_2` (the edge in each group's network), `difference`
-(statistic E), `p_value` and `significant` (`p_value < 0.05`).
+fixed level). With `table = "edges"` (and the
+[`as.data.frame()`](https://rdrr.io/r/base/as.data.frame.html) method),
+one row per node pair, with the columns `from`, `to`, `weight_1` and
+`weight_2` (the edge in each group's network), `difference` (statistic
+E), `p_value` and `significant` (`p_value < 0.05`).
 
 ## Details
 

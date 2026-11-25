@@ -1,4 +1,4 @@
-# Coerce an inferential comparison to a network difference
+# Convert a network comparison to a difference network
 
 `as_netdifference()` turns the result of a network comparison into a
 plain `netdifference` object, the signed difference network that

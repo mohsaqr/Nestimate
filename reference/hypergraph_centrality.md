@@ -1,4 +1,4 @@
-# Hypergraph eigenvector centralities
+# Compute the eigenvector centralities of a hypergraph
 
 `hypergraph_centrality()` scores how central each node of a hypergraph
 is, with up to three eigenvector centralities from Benson (2019):
@@ -38,7 +38,7 @@ hypergraph_centrality(
 
 - hg:
 
-  The hypergraph: a `net_hypergraph` from
+  A hypergraph, from
   [`build_hypergraph()`](https://pak.dynasite.org/Nestimate/reference/build_hypergraph.md)
   or
   [`bipartite_groups()`](https://pak.dynasite.org/Nestimate/reference/bipartite_groups.md).
@@ -83,7 +83,8 @@ all-zero vectors, and one without nodes empty vectors.
 **Clique-motif eigenvector centrality (CEC)** is the leading eigenvector
 of the clique-expanded pairwise graph \\W\\ with \\W\_{ij} = \|\\e : i,
 j \in e\\\|\\, the number of hyperedges two nodes share. It reads
-membership only, so incidence weights are ignored: it equals
+membership only (a positive incidence cell, the rule that builds
+`$hyperedges`), so incidence weights are ignored: it equals
 [`igraph::eigen_centrality()`](https://r.igraph.org/reference/eigen_centrality.html)
 on `clique_expansion(hg, weighted = FALSE)`, and on
 [`clique_expansion()`](https://pak.dynasite.org/Nestimate/reference/clique_expansion.md)'s

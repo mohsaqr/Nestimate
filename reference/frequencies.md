@@ -1,4 +1,4 @@
-# Build a Transition Frequency Matrix
+# Count the transitions between states in sequences
 
 `frequencies()` counts how often each state is followed by each other
 state across all sequences and returns the counts as a square integer

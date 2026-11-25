@@ -1,4 +1,4 @@
-# Edge-weight Case-dropping Stability
+# Estimate the case-dropping stability of edge weights
 
 `casedrop_reliability()` measures how stable a network's edge weights
 are when cases are left out. It re-estimates the network on random
@@ -47,7 +47,8 @@ casedrop_reliability(
   method = c("spearman", "pearson", "kendall"),
   include_diag = FALSE,
   seed = NULL,
-  target = c("auto", "existing", "all")
+  target = c("auto", "existing", "all"),
+  actor = NULL
 )
 
 # S3 method for class 'net_casedrop_reliability'
@@ -82,11 +83,16 @@ plot(
 
   The network: a `netobject` or `cograph_network` that carries its data,
   or a `netobject_group` or `mcml`, whose networks (for an `mcml`, the
-  macro network and each cluster's) are assessed one by one. A network
-  without data raises an error, and one that rests on a single sequence,
-  or one-hot data with no actor or session, has no cases to drop and
-  raises an error of class `nestimate_single_sequence`. For the
-  [`print()`](https://rdrr.io/r/base/print.html) and
+  macro network and each cluster's) are assessed one by one. A `tna`
+  model or a `group_tna` (package tna) is first rebuilt as a network
+  from its own sequences (see
+  [`as_netobject()`](https://pak.dynasite.org/Nestimate/reference/as_netobject.md)).
+  A network without data raises an error, and one that rests on a single
+  sequence, or one-hot data with no actor or session, has no cases to
+  drop and raises an error of class `nestimate_single_sequence`. A
+  network built with `method = "latency"` raises an error of class
+  `nestimate_latency_resampling`: latency networks are not resampled.
+  For the [`print()`](https://rdrr.io/r/base/print.html) and
   [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods: the
   result of `casedrop_reliability()` (for
   [`print()`](https://rdrr.io/r/base/print.html), also the
@@ -149,6 +155,18 @@ plot(
   (default) uses `"existing"` for unscaled and unthresholded transition
   networks, where an absent transition cannot appear in a subset, and
   `"all"` otherwise. `include_diag` applies to either.
+
+- actor:
+
+  The column identifying the actor each sequence belongs to (for example
+  `"student_id"` for sessions nested in students), looked up in the
+  network's metadata or its wide sequence data, as in
+  [`bootstrap_network()`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.md).
+  With it, whole actors are dropped; see *Nested data and `actor`*.
+  Several column names, outermost first, are nested levels, of which the
+  outermost is dropped. Default `NULL`: sequences are dropped one by
+  one. Available for transition networks (relative, frequency,
+  co-occurrence).
 
 - digits:
 
@@ -228,8 +246,12 @@ network. The fields of a single result:
 
 - `n_cases`:
 
-  The number of cases resampled from: sequences for a transition
-  network, rows of the data otherwise.
+  The number of cases resampled from: sequences for a transition network
+  (actors with `actor`), rows of the data otherwise.
+
+- `actor`:
+
+  With `actor` only: the actor column(s).
 
 - `n_edges`:
 
@@ -281,11 +303,19 @@ networks and scaled or thresholded networks compare all cells, because a
 zero original weight can become non-zero once cases are dropped; set
 `target = "existing"` to compare only the original edges there.
 
+## Nested data and `actor`
+
 Case-dropping drops cases at random, so it treats them as independent
-units. When the cases are nested in actors (several sessions per
-person), the remaining cases of an actor stand in for the dropped ones,
-and the CS-coefficient overstates the stability; drop whole actors
-instead (for example with `tna::estimate_cs(actor = )`).
+units. When the sequences are nested in actors (several sessions per
+person), the remaining sequences of an actor stand in for the dropped
+ones, and the CS-coefficient overstates the stability. With `actor`, a
+case is an actor: `drop_prop` is the proportion of actors dropped, and
+all sequences of a dropped actor leave together, as in
+`tna::estimate_cs(actor = )`. With one sequence per actor the result is
+that of `actor = NULL`. Raises `nestimate_actor_missing` when the
+`actor` column is absent or incomplete, and
+`nestimate_actor_unsupported` when the network is not a transition
+network.
 
 ## References
 

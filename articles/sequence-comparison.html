@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>Sequence Pattern Comparison: Early vs Late Human-AI Interactions • Nestimate</title>
+<title>Comparing Sequences Between Groups: Early vs Late Human-AI Interactions • Nestimate</title>
 <!-- favicons --><link rel="icon" type="image/png" sizes="96x96" href="../favicon-96x96.png">
 <link rel="icon" type="”image/svg+xml”" href="../favicon.svg">
 <link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
@@ -14,7 +14,15 @@
 <link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Sequence Pattern Comparison: Early vs Late Human-AI Interactions">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Comparing Sequences Between Groups: Early vs Late Human-AI Interactions">
+<meta name="citation_title" content="Comparing Sequences Between Groups: Early vs Late Human-AI Interactions">
+<meta name="citation_author" content="Saqr, Mohammed">
+<meta name="citation_author" content="López-Pernas, Sonsoles">
+<meta name="citation_author" content="Misiejuk, Kamila">
+<meta name="citation_publication_date" content="2026">
+<meta name="citation_publisher" content="Nestimate">
+<meta name="citation_pdf_url" content="https://pak.dynasite.org/Nestimate/pdf/sequence-comparison.pdf">
+<meta name="citation_abstract_html_url" content="https://pak.dynasite.org/Nestimate/articles/sequence-comparison.html">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -24,7 +32,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.12</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -39,8 +47,8 @@
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
 <li><a class="dropdown-item" href="../articles/transition-entropy.html">Transition Matrix Entropy</a></li>
     <li><a class="dropdown-item" href="../articles/transition-networks.html">Network Estimation and Analysis with Nestimate</a></li>
-    <li><a class="dropdown-item" href="../articles/sequence-comparison.html">Sequence Pattern Comparison: Early vs Late Human-AI Interactions</a></li>
-    <li><a class="dropdown-item" href="../articles/sequence-plots.html">Sequence Plots: heatmap, index, and distribution</a></li>
+    <li><a class="dropdown-item" href="../articles/sequence-comparison.html">Comparing Sequences Between Groups: Early vs Late Human-AI Interactions</a></li>
+    <li><a class="dropdown-item" href="../articles/sequence-plots.html">Sequence Plots</a></li>
     <li><a class="dropdown-item" href="../articles/clustering.html">Sequence Clustering</a></li>
     <li><a class="dropdown-item" href="../articles/markov-stability.html">Markov Stability Analysis</a></li>
     <li><hr class="dropdown-divider"></li>
@@ -66,7 +74,7 @@
 
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
-      <img src="../logo.svg" class="logo" alt=""><h1>Sequence Pattern Comparison: Early vs Late Human-AI Interactions</h1>
+      <img src="../logo.svg" class="logo" alt=""><h1>Comparing Sequences Between Groups: Early vs Late Human-AI Interactions</h1>
                         <h4 data-toc-skip class="author">Mohammed
 Saqr</h4>
             <address class="author_afil">
@@ -87,216 +95,852 @@ Misiejuk</h4>
 
     
     
-<style>
-img { border: 0; }
-body, .main-container { max-width: 1200px; width: 100%; }
-</style>
+<p>Two groups of sequences can differ at several levels: in how often
+each state occurs, in which state follows which, in summary indices of
+each sequence, and in the patterns of states they contain. Nestimate
+(Saqr, López-Pernas &amp; Misiejuk 2026) compares sequences at each of
+these levels. This vignette applies them to one question: whether people
+direct an AI coding assistant differently in the first and the second
+half of a session. Temporal patterns within a learning episode have been
+used to study how students’ interactions and self-regulation develop
+over time (Saqr, Nouri &amp; Fors 2019).</p>
+<table class="table">
+<colgroup>
+<col width="50%">
+<col width="50%">
+</colgroup>
+<thead><tr class="header">
+<th>Question</th>
+<th>Function</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td>States: are they used in different proportions?</td>
+<td><code><a href="../reference/mosaic_test.html">mosaic_test()</a></code></td>
+</tr>
+<tr class="even">
+<td>Transitions: do their probabilities differ?</td>
+<td><code><a href="../reference/permutation.html">permutation()</a></code></td>
+</tr>
+<tr class="odd">
+<td>Sequences: do their summary indices differ?</td>
+<td><code>sequence_metrics(group = )</code></td>
+</tr>
+<tr class="even">
+<td>Patterns: does a pattern occur more often?</td>
+<td><code><a href="../reference/sequence_compare.html">sequence_compare()</a></code></td>
+</tr>
+<tr class="odd">
+<td>Patterns: does a pattern occur in more sequences?</td>
+<td><code><a href="../reference/sequence_patterns.html">sequence_patterns()</a></code></td>
+</tr>
+<tr class="even">
+<td>Jointly: which patterns or indices distinguish the groups?</td>
+<td>
+<code><a href="../reference/pattern_outcome.html">pattern_outcome()</a></code>, <code><a href="../reference/outcome_model.html">outcome_model()</a></code>
+</td>
+</tr>
+</tbody>
+</table>
 <div class="section level2">
-<h2 id="the-dataset">1. The dataset<a class="anchor" aria-label="anchor" href="#the-dataset"></a>
+<h2 id="data">Data<a class="anchor" aria-label="anchor" href="#data"></a>
 </h2>
-<p>Do people steer an AI coding assistant differently at the start of a
-session than at the end? <code>human_long</code> is a bundled dataset in
-<code>Nestimate</code> containing the coded human turns of <strong>429
-human-AI coding sessions across 34 projects</strong>. Every row is a
-single action taken during a session, with a <code>cluster</code> label
-grouping the nine action codes into three broad types:
+<p><code>human_long</code> holds the coded human turns of 429 human-AI
+pair-programming (“vibe coding”) sessions across 34 projects, one row
+per coded action (Saqr, Misiejuk &amp; López-Pernas 2026; Misiejuk et
+al. 2026). The nine action codes are grouped into three clusters,
 <code>Directive</code>, <code>Evaluative</code> and
-<code>Metacognitive</code>.</p>
+<code>Metacognitive</code>, in the column <code>cluster</code>, which is
+the state used here. <code>order_in_session</code> gives the position of
+each action within its session.</p>
+<p><code><a href="../reference/mark_phases.html">mark_phases()</a></code> orders the actions of each session by
+<code>order_in_session</code> and divides them into consecutive phases
+of nearly equal length. With <code>n = 2</code>, the first half of each
+session is labelled <code>early</code> and the second half
+<code>late</code>; with an odd number of actions, the middle one belongs
+to the second half.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">human_long</span>, package <span class="op">=</span> <span class="st">"Nestimate"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">human_long</span><span class="op">)</span></span>
-<span><span class="co">#&gt;   message_id   project   session_id  timestamp session_date      code</span></span>
-<span><span class="co">#&gt; 1       3439 Project_7 0086cabebd15 1772661600   2026-03-05   Specify</span></span>
-<span><span class="co">#&gt; 2       3439 Project_7 0086cabebd15 1772661600   2026-03-05   Command</span></span>
-<span><span class="co">#&gt; 3       3439 Project_7 0086cabebd15 1772661600   2026-03-05   Specify</span></span>
-<span><span class="co">#&gt; 4       3440 Project_7 0086cabebd15 1772661600   2026-03-05 Interrupt</span></span>
-<span><span class="co">#&gt; 5       3442 Project_7 0086cabebd15 1772661600   2026-03-05    Verify</span></span>
-<span><span class="co">#&gt; 6       3444 Project_7 0086cabebd15 1772661600   2026-03-05   Specify</span></span>
-<span><span class="co">#&gt;         cluster code_order order_in_session</span></span>
-<span><span class="co">#&gt; 1     Directive          1                1</span></span>
-<span><span class="co">#&gt; 2     Directive          2                2</span></span>
-<span><span class="co">#&gt; 3     Directive          3                3</span></span>
-<span><span class="co">#&gt; 4 Metacognitive          1                4</span></span>
-<span><span class="co">#&gt; 5    Evaluative          1                7</span></span>
-<span><span class="co">#&gt; 6     Directive          1               10</span></span></code></pre></div>
-</div>
-<div class="section level2">
-<h2 id="split-by-time-early-vs-late-interactions">2. Split by time — early vs late interactions<a class="anchor" aria-label="anchor" href="#split-by-time-early-vs-late-interactions"></a>
-</h2>
-<p>For each session, the first half of its actions is labeled
-<code>"early"</code> and the second half <code>"late"</code>. Base R
-<code><a href="https://rdrr.io/r/stats/ave.html" class="external-link">ave()</a></code> does both jobs — per-session count and per-session
-position — and then a single <code><a href="https://rdrr.io/r/base/ifelse.html" class="external-link">ifelse()</a></code> writes the label.</p>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/mohsaqr/Nestimate" class="external-link">Nestimate</a></span><span class="op">)</span></span>
+<span><span class="va">halves</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mark_phases.html">mark_phases</a></span><span class="op">(</span><span class="va">human_long</span>, actor <span class="op">=</span> <span class="st">"session_id"</span>,</span>
+<span>                      time <span class="op">=</span> <span class="st">"order_in_session"</span>, n <span class="op">=</span> <span class="fl">2</span>,</span>
+<span>                      labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"early"</span>, <span class="st">"late"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<p><code><a href="../reference/build_network.html">build_network()</a></code> with <code>group = "phase"</code>
+estimates one transition network per half and keeps the half-session
+sequences, which every function below reads.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">dat</span> <span class="op">&lt;-</span> <span class="va">human_long</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/order.html" class="external-link">order</a></span><span class="op">(</span><span class="va">human_long</span><span class="op">$</span><span class="va">session_id</span>, <span class="va">human_long</span><span class="op">$</span><span class="va">order_in_session</span><span class="op">)</span>, <span class="op">]</span></span>
-<span><span class="va">n_per</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/ave.html" class="external-link">ave</a></span><span class="op">(</span><span class="va">dat</span><span class="op">$</span><span class="va">order_in_session</span>, <span class="va">dat</span><span class="op">$</span><span class="va">session_id</span>, FUN <span class="op">=</span> <span class="va">length</span><span class="op">)</span></span>
-<span><span class="va">pos</span>   <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/ave.html" class="external-link">ave</a></span><span class="op">(</span><span class="va">dat</span><span class="op">$</span><span class="va">order_in_session</span>, <span class="va">dat</span><span class="op">$</span><span class="va">session_id</span>, FUN <span class="op">=</span> <span class="va">seq_along</span><span class="op">)</span></span>
-<span><span class="va">dat</span><span class="op">$</span><span class="va">half</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/ifelse.html" class="external-link">ifelse</a></span><span class="op">(</span><span class="va">pos</span> <span class="op">&lt;=</span> <span class="va">n_per</span> <span class="op"><a href="https://rdrr.io/r/base/Arithmetic.html" class="external-link">%/%</a></span> <span class="fl">2</span>, <span class="st">"early"</span>, <span class="st">"late"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span><span class="va">dat</span><span class="op">$</span><span class="va">half</span><span class="op">)</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; early  late </span></span>
-<span><span class="co">#&gt;  5287  5509</span></span></code></pre></div>
-</div>
-<div class="section level2">
-<h2 id="build-the-grouped-network">3. Build the grouped network<a class="anchor" aria-label="anchor" href="#build-the-grouped-network"></a>
-</h2>
-<p><code><a href="../reference/build_network.html">build_network()</a></code> is the canonical entry point. Passing
-<code>group = "half"</code> produces a <code>netobject_group</code> with
-one netobject per half; each stores the session-half sequences that
-<code><a href="../reference/sequence_compare.html">sequence_compare()</a></code> counts patterns in.</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">net</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_network.html">build_network</a></span><span class="op">(</span></span>
-<span>  data   <span class="op">=</span> <span class="va">dat</span>,</span>
-<span>  actor  <span class="op">=</span> <span class="st">"session_id"</span>,</span>
-<span>  action <span class="op">=</span> <span class="st">"cluster"</span>,</span>
-<span>  group  <span class="op">=</span> <span class="st">"half"</span>,</span>
-<span>  method <span class="op">=</span> <span class="st">"relative"</span></span>
-<span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">net</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_network.html">build_network</a></span><span class="op">(</span><span class="va">halves</span>, actor <span class="op">=</span> <span class="st">"session_id"</span>, action <span class="op">=</span> <span class="st">"cluster"</span>,</span>
+<span>                     group <span class="op">=</span> <span class="st">"phase"</span>, method <span class="op">=</span> <span class="st">"relative"</span><span class="op">)</span></span>
 <span><span class="va">net</span></span>
-<span><span class="co">#&gt; Group Networks (2 groups, group_col: half)</span></span>
+<span><span class="co">#&gt; Group Networks (2 groups, group_col: phase)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   Group  Nodes  Edges  Weights</span></span>
 <span><span class="co">#&gt;   early  3      9      [0.105, 0.637]</span></span>
 <span><span class="co">#&gt;   late   3      9      [0.131, 0.575]</span></span></code></pre></div>
-</div>
-<div class="section level2">
-<h2 id="compare-patterns-between-early-and-late">4. Compare patterns between early and late<a class="anchor" aria-label="anchor" href="#compare-patterns-between-early-and-late"></a>
-</h2>
-<p><code><a href="../reference/sequence_compare.html">sequence_compare()</a></code> accepts a
-<code>netobject_group</code> directly — group labels are read from the
-list names, no separate <code>group</code> argument needed. Pattern
-lengths 3–5 (the default <code>sub = 3:5</code>), minimum frequency 25,
-chi-square test with FDR correction (the default
-<code>adjust = "fdr"</code>).</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sequence_compare.html">sequence_compare</a></span><span class="op">(</span><span class="va">net</span>, min_freq <span class="op">=</span> <span class="fl">25L</span>, test <span class="op">=</span> <span class="st">"chisq"</span><span class="op">)</span></span>
-<span><span class="va">res</span></span>
-<span><span class="co">#&gt; Sequence Comparison  [100 patterns | 2 groups: early, late]</span></span>
-<span><span class="co">#&gt;   Lengths: 3, 4, 5  |  min_freq: 25  |  chi-square  (fdr)</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;                                                     pattern length freq_early</span></span>
-<span><span class="co">#&gt;              Directive-&gt;Directive-&gt;Directive-&gt;Metacognitive      4        278</span></span>
-<span><span class="co">#&gt;  Directive-&gt;Directive-&gt;Directive-&gt;Metacognitive-&gt;Evaluative      5         97</span></span>
-<span><span class="co">#&gt;                             Directive-&gt;Directive-&gt;Directive      3       1052</span></span>
-<span><span class="co">#&gt;                 Metacognitive-&gt;Metacognitive-&gt;Metacognitive      3         32</span></span>
-<span><span class="co">#&gt;   Directive-&gt;Directive-&gt;Directive-&gt;Directive-&gt;Metacognitive      5        142</span></span>
-<span><span class="co">#&gt;             Directive-&gt;Directive-&gt;Metacognitive-&gt;Evaluative      4        114</span></span>
-<span><span class="co">#&gt;   Directive-&gt;Directive-&gt;Directive-&gt;Metacognitive-&gt;Directive      5        120</span></span>
-<span><span class="co">#&gt;                            Evaluative-&gt;Directive-&gt;Directive      3        265</span></span>
-<span><span class="co">#&gt;                         Directive-&gt;Directive-&gt;Metacognitive      3        327</span></span>
-<span><span class="co">#&gt;                 Evaluative-&gt;Directive-&gt;Directive-&gt;Directive      4        134</span></span>
-<span><span class="co">#&gt;  freq_late prop_early   prop_late resid_early resid_late statistic      p_value</span></span>
-<span><span class="co">#&gt;        149 0.06876082 0.035100118    6.929245  -6.929245  47.32807 6.004603e-10</span></span>
-<span><span class="co">#&gt;         25 0.02645214 0.006488451    6.849638  -6.849638  45.67504 6.979522e-10</span></span>
-<span><span class="co">#&gt;        842 0.23672367 0.180803092    6.568847  -6.568847  42.81109 2.009648e-09</span></span>
-<span><span class="co">#&gt;        102 0.00720072 0.021902512   -5.820751   5.820751  32.87528 2.456621e-07</span></span>
-<span><span class="co">#&gt;         71 0.03872375 0.018427200    5.303063  -5.303063  27.38985 3.326031e-06</span></span>
-<span><span class="co">#&gt;         51 0.02819688 0.012014134    5.271906  -5.271906  26.96981 3.444305e-06</span></span>
-<span><span class="co">#&gt;         63 0.03272430 0.016350895    4.605937  -4.605937  20.53065 8.383434e-05</span></span>
-<span><span class="co">#&gt;        379 0.05963096 0.081382865   -4.045115   4.045115  16.03382 7.777640e-04</span></span>
-<span><span class="co">#&gt;        249 0.07358236 0.053467898    3.939441  -3.939441  15.18176 1.084909e-03</span></span>
-<span><span class="co">#&gt;        208 0.03314371 0.048998822   -3.627419   3.627419  12.76045 3.540257e-03</span></span>
-<span><span class="co">#&gt;   ... and 90 more patterns</span></span></code></pre></div>
-<p><code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> returns the full per-pattern table, one row
-per pattern, ranked by the test statistic:</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">res</span><span class="op">)</span>, <span class="fl">10</span><span class="op">)</span></span>
-<span><span class="co">#&gt;                                                       pattern length freq_early</span></span>
-<span><span class="co">#&gt; 1              Directive-&gt;Directive-&gt;Directive-&gt;Metacognitive      4        278</span></span>
-<span><span class="co">#&gt; 2  Directive-&gt;Directive-&gt;Directive-&gt;Metacognitive-&gt;Evaluative      5         97</span></span>
-<span><span class="co">#&gt; 3                             Directive-&gt;Directive-&gt;Directive      3       1052</span></span>
-<span><span class="co">#&gt; 4                 Metacognitive-&gt;Metacognitive-&gt;Metacognitive      3         32</span></span>
-<span><span class="co">#&gt; 5   Directive-&gt;Directive-&gt;Directive-&gt;Directive-&gt;Metacognitive      5        142</span></span>
-<span><span class="co">#&gt; 6             Directive-&gt;Directive-&gt;Metacognitive-&gt;Evaluative      4        114</span></span>
-<span><span class="co">#&gt; 7   Directive-&gt;Directive-&gt;Directive-&gt;Metacognitive-&gt;Directive      5        120</span></span>
-<span><span class="co">#&gt; 8                            Evaluative-&gt;Directive-&gt;Directive      3        265</span></span>
-<span><span class="co">#&gt; 9                         Directive-&gt;Directive-&gt;Metacognitive      3        327</span></span>
-<span><span class="co">#&gt; 10                Evaluative-&gt;Directive-&gt;Directive-&gt;Directive      4        134</span></span>
-<span><span class="co">#&gt;    freq_late prop_early   prop_late resid_early resid_late statistic</span></span>
-<span><span class="co">#&gt; 1        149 0.06876082 0.035100118    6.929245  -6.929245  47.32807</span></span>
-<span><span class="co">#&gt; 2         25 0.02645214 0.006488451    6.849638  -6.849638  45.67504</span></span>
-<span><span class="co">#&gt; 3        842 0.23672367 0.180803092    6.568847  -6.568847  42.81109</span></span>
-<span><span class="co">#&gt; 4        102 0.00720072 0.021902512   -5.820751   5.820751  32.87528</span></span>
-<span><span class="co">#&gt; 5         71 0.03872375 0.018427200    5.303063  -5.303063  27.38985</span></span>
-<span><span class="co">#&gt; 6         51 0.02819688 0.012014134    5.271906  -5.271906  26.96981</span></span>
-<span><span class="co">#&gt; 7         63 0.03272430 0.016350895    4.605937  -4.605937  20.53065</span></span>
-<span><span class="co">#&gt; 8        379 0.05963096 0.081382865   -4.045115   4.045115  16.03382</span></span>
-<span><span class="co">#&gt; 9        249 0.07358236 0.053467898    3.939441  -3.939441  15.18176</span></span>
-<span><span class="co">#&gt; 10       208 0.03314371 0.048998822   -3.627419   3.627419  12.76045</span></span>
-<span><span class="co">#&gt;         p_value</span></span>
-<span><span class="co">#&gt; 1  6.004603e-10</span></span>
-<span><span class="co">#&gt; 2  6.979522e-10</span></span>
-<span><span class="co">#&gt; 3  2.009648e-09</span></span>
-<span><span class="co">#&gt; 4  2.456621e-07</span></span>
-<span><span class="co">#&gt; 5  3.326031e-06</span></span>
-<span><span class="co">#&gt; 6  3.444305e-06</span></span>
-<span><span class="co">#&gt; 7  8.383434e-05</span></span>
-<span><span class="co">#&gt; 8  7.777640e-04</span></span>
-<span><span class="co">#&gt; 9  1.084909e-03</span></span>
-<span><span class="co">#&gt; 10 3.540257e-03</span></span></code></pre></div>
+<p>There are 425 early and 429 late half-sessions; the four sessions
+with a single action have no early half.</p>
 <div class="section level3">
-<h3 id="how-to-read-the-residuals">How to read the residuals<a class="anchor" aria-label="anchor" href="#how-to-read-the-residuals"></a>
+<h3 id="nested-data">Nested data<a class="anchor" aria-label="anchor" href="#nested-data"></a>
 </h3>
-<p>For every pattern, the standardized residual is computed from a 2x2
-contingency table <code>(this pattern vs. everything else)</code>:</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mtext mathvariant="normal">stdres</mtext><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo>=</mo><mfrac><mrow><msub><mi>O</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo>−</mo><msub><mi>E</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub></mrow><msqrt><mrow><msub><mi>E</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo>⋅</mo><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><msub><mi>r</mi><mi>i</mi></msub><mi>/</mi><mi>N</mi><mo stretchy="false" form="postfix">)</mo><mo>⋅</mo><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><msub><mi>c</mi><mi>j</mi></msub><mi>/</mi><mi>N</mi><mo stretchy="false" form="postfix">)</mo></mrow></msqrt></mfrac></mrow><annotation encoding="application/x-tex">\text{stdres}_{ij} = \frac{O_{ij} - E_{ij}}{\sqrt{E_{ij} \cdot (1 - r_i/N) \cdot (1 - c_j/N)}}</annotation></semantics></math></p>
-<ul>
-<li>
-<strong>Positive on <code>early</code></strong> → over-represented
-in the first half of sessions</li>
-<li>
-<strong>Positive on <code>late</code></strong> → over-represented in
-the second half</li>
-<li>
-<code>|z| &gt; 1.96</code> corresponds to <code>p &lt; 0.05</code>;
-<code>|z| &gt; 3</code> is very strong evidence</li>
-</ul>
+<p>Every session contributes one early and one late half, and the
+actions of a session come from the same person, project and AI
+assistant. The observations are therefore nested in sessions, and a test
+that treats the actions or the half-sessions as independent overstates
+the evidence when sessions differ from each other. Each function below
+has an argument for the nesting: <code>actor</code> for the tests based
+on counts and permutations, which then correct for the clustering or
+shuffle the labels only within a session (Anderson &amp; ter Braak 2003;
+Good 2005), and <code>group</code> for the regression models, which then
+include a random intercept for each session (Bates et al. 2015).</p>
 </div>
 </div>
 <div class="section level2">
-<h2 id="pyramid-plot">5. Pyramid plot<a class="anchor" aria-label="anchor" href="#pyramid-plot"></a>
+<h2 id="states">States<a class="anchor" aria-label="anchor" href="#states"></a>
 </h2>
-<p>Back-to-back bars with residual labels inside each segment. Both
-sides use the same standardized-residual color scale.</p>
+<p>The first comparison concerns the share of each state, ignoring
+order. <code><a href="../reference/sequence_plot.html">sequence_plot()</a></code> with
+<code>type = "distribution"</code> shows the share of each state at each
+position of the half-sessions. With <code>na = FALSE</code> the shares
+are taken among the observed actions, and <code>trim = 0.9</code> keeps
+the positions that hold 90% of the actions, since few half-sessions are
+longer.</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/sequence_plot.html">sequence_plot</a></span><span class="op">(</span><span class="va">net</span>, type <span class="op">=</span> <span class="st">"distribution"</span>, na <span class="op">=</span> <span class="cn">FALSE</span>, trim <span class="op">=</span> <span class="fl">0.9</span><span class="op">)</span></span></code></pre></div>
+<p><img src="sequence-comparison_files/figure-html/distribution-1.png" class="r-plt" alt="" width="100%" style="display: block; margin: auto;"></p>
+<p>Early halves start almost entirely with directives; late halves start
+with all three states, and metacognitive actions take a larger share of
+the late halves.</p>
+<p><code><a href="../reference/mosaic_test.html">mosaic_test()</a></code> cross-tabulates the half against the state
+and tests the association with every method for clustered counts. With
+<code>actor = "session_id"</code>, the sessions are the clusters.</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/mosaic_test.html">mosaic_test</a></span><span class="op">(</span><span class="va">net</span>, actor <span class="op">=</span> <span class="st">"session_id"</span><span class="op">)</span></span>
+<span><span class="co">#&gt;        method                    test statistic       df      df2      p_value</span></span>
+<span><span class="co">#&gt; 1       chisq                 Pearson  69.78883 2.000000       NA 7.007264e-16</span></span>
+<span><span class="co">#&gt; 2   rao_scott               Rao-Scott  28.72328 1.973638 844.7172 1.156606e-12</span></span>
+<span><span class="co">#&gt; 3 donner_klar             Donner-Klar        NA       NA       NA           NA</span></span>
+<span><span class="co">#&gt; 4         cmh Cochran-Mantel-Haenszel  74.24399 2.000000       NA 7.553064e-17</span></span>
+<span><span class="co">#&gt; 5         gee                GEE Wald  58.16751 2.000000       NA 2.339297e-13</span></span>
+<span><span class="co">#&gt; 6        glmm               GLMM Wald  69.33653 2.000000       NA 8.785453e-16</span></span>
+<span><span class="co">#&gt;       n clusters design_effect icc</span></span>
+<span><span class="co">#&gt; 1 10796       NA            NA  NA</span></span>
+<span><span class="co">#&gt; 2 10796      429      1.214848  NA</span></span>
+<span><span class="co">#&gt; 3 10796       NA            NA  NA</span></span>
+<span><span class="co">#&gt; 4 10796      421            NA  NA</span></span>
+<span><span class="co">#&gt; 5 10796      429            NA  NA</span></span>
+<span><span class="co">#&gt; 6 10796      429            NA  NA</span></span>
+<span><span class="co">#&gt;                                                                                                                                       note</span></span>
+<span><span class="co">#&gt; 1                                                                                                                                     &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 2                                                                                                                                     &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 3                                                                     Donner-Klar needs one variable that is constant within every cluster</span></span>
+<span><span class="co">#&gt; 4                                                                                                                                     &lt;NA&gt;</span></span>
+<span><span class="co">#&gt; 5 Wald test with a cluster-robust covariance; liberal unless the actors are many relative to the degrees of freedom (see ?mosaic_analysis)</span></span>
+<span><span class="co">#&gt; 6                                                                                                                                     &lt;NA&gt;</span></span></code></pre></div>
+<p>The Pearson chi-square test treats the 10,796 actions as independent.
+The Rao-Scott test corrects it for the clustering with a second-order
+adjustment (Rao &amp; Scott 1984); the design effect, 1.21, is the
+factor by which the clustering inflates the variance. The
+Cochran-Mantel-Haenszel test stratifies by session and compares the
+halves within each of the 421 sessions that have both (Landis, Heyman
+&amp; Koch 1978). The GEE test uses a cluster-robust covariance (Liang
+&amp; Zeger 1986), and the GLMM test a mixed model with a random
+intercept per session. The Donner-Klar test needs one variable that is
+constant within each cluster (Donner &amp; Klar 1994), and the half
+varies within every session, so it is not computed. The four tests that
+apply all reject independence (Rao-Scott F(1.97, 844.7) = 28.72, CMH =
+74.24, GEE = 58.17, GLMM = 69.34; every p &lt; 0.001).</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/mosaic_plot.html">mosaic_plot</a></span><span class="op">(</span><span class="va">net</span><span class="op">)</span></span></code></pre></div>
+<p><img src="sequence-comparison_files/figure-html/mosaic-plot-1.png" class="r-plt" alt="" width="100%" style="display: block; margin: auto;"></p>
+<p>In the mosaic plot, the width of a column is the share of actions in
+each half and the height of a tile the share of each state within the
+half. The fill is the standardised residual: blue tiles hold more
+actions than independence predicts and red tiles fewer. Directives are
+over-represented early; evaluations and metacognitive actions late.</p>
+</div>
+<div class="section level2">
+<h2 id="transitions">Transitions<a class="anchor" aria-label="anchor" href="#transitions"></a>
+</h2>
+<p>The second comparison concerns the transition probabilities, the
+probability of each state following each state.
+<code><a href="../reference/permutation.html">permutation()</a></code> compares the two networks edge by edge and as
+a whole by shuffling the <code>early</code> and <code>late</code> labels
+and recomputing the differences, which is the comparison used in
+transition network analysis (Saqr et al. 2025). With
+<code>actor = "session_id"</code>, the labels are shuffled only within
+each session.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">res</span>, style <span class="op">=</span> <span class="st">"pyramid"</span>, show_residuals <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
-<p><img src="sequence-comparison_files/figure-html/pyramid-1.png" class="r-plt" alt="" width="100%" style="display: block; margin: auto;"></p>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">2026</span><span class="op">)</span></span>
+<span><span class="va">transitions</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/permutation.html">permutation</a></span><span class="op">(</span><span class="va">net</span>, iter <span class="op">=</span> <span class="fl">1000</span>, actor <span class="op">=</span> <span class="st">"session_id"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">transitions</span><span class="op">)</span></span>
+<span><span class="co">#&gt;           group          from            to  weight_x  weight_y        diff</span></span>
+<span><span class="co">#&gt; 1 early vs late     Directive     Directive 0.6368638 0.5752445  0.06161928</span></span>
+<span><span class="co">#&gt; 2 early vs late     Directive    Evaluative 0.2032325 0.2449210 -0.04168853</span></span>
+<span><span class="co">#&gt; 3 early vs late     Directive Metacognitive 0.1599037 0.1798345 -0.01993075</span></span>
+<span><span class="co">#&gt; 4 early vs late    Evaluative     Directive 0.4547582 0.4901712 -0.03541302</span></span>
+<span><span class="co">#&gt; 5 early vs late    Evaluative    Evaluative 0.4407176 0.3792010  0.06151661</span></span>
+<span><span class="co">#&gt; 6 early vs late    Evaluative Metacognitive 0.1045242 0.1306278 -0.02610359</span></span>
+<span><span class="co">#&gt; 7 early vs late Metacognitive     Directive 0.4494048 0.3964497  0.05295506</span></span>
+<span><span class="co">#&gt; 8 early vs late Metacognitive    Evaluative 0.3690476 0.2875740  0.08147365</span></span>
+<span><span class="co">#&gt; 9 early vs late Metacognitive Metacognitive 0.1815476 0.3159763 -0.13442871</span></span>
+<span><span class="co">#&gt;   effect_size     p_value   sig</span></span>
+<span><span class="co">#&gt; 1    4.767254 0.000999001  TRUE</span></span>
+<span><span class="co">#&gt; 2   -3.424018 0.000999001  TRUE</span></span>
+<span><span class="co">#&gt; 3   -2.005723 0.046953047  TRUE</span></span>
+<span><span class="co">#&gt; 4   -1.813544 0.062937063 FALSE</span></span>
+<span><span class="co">#&gt; 5    3.231657 0.002997003  TRUE</span></span>
+<span><span class="co">#&gt; 6   -2.159258 0.027972028  TRUE</span></span>
+<span><span class="co">#&gt; 7    2.060593 0.033966034  TRUE</span></span>
+<span><span class="co">#&gt; 8    3.324027 0.002997003  TRUE</span></span>
+<span><span class="co">#&gt; 9   -4.926942 0.000999001  TRUE</span></span></code></pre></div>
+<p><code>weight_x</code> and <code>weight_y</code> are the transition
+probabilities of the early and the late half, <code>diff</code> their
+difference, and <code>effect_size</code> the difference divided by the
+standard deviation of the permuted differences. Eight of the nine
+transitions differ. The global statistic M, the sum of the absolute edge
+differences, is 0.515, and no permutation reached it (p = 0.001, the
+smallest value 1,000 permutations can give). The largest difference
+concerns a metacognitive action followed by another: its probability is
+0.18 in the first half and 0.32 in the second.</p>
 </div>
 <div class="section level2">
-<h2 id="heatmap">6. Heatmap<a class="anchor" aria-label="anchor" href="#heatmap"></a>
+<h2 id="sequence-indices">Sequence indices<a class="anchor" aria-label="anchor" href="#sequence-indices"></a>
 </h2>
-<p>Same top patterns, same color scale, alternative layout. Works for
-any number of groups (pyramid requires exactly 2).</p>
+<p>The third comparison summarises each half-session with indices of its
+composition and dynamics, such as the number of distinct states, the
+evenness of the states (longitudinal entropy), the share of consecutive
+actions that change state (transition rate) and the mean length of a
+spell in one state (Gabadinho et al. 2011).
+<code><a href="../reference/sequence_metrics.html">sequence_metrics()</a></code> computes them for every sequence; for a
+grouped network it compares each index between the groups. For each
+index it reports the number of half-sessions, the mean and the standard
+deviation of each half; the difference between the means (late minus
+early); Hedges’ g, the standardised difference corrected for small
+samples, with its 95% interval (Hedges 1981); eta squared, the share of
+the index’s variance between the halves; and a permutation p-value of
+the one-way F statistic, adjusted with the Benjamini-Hochberg method.
+The network was built with <code>actor = "session_id"</code>, so the
+labels are shuffled within each session.</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">res</span>, style <span class="op">=</span> <span class="st">"heatmap"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="sequence-comparison_files/figure-html/heatmap-1.png" class="r-plt" alt="" width="100%" style="display: block; margin: auto;"></p>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">2026</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/sequence_metrics.html">sequence_metrics</a></span><span class="op">(</span><span class="va">net</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Sequence metrics by phase  [19 indices | 2 groups: early, late]</span></span>
+<span><span class="co">#&gt;   permutation of the one-way F: 1000 iter (BH), within session</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;  index                 group n   mean  sd    diff  g     g_lo  g_hi  eta_sq</span></span>
+<span><span class="co">#&gt;  valid_n               early 425 12.44 12.00  0.40  0.03 -0.10  0.17 0.00  </span></span>
+<span><span class="co">#&gt;  valid_n               late  429 12.84 11.98  0.40  0.03 -0.10  0.17 0.00  </span></span>
+<span><span class="co">#&gt;  valid_proportion      early 425  1.00  0.00  0.00    NA    NA    NA   NA  </span></span>
+<span><span class="co">#&gt;  valid_proportion      late  429  1.00  0.00  0.00    NA    NA    NA   NA  </span></span>
+<span><span class="co">#&gt;  unique_states         early 425  2.42  0.74  0.20  0.31  0.17  0.44 0.02  </span></span>
+<span><span class="co">#&gt;  unique_states         late  429  2.62  0.58  0.20  0.31  0.17  0.44 0.02  </span></span>
+<span><span class="co">#&gt;  mean_spell_duration   early 425  2.21  0.93 -0.36 -0.41 -0.54 -0.27 0.04  </span></span>
+<span><span class="co">#&gt;  mean_spell_duration   late  429  1.85  0.84 -0.36 -0.41 -0.54 -0.27 0.04  </span></span>
+<span><span class="co">#&gt;  max_spell_duration    early 425  3.97  1.75 -0.28 -0.14 -0.28 -0.01 0.01  </span></span>
+<span><span class="co">#&gt;  max_spell_duration    late  429  3.69  2.16 -0.28 -0.14 -0.28 -0.01 0.01  </span></span>
+<span><span class="co">#&gt;  longitudinal_entropy  early 425  0.61  0.30  0.13  0.47  0.33  0.60 0.05  </span></span>
+<span><span class="co">#&gt;  longitudinal_entropy  late  429  0.73  0.24  0.13  0.47  0.33  0.60 0.05  </span></span>
+<span><span class="co">#&gt;  simpson_diversity     early 425  0.41  0.20  0.09  0.50  0.36  0.63 0.06  </span></span>
+<span><span class="co">#&gt;  simpson_diversity     late  429  0.50  0.16  0.09  0.50  0.36  0.63 0.06  </span></span>
+<span><span class="co">#&gt;  self_loop_tendency    early 418  0.59  0.23 -0.14 -0.60 -0.74 -0.46 0.08  </span></span>
+<span><span class="co">#&gt;  self_loop_tendency    late  423  0.45  0.22 -0.14 -0.60 -0.74 -0.46 0.08  </span></span>
+<span><span class="co">#&gt;  transition_rate       early 418  0.41  0.23  0.14  0.60  0.46  0.74 0.08  </span></span>
+<span><span class="co">#&gt;  transition_rate       late  423  0.55  0.22  0.14  0.60  0.46  0.74 0.08  </span></span>
+<span><span class="co">#&gt;  transition_complexity early 425  0.47  0.31  0.06  0.20  0.07  0.34 0.01  </span></span>
+<span><span class="co">#&gt;  transition_complexity late  429  0.53  0.27  0.06  0.20  0.07  0.34 0.01  </span></span>
+<span><span class="co">#&gt;  F     p        p_adj </span></span>
+<span><span class="co">#&gt;   0.24 0.000999 0.0015</span></span>
+<span><span class="co">#&gt;   0.24 0.000999 0.0015</span></span>
+<span><span class="co">#&gt;     NA NA       NA    </span></span>
+<span><span class="co">#&gt;     NA NA       NA    </span></span>
+<span><span class="co">#&gt;  20.03 0.000999 0.0015</span></span>
+<span><span class="co">#&gt;  20.03 0.000999 0.0015</span></span>
+<span><span class="co">#&gt;  35.24 0.000999 0.0015</span></span>
+<span><span class="co">#&gt;  35.24 0.000999 0.0015</span></span>
+<span><span class="co">#&gt;   4.38 0.00999  0.012 </span></span>
+<span><span class="co">#&gt;   4.38 0.00999  0.012 </span></span>
+<span><span class="co">#&gt;  46.76 0.000999 0.0015</span></span>
+<span><span class="co">#&gt;  46.76 0.000999 0.0015</span></span>
+<span><span class="co">#&gt;  52.75 0.000999 0.0015</span></span>
+<span><span class="co">#&gt;  52.75 0.000999 0.0015</span></span>
+<span><span class="co">#&gt;  75.70 0.000999 0.0015</span></span>
+<span><span class="co">#&gt;  75.70 0.000999 0.0015</span></span>
+<span><span class="co">#&gt;  75.70 0.000999 0.0015</span></span>
+<span><span class="co">#&gt;  75.70 0.000999 0.0015</span></span>
+<span><span class="co">#&gt;   8.65 0.000999 0.0015</span></span>
+<span><span class="co">#&gt;   8.65 0.000999 0.0015</span></span>
+<span><span class="co">#&gt;   ... and 9 more indices (18 rows); summary() returns them all</span></span></code></pre></div>
+<p>Most indices differ between the halves. The largest differences
+concern the opening state: in the late halves it holds a smaller share
+of the half-session (<code>initial_state_proportion</code>, 0.67 against
+0.51, g = -0.78 [-0.92, -0.64]) and is left sooner
+(<code>initial_state_persistence</code>, g = -0.70). Late halves change
+state more often (<code>transition_rate</code>, 0.41 against 0.55, g =
+0.60 [0.46, 0.74]), spend less time in their dominant state
+(<code>dominant_proportion</code>, g = -0.53) and in each spell
+(<code>mean_spell_duration</code>, 2.22 against 1.86 actions, g =
+-0.41), and spread their actions more evenly
+(<code>longitudinal_entropy</code>, 0.61 against 0.74, g = 0.47;
+<code>simpson_diversity</code>, g = 0.50).
+<code>self_loop_tendency</code> is one minus the transition rate, so its
+test is the same. Three rows need no interpretation. The late half is
+never shorter than the early half, because <code><a href="../reference/mark_phases.html">mark_phases()</a></code>
+puts the middle action of an odd-length session in the second half, so
+<code>valid_n</code> differs although the means are almost equal (12.4
+against 12.8, g = 0.03). <code>valid_proportion</code> is 1 for every
+half-session and cannot be compared. The two indices of the emergent
+state are defined only for the half-sessions that have one (161 early,
+240 late) and do not differ.</p>
 </div>
 <div class="section level2">
-<h2 id="sort-by-frequency">7. Sort by frequency<a class="anchor" aria-label="anchor" href="#sort-by-frequency"></a>
+<h2 id="patterns">Patterns<a class="anchor" aria-label="anchor" href="#patterns"></a>
 </h2>
-<p>By default patterns are ranked by test statistic. Pass
-<code>sort = "frequency"</code> to rank by total occurrence count
-instead — useful for focusing on the most common patterns regardless of
-their group difference.</p>
+<p>A pattern is a sequence of consecutive states, such as
+<code>Directive-&gt;Directive-&gt;Evaluative</code>, a k-gram of length
+3. The halves can differ in how often a pattern occurs, which weighs
+each half-session by how often it repeats the pattern, and in how many
+half-sessions contain it, which counts each half-session once.</p>
+<div class="section level3">
+<h3 id="how-often-a-pattern-occurs">How often a pattern occurs<a class="anchor" aria-label="anchor" href="#how-often-a-pattern-occurs"></a>
+</h3>
+<p>For each pattern length in <code>sub</code> (3 to 5 by default),
+<code><a href="../reference/sequence_compare.html">sequence_compare()</a></code> counts every pattern in each half and
+keeps the patterns that occur at least <code>min_freq</code> times in
+both. The standardised residual compares a half’s count with the count
+expected if pattern and half were independent, in approximately
+standard-normal units (Haberman 1973). The permutation test shuffles the
+labels within sessions (<code>actor</code>), and the p-values are
+adjusted with the false discovery rate (Benjamini &amp; Hochberg
+1995).</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">res</span>, style <span class="op">=</span> <span class="st">"pyramid"</span>, sort <span class="op">=</span> <span class="st">"frequency"</span>, show_residuals <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
-<p><img src="sequence-comparison_files/figure-html/sort-freq-1.png" class="r-plt" alt="" width="100%" style="display: block; margin: auto;"></p>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">20260413</span><span class="op">)</span></span>
+<span><span class="va">counts</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sequence_compare.html">sequence_compare</a></span><span class="op">(</span><span class="va">net</span>, min_freq <span class="op">=</span> <span class="fl">25L</span>, test <span class="op">=</span> <span class="st">"permutation"</span>,</span>
+<span>                           iter <span class="op">=</span> <span class="fl">1000L</span>, actor <span class="op">=</span> <span class="st">"session_id"</span><span class="op">)</span></span>
+<span><span class="va">counts</span></span>
+<span><span class="co">#&gt; Sequence Comparison  [100 patterns | 2 groups: early, late]</span></span>
+<span><span class="co">#&gt;   Lengths: 3, 4, 5  |  min_freq: 25  |  permutation: 1000 iter (fdr), actor: session_id (429 actors, mixed)</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;  pattern                                                    group count prop</span></span>
+<span><span class="co">#&gt;  Directive-&gt;Directive-&gt;Directive-&gt;Metacognitive             early  278  0.07</span></span>
+<span><span class="co">#&gt;  Directive-&gt;Directive-&gt;Directive-&gt;Metacognitive             late   149  0.04</span></span>
+<span><span class="co">#&gt;  Directive-&gt;Directive-&gt;Directive-&gt;Metacognitive-&gt;Evaluative early   97  0.03</span></span>
+<span><span class="co">#&gt;  Directive-&gt;Directive-&gt;Directive-&gt;Metacognitive-&gt;Evaluative late    25  0.01</span></span>
+<span><span class="co">#&gt;  Directive-&gt;Directive-&gt;Directive-&gt;Directive-&gt;Metacognitive  early  142  0.04</span></span>
+<span><span class="co">#&gt;  Directive-&gt;Directive-&gt;Directive-&gt;Directive-&gt;Metacognitive  late    71  0.02</span></span>
+<span><span class="co">#&gt;  Directive-&gt;Directive-&gt;Metacognitive-&gt;Evaluative            early  114  0.03</span></span>
+<span><span class="co">#&gt;  Directive-&gt;Directive-&gt;Metacognitive-&gt;Evaluative            late    51  0.01</span></span>
+<span><span class="co">#&gt;  Evaluative-&gt;Directive-&gt;Directive                           early  265  0.06</span></span>
+<span><span class="co">#&gt;  Evaluative-&gt;Directive-&gt;Directive                           late   379  0.08</span></span>
+<span><span class="co">#&gt;  Directive-&gt;Directive-&gt;Directive-&gt;Metacognitive-&gt;Directive  early  120  0.03</span></span>
+<span><span class="co">#&gt;  Directive-&gt;Directive-&gt;Directive-&gt;Metacognitive-&gt;Directive  late    63  0.02</span></span>
+<span><span class="co">#&gt;  Directive-&gt;Directive-&gt;Directive                            early 1052  0.24</span></span>
+<span><span class="co">#&gt;  Directive-&gt;Directive-&gt;Directive                            late   842  0.18</span></span>
+<span><span class="co">#&gt;  Metacognitive-&gt;Metacognitive-&gt;Metacognitive                early   32  0.01</span></span>
+<span><span class="co">#&gt;  Metacognitive-&gt;Metacognitive-&gt;Metacognitive                late   102  0.02</span></span>
+<span><span class="co">#&gt;  Directive-&gt;Directive-&gt;Metacognitive                        early  327  0.07</span></span>
+<span><span class="co">#&gt;  Directive-&gt;Directive-&gt;Metacognitive                        late   249  0.05</span></span>
+<span><span class="co">#&gt;  Evaluative-&gt;Directive-&gt;Directive-&gt;Directive                early  134  0.03</span></span>
+<span><span class="co">#&gt;  Evaluative-&gt;Directive-&gt;Directive-&gt;Directive                late   208  0.05</span></span>
+<span><span class="co">#&gt;  resid effect p      </span></span>
+<span><span class="co">#&gt;   6.93 11.31  0.00908</span></span>
+<span><span class="co">#&gt;  -6.93 11.31  0.00908</span></span>
+<span><span class="co">#&gt;   6.85 10.81  0.00908</span></span>
+<span><span class="co">#&gt;  -6.85 10.81  0.00908</span></span>
+<span><span class="co">#&gt;   5.30  8.39  0.00908</span></span>
+<span><span class="co">#&gt;  -5.30  8.39  0.00908</span></span>
+<span><span class="co">#&gt;   5.27  7.23  0.00908</span></span>
+<span><span class="co">#&gt;  -5.27  7.23  0.00908</span></span>
+<span><span class="co">#&gt;  -4.05  7.12  0.00908</span></span>
+<span><span class="co">#&gt;   4.05  7.12  0.00908</span></span>
+<span><span class="co">#&gt;   4.61  6.46  0.00908</span></span>
+<span><span class="co">#&gt;  -4.61  6.46  0.00908</span></span>
+<span><span class="co">#&gt;   6.57  6.25  0.00908</span></span>
+<span><span class="co">#&gt;  -6.57  6.25  0.00908</span></span>
+<span><span class="co">#&gt;  -5.82  5.73  0.00908</span></span>
+<span><span class="co">#&gt;   5.82  5.73  0.00908</span></span>
+<span><span class="co">#&gt;   3.94  5.66  0.00908</span></span>
+<span><span class="co">#&gt;  -3.94  5.66  0.00908</span></span>
+<span><span class="co">#&gt;  -3.63  5.24  0.00908</span></span>
+<span><span class="co">#&gt;   3.63  5.24  0.00908</span></span>
+<span><span class="co">#&gt;   ... and 90 more patterns (180 rows); summary() returns them all</span></span></code></pre></div>
+<p>The printout shows one row per pattern and half: <code>count</code>
+is how often the pattern occurs in the half, <code>prop</code> its share
+of the half’s patterns of that length, <code>resid</code> the
+standardised residual, and <code>effect</code> the number of standard
+deviations by which the observed statistic exceeds the mean of the
+permuted ones; <code>effect</code> and <code>p</code> belong to the
+pattern and repeat on its two rows.
+<code>summary(counts, format = "long")</code> returns that table for
+every pattern, and <code>summary(counts)</code> one row per pattern. Of
+the 100 patterns tested, 18 differ at a false discovery rate of 0.05: 11
+are more frequent early and 7 late. Directives followed by a
+metacognitive action are more frequent early
+(<code>Directive-&gt;Directive-&gt;Directive-&gt;Metacognitive</code>,
+278 against 149), and patterns that start with an evaluation and
+continue with directives are more frequent late
+(<code>Evaluative-&gt;Directive-&gt;Directive</code>, 265 against
+379).</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">counts</span>, style <span class="op">=</span> <span class="st">"pyramid"</span>, show_residuals <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+<p><img src="sequence-comparison_files/figure-html/compare-pyramid-1.png" class="r-plt" alt="" width="100%" style="display: block; margin: auto;"></p>
+<p>The pyramid shows the patterns with the largest differences, the
+first half on the left and the second on the right, each pattern’s count
+beside its bar, its residual inside the bar when the bar is wide enough,
+and its p-value in the middle. The heatmap shows the same residuals as a
+grid of patterns by halves, the layout used for more than two
+groups.</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">counts</span>, style <span class="op">=</span> <span class="st">"heatmap"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="sequence-comparison_files/figure-html/compare-heatmap-1.png" class="r-plt" alt="" width="100%" style="display: block; margin: auto;"></p>
+<p>By default the patterns are ranked by the test statistic;
+<code>sort = "frequency"</code> ranks them by their total count instead,
+which shows the most common patterns whatever their difference.</p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">counts</span>, style <span class="op">=</span> <span class="st">"pyramid"</span>, sort <span class="op">=</span> <span class="st">"frequency"</span>, show_residuals <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+<p><img src="sequence-comparison_files/figure-html/compare-frequency-1.png" class="r-plt" alt="" width="100%" style="display: block; margin: auto;"></p>
+</div>
+<div class="section level3">
+<h3 id="how-many-sequences-contain-a-pattern">How many sequences contain a pattern<a class="anchor" aria-label="anchor" href="#how-many-sequences-contain-a-pattern"></a>
+</h3>
+<p>Support is the share of sequences that contain a pattern at least
+once (Agrawal &amp; Srikant 1995). <code><a href="../reference/sequence_patterns.html">sequence_patterns()</a></code>
+reports the support of each pattern and, for a group of networks,
+compares it between the groups with Fisher’s exact test and an odds
+ratio with its 95% interval; the odds ratios are those of the late half,
+and <code>p_adj</code> is adjusted with the Benjamini-Hochberg method.
+Fisher’s test treats the half-sessions as independent samples, so these
+p-values do not take the sessions into account. Four kinds of pattern
+are compared.</p>
+<div class="section level4">
+<h4 id="contiguous-patterns">Contiguous patterns<a class="anchor" aria-label="anchor" href="#contiguous-patterns"></a>
+</h4>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">ngrams</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sequence_patterns.html">sequence_patterns</a></span><span class="op">(</span><span class="va">net</span>, type <span class="op">=</span> <span class="st">"ngram"</span>, len <span class="op">=</span> <span class="fl">3</span><span class="op">:</span><span class="fl">4</span>, min_freq <span class="op">=</span> <span class="fl">25</span><span class="op">)</span></span>
+<span><span class="va">ngrams</span></span>
+<span><span class="co">#&gt; Sequence patterns by phase  [95 patterns | 2 groups: early, late]</span></span>
+<span><span class="co">#&gt;   presence test: Fisher's exact, odds ratio against early (BH)</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;  pattern                                         n_sequences support group</span></span>
+<span><span class="co">#&gt;  Directive-&gt;Directive-&gt;Directive                 630         0.74    early</span></span>
+<span><span class="co">#&gt;  Directive-&gt;Directive-&gt;Directive                 630         0.74    late </span></span>
+<span><span class="co">#&gt;  Directive-&gt;Directive-&gt;Directive-&gt;Metacognitive  362         0.42    early</span></span>
+<span><span class="co">#&gt;  Directive-&gt;Directive-&gt;Directive-&gt;Metacognitive  362         0.42    late </span></span>
+<span><span class="co">#&gt;  Directive-&gt;Directive-&gt;Directive-&gt;Directive      385         0.45    early</span></span>
+<span><span class="co">#&gt;  Directive-&gt;Directive-&gt;Directive-&gt;Directive      385         0.45    late </span></span>
+<span><span class="co">#&gt;  Directive-&gt;Directive-&gt;Metacognitive             435         0.51    early</span></span>
+<span><span class="co">#&gt;  Directive-&gt;Directive-&gt;Metacognitive             435         0.51    late </span></span>
+<span><span class="co">#&gt;  Directive-&gt;Directive-&gt;Metacognitive-&gt;Evaluative 150         0.18    early</span></span>
+<span><span class="co">#&gt;  Directive-&gt;Directive-&gt;Metacognitive-&gt;Evaluative 150         0.18    late </span></span>
+<span><span class="co">#&gt;  Evaluative-&gt;Directive-&gt;Directive                389         0.46    early</span></span>
+<span><span class="co">#&gt;  Evaluative-&gt;Directive-&gt;Directive                389         0.46    late </span></span>
+<span><span class="co">#&gt;  Evaluative-&gt;Directive-&gt;Directive-&gt;Directive     250         0.29    early</span></span>
+<span><span class="co">#&gt;  Evaluative-&gt;Directive-&gt;Directive-&gt;Directive     250         0.29    late </span></span>
+<span><span class="co">#&gt;  Metacognitive-&gt;Metacognitive-&gt;Metacognitive      65         0.08    early</span></span>
+<span><span class="co">#&gt;  Metacognitive-&gt;Metacognitive-&gt;Metacognitive      65         0.08    late </span></span>
+<span><span class="co">#&gt;  Directive-&gt;Directive-&gt;Metacognitive-&gt;Directive  197         0.23    early</span></span>
+<span><span class="co">#&gt;  Directive-&gt;Directive-&gt;Metacognitive-&gt;Directive  197         0.23    late </span></span>
+<span><span class="co">#&gt;  Directive-&gt;Metacognitive-&gt;Directive-&gt;Evaluative  70         0.08    early</span></span>
+<span><span class="co">#&gt;  Directive-&gt;Metacognitive-&gt;Directive-&gt;Evaluative  70         0.08    late </span></span>
+<span><span class="co">#&gt;  group_support odds_ratio or_lower or_upper p_value  p_adj   </span></span>
+<span><span class="co">#&gt;  0.88          0.20       0.13     0.28     1.92e-22 1.82e-20</span></span>
+<span><span class="co">#&gt;  0.59          0.20       0.13     0.28     1.92e-22 1.82e-20</span></span>
+<span><span class="co">#&gt;  0.57          0.29       0.21     0.39     2.67e-18 1.27e-16</span></span>
+<span><span class="co">#&gt;  0.28          0.29       0.21     0.39     2.67e-18 1.27e-16</span></span>
+<span><span class="co">#&gt;  0.55          0.46       0.35     0.61     3.43e-08 1.09e-06</span></span>
+<span><span class="co">#&gt;  0.36          0.46       0.35     0.61     3.43e-08 1.09e-06</span></span>
+<span><span class="co">#&gt;  0.60          0.48       0.36     0.64     1.34e-07 3.18e-06</span></span>
+<span><span class="co">#&gt;  0.42          0.48       0.36     0.64     1.34e-07 3.18e-06</span></span>
+<span><span class="co">#&gt;  0.24          0.39       0.26     0.57     3.71e-07 7.05e-06</span></span>
+<span><span class="co">#&gt;  0.11          0.39       0.26     0.57     3.71e-07 7.05e-06</span></span>
+<span><span class="co">#&gt;  0.37          2.01       1.51     2.67     5.16e-07 8.17e-06</span></span>
+<span><span class="co">#&gt;  0.54          2.01       1.51     2.67     5.16e-07 8.17e-06</span></span>
+<span><span class="co">#&gt;  0.22          2.11       1.54     2.89     1.35e-06 1.83e-05</span></span>
+<span><span class="co">#&gt;  0.37          2.11       1.54     2.89     1.35e-06 1.83e-05</span></span>
+<span><span class="co">#&gt;  0.04          2.56       1.44     4.72     0.000692 0.00822 </span></span>
+<span><span class="co">#&gt;  0.11          2.56       1.44     4.72     0.000692 0.00822 </span></span>
+<span><span class="co">#&gt;  0.28          0.57       0.41     0.80     0.00084  0.00887 </span></span>
+<span><span class="co">#&gt;  0.18          0.57       0.41     0.80     0.00084  0.00887 </span></span>
+<span><span class="co">#&gt;  0.11          0.42       0.24     0.73     0.0011   0.0104  </span></span>
+<span><span class="co">#&gt;  0.05          0.42       0.24     0.73     0.0011   0.0104  </span></span>
+<span><span class="co">#&gt;   ... and 85 more patterns (170 rows); summary() returns them all</span></span></code></pre></div>
+<p>Of the 95 patterns, 20 differ in support at an adjusted level of
+0.05: 8 occur in a larger share of early halves and 12 in a larger share
+of late halves. <code>Directive-&gt;Directive-&gt;Directive</code>
+occurs in 88% of the early halves and 59% of the late halves (odds ratio
+0.20 [0.13, 0.28]), and
+<code>Evaluative-&gt;Directive-&gt;Directive</code> in 37% and 54% (2.01
+[1.51, 2.67]).</p>
+</div>
+<div class="section level4">
+<h4 id="two-states-with-others-between-them">Two states with others between them<a class="anchor" aria-label="anchor" href="#two-states-with-others-between-them"></a>
+</h4>
+<p>A gapped pattern fixes two states and allows any states between them:
+<code>Evaluative-&gt;*-&gt;Directive</code> is an evaluation followed by
+a directive two positions later,
+<code>Evaluative-&gt;**-&gt;Directive</code> three positions later.</p>
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">gaps</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sequence_patterns.html">sequence_patterns</a></span><span class="op">(</span><span class="va">net</span>, type <span class="op">=</span> <span class="st">"gapped"</span>, gap <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">2</span>, min_freq <span class="op">=</span> <span class="fl">25</span><span class="op">)</span></span>
+<span><span class="va">gaps</span></span>
+<span><span class="co">#&gt; Sequence patterns by phase  [18 patterns | 2 groups: early, late]</span></span>
+<span><span class="co">#&gt;   presence test: Fisher's exact, odds ratio against early (BH)</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;  pattern                          n_sequences support group group_support</span></span>
+<span><span class="co">#&gt;  Directive-&gt;*-&gt;Directive          723         0.85    early 0.92         </span></span>
+<span><span class="co">#&gt;  Directive-&gt;*-&gt;Directive          723         0.85    late  0.77         </span></span>
+<span><span class="co">#&gt;  Evaluative-&gt;**-&gt;Directive        421         0.49    early 0.39         </span></span>
+<span><span class="co">#&gt;  Evaluative-&gt;**-&gt;Directive        421         0.49    late  0.60         </span></span>
+<span><span class="co">#&gt;  Evaluative-&gt;*-&gt;Directive         477         0.56    early 0.47         </span></span>
+<span><span class="co">#&gt;  Evaluative-&gt;*-&gt;Directive         477         0.56    late  0.65         </span></span>
+<span><span class="co">#&gt;  Directive-&gt;**-&gt;Metacognitive     507         0.59    early 0.67         </span></span>
+<span><span class="co">#&gt;  Directive-&gt;**-&gt;Metacognitive     507         0.59    late  0.52         </span></span>
+<span><span class="co">#&gt;  Evaluative-&gt;*-&gt;Metacognitive     251         0.29    early 0.22         </span></span>
+<span><span class="co">#&gt;  Evaluative-&gt;*-&gt;Metacognitive     251         0.29    late  0.37         </span></span>
+<span><span class="co">#&gt;  Evaluative-&gt;**-&gt;Metacognitive    212         0.25    early 0.19         </span></span>
+<span><span class="co">#&gt;  Evaluative-&gt;**-&gt;Metacognitive    212         0.25    late  0.31         </span></span>
+<span><span class="co">#&gt;  Metacognitive-&gt;**-&gt;Metacognitive 150         0.18    early 0.12         </span></span>
+<span><span class="co">#&gt;  Metacognitive-&gt;**-&gt;Metacognitive 150         0.18    late  0.23         </span></span>
+<span><span class="co">#&gt;  Directive-&gt;*-&gt;Metacognitive      501         0.59    early 0.64         </span></span>
+<span><span class="co">#&gt;  Directive-&gt;*-&gt;Metacognitive      501         0.59    late  0.53         </span></span>
+<span><span class="co">#&gt;  Metacognitive-&gt;*-&gt;Metacognitive  183         0.21    early 0.17         </span></span>
+<span><span class="co">#&gt;  Metacognitive-&gt;*-&gt;Metacognitive  183         0.21    late  0.26         </span></span>
+<span><span class="co">#&gt;  Directive-&gt;**-&gt;Directive         634         0.74    early 0.78         </span></span>
+<span><span class="co">#&gt;  Directive-&gt;**-&gt;Directive         634         0.74    late  0.71         </span></span>
+<span><span class="co">#&gt;  odds_ratio or_lower or_upper p_value  p_adj   </span></span>
+<span><span class="co">#&gt;  0.27       0.17     0.42     1.79e-10 3.22e-09</span></span>
+<span><span class="co">#&gt;  0.27       0.17     0.42     1.79e-10 3.22e-09</span></span>
+<span><span class="co">#&gt;  2.33       1.76     3.10     1.06e-09 9.54e-09</span></span>
+<span><span class="co">#&gt;  2.33       1.76     3.10     1.06e-09 9.54e-09</span></span>
+<span><span class="co">#&gt;  2.05       1.54     2.72     3.18e-07 1.91e-06</span></span>
+<span><span class="co">#&gt;  2.05       1.54     2.72     3.18e-07 1.91e-06</span></span>
+<span><span class="co">#&gt;  0.52       0.39     0.69     2.94e-06 1.32e-05</span></span>
+<span><span class="co">#&gt;  0.52       0.39     0.69     2.94e-06 1.32e-05</span></span>
+<span><span class="co">#&gt;  2.03       1.49     2.78     4.26e-06 1.53e-05</span></span>
+<span><span class="co">#&gt;  2.03       1.49     2.78     4.26e-06 1.53e-05</span></span>
+<span><span class="co">#&gt;  1.97       1.41     2.75     2.65e-05 7.94e-05</span></span>
+<span><span class="co">#&gt;  1.97       1.41     2.75     2.65e-05 7.94e-05</span></span>
+<span><span class="co">#&gt;  2.05       1.40     3.02     0.000104 0.000268</span></span>
+<span><span class="co">#&gt;  2.05       1.40     3.02     0.000104 0.000268</span></span>
+<span><span class="co">#&gt;  0.64       0.48     0.86     0.00177  0.00397 </span></span>
+<span><span class="co">#&gt;  0.64       0.48     0.86     0.00177  0.00397 </span></span>
+<span><span class="co">#&gt;  1.66       1.18     2.35     0.00269  0.00537 </span></span>
+<span><span class="co">#&gt;  1.66       1.18     2.35     0.00269  0.00537 </span></span>
+<span><span class="co">#&gt;  0.68       0.49     0.94     0.0188   0.0338  </span></span>
+<span><span class="co">#&gt;  0.68       0.49     0.94     0.0188   0.0338  </span></span>
+<span><span class="co">#&gt;   ... and 8 more patterns (16 rows); summary() returns them all</span></span></code></pre></div>
+<p>Of the 18 gapped patterns, 10 differ. An evaluation is followed by a
+directive two or three positions later in more late halves (47% against
+65%, odds ratio 2.05 [1.54, 2.72]; 39% against 60%, 2.33 [1.76, 3.10]),
+and a directive by a directive two positions later in more early halves
+(92% against 77%, 0.27 [0.17, 0.42]).</p>
+</div>
+<div class="section level4">
+<h4 id="repetitions-of-one-state">Repetitions of one state<a class="anchor" aria-label="anchor" href="#repetitions-of-one-state"></a>
+</h4>
+<p>A repeated pattern is a repetition of one state. Comparing
+repetitions of increasing length shows whether a group persists in a
+state for longer.</p>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">repeats</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sequence_patterns.html">sequence_patterns</a></span><span class="op">(</span><span class="va">net</span>, type <span class="op">=</span> <span class="st">"repeated"</span>, len <span class="op">=</span> <span class="fl">2</span><span class="op">:</span><span class="fl">5</span>,</span>
+<span>                             min_freq <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span>
+<span><span class="va">repeats</span></span>
+<span><span class="co">#&gt; Sequence patterns by phase  [12 patterns | 2 groups: early, late]</span></span>
+<span><span class="co">#&gt;   presence test: Fisher's exact, odds ratio against early (BH)</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;  pattern                                                                  </span></span>
+<span><span class="co">#&gt;  Directive-&gt;Directive-&gt;Directive                                          </span></span>
+<span><span class="co">#&gt;  Directive-&gt;Directive-&gt;Directive                                          </span></span>
+<span><span class="co">#&gt;  Directive-&gt;Directive                                                     </span></span>
+<span><span class="co">#&gt;  Directive-&gt;Directive                                                     </span></span>
+<span><span class="co">#&gt;  Directive-&gt;Directive-&gt;Directive-&gt;Directive                               </span></span>
+<span><span class="co">#&gt;  Directive-&gt;Directive-&gt;Directive-&gt;Directive                               </span></span>
+<span><span class="co">#&gt;  Metacognitive-&gt;Metacognitive                                             </span></span>
+<span><span class="co">#&gt;  Metacognitive-&gt;Metacognitive                                             </span></span>
+<span><span class="co">#&gt;  Metacognitive-&gt;Metacognitive-&gt;Metacognitive                              </span></span>
+<span><span class="co">#&gt;  Metacognitive-&gt;Metacognitive-&gt;Metacognitive                              </span></span>
+<span><span class="co">#&gt;  Metacognitive-&gt;Metacognitive-&gt;Metacognitive-&gt;Metacognitive               </span></span>
+<span><span class="co">#&gt;  Metacognitive-&gt;Metacognitive-&gt;Metacognitive-&gt;Metacognitive               </span></span>
+<span><span class="co">#&gt;  Metacognitive-&gt;Metacognitive-&gt;Metacognitive-&gt;Metacognitive-&gt;Metacognitive</span></span>
+<span><span class="co">#&gt;  Metacognitive-&gt;Metacognitive-&gt;Metacognitive-&gt;Metacognitive-&gt;Metacognitive</span></span>
+<span><span class="co">#&gt;  Evaluative-&gt;Evaluative                                                   </span></span>
+<span><span class="co">#&gt;  Evaluative-&gt;Evaluative                                                   </span></span>
+<span><span class="co">#&gt;  Directive-&gt;Directive-&gt;Directive-&gt;Directive-&gt;Directive                    </span></span>
+<span><span class="co">#&gt;  Directive-&gt;Directive-&gt;Directive-&gt;Directive-&gt;Directive                    </span></span>
+<span><span class="co">#&gt;  Evaluative-&gt;Evaluative-&gt;Evaluative                                       </span></span>
+<span><span class="co">#&gt;  Evaluative-&gt;Evaluative-&gt;Evaluative                                       </span></span>
+<span><span class="co">#&gt;  n_sequences support group group_support odds_ratio or_lower or_upper p_value </span></span>
+<span><span class="co">#&gt;  630         0.74    early 0.88           0.20      0.13       0.28   1.92e-22</span></span>
+<span><span class="co">#&gt;  630         0.74    late  0.59           0.20      0.13       0.28   1.92e-22</span></span>
+<span><span class="co">#&gt;  751         0.88    early 0.95           0.25      0.15       0.41   1.78e-09</span></span>
+<span><span class="co">#&gt;  751         0.88    late  0.81           0.25      0.15       0.41   1.78e-09</span></span>
+<span><span class="co">#&gt;  385         0.45    early 0.55           0.46      0.35       0.61   3.43e-08</span></span>
+<span><span class="co">#&gt;  385         0.45    late  0.36           0.46      0.35       0.61   3.43e-08</span></span>
+<span><span class="co">#&gt;  196         0.23    early 0.17           1.94      1.38       2.73   6.55e-05</span></span>
+<span><span class="co">#&gt;  196         0.23    late  0.29           1.94      1.38       2.73   6.55e-05</span></span>
+<span><span class="co">#&gt;   65         0.08    early 0.04           2.56      1.44       4.72   0.000692</span></span>
+<span><span class="co">#&gt;   65         0.08    late  0.11           2.56      1.44       4.72   0.000692</span></span>
+<span><span class="co">#&gt;   28         0.03    early 0.01           3.77      1.46      11.48   0.00321 </span></span>
+<span><span class="co">#&gt;   28         0.03    late  0.05           3.77      1.46      11.48   0.00321 </span></span>
+<span><span class="co">#&gt;   11         0.01    early 0.00          10.10      1.43     439.30   0.0112  </span></span>
+<span><span class="co">#&gt;   11         0.01    late  0.02          10.10      1.43     439.30   0.0112  </span></span>
+<span><span class="co">#&gt;  373         0.44    early 0.41           1.27      0.96       1.68   0.0849  </span></span>
+<span><span class="co">#&gt;  373         0.44    late  0.47           1.27      0.96       1.68   0.0849  </span></span>
+<span><span class="co">#&gt;  162         0.19    early 0.18           1.15      0.81       1.65   0.433   </span></span>
+<span><span class="co">#&gt;  162         0.19    late  0.20           1.15      0.81       1.65   0.433   </span></span>
+<span><span class="co">#&gt;  189         0.22    early 0.21           1.09      0.78       1.52   0.622   </span></span>
+<span><span class="co">#&gt;  189         0.22    late  0.23           1.09      0.78       1.52   0.622   </span></span>
+<span><span class="co">#&gt;  p_adj   </span></span>
+<span><span class="co">#&gt;  2.3e-21 </span></span>
+<span><span class="co">#&gt;  2.3e-21 </span></span>
+<span><span class="co">#&gt;  1.07e-08</span></span>
+<span><span class="co">#&gt;  1.07e-08</span></span>
+<span><span class="co">#&gt;  1.37e-07</span></span>
+<span><span class="co">#&gt;  1.37e-07</span></span>
+<span><span class="co">#&gt;  0.000196</span></span>
+<span><span class="co">#&gt;  0.000196</span></span>
+<span><span class="co">#&gt;  0.00166 </span></span>
+<span><span class="co">#&gt;  0.00166 </span></span>
+<span><span class="co">#&gt;  0.00642 </span></span>
+<span><span class="co">#&gt;  0.00642 </span></span>
+<span><span class="co">#&gt;  0.0193  </span></span>
+<span><span class="co">#&gt;  0.0193  </span></span>
+<span><span class="co">#&gt;  0.127   </span></span>
+<span><span class="co">#&gt;  0.127   </span></span>
+<span><span class="co">#&gt;  0.578   </span></span>
+<span><span class="co">#&gt;  0.578   </span></span>
+<span><span class="co">#&gt;  0.746   </span></span>
+<span><span class="co">#&gt;  0.746   </span></span>
+<span><span class="co">#&gt;   ... and 2 more patterns (4 rows); summary() returns them all</span></span></code></pre></div>
+<p>Of the 12 repetitions, 7 differ. Repetitions of two to four
+directives occur in a larger share of early halves. Repetitions of
+metacognitive actions occur in a larger share of late halves, and the
+odds ratio grows with the length of the repetition: 1.94 for two, 2.56
+for three, 3.77 for four and 10.10 for five. The repetition of five
+occurs in 1 early and 10 late half-sessions, so its interval is wide
+([1.43, 439.30]). Repetitions of evaluations do not differ.</p>
+</div>
+<div class="section level4">
+<h4 id="the-instances-of-one-template">The instances of one template<a class="anchor" aria-label="anchor" href="#the-instances-of-one-template"></a>
+</h4>
+<p><code>pattern =</code> searches for the instances of one template, in
+which <code>*</code> matches any one state, and <code>start</code>,
+<code>end</code> and <code>contain</code> restrict the search to
+patterns that begin, end or include given states.</p>
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/sequence_patterns.html">sequence_patterns</a></span><span class="op">(</span><span class="va">net</span>, pattern <span class="op">=</span> <span class="st">"Evaluative-&gt;*-&gt;Directive"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Sequence patterns by phase  [3 patterns | 2 groups: early, late]</span></span>
+<span><span class="co">#&gt;   presence test: Fisher's exact, odds ratio against early (BH)</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;  pattern                              n_sequences support group group_support</span></span>
+<span><span class="co">#&gt;  Evaluative-&gt;Directive-&gt;Directive     389         0.46    early 0.37         </span></span>
+<span><span class="co">#&gt;  Evaluative-&gt;Directive-&gt;Directive     389         0.46    late  0.54         </span></span>
+<span><span class="co">#&gt;  Evaluative-&gt;Evaluative-&gt;Directive    268         0.31    early 0.27         </span></span>
+<span><span class="co">#&gt;  Evaluative-&gt;Evaluative-&gt;Directive    268         0.31    late  0.35         </span></span>
+<span><span class="co">#&gt;  Evaluative-&gt;Metacognitive-&gt;Directive 102         0.12    early 0.10         </span></span>
+<span><span class="co">#&gt;  Evaluative-&gt;Metacognitive-&gt;Directive 102         0.12    late  0.14         </span></span>
+<span><span class="co">#&gt;  odds_ratio or_lower or_upper p_value  p_adj   </span></span>
+<span><span class="co">#&gt;  2.01       1.51     2.67     5.16e-07 1.55e-06</span></span>
+<span><span class="co">#&gt;  2.01       1.51     2.67     5.16e-07 1.55e-06</span></span>
+<span><span class="co">#&gt;  1.46       1.08     1.98     0.0121   0.0182  </span></span>
+<span><span class="co">#&gt;  1.46       1.08     1.98     0.0121   0.0182  </span></span>
+<span><span class="co">#&gt;  1.55       1.00     2.43     0.0448   0.0448  </span></span>
+<span><span class="co">#&gt;  1.55       1.00     2.43     0.0448   0.0448</span></span></code></pre></div>
+<p>All three instances of <code>Evaluative-&gt;*-&gt;Directive</code>
+occur in a larger share of late halves: an evaluation followed by a
+directive and another directive (37% against 54%), by another evaluation
+and a directive (27% against 35%), and by a metacognitive action and a
+directive (10% against 14%).</p>
+</div>
+</div>
 </div>
 <div class="section level2">
-<h2 id="note-on-the-test-choice">8. Note on the test choice<a class="anchor" aria-label="anchor" href="#note-on-the-test-choice"></a>
+<h2 id="joint-models">Joint models<a class="anchor" aria-label="anchor" href="#joint-models"></a>
 </h2>
-<p>The split-within-session design makes the two halves of one session
-non-independent (same human, same AI, same project).
-<code>test = "permutation"</code> shuffles group labels at the sequence
-level and assumes the sequences are exchangeable, which paired halves
-are not, so it is not used here.</p>
-<p><code>test = "chisq"</code> answers the k-gram-level question “do the
-rates differ between halves?”. It does not model the pairing either:
-every k-gram occurrence is treated as an independent count, so its
-p-values are best read as a ranking of the patterns that differ most,
-not as exact error rates. The permutation test is the right choice when
-the groups are independent cohorts (e.g., two projects), where each
-sequence belongs to one group only.</p>
+<p>The comparisons above test each pattern on its own, and patterns
+overlap: every half that contains
+<code>Directive-&gt;Directive-&gt;Directive</code> also contains
+<code>Directive-&gt;Directive</code>. <code><a href="../reference/pattern_outcome.html">pattern_outcome()</a></code>
+fits one logistic regression in which the half is the outcome and the
+presence of each selected pattern is a predictor, so each pattern’s odds
+ratio is adjusted for the others, with a random intercept per session
+(<code>group = "session_id"</code>). It follows
+<code>analyze_outcome()</code> in codyna (Tikka, López-Pernas &amp; Saqr
+2026): the <code>n</code> patterns with the largest chi-square statistic
+are selected and entered together.</p>
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">joint</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pattern_outcome.html">pattern_outcome</a></span><span class="op">(</span><span class="va">net</span>, outcome <span class="op">=</span> <span class="st">"phase"</span>, len <span class="op">=</span> <span class="fl">2</span><span class="op">:</span><span class="fl">3</span>, n <span class="op">=</span> <span class="fl">8</span>,</span>
+<span>                         group <span class="op">=</span> <span class="st">"session_id"</span><span class="op">)</span></span>
+<span><span class="va">joint</span></span>
+<span><span class="co">#&gt;                                       pattern length occurrences n_sequences</span></span>
+<span><span class="co">#&gt; 1             Directive-&gt;Directive-&gt;Directive      3        1894         630</span></span>
+<span><span class="co">#&gt; 2         Directive-&gt;Directive-&gt;Metacognitive      3         576         435</span></span>
+<span><span class="co">#&gt; 3                       Evaluative-&gt;Directive      2        1356         536</span></span>
+<span><span class="co">#&gt; 4            Evaluative-&gt;Directive-&gt;Directive      3         644         389</span></span>
+<span><span class="co">#&gt; 5        Evaluative-&gt;Directive-&gt;Metacognitive      3         202         154</span></span>
+<span><span class="co">#&gt; 6                   Evaluative-&gt;Metacognitive      2         340         240</span></span>
+<span><span class="co">#&gt; 7                Metacognitive-&gt;Metacognitive      2         389         196</span></span>
+<span><span class="co">#&gt; 8 Metacognitive-&gt;Metacognitive-&gt;Metacognitive      3         134          65</span></span>
+<span><span class="co">#&gt;      support      lift support_early support_late     chisq    estimate</span></span>
+<span><span class="co">#&gt; 1 0.73770492 0.7534748    0.88235294    0.5944056 22.857143 -1.79008650</span></span>
+<span><span class="co">#&gt; 2 0.50936768 0.6808294    0.60000000    0.4195804 12.931034 -0.63381015</span></span>
+<span><span class="co">#&gt; 3 0.62763466 0.8191084    0.53411765    0.7202797 12.544776  0.28653813</span></span>
+<span><span class="co">#&gt; 4 0.45550351 0.5986710    0.36941176    0.5407925 14.460154  0.88355145</span></span>
+<span><span class="co">#&gt; 5 0.18032787 0.3101560    0.13882353    0.2214452  8.415584  0.07908042</span></span>
+<span><span class="co">#&gt; 6 0.28103044 0.4799640    0.22352941    0.3379953 10.416667  0.29296608</span></span>
+<span><span class="co">#&gt; 7 0.22950820 0.3986244    0.17176471    0.2867133 12.755102  0.75480402</span></span>
+<span><span class="co">#&gt; 8 0.07611241 0.1742224    0.04470588    0.1072261 11.215385  0.29676937</span></span>
+<span><span class="co">#&gt;   std_error    ci_lower   ci_upper      p_value odds_ratio  or_lower  or_upper</span></span>
+<span><span class="co">#&gt; 1 0.2047132 -2.19131698 -1.3888560 2.242767e-18  0.1669457 0.1117695 0.2493604</span></span>
+<span><span class="co">#&gt; 2 0.1710063 -0.96897627 -0.2986440 2.102625e-04  0.5305664 0.3794713 0.7418234</span></span>
+<span><span class="co">#&gt; 3 0.2492882 -0.20205779  0.7751341 2.503807e-01  1.3318090 0.8170477 2.1708831</span></span>
+<span><span class="co">#&gt; 4 0.2323100  0.42823222  1.3388707 1.427643e-04  2.4194771 1.5345424 3.8147330</span></span>
+<span><span class="co">#&gt; 5 0.2222660 -0.35655296  0.5147138 7.219965e-01  1.0822914 0.7000854 1.6731596</span></span>
+<span><span class="co">#&gt; 6 0.1796603 -0.05916158  0.6450937 1.029606e-01  1.3403973 0.9425545 1.9061657</span></span>
+<span><span class="co">#&gt; 7 0.2246475  0.31450294  1.1951051 7.795716e-04  2.1271946 1.3695784 3.3039050</span></span>
+<span><span class="co">#&gt; 8 0.3532853 -0.39565712  0.9891959 4.008930e-01  1.3455049 0.6732375 2.6890712</span></span></code></pre></div>
+<p><code>estimate</code> is the log odds ratio of the late half,
+adjusted for the other patterns, and <code>odds_ratio</code> with
+<code>or_lower</code> and <code>or_upper</code> its exponent and 95%
+Wald interval. Four of the eight patterns remain associated with the
+half. A half that contains
+<code>Directive-&gt;Directive-&gt;Directive</code> (odds ratio 0.17
+[0.11, 0.25]) or <code>Directive-&gt;Directive-&gt;Metacognitive</code>
+(0.53 [0.38, 0.74]) is less likely to be a late half; a half with
+<code>Evaluative-&gt;Directive-&gt;Directive</code> (2.42 [1.53, 3.81])
+or <code>Metacognitive-&gt;Metacognitive</code> (2.13 [1.37, 3.30]) is
+more likely to be one. The other four have intervals that include 1 once
+the patterns above are in the model. The session variance is again
+estimated as zero. The patterns were selected by their association with
+the outcome before the model was fitted, so the p-values overstate the
+evidence.</p>
+<p>The same kind of model relates the half to several sequence indices
+at once. <code><a href="../reference/outcome_model.html">outcome_model()</a></code> fits a logistic regression of the
+half on the indices returned by <code><a href="../reference/sequence_metrics.html">sequence_metrics()</a></code> with
+<code>meta = TRUE</code>, which keeps the half and the session of each
+sequence, with a random intercept per session
+(<code>group = "session_id"</code>; Bates et al. 2015). Three indices
+are entered: <code>unique_states</code>,
+<code>longitudinal_entropy</code> and <code>transition_rate</code>.</p>
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">indices</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sequence_metrics.html">sequence_metrics</a></span><span class="op">(</span><span class="va">net</span>, meta <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="va">index_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/outcome_model.html">outcome_model</a></span><span class="op">(</span><span class="va">indices</span>, outcome <span class="op">=</span> <span class="st">"phase"</span>,</span>
+<span>                             predictors <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"unique_states"</span>,</span>
+<span>                                            <span class="st">"longitudinal_entropy"</span>,</span>
+<span>                                            <span class="st">"transition_rate"</span><span class="op">)</span>,</span>
+<span>                             group <span class="op">=</span> <span class="st">"session_id"</span><span class="op">)</span></span>
+<span><span class="va">index_model</span></span>
+<span><span class="co">#&gt; Outcome Model</span></span>
+<span><span class="co">#&gt; =============</span></span>
+<span><span class="co">#&gt; Outcome  : phase | binomial </span></span>
+<span><span class="co">#&gt; Units    : 841 in 423 groups </span></span>
+<span><span class="co">#&gt; Terms    : 3  </span></span>
+<span><span class="co">#&gt; p-values : BH corrected</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;                   term estimate std_error statistic ci_lower ci_upper</span></span>
+<span><span class="co">#&gt; 1        unique_states   -1.013     0.296    -3.422   -1.593   -0.433</span></span>
+<span><span class="co">#&gt; 2 longitudinal_entropy    3.050     0.814     3.746    1.454    4.646</span></span>
+<span><span class="co">#&gt; 3      transition_rate    1.848     0.465     3.974    0.936    2.759</span></span>
+<span><span class="co">#&gt;        p_value        p_adj odds_ratio or_lower or_upper</span></span>
+<span><span class="co">#&gt; 1 6.212835e-04 0.0006212835      0.363    0.203    0.649</span></span>
+<span><span class="co">#&gt; 2 1.797093e-04 0.0002695639     21.114    4.281  104.142</span></span>
+<span><span class="co">#&gt; 3 7.068437e-05 0.0002120531      6.346    2.551   15.787</span></span></code></pre></div>
+<p>The model uses 841 half-sessions from 423 sessions; the 13
+half-sessions with a single action have no transition rate. The odds
+ratios are those of a late half per unit of each index, each adjusted
+for the other two. A half with a higher entropy (odds ratio 21.1 per
+unit, 95% interval [4.3, 104.1]) or a higher transition rate (6.35
+[2.55, 15.79]) is more likely to be a late half: late halves spread
+their actions more evenly over the states and switch between them more
+often. For the same entropy and transition rate, a half with more
+distinct states is less likely to be a late half (0.36 [0.20, 0.65]).
+The variance of the session intercepts is estimated as zero (a singular
+fit), so the halves of one session are no more alike than halves of
+different sessions once the indices are known.</p>
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">index_model</span><span class="op">)</span></span></code></pre></div>
+<p><img src="sequence-comparison_files/figure-html/indices-plot-1.png" class="r-plt" alt="" width="100%" style="display: block; margin: auto;"></p>
+</div>
+<div class="section level2">
+<h2 id="summary">Summary<a class="anchor" aria-label="anchor" href="#summary"></a>
+</h2>
+<p>The levels agree. Early in a session, people give more directives, in
+long repetitions that stay in the opening state; later, they change
+state more often, spread their actions more evenly over the states,
+follow an evaluation with a directive more often and repeat
+metacognitive actions more often. The state tests, the permutation tests
+of the transitions, indices and pattern counts, and the mixed models
+take the sessions into account; the Fisher tests of pattern support do
+not.</p>
+</div>
+<div class="section level2">
+<h2 id="how-to-cite-this-article">How to cite this article<a class="anchor" aria-label="anchor" href="#how-to-cite-this-article"></a>
+</h2>
+<p>Saqr, M., López-Pernas, S., &amp; Misiejuk, K. (2026). <em>Comparing
+sequences between groups: Early vs late human-AI interactions</em>.
+Nestimate. <a href="https://pak.dynasite.org/Nestimate/articles/sequence-comparison.html">HTML</a>
+· <a href="https://pak.dynasite.org/Nestimate/pdf/sequence-comparison.pdf">PDF</a></p>
+</div>
+<div class="section level2">
+<h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
+</h2>
+<p>Agrawal, R., &amp; Srikant, R. (1995). Mining sequential patterns. In
+<em>Proceedings of the Eleventh International Conference on Data
+Engineering</em> (pp. 3–14). IEEE. <a href="https://doi.org/10.1109/ICDE.1995.380415" class="external-link uri">https://doi.org/10.1109/ICDE.1995.380415</a></p>
+<p>Anderson, M. J., &amp; ter Braak, C. J. F. (2003). Permutation tests
+for multi-factorial analysis of variance. <em>Journal of Statistical
+Computation and Simulation</em>, 73(2), 85–113. <a href="https://doi.org/10.1080/00949650215733" class="external-link uri">https://doi.org/10.1080/00949650215733</a></p>
+<p>Bates, D., Mächler, M., Bolker, B., &amp; Walker, S. (2015). Fitting
+linear mixed-effects models using lme4. <em>Journal of Statistical
+Software</em>, 67(1). <a href="https://doi.org/10.18637/jss.v067.i01" class="external-link uri">https://doi.org/10.18637/jss.v067.i01</a></p>
+<p>Benjamini, Y., &amp; Hochberg, Y. (1995). Controlling the false
+discovery rate: A practical and powerful approach to multiple testing.
+<em>Journal of the Royal Statistical Society: Series B
+(Methodological)</em>, 57(1), 289–300. <a href="https://doi.org/10.1111/j.2517-6161.1995.tb02031.x" class="external-link uri">https://doi.org/10.1111/j.2517-6161.1995.tb02031.x</a></p>
+<p>Donner, A., &amp; Klar, N. (1994). Methods for comparing event rates
+in intervention studies when the unit of allocation is a cluster.
+<em>American Journal of Epidemiology</em>, 140(3), 279–289. <a href="https://doi.org/10.1093/oxfordjournals.aje.a117247" class="external-link uri">https://doi.org/10.1093/oxfordjournals.aje.a117247</a></p>
+<p>Gabadinho, A., Ritschard, G., Müller, N. S., &amp; Studer, M. (2011).
+Analyzing and visualizing state sequences in R with TraMineR.
+<em>Journal of Statistical Software</em>, 40(4). <a href="https://doi.org/10.18637/jss.v040.i04" class="external-link uri">https://doi.org/10.18637/jss.v040.i04</a></p>
+<p>Good, P. (2005). <em>Permutation, parametric and bootstrap tests of
+hypotheses</em>. Springer. <a href="https://doi.org/10.1007/b138696" class="external-link uri">https://doi.org/10.1007/b138696</a></p>
+<p>Haberman, S. J. (1973). The analysis of residuals in cross-classified
+tables. <em>Biometrics</em>, 29(1), 205–220. <a href="https://doi.org/10.2307/2529686" class="external-link uri">https://doi.org/10.2307/2529686</a></p>
+<p>Hedges, L. V. (1981). Distribution theory for Glass’s estimator of
+effect size and related estimators. <em>Journal of Educational
+Statistics</em>, 6(2), 107–128. <a href="https://doi.org/10.3102/10769986006002107" class="external-link uri">https://doi.org/10.3102/10769986006002107</a></p>
+<p>Landis, J. R., Heyman, E. R., &amp; Koch, G. G. (1978). Average
+partial association in three-way contingency tables: A review and
+discussion of alternative tests. <em>International Statistical
+Review</em>, 46(3), 237–254. <a href="https://doi.org/10.2307/1402373" class="external-link uri">https://doi.org/10.2307/1402373</a></p>
+<p>Liang, K.-Y., &amp; Zeger, S. L. (1986). Longitudinal data analysis
+using generalized linear models. <em>Biometrika</em>, 73(1), 13–22. <a href="https://doi.org/10.1093/biomet/73.1.13" class="external-link uri">https://doi.org/10.1093/biomet/73.1.13</a></p>
+<p>Misiejuk, K., López-Pernas, S., Oliveira, E., Rinja, D., &amp; Saqr,
+M. (2026). It takes two to vibe code: Profiling student-AI programming
+interactions processes and their high order structure. In
+<em>Proceedings of the 26th Koli Calling International Conference on
+Computing Education Research</em> (pp. 1–11). ACM. <a href="https://doi.org/10.1145/3856208.3856254" class="external-link uri">https://doi.org/10.1145/3856208.3856254</a></p>
+<p>Rao, J. N. K., &amp; Scott, A. J. (1984). On chi-squared tests for
+multiway contingency tables with cell proportions estimated from survey
+data. <em>The Annals of Statistics</em>, 12(1), 46–60. <a href="https://doi.org/10.1214/aos/1176346391" class="external-link uri">https://doi.org/10.1214/aos/1176346391</a></p>
+<p>Saqr, M., López-Pernas, S., &amp; Misiejuk, K. (2026). Nestimate: An
+R package for dynamic, probabilistic, and high order network analysis.
+<em>Applied Psychological Measurement</em>. <a href="https://doi.org/10.1177/01466216261472019" class="external-link uri">https://doi.org/10.1177/01466216261472019</a></p>
+<p>Saqr, M., López-Pernas, S., Törmänen, T., Kaliisa, R., Misiejuk, K.,
+&amp; Tikka, S. (2025). Transition network analysis: A novel framework
+for modeling, visualizing, and identifying the temporal patterns of
+learners and learning processes. In <em>Proceedings of the 15th
+International Learning Analytics and Knowledge Conference (LAK25)</em>
+(pp. 351–361). ACM. <a href="https://doi.org/10.1145/3706468.3706513" class="external-link uri">https://doi.org/10.1145/3706468.3706513</a></p>
+<p>Saqr, M., Misiejuk, K., &amp; López-Pernas, S. (2026). Human-AI
+collaboration or obedient and often clueless AI in instruct, serve,
+repeat dynamics? <em>The Internet and Higher Education</em>, 70, 101087.
+<a href="https://doi.org/10.1016/j.iheduc.2026.101087" class="external-link uri">https://doi.org/10.1016/j.iheduc.2026.101087</a></p>
+<p>Saqr, M., Nouri, J., &amp; Fors, U. (2019). Time to focus on the
+temporal dimension of learning: A learning analytics study of the
+temporal patterns of students’ interactions and self-regulation.
+<em>International Journal of Technology Enhanced Learning</em>, 11(4),
+398–412. <a href="https://doi.org/10.1504/IJTEL.2019.102549" class="external-link uri">https://doi.org/10.1504/IJTEL.2019.102549</a></p>
+<p>Tikka, S., López-Pernas, S., &amp; Saqr, M. (2026). <em>Analyzing
+complex dynamic systems with the R package codyna</em> [Preprint]. <a href="https://doi.org/10.13140/RG.2.2.19126.56646" class="external-link uri">https://doi.org/10.13140/RG.2.2.19126.56646</a></p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

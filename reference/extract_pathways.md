@@ -1,4 +1,4 @@
-# Cut an Event Log into Pathways
+# Cut an event log into pathways
 
 `extract_pathways()` cuts a long event log into pathways, runs of
 consecutive events within one unit (an actor, or an actor's session),

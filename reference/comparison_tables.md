@@ -1,15 +1,24 @@
-# Tables of a network comparison
+# Tabulate the results of a network comparison
 
-[`summary()`](https://rdrr.io/r/base/summary.html),
-`edge_differences()`, `node_differences()`, `global_differences()` and
-`network_metrics()` return the tables of a comparison made with
-[`compare_networks()`](https://pak.dynasite.org/Nestimate/reference/compare_networks.md):
-one row per pair, per pair and cell, per pair, node and measure, per
-pair and metric, and per network and structural metric. Each is a data
-frame with no row names, numeric columns rounded to `digits` decimals
-and p-value and probability-of-direction columns left unrounded. All but
-`network_metrics()` select pairs with the same `pair` argument as the
-[`plot()`](https://rdrr.io/r/graphics/plot.default.html) method.
+`edge_differences()` and its sibling verbs return the tables of a
+[`compare_networks()`](https://pak.dynasite.org/Nestimate/reference/compare_networks.md)
+result:
+
+- [`summary()`](https://rdrr.io/r/base/summary.html): one row per pair;
+
+- `edge_differences()`: one row per pair and cell;
+
+- `node_differences()`: one row per pair, node and measure;
+
+- `global_differences()`: one row per pair and metric;
+
+- `network_metrics()`: one row per network and structural metric.
+
+Each is a data frame with no row names, numeric columns rounded to
+`digits` decimals and p-value and probability-of-direction columns left
+unrounded. All but `network_metrics()` select pairs with the same `pair`
+argument as the [`plot()`](https://rdrr.io/r/graphics/plot.default.html)
+method.
 
 ## Usage
 
@@ -27,6 +36,9 @@ network_metrics(x, digits = 2L)
 
 # S3 method for class 'net_table'
 print(x, digits = attr(x, "digits") %||% 2L, ...)
+
+# S3 method for class 'net_table'
+x[...]
 ```
 
 ## Arguments
@@ -48,14 +60,17 @@ print(x, digits = attr(x, "digits") %||% 2L, ...)
 
 - ...:
 
-  Ignored.
+  Ignored. For `[`: the row and column indices.
 
 - x, object:
 
   A `net_network_comparison` object from
   [`compare_networks()`](https://pak.dynasite.org/Nestimate/reference/compare_networks.md).
-  For the [`print()`](https://rdrr.io/r/base/print.html) method: a table
-  returned by one of these verbs.
+  For the [`print()`](https://rdrr.io/r/base/print.html) method and for
+  subsetting with `[` (as
+  [`subset()`](https://rdrr.io/r/base/subset.html) does): a table
+  returned by one of these verbs, whose rows and columns keep its
+  `digits`.
 
 - measure:
 

@@ -1,4 +1,4 @@
-# Report Network Pruning Details
+# List the edges a pruning removed
 
 `net_pruning_details()` lists the edges that
 [`net_prune()`](https://pak.dynasite.org/Nestimate/reference/net_prune.md)

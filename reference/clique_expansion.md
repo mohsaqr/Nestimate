@@ -1,4 +1,4 @@
-# Clique expansion of a hypergraph
+# Project a hypergraph onto a pairwise network
 
 `clique_expansion()` projects a hypergraph onto an ordinary pairwise
 network, its *clique expansion* (also called the "downgrade" of a
@@ -33,7 +33,7 @@ clique_expansion(hg, weighted = TRUE)
 
 - hg:
 
-  The hypergraph: a `net_hypergraph` from
+  A hypergraph, from
   [`build_hypergraph()`](https://pak.dynasite.org/Nestimate/reference/build_hypergraph.md)
   or
   [`bipartite_groups()`](https://pak.dynasite.org/Nestimate/reference/bipartite_groups.md).

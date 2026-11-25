@@ -1,4 +1,4 @@
-# Permutation Test for Network Comparison
+# Test whether two networks differ by permutation
 
 `permutation()` tests whether two networks differ more than chance would
 produce. The sequences (or, for association networks, the rows) behind
@@ -72,14 +72,28 @@ summary(object, ...)
 
 - x:
 
-  The first network: a `netobject` from
-  [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
-  (a bare `cograph_network` is converted to one), a `netobject_group` or
-  `mcml`, a `wtna_mixed`, or a
-  [`net_edge_betweenness()`](https://pak.dynasite.org/Nestimate/reference/net_edge_betweenness.md)
-  result. For the [`print()`](https://rdrr.io/r/base/print.html)
-  methods: a `net_permutation`, `net_permutation_group` or
-  `wtna_perm_mixed`.
+  The first network:
+
+  - a `netobject` from
+    [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md),
+    or a bare `cograph_network`;
+
+  - a `netobject_group`, an `mcml` or a `wtna_mixed`;
+
+  - a
+    [`net_edge_betweenness()`](https://pak.dynasite.org/Nestimate/reference/net_edge_betweenness.md)
+    result;
+
+  - a `tna` model or `group_tna`, rebuilt as a network from its own
+    sequences (see
+    [`as_netobject()`](https://pak.dynasite.org/Nestimate/reference/as_netobject.md)).
+    Raises `nestimate_actor_missing` when `actor` is given and the model
+    keeps no metadata; models built with
+    [`tna::prepare_data()`](https://sonsoles.me/tna/reference/prepare_data.html)
+    keep it.
+
+  For the [`print()`](https://rdrr.io/r/base/print.html) methods: a
+  `permutation()` result.
 
 - y:
 
@@ -106,7 +120,8 @@ summary(object, ...)
 
   Whether the two networks hold paired observations (the i-th sequence
   or row of `x` with the i-th of `y`, such as the same people measured
-  twice). Each shuffle then swaps the two members of a pair at random
+  twice; for one-hot data, the i-th actor in the order the actors first
+  appear). Each shuffle then swaps the two members of a pair at random
   instead of shuffling all labels, so `x` and `y` need the same number
   of sequences (after `concat`) or rows; otherwise an error is raised.
   It cannot be combined with `actor`, of which it is the special case of
@@ -163,14 +178,13 @@ summary(object, ...)
   nested in students, or `"Group"` for students nested in teams) and
   then in its wide sequence data. Whole actors are then shuffled, and
   the ICC and design effect are reported; see the sections *Nested data
-  and actor* and *ICC and design effect*. Default `NULL`: sequences are
-  shuffled one by one. A value that is not one column name, or `actor`
-  with `paired = TRUE`, raises an error of class `nestimate_bad_actor`;
-  a column that is absent or has missing values,
-  `nestimate_actor_missing`; a column whose values do not give one id
-  per sequence (or, with `concat`, that joins rows of different actors),
-  `nestimate_actor_misaligned`; a method other than the transition
-  methods, `nestimate_actor_unsupported`.
+  and actor* and *ICC and design effect*. Several column names,
+  outermost first, are nested levels (such as `c("Group", "Student")`):
+  labels are shuffled at the level where they are assigned, within the
+  units above it. Default `NULL`: sequences are shuffled one by one.
+  Raises `nestimate_actor_missing` when the column is absent or
+  incomplete, and `nestimate_actor_misaligned` when it does not give one
+  actor per sequence.
 
 - ...:
 
@@ -261,11 +275,21 @@ input invisibly. The `net_permutation`'s fields:
 
 - actor:
 
-  The `actor` column name, or `NULL`.
+  The `actor` column name (or names, outermost first), or `NULL`.
 
 - n_actors:
 
-  The number of distinct actors, or `NULL`.
+  The number of distinct actors (with several levels, at the innermost
+  level), or `NULL`.
+
+- actor_levels:
+
+  Only with several `actor` levels: one row per level, with `level` (the
+  column), `n_actors` (the units at that level), `n_pure` and
+  `n_crossed` (the units the shuffle met at that level, inside crossed
+  units of the level above, that sit in one group or in both) and
+  `design` (`"between"`, `"within"`, `"mixed"`, or `"not opened"` when
+  no unit above was crossed).
 
 - null_sd:
 
@@ -280,11 +304,15 @@ input invisibly. The `net_permutation`'s fields:
 - clustering:
 
   Only with `actor`: a one-row data frame with `n_sequences`,
-  `n_actors`, `design` (`"between"`, `"within"` or `"mixed"`), `icc`
-  with `icc_ci_lower` and `icc_ci_upper` (how alike the sequences of one
-  actor are), `deff_edges` (the median design effect over edges),
-  `deff_global` (the design effect for M) and `min_p`, the smallest
-  attainable p-value.
+  `n_actors`, `design` (`"between"`, `"within"` or `"mixed"`; with
+  several levels, one `"<level>: <design> (<n> actors)"` entry per
+  level), `icc` (at the innermost level) with `icc_ci_lower` and
+  `icc_ci_upper` (how alike the sequences of one actor are),
+  `deff_edges` (the median design effect over edges), `deff_global` (the
+  design effect for M) and `min_p`, the smallest p-value the exact test
+  over the actors' arrangements can give: one over their number, or
+  `1 / (iter + 1)` when larger. The reported p-values are Monte Carlo
+  estimates, so with few arrangements one can fall below it by chance.
 
 - clustering_edges:
 
@@ -306,7 +334,11 @@ and each shuffle only re-sums them, which keeps a large `iter` fast; the
 networks' `scaling` and `threshold` are applied to every shuffled
 network as to the observed one. For the other methods the estimator is
 re-run on every shuffle (`cor` and `pcor` through a lighter direct
-path). For `glasso`, every shuffled network is estimated as
+path). A network built with `method = "latency"` (alone or in a group)
+raises an error of class `nestimate_latency_resampling`;
+[`bootstrap_network()`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.md)
+is the verb that resamples latency networks. For `glasso`, every
+shuffled network is estimated as
 [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
 estimated the observed ones, with `x`'s `params` (each sample's own
 lambda path, `nlambda`, `lambda.min.ratio`, `gamma`,
@@ -315,7 +347,8 @@ come from one estimator (van Borkulo et al. 2022). Two glasso networks
 built with different settings raise an error of class
 `nestimate_bad_input`. A network that rests on one sequence, or one-hot
 data with no actor or session, has nothing to shuffle and raises an
-error of class `nestimate_single_sequence`.
+error of class `nestimate_single_sequence`. A sequence network with no
+observed transition raises an error of class `nestimate_no_transition`.
 
 Wide rows combined with `params = list(concat = k)` are shuffled as the
 merged sequences the estimator used, keeping their internal joins. A
@@ -385,13 +418,58 @@ sizes do. With few actors there are few distinct ways to shuffle them,
 and a warning of class `nestimate_few_actors` is raised when no p-value
 could fall below `alpha`.
 
-`actor` is available for transition networks built from sequences
-(`"relative"`, `"frequency"`, `"co_occurrence"`). On one-hot data the
-actor column is held per row rather than per unit, so the call raises an
-error of class `nestimate_actor_misaligned`. The other methods,
-association networks (`"cor"`, `"pcor"`, `"glasso"`, ...) among them, do
-not keep row identifiers after estimation and raise an error of class
-`nestimate_actor_unsupported`.
+Several columns, outermost first (`actor = c("Group", "Student")`,
+students within teams), name nested levels; the unit at each level is
+the combination of its column with the ones before it. A level that adds
+no units below the one before it (the levels given innermost first)
+raises an error of class `nestimate_bad_actor`. A column whose ids
+repeat across the units of the next column (a class code reused in every
+team) cannot be told apart from a correctly nested one, so the order of
+the columns is the caller's statement of the design. The labels are then
+shuffled at the level where they are assigned, within the units above it
+(Anderson & ter Braak, 2003; Good, 2005): teams whose sequences are all
+in one group move as wholes among such teams, exactly as with one
+column; a team with sequences in both groups is opened, and inside it
+the students all in one group exchange labels with each other (never
+with students of another team), while a student in both groups is opened
+in turn, down to the last column, inside which single sequences exchange
+labels. Set the levels whenever the groups are assigned below the top
+level (students of one team in different conditions): `actor = "Group"`
+alone would then shuffle single sequences within each team and treat the
+sessions of one student as independent. The number of distinct
+arrangements, the `nestimate_few_actors` check and `min_p` follow the
+whole scheme. One column, or `NULL`, runs exactly the scheme described
+above.
+
+When to set `actor`: when the groups are made of different actors (high-
+versus low-achieving students, each student in one group), set it.
+Shuffling single sequences then treats the sequences of one actor as
+independent, and the test is too liberal. In one data set of sessions
+nested in students, two groups of different students with no true
+difference had 11.7% of edges significant at `alpha = 0.05` when
+sessions were shuffled (23% of replicates had at least one significant
+edge after Benjamini-Hochberg correction), against 4.6% (0.5%) when
+whole students were shuffled. When the groups vary within the same
+actors (pre- and post-test sessions of the same students), `actor`
+shuffles the labels within each actor; the plain test gave similar size
+in that simulation (5.1% against 5.0%). This does not establish validity
+for other within-actor designs: the permitted shuffles must respect the
+assignment mechanism or exchangeability under the null. Whether nesting
+matters is decided by the design effect, not by the ICC alone: in that
+data set the transitions of one student correlated at about 0.01, yet
+with about 59 transitions per student (size-weighted mean) the Rao-Scott
+design effect of the transition table was about 1.5
+([`mosaic_test()`](https://pak.dynasite.org/Nestimate/reference/mosaic_test.md)).
+The printed ICC is a different quantity, the correlation between the
+sequences of one actor (0.05 in that data set, with a printed design
+effect of 1.24 for the bootstrap), so Kish's approximation with it
+counts sequences per actor, not transitions.
+
+`actor` works for the transition networks built from sequences:
+`"relative"`, `"frequency"` and `"co_occurrence"`. The other methods
+keep no row identifiers after estimation, and with them `actor` raises
+`nestimate_actor_unsupported`; one-hot data, which hold the actor per
+row, raise `nestimate_actor_misaligned`.
 
 ## ICC and design effect
 
@@ -406,17 +484,20 @@ reports:
   ICC of each sequence's transition shares within each group, averaged
   over edges weighted by edge frequency and jackknife bias-corrected,
   with a 95% interval from the leave-one-actor-out jackknife (Efron &
-  Tibshirani, 1993).
+  Tibshirani, 1993). With several `actor` levels it is computed at the
+  innermost level (the finest actor, such as the student within a team),
+  and [`print()`](https://rdrr.io/r/base/print.html) says so.
 
 - Design effect:
 
   The ratio of the variance of an estimate under the clustered design to
   its variance had the units been sampled independently (Kish, 1965).
   Here it is the variance of the shuffled differences when whole actors
-  are moved, divided by the variance when single sequences are moved,
-  both drawn in the same run, reported as the median over edges and for
-  the global statistic M. For equal numbers of sequences per actor m,
-  Kish gives the approximation `1 + (m - 1) * ICC`.
+  are moved, divided by the variance when single sequences are moved
+  (with several levels: under the whole nested scheme), both drawn in
+  the same run, reported as the median over edges and for the global
+  statistic M. For equal numbers of sequences per actor m, Kish gives
+  the approximation `1 + (m - 1) * ICC`.
 
 ## Reading the printed output
 
@@ -433,8 +514,13 @@ Line 3: the edges present in either network and how many differ at
 `alpha`. Line 4: the global test. Lines 5 and 6, only with `actor`: the
 ICC with its interval, whether actors sit in one group (`between`), in
 both (`within`) or either (`mixed`), and the design effects. With
-`actor`, when no p-value can fall below `alpha` (too few actors, or too
-small an `iter`), a last line says so.
+`actor`, when `min_p` is above `alpha` (too few actors for the exact
+test, or too small an `iter`), a last line says so. With several `actor`
+levels, line 2 names the levels (`Actor: Group > Student (nested)`), and
+line 5 is replaced by two: the design at every level, with its number of
+actors
+(`Design: Group: mixed (200 actors), Student: between (2000 actors)`),
+and the ICC at the innermost level.
 
 ## References
 

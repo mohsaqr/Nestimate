@@ -334,7 +334,8 @@ where?”
 ``` r
 
 res <- sequence_compare(group_nets, sub = 2:4, test = "chisq", adjust = "fdr")
-summary(res)                        # per-pattern frequencies + p-values
+res                                 # one row per pattern and group, rounded
+summary(res)                        # every row as a data frame
 plot(res)                           # back-to-back pyramid chart
 plot(res, style = "heatmap")        # heatmap for many patterns
 ```
@@ -469,19 +470,32 @@ summary(boot_gl)
 
 ## Citation
 
-If you use Nestimate in your research, please cite:
+If you use Nestimate in your research, please cite
+(`citation("Nestimate")`):
 
-> Saqr, M., Lopez-Pernas, S., Tormanen, T., Kaliisa, R., Misiejuk, K., &
-> Tikka, S. (2025). Transition Network Analysis: A Novel Framework for
-> Modeling, Visualizing, and Identifying the Temporal Patterns of
-> Learners and Learning. *Proceedings of the 15th Learning Analytics and
-> Knowledge Conference*. doi:
-> [10.1145/3706468.3706513](https://doi.org/10.1145/3706468.3706513)
+> Saqr, M., López-Pernas, S., & Misiejuk, K. (2026). Nestimate: An R
+> package for dynamic, probabilistic, and high order network analysis.
+> *Applied Psychological Measurement*.
+> <https://doi.org/10.1177/01466216261472019>
 
-> Saqr, M., Beck, E., & Lopez-Pernas, S. (2024). Psychological Networks.
-> In M. Saqr & S. Lopez-Pernas (Eds.), *Learning Analytics Methods and
-> Tutorials* (pp. 513–546). Springer. doi:
-> [10.1007/978-3-031-54464-4_19](https://doi.org/10.1007/978-3-031-54464-4_19)
+and, for the methods:
+
+> Saqr, M., López-Pernas, S., Törmänen, T., Kaliisa, R., Misiejuk, K., &
+> Tikka, S. (2025). Transition network analysis: A novel framework for
+> modeling, visualizing, and identifying the temporal patterns of
+> learners and learning processes. In *Proceedings of the 15th
+> International Learning Analytics and Knowledge Conference (LAK25)*
+> (pp. 351–361). ACM. <https://doi.org/10.1145/3706468.3706513>
+
+> Saqr, M., Beck, E., & López-Pernas, S. (2024). Psychological networks:
+> A modern approach to analysis of learning and complex learning
+> processes. In M. Saqr & S. López-Pernas (Eds.), *Learning analytics
+> methods and tutorials: A practical guide using R* (pp. 639–671).
+> Springer. <https://doi.org/10.1007/978-3-031-54464-4_19>
+
+> Saqr, M., & López-Pernas, S. (Eds.). (2024). *Learning analytics
+> methods and tutorials: A practical guide using R*. Springer.
+> <https://doi.org/10.1007/978-3-031-54464-4>
 
 ## License
 
@@ -500,47 +514,60 @@ Core functions for building networks from data
   [`summary(`*`<netobject>`*`)`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
   [`summary(`*`<netobject_group>`*`)`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
   [`print(`*`<summary.netobject>`*`)`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
+  [`` `[`( ``*`<summary.netobject_group>`*`)`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
   [`print(`*`<summary.netobject_group>`*`)`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
-  : Build a Network
-- [`estimate_network()`](https://pak.dynasite.org/Nestimate/reference/estimate_network.md)
-  : Estimate a Network (Deprecated)
-- [`register_estimator()`](https://pak.dynasite.org/Nestimate/reference/register_estimator.md)
-  : Register a Network Estimator
-- [`get_estimator()`](https://pak.dynasite.org/Nestimate/reference/get_estimator.md)
-  : Retrieve a Registered Estimator
-- [`list_estimators()`](https://pak.dynasite.org/Nestimate/reference/list_estimators.md)
-  : List All Registered Estimators
-- [`remove_estimator()`](https://pak.dynasite.org/Nestimate/reference/remove_estimator.md)
-  : Remove a Registered Estimator
+  : Estimate a network
 - [`build_tna()`](https://pak.dynasite.org/Nestimate/reference/build_tna.md)
-  : Build a Transition Network (TNA)
-- [`build_atna()`](https://pak.dynasite.org/Nestimate/reference/build_atna.md)
-  : Build an Attention-Weighted Transition Network (ATNA)
+  : Estimate a transition network analysis (TNA) model
 - [`build_ftna()`](https://pak.dynasite.org/Nestimate/reference/build_ftna.md)
-  : Build a Frequency Transition Network (FTNA)
+  : Estimate a frequency transition network analysis (FTNA) model
+- [`build_atna()`](https://pak.dynasite.org/Nestimate/reference/build_atna.md)
+  : Estimate an attention transition network analysis (ATNA) model
 - [`build_cna()`](https://pak.dynasite.org/Nestimate/reference/build_cna.md)
-  : Build a Co-occurrence Network (CNA)
-- [`build_cor()`](https://pak.dynasite.org/Nestimate/reference/build_cor.md)
-  : Build a Correlation Network
-- [`build_pcor()`](https://pak.dynasite.org/Nestimate/reference/build_pcor.md)
-  : Build a Partial Correlation Network
-- [`build_glasso()`](https://pak.dynasite.org/Nestimate/reference/build_glasso.md)
-  : Build a Graphical Lasso Network (EBICglasso)
-- [`build_ising()`](https://pak.dynasite.org/Nestimate/reference/build_ising.md)
-  : Build an Ising Network
+  : Estimate a co-occurrence network analysis (CNA) model
+- [`build_ngram()`](https://pak.dynasite.org/Nestimate/reference/build_ngram.md)
+  : Estimate an n-gram transition network analysis model
+- [`build_gap()`](https://pak.dynasite.org/Nestimate/reference/build_gap.md)
+  : Estimate a gap transition network analysis model
+- [`build_reverse()`](https://pak.dynasite.org/Nestimate/reference/build_reverse.md)
+  : Estimate a reverse transition network analysis model
+- [`build_latency()`](https://pak.dynasite.org/Nestimate/reference/build_latency.md)
+  : Estimate a latency network analysis model
+- [`build_wtna()`](https://pak.dynasite.org/Nestimate/reference/build_wtna.md)
+  : Estimate a window transition network analysis (WTNA) model
 - [`wtna()`](https://pak.dynasite.org/Nestimate/reference/wtna.md)
   [`print(`*`<wtna_mixed>`*`)`](https://pak.dynasite.org/Nestimate/reference/wtna.md)
-  : Window-based Transition Network Analysis
+  : Build a window-based transition network from one-hot data
+- [`build_cor()`](https://pak.dynasite.org/Nestimate/reference/build_cor.md)
+  : Estimate a correlation network
+- [`build_pcor()`](https://pak.dynasite.org/Nestimate/reference/build_pcor.md)
+  : Estimate a partial correlation network
+- [`build_glasso()`](https://pak.dynasite.org/Nestimate/reference/build_glasso.md)
+  : Estimate an EBIC graphical lasso network
+- [`build_ising()`](https://pak.dynasite.org/Nestimate/reference/build_ising.md)
+  : Estimate an Ising model
+- [`build_mgm()`](https://pak.dynasite.org/Nestimate/reference/build_mgm.md)
+  : Estimate a mixed graphical model (MGM)
+- [`estimate_network()`](https://pak.dynasite.org/Nestimate/reference/estimate_network.md)
+  : Estimate a network (deprecated)
+- [`register_estimator()`](https://pak.dynasite.org/Nestimate/reference/register_estimator.md)
+  : Register a network estimator
+- [`get_estimator()`](https://pak.dynasite.org/Nestimate/reference/get_estimator.md)
+  : Retrieve a registered estimator
+- [`list_estimators()`](https://pak.dynasite.org/Nestimate/reference/list_estimators.md)
+  : List the registered estimators
+- [`remove_estimator()`](https://pak.dynasite.org/Nestimate/reference/remove_estimator.md)
+  : Remove a registered estimator
 - [`cooccurrence()`](https://pak.dynasite.org/Nestimate/reference/cooccurrence.md)
-  : Build a Co-occurrence Network
+  : Build a co-occurrence network of items in transactions
 - [`build_mlvar()`](https://pak.dynasite.org/Nestimate/reference/build_mlvar.md)
   [`print(`*`<net_mlvar>`*`)`](https://pak.dynasite.org/Nestimate/reference/build_mlvar.md)
   [`summary(`*`<net_mlvar>`*`)`](https://pak.dynasite.org/Nestimate/reference/build_mlvar.md)
   [`plot(`*`<net_mlvar>`*`)`](https://pak.dynasite.org/Nestimate/reference/build_mlvar.md)
-  : Build a Multilevel Vector Autoregression (mlVAR) network
+  : Estimate multilevel vector autoregression networks
 - [`build_gimme()`](https://pak.dynasite.org/Nestimate/reference/build_gimme.md)
   [`coefs(`*`<net_gimme>`*`)`](https://pak.dynasite.org/Nestimate/reference/build_gimme.md)
-  : GIMME: Group Iterative Multiple Model Estimation
+  : Estimate person-specific networks with GIMME
 
 ## Bayesian Inference
 
@@ -554,19 +581,20 @@ is the complement of
 
 - [`certainty()`](https://pak.dynasite.org/Nestimate/reference/certainty.md)
   [`print(`*`<net_certainty>`*`)`](https://pak.dynasite.org/Nestimate/reference/certainty.md)
-  : Analytic certainty of network edges (Bayesian Dirichlet-Multinomial)
+  : Estimate the Bayesian certainty of transition network edges
 - [`bayes_compare()`](https://pak.dynasite.org/Nestimate/reference/bayes_compare.md)
   [`print(`*`<net_bayes>`*`)`](https://pak.dynasite.org/Nestimate/reference/bayes_compare.md)
   [`summary(`*`<net_bayes>`*`)`](https://pak.dynasite.org/Nestimate/reference/bayes_compare.md)
   [`plot(`*`<net_bayes>`*`)`](https://pak.dynasite.org/Nestimate/reference/bayes_compare.md)
   [`print(`*`<net_bayes_group>`*`)`](https://pak.dynasite.org/Nestimate/reference/bayes_compare.md)
+  [`plot(`*`<net_bayes_group>`*`)`](https://pak.dynasite.org/Nestimate/reference/bayes_compare.md)
   [`summary(`*`<net_bayes_group>`*`)`](https://pak.dynasite.org/Nestimate/reference/bayes_compare.md)
-  : Bayesian Dirichlet-Multinomial comparison of two transition networks
+  : Compare two transition networks with a Bayesian Dirichlet model
 - [`subtract_networks()`](https://pak.dynasite.org/Nestimate/reference/subtract_networks.md)
   [`print(`*`<netdifference>`*`)`](https://pak.dynasite.org/Nestimate/reference/subtract_networks.md)
   : Subtract one network from another
 - [`as_netdifference()`](https://pak.dynasite.org/Nestimate/reference/as_netdifference.md)
-  : Coerce an inferential comparison to a network difference
+  : Convert a network comparison to a difference network
 
 ## Higher-Order Networks
 
@@ -575,55 +603,55 @@ Methods for capturing higher-order dependencies
 - [`build_hon()`](https://pak.dynasite.org/Nestimate/reference/build_hon.md)
   [`print(`*`<net_hon>`*`)`](https://pak.dynasite.org/Nestimate/reference/build_hon.md)
   [`summary(`*`<net_hon>`*`)`](https://pak.dynasite.org/Nestimate/reference/build_hon.md)
-  : Build a Higher-Order Network (HON)
+  : Build a higher-order network from sequences
 - [`build_honem()`](https://pak.dynasite.org/Nestimate/reference/build_honem.md)
   [`print(`*`<net_honem>`*`)`](https://pak.dynasite.org/Nestimate/reference/build_honem.md)
   [`summary(`*`<net_honem>`*`)`](https://pak.dynasite.org/Nestimate/reference/build_honem.md)
   [`plot(`*`<net_honem>`*`)`](https://pak.dynasite.org/Nestimate/reference/build_honem.md)
-  : Build HONEM Embeddings for Higher-Order Networks
+  : Embed the nodes of a higher-order network with HONEM
 - [`build_hypa()`](https://pak.dynasite.org/Nestimate/reference/build_hypa.md)
   [`print(`*`<net_hypa>`*`)`](https://pak.dynasite.org/Nestimate/reference/build_hypa.md)
   [`summary(`*`<net_hypa>`*`)`](https://pak.dynasite.org/Nestimate/reference/build_hypa.md)
-  : Detect Path Anomalies via HYPA
+  : Detect over- and under-represented paths with HYPA
 - [`build_mogen()`](https://pak.dynasite.org/Nestimate/reference/build_mogen.md)
   [`print(`*`<net_mogen>`*`)`](https://pak.dynasite.org/Nestimate/reference/build_mogen.md)
   [`summary(`*`<net_mogen>`*`)`](https://pak.dynasite.org/Nestimate/reference/build_mogen.md)
   [`plot(`*`<net_mogen>`*`)`](https://pak.dynasite.org/Nestimate/reference/build_mogen.md)
-  : Build Multi-Order Generative Model (MOGen)
+  : Fit a multi-order generative model to sequences
 - [`pathways()`](https://pak.dynasite.org/Nestimate/reference/pathways.md)
-  : Extract Pathways from Higher-Order Network Objects
+  : Extract pathways from a higher-order network
 - [`mogen_transitions()`](https://pak.dynasite.org/Nestimate/reference/mogen_transitions.md)
-  : Extract Transition Table from a MOGen Model
+  : Extract the transitions of a MOGen model
 - [`path_counts()`](https://pak.dynasite.org/Nestimate/reference/path_counts.md)
-  : Count Path Frequencies in Trajectory Data
+  : Count the paths of k states in trajectories
 - [`bipartite_groups()`](https://pak.dynasite.org/Nestimate/reference/bipartite_groups.md)
-  : Build a Hypergraph from Group Memberships
+  : Build a hypergraph from group memberships
 - [`clique_expansion()`](https://pak.dynasite.org/Nestimate/reference/clique_expansion.md)
-  : Clique expansion of a hypergraph
+  : Project a hypergraph onto a pairwise network
 - [`hypergraph_centrality()`](https://pak.dynasite.org/Nestimate/reference/hypergraph_centrality.md)
-  : Hypergraph eigenvector centralities
+  : Compute the eigenvector centralities of a hypergraph
 - [`build_hypergraph()`](https://pak.dynasite.org/Nestimate/reference/build_hypergraph.md)
   [`print(`*`<net_hypergraph>`*`)`](https://pak.dynasite.org/Nestimate/reference/build_hypergraph.md)
   [`summary(`*`<net_hypergraph>`*`)`](https://pak.dynasite.org/Nestimate/reference/build_hypergraph.md)
-  : Higher-order hypergraph from a network's clique structure
+  : Build a hypergraph from a network's cliques
 - [`hypergraph_measures()`](https://pak.dynasite.org/Nestimate/reference/hypergraph_measures.md)
   [`print(`*`<hypergraph_measures>`*`)`](https://pak.dynasite.org/Nestimate/reference/hypergraph_measures.md)
-  : Structural measures for a hypergraph
+  : Compute the structural measures of a hypergraph
 - [`hypergraph_cluster()`](https://pak.dynasite.org/Nestimate/reference/hypergraph_cluster.md)
   [`print(`*`<net_hypergraph_cluster>`*`)`](https://pak.dynasite.org/Nestimate/reference/hypergraph_cluster.md)
   [`summary(`*`<net_hypergraph_cluster>`*`)`](https://pak.dynasite.org/Nestimate/reference/hypergraph_cluster.md)
   [`node_clusters()`](https://pak.dynasite.org/Nestimate/reference/hypergraph_cluster.md)
   [`plot(`*`<net_hypergraph_cluster>`*`)`](https://pak.dynasite.org/Nestimate/reference/hypergraph_cluster.md)
-  : Spectral clustering of hypergraph vertices
+  : Cluster the nodes of a hypergraph spectrally
 - [`hypergraph_transduction()`](https://pak.dynasite.org/Nestimate/reference/hypergraph_transduction.md)
   [`print(`*`<net_hypergraph_transduction>`*`)`](https://pak.dynasite.org/Nestimate/reference/hypergraph_transduction.md)
   [`summary(`*`<net_hypergraph_transduction>`*`)`](https://pak.dynasite.org/Nestimate/reference/hypergraph_transduction.md)
   [`label_predictions()`](https://pak.dynasite.org/Nestimate/reference/hypergraph_transduction.md)
   [`label_scores()`](https://pak.dynasite.org/Nestimate/reference/hypergraph_transduction.md)
   [`plot(`*`<net_hypergraph_transduction>`*`)`](https://pak.dynasite.org/Nestimate/reference/hypergraph_transduction.md)
-  : Transductive label spreading on a hypergraph
+  : Classify unlabelled hypergraph nodes by label spreading
 - [`hypergraph_laplacian()`](https://pak.dynasite.org/Nestimate/reference/hypergraph_laplacian.md)
-  : Normalised hypergraph Laplacian
+  : Compute the normalised Laplacian of a hypergraph
 
 ## Markov Analysis
 
@@ -636,7 +664,7 @@ Order, structure, entropy, and stability of Markov chains
   [`print(`*`<chain_structure_group>`*`)`](https://pak.dynasite.org/Nestimate/reference/chain_structure.md)
   [`summary(`*`<chain_structure_group>`*`)`](https://pak.dynasite.org/Nestimate/reference/chain_structure.md)
   [`print(`*`<summary_chain_structure>`*`)`](https://pak.dynasite.org/Nestimate/reference/chain_structure.md)
-  : Qualitative structure of a discrete-time Markov chain
+  : Classify the states and structure of a Markov chain
 - [`markov_order_test()`](https://pak.dynasite.org/Nestimate/reference/markov_order_test.md)
   [`print(`*`<net_markov_order>`*`)`](https://pak.dynasite.org/Nestimate/reference/markov_order_test.md)
   [`print(`*`<net_markov_order_group>`*`)`](https://pak.dynasite.org/Nestimate/reference/markov_order_test.md)
@@ -647,39 +675,39 @@ Order, structure, entropy, and stability of Markov chains
   [`print(`*`<net_markov_stability>`*`)`](https://pak.dynasite.org/Nestimate/reference/markov_stability.md)
   [`print(`*`<net_markov_stability_group>`*`)`](https://pak.dynasite.org/Nestimate/reference/markov_stability.md)
   [`summary(`*`<net_markov_stability>`*`)`](https://pak.dynasite.org/Nestimate/reference/markov_stability.md)
+  [`summary(`*`<net_markov_stability_group>`*`)`](https://pak.dynasite.org/Nestimate/reference/markov_stability.md)
   [`plot(`*`<net_markov_stability>`*`)`](https://pak.dynasite.org/Nestimate/reference/markov_stability.md)
   [`plot(`*`<net_markov_stability_group>`*`)`](https://pak.dynasite.org/Nestimate/reference/markov_stability.md)
-  : Markov Stability Analysis
+  : Describe the stability of each state of a Markov chain
 - [`passage_time()`](https://pak.dynasite.org/Nestimate/reference/passage_time.md)
   [`print(`*`<net_mpt>`*`)`](https://pak.dynasite.org/Nestimate/reference/passage_time.md)
   [`print(`*`<net_mpt_group>`*`)`](https://pak.dynasite.org/Nestimate/reference/passage_time.md)
   [`summary(`*`<net_mpt>`*`)`](https://pak.dynasite.org/Nestimate/reference/passage_time.md)
-  [`print(`*`<summary.net_mpt>`*`)`](https://pak.dynasite.org/Nestimate/reference/passage_time.md)
+  [`summary(`*`<net_mpt_group>`*`)`](https://pak.dynasite.org/Nestimate/reference/passage_time.md)
   [`plot(`*`<net_mpt>`*`)`](https://pak.dynasite.org/Nestimate/reference/passage_time.md)
   [`plot(`*`<net_mpt_group>`*`)`](https://pak.dynasite.org/Nestimate/reference/passage_time.md)
-  : Mean First Passage Times
+  : Compute the mean first passage times of a Markov chain
 - [`path_dependence()`](https://pak.dynasite.org/Nestimate/reference/path_dependence.md)
   [`print(`*`<net_path_dependence>`*`)`](https://pak.dynasite.org/Nestimate/reference/path_dependence.md)
   [`summary(`*`<net_path_dependence>`*`)`](https://pak.dynasite.org/Nestimate/reference/path_dependence.md)
   [`print(`*`<summary.net_path_dependence>`*`)`](https://pak.dynasite.org/Nestimate/reference/path_dependence.md)
   [`plot(`*`<net_path_dependence>`*`)`](https://pak.dynasite.org/Nestimate/reference/path_dependence.md)
-  : Per-Context Path Dependence at Order k
+  : Measure the path dependence of each context at order k
 - [`transition_entropy()`](https://pak.dynasite.org/Nestimate/reference/transition_entropy.md)
   [`print(`*`<net_transition_entropy>`*`)`](https://pak.dynasite.org/Nestimate/reference/transition_entropy.md)
   [`print(`*`<net_transition_entropy_group>`*`)`](https://pak.dynasite.org/Nestimate/reference/transition_entropy.md)
   [`summary(`*`<net_transition_entropy_group>`*`)`](https://pak.dynasite.org/Nestimate/reference/transition_entropy.md)
   [`plot(`*`<net_transition_entropy_group>`*`)`](https://pak.dynasite.org/Nestimate/reference/transition_entropy.md)
   [`summary(`*`<net_transition_entropy>`*`)`](https://pak.dynasite.org/Nestimate/reference/transition_entropy.md)
-  [`print(`*`<summary.net_transition_entropy>`*`)`](https://pak.dynasite.org/Nestimate/reference/transition_entropy.md)
   [`plot(`*`<net_transition_entropy>`*`)`](https://pak.dynasite.org/Nestimate/reference/transition_entropy.md)
-  : Transition Entropy of a Markov Chain
+  : Compute the transition entropy of a Markov chain
 - [`entropy_network()`](https://pak.dynasite.org/Nestimate/reference/entropy_network.md)
-  : Transition Entropy Network
+  : Decompose the entropy rate into a network of transitions
 - [`entropy_trajectory()`](https://pak.dynasite.org/Nestimate/reference/entropy_trajectory.md)
   [`print(`*`<net_entropy_trajectory>`*`)`](https://pak.dynasite.org/Nestimate/reference/entropy_trajectory.md)
   [`summary(`*`<net_entropy_trajectory>`*`)`](https://pak.dynasite.org/Nestimate/reference/entropy_trajectory.md)
   [`plot(`*`<net_entropy_trajectory>`*`)`](https://pak.dynasite.org/Nestimate/reference/entropy_trajectory.md)
-  : Sliding-Window Transition Entropy Trajectory
+  : Track transition entropy over time in sliding windows
 - [`entropy_bayes()`](https://pak.dynasite.org/Nestimate/reference/entropy_bayes.md)
   [`print(`*`<net_entropy_bayes>`*`)`](https://pak.dynasite.org/Nestimate/reference/entropy_bayes.md)
   [`print(`*`<net_entropy_bayes_group>`*`)`](https://pak.dynasite.org/Nestimate/reference/entropy_bayes.md)
@@ -687,36 +715,36 @@ Order, structure, entropy, and stability of Markov chains
   [`plot(`*`<net_entropy_bayes_group>`*`)`](https://pak.dynasite.org/Nestimate/reference/entropy_bayes.md)
   [`summary(`*`<net_entropy_bayes>`*`)`](https://pak.dynasite.org/Nestimate/reference/entropy_bayes.md)
   [`plot(`*`<net_entropy_bayes>`*`)`](https://pak.dynasite.org/Nestimate/reference/entropy_bayes.md)
-  : Bayesian Transition Entropy
+  : Estimate transition entropy with Bayesian credible intervals
 - [`stability_landscape()`](https://pak.dynasite.org/Nestimate/reference/stability_landscape.md)
   [`summary(`*`<net_landscape>`*`)`](https://pak.dynasite.org/Nestimate/reference/stability_landscape.md)
   [`print(`*`<net_landscape>`*`)`](https://pak.dynasite.org/Nestimate/reference/stability_landscape.md)
   [`plot(`*`<net_landscape>`*`)`](https://pak.dynasite.org/Nestimate/reference/stability_landscape.md)
-  : Stability Landscape of a Transition Network
+  : Estimate the stability landscape of a transition network
 - [`landscape_surface()`](https://pak.dynasite.org/Nestimate/reference/landscape_surface.md)
   [`summary(`*`<net_landscape_surface>`*`)`](https://pak.dynasite.org/Nestimate/reference/landscape_surface.md)
   [`print(`*`<net_landscape_surface>`*`)`](https://pak.dynasite.org/Nestimate/reference/landscape_surface.md)
   [`plot(`*`<net_landscape_surface>`*`)`](https://pak.dynasite.org/Nestimate/reference/landscape_surface.md)
-  : Stability Landscape Across a Stability Measure
+  : Trace a stability landscape across a sequence measure
 - [`landscape_trend()`](https://pak.dynasite.org/Nestimate/reference/landscape_trend.md)
   [`summary(`*`<net_landscape_trend>`*`)`](https://pak.dynasite.org/Nestimate/reference/landscape_trend.md)
   [`print(`*`<net_landscape_trend>`*`)`](https://pak.dynasite.org/Nestimate/reference/landscape_trend.md)
   [`plot(`*`<net_landscape_trend>`*`)`](https://pak.dynasite.org/Nestimate/reference/landscape_trend.md)
-  : Stability Landscape Along the Programme or a Covariate
+  : Trace a stability landscape along time or a covariate
 
 ## Network Pruning
 
 Non-destructive edge pruning and restoration
 
 - [`net_prune()`](https://pak.dynasite.org/Nestimate/reference/net_prune.md)
-  : Prune a Network's Edges
+  : Prune weak or non-significant edges from a network
 - [`net_deprune()`](https://pak.dynasite.org/Nestimate/reference/net_deprune.md)
-  : Undo Network Pruning
+  : Undo the pruning of a network
 - [`net_reprune()`](https://pak.dynasite.org/Nestimate/reference/net_reprune.md)
-  : Re-apply Network Pruning
+  : Re-apply the pruning of a network
 - [`net_pruning_details()`](https://pak.dynasite.org/Nestimate/reference/net_pruning_details.md)
   [`print(`*`<net_pruning_details>`*`)`](https://pak.dynasite.org/Nestimate/reference/net_pruning_details.md)
-  : Report Network Pruning Details
+  : List the edges a pruning removed
 
 ## Bootstrap & Inference
 
@@ -729,26 +757,22 @@ Statistical inference for network estimation
   [`summary(`*`<net_bootstrap_group>`*`)`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.md)
   [`print(`*`<wtna_boot_mixed>`*`)`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.md)
   [`summary(`*`<wtna_boot_mixed>`*`)`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.md)
-  : Bootstrap a Network Estimate
-
+  : Bootstrap a network estimate
 - [`vertex_bootstrap()`](https://pak.dynasite.org/Nestimate/reference/vertex_bootstrap.md)
   [`print(`*`<net_vertex_bootstrap>`*`)`](https://pak.dynasite.org/Nestimate/reference/vertex_bootstrap.md)
   [`summary(`*`<net_vertex_bootstrap>`*`)`](https://pak.dynasite.org/Nestimate/reference/vertex_bootstrap.md)
   [`plot(`*`<net_vertex_bootstrap>`*`)`](https://pak.dynasite.org/Nestimate/reference/vertex_bootstrap.md)
-  : Vertex Bootstrap for Network-Level Statistics
-
+  : Bootstrap network-level statistics by resampling nodes
 - [`vertex_compare()`](https://pak.dynasite.org/Nestimate/reference/vertex_compare.md)
   [`print(`*`<net_vertex_comparison>`*`)`](https://pak.dynasite.org/Nestimate/reference/vertex_compare.md)
   [`summary(`*`<net_vertex_comparison>`*`)`](https://pak.dynasite.org/Nestimate/reference/vertex_compare.md)
   [`plot(`*`<net_vertex_comparison>`*`)`](https://pak.dynasite.org/Nestimate/reference/vertex_compare.md)
-  : Compare Network-Level Statistics of Two Networks
-
+  : Test whether network-level statistics differ between two networks
 - [`boot_glasso()`](https://pak.dynasite.org/Nestimate/reference/boot_glasso.md)
   [`print(`*`<boot_glasso>`*`)`](https://pak.dynasite.org/Nestimate/reference/boot_glasso.md)
   [`summary(`*`<boot_glasso>`*`)`](https://pak.dynasite.org/Nestimate/reference/boot_glasso.md)
   [`plot(`*`<boot_glasso>`*`)`](https://pak.dynasite.org/Nestimate/reference/boot_glasso.md)
-  : Bootstrap for Regularised Partial Correlation Networks
-
+  : Bootstrap a graphical lasso network
 - [`permutation()`](https://pak.dynasite.org/Nestimate/reference/permutation.md)
   [`print(`*`<net_permutation>`*`)`](https://pak.dynasite.org/Nestimate/reference/permutation.md)
   [`summary(`*`<net_permutation>`*`)`](https://pak.dynasite.org/Nestimate/reference/permutation.md)
@@ -756,44 +780,37 @@ Statistical inference for network estimation
   [`summary(`*`<net_permutation_group>`*`)`](https://pak.dynasite.org/Nestimate/reference/permutation.md)
   [`print(`*`<wtna_perm_mixed>`*`)`](https://pak.dynasite.org/Nestimate/reference/permutation.md)
   [`summary(`*`<wtna_perm_mixed>`*`)`](https://pak.dynasite.org/Nestimate/reference/permutation.md)
-  : Permutation Test for Network Comparison
-
+  : Test whether two networks differ by permutation
 - [`permutation_diagnostics()`](https://pak.dynasite.org/Nestimate/reference/permutation_diagnostics.md)
-  : Does Nesting Bias a Permutation Test?
-
+  : Diagnose the effect of nesting on a permutation test
 - [`nct()`](https://pak.dynasite.org/Nestimate/reference/nct.md)
   [`print(`*`<net_nct>`*`)`](https://pak.dynasite.org/Nestimate/reference/nct.md)
   [`summary(`*`<net_nct>`*`)`](https://pak.dynasite.org/Nestimate/reference/nct.md)
   [`as.data.frame(`*`<net_nct>`*`)`](https://pak.dynasite.org/Nestimate/reference/nct.md)
-  : Network Comparison Test
-
+  : Compare two networks with the network comparison test
 - [`compare_model()`](https://pak.dynasite.org/Nestimate/reference/compare_model.md)
   [`print(`*`<net_comparison>`*`)`](https://pak.dynasite.org/Nestimate/reference/compare_model.md)
   [`plot(`*`<net_comparison>`*`)`](https://pak.dynasite.org/Nestimate/reference/compare_model.md)
   : Compare two networks descriptively
-
 - [`compare_networks()`](https://pak.dynasite.org/Nestimate/reference/compare_networks.md)
   [`print(`*`<net_network_comparison>`*`)`](https://pak.dynasite.org/Nestimate/reference/compare_networks.md)
   [`plot(`*`<net_network_comparison>`*`)`](https://pak.dynasite.org/Nestimate/reference/compare_networks.md)
   : Compare two or more networks
-
 - [`summary(`*`<net_network_comparison>`*`)`](https://pak.dynasite.org/Nestimate/reference/comparison_tables.md)
   [`edge_differences()`](https://pak.dynasite.org/Nestimate/reference/comparison_tables.md)
   [`node_differences()`](https://pak.dynasite.org/Nestimate/reference/comparison_tables.md)
   [`global_differences()`](https://pak.dynasite.org/Nestimate/reference/comparison_tables.md)
   [`network_metrics()`](https://pak.dynasite.org/Nestimate/reference/comparison_tables.md)
   [`print(`*`<net_table>`*`)`](https://pak.dynasite.org/Nestimate/reference/comparison_tables.md)
-  : Tables of a network comparison
-
+  [`` `[`( ``*`<net_table>`*`)`](https://pak.dynasite.org/Nestimate/reference/comparison_tables.md)
+  : Tabulate the results of a network comparison
 - [`rename_models()`](https://pak.dynasite.org/Nestimate/reference/rename_models.md)
-  :
-
-  Rename the models of a `netobject_group`
-
+  : Rename the networks of a network group
 - [`magnitude_difference()`](https://pak.dynasite.org/Nestimate/reference/magnitude_difference.md)
   [`print(`*`<magnitude_difference>`*`)`](https://pak.dynasite.org/Nestimate/reference/magnitude_difference.md)
+  [`summary(`*`<magnitude_difference>`*`)`](https://pak.dynasite.org/Nestimate/reference/magnitude_difference.md)
   [`plot(`*`<magnitude_difference>`*`)`](https://pak.dynasite.org/Nestimate/reference/magnitude_difference.md)
-  : Magnitude difference between the frequency and probability views
+  : Measure how far frequency and probability networks disagree
 
 ## Reliability & Stability
 
@@ -803,7 +820,7 @@ Assess reliability and stability of network estimates
   [`print(`*`<net_reliability>`*`)`](https://pak.dynasite.org/Nestimate/reference/network_reliability.md)
   [`summary(`*`<net_reliability>`*`)`](https://pak.dynasite.org/Nestimate/reference/network_reliability.md)
   [`plot(`*`<net_reliability>`*`)`](https://pak.dynasite.org/Nestimate/reference/network_reliability.md)
-  : Split-Half Reliability for Network Estimates
+  : Estimate the split-half reliability of a network
 - [`casedrop_reliability()`](https://pak.dynasite.org/Nestimate/reference/casedrop_reliability.md)
   [`print(`*`<net_casedrop_reliability>`*`)`](https://pak.dynasite.org/Nestimate/reference/casedrop_reliability.md)
   [`summary(`*`<net_casedrop_reliability>`*`)`](https://pak.dynasite.org/Nestimate/reference/casedrop_reliability.md)
@@ -812,19 +829,19 @@ Assess reliability and stability of network estimates
   [`print(`*`<summary.net_casedrop_reliability_group>`*`)`](https://pak.dynasite.org/Nestimate/reference/casedrop_reliability.md)
   [`plot(`*`<net_casedrop_reliability>`*`)`](https://pak.dynasite.org/Nestimate/reference/casedrop_reliability.md)
   [`plot(`*`<net_casedrop_reliability_group>`*`)`](https://pak.dynasite.org/Nestimate/reference/casedrop_reliability.md)
-  : Edge-weight Case-dropping Stability
+  : Estimate the case-dropping stability of edge weights
 - [`centrality_stability()`](https://pak.dynasite.org/Nestimate/reference/centrality_stability.md)
   [`print(`*`<net_stability>`*`)`](https://pak.dynasite.org/Nestimate/reference/centrality_stability.md)
   [`print(`*`<net_stability_group>`*`)`](https://pak.dynasite.org/Nestimate/reference/centrality_stability.md)
   [`summary(`*`<net_stability_group>`*`)`](https://pak.dynasite.org/Nestimate/reference/centrality_stability.md)
   [`summary(`*`<net_stability>`*`)`](https://pak.dynasite.org/Nestimate/reference/centrality_stability.md)
   [`plot(`*`<net_stability>`*`)`](https://pak.dynasite.org/Nestimate/reference/centrality_stability.md)
-  : Centrality Stability Coefficient (CS-coefficient)
+  : Estimate the CS-coefficient of centrality indices
 - [`loading_stability()`](https://pak.dynasite.org/Nestimate/reference/loading_stability.md)
   [`print(`*`<pc_loading_stability>`*`)`](https://pak.dynasite.org/Nestimate/reference/loading_stability.md)
   [`summary(`*`<pc_loading_stability>`*`)`](https://pak.dynasite.org/Nestimate/reference/loading_stability.md)
   [`plot(`*`<pc_loading_stability>`*`)`](https://pak.dynasite.org/Nestimate/reference/loading_stability.md)
-  : Composite-Weight Stability Under Case Resampling
+  : Bootstrap the item weights of a psychometric MCML fit
 
 ## Clustering & Grouping
 
@@ -835,55 +852,55 @@ Cluster-based and multilevel network analysis
   [`summary(`*`<net_clustering>`*`)`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md)
   [`plot(`*`<net_clustering>`*`)`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md)
   [`print(`*`<tidy_covariates>`*`)`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md)
-  : Cluster Sequences by Dissimilarity
+  : Cluster sequences by dissimilarity
 - [`cluster_data()`](https://pak.dynasite.org/Nestimate/reference/cluster_data.md)
-  : Cluster sequence data (deprecated alias)
+  : Cluster sequences (deprecated)
 - [`cluster_choice()`](https://pak.dynasite.org/Nestimate/reference/cluster_choice.md)
   [`print(`*`<cluster_choice>`*`)`](https://pak.dynasite.org/Nestimate/reference/cluster_choice.md)
   [`summary(`*`<cluster_choice>`*`)`](https://pak.dynasite.org/Nestimate/reference/cluster_choice.md)
   [`plot(`*`<cluster_choice>`*`)`](https://pak.dynasite.org/Nestimate/reference/cluster_choice.md)
-  : Compare Clusterings Across k, Dissimilarity and Method
+  : Compare clusterings across k, dissimilarities and methods
 - [`cluster_diagnostics()`](https://pak.dynasite.org/Nestimate/reference/cluster_diagnostics.md)
   [`print(`*`<net_cluster_diagnostics>`*`)`](https://pak.dynasite.org/Nestimate/reference/cluster_diagnostics.md)
   [`plot(`*`<net_cluster_diagnostics>`*`)`](https://pak.dynasite.org/Nestimate/reference/cluster_diagnostics.md)
   [`summary(`*`<net_cluster_diagnostics>`*`)`](https://pak.dynasite.org/Nestimate/reference/cluster_diagnostics.md)
-  : Cluster Diagnostics
+  : Collect the quality measures of a clustering
 - [`cluster_summary()`](https://pak.dynasite.org/Nestimate/reference/cluster_summary.md)
-  : Cluster Summary Statistics
+  : Aggregate a network's weights to clusters of nodes
 - [`cluster_mmm()`](https://pak.dynasite.org/Nestimate/reference/cluster_mmm.md)
-  : Cluster sequences using Mixed Markov Models
+  : Cluster sequences with a mixed Markov model
 - [`cluster_network()`](https://pak.dynasite.org/Nestimate/reference/cluster_network.md)
-  : Cluster data and build per-cluster networks in one step
+  : Cluster sequences and estimate one network per cluster
 - [`build_mcml()`](https://pak.dynasite.org/Nestimate/reference/build_mcml.md)
   [`print(`*`<mcml_layer>`*`)`](https://pak.dynasite.org/Nestimate/reference/build_mcml.md)
   [`print(`*`<mcml>`*`)`](https://pak.dynasite.org/Nestimate/reference/build_mcml.md)
   [`summary(`*`<mcml>`*`)`](https://pak.dynasite.org/Nestimate/reference/build_mcml.md)
-  : Build MCML from Raw Transition Data
+  : Build an MCML model of cluster and within-cluster transitions
 - [`build_mcml_pc()`](https://pak.dynasite.org/Nestimate/reference/build_mcml_pc.md)
   [`print(`*`<mcml_pc>`*`)`](https://pak.dynasite.org/Nestimate/reference/build_mcml_pc.md)
   [`summary(`*`<mcml_pc>`*`)`](https://pak.dynasite.org/Nestimate/reference/build_mcml_pc.md)
   [`plot(`*`<mcml_pc>`*`)`](https://pak.dynasite.org/Nestimate/reference/build_mcml_pc.md)
-  : Multi-Cluster Multi-Level Aggregation for Psychometric Networks
+  : Build an MCML model of a psychometric network
 - [`composites()`](https://pak.dynasite.org/Nestimate/reference/composites.md)
-  : Cluster Scores From a Psychometric MCML Fit
+  : Compute cluster scores from a psychometric MCML fit
 - [`item_loadings()`](https://pak.dynasite.org/Nestimate/reference/item_loadings.md)
-  : Item Diagnostics From a Psychometric MCML Fit
+  : Tabulate the item loadings of a psychometric MCML fit
 - [`macro_network()`](https://pak.dynasite.org/Nestimate/reference/macro_network.md)
-  : Cluster-Level Network, With One Cluster Expanded
+  : Build the cluster-level network with chosen clusters expanded
 - [`build_mmm()`](https://pak.dynasite.org/Nestimate/reference/build_mmm.md)
   [`print(`*`<net_mmm>`*`)`](https://pak.dynasite.org/Nestimate/reference/build_mmm.md)
   [`summary(`*`<net_mmm>`*`)`](https://pak.dynasite.org/Nestimate/reference/build_mmm.md)
   [`plot(`*`<net_mmm>`*`)`](https://pak.dynasite.org/Nestimate/reference/build_mmm.md)
   [`print(`*`<net_mmm_clustering>`*`)`](https://pak.dynasite.org/Nestimate/reference/build_mmm.md)
   [`plot(`*`<net_mmm_clustering>`*`)`](https://pak.dynasite.org/Nestimate/reference/build_mmm.md)
-  : Fit a Mixed Markov Model
+  : Fit a mixed Markov model
 - [`compare_mmm()`](https://pak.dynasite.org/Nestimate/reference/compare_mmm.md)
   [`print(`*`<mmm_compare>`*`)`](https://pak.dynasite.org/Nestimate/reference/compare_mmm.md)
   [`summary(`*`<mmm_compare>`*`)`](https://pak.dynasite.org/Nestimate/reference/compare_mmm.md)
   [`plot(`*`<mmm_compare>`*`)`](https://pak.dynasite.org/Nestimate/reference/compare_mmm.md)
-  : Compare MMM fits across different k
+  : Compare mixed Markov models across numbers of subgroups
 - [`session_ids()`](https://pak.dynasite.org/Nestimate/reference/session_ids.md)
-  : The session behind each sequence
+  : Identify the session behind each sequence
 
 ## Simplicial Complex Analysis
 
@@ -892,31 +909,32 @@ Topological analysis of networks
 - [`build_simplicial()`](https://pak.dynasite.org/Nestimate/reference/build_simplicial.md)
   [`print(`*`<simplicial_complex>`*`)`](https://pak.dynasite.org/Nestimate/reference/build_simplicial.md)
   [`plot(`*`<simplicial_complex>`*`)`](https://pak.dynasite.org/Nestimate/reference/build_simplicial.md)
-  : Build a Simplicial Complex
+  : Build a simplicial complex
 - [`simplicial_features()`](https://pak.dynasite.org/Nestimate/reference/simplicial_features.md)
-  : Tidy Topological Features for One or Many Networks
+  : Tabulate the topological features of one or many networks
 - [`persistent_homology()`](https://pak.dynasite.org/Nestimate/reference/persistent_homology.md)
   [`print(`*`<persistent_homology>`*`)`](https://pak.dynasite.org/Nestimate/reference/persistent_homology.md)
   [`plot(`*`<persistent_homology>`*`)`](https://pak.dynasite.org/Nestimate/reference/persistent_homology.md)
-  : Persistent Homology
+  : Compute the persistent homology of a network
 - [`bottleneck_distance()`](https://pak.dynasite.org/Nestimate/reference/bottleneck_distance.md)
-  : Bottleneck Distance Between Persistence Diagrams
+  : Compute the bottleneck distance between persistence diagrams
 - [`persistence_landscape()`](https://pak.dynasite.org/Nestimate/reference/persistence_landscape.md)
   [`print(`*`<persistence_landscape>`*`)`](https://pak.dynasite.org/Nestimate/reference/persistence_landscape.md)
   [`plot(`*`<persistence_landscape>`*`)`](https://pak.dynasite.org/Nestimate/reference/persistence_landscape.md)
-  : Persistence Landscape
+  : Compute the persistence landscape of a persistence diagram
 - [`q_analysis()`](https://pak.dynasite.org/Nestimate/reference/q_analysis.md)
   [`print(`*`<q_analysis>`*`)`](https://pak.dynasite.org/Nestimate/reference/q_analysis.md)
   [`plot(`*`<q_analysis>`*`)`](https://pak.dynasite.org/Nestimate/reference/q_analysis.md)
-  : Q-Analysis
+  : Describe the q-connectivity of a simplicial complex
 - [`betti_numbers()`](https://pak.dynasite.org/Nestimate/reference/betti_numbers.md)
-  : Betti Numbers
+  : Count the holes of a simplicial complex
 - [`euler_characteristic()`](https://pak.dynasite.org/Nestimate/reference/euler_characteristic.md)
-  : Euler Characteristic
+  : Compute the Euler characteristic of a simplicial complex
 - [`simplicial_degree()`](https://pak.dynasite.org/Nestimate/reference/simplicial_degree.md)
-  : Simplicial Degree
+  : Count the simplices that contain each node
 - [`verify_simplicial()`](https://pak.dynasite.org/Nestimate/reference/verify_simplicial.md)
-  : Verify Simplicial Complex Against igraph
+  [`print(`*`<net_simplicial_check>`*`)`](https://pak.dynasite.org/Nestimate/reference/verify_simplicial.md)
+  : Verify a simplicial complex against igraph
 
 ## Data Preparation
 
@@ -924,74 +942,82 @@ Convert and prepare data for network estimation
 
 - [`prepare()`](https://pak.dynasite.org/Nestimate/reference/prepare.md)
   [`print(`*`<nestimate_data>`*`)`](https://pak.dynasite.org/Nestimate/reference/prepare.md)
-  : Prepare Event Log Data for Network Estimation
+  : Prepare an event log for network estimation
 - [`human_long`](https://pak.dynasite.org/Nestimate/reference/long-data.md)
   [`ai_long`](https://pak.dynasite.org/Nestimate/reference/long-data.md)
-  : Human-AI Vibe Coding Interaction Data (Long Format)
+  : Coded turns of human-AI vibe coding sessions
 - [`prepare_for_tna()`](https://pak.dynasite.org/Nestimate/reference/prepare_for_tna.md)
-  : Prepare Data for TNA Analysis
+  : Prepare sequence data for the tna package
 - [`action_to_onehot()`](https://pak.dynasite.org/Nestimate/reference/action_to_onehot.md)
-  : Convert Action Column to One-Hot Encoding
+  : Convert an action column to one-hot columns
 - [`wide_to_long()`](https://pak.dynasite.org/Nestimate/reference/wide_to_long.md)
-  : Convert Wide Sequences to Long Format
+  : Convert wide sequences to long format
 - [`long_to_wide()`](https://pak.dynasite.org/Nestimate/reference/long_to_wide.md)
-  : Convert Long Format to Wide Sequences
+  : Convert long event data to wide sequences
 - [`convert_sequence_format()`](https://pak.dynasite.org/Nestimate/reference/convert_sequence_format.md)
-  : Convert Sequence Data to Different Formats
+  : Convert sequence data to counts, one-hot codes or transitions
 - [`actor_endpoints()`](https://pak.dynasite.org/Nestimate/reference/actor_endpoints.md)
-  : Tidy per-actor endpoint summary of a wide-format sequence dataset
+  : Tabulate the first and last states of each sequence
 - [`mark_first_state()`](https://pak.dynasite.org/Nestimate/reference/mark_first_state.md)
-  : Mark leading-NA cells with an explicit state label
+  : Fill leading missing cells with a start state
 - [`mark_terminal_state()`](https://pak.dynasite.org/Nestimate/reference/mark_terminal_state.md)
-  : Mark terminal-NA cells with an explicit state label
+  : Fill trailing missing cells with an end state
+- [`mark_phases()`](https://pak.dynasite.org/Nestimate/reference/mark_phases.md)
+  : Split each actor's sequence into phases
 
 ## Utilities
 
 Helper functions and extractors
 
 - [`predictability()`](https://pak.dynasite.org/Nestimate/reference/predictability.md)
-  : Compute Node Predictability
+  : Compute the predictability of each node
 - [`frequencies()`](https://pak.dynasite.org/Nestimate/reference/frequencies.md)
   [`summary(`*`<nest_transition_counts>`*`)`](https://pak.dynasite.org/Nestimate/reference/frequencies.md)
-  : Build a Transition Frequency Matrix
+  : Count the transitions between states in sequences
 - [`state_frequencies()`](https://pak.dynasite.org/Nestimate/reference/state_frequencies.md)
-  : Compute State Frequencies from Trajectory Data
+  : Count state frequencies in trajectories
 - [`net_aggregate_weights()`](https://pak.dynasite.org/Nestimate/reference/net_aggregate_weights.md)
-  : Aggregate Edge Weights
+  : Aggregate edge weights into one value
 - [`net_centrality()`](https://pak.dynasite.org/Nestimate/reference/net_centrality.md)
+  [`print(`*`<net_centrality>`*`)`](https://pak.dynasite.org/Nestimate/reference/net_centrality.md)
+  [`summary(`*`<net_centrality>`*`)`](https://pak.dynasite.org/Nestimate/reference/net_centrality.md)
+  [`print(`*`<net_centrality_group>`*`)`](https://pak.dynasite.org/Nestimate/reference/net_centrality.md)
+  [`summary(`*`<net_centrality_group>`*`)`](https://pak.dynasite.org/Nestimate/reference/net_centrality.md)
+  [`` `[`( ``*`<net_centrality_group>`*`)`](https://pak.dynasite.org/Nestimate/reference/net_centrality.md)
+  [`` `[`( ``*`<net_centrality>`*`)`](https://pak.dynasite.org/Nestimate/reference/net_centrality.md)
   [`plot(`*`<net_centrality>`*`)`](https://pak.dynasite.org/Nestimate/reference/net_centrality.md)
   [`plot(`*`<net_centrality_group>`*`)`](https://pak.dynasite.org/Nestimate/reference/net_centrality.md)
-  : Compute Centrality Measures for a Network
+  : Compute centrality measures for a network
 - [`net_edge_betweenness()`](https://pak.dynasite.org/Nestimate/reference/net_edge_betweenness.md)
   [`plot(`*`<net_edge_betweenness>`*`)`](https://pak.dynasite.org/Nestimate/reference/net_edge_betweenness.md)
-  : Edge Betweenness Network
+  : Weight a network's edges by their betweenness
 - [`coefs()`](https://pak.dynasite.org/Nestimate/reference/coefs.md) :
-  Tidy coefficients from a fitted mlvar model
+  Tabulate the temporal coefficients of an mlVAR fit
 - [`as_tna()`](https://pak.dynasite.org/Nestimate/reference/as_tna.md) :
-  Promote the Layers of an mcml to Networks
+  Convert the layers of an MCML model to a group of networks
 - [`as_htna()`](https://pak.dynasite.org/Nestimate/reference/as_htna.md)
-  : Build a grouped node-level network (htna) from data and a clustering
+  : Build a node-level network with clusters as node groups
 - [`as_networks()`](https://pak.dynasite.org/Nestimate/reference/as_networks.md)
-  : Promote a psychometric MCML result to a network group
+  : Convert a psychometric MCML fit to a group of networks
 - [`as_netobject()`](https://pak.dynasite.org/Nestimate/reference/as_netobject.md)
-  : Coerce a network object to a Nestimate netobject
+  : Convert a network from another package to a netobject
 - [`validate_netobject()`](https://pak.dynasite.org/Nestimate/reference/validate_netobject.md)
-  : Validate a netobject / cograph_network against the shared schema
+  : Validate the structure of a network object
 - [`extract_edges()`](https://pak.dynasite.org/Nestimate/reference/extract_edges.md)
-  : Extract Edge List with Weights
+  : Extract the edge list of a network
 - [`extract_initial_probs()`](https://pak.dynasite.org/Nestimate/reference/extract_initial_probs.md)
   [`print(`*`<nest_initial_probs>`*`)`](https://pak.dynasite.org/Nestimate/reference/extract_initial_probs.md)
   [`summary(`*`<nest_initial_probs>`*`)`](https://pak.dynasite.org/Nestimate/reference/extract_initial_probs.md)
-  : Extract Initial Probabilities from Model
+  : Extract the initial-state probabilities of a network
 - [`extract_transition_matrix()`](https://pak.dynasite.org/Nestimate/reference/extract_transition_matrix.md)
   [`print(`*`<nest_transition_matrix>`*`)`](https://pak.dynasite.org/Nestimate/reference/extract_transition_matrix.md)
   [`summary(`*`<nest_transition_matrix>`*`)`](https://pak.dynasite.org/Nestimate/reference/extract_transition_matrix.md)
-  : Extract Transition Matrix from Model
+  : Extract the transition matrix of a network
 - [`state_colors()`](https://pak.dynasite.org/Nestimate/reference/state_colors.md)
-  : The state colours an object will draw with
+  : Get the state colours of an object
 - [`set_state_colors()`](https://pak.dynasite.org/Nestimate/reference/set_state_colors.md)
   [`` `state_colors<-`() ``](https://pak.dynasite.org/Nestimate/reference/set_state_colors.md)
-  : Set the state colours carried by a network object
+  : Set the state colours of a network object
 
 ## Sequence Analysis
 
@@ -999,42 +1025,50 @@ Sequence visualization, pattern comparison, and association mining
 
 - [`sequence_plot()`](https://pak.dynasite.org/Nestimate/reference/sequence_plot.md)
   [`print(`*`<mcml_sequence_plot>`*`)`](https://pak.dynasite.org/Nestimate/reference/sequence_plot.md)
-  : Sequence Plot (heatmap, index, or distribution)
+  : Draw a sequence index plot, heatmap or distribution plot
 - [`distribution_plot()`](https://pak.dynasite.org/Nestimate/reference/distribution_plot.md)
-  : State Distribution Plot Over Time
+  : Draw a state distribution plot
 - [`plot_state_frequencies()`](https://pak.dynasite.org/Nestimate/reference/plot_state_frequencies.md)
   [`print(`*`<nestimate_facet_plot>`*`)`](https://pak.dynasite.org/Nestimate/reference/plot_state_frequencies.md)
   [`print(`*`<nestimate_facet_list>`*`)`](https://pak.dynasite.org/Nestimate/reference/plot_state_frequencies.md)
   [`print(`*`<state_freq>`*`)`](https://pak.dynasite.org/Nestimate/reference/plot_state_frequencies.md)
   [`plot(`*`<state_freq>`*`)`](https://pak.dynasite.org/Nestimate/reference/plot_state_frequencies.md)
-  : Plot State Frequency Distributions
+  : Plot state frequencies as treemaps or bars
 - [`state_distribution()`](https://pak.dynasite.org/Nestimate/reference/state_distribution.md)
-  : Per-Class State Distribution as a Tidy Data Frame
+  : Tabulate the state distribution of each group
 - [`mosaic_plot()`](https://pak.dynasite.org/Nestimate/reference/mosaic_plot.md)
-  : Mosaic Plot of a Network's Transition or Co-occurrence Counts
+  : Draw a mosaic plot of transition or co-occurrence counts
 - [`mosaic_analysis()`](https://pak.dynasite.org/Nestimate/reference/mosaic_analysis.md)
   [`plot(`*`<mosaic_analysis>`*`)`](https://pak.dynasite.org/Nestimate/reference/mosaic_analysis.md)
   [`print(`*`<mosaic_analysis>`*`)`](https://pak.dynasite.org/Nestimate/reference/mosaic_analysis.md)
   [`summary(`*`<mosaic_analysis>`*`)`](https://pak.dynasite.org/Nestimate/reference/mosaic_analysis.md)
-  : Two-variable mosaic analysis (chi-square test + flat mosaic)
+  : Test and draw the association of two categorical variables
+- [`mosaic_test()`](https://pak.dynasite.org/Nestimate/reference/mosaic_test.md)
+  : Test the association of a mosaic with and without clustering
 - [`extract_sequences()`](https://pak.dynasite.org/Nestimate/reference/extract_sequences.md)
-  : Extract Sequences in Wide Format
+  : Extract sequences in wide format
 - [`sequence_patterns()`](https://pak.dynasite.org/Nestimate/reference/sequence_patterns.md)
-  : Discover Sequential Patterns
+  [`print(`*`<net_sequence_patterns>`*`)`](https://pak.dynasite.org/Nestimate/reference/sequence_patterns.md)
+  [`summary(`*`<net_sequence_patterns>`*`)`](https://pak.dynasite.org/Nestimate/reference/sequence_patterns.md)
+  [`` `[`( ``*`<net_sequence_patterns>`*`)`](https://pak.dynasite.org/Nestimate/reference/sequence_patterns.md)
+  : Discover sequential patterns
 - [`sequence_metrics()`](https://pak.dynasite.org/Nestimate/reference/sequence_metrics.md)
-  : Per-Sequence Indices
+  [`print(`*`<net_sequence_metrics>`*`)`](https://pak.dynasite.org/Nestimate/reference/sequence_metrics.md)
+  [`summary(`*`<net_sequence_metrics>`*`)`](https://pak.dynasite.org/Nestimate/reference/sequence_metrics.md)
+  [`` `[`( ``*`<net_sequence_metrics>`*`)`](https://pak.dynasite.org/Nestimate/reference/sequence_metrics.md)
+  : Compute descriptive indices for each sequence
 - [`sequence_compare()`](https://pak.dynasite.org/Nestimate/reference/sequence_compare.md)
   [`print(`*`<net_sequence_comparison>`*`)`](https://pak.dynasite.org/Nestimate/reference/sequence_compare.md)
   [`summary(`*`<net_sequence_comparison>`*`)`](https://pak.dynasite.org/Nestimate/reference/sequence_compare.md)
   [`plot(`*`<net_sequence_comparison>`*`)`](https://pak.dynasite.org/Nestimate/reference/sequence_compare.md)
-  : Compare Subsequence Patterns Between Groups
+  : Compare subsequence patterns between groups
 - [`extract_pathways()`](https://pak.dynasite.org/Nestimate/reference/extract_pathways.md)
-  : Cut an Event Log into Pathways
+  : Cut an event log into pathways
 - [`association_rules()`](https://pak.dynasite.org/Nestimate/reference/association_rules.md)
   [`print(`*`<net_association_rules>`*`)`](https://pak.dynasite.org/Nestimate/reference/association_rules.md)
   [`summary(`*`<net_association_rules>`*`)`](https://pak.dynasite.org/Nestimate/reference/association_rules.md)
   [`plot(`*`<net_association_rules>`*`)`](https://pak.dynasite.org/Nestimate/reference/association_rules.md)
-  : Discover Association Rules from Sequential or Transaction Data
+  : Discover association rules in transactions or sequences
 
 ## Link Prediction
 
@@ -1043,23 +1077,23 @@ Predict and evaluate missing connections
 - [`predict_links()`](https://pak.dynasite.org/Nestimate/reference/predict_links.md)
   [`print(`*`<net_link_prediction>`*`)`](https://pak.dynasite.org/Nestimate/reference/predict_links.md)
   [`summary(`*`<net_link_prediction>`*`)`](https://pak.dynasite.org/Nestimate/reference/predict_links.md)
-  : Predict Missing or Future Links in a Network
+  : Predict missing or future links in a network
 - [`evaluate_links()`](https://pak.dynasite.org/Nestimate/reference/evaluate_links.md)
-  : Evaluate Link Predictions Against Known Edges
+  : Evaluate link predictions against known edges
 
 ## Outcome Modelling
 
 Relate network and sequence features to an outcome
 
 - [`pattern_outcome()`](https://pak.dynasite.org/Nestimate/reference/pattern_outcome.md)
-  : Model a Binary Outcome From Sequential Patterns
+  : Model a binary outcome from sequential patterns
 - [`outcome_model()`](https://pak.dynasite.org/Nestimate/reference/outcome_model.md)
   [`print(`*`<net_outcome_model>`*`)`](https://pak.dynasite.org/Nestimate/reference/outcome_model.md)
   [`summary(`*`<net_outcome_model>`*`)`](https://pak.dynasite.org/Nestimate/reference/outcome_model.md)
   [`plot(`*`<net_outcome_model>`*`)`](https://pak.dynasite.org/Nestimate/reference/outcome_model.md)
-  : Model Unit-Level Outcomes from Sequence or Network Predictors
+  : Model a unit-level outcome from sequence or network predictors
 - [`effects_table()`](https://pak.dynasite.org/Nestimate/reference/effects_table.md)
-  : Effect Table of a Fitted Outcome Model
+  : Tabulate the effects of an outcome model
 
 ## Data
 
@@ -1067,17 +1101,19 @@ Example datasets
 
 - [`human_long`](https://pak.dynasite.org/Nestimate/reference/long-data.md)
   [`ai_long`](https://pak.dynasite.org/Nestimate/reference/long-data.md)
-  : Human-AI Vibe Coding Interaction Data (Long Format)
+  : Coded turns of human-AI vibe coding sessions
+- [`daily_actions`](https://pak.dynasite.org/Nestimate/reference/daily_actions.md)
+  : Simulated learning actions over seven days
 - [`srl_strategies`](https://pak.dynasite.org/Nestimate/reference/srl_strategies.md)
-  : Self-Regulated Learning Strategy Frequencies
+  : Simulated counts of self-regulated learning strategies
 - [`learning_activities`](https://pak.dynasite.org/Nestimate/reference/learning_activities.md)
-  : Online Learning Activity Indicators
+  : Online learning activity indicators
 - [`group_regulation_long`](https://pak.dynasite.org/Nestimate/reference/group_regulation_long.md)
-  : Group Regulation in Collaborative Learning (Long Format)
+  : Group regulation actions in collaborative learning
 - [`chatgpt_srl`](https://pak.dynasite.org/Nestimate/reference/chatgpt_srl.md)
-  : ChatGPT Self-Regulated Learning Scale Scores
+  : ChatGPT scores on self-regulated learning scales
 - [`trajectories`](https://pak.dynasite.org/Nestimate/reference/trajectories.md)
-  : Student Engagement Trajectories
+  : Student engagement trajectories
 
 # Articles
 
@@ -1087,10 +1123,10 @@ Example datasets
   Entropy](https://pak.dynasite.org/Nestimate/articles/transition-entropy.md):
 - [Network Estimation and Analysis with
   Nestimate](https://pak.dynasite.org/Nestimate/articles/transition-networks.md):
-- [Sequence Pattern Comparison: Early vs Late Human-AI
+- [Comparing Sequences Between Groups: Early vs Late Human-AI
   Interactions](https://pak.dynasite.org/Nestimate/articles/sequence-comparison.md):
-- [Sequence Plots: heatmap, index, and
-  distribution](https://pak.dynasite.org/Nestimate/articles/sequence-plots.md):
+- [Sequence
+  Plots](https://pak.dynasite.org/Nestimate/articles/sequence-plots.md):
 - [Sequence
   Clustering](https://pak.dynasite.org/Nestimate/articles/clustering.md):
 - [Markov Stability
@@ -1103,25 +1139,30 @@ Full tutorials
 - [Network Estimation and Visualization with Nestimate +
   cograph](https://pak.dynasite.org/Nestimate/articles/cograph-tutorial-nestimate.md):
 
-  From raw sequence data to publication-ready statistical network plots
-  — build, bootstrap, compare, cluster, and visualize using Nestimate
-  and cograph together.
+  Estimating, resampling, comparing and clustering transition networks
+  with Nestimate, and drawing them with cograph.
 
 - [Higher-Order Network Analysis with Simplicial
   Complexes](https://pak.dynasite.org/Nestimate/articles/cograph-tutorial-simplicial.md):
 
-- [Tutorial: Model assessment for transition
-  networks](https://pak.dynasite.org/Nestimate/articles/tutorial_model_assessment.md):
+- [Model Assessment for Transition
+  Networks](https://pak.dynasite.org/Nestimate/articles/tutorial_model_assessment.md):
 
 - [Nested sequences and the permutation
   test](https://pak.dynasite.org/Nestimate/articles/permutation-nested-data.md):
 
-- [Comparing two networks with
+- [Comparing networks with
   compare_networks()](https://pak.dynasite.org/Nestimate/articles/compare-networks.md):
 
 ### Experimental
 
 New methods whose interface may still change
 
-- [Stability landscapes of engagement
-  (experimental)](https://pak.dynasite.org/Nestimate/articles/stability-landscapes.md):
+- [Stability of engagement: states, landscapes and
+  students](https://pak.dynasite.org/Nestimate/articles/stability-landscapes.md):
+
+### Resources
+
+Every article with its reference and PDF
+
+- [Resources](https://pak.dynasite.org/Nestimate/articles/cite-articles.md):

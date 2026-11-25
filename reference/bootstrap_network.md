@@ -1,4 +1,4 @@
-# Bootstrap a Network Estimate
+# Bootstrap a network estimate
 
 `bootstrap_network()` resamples the cases a network was estimated from,
 re-estimates the network on every resample with the same method and
@@ -76,10 +76,19 @@ summary(object, ...)
   or a `cograph_network`, which is converted first. A `netobject_group`
   or `mcml` bootstraps every network it holds (for an `mcml`, the macro
   network and each cluster's), and a `wtna_mixed` bootstraps both of its
-  components (see *Value*). A network without its data raises an error,
-  and one that rests on a single sequence, or one-hot data with no actor
-  or session, has nothing to resample and raises an error of class
-  `nestimate_single_sequence`. For the
+  components (see *Value*). A `tna` model or a `group_tna` (package tna)
+  is first rebuilt as a network from its own sequences (see
+  [`as_netobject()`](https://pak.dynasite.org/Nestimate/reference/as_netobject.md)).
+  `actor` is read from the metadata the model keeps
+  (`attr(model$data, "meta")`, kept when the model is built from
+  [`tna::prepare_data()`](https://sonsoles.me/tna/reference/prepare_data.html));
+  a model without it raises `nestimate_actor_missing`. A network without
+  its data raises an error, and one that rests on a single sequence, or
+  one-hot data with no actor or session, has nothing to resample and
+  raises an error of class `nestimate_single_sequence`. A sequence
+  network with no observed transition raises an error of class
+  `nestimate_no_transition`, and a network built with `level` one of
+  class `nestimate_multilevel_resampling`. For the
   [`print()`](https://rdrr.io/r/base/print.html) methods: the result of
   `bootstrap_network()`.
 
@@ -143,11 +152,16 @@ summary(object, ...)
   `"student_id"` for sessions nested in students, `"Group"` for students
   nested in teams), looked up in the network's metadata or its wide
   sequence data. With it, whole actors are resampled; see *Nested data
-  and `actor`*. Default `NULL`: sequences are resampled one by one. It
-  is available for sequence-based transition networks (`"relative"`,
-  `"frequency"`, `"co_occurrence"`); a method outside the fast path (see
-  *Details*) raises an error of class `nestimate_actor_unsupported`. A
-  value that is not a single column name, or that names fewer than two
+  and `actor`*. Several column names, outermost first (such as
+  `c("Group", "Student")`), are nested levels, of which the outermost is
+  resampled; the reported number of actors, ICC and design effect are
+  those of the outermost level, and levels that are not nested outermost
+  first raise an error of class `nestimate_bad_actor`. Default `NULL`:
+  sequences are resampled one by one. It is available for sequence-based
+  transition networks (`"relative"`, `"frequency"`, `"co_occurrence"`);
+  a method outside the fast path (see *Details*) raises an error of
+  class `nestimate_actor_unsupported`. A value that is not one or more
+  distinct column names, or whose outermost column names fewer than two
   actors, raises an error of class `nestimate_bad_actor`; a column that
   is absent or has missing values, one of class
   `nestimate_actor_missing`; and ids that do not give one actor per
@@ -227,7 +241,8 @@ original network. The fields:
 
 - actor, n_actors:
 
-  The `actor` column and its number of actors; `NULL` without `actor`.
+  The `actor` column (or columns, outermost first) and the number of
+  actors resampled (at the outermost level); `NULL` without `actor`.
 
 - clustering:
 
@@ -251,15 +266,43 @@ methods below. A `wtna_mixed` gives a `wtna_boot_mixed` holding the
 The [`print()`](https://rdrr.io/r/base/print.html) methods return their
 input invisibly. The [`summary()`](https://rdrr.io/r/base/summary.html)
 method of a `net_bootstrap` returns its per-edge table, the `summary`
-field described above. For a `net_bootstrap_group` it stacks those
-tables into one data frame, with a first column `group` naming the
-network each row comes from; for a `wtna_boot_mixed` it returns a list
-of the `transition` and `cooccurrence` tables.
+field described above. For a `net_bootstrap_group` it returns the tables
+of all groups stacked into one data frame, with a first column `group`
+naming the network each row comes from; the group object keeps that
+table from the start (its `"summary"` attribute); for a
+`wtna_boot_mixed` it returns a list of the `transition` and
+`cooccurrence` tables.
 
 ## Details
 
 The two tests and the inclusive boundary rule follow
 [`tna::bootstrap()`](https://sonsoles.me/tna/reference/bootstrap.html).
+
+A latency network (`method = "latency"`) is resampled by its sequences,
+and every edge's weight is recomputed from the replies of the drawn
+sequences. A percentile cap the network resolved from its own replies is
+resolved again in every resample; a cap in seconds, or one pooled over
+the groups of a grouped build, keeps its value. A resample whose
+resolved cap is 0 seconds (its replies mostly instant) stops the
+bootstrap with an error of class `nestimate_latency_zero_cap`; give the
+cap in seconds. Per-unit caps (`latency_scope` other than `"global"`)
+and `actor` raise an error of class `nestimate_latency_resampling` or
+`nestimate_actor_unsupported`; to resample within groups, build the
+network with `group` and bootstrap the group. With the default
+`aggregate = "mean"`, the stability test is run on the speed score
+`(weight - floor) / (1 - floor)`, which runs from 0 (every reply at or
+past the cap) to 1 (every reply instant), because a band around a mean
+weight between the floor and 1 passes almost every edge. An edge whose
+replies come from fewer than 5 sequences cannot vary across resamples
+and gets a p-value of 1. The summary adds each edge's `n_replies`,
+`n_sequences` and `cv`, the coefficient of variation of its resampled
+speed scores. These rules were checked by simulation against known reply
+speeds: with a percentile cap the 95% intervals covered 0.91-0.95 of the
+true weights from 30 sequences on, and an edge called stable was within
+25% of its true score in 97-100% of datasets from 300 sequences on.
+Bootstrapping latency networks is experimental: every call says so in a
+message of class `nestimate_experimental` (once for a group of
+networks).
 
 Transition networks (`"relative"`, `"frequency"`, `"co_occurrence"`, and
 `wtna` networks, which hold the same one-hot counts) take a fast path:
@@ -281,7 +324,13 @@ A network built from an edge list (for example an `mcml` from
 [`build_mcml()`](https://pak.dynasite.org/Nestimate/reference/build_mcml.md)
 with `from` and `to`) has no sequences, so each transition is resampled
 as an independent case, with a warning of class
-`nestimate_edgelist_resampling` that points to the alternatives.
+`nestimate_edgelist_resampling` that points to the alternatives. An
+`mcml` built with a `method` other than `"sum"` (such as `"mean"` or
+`"max"`) combines the transitions of each resample by that method, so
+every replicate is the `mcml` that
+[`build_mcml()`](https://pak.dynasite.org/Nestimate/reference/build_mcml.md)
+gives on the resampled rows; `actor` is then not supported and raises an
+error of class `nestimate_actor_unsupported`.
 
 ## Nested data and `actor`
 
@@ -292,6 +341,16 @@ with replacement, keeping all their sequences together: the cluster
 bootstrap that resamples at the top level only (Davison & Hinkley, 1997,
 section 3.8; Field & Welsh, 2007). The number of sequences per replicate
 then varies with the actors drawn.
+
+Several columns, outermost first (`actor = c("Group", "Student")`,
+students within teams), name nested levels. Every column is checked, but
+only the outermost level is resampled: whole teams, each with all its
+students and sessions. Resampling inside the drawn clusters as well
+(students within teams) adds their variation a second time and
+overstates the variance (Davison & Hinkley, 1997, section 3.8). The ICC
+and design effect are then those of the outermost level, and
+[`print()`](https://rdrr.io/r/base/print.html) names it as the resampled
+level.
 
 With `actor`, the result also reports the nesting effect. The ICC is the
 proportion of the total variance that lies between actors (Shrout &
@@ -305,6 +364,23 @@ replicates divided by their variance over sequence-level replicates
 drawn in the same run, reported as the median over edges. `actor` is
 available for transition networks (`"relative"`, `"frequency"`,
 `"co_occurrence"`).
+
+When to set `actor`: resampling sequences describes the variability of
+these actors' sequences; to generalise to other actors (other students,
+other teams), resample actors. A drawn actor brings all of their
+sequences, so a replicate can contain an actor twice or not at all. The
+design effect, not the ICC alone, decides how much this matters: Kish's
+approximation `1 + (m - 1) * ICC` for clusters of m equally informative
+units grows with the cluster size, so a small ICC over large clusters
+still widens the intervals. In one data set of sessions nested in
+students, the transitions of one student correlated at about 0.01, yet
+with about 59 transitions per student (size-weighted mean) the Rao-Scott
+design effect of the transition table was about 1.5
+([`mosaic_test()`](https://pak.dynasite.org/Nestimate/reference/mosaic_test.md)).
+The printed values, which take the sequence as the unit, were an ICC of
+0.05 and a design effect of 1.24; resampling students gave intervals
+about a quarter wider than resampling sessions, and fewer significant
+edges (18 against 22).
 
 ## References
 

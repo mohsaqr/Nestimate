@@ -15,6 +15,14 @@
 <script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Network Estimation and Analysis with Nestimate">
+<meta name="citation_title" content="Network Estimation and Analysis with Nestimate">
+<meta name="citation_author" content="Saqr, Mohammed">
+<meta name="citation_author" content="López-Pernas, Sonsoles">
+<meta name="citation_author" content="Misiejuk, Kamila">
+<meta name="citation_publication_date" content="2026">
+<meta name="citation_publisher" content="Nestimate">
+<meta name="citation_pdf_url" content="https://pak.dynasite.org/Nestimate/pdf/transition-networks.pdf">
+<meta name="citation_abstract_html_url" content="https://pak.dynasite.org/Nestimate/articles/transition-networks.html">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -24,7 +32,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.12</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -39,8 +47,8 @@
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
 <li><a class="dropdown-item" href="../articles/transition-entropy.html">Transition Matrix Entropy</a></li>
     <li><a class="dropdown-item" href="../articles/transition-networks.html">Network Estimation and Analysis with Nestimate</a></li>
-    <li><a class="dropdown-item" href="../articles/sequence-comparison.html">Sequence Pattern Comparison: Early vs Late Human-AI Interactions</a></li>
-    <li><a class="dropdown-item" href="../articles/sequence-plots.html">Sequence Plots: heatmap, index, and distribution</a></li>
+    <li><a class="dropdown-item" href="../articles/sequence-comparison.html">Comparing Sequences Between Groups: Early vs Late Human-AI Interactions</a></li>
+    <li><a class="dropdown-item" href="../articles/sequence-plots.html">Sequence Plots</a></li>
     <li><a class="dropdown-item" href="../articles/clustering.html">Sequence Clustering</a></li>
     <li><a class="dropdown-item" href="../articles/markov-stability.html">Markov Stability Analysis</a></li>
     <li><hr class="dropdown-divider"></li>
@@ -87,17 +95,18 @@ Misiejuk</h4>
 
     
     
-<p><code>Nestimate</code> is a unified framework for estimating,
-validating, and comparing networks from sequential and cross-sectional
-data. It implements two complementary paradigms: <strong>Transition
-Network Analysis (TNA)</strong>, which models the relational dynamics of
-temporal processes as weighted directed networks using stochastic Markov
-models; and <strong>Psychological Network Analysis (PNA)</strong>, which
-estimates the conditional dependency structure among variables using
-regularized partial correlations and graphical models. Both paradigms
-share the same <code><a href="../reference/build_network.html">build_network()</a></code> interface, the same
-validation engine (bootstrap, permutation, centrality stability), and
-the same output format — enabling researchers to apply a consistent
+<p><code>Nestimate</code> (Saqr et al., 2026) is a unified framework for
+estimating, validating, and comparing networks from sequential and
+cross-sectional data. It implements two complementary paradigms:
+<strong>Transition Network Analysis (TNA)</strong>, which models the
+relational dynamics of temporal processes as weighted directed networks
+using stochastic Markov models (Saqr et al., 2025c); and
+<strong>Psychological Network Analysis (PNA)</strong>, which estimates
+the conditional dependency structure among variables using regularized
+partial correlations and graphical models (Saqr et al., 2024). Both
+paradigms share the same <code><a href="../reference/build_network.html">build_network()</a></code> interface, the
+same validation engine (bootstrap, permutation, centrality stability),
+and the same output format — enabling researchers to apply a consistent
 analytic workflow across fundamentally different data types.</p>
 <p>This vignette demonstrates both paradigms, covering network
 estimation, statistical validation, data-driven clustering, and group
@@ -117,22 +126,28 @@ governed by a stochastic process: the specific ways in which the system
 changes or evolves is rather random and therefore cannot be strictly
 determined. That is, the transitions are probabilistically dependent on
 preceding states — a method that assumes events are probabilistically
-dependent on the preceding ones.</p>
+dependent on the preceding ones. Modeling the temporal order of learning
+events has been used to study the temporal patterns of students’
+interactions and self-regulation (Saqr et al., 2019) and to map
+students’ self-regulated learning tactics (Peeters et al., 2020). In
+network science, temporal networks keep the timing and order of
+interactions as part of the network (Holme &amp; Saramäki, 2012; Holme,
+2015).</p>
 <p>The main principle of TNA is representing the transition matrix
 between events as a graph to take full advantage of graph theory
-potentials and the wealth of network analysis. TNA brings network
-measures at the node, edge, and graph level; pattern mining through
-dyads, triads, and communities; clustering of sub-networks into typical
-behavioral strategies; and rigorous statistical validation at each edge
-through bootstrapping, permutation, and case-dropping techniques. Such
-statistical rigor that brings validation and hypothesis testing at each
-step of the analysis offers a method for researchers to build, verify,
-and advance existing theories on the basis of a robust scientific
-approach.</p>
+potentials and the wealth of network analysis (Wasserman &amp; Faust,
+1994; Newman, 2018). TNA brings network measures at the node, edge, and
+graph level; pattern mining through dyads, triads, and communities;
+clustering of sub-networks into typical behavioral strategies; and
+rigorous statistical validation at each edge through bootstrapping,
+permutation, and case-dropping techniques. Such statistical rigor that
+brings validation and hypothesis testing at each step of the analysis
+offers a method for researchers to build, verify, and advance existing
+theories on the basis of a robust scientific approach.</p>
 <p>For a comprehensive introduction to TNA in learning analytics, see
-Saqr et al. (2025a) and Saqr (2024). For detailed tutorials on TNA
-clustering and heterogeneity analysis, see López-Pernas et
-al. (2025).</p>
+Saqr et al. (2025a, 2025c). For detailed tutorials on TNA clustering and
+heterogeneity analysis, see López-Pernas et al. (2025). TNA is also
+implemented in the R package tna (Tikka et al., 2025).</p>
 </div>
 <div class="section level3">
 <h3 id="data">Data<a class="anchor" aria-label="anchor" href="#data"></a>
@@ -141,9 +156,10 @@ al. (2025).</p>
 interaction turns from 429 human-AI pair programming sessions across 34
 projects. Each row is a single turn, with <code>code</code> recording
 the interaction type, <code>session_id</code> identifying the session,
-and <code>timestamp</code> providing temporal ordering. For a detailed
-description of the dataset and coding scheme, see <a href="https://saqr.me/blog/2026/human-ai-interaction-cograph/" class="external-link">Saqr
-(2026)</a>.</p>
+and <code>timestamp</code> providing temporal ordering. Vibe coding,
+programming by conversation with an AI assistant (Sarkar &amp; Drosos,
+2025), has been studied with transition networks and sequence analysis
+(Saqr, Misiejuk, &amp; López-Pernas, 2026; Misiejuk et al., 2026).</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/mohsaqr/Nestimate" class="external-link">Nestimate</a></span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">human_long</span><span class="op">)</span></span>
@@ -221,48 +237,31 @@ to
 <span><span class="co">#&gt; Transition Network (relative probabilities) [directed]</span></span>
 <span><span class="co">#&gt;   Weights: [0.018, 0.620]  |  mean: 0.111</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   Weight matrix:</span></span>
-<span><span class="co">#&gt;             Command Correct Frustrate Inquire Interrupt Refine Request Specify</span></span>
-<span><span class="co">#&gt;   Command     0.235   0.088     0.055   0.066     0.035  0.038   0.155   0.280</span></span>
-<span><span class="co">#&gt;   Correct     0.093   0.091     0.138   0.057     0.054  0.112   0.120   0.278</span></span>
-<span><span class="co">#&gt;   Frustrate   0.103   0.115     0.176   0.075     0.047  0.171   0.111   0.125</span></span>
-<span><span class="co">#&gt;   Inquire     0.196   0.126     0.098   0.188     0.094  0.062   0.084   0.106</span></span>
-<span><span class="co">#&gt;   Interrupt   0.259   0.081     0.094   0.123     0.102  0.080   0.069   0.122</span></span>
-<span><span class="co">#&gt;   Refine      0.058   0.075     0.072   0.047     0.042  0.086   0.146   0.457</span></span>
-<span><span class="co">#&gt;   Request     0.096   0.019     0.044   0.067     0.051  0.033   0.039   0.620</span></span>
-<span><span class="co">#&gt;   Specify     0.263   0.058     0.081   0.072     0.167  0.074   0.070   0.172</span></span>
-<span><span class="co">#&gt;   Verify      0.224   0.079     0.164   0.118     0.043  0.097   0.116   0.083</span></span>
-<span><span class="co">#&gt;             Verify</span></span>
-<span><span class="co">#&gt;   Command    0.048</span></span>
-<span><span class="co">#&gt;   Correct    0.056</span></span>
-<span><span class="co">#&gt;   Frustrate  0.077</span></span>
-<span><span class="co">#&gt;   Inquire    0.044</span></span>
-<span><span class="co">#&gt;   Interrupt  0.069</span></span>
-<span><span class="co">#&gt;   Refine     0.018</span></span>
-<span><span class="co">#&gt;   Request    0.032</span></span>
-<span><span class="co">#&gt;   Specify    0.043</span></span>
-<span><span class="co">#&gt;   Verify     0.077 </span></span>
+<span><span class="co">#&gt;   Strongest edges (10 of 81):</span></span>
+<span><span class="co">#&gt;    from      to      weight</span></span>
+<span><span class="co">#&gt;    Request   Specify 0.620 </span></span>
+<span><span class="co">#&gt;    Refine    Specify 0.457 </span></span>
+<span><span class="co">#&gt;    Command   Specify 0.280 </span></span>
+<span><span class="co">#&gt;    Correct   Specify 0.278 </span></span>
+<span><span class="co">#&gt;    Specify   Command 0.263 </span></span>
+<span><span class="co">#&gt;    Interrupt Command 0.259 </span></span>
+<span><span class="co">#&gt;    Command   Command 0.235 </span></span>
+<span><span class="co">#&gt;    Verify    Command 0.224 </span></span>
+<span><span class="co">#&gt;    Inquire   Command 0.196 </span></span>
+<span><span class="co">#&gt;    Inquire   Inquire 0.188  </span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   Initial probabilities:</span></span>
-<span><span class="co">#&gt;   Specify       0.679  ████████████████████████████████████████</span></span>
-<span><span class="co">#&gt;   Command       0.175  ██████████</span></span>
-<span><span class="co">#&gt;   Request       0.055  ███</span></span>
-<span><span class="co">#&gt;   Interrupt     0.030  ██</span></span>
-<span><span class="co">#&gt;   Correct       0.019  █</span></span>
-<span><span class="co">#&gt;   Refine        0.019  █</span></span>
-<span><span class="co">#&gt;   Frustrate     0.013  █</span></span>
-<span><span class="co">#&gt;   Inquire       0.008  </span></span>
-<span><span class="co">#&gt;   Verify        0.002</span></span></code></pre></div>
+<span><span class="co">#&gt;   extract_edges(include_self = TRUE) lists every edge; extract_transition_matrix() gives the weight matrix;</span></span>
+<span><span class="co">#&gt;   extract_initial_probs() the initial probabilities.</span></span></code></pre></div>
 </div>
 <div class="section level4">
 <h4 id="frequency-network-ftna">Frequency Network (FTNA)<a class="anchor" aria-label="anchor" href="#frequency-network-ftna"></a>
 </h4>
 <p>The frequency method preserves raw transition counts rather than
-normalizing to conditional probabilities. This is useful when absolute
-frequencies matter — a transition occurring 500 times from a common
-state may be more practically important than one occurring 5 times from
-a rare state, even if the latter has a higher conditional
-probability.</p>
+normalizing to conditional probabilities (Saqr et al., 2025b). This is
+useful when absolute frequencies matter — a transition occurring 500
+times from a common state may be more practically important than one
+occurring 5 times from a rare state, even if the latter has a higher
+conditional probability.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">net_ftna</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_network.html">build_network</a></span><span class="op">(</span><span class="va">human_long</span>, method <span class="op">=</span> <span class="st">"ftna"</span>,</span>
 <span>                          action <span class="op">=</span> <span class="st">"code"</span>, actor <span class="op">=</span> <span class="st">"session_id"</span>,</span>
@@ -271,38 +270,21 @@ probability.</p>
 <span><span class="co">#&gt; Transition Network (frequency counts) [directed]</span></span>
 <span><span class="co">#&gt;   Weights: [14.000, 732.000]  |  mean: 126.790</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   Weight matrix:</span></span>
-<span><span class="co">#&gt;             Command Correct Frustrate Inquire Interrupt Refine Request Specify</span></span>
-<span><span class="co">#&gt;   Command       459     171       107     129        68     75     303     548</span></span>
-<span><span class="co">#&gt;   Correct        73      71       108      45        42     88      94     218</span></span>
-<span><span class="co">#&gt;   Frustrate      95     106       162      69        43    157     102     115</span></span>
-<span><span class="co">#&gt;   Inquire       160     103        80     154        77     51      69      87</span></span>
-<span><span class="co">#&gt;   Interrupt     191      60        69      91        75     59      51      90</span></span>
-<span><span class="co">#&gt;   Refine         45      59        56      37        33     67     114     357</span></span>
-<span><span class="co">#&gt;   Request        97      19        45      68        52     33      40     629</span></span>
-<span><span class="co">#&gt;   Specify       732     161       226     199       463    205     194     479</span></span>
-<span><span class="co">#&gt;   Verify        108      38        79      57        21     47      56      40</span></span>
-<span><span class="co">#&gt;             Verify</span></span>
-<span><span class="co">#&gt;   Command       94</span></span>
-<span><span class="co">#&gt;   Correct       44</span></span>
-<span><span class="co">#&gt;   Frustrate     71</span></span>
-<span><span class="co">#&gt;   Inquire       36</span></span>
-<span><span class="co">#&gt;   Interrupt     51</span></span>
-<span><span class="co">#&gt;   Refine        14</span></span>
-<span><span class="co">#&gt;   Request       32</span></span>
-<span><span class="co">#&gt;   Specify      120</span></span>
-<span><span class="co">#&gt;   Verify        37 </span></span>
+<span><span class="co">#&gt;   Strongest edges (10 of 81):</span></span>
+<span><span class="co">#&gt;    from    to        weight</span></span>
+<span><span class="co">#&gt;    Specify Command   732   </span></span>
+<span><span class="co">#&gt;    Request Specify   629   </span></span>
+<span><span class="co">#&gt;    Command Specify   548   </span></span>
+<span><span class="co">#&gt;    Specify Specify   479   </span></span>
+<span><span class="co">#&gt;    Specify Interrupt 463   </span></span>
+<span><span class="co">#&gt;    Command Command   459   </span></span>
+<span><span class="co">#&gt;    Refine  Specify   357   </span></span>
+<span><span class="co">#&gt;    Command Request   303   </span></span>
+<span><span class="co">#&gt;    Specify Frustrate 226   </span></span>
+<span><span class="co">#&gt;    Correct Specify   218    </span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   Initial probabilities:</span></span>
-<span><span class="co">#&gt;   Specify       0.679  ████████████████████████████████████████</span></span>
-<span><span class="co">#&gt;   Command       0.175  ██████████</span></span>
-<span><span class="co">#&gt;   Request       0.055  ███</span></span>
-<span><span class="co">#&gt;   Interrupt     0.030  ██</span></span>
-<span><span class="co">#&gt;   Correct       0.019  █</span></span>
-<span><span class="co">#&gt;   Refine        0.019  █</span></span>
-<span><span class="co">#&gt;   Frustrate     0.013  █</span></span>
-<span><span class="co">#&gt;   Inquire       0.008  </span></span>
-<span><span class="co">#&gt;   Verify        0.002</span></span></code></pre></div>
+<span><span class="co">#&gt;   extract_edges(include_self = TRUE) lists every edge; extract_transition_matrix() gives the weight matrix;</span></span>
+<span><span class="co">#&gt;   extract_initial_probs() the initial probabilities.</span></span></code></pre></div>
 </div>
 <div class="section level4">
 <h4 id="attention-network-atna">Attention Network (ATNA)<a class="anchor" aria-label="anchor" href="#attention-network-atna"></a>
@@ -322,38 +304,21 @@ dynamics than early ones.</p>
 <span><span class="co">#&gt; Attention Network (decay-weighted transitions) [directed]</span></span>
 <span><span class="co">#&gt;   Weights: [11.018, 357.662]  |  mean: 71.690</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   Weight matrix:</span></span>
-<span><span class="co">#&gt;             Command Correct Frustrate Inquire Interrupt  Refine Request Specify</span></span>
-<span><span class="co">#&gt;   Command   254.753  91.496    66.797  80.402    65.936  47.423 145.985 297.131</span></span>
-<span><span class="co">#&gt;   Correct    51.382  44.627    55.538  29.832    27.286  46.929  46.160 119.340</span></span>
-<span><span class="co">#&gt;   Frustrate  57.452  55.341    92.756  40.085    28.624  74.892  54.606  87.031</span></span>
-<span><span class="co">#&gt;   Inquire    85.134  56.787    43.046  81.061    38.782  29.220  40.091  69.990</span></span>
-<span><span class="co">#&gt;   Interrupt  94.228  31.160    36.365  46.634    48.698  30.005  28.457  67.398</span></span>
-<span><span class="co">#&gt;   Refine     36.306  37.008    37.761  24.197    21.236  51.087  58.478 167.226</span></span>
-<span><span class="co">#&gt;   Request    63.272  18.659    31.998  41.056    51.503  30.285  33.277 272.476</span></span>
-<span><span class="co">#&gt;   Specify   357.662  96.031   134.432 115.671   206.063 116.889 141.240 335.302</span></span>
-<span><span class="co">#&gt;   Verify     53.941  20.958    40.429  30.820    11.349  25.768  29.387  39.412</span></span>
-<span><span class="co">#&gt;             Verify</span></span>
-<span><span class="co">#&gt;   Command   53.492</span></span>
-<span><span class="co">#&gt;   Correct   22.847</span></span>
-<span><span class="co">#&gt;   Frustrate 32.765</span></span>
-<span><span class="co">#&gt;   Inquire   17.833</span></span>
-<span><span class="co">#&gt;   Interrupt 27.393</span></span>
-<span><span class="co">#&gt;   Refine    11.018</span></span>
-<span><span class="co">#&gt;   Request   21.781</span></span>
-<span><span class="co">#&gt;   Specify   76.312</span></span>
-<span><span class="co">#&gt;   Verify    23.444 </span></span>
+<span><span class="co">#&gt;   Strongest edges (10 of 81):</span></span>
+<span><span class="co">#&gt;    from    to        weight </span></span>
+<span><span class="co">#&gt;    Specify Command   357.662</span></span>
+<span><span class="co">#&gt;    Specify Specify   335.302</span></span>
+<span><span class="co">#&gt;    Command Specify   297.131</span></span>
+<span><span class="co">#&gt;    Request Specify   272.476</span></span>
+<span><span class="co">#&gt;    Command Command   254.753</span></span>
+<span><span class="co">#&gt;    Specify Interrupt 206.063</span></span>
+<span><span class="co">#&gt;    Refine  Specify   167.226</span></span>
+<span><span class="co">#&gt;    Command Request   145.985</span></span>
+<span><span class="co">#&gt;    Specify Request   141.240</span></span>
+<span><span class="co">#&gt;    Specify Frustrate 134.432 </span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   Initial probabilities:</span></span>
-<span><span class="co">#&gt;   Specify       0.679  ████████████████████████████████████████</span></span>
-<span><span class="co">#&gt;   Command       0.175  ██████████</span></span>
-<span><span class="co">#&gt;   Request       0.055  ███</span></span>
-<span><span class="co">#&gt;   Interrupt     0.030  ██</span></span>
-<span><span class="co">#&gt;   Correct       0.019  █</span></span>
-<span><span class="co">#&gt;   Refine        0.019  █</span></span>
-<span><span class="co">#&gt;   Frustrate     0.013  █</span></span>
-<span><span class="co">#&gt;   Inquire       0.008  </span></span>
-<span><span class="co">#&gt;   Verify        0.002</span></span></code></pre></div>
+<span><span class="co">#&gt;   extract_edges(include_self = TRUE) lists every edge; extract_transition_matrix() gives the weight matrix;</span></span>
+<span><span class="co">#&gt;   extract_initial_probs() the initial probabilities.</span></span></code></pre></div>
 </div>
 <div class="section level4">
 <h4 id="co-occurrence-network-from-binary-data">Co-occurrence Network from Binary Data<a class="anchor" aria-label="anchor" href="#co-occurrence-network-from-binary-data"></a>
@@ -371,14 +336,20 @@ events tend to co-occur.</p>
 <span><span class="co">#&gt; Co-occurrence Network [undirected]</span></span>
 <span><span class="co">#&gt;   Weights: [2681.000, 6262.000]  |  mean: 3867.381</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   Weight matrix:</span></span>
-<span><span class="co">#&gt;           Reading Video Forum Quiz Coding Review</span></span>
-<span><span class="co">#&gt;   Reading    6100  3169  3211 2891   3138   3113</span></span>
-<span><span class="co">#&gt;   Video      3169  6262  3183 2903   3278   3290</span></span>
-<span><span class="co">#&gt;   Forum      3211  3183  5692 2942   2958   3045</span></span>
-<span><span class="co">#&gt;   Quiz       2891  2903  2942 5379   2681   2725</span></span>
-<span><span class="co">#&gt;   Coding     3138  3278  2958 2681   5886   3183</span></span>
-<span><span class="co">#&gt;   Review     3113  3290  3045 2725   3183   6186</span></span></code></pre></div>
+<span><span class="co">#&gt;   Strongest edges (10 of 21):</span></span>
+<span><span class="co">#&gt;    from    to      weight</span></span>
+<span><span class="co">#&gt;    Video   Video   6262  </span></span>
+<span><span class="co">#&gt;    Review  Review  6186  </span></span>
+<span><span class="co">#&gt;    Reading Reading 6100  </span></span>
+<span><span class="co">#&gt;    Coding  Coding  5886  </span></span>
+<span><span class="co">#&gt;    Forum   Forum   5692  </span></span>
+<span><span class="co">#&gt;    Quiz    Quiz    5379  </span></span>
+<span><span class="co">#&gt;    Video   Review  3290  </span></span>
+<span><span class="co">#&gt;    Video   Coding  3278  </span></span>
+<span><span class="co">#&gt;    Reading Forum   3211  </span></span>
+<span><span class="co">#&gt;    Coding  Review  3183   </span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;   extract_edges(include_self = TRUE) lists every edge; extract_transition_matrix() gives the weight matrix.</span></span></code></pre></div>
 </div>
 <div class="section level4">
 <h4 id="window-based-tna-wtna">Window-based TNA (WTNA)<a class="anchor" aria-label="anchor" href="#window-based-tna-wtna"></a>
@@ -404,44 +375,42 @@ transitions and co-occurrences</li>
 <span><span class="co">#&gt; Network (method: wtna_transition) [directed]</span></span>
 <span><span class="co">#&gt;   Weights: [2493.000, 4314.000]  |  mean: 3025.056</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   Weight matrix:</span></span>
-<span><span class="co">#&gt;           Reading Video Forum Quiz Coding Review</span></span>
-<span><span class="co">#&gt;   Reading    4297  2903  2908 2638   2935   3008</span></span>
-<span><span class="co">#&gt;   Video      2921  4314  2943 2651   2909   3018</span></span>
-<span><span class="co">#&gt;   Forum      2863  2875  3881 2675   2747   2902</span></span>
-<span><span class="co">#&gt;   Quiz       2691  2654  2706 3695   2518   2542</span></span>
-<span><span class="co">#&gt;   Coding     2814  3094  2767 2559   4005   2953</span></span>
-<span><span class="co">#&gt;   Review     2971  3113  2824 2493   2909   4206 </span></span>
+<span><span class="co">#&gt;   Strongest edges (10 of 36):</span></span>
+<span><span class="co">#&gt;    from    to      weight</span></span>
+<span><span class="co">#&gt;    Video   Video   4314  </span></span>
+<span><span class="co">#&gt;    Reading Reading 4297  </span></span>
+<span><span class="co">#&gt;    Review  Review  4206  </span></span>
+<span><span class="co">#&gt;    Coding  Coding  4005  </span></span>
+<span><span class="co">#&gt;    Forum   Forum   3881  </span></span>
+<span><span class="co">#&gt;    Quiz    Quiz    3695  </span></span>
+<span><span class="co">#&gt;    Review  Video   3113  </span></span>
+<span><span class="co">#&gt;    Coding  Video   3094  </span></span>
+<span><span class="co">#&gt;    Video   Review  3018  </span></span>
+<span><span class="co">#&gt;    Reading Review  3008   </span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   Initial probabilities:</span></span>
-<span><span class="co">#&gt;   Reading       0.209  ████████████████████████████████████████</span></span>
-<span><span class="co">#&gt;   Coding        0.194  █████████████████████████████████████</span></span>
-<span><span class="co">#&gt;   Video         0.179  ██████████████████████████████████</span></span>
-<span><span class="co">#&gt;   Review        0.151  █████████████████████████████</span></span>
-<span><span class="co">#&gt;   Quiz          0.141  ███████████████████████████</span></span>
-<span><span class="co">#&gt;   Forum         0.126  ████████████████████████</span></span></code></pre></div>
+<span><span class="co">#&gt;   extract_edges(include_self = TRUE) lists every edge; extract_transition_matrix() gives the weight matrix;</span></span>
+<span><span class="co">#&gt;   extract_initial_probs() the initial probabilities.</span></span></code></pre></div>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">net_wtna_rel</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/wtna.html">wtna</a></span><span class="op">(</span><span class="va">learning_activities</span>, method <span class="op">=</span> <span class="st">"transition"</span>, type <span class="op">=</span> <span class="st">"relative"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">net_wtna_rel</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Network (method: wtna_transition) [directed]</span></span>
 <span><span class="co">#&gt;   Weights: [0.136, 0.225]  |  mean: 0.167</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   Weight matrix:</span></span>
-<span><span class="co">#&gt;           Reading Video Forum  Quiz Coding Review</span></span>
-<span><span class="co">#&gt;   Reading   0.225 0.157 0.155 0.142  0.159  0.162</span></span>
-<span><span class="co">#&gt;   Video     0.156 0.225 0.157 0.142  0.159  0.161</span></span>
-<span><span class="co">#&gt;   Forum     0.160 0.161 0.210 0.150  0.156  0.162</span></span>
-<span><span class="co">#&gt;   Quiz      0.161 0.160 0.161 0.213  0.151  0.153</span></span>
-<span><span class="co">#&gt;   Coding    0.157 0.169 0.152 0.141  0.220  0.162</span></span>
-<span><span class="co">#&gt;   Review    0.162 0.167 0.152 0.136  0.159  0.224 </span></span>
+<span><span class="co">#&gt;   Strongest edges (10 of 36):</span></span>
+<span><span class="co">#&gt;    from    to      weight</span></span>
+<span><span class="co">#&gt;    Video   Video   0.225 </span></span>
+<span><span class="co">#&gt;    Reading Reading 0.225 </span></span>
+<span><span class="co">#&gt;    Review  Review  0.224 </span></span>
+<span><span class="co">#&gt;    Coding  Coding  0.220 </span></span>
+<span><span class="co">#&gt;    Quiz    Quiz    0.213 </span></span>
+<span><span class="co">#&gt;    Forum   Forum   0.210 </span></span>
+<span><span class="co">#&gt;    Coding  Video   0.169 </span></span>
+<span><span class="co">#&gt;    Review  Video   0.167 </span></span>
+<span><span class="co">#&gt;    Coding  Review  0.162 </span></span>
+<span><span class="co">#&gt;    Forum   Review  0.162  </span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   Initial probabilities:</span></span>
-<span><span class="co">#&gt;   Reading       0.500  ████████████████████████████████████████</span></span>
-<span><span class="co">#&gt;   Quiz          0.500  ████████████████████████████████████████</span></span>
-<span><span class="co">#&gt;   Video         0.000  </span></span>
-<span><span class="co">#&gt;   Forum         0.000  </span></span>
-<span><span class="co">#&gt;   Coding        0.000  </span></span>
-<span><span class="co">#&gt;   Review        0.000</span></span></code></pre></div>
+<span><span class="co">#&gt;   extract_edges(include_self = TRUE) lists every edge; extract_transition_matrix() gives the weight matrix;</span></span>
+<span><span class="co">#&gt;   extract_initial_probs() the initial probabilities.</span></span></code></pre></div>
 </div>
 <div class="section level4">
 <h4 id="mixed-network-transitions-co-occurrences">Mixed Network (Transitions + Co-occurrences)<a class="anchor" aria-label="anchor" href="#mixed-network-transitions-co-occurrences"></a>
@@ -456,8 +425,8 @@ single structure.</p>
 <span><span class="co">#&gt; Mixed Window TNA (transition + co-occurrence)</span></span>
 <span><span class="co">#&gt; -- Transition (directed) --</span></span>
 <span><span class="co">#&gt;   Nodes: 6  |  Edges: 36</span></span>
-<span><span class="co">#&gt; -- Co-occurrence (undirected) --</span></span>
-<span><span class="co">#&gt;   Nodes: 6  |  Edges: 21</span></span></code></pre></div>
+<span><span class="co">#&gt; -- Co-occurrence (row-normalised, directed) --</span></span>
+<span><span class="co">#&gt;   Nodes: 6  |  Edges: 36</span></span></code></pre></div>
 </div>
 </div>
 <div class="section level3">
@@ -488,12 +457,12 @@ data, not driven by a small number of idiosyncratic sequences.</p>
 <h4 id="bootstrap-analysis">Bootstrap Analysis<a class="anchor" aria-label="anchor" href="#bootstrap-analysis"></a>
 </h4>
 <p>Bootstrapping repeatedly draws samples from the original dataset with
-replacement to estimate the model for each sample. When edges
-consistently appear across the majority of the estimated models, they
-are considered stable and significant. The bootstrap also provides
-confidence intervals and p-values for each edge weight, offering a
-quantifiable measure of uncertainty and robustness for each transition
-in the network.</p>
+replacement to estimate the model for each sample (Efron &amp;
+Tibshirani, 1994). When edges consistently appear across the majority of
+the estimated models, they are considered stable and significant. The
+bootstrap also provides confidence intervals and p-values for each edge
+weight, offering a quantifiable measure of uncertainty and robustness
+for each transition in the network.</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">42</span><span class="op">)</span></span>
 <span><span class="va">boot</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/bootstrap_network.html">bootstrap_network</a></span><span class="op">(</span><span class="va">net_tna</span>, iter <span class="op">=</span> <span class="fl">100</span><span class="op">)</span></span>
@@ -516,12 +485,13 @@ in the network.</p>
 <h4 id="centrality-stability">Centrality Stability<a class="anchor" aria-label="anchor" href="#centrality-stability"></a>
 </h4>
 <p>Centrality measures quantify the role or importance of each state in
-the process. Centrality stability analysis quantifies how robust
-centrality rankings are to case-dropping: the CS-coefficient is the
-maximum proportion of cases that can be dropped while maintaining a
-correlation of at least 0.7 with the original centrality values in at
-least 95% of the resamples. A CS-coefficient above 0.5 indicates stable
-rankings; below 0.25 indicates instability (Epskamp et al., 2018).</p>
+the process (Freeman, 1978; Opsahl et al., 2010). Centrality stability
+analysis quantifies how robust centrality rankings are to case-dropping:
+the CS-coefficient is the maximum proportion of cases that can be
+dropped while maintaining a correlation of at least 0.7 with the
+original centrality values in at least 95% of the resamples. A
+CS-coefficient above 0.5 indicates stable rankings; below 0.25 indicates
+instability (Epskamp et al., 2018).</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/centrality_stability.html">centrality_stability</a></span><span class="op">(</span><span class="va">net_tna</span>, iter <span class="op">=</span> <span class="fl">100</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Centrality Stability (100 iterations, threshold = 0.7)</span></span>
@@ -610,8 +580,9 @@ patterns alone, and the researcher then asks whether those patterns are
 associated with external variables.</p>
 <p>The <code>group_regulation_long</code> dataset contains
 self-regulated learning sequences annotated with an
-<code>Achiever</code> covariate distinguishing high and low
-achievers.</p>
+<code>Achiever</code> covariate distinguishing high and low achievers.
+It was synthetically generated from the <code>group_regulation</code>
+dataset of the tna package (Tikka et al., 2025).</p>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"group_regulation_long"</span><span class="op">)</span></span>
 <span><span class="va">net_GR</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_network.html">build_network</a></span><span class="op">(</span><span class="va">group_regulation_long</span>, method <span class="op">=</span> <span class="st">"tna"</span>,</span>
@@ -665,12 +636,13 @@ achievers.</p>
 <h3 id="theoretical-grounding-1">Theoretical Grounding<a class="anchor" aria-label="anchor" href="#theoretical-grounding-1"></a>
 </h3>
 <p>Psychological network analysis estimates the conditional dependency
-structure among a set of variables. Variables (e.g., symptoms, traits,
-behaviors) are represented as nodes, and edges represent partial
-correlations — the association between two variables after controlling
-for all others. This approach reveals which variables are directly
-connected versus those whose association is mediated through other
-variables (Saqr et al., 2024).</p>
+structure among a set of variables (Borsboom et al., 2021; Epskamp &amp;
+Fried, 2018). Variables (e.g., symptoms, traits, behaviors) are
+represented as nodes, and edges represent partial correlations — the
+association between two variables after controlling for all others. This
+approach reveals which variables are directly connected versus those
+whose association is mediated through other variables (Saqr et al.,
+2024).</p>
 <p><code>Nestimate</code> supports three estimation methods for
 continuous psychological data, all accessed through the same
 <code><a href="../reference/build_network.html">build_network()</a></code> interface (binary data use
@@ -722,9 +694,10 @@ al., 2025).</p>
 </h3>
 <p>The graphical lasso applies L1 regularization to the precision matrix
 (the inverse of the covariance matrix), producing a sparse network where
-weak or unreliable edges are shrunk to exactly zero. The
-<code>gamma</code> parameter controls sparsity through EBIC model
-selection — higher values yield sparser networks.</p>
+weak or unreliable edges are shrunk to exactly zero (Friedman et al.,
+2008). The <code>gamma</code> parameter controls sparsity through EBIC
+model selection (Foygel &amp; Drton, 2010) — higher values yield sparser
+networks.</p>
 <div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">net_glasso</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_network.html">build_network</a></span><span class="op">(</span><span class="va">chatgpt_srl</span>, method <span class="op">=</span> <span class="st">"glasso"</span>,</span>
 <span>                            params <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>gamma <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span><span class="op">)</span></span>
@@ -732,13 +705,9 @@ selection — higher values yield sparser networks.</p>
 <span><span class="co">#&gt; Partial Correlation Network (EBICglasso) [undirected]</span></span>
 <span><span class="co">#&gt;   Sample size: 1000</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   Weight matrix:</span></span>
-<span><span class="co">#&gt;       CSU IV SE SR TA</span></span>
-<span><span class="co">#&gt;   CSU   0  0  0  0  0</span></span>
-<span><span class="co">#&gt;   IV    0  0  0  0  0</span></span>
-<span><span class="co">#&gt;   SE    0  0  0  0  0</span></span>
-<span><span class="co">#&gt;   SR    0  0  0  0  0</span></span>
-<span><span class="co">#&gt;   TA    0  0  0  0  0 </span></span>
+<span><span class="co">#&gt;   No edges: every weight is zero.</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;   extract_edges(include_self = TRUE) lists every edge; extract_transition_matrix() gives the weight matrix.</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   Predictability (R²):</span></span>
 <span><span class="co">#&gt;   CSU           0.000  </span></span>
@@ -751,40 +720,105 @@ selection — higher values yield sparser networks.</p>
 </div>
 </div>
 <div class="section level2">
+<h2 id="how-to-cite-this-article">How to cite this article<a class="anchor" aria-label="anchor" href="#how-to-cite-this-article"></a>
+</h2>
+<p>Saqr, M., López-Pernas, S., &amp; Misiejuk, K. (2026). <em>Network
+estimation and analysis with Nestimate</em>. Nestimate. <a href="https://pak.dynasite.org/Nestimate/articles/transition-networks.html">HTML</a>
+· <a href="https://pak.dynasite.org/Nestimate/pdf/transition-networks.pdf">PDF</a></p>
+</div>
+<div class="section level2">
 <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
 </h2>
-<p>Saqr, M. (2024). Temporal Network Analysis: Introduction, Methods and
-Analysis with R. In M. Saqr &amp; S. López-Pernas (Eds.), <em>Learning
-Analytics Methods and Tutorials: A Practical Guide Using R</em>.
-Springer. <a href="https://lamethods.org/book1/chapters/ch17-temporal-networks/ch17-tna.html" class="external-link uri">https://lamethods.org/book1/chapters/ch17-temporal-networks/ch17-tna.html</a></p>
-<p>Saqr, M., Beck, E., &amp; López-Pernas, S. (2024). Psychological
-Networks: A Modern Approach to Analysis of Learning and Complex Learning
-Processes. In M. Saqr &amp; S. López-Pernas (Eds.), <em>Learning
-Analytics Methods and Tutorials: A Practical Guide Using R</em>.
-Springer. <a href="https://lamethods.org/book1/chapters/ch19-psychological-networks/ch19-psych.html" class="external-link uri">https://lamethods.org/book1/chapters/ch19-psychological-networks/ch19-psych.html</a></p>
-<p>Saqr, M., López-Pernas, S., &amp; Tikka, S. (2025a). Mapping
-Relational Dynamics with Transition Network Analysis: A Primer and
-Tutorial. In M. Saqr &amp; S. López-Pernas (Eds.), <em>Advanced Learning
-Analytics Methods: AI, Precision and Complexity</em>. Springer Nature
-Switzerland. <a href="https://lamethods.org/book2/chapters/ch15-tna/ch15-tna.html" class="external-link uri">https://lamethods.org/book2/chapters/ch15-tna/ch15-tna.html</a></p>
-<p>Saqr, M., López-Pernas, S., Törmänen, T., Kaliisa, R., Misiejuk, K.,
-&amp; Tikka, S. (2025b). Transition network analysis: A novel framework
-for modeling, visualizing, and identifying the temporal patterns of
-learners and learning processes. <em>Proceedings of the 15th
-International Learning Analytics and Knowledge Conference (LAK25)</em>.
-ACM. <a href="https://doi.org/10.1145/3706468.3706513" class="external-link uri">https://doi.org/10.1145/3706468.3706513</a></p>
-<p>López-Pernas, S., Tikka, S., &amp; Saqr, M. (2025). Mining Patterns
-and Clusters with Transition Network Analysis: A Heterogeneity Approach.
-In M. Saqr &amp; S. López-Pernas (Eds.), <em>Advanced Learning Analytics
-Methods: AI, Precision and Complexity</em>. Springer Nature Switzerland.
-<a href="https://lamethods.org/book2/chapters/ch17-tna-clusters/ch17-tna-clusters.html" class="external-link uri">https://lamethods.org/book2/chapters/ch17-tna-clusters/ch17-tna-clusters.html</a></p>
+<p>Borsboom, D., Deserno, M. K., Rhemtulla, M., Epskamp, S., Fried, E.
+I., McNally, R. J., Robinaugh, D. J., Perugini, M., Dalege, J.,
+Costantini, G., Isvoranu, A.-M., Wysocki, A. C., van Borkulo, C. D., van
+Bork, R., &amp; Waldorp, L. J. (2021). Network analysis of multivariate
+data in psychological science. <em>Nature Reviews Methods Primers</em>,
+1, 58. <a href="https://doi.org/10.1038/s43586-021-00055-w" class="external-link uri">https://doi.org/10.1038/s43586-021-00055-w</a></p>
+<p>Efron, B., &amp; Tibshirani, R. J. (1994). <em>An introduction to the
+bootstrap</em>. Chapman and Hall/CRC. <a href="https://doi.org/10.1201/9780429246593" class="external-link uri">https://doi.org/10.1201/9780429246593</a></p>
+<p>Epskamp, S., &amp; Fried, E. I. (2018). A tutorial on regularized
+partial correlation networks. <em>Psychological Methods</em>, 23(4),
+617–634. <a href="https://doi.org/10.1037/met0000167" class="external-link uri">https://doi.org/10.1037/met0000167</a></p>
 <p>Epskamp, S., Borsboom, D., &amp; Fried, E. I. (2018). Estimating
 psychological networks and their accuracy: A tutorial paper.
 <em>Behavior Research Methods</em>, 50(1), 195–212. <a href="https://doi.org/10.3758/s13428-017-0862-1" class="external-link uri">https://doi.org/10.3758/s13428-017-0862-1</a></p>
-<p>Vogelsmeier, L.V.D.E., Oliveira, E., Misiejuk, K., López-Pernas, S.,
-&amp; Saqr, M. (2025). Delving into the psychology of Machines:
+<p>Foygel, R., &amp; Drton, M. (2010). Extended Bayesian information
+criteria for Gaussian graphical models. <em>Advances in Neural
+Information Processing Systems</em>, 23, 604–612.</p>
+<p>Freeman, L. C. (1978). Centrality in social networks conceptual
+clarification. <em>Social Networks</em>, 1(3), 215–239. <a href="https://doi.org/10.1016/0378-8733(78)90021-7" class="external-link uri">https://doi.org/10.1016/0378-8733(78)90021-7</a></p>
+<p>Friedman, J., Hastie, T., &amp; Tibshirani, R. (2008). Sparse inverse
+covariance estimation with the graphical lasso. <em>Biostatistics</em>,
+9(3), 432–441. <a href="https://doi.org/10.1093/biostatistics/kxm045" class="external-link uri">https://doi.org/10.1093/biostatistics/kxm045</a></p>
+<p>Holme, P. (2015). Modern temporal network theory: A colloquium.
+<em>The European Physical Journal B</em>, 88(9), 234. <a href="https://doi.org/10.1140/epjb/e2015-60657-4" class="external-link uri">https://doi.org/10.1140/epjb/e2015-60657-4</a></p>
+<p>Holme, P., &amp; Saramäki, J. (2012). Temporal networks. <em>Physics
+Reports</em>, 519(3), 97–125. <a href="https://doi.org/10.1016/j.physrep.2012.03.001" class="external-link uri">https://doi.org/10.1016/j.physrep.2012.03.001</a></p>
+<p>López-Pernas, S., Tikka, S., &amp; Saqr, M. (2025). Mining patterns
+and clusters with transition network analysis: A heterogeneity approach.
+In M. Saqr &amp; S. López-Pernas (Eds.), <em>Advanced learning analytics
+methods: AI, precision and complexity</em> (pp. 447–468). Springer. <a href="https://doi.org/10.1007/978-3-031-95365-1_17" class="external-link uri">https://doi.org/10.1007/978-3-031-95365-1_17</a></p>
+<p>Misiejuk, K., López-Pernas, S., Oliveira, E., Rinja, D., &amp; Saqr,
+M. (2026). It takes two to vibe code: Profiling student-AI programming
+interactions processes and their high order structure. In
+<em>Proceedings of the 26th Koli Calling International Conference on
+Computing Education Research</em> (pp. 1–11). ACM. <a href="https://doi.org/10.1145/3856208.3856254" class="external-link uri">https://doi.org/10.1145/3856208.3856254</a></p>
+<p>Newman, M. (2018). <em>Networks</em> (2nd ed.). Oxford University
+Press. <a href="https://doi.org/10.1093/oso/9780198805090.001.0001" class="external-link uri">https://doi.org/10.1093/oso/9780198805090.001.0001</a></p>
+<p>Opsahl, T., Agneessens, F., &amp; Skvoretz, J. (2010). Node
+centrality in weighted networks: Generalizing degree and shortest paths.
+<em>Social Networks</em>, 32(3), 245–251. <a href="https://doi.org/10.1016/j.socnet.2010.03.006" class="external-link uri">https://doi.org/10.1016/j.socnet.2010.03.006</a></p>
+<p>Peeters, W., Saqr, M., &amp; Viberg, O. (2020). Applying learning
+analytics to map students’ self-regulated learning tactics in an
+academic writing course. In <em>Proceedings of the 28th International
+Conference on Computers in Education (ICCE 2020)</em> (pp. 245–254).</p>
+<p>Saqr, M., Beck, E., &amp; López-Pernas, S. (2024). Psychological
+networks: A modern approach to analysis of learning and complex learning
+processes. In M. Saqr &amp; S. López-Pernas (Eds.), <em>Learning
+analytics methods and tutorials: A practical guide using R</em>
+(pp. 639–671). Springer. <a href="https://doi.org/10.1007/978-3-031-54464-4_19" class="external-link uri">https://doi.org/10.1007/978-3-031-54464-4_19</a></p>
+<p>Saqr, M., López-Pernas, S., &amp; Misiejuk, K. (2026). Nestimate: An
+R package for dynamic, probabilistic, and high order network analysis.
+<em>Applied Psychological Measurement</em>. <a href="https://doi.org/10.1177/01466216261472019" class="external-link uri">https://doi.org/10.1177/01466216261472019</a></p>
+<p>Saqr, M., López-Pernas, S., &amp; Tikka, S. (2025a). Mapping
+relational dynamics with transition network analysis: A primer and
+tutorial. In M. Saqr &amp; S. López-Pernas (Eds.), <em>Advanced learning
+analytics methods: AI, precision and complexity</em> (pp. 371–411).
+Springer. <a href="https://doi.org/10.1007/978-3-031-95365-1_15" class="external-link uri">https://doi.org/10.1007/978-3-031-95365-1_15</a></p>
+<p>Saqr, M., López-Pernas, S., &amp; Tikka, S. (2025b). Capturing the
+breadth and dynamics of the temporal processes with frequency transition
+network analysis: A primer and tutorial. In M. Saqr &amp; S.
+López-Pernas (Eds.), <em>Advanced learning analytics methods: AI,
+precision and complexity</em> (pp. 413–446). Springer. <a href="https://doi.org/10.1007/978-3-031-95365-1_16" class="external-link uri">https://doi.org/10.1007/978-3-031-95365-1_16</a></p>
+<p>Saqr, M., López-Pernas, S., Törmänen, T., Kaliisa, R., Misiejuk, K.,
+&amp; Tikka, S. (2025c). Transition network analysis: A novel framework
+for modeling, visualizing, and identifying the temporal patterns of
+learners and learning processes. In <em>Proceedings of the 15th
+International Learning Analytics and Knowledge Conference (LAK25)</em>
+(pp. 351–361). ACM. <a href="https://doi.org/10.1145/3706468.3706513" class="external-link uri">https://doi.org/10.1145/3706468.3706513</a></p>
+<p>Saqr, M., Misiejuk, K., &amp; López-Pernas, S. (2026). Human-AI
+collaboration or obedient and often clueless AI in instruct, serve,
+repeat dynamics? <em>The Internet and Higher Education</em>, 70, 101087.
+<a href="https://doi.org/10.1016/j.iheduc.2026.101087" class="external-link uri">https://doi.org/10.1016/j.iheduc.2026.101087</a></p>
+<p>Saqr, M., Nouri, J., &amp; Fors, U. (2019). Time to focus on the
+temporal dimension of learning: A learning analytics study of the
+temporal patterns of students’ interactions and self-regulation.
+<em>International Journal of Technology Enhanced Learning</em>, 11(4),
+398–412. <a href="https://doi.org/10.1504/IJTEL.2019.102549" class="external-link uri">https://doi.org/10.1504/IJTEL.2019.102549</a></p>
+<p>Sarkar, A., &amp; Drosos, I. (2025). Vibe coding: Programming through
+conversation with artificial intelligence. In <em>Proceedings of the
+36th Annual Conference of the Psychology of Programming Interest Group
+(PPIG 2025)</em>. <a href="https://doi.org/10.48550/arXiv.2506.23253" class="external-link uri">https://doi.org/10.48550/arXiv.2506.23253</a></p>
+<p>Tikka, S., López-Pernas, S., &amp; Saqr, M. (2025). tna: An R package
+for transition network analysis. <em>Applied Psychological
+Measurement</em>, 49(6), 326–328. <a href="https://doi.org/10.1177/01466216251348840" class="external-link uri">https://doi.org/10.1177/01466216251348840</a></p>
+<p>Vogelsmeier, L. V. D. E., Oliveira, E., Misiejuk, K., López-Pernas,
+S., &amp; Saqr, M. (2025). Delving into the psychology of machines:
 Exploring the structure of self-regulated learning via LLM-generated
 survey responses. <em>Computers in Human Behavior</em>, 173, 108769. <a href="https://doi.org/10.1016/j.chb.2025.108769" class="external-link uri">https://doi.org/10.1016/j.chb.2025.108769</a></p>
+<p>Wasserman, S., &amp; Faust, K. (1994). <em>Social network analysis:
+Methods and applications</em>. Cambridge University Press. <a href="https://doi.org/10.1017/CBO9780511815478" class="external-link uri">https://doi.org/10.1017/CBO9780511815478</a></p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

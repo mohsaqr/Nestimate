@@ -1,4 +1,4 @@
-# Persistent Homology
+# Compute the persistent homology of a network
 
 `persistent_homology()` follows the holes of a network's simplicial
 complex as the complex is grown edge by edge: each component, loop or

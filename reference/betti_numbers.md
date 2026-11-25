@@ -1,4 +1,4 @@
-# Betti Numbers
+# Count the holes of a simplicial complex
 
 `betti_numbers()` counts the holes of a simplicial complex in each
 dimension: \\\beta_0\\ is the number of connected components,

@@ -1,4 +1,4 @@
-# Prepare Event Log Data for Network Estimation
+# Prepare an event log for network estimation
 
 `prepare()` turns an event log (one row per event: the action, and
 optionally who did it and when) into sequences, one row per session and
@@ -109,10 +109,9 @@ print(x, ...)
 
 - unix_time_unit:
 
-  The unit of Unix timestamps: `"seconds"` (default), `"milliseconds"`
-  or `"microseconds"`. A numeric `time` column that gives dates after
-  the year 2500 raises a warning of class `nestimate_time_unit`, the
-  usual sign of the wrong unit.
+  The unit of numeric timestamps. Default `"seconds"`; also
+  `"milliseconds"` or `"microseconds"`. Dates after the year 2500, the
+  usual sign of the wrong unit, raise the warning `nestimate_time_unit`.
 
 - timezone:
 
@@ -220,14 +219,18 @@ net
 #> Transition Network (relative probabilities) [directed]
 #>   Weights: [0.200, 0.500]  |  mean: 0.333
 #> 
-#>   Weight matrix:
-#>          read  test write
-#>   read  0.400 0.200 0.400
-#>   test  0.500 0.250 0.250
-#>   write 0.333 0.333 0.333 
+#>   Strongest edges (9 of 9):
+#>    from  to    weight
+#>    test  read  0.500 
+#>    read  read  0.400 
+#>    read  write 0.400 
+#>    write read  0.333 
+#>    write test  0.333 
+#>    write write 0.333 
+#>    test  test  0.250 
+#>    test  write 0.250 
+#>    read  test  0.200  
 #> 
-#>   Initial probabilities:
-#>   test          0.667  ████████████████████████████████████████
-#>   read          0.333  ████████████████████
-#>   write         0.000  
+#>   extract_edges(include_self = TRUE) lists every edge; extract_transition_matrix() gives the weight matrix;
+#>   extract_initial_probs() the initial probabilities.
 ```

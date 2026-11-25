@@ -1,4 +1,4 @@
-# Detect Path Anomalies via HYPA
+# Detect over- and under-represented paths with HYPA
 
 `build_hypa()` tests which paths in a set of sequences occur more or
 less often than expected, with HYPA (LaRock et al., 2020). For an order
@@ -172,14 +172,17 @@ The object's fields:
   `to`, the next state; `observed`; `expected`, the count under the null
   model, whose propensity matrix keeps the observed in- and out-strength
   of every De Bruijn node (at order 2 this equals the first-order Markov
-  expectation \\n(a b \cdot) n(\cdot b c) / n(\cdot b \cdot)\\);
-  `ratio`, observed / expected; `p_under`, the hypergeometric lower-tail
-  probability `P(X <= observed)`, and `p_value`, the same value under
-  its older name; `p_over`, the strict upper tail
-  `P(X > observed) = 1 - p_under`, so that `p_over <= alpha` is the
-  paper's HYPA score of at least `1 - alpha`; `p_adjusted_under` and
-  `p_adjusted_over`, the same after `p_adjust`; `anomaly` (`"over"`,
-  `"under"` or `"normal"`); and `order`.
+  expectation \\n(a b \cdot) n(\cdot b c) / n(\cdot b \cdot)\\), from
+  the continuous fit; `ratio`, observed / expected; `p_under`, the
+  hypergeometric lower-tail probability `P(X <= observed)`, whose pool
+  sizes are the propensities rounded to whole numbers, as the
+  hypergeometric distribution requires, so its mean can differ from
+  `expected` by up to about `0.5 / m` for `m` observed paths of that
+  order; and `p_value`, the same value under its older name; `p_over`,
+  the strict upper tail `P(X > observed) = 1 - p_under`, so that
+  `p_over <= alpha` is the paper's HYPA score of at least `1 - alpha`;
+  `p_adjusted_under` and `p_adjusted_over`, the same after `p_adjust`;
+  `anomaly` (`"over"`, `"under"` or `"normal"`); and `order`.
 
 - ho_edges:
 

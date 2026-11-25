@@ -1,4 +1,4 @@
-# Cluster sequence data (deprecated alias)
+# Cluster sequences (deprecated)
 
 `cluster_data()` is the old name of
 [`build_clusters()`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md),

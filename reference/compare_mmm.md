@@ -1,4 +1,4 @@
-# Compare MMM fits across different k
+# Compare mixed Markov models across numbers of subgroups
 
 `compare_mmm()` fits a mixed Markov model with
 [`build_mmm()`](https://pak.dynasite.org/Nestimate/reference/build_mmm.md)
@@ -71,7 +71,11 @@ plot(x, ...)
 
   How many starting configurations to try, a positive whole number. More
   starts make it likelier that the best local maximum is found. Default
-  `50`.
+  `50`. On Unix the starts are screened in parallel on at most
+  `getOption("mc.cores", 2L)` cores; the fit does not depend on the
+  number of cores. A start whose EM stops with an error is left out with
+  a warning of class `nestimate_mmm_start_failed` that counts them; when
+  every start fails the error has class `nestimate_mmm_failed`.
 
 - max_iter:
 

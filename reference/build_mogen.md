@@ -1,4 +1,4 @@
-# Build Multi-Order Generative Model (MOGen)
+# Fit a multi-order generative model to sequences
 
 `build_mogen()` fits Markov chains of every order from 0 to `max_order`
 to a set of sequences and selects the order that best balances fit
@@ -75,7 +75,8 @@ plot(x, type = c("ic", "likelihood"), ...)
 
   How the order is selected: `"aic"` (default) or `"bic"` takes the
   order with the smallest criterion, and `"lrt"` uses the sequential
-  likelihood-ratio tests described in *Details*.
+  likelihood-ratio tests described in *Details*, which select an order
+  of at least 1.
 
 - lrt_alpha:
 
@@ -169,7 +170,7 @@ the same as character strings. The object's fields:
 - lrt_p:
 
   Named numeric vector: the likelihood-ratio p-value of order k against
-  order k - 1.
+  order k - 1 (`NA` for orders 0 and 1).
 
 - transition_matrices:
 
@@ -199,13 +200,16 @@ the same as character strings. The object's fields:
 - weights:
 
   The transition matrix of the selected order, as the `cograph_network`
-  weight matrix (a 1 x n matrix named `"marginal"` when the selected
-  order is 0). Its dimnames are internal k-tuple keys (states joined by
-  a non-printing separator), not arrow notation.
+  weight matrix (when the selected order is 0, a states x states matrix
+  of zeros, since an order-0 model has no transitions; its marginal is
+  the first element of `transition_matrices`). Its dimnames are internal
+  k-tuple keys (states joined by a non-printing separator), not arrow
+  notation.
 
 - nodes:
 
-  Data frame (`id`, `label`, `name`) of the nodes of the selected order.
+  Data frame (`id`, `label`, `name`) of the nodes of the selected order
+  (the states at order 0).
 
 - edges:
 
@@ -237,12 +241,16 @@ trajectory by the marginal distribution, the j-th state by the order j -
 1 transitions while j \<= k, and every later state by the order-k
 transitions. The likelihood-ratio test of order k against order k - 1
 refers twice the gain in log-likelihood to a chi-square distribution
-with the order-k layer's degrees of freedom; its p-value is `NA` for
-order 0 and where the statistic or the degrees of freedom are not
+with the order-k layer's degrees of freedom. The tests start from the
+first-order model as the null (Scholtes 2017; pathpy 2
+`MultiOrderModel.estimate_order`): order 1 is not tested against order
+0, because a first-order model restricted to the observed transitions
+does not nest the order-0 model, so the p-value is `NA` for orders 0 and
+1, and also where the statistic or the degrees of freedom are not
 positive. With `criterion = "lrt"` the selected order is the largest k
-whose test rejects at `lrt_alpha` (Scholtes 2017), or 0 when none does.
-Every p-value is kept in the result, so a non-monotone run of tests is
-visible.
+of at least 2 whose test rejects at `lrt_alpha`, or 1 when none does;
+only AIC and BIC can select order 0. Every p-value is kept in the
+result, so a non-monotone run of tests is visible.
 
 The model is the one pathpy 2 calls `MultiOrderModel`. It is not the
 multi-order generative model of Gote et al. (2023), which adds start and

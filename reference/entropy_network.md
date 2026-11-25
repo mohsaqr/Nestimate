@@ -1,4 +1,4 @@
-# Transition Entropy Network
+# Decompose the entropy rate into a network of transitions
 
 `entropy_network()` splits a chain's entropy rate into one term per
 transition and returns the terms as a network. The entropy rate \\h(P) =
@@ -56,8 +56,8 @@ entropy_network(
 - base:
 
   The logarithm base, which sets the unit: `2` (default) for bits,
-  `exp(1)` for nats, `10` for hartleys. Any positive number other than
-  1.
+  `exp(1)` for nats, `10` for hartleys. Any finite number greater than
+  1; another value raises an error of class `nestimate_bad_input`.
 
 - weight:
 
@@ -113,10 +113,10 @@ entropy_network(
 
 ## Value
 
-A `netobject` (class `c("netobject", "cograph_network")`; for a bare
-`cograph_network` input, that network with its own class) with method
-`"entropy"`, whose weights are the per-edge entropy quantities. Print it
-for an overview; [`summary()`](https://rdrr.io/r/base/summary.html) (see
+A `netobject` (class `c("netobject", "cograph_network")`, also for a
+bare `cograph_network` input) with method `"entropy"`, whose weights are
+the per-edge entropy quantities. Print it for an overview;
+[`summary()`](https://rdrr.io/r/base/summary.html) (see
 [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md))
 gives its network metrics,
 [`extract_edges()`](https://pak.dynasite.org/Nestimate/reference/extract_edges.md)
@@ -126,10 +126,13 @@ draws it. When `x` is a network (or sequence data, from which a relative
 network is built), the result is that network with the entropy weights
 swapped in: its initial probabilities, metadata, node groups and node
 coordinates are kept, so it plots with the same TNA styling and layout
-as its source. The stored parameters are `base`, `weight`, `scaling`,
-the entropy rate `entropy_rate` (whatever the weight) and the stationary
-distribution `stationary`, plus `production_rate` and `n_oneway_pairs`
-when `weight = "production"`.
+as its source. A bare `cograph_network` is first converted to a
+`netobject`, which keeps its nodes, data, metadata, node groups and
+parameters but no other field (its `inits`, for one, is dropped). The
+stored parameters are `base`, `weight`, `scaling`, the entropy rate
+`entropy_rate` (whatever the weight) and the stationary distribution
+`stationary`, plus `production_rate` and `n_oneway_pairs` when
+`weight = "production"`.
 
 The object also declares the entropy house style through its
 `meta$splot` producer contract (honoured by cograph \>= 2.4.4): no
@@ -188,38 +191,21 @@ ent
 #> Network (method: entropy) [directed]
 #>   Weights: [0.002, 0.132]  |  mean: 0.031
 #> 
-#>   Weight matrix:
-#>              adapt cohesion consensus coregulate discuss emotion monitor  plan
-#>   adapt      0.000    0.011     0.011      0.002   0.005   0.008   0.003 0.002
-#>   cohesion   0.002    0.009     0.033      0.024   0.016   0.024   0.011 0.027
-#>   consensus  0.009    0.023     0.074      0.113   0.113   0.069   0.051 0.132
-#>   coregulate 0.008    0.014     0.032      0.010   0.042   0.036   0.025 0.040
-#>   discuss    0.041    0.032     0.080      0.046   0.070   0.052   0.019 0.011
-#>   emotion    0.002    0.058     0.057      0.018   0.037   0.031   0.019 0.036
-#>   monitor    0.004    0.011     0.021      0.012   0.026   0.015   0.005 0.023
-#>   plan       0.002    0.033     0.127      0.025   0.065   0.100   0.069 0.130
-#>   synthesis  0.013    0.004     0.014      0.005   0.007   0.007   0.002 0.007
-#>              synthesis
-#>   adapt          0.000
-#>   cohesion       0.002
-#>   consensus      0.013
-#>   coregulate     0.009
-#>   discuss        0.060
-#>   emotion        0.003
-#>   monitor        0.005
-#>   plan           0.004
-#>   synthesis      0.000 
+#>   Strongest edges (10 of 78):
+#>    from      to         weight
+#>    consensus plan       0.132 
+#>    plan      plan       0.130 
+#>    plan      consensus  0.127 
+#>    consensus discuss    0.113 
+#>    consensus coregulate 0.113 
+#>    plan      emotion    0.100 
+#>    discuss   consensus  0.080 
+#>    consensus consensus  0.074 
+#>    discuss   discuss    0.070 
+#>    plan      monitor    0.069  
 #> 
-#>   Initial probabilities:
-#>   consensus     0.214  ████████████████████████████████████████
-#>   plan          0.204  ██████████████████████████████████████
-#>   discuss       0.175  █████████████████████████████████
-#>   emotion       0.151  ████████████████████████████
-#>   monitor       0.144  ███████████████████████████
-#>   cohesion      0.060  ███████████
-#>   synthesis     0.019  ████
-#>   coregulate    0.019  ████
-#>   adapt         0.011  ██
+#>   extract_edges(include_self = TRUE) lists every edge; extract_transition_matrix() gives the weight matrix;
+#>   extract_initial_probs() the initial probabilities.
 # \donttest{
 if (requireNamespace("cograph", quietly = TRUE)) {
   cograph::splot(ent)

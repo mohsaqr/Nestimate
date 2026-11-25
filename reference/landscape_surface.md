@@ -1,4 +1,4 @@
-# Stability Landscape Across a Stability Measure
+# Trace a stability landscape across a sequence measure
 
 `landscape_surface()` traces the cups of
 [`stability_landscape()`](https://pak.dynasite.org/Nestimate/reference/stability_landscape.md)
@@ -22,8 +22,8 @@ tendency in particular is closely tied to the stay probabilities). What
 the surface adds is which cup deepens as stability rises. A slice's
 `effective_n` (\\(\sum w)^2 / \sum w^2\\) shows how many sequences it
 rests on, and a warning of class `nestimate_thin_slice` flags slices
-resting on fewer than five. For change over the programme rather than
-across sequences, use
+resting on fewer than five. For change over time rather than across
+sequences, use
 [`landscape_trend()`](https://pak.dynasite.org/Nestimate/reference/landscape_trend.md).
 
 ## Usage
@@ -55,10 +55,12 @@ plot(x, max_stay = 50, theta = 10, phi = 30, ncol = NULL, ...)
   The network or sequences: a transition network from
   [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
   with method `"relative"` or `"frequency"` (or a bare `cograph_network`
-  of one), a grouped one (`netobject_group`), a `tna` model, or a wide
-  sequence data frame or matrix. A network must carry its sequences; a
-  network of another method (for example `"glasso"`) raises an error of
-  class `nestimate_not_markov`. For the
+  of one), a grouped one (`netobject_group`), a `tna` model or a
+  `group_tna` (one landscape per group), or a wide sequence data frame
+  or matrix. A network must count one-step transitions (a window wider
+  than one position raises an error) and carry its sequences; a network
+  of another method (for example `"glasso"`) raises an error of class
+  `nestimate_not_markov`. For the
   [`print()`](https://rdrr.io/r/base/print.html) and
   [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods: a
   `net_landscape_surface` object.
@@ -189,10 +191,11 @@ original sequences to estimate a new landscape.
 
 Sequences with fewer than two observed positions, or no value of the
 measure, are left out. The kernel's half-width is the distance to the
-`k`-th nearest sequence, but at least 1/50 of the measure's range. A
-state that does not occur in a slice has an `NA` depth and leaves a gap
-in the surface, and one that is never left in a slice has an infinite
-depth.
+`k`-th nearest sequence, but at least 1/50 of the measure's range; when
+the `k` nearest all lie at that distance (many sequences share a value),
+they weigh equally. A state that does not occur in a slice has an `NA`
+depth and leaves a gap in the surface, and one that is never left in a
+slice has an infinite depth.
 
 ## Errors
 
@@ -229,11 +232,11 @@ surf
 #> 
 #> Cup depth (log of the expected stay) at the low and the high end of each measure:
 #>               measure      state  low depth_at_low high depth_at_high
-#>  longitudinal_entropy Disengaged 0.11         1.95 0.96          0.57
+#>  longitudinal_entropy Disengaged 0.11         1.96 0.96          0.58
 #>  longitudinal_entropy    Average 0.11         1.42 0.96          0.57
-#>  longitudinal_entropy     Active 0.11         3.03 0.96          0.54
+#>  longitudinal_entropy     Active 0.11         3.03 0.96          0.53
 #> 
-#> Effective sequences per slice: network 13.3-25.7
+#> Effective sequences per slice: network 12.9-25.5
 # \donttest{
 plot(surf)
 

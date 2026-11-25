@@ -12,16 +12,17 @@
 ## Citation
 
 Source:
-[`DESCRIPTION`](https://github.com/mohsaqr/Nestimate/blob/main/DESCRIPTION)
+[`inst/CITATION`](https://github.com/mohsaqr/Nestimate/blob/main/inst/CITATION)
 
-Saqr M, López-Pernas S, Misiejuk K (2026). *Nestimate: Dynamic,
-Probabilistic, and Higher-Order Network Analysis*. R package version
-1.0.12, <https://github.com/mohsaqr/Nestimate>.
+Saqr, M., López-Pernas, S., & Misiejuk, K. (2026). Nestimate: An R
+package for dynamic, probabilistic, and high order network analysis.
+Applied Psychological Measurement.
+https://doi.org/10.1177/01466216261472019
 
-    @Manual{,
-      title = {Nestimate: Dynamic, Probabilistic, and Higher-Order Network Analysis},
+    @Article{,
+      title = {{Nestimate}: An {R} Package for Dynamic, Probabilistic, and High Order Network Analysis},
       author = {Mohammed Saqr and Sonsoles López-Pernas and Kamila Misiejuk},
+      journal = {Applied Psychological Measurement},
       year = {2026},
-      note = {R package version 1.0.12},
-      url = {https://github.com/mohsaqr/Nestimate},
+      doi = {10.1177/01466216261472019},
     }

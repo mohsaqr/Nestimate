@@ -1,4 +1,4 @@
-# Fit a Mixed Markov Model
+# Fit a mixed Markov model
 
 `build_mmm()` fits a mixture of first-order Markov chains to a set of
 sequences by expectation-maximisation: it looks for `k` subgroups whose
@@ -73,7 +73,8 @@ plot(
   an id or a covariate is not a position, and the columns set aside are
   named in a message and kept as metadata. Association networks (`cor`,
   `pcor`, `glasso`, `ising`, `mgm`) hold variables, not sequences, and
-  raise an error of class `nestimate_bad_input`.
+  raise an error of class `nestimate_bad_input`, as do other fitted
+  objects (an `mcml`, a `group_tna`, a `netobject_group`).
 
 - k:
 
@@ -84,7 +85,11 @@ plot(
 
   How many starting configurations to try, a positive whole number. More
   starts make it likelier that the best local maximum is found. Default
-  `50`.
+  `50`. On Unix the starts are screened in parallel on at most
+  `getOption("mc.cores", 2L)` cores; the fit does not depend on the
+  number of cores. A start whose EM stops with an error is left out with
+  a warning of class `nestimate_mmm_start_failed` that counts them; when
+  every start fails the error has class `nestimate_mmm_failed`.
 
 - max_iter:
 
@@ -264,7 +269,14 @@ fields:
 - network_method, build_args, htna_partition:
 
   Provenance kept from `netobject` / HTNA input so per-cluster networks
-  can be rebuilt the same way; NULL otherwise.
+  are of the same type; NULL otherwise.
+
+- network_settings:
+
+  For `netobject` input, the network's `threshold` and `scaling` when
+  they are not the defaults and its estimator settings in `params`,
+  which `build_network(x, inherit = TRUE)` uses; NULL when there are
+  none.
 
 - metadata:
 

@@ -1,4 +1,4 @@
-# Aggregate Edge Weights
+# Aggregate edge weights into one value
 
 `net_aggregate_weights()` reduces a vector of edge weights to one
 number: their sum, mean, median, maximum, minimum, product, density or

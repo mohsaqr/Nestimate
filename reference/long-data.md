@@ -1,11 +1,11 @@
-# Human-AI Vibe Coding Interaction Data (Long Format)
+# Coded turns of human-AI vibe coding sessions
 
-Coded turns from 429 human-AI pair-programming ("vibe coding") sessions
-across 34 projects, held between 5 February and 8 March 2026, in long
-format with one row per code. `human_long` holds the codes of the human
-turns and `ai_long` those of the AI turns (428 of the sessions have AI
-turns). The two data frames share their columns and their sessions, and
-interleave on `order_in_session`.
+`human_long` and `ai_long` are a coded dataset of the turns of 429
+human-AI pair-programming ("vibe coding") sessions across 34 projects,
+held between 5 February and 8 March 2026: `human_long` has the codes of
+the human turns and `ai_long` those of the AI turns (428 of the sessions
+have AI turns). Both are in long format, one row per code; they share
+their columns and their sessions, and interleave on `order_in_session`.
 
 ## Usage
 
@@ -83,7 +83,7 @@ An object of class `data.frame` with 8551 rows and 9 columns.
 ## Source
 
 Saqr, M. (2026). Human-AI vibe coding interaction study.
-<https://saqr.me/blog/2026/human-ai-interaction-cograph/>
+[saqr.me](https://saqr.me/blog/2026/human-ai-interaction-cograph/)
 
 ## Examples
 
@@ -96,36 +96,19 @@ net
 #> Transition Network (relative probabilities) [directed]
 #>   Weights: [0.018, 0.620]  |  mean: 0.111
 #> 
-#>   Weight matrix:
-#>             Command Correct Frustrate Inquire Interrupt Refine Request Specify
-#>   Command     0.235   0.088     0.055   0.066     0.035  0.038   0.155   0.280
-#>   Correct     0.093   0.091     0.138   0.057     0.054  0.112   0.120   0.278
-#>   Frustrate   0.103   0.115     0.176   0.075     0.047  0.171   0.111   0.125
-#>   Inquire     0.196   0.126     0.098   0.188     0.094  0.062   0.084   0.106
-#>   Interrupt   0.259   0.081     0.094   0.123     0.102  0.080   0.069   0.122
-#>   Refine      0.058   0.075     0.072   0.047     0.042  0.086   0.146   0.457
-#>   Request     0.096   0.019     0.044   0.067     0.051  0.033   0.039   0.620
-#>   Specify     0.263   0.058     0.081   0.072     0.167  0.074   0.070   0.172
-#>   Verify      0.224   0.079     0.164   0.118     0.043  0.097   0.116   0.083
-#>             Verify
-#>   Command    0.048
-#>   Correct    0.056
-#>   Frustrate  0.077
-#>   Inquire    0.044
-#>   Interrupt  0.069
-#>   Refine     0.018
-#>   Request    0.032
-#>   Specify    0.043
-#>   Verify     0.077 
+#>   Strongest edges (10 of 81):
+#>    from      to      weight
+#>    Request   Specify 0.620 
+#>    Refine    Specify 0.457 
+#>    Command   Specify 0.280 
+#>    Correct   Specify 0.278 
+#>    Specify   Command 0.263 
+#>    Interrupt Command 0.259 
+#>    Command   Command 0.235 
+#>    Verify    Command 0.224 
+#>    Inquire   Command 0.196 
+#>    Inquire   Inquire 0.188  
 #> 
-#>   Initial probabilities:
-#>   Specify       0.679  ████████████████████████████████████████
-#>   Command       0.175  ██████████
-#>   Request       0.055  ███
-#>   Interrupt     0.030  ██
-#>   Correct       0.019  █
-#>   Refine        0.019  █
-#>   Frustrate     0.013  █
-#>   Inquire       0.008  
-#>   Verify        0.002  
+#>   extract_edges(include_self = TRUE) lists every edge; extract_transition_matrix() gives the weight matrix;
+#>   extract_initial_probs() the initial probabilities.
 ```

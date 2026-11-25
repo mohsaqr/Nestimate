@@ -1,4 +1,4 @@
-# Plot State Frequency Distributions
+# Plot state frequencies as treemaps or bars
 
 `plot_state_frequencies()` counts how often each state occurs in the
 sequences behind a network and draws the shares, per group, as treemaps
@@ -57,6 +57,7 @@ plot_state_frequencies(
   combine = "auto",
   ncol = NULL,
   node_groups = NULL,
+  state_colors = NULL,
   ...
 )
 
@@ -77,6 +78,7 @@ plot_state_frequencies(
   combine = "auto",
   ncol = NULL,
   node_groups = NULL,
+  state_colors = NULL,
   ...
 )
 
@@ -97,6 +99,7 @@ plot_state_frequencies(
   combine = "auto",
   ncol = NULL,
   node_groups = NULL,
+  state_colors = NULL,
   ...
 )
 
@@ -117,6 +120,7 @@ plot_state_frequencies(
   combine = "auto",
   ncol = NULL,
   node_groups = NULL,
+  state_colors = NULL,
   ...
 )
 
@@ -135,11 +139,15 @@ plot(x, ...)
 - x:
 
   The object to count: a `netobject`, `netobject_group`, `mcml` or
-  `htna` network built from sequences. A network without sequence data
-  raises an error; in a `netobject_group` or `mcml`, groups without it
-  are left out. For the [`print()`](https://rdrr.io/r/base/print.html)
-  and [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods
-  of the result: the `state_freq` object; for the
+  `htna` network built from sequences. A `tna` model or a `group_tna`
+  (package tna) is first rebuilt as a network from its own sequences
+  (see
+  [`as_netobject()`](https://pak.dynasite.org/Nestimate/reference/as_netobject.md)).
+  A network without sequence data raises an error; in a
+  `netobject_group` or `mcml`, groups without it are left out. For the
+  [`print()`](https://rdrr.io/r/base/print.html) and
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods of
+  the result: the `state_freq` object; for the
   [`print()`](https://rdrr.io/r/base/print.html) methods of a per-panel
   figure: an object of class `nestimate_facet_plot` or
   `nestimate_facet_list`.
@@ -204,13 +212,8 @@ plot(x, ...)
 
 - colors:
 
-  Fill colours for the states, overriding the palette attached to `x`
-  with
-  [`set_state_colors()`](https://pak.dynasite.org/Nestimate/reference/set_state_colors.md)
-  for this chart: an unnamed vector in state order (at least one per
-  state) or a named lookup such as `c(plan = "#0072B2")` that overrides
-  only the states named. Default `NULL`: the attached palette, or else
-  the Okabe-Ito palette, recycled.
+  Deprecated name of `state_colors`; it still works, with a warning of
+  class `nestimate_deprecated`.
 
 - label_size:
 
@@ -255,6 +258,16 @@ plot(x, ...)
   `c(plan = "Regulation", monitor = "Regulation")`. The chart is then
   drawn and coloured by these groups, states not named keeping their own
   name; the returned table keeps one row per state. Default `NULL`.
+
+- state_colors:
+
+  Fill colours for the states, overriding the palette attached to `x`
+  with
+  [`set_state_colors()`](https://pak.dynasite.org/Nestimate/reference/set_state_colors.md)
+  for this chart: an unnamed vector in state order (at least one per
+  state) or a named lookup such as `c(plan = "#0072B2")` that overrides
+  only the states named. Default `NULL`: the attached palette, or else
+  Okabe-Ito, as every figure of `x` draws them.
 
 - digits:
 

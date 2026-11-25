@@ -1,4 +1,4 @@
-# Cluster Summary Statistics
+# Aggregate a network's weights to clusters of nodes
 
 `cluster_summary()` aggregates a node-level weight matrix to clusters of
 nodes and returns an `mcml` object with two levels: a macro network
@@ -124,7 +124,9 @@ cluster_summary(
   Whether the network is directed, so that A-\>B and B-\>A are separate
   edges. Default `TRUE`. `FALSE` replaces the matrix by the mean of it
   and its transpose before aggregating, which makes every layer
-  symmetric.
+  symmetric; each undirected edge then counts once, so a cluster's macro
+  self-loop aggregates the upper triangle of its block with the diagonal
+  (and `"density"` divides by its `n_i (n_i + 1) / 2` possible edges).
 
 - compute_within:
 

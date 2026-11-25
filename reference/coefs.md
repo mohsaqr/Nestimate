@@ -1,4 +1,4 @@
-# Tidy coefficients from a fitted mlvar model
+# Tabulate the temporal coefficients of an mlVAR fit
 
 `coefs()` returns the temporal coefficients of a
 [`build_mlvar()`](https://pak.dynasite.org/Nestimate/reference/build_mlvar.md)

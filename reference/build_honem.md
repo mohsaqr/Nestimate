@@ -1,4 +1,4 @@
-# Build HONEM Embeddings for Higher-Order Networks
+# Embed the nodes of a higher-order network with HONEM
 
 `build_honem()` places the nodes of a higher-order network (HON) in a
 low-dimensional space, after the HONEM approach of Saebi et al. (2020):
@@ -49,8 +49,10 @@ plot(x, dims = c(1L, 2L), ...)
 
 - max_power:
 
-  \\L\\, the highest matrix power in the decayed sum, at least 1.
-  Default `10`. Higher values let longer paths shape the proximities.
+  \\L\\, the upper limit of \\k\\ in the decayed sum, at least 1.
+  Default `10`. The sum runs from \\D^1\\ to \\D^{L+1}\\, so the highest
+  matrix power is `max_power + 1`. Higher values let longer paths shape
+  the proximities.
 
 - x:
 
@@ -112,7 +114,8 @@ on two dimensions. The object's fields:
 
 - max_power:
 
-  Highest matrix power used.
+  \\L\\, the upper limit of \\k\\; the highest matrix power used is
+  `max_power + 1`.
 
 - n_nodes:
 
@@ -169,7 +172,7 @@ print(emb)
 #> HONEM: Higher-Order Network Embedding
 #>   Nodes:      4
 #>   Dimensions: 3
-#>   Max power:  10
+#>   Max power:  10 (the sum runs to D^11)
 #>   Variance explained: 94.6%
 plot(emb)
 

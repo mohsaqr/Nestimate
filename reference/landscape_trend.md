@@ -1,17 +1,16 @@
-# Stability Landscape Along the Programme or a Covariate
+# Trace a stability landscape along time or a covariate
 
 `landscape_trend()` traces the landscape of
 [`stability_landscape()`](https://pak.dynasite.org/Nestimate/reference/stability_landscape.md)
 along a second axis and returns the height of every state, with a
-bootstrap interval, at each point of that axis. The axis is either the
-programme phase, `along = "phase"`: the landscape is estimated from the
-transitions inside a window of `window` time steps that slides one step
-at a time; or a numeric per-sequence covariate such as a grade,
-`along = "grade"`: at each value of the covariate it comes from the `k`
-nearest sequences, weighted by a tricube kernel (Cleveland 1979).
-Intervals come from resampling whole sequences, and the same resamples
-serve every window or slice. A grouped network gives one trend per
-group.
+bootstrap interval, at each point of that axis. The axis is either time,
+`along = "phase"`: the landscape is estimated from the transitions
+inside a window of `window` time steps that slides one step at a time;
+or a numeric per-sequence covariate such as a grade, `along = "grade"`:
+at each value of the covariate it comes from the `k` nearest sequences,
+weighted by a tricube kernel (Cleveland 1979). Intervals come from
+resampling whole sequences, and the same resamples serve every window or
+slice. A grouped network gives one trend per group.
 
 Two heights are available. `depth = "stay"` (default) is the depth of
 [`stability_landscape()`](https://pak.dynasite.org/Nestimate/reference/stability_landscape.md),
@@ -52,7 +51,14 @@ summary(object, ...)
 print(x, digits = 2, ...)
 
 # S3 method for class 'net_landscape_trend'
-plot(x, type = c("lines", "surface"), theta = 10, phi = 30, ...)
+plot(
+  x,
+  type = c("lines", "surface"),
+  theta = 10,
+  phi = 30,
+  state_colors = NULL,
+  ...
+)
 ```
 
 ## Arguments
@@ -62,14 +68,15 @@ plot(x, type = c("lines", "surface"), theta = 10, phi = 30, ...)
   The network or sequences: a transition network from
   [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
   with method `"relative"` or `"frequency"` (or a bare `cograph_network`
-  of one), a grouped one (`netobject_group`), a `tna` model, or a wide
-  sequence data frame. A covariate is read from the network's metadata,
-  which
+  of one), a grouped one (`netobject_group`), a `tna` model or a
+  `group_tna` (one landscape per group), or a wide sequence data frame.
+  A covariate is read from the network's metadata, which
   [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
   fills with the numeric columns of a wide data frame, or from a data
-  frame's columns beside the positions. A network must carry its
-  sequences; a network of another method (for example `"glasso"`) raises
-  an error of class `nestimate_not_markov`. For the
+  frame's columns beside the positions. A network must count one-step
+  transitions (a window wider than one position raises an error) and
+  carry its sequences; a network of another method (for example
+  `"glasso"`) raises an error of class `nestimate_not_markov`. For the
   [`print()`](https://rdrr.io/r/base/print.html) and
   [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods: a
   `net_landscape_trend` object.
@@ -162,6 +169,16 @@ plot(x, type = c("lines", "surface"), theta = 10, phi = 30, ...)
   For `plot(type = "surface")`: the viewing angles. Defaults `10` and
   `30`.
 
+- state_colors:
+
+  For the [`plot()`](https://rdrr.io/r/graphics/plot.default.html)
+  method: colours for the states, for this figure only. Named,
+  `c(state = "#0072B2")`, it overrides the states it names; unnamed, it
+  gives one colour per state in `states` order. Default `NULL`: the
+  colours of the network the result came from (set with
+  [`set_state_colors()`](https://pak.dynasite.org/Nestimate/reference/set_state_colors.md)),
+  Okabe-Ito for the rest, as every figure of that network draws them.
+
 ## Value
 
 A `net_landscape_trend` object.
@@ -214,26 +231,32 @@ With `depth = "stay"`, a window or slice in which a state is never left
 gives an infinite depth, and one in which it does not occur gives `NA`.
 With `depth = "occupancy"`, ridges join the states next to each other in
 `states` order and the last state to the first (one ridge with two
-states); a window whose chain has no unique stationary distribution is
-`NA` throughout, and a ridge never crossed is `NA`. Such points are kept
-in [`summary()`](https://rdrr.io/r/base/summary.html), left out of the
+states); a window whose chain has no unique stationary distribution
+(more than one closed class of states) is `NA` throughout, a state
+outside the closed class (transient) has an infinite potential, and a
+ridge never crossed is `NA`. Such points are kept in
+[`summary()`](https://rdrr.io/r/base/summary.html), left out of the
 lines and the surface, and counted in the plot caption. Interval bands
 are clipped at the panel edge, which is set by the estimates.
 
 Along a covariate, sequences without its value or with fewer than two
 observed positions are left out, and the kernel's half-width is the
 distance to the `k`-th nearest sequence, but at least 1/50 of the
-covariate's range.
+covariate's range; when the `k` nearest all lie at that distance (a
+covariate with few distinct values), they weigh equally.
 
 ## Errors
 
-`nestimate_not_markov` for a network that is not a transition network;
-`nestimate_bad_input` for an unknown, non-numeric or constant covariate,
-a covariate that varies within a concatenated sequence, bad `states`, a
-`window` longer than the sequences, input without sequences, or a
-network whose weights cannot be rebuilt from its sequences (a scaled or
-thresholded one included); `nestimate_landscape_unestimable` for fewer
-than five usable sequences along a covariate.
+`nestimate_latency_resampling` for a latency network (or a group holding
+one); `nestimate_single_sequence` along `"phase"` for a network or data
+resting on one sequence when `iter > 0`; `nestimate_not_markov` for a
+network that is not a transition network; `nestimate_bad_input` for an
+unknown, non-numeric or constant covariate, a covariate that varies
+within a concatenated sequence, bad `states`, a `window` longer than the
+sequences, input without sequences, or a network whose weights cannot be
+rebuilt from its sequences (a scaled or thresholded one included);
+`nestimate_landscape_unestimable` for fewer than five usable sequences
+along a covariate.
 
 ## References
 
@@ -259,7 +282,7 @@ net <- build_network(trajectories, method = "relative")
 trend <- landscape_trend(net, along = "phase",
   states = c("Disengaged", "Average", "Active"), iter = 50, seed = 1)
 trend
-#> Stability landscape along programme phase (5-step windows): 3 states, 1 network, 50 resamples
+#> Stability landscape along time (5-step windows): 3 states, 1 network, 50 resamples
 #> 
 #> Cup depth (log of the expected stay; higher = more stable) at the two ends and its range:
 #>       state first at_first  last at_last  min  max

@@ -1,4 +1,4 @@
-# Edge Betweenness Network
+# Weight a network's edges by their betweenness
 
 `net_edge_betweenness()` returns a copy of a network in which each
 edge's weight is replaced by its betweenness: the number of shortest
@@ -50,9 +50,13 @@ plot(x, style = c("bar", "forest", "delta"), top_n = NULL, labels = TRUE, ...)
 
 - x:
 
-  A `netobject` or `netobject_group`; any other input raises an error.
-  For the [`plot()`](https://rdrr.io/r/graphics/plot.default.html)
-  method: a `net_edge_betweenness` network.
+  A `netobject` or `netobject_group`. A `tna` model or a `group_tna`
+  (package tna) is first rebuilt as a network from its own sequences
+  (see
+  [`as_netobject()`](https://pak.dynasite.org/Nestimate/reference/as_netobject.md)).
+  Any other input raises an error. For the
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) method: a
+  `net_edge_betweenness` network.
 
 - invert:
 

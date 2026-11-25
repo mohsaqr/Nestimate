@@ -1,4 +1,4 @@
-# Promote a psychometric MCML result to a network group
+# Convert a psychometric MCML fit to a group of networks
 
 `as_networks()` gathers the cluster-level (macro) network and the
 within-cluster networks of a
@@ -44,16 +44,14 @@ as_networks(x)
 
 ## Value
 
-A `netobject_group`, read by
-[`print()`](https://rdrr.io/r/base/print.html),
-[`summary()`](https://rdrr.io/r/base/summary.html) and
+A `netobject_group`, which
 [`net_centrality()`](https://pak.dynasite.org/Nestimate/reference/net_centrality.md)
-and drawn by
-[`cograph::splot()`](https://sonsoles.me/cograph/reference/splot.html):
-a named list whose first element, `macro`, is the cluster-level network,
-followed by one netobject per cluster with more than one member. A
-singleton cluster has no within-cluster network and is left out, with a
-warning naming it.
+and
+[`cograph::splot()`](https://sonsoles.me/cograph/reference/splot.html)
+read as any group of networks: a named list whose first element,
+`macro`, is the cluster-level network, followed by one netobject per
+cluster with more than one member. A singleton cluster has no
+within-cluster network and is left out, with a warning naming it.
 
 ## See also
 

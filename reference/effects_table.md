@@ -1,4 +1,4 @@
-# Effect Table of a Fitted Outcome Model
+# Tabulate the effects of an outcome model
 
 `effects_table()` returns the effect table of an
 [`outcome_model()`](https://pak.dynasite.org/Nestimate/reference/outcome_model.md)

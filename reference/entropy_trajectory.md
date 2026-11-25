@@ -1,4 +1,4 @@
-# Sliding-Window Transition Entropy Trajectory
+# Track transition entropy over time in sliding windows
 
 `entropy_trajectory()` tracks transition entropy over time: it forms the
 transitions within each actor's sequence of an event log, pools them in
@@ -25,7 +25,7 @@ and
 ``` r
 entropy_trajectory(
   data,
-  action,
+  action = NULL,
   actor = NULL,
   time = NULL,
   group = NULL,
@@ -46,6 +46,9 @@ plot(
   normalized = FALSE,
   span = 0.4,
   title = "Transition entropy over time",
+  iter = 200L,
+  ci_level = 0.95,
+  seed = NULL,
   ...
 )
 ```
@@ -54,11 +57,20 @@ plot(
 
 - data:
 
-  An event log: a data frame with one row per event.
+  An event log (a data frame with one row per event, read with
+  `action`), or sequences: a network built from sequences (a
+  `netobject`, a grouped `netobject_group`, a `tna` model), prepared
+  data, or a wide table or character matrix with one row per sequence
+  and one column per position. Sequences are read in position order:
+  each row is one actor, the position is the time, and the groups of a
+  `netobject_group` become `group`. A network whose data are not
+  sequences of states (an association or one-hot network) raises an
+  error of class `nestimate_bad_input`.
 
 - action:
 
-  The column holding each event's state.
+  The column of an event log holding each event's state. Default `NULL`,
+  which reads `data` as sequences.
 
 - actor:
 
@@ -78,7 +90,8 @@ plot(
 
   A column splitting the data into parallel trajectories (for example a
   condition or an achievement level), each with its own windows. Default
-  `NULL` (one trajectory, labelled `"all"`).
+  `NULL` (one trajectory, labelled `"all"`). A missing value in it
+  raises an error of class `nestimate_bad_input`.
 
 - window:
 
@@ -92,7 +105,8 @@ plot(
 - base:
 
   The logarithm base, which sets the unit: `2` (default) for bits. Any
-  positive number other than 1.
+  finite number greater than 1; another value raises an error of class
+  `nestimate_bad_input`.
 
 - x:
 
@@ -125,12 +139,35 @@ plot(
 - span:
 
   For [`plot()`](https://rdrr.io/r/graphics/plot.default.html): the
-  loess span of the trend line. Default `0.4`.
+  loess span of the trend line. Default `0.4`. A group gets a trend line
+  when `span` times its number of windows is at least 4 (10 windows at
+  the default); a group with fewer windows is drawn as its windows
+  joined by a line, with a `nestimate_sparse_trajectory` warning naming
+  it. A group with enough windows whose loess fit still warns is drawn
+  the same way, with a `nestimate_trend_not_fitted` warning giving
+  loess's message.
 
 - title:
 
   For [`plot()`](https://rdrr.io/r/graphics/plot.default.html): the plot
   title. Default `"Transition entropy over time"`.
+
+- iter:
+
+  For [`plot()`](https://rdrr.io/r/graphics/plot.default.html): the
+  number of bootstrap resamples behind the confidence band of each
+  trend. Default `200`; `0` draws the trends without a band.
+
+- ci_level:
+
+  For [`plot()`](https://rdrr.io/r/graphics/plot.default.html): the
+  coverage of the band. Default `0.95`.
+
+- seed:
+
+  For [`plot()`](https://rdrr.io/r/graphics/plot.default.html): a seed
+  for the resampling. It applies to this call only: the session's random
+  state is restored afterwards. Default `NULL`.
 
 ## Value
 
@@ -143,9 +180,10 @@ data frame with one row per group: `group`, `windows`, the `mean`, `sd`,
 `last` windows, and their difference `change` (negative when the
 transitions became more predictable).
 [`plot()`](https://rdrr.io/r/graphics/plot.default.html) returns a
-`ggplot` with the per-window entropy as faint lines and a loess-smoothed
-trend (with its standard-error band) per group, in Okabe-Ito colours.
-The object's fields:
+`ggplot` with a loess-smoothed trend per group and its bootstrap
+confidence band, each group in an Okabe-Ito colour that no state uses
+and named at the end of its trend; more groups than those colours are
+drawn one panel each. The object's fields:
 
 - trajectory:
 
@@ -166,6 +204,20 @@ The object's fields:
 
   The states of the whole log.
 
+- stream:
+
+  The transitions in time order within each group (state codes, time,
+  group and actor), from which
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) resamples.
+
+- state_palette:
+
+  The colours of the states (the input network's own, or Okabe-Ito dealt
+  over the sorted states).
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) draws the
+  groups in the Okabe-Ito colours these leave, so a group never takes a
+  state's colour.
+
 ## Details
 
 Each window's entropy is the empirical conditional entropy \\-\sum\_{ij}
@@ -183,6 +235,32 @@ The transitions of all actors are pooled in time order within each group
 shorter than `window` gets one window covering all of it, with a
 warning. Fewer than two transitions in all raise an error.
 
+The band of [`plot()`](https://rdrr.io/r/graphics/plot.default.html) is
+a bootstrap over actors (Davison & Hinkley, 1997): each resample draws a
+group's actors with replacement, rebuilds its windows from their
+transitions in time order and fits the same loess trend. The band is the
+basic bootstrap interval of the trend at each time: the central
+`ci_level` of the resampled trends, reflected about the observed trend.
+It takes the spread of the resampled trends around the observed one as
+the spread of the observed trend around the true one, so a systematic
+shift of the resamples is carried to the other side of the trend rather
+than kept. The plug-in entropy of a window is biased downward (Miller,
+1955), by about \\(c - r) / (2N \ln b)\\ for \\c\\ observed transition
+types from \\r\\ states in \\N\\ transitions, and resampled actors
+(repeated transitions) shift it further down, so percentile limits tend
+to sit below the trend. In a simulation (40 datasets of 100 actors with
+20 steps of a stationary 4-state chain, `window = 300`, `step = 100`)
+the 95% band covered the true entropy rate at mid-study in 38 of the 40,
+missing once on each side. Whole actors are resampled because the
+windows overlap (each transition sits in about `window / step` of them)
+and an actor's transitions depend on each other, so a band from the
+loess standard error, which treats the windows as independent, would be
+too narrow. A resample whose trend cannot be fitted (too few windows, or
+a loess warning) is left out of the band, and the plot warns how many
+were, with class `nestimate_dropped_resamples`; a time reached by fewer
+than half of the `iter` resamples has no band. A group with one actor
+has no band (warning class `nestimate_single_actor_band`).
+
 ## References
 
 Krejtz, K., Hughes, C.J., Stasiak, I., Duchowski, A., & Krejtz, I.
@@ -191,6 +269,13 @@ Movements. *ETRA '25*. doi:10.1145/3715669.3723128
 
 Cover, T.M. & Thomas, J.A. (2006). *Elements of Information Theory*, 2nd
 ed. Wiley.
+
+Davison, A.C. & Hinkley, D.V. (1997). *Bootstrap Methods and Their
+Application*. Cambridge University Press.
+
+Miller, G.A. (1955). Note on the bias of information estimates. In H.
+Quastler (Ed.), *Information Theory in Psychology* (pp. 95–100). Free
+Press.
 
 ## See also
 
@@ -220,6 +305,14 @@ summary(tr)
 #> 1 -0.007963838
 #> 2  0.114074796
 plot(tr)
-#> `geom_smooth()` using formula = 'y ~ x'
 
+
+# sequences: the network of the engagement trajectories, by course
+net <- build_network(trajectories, method = "relative")
+entropy_trajectory(net, window = 300, step = 50)
+#> Entropy Trajectory (3 states; window 300 transitions, step 50)
+#> 
+#>   all:          29 windows   mean 1.212   range [1.034, 1.352]
+#> 
+#> Use plot() for the trajectory, summary() for per-group statistics.
 ```

@@ -1,4 +1,4 @@
-# Model a Binary Outcome From Sequential Patterns
+# Model a binary outcome from sequential patterns
 
 `pattern_outcome()` selects the `n` sequential patterns most associated
 with a two-valued outcome and fits one logistic regression of the
@@ -144,9 +144,8 @@ pattern_outcome(
 
 - actor, action, time:
 
-  The actor, action and timestamp columns of a long event log, as in
-  [`extract_sequences()`](https://pak.dynasite.org/Nestimate/reference/extract_sequences.md):
-  setting `action` declares `x` an event log. Default `NULL`.
+  The actor, action and timestamp columns of a long event log; setting
+  `action` marks `x` as one. Default `NULL`.
 
 - ...:
 
@@ -166,12 +165,11 @@ pattern (`support_<value>`); `chisq` (the selection statistic);
 `std_error`, `ci_lower`, `ci_upper` and `p_value` (Wald z); and
 `odds_ratio`, `or_lower` and `or_upper`.
 
-Sequences with a missing outcome, covariate or group are dropped with a
-warning of class `nestimate_missing_outcome`. A selected pattern
-collinear with the other terms gets `NA` estimates (and `NA` standard
-error, intervals, p-value and odds ratios), its descriptive columns
-kept, and a warning of class `nestimate_aliased_pattern`. Warnings from
-the model fit (such as separation) are passed on unchanged.
+Raises the warning `nestimate_missing_outcome` when it drops sequences
+with a missing outcome, covariate or group. A selected pattern collinear
+with the other terms keeps its descriptive columns but gets `NA`
+estimates, intervals, p-value and odds ratios, with a warning. Warnings
+from the model fit (such as separation) are passed on unchanged.
 
 ## Details
 

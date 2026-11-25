@@ -2,53 +2,42 @@
 
 ## 1 Introduction
 
-**Nestimate** is a unified network estimation package for R. It provides
-a single entry point —
-[`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
-— that accepts sequence data, wide-format behavioral data, or numeric
-matrices and estimates networks using any of 10 built-in methods. The
-result is a `netobject` that inherits `cograph_network`, so every object
-produced by Nestimate can be plotted with
-[`splot()`](https://sonsoles.me/cograph/reference/splot.html) directly.
+Nestimate (Saqr, López-Pernas, & Misiejuk, 2026) estimates networks from
+sequence and panel data, and cograph draws them. The two packages divide
+the work: Nestimate computes the networks, their resampling, comparisons
+and clusterings, and returns objects that cograph’s
+[`splot()`](https://sonsoles.me/cograph/reference/splot.html) draws
+directly. This tutorial follows one dataset through the steps of a
+transition network analysis (Saqr et al., 2025; Saqr, López-Pernas, &
+Tikka, 2025), which has been used, for example, to map students’
+self-regulated learning tactics (Peeters, Saqr, & Viberg, 2020):
+estimating the network, checking the stability of its edges and
+centralities, comparing groups, and grouping the states into clusters.
 
-The core design principle is that **estimation and visualization are
-separate concerns**: Nestimate handles all computation (network
-construction, bootstrapping, permutation testing, clustering,
-multi-cluster analysis), while cograph handles all rendering. This
-separation means the analyst writes estimation code once and gets
-publication-ready figures without adapter code or manual class
-conversion.
-
-Beyond single-network estimation, Nestimate provides a complete
-statistical toolkit:
-
-- **Bootstrap stability analysis** (`bootstrap_network`) — identifies
-  which edges survive resampling and which are sampling artifacts.
-- **Permutation-based group comparison** (`permutation`) — tests whether
-  edges differ significantly between conditions.
-- **Multi-cluster multi-level analysis** (`csum`, `summarize_clusters`)
-  — aggregates node-level networks into cluster-level summaries for
-  hierarchical visualization.
-- **Centrality stability** (`centrality_stability`) — assesses whether
-  centrality rankings are robust to case dropping.
-- **Group-level operations** — bootstrapping, permutation testing, and
-  plotting work on grouped networks with no additional code.
-
-This tutorial walks through the full pipeline with the
-`group_regulation_long` dataset shipped with Nestimate.
-
-------------------------------------------------------------------------
+| Step | Nestimate | cograph |
+|----|----|----|
+| Estimate a network | [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md) | [`splot()`](https://sonsoles.me/cograph/reference/splot.html) |
+| Stability of the edges | [`bootstrap_network()`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.md) | [`splot()`](https://sonsoles.me/cograph/reference/splot.html), [`plot_bootstrap_forest()`](https://sonsoles.me/cograph/reference/plot_bootstrap_forest.html) |
+| Stability of the centralities | [`centrality_stability()`](https://pak.dynasite.org/Nestimate/reference/centrality_stability.md) | [`splot()`](https://sonsoles.me/cograph/reference/splot.html) |
+| Networks per group | `build_network(group = )` | [`splot()`](https://sonsoles.me/cograph/reference/splot.html) |
+| Compare groups | [`permutation()`](https://pak.dynasite.org/Nestimate/reference/permutation.md) | [`splot()`](https://sonsoles.me/cograph/reference/splot.html) |
+| Clusters of states | [`build_mcml()`](https://pak.dynasite.org/Nestimate/reference/build_mcml.md), [`as_tna()`](https://pak.dynasite.org/Nestimate/reference/as_tna.md) | [`splot()`](https://sonsoles.me/cograph/reference/splot.html) |
 
 ## 2 Data
 
-`group_regulation_long` is a long-format dataset of collaborative
-regulation behaviors coded across student groups. Each row is one coded
-action in a session, with columns identifying the actor, the group,
-achievement level, course, timestamp, and the regulation behavior.
+`group_regulation_long` records the regulation actions of students
+working in groups, one row per action, with the student (`Actor`), the
+time (`Time`) and the action (`Action`). It is generated synthetically
+from the `group_regulation` dataset of the tna package (Tikka,
+López-Pernas, & Saqr, 2025). The nine actions, `adapt`, `cohesion`,
+`consensus`, `coregulate`, `discuss`, `emotion`, `monitor`, `plan` and
+`synthesis`, are the nodes of the networks below. `Achiever` marks each
+student as a high or a low achiever.
 
 ``` r
 
-data("group_regulation_long", package = "Nestimate")
+library(Nestimate)
+library(cograph)
 head(group_regulation_long)
 ```
 
@@ -60,91 +49,70 @@ head(group_regulation_long)
     5     1     High     1      A 2025-01-01 08:52:25     adapt
     6     1     High     1      A 2025-01-01 08:57:31 consensus
 
-The nine regulation behaviors are: `adapt`, `cohesion`, `consensus`,
-`coregulate`, `discuss`, `emotion`, `monitor`, `plan`, and `synthesis`.
-These form the nodes of the networks we estimate below.
+## 3 Estimating networks
 
-------------------------------------------------------------------------
-
-## 3 Estimating Networks
-
-### 3.1 A single network
+### 3.1 A transition network
 
 [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
-estimates a network from raw data. The `method` argument selects the
-estimation algorithm. Here we use `"relative"`, which computes
-row-normalized transition probabilities — the standard approach in
-transition network analysis (TNA). Unlike constructing a TNA model
-manually (preparing wide-format data, computing the transition matrix,
-normalizing),
-[`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
-handles all data preparation internally.
+estimates a network from the data. With `method = "relative"`, the
+weight of the edge from one action to another is the probability that
+the second follows the first, so each row of the weight matrix sums to
+1.
 
 ``` r
 
-net <- build_network(
-  group_regulation_long,
-  action = "Action", actor = "Actor",
-  method = "relative"
-)
+net <- build_network(group_regulation_long, action = "Action",
+                     actor = "Actor", time = "Time", method = "relative")
 net
 ```
 
     Transition Network (relative probabilities) [directed]
       Weights: [0.001, 0.498]  |  mean: 0.115
 
-      Weight matrix:
-                 adapt cohesion consensus coregulate discuss emotion monitor  plan
-      adapt      0.000    0.273     0.477      0.022   0.059   0.120   0.033 0.016
-      cohesion   0.003    0.027     0.498      0.119   0.060   0.116   0.033 0.141
-      consensus  0.005    0.015     0.082      0.188   0.188   0.073   0.047 0.396
-      coregulate 0.016    0.036     0.135      0.023   0.274   0.172   0.086 0.239
-      discuss    0.071    0.048     0.321      0.084   0.195   0.106   0.022 0.012
-      emotion    0.002    0.325     0.320      0.034   0.102   0.077   0.036 0.100
-      monitor    0.011    0.056     0.159      0.058   0.375   0.091   0.018 0.216
-      plan       0.001    0.025     0.290      0.017   0.068   0.147   0.076 0.374
-      synthesis  0.235    0.034     0.466      0.044   0.063   0.071   0.012 0.075
-                 synthesis
-      adapt          0.000
-      cohesion       0.004
-      consensus      0.008
-      coregulate     0.019
-      discuss        0.141
-      emotion        0.003
-      monitor        0.016
-      plan           0.002
-      synthesis      0.000
+      Strongest edges (10 of 78):
+       from      to        weight
+       cohesion  consensus 0.498
+       adapt     consensus 0.477
+       synthesis consensus 0.466
+       consensus plan      0.396
+       monitor   discuss   0.375
+       plan      plan      0.374
+       emotion   cohesion  0.325
+       discuss   consensus 0.321
+       emotion   consensus 0.320
+       plan      consensus 0.290
 
-      Initial probabilities:
-      consensus     0.214  ████████████████████████████████████████
-      plan          0.204  ██████████████████████████████████████
-      discuss       0.175  █████████████████████████████████
-      emotion       0.151  ████████████████████████████
-      monitor       0.144  ███████████████████████████
-      cohesion      0.060  ███████████
-      synthesis     0.019  ████
-      coregulate    0.019  ████
-      adapt         0.011  ██
+      extract_edges(include_self = TRUE) lists every edge; extract_transition_matrix() gives the weight matrix;
+      extract_initial_probs() the initial probabilities.
 
-The returned `net` is a `netobject` (which inherits `cograph_network`),
-so [`splot()`](https://sonsoles.me/cograph/reference/splot.html) renders
-it directly:
+``` r
+
+extract_initial_probs(net)
+```
+
+         adapt   cohesion  consensus coregulate    discuss    emotion    monitor
+        0.0115     0.0605     0.2140     0.0190     0.1755     0.1515     0.1440
+          plan  synthesis
+        0.2045     0.0195 
+
+The strongest transitions lead to `consensus`: from `cohesion` (0.50),
+from `adapt` (0.48) and from `synthesis` (0.47). `consensus` is also the
+most frequent first action (0.21), followed by `plan` (0.20). The
+network is a `netobject`, which inherits from `cograph_network`, so
+[`splot()`](https://sonsoles.me/cograph/reference/splot.html) draws it.
 
 ``` r
 
 splot(net)
 ```
 
-![](cograph-tutorial-nestimate_files/figure-html/fig-base-1.png)
+![](cograph-tutorial-nestimate_files/figure-html/unnamed-chunk-3-1.png)
 
-Figure 1: Collaborative regulation network — row-normalized transitions
-(relative method)
+### 3.2 Other estimators
 
-### 3.2 Available estimators
-
-Nestimate ships with 10 built-in estimators. Each is selected via the
-`method` argument to
-[`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md):
+`method` selects the estimator;
+[`list_estimators()`](https://pak.dynasite.org/Nestimate/reference/list_estimators.md)
+lists them.
 
 ``` r
 
@@ -159,13 +127,14 @@ list_estimators()
     5                gap             Gap-allowed transitions weighted by 1/distance
     6             glasso                EBICglasso regularized partial correlations
     7              ising             Ising model (L1-penalized logistic regression)
-    8                mgm Mixed Graphical Model (nodewise lasso, EBIC, LW threshold)
-    9              ngram      n-gram transitions (adjacent pairs per n-gram window)
-    10              pcor                         Unregularized partial correlations
-    11          relative                    Row-normalized transition probabilities
-    12           reverse        Reverse (reply) transitions: transpose of frequency
-    13              wtna                     Window-based TNA transitions (one-hot)
-    14 wtna_cooccurrence                   Window-based TNA co-occurrence (one-hot)
+    8            latency         Reply network weighted by response speed (latency)
+    9                mgm Mixed Graphical Model (nodewise lasso, EBIC, LW threshold)
+    10             ngram      n-gram transitions (adjacent pairs per n-gram window)
+    11              pcor                         Unregularized partial correlations
+    12          relative                    Row-normalized transition probabilities
+    13           reverse        Reverse (reply) transitions: transpose of frequency
+    14              wtna                     Window-based TNA transitions (one-hot)
+    15 wtna_cooccurrence                   Window-based TNA co-occurrence (one-hot)
        directed
     1      TRUE
     2     FALSE
@@ -174,61 +143,54 @@ list_estimators()
     5      TRUE
     6     FALSE
     7     FALSE
-    8     FALSE
-    9      TRUE
-    10    FALSE
-    11     TRUE
+    8      TRUE
+    9     FALSE
+    10     TRUE
+    11    FALSE
     12     TRUE
     13     TRUE
-    14    FALSE
+    14     TRUE
+    15    FALSE
 
-Different estimators answer different research questions. Directed
-methods (relative, frequency, attention) model sequential transitions —
-which behavior follows which. Undirected methods (glasso, pcor, cor,
-co_occurrence, ising) model co-occurrence or partial correlation
-structures — which behaviors tend to appear together. The choice of
-method should be driven by the theoretical question, not by convenience.
-
-``` r
-
-frequency_net    <- build_network(group_regulation_long, action = "Action",
-                                  actor = "Actor", method = "frequency")
-attention_net    <- build_network(group_regulation_long, action = "Action",
-                                  actor = "Actor", method = "attention")
-co_occurrence_net <- build_network(group_regulation_long, action = "Action",
-                                   actor = "Actor", method = "co_occurrence")
-```
-
-Each of these is a `netobject` that works with
-[`splot()`](https://sonsoles.me/cograph/reference/splot.html):
+Fifteen estimators are available. The directed ones (`relative`,
+`frequency`, `attention`, `ngram`, `gap`, `reverse`, `latency`, `wtna`)
+describe which action follows which; the undirected ones (`cor`, `pcor`,
+`glasso`, `ising`, `mgm`, `co_occurrence`, `wtna_cooccurrence`) describe
+which actions or variables go together (Saqr, Beck, & López-Pernas,
+2024). `frequency` keeps the counts of the transitions instead of their
+probabilities, and `co_occurrence` counts how often two actions occur in
+the same sequence.
 
 ``` r
 
+frequency_net <- build_network(group_regulation_long, action = "Action",
+                               actor = "Actor", time = "Time",
+                               method = "frequency")
 splot(frequency_net)
 ```
 
-![](cograph-tutorial-nestimate_files/figure-html/fig-frequency-1.png)
-
-Figure 2: Frequency-based transition network (raw counts)
+![](cograph-tutorial-nestimate_files/figure-html/unnamed-chunk-5-1.png)
 
 ``` r
 
+co_occurrence_net <- build_network(group_regulation_long, action = "Action",
+                                   actor = "Actor", time = "Time",
+                                   method = "co_occurrence")
 splot(co_occurrence_net, layout = "spring")
 ```
 
-![](cograph-tutorial-nestimate_files/figure-html/fig-co-occurrence-1.png)
+![](cograph-tutorial-nestimate_files/figure-html/unnamed-chunk-6-1.png)
 
-Figure 3: Co-occurrence network (undirected)
+## 4 Stability of the edges
 
-------------------------------------------------------------------------
-
-## 4 Bootstrap Stability
-
-To ensure that the patterns we observe reflect genuine structure rather
-than sampling noise, we need bootstrap resampling.
+An edge estimated from one sample may not hold in another.
 [`bootstrap_network()`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.md)
-resamples the data, refits the model at each iteration, and identifies
-which edges are stable. The result is a `net_bootstrap` object.
+resamples the sequences with replacement, re-estimates the network in
+each resample and reports, for each edge, its mean, its 95% interval and
+a p-value (Saqr et al., 2025). By default the p-value is the share of
+resamples in which the edge’s weight falls outside a consistency range
+of 0.75 to 1.25 times its original weight, so an edge with a small
+p-value keeps its size across resamples.
 
 ``` r
 
@@ -251,121 +213,57 @@ boot
       Edges      : 51 significant / 78 total
       CI         : 95%  |  Inference: stability  |  CR [0.75, 1.25]
 
-### 4.1 Styled mode (default)
+Of the 78 edges, 51 are stable at the 5% level. The strongest
+transitions are also the most precise: `cohesion` to `consensus` has a
+mean of 0.50 and an interval of \[0.47, 0.52\].
 
-Significant edges (p \< 0.05) appear **solid dark blue**;
-non-significant edges appear **dashed grey**. This immediately separates
-the stable network structure from noise.
+[`splot()`](https://sonsoles.me/cograph/reference/splot.html) draws the
+stable edges solid and the others dashed; `display = "significant"`
+draws only the stable edges, `display = "full"` all edges alike, and
+`show_stars = TRUE` or `show_ci = TRUE` add the significance stars or
+the intervals to the edge labels.
 
 ``` r
 
 splot(boot)
 ```
 
-![](cograph-tutorial-nestimate_files/figure-html/fig-boot-styled-1.png)
-
-Figure 4: Bootstrapped network — solid = stable edges, dashed = sampling
-artifacts
-
-### 4.2 Significant edges only
+![](cograph-tutorial-nestimate_files/figure-html/unnamed-chunk-8-1.png)
 
 ``` r
 
 splot(boot, display = "significant")
 ```
 
-![](cograph-tutorial-nestimate_files/figure-html/fig-boot-sig-1.png)
-
-Figure 5: Only statistically stable edges retained
-
-### 4.3 Full network (no styling)
-
-``` r
-
-splot(boot, display = "full")
-```
-
-![](cograph-tutorial-nestimate_files/figure-html/fig-boot-full-1.png)
-
-Figure 6: All edges shown with uniform styling (bootstrap weights)
-
-### 4.4 Significance stars on edge labels
-
-``` r
-
-splot(boot, show_stars = TRUE)
-```
-
-![](cograph-tutorial-nestimate_files/figure-html/fig-boot-stars-1.png)
-
-Figure 7: Bootstrap network with significance stars (\*, \*\*, \*\*\*)
-
-### 4.5 Confidence interval labels
+![](cograph-tutorial-nestimate_files/figure-html/unnamed-chunk-9-1.png)
 
 ``` r
 
 splot(boot, show_ci = TRUE)
 ```
 
-![](cograph-tutorial-nestimate_files/figure-html/fig-boot-ci-1.png)
+![](cograph-tutorial-nestimate_files/figure-html/unnamed-chunk-10-1.png)
 
-Figure 8: Bootstrap weights with 95% CI bounds on each edge label
-
-> **[`splot()`](https://sonsoles.me/cograph/reference/splot.html)
-> display modes for `net_bootstrap`**
->
-> | `display` | Description |
-> |----|----|
-> | `"styled"` (default) | Significant = solid blue, non-significant = dashed grey |
-> | `"significant"` | Only significant edges |
-> | `"full"` | All edges, uniform styling |
->
-> Additional parameters: `show_stars`, `show_ci`, `inherit_style`.
-
-### 4.6 Forest plots
-
-Forest plots provide a complementary view of bootstrap results, showing
-the point estimate and confidence interval for every edge. Three layouts
-are available:
+A forest plot shows the estimate and the interval of every edge;
+`layout` arranges the edges in a list, a circle or groups.
 
 ``` r
 
 plot_bootstrap_forest(boot, show_ci = TRUE)
 ```
 
-![](cograph-tutorial-nestimate_files/figure-html/fig-forest-default-1.png)
+![](cograph-tutorial-nestimate_files/figure-html/unnamed-chunk-11-1.png)
 
-Figure 9: Bootstrap forest plot — default linear layout
+## 5 Stability of the centralities
 
-``` r
-
-plot_bootstrap_forest(boot, show_ci = TRUE, layout = "circular")
-```
-
-![](cograph-tutorial-nestimate_files/figure-html/fig-forest-circular-1.png)
-
-Figure 10: Bootstrap forest plot — circular layout
-
-``` r
-
-plot_bootstrap_forest(boot, show_ci = TRUE, layout = "grouped", scale = 0.55)
-```
-
-![](cograph-tutorial-nestimate_files/figure-html/fig-forest-grouped-1.png)
-
-Figure 11: Bootstrap forest plot — grouped by source node
-
-------------------------------------------------------------------------
-
-## 5 Centrality Stability
-
-Bootstrap alone tells us which edges are stable. To assess whether
-centrality rankings are robust, we need the case-dropping procedure from
-Epskamp et al. (2018): progressively remove increasing fractions of
-cases, recompute centrality, and correlate with the original ranking.
-The CS-coefficient is the maximum proportion of cases that can be
-dropped while maintaining a correlation above 0.7 in at least 95% of
-bootstrap samples.
+Centrality measures summarise each node’s position in the network.
+[`centrality_stability()`](https://pak.dynasite.org/Nestimate/reference/centrality_stability.md)
+drops increasing proportions of the sequences, recomputes the
+centralities, and correlates them with the centralities of the full data
+(Epskamp, Borsboom, & Fried, 2018). The CS-coefficient is the largest
+proportion of sequences that can be dropped while the correlation stays
+above 0.7 in 95% of the resamples; Epskamp et al. (2018) treat values
+above 0.5 as acceptable.
 
 ``` r
 
@@ -387,203 +285,140 @@ cs
 splot(cs)
 ```
 
-![](cograph-tutorial-nestimate_files/figure-html/fig-stability-1.png)
+![](cograph-tutorial-nestimate_files/figure-html/unnamed-chunk-12-1.png)
 
-Figure 12: Centrality stability — correlation with original ranking as
-cases are dropped
+The CS-coefficients of in-strength, out-strength and betweenness are all
+0.90: the ranking of the actions by these measures holds when 90% of the
+sequences are removed.
 
-A CS-coefficient above 0.5 is generally considered acceptable; above 0.7
-is good (Epskamp et al., 2018). The horizontal dashed line marks the 0.7
-threshold.
+## 6 Group networks
 
-------------------------------------------------------------------------
-
-## 6 Group Networks
-
-### 6.1 Building group networks
-
-Pass `group =` to
-[`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
-and it estimates a separate network per group level, returning a
-`netobject_group`.
-[`splot()`](https://sonsoles.me/cograph/reference/splot.html) dispatches
-to
-[`plot_netobject_group()`](https://sonsoles.me/cograph/reference/plot-results.html)
-and renders all groups in an automatic grid.
+`group =` estimates one network per value of a covariate and returns a
+group of networks (López-Pernas, Tikka, & Saqr, 2025).
+[`splot()`](https://sonsoles.me/cograph/reference/splot.html) draws the
+groups side by side on a common scale, so edge widths can be compared
+across panels.
 
 ``` r
 
-grp_net <- build_network(
-  group_regulation_long, method = "relative",
-  action = "Action", actor = "Actor", time = "Time",
-  group = "Achiever"
-)
-names(grp_net)
+group_net <- build_network(group_regulation_long, action = "Action",
+                           actor = "Actor", time = "Time",
+                           method = "relative", group = "Achiever")
+group_net
 ```
 
-    [1] "High" "Low" 
+    Group Networks (2 groups, group_col: Achiever)
+
+      Group  Nodes  Edges  Weights
+      High   9      76     [0.001, 0.576]
+      Low    9      75     [0.000, 0.462]
 
 ``` r
 
-splot(grp_net)
+splot(group_net)
 ```
 
-![](cograph-tutorial-nestimate_files/figure-html/fig-group-default-1.png)
+![](cograph-tutorial-nestimate_files/figure-html/unnamed-chunk-13-1.png)
 
-Figure 13: High vs. Low achievers — side-by-side on a common weight
-scale
-
-`common_scale = TRUE` (default) ensures both panels use the same maximum
-weight, so edge widths are directly comparable. Turn it off when you
-want each panel to use its own scale:
-
-``` r
-
-splot(grp_net, common_scale = FALSE, title_prefix = "Achievers: ")
-```
-
-![](cograph-tutorial-nestimate_files/figure-html/fig-group-noscale-1.png)
-
-Figure 14: Each group on its own weight scale — emphasises internal
-structure
-
-### 6.2 Group bootstrap
-
-Bootstrapping works on grouped networks.
 [`bootstrap_network()`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.md)
-applied to a `netobject_group` returns a `net_bootstrap_group` — one
-bootstrap result per group, rendered in a multi-panel grid.
+on the group resamples each group.
 
 ``` r
 
 set.seed(265)
-gboot <- bootstrap_network(grp_net, iter = 500)
+group_boot <- bootstrap_network(group_net, iter = 500)
+splot(group_boot)
 ```
 
-``` r
+![](cograph-tutorial-nestimate_files/figure-html/unnamed-chunk-14-1.png)
 
-splot(gboot)
-```
-
-![](cograph-tutorial-nestimate_files/figure-html/fig-group-bootstrap-1.png)
-
-Figure 15: Group-level bootstrap — original networks per cluster
-
-------------------------------------------------------------------------
-
-## 7 Permutation Testing
-
-### 7.1 Pairwise comparison
+## 7 Comparing groups
 
 [`permutation()`](https://pak.dynasite.org/Nestimate/reference/permutation.md)
-tests whether each edge differs significantly between two networks by
-comparing the observed difference to a permutation null distribution.
-Green edges indicate the first group is stronger; red edges indicate the
-second group is stronger.
+compares the networks of the groups edge by edge: it shuffles the group
+labels of the sequences, recomputes the difference of every edge, and
+compares the observed difference with the shuffled ones (Saqr et al.,
+2025). On a group of networks it compares every pair of groups.
 
 ``` r
 
 set.seed(265)
-perm <- permutation(grp_net$High, grp_net$Low, iter = 1000)
-perm
+group_perm <- permutation(group_net, iter = 1000)
+group_perm
 ```
 
+    Grouped Permutation Test
+    Groups: High vs Low
+
+    -- High vs Low --
     Permutation Test: Transition Network (relative probabilities) [directed]
       Iterations: 1000  |  Alpha: 0.05
       Nodes: 9  |  Edges tested: 78  |  Significant: 42
       Global test (networks differ overall?): M = 2.612 (p = 0.000999)  |  S = 0.210 (p = 0.000999)
 
-``` r
-
-splot(perm)
-```
-
-![](cograph-tutorial-nestimate_files/figure-html/fig-perm-sig-1.png)
-
-Figure 16: Permutation test — green = High \> Low, red = Low \> High (p
-\< 0.05)
-
-### 7.2 Show non-significant edges
+The networks of high and low achievers differ: 42 of the 78 transitions
+differ at the 5% level, and the global statistic M, the sum of the
+absolute edge differences, is 2.61 (p = 0.001).
 
 ``` r
 
-splot(perm, show_nonsig = TRUE)
+head(summary(group_perm), 10)
 ```
 
-![](cograph-tutorial-nestimate_files/figure-html/fig-perm-nonsig-1.png)
+             group     from         to   weight_x   weight_y         diff
+    1  High vs Low    adapt   cohesion 0.26241135 0.27717391 -0.014762566
+    2  High vs Low    adapt  consensus 0.51773050 0.46195652  0.055773975
+    3  High vs Low    adapt coregulate 0.00000000 0.02989130 -0.029891304
+    4  High vs Low    adapt    discuss 0.03546099 0.06793478 -0.032473790
+    5  High vs Low    adapt    emotion 0.14184397 0.11141304  0.030430928
+    6  High vs Low    adapt    monitor 0.02836879 0.03532609 -0.006957293
+    7  High vs Low    adapt       plan 0.01418440 0.01630435 -0.002119951
+    8  High vs Low cohesion      adapt 0.00533049 0.00000000  0.005330490
+    9  High vs Low cohesion   cohesion 0.04371002 0.00660502  0.037105002
+    10 High vs Low cohesion  consensus 0.53624733 0.45046235  0.085784983
+       effect_size     p_value   sig
+    1   -0.3922188 0.712287712 FALSE
+    2    1.2669055 0.201798202 FALSE
+    3   -2.4196843 0.011988012  TRUE
+    4   -1.6142325 0.103896104 FALSE
+    5    1.0508991 0.300699301 FALSE
+    6   -0.4479287 0.665334665 FALSE
+    7   -0.1965672 0.751248751 FALSE
+    8    2.0799910 0.054945055 FALSE
+    9    4.4791305 0.000999001  TRUE
+    10   3.5701213 0.001998002  TRUE
 
-Figure 17: All edges — coloured solid = significant, dashed grey =
-non-significant
+`weight_x` and `weight_y` are the transition probabilities of high and
+low achievers, `diff` their difference, and `effect_size` the difference
+in standard deviations of the permuted differences. For example, low
+achievers move from `cohesion` to `coregulate` more often (0.17 against
+0.08), and high achievers from `cohesion` to `consensus` (0.54 against
+0.45).
 
-### 7.3 With significance stars and effect sizes
+[`splot()`](https://sonsoles.me/cograph/reference/splot.html) draws the
+edges that differ, coloured by the group in which they are stronger.
 
 ``` r
 
-splot(perm, show_stars = TRUE, show_effect = TRUE)
+splot(group_perm, edge_positive_color = "#4A6FE3",
+      edge_negative_color = "#D33F6A")
 ```
 
-![](cograph-tutorial-nestimate_files/figure-html/fig-perm-stars-effect-1.png)
+![](cograph-tutorial-nestimate_files/figure-html/unnamed-chunk-17-1.png)
 
-Figure 18: Permutation test with stars and effect sizes (Cohen’s d in
-parentheses)
+Blue edges are stronger among high achievers and red edges among low
+achievers; `show_nonsig = TRUE` adds the edges that do not differ, and
+`show_stars = TRUE` the significance stars.
 
-> **[`splot()`](https://sonsoles.me/cograph/reference/splot.html)
-> parameters for `net_permutation`**
->
-> | Parameter             | Default     | Description                           |
-> |-----------------------|-------------|---------------------------------------|
-> | `show_nonsig`         | `FALSE`     | Show non-significant edges            |
-> | `edge_positive_color` | `"#009900"` | Color when group 1 \> group 2         |
-> | `edge_negative_color` | `"#C62828"` | Color when group 2 \> group 1         |
-> | `show_stars`          | `TRUE`      | Significance stars (\*, \*\*, \*\*\*) |
-> | `show_effect`         | `FALSE`     | Effect size in parentheses            |
+## 8 Clusters of states
 
-### 7.4 Group-level permutation
-
-When applied to a `netobject_group`,
-[`permutation()`](https://pak.dynasite.org/Nestimate/reference/permutation.md)
-runs all pairwise comparisons and returns a `net_permutation_group`.
-[`splot()`](https://sonsoles.me/cograph/reference/splot.html) renders
-each comparison in a grid.
-
-``` r
-
-set.seed(265)
-gperm <- permutation(grp_net, iter = 1000)
-```
-
-``` r
-
-splot(gperm)
-```
-
-![](cograph-tutorial-nestimate_files/figure-html/fig-group-perm-1.png)
-
-Figure 19: Group-level permutation test — all pairwise comparisons
-
-------------------------------------------------------------------------
-
-## 8 Multi-Cluster Multi-Level Analysis (MCML)
-
-A common analytical question is: given a network of individual states
-(nodes), can we group them into meaningful clusters and study how these
-clusters interact? The MCML (Multi-Cluster Multi-Level) pipeline does
-exactly this. It aggregates a node-level network into a cluster-level
-summary, producing both a macro-level view (cluster-to-cluster
-transitions) and per-cluster detail networks (within-cluster structure).
-
-There are several ways to build an MCML analysis, depending on whether
-you start from a pre-built network or from raw data, and whether you
-define clusters manually or discover them algorithmically.
-
-### 8.1 Approach 1: Theory-driven clusters from a network
-
-When domain knowledge dictates the grouping, define clusters as a named
-list of node labels and pass them to
-[`csum()`](https://sonsoles.me/cograph/reference/csum.html). For
-collaborative regulation, we can distinguish regulatory behaviors
-(monitoring, planning, coregulating, adapting) from social-communicative
-behaviors (cohesion, consensus, discussion, emotion, synthesis):
+The nine actions fall into two groups of behaviour: regulation of the
+task (`monitor`, `plan`, `coregulate`, `adapt`) and social interaction
+(`cohesion`, `consensus`, `discuss`, `emotion`, `synthesis`).
+[`build_mcml()`](https://pak.dynasite.org/Nestimate/reference/build_mcml.md)
+estimates a multi-cluster, multi-level network: a network of the
+clusters, and a network of the actions within each cluster (Zhang et
+al., 2026).
 
 ``` r
 
@@ -591,208 +426,105 @@ clusters <- list(
   Regulatory = c("monitor", "plan", "coregulate", "adapt"),
   Social     = c("cohesion", "consensus", "discuss", "emotion", "synthesis")
 )
-
-mcml_theory <- csum(net, clusters, type = "tna")
-mcml_theory
+cluster_net <- build_mcml(net, clusters = clusters)
+cluster_net
 ```
 
-    Cluster Summary
-    ---------------
-    Type: tna
-    Method: sum
-    Clusters: 2
-    Nodes: 9
-    Cluster sizes: 4, 5
+    MCML Network
+    ============
+    Type: tna  | Method: sum
+    Nodes: 9  | Clusters: 2
+    Transitions: 25533
+      Macro: 11997  | Per-cluster: 13536
 
-    Macro (cluster-level) weights (2x2):
-      Inits: 0.318, 0.682
+    Clusters:
+      Regulatory (4): monitor, plan, coregulate, adapt
+      Social (5): cohesion, consensus, discuss, emotion, synthesis
+
+    Macro (cluster-level) weights:
                Regulatory Social
-    Regulatory      0.302  0.698
-    Social          0.332  0.668
-
-    Per-cluster weights:
-      Regulatory (4 nodes)
-      Social (5 nodes)
-
-[`splot()`](https://sonsoles.me/cograph/reference/splot.html) dispatches
-the `mcml` object to
-[`plot_mcml()`](https://sonsoles.me/cograph/reference/plot_mcml.html),
-rendering a two-layer visualization: the bottom layer shows
-within-cluster detail networks, the top layer shows the macro
-(cluster-to-cluster) summary.
+    Regulatory     0.4042 0.5958
+    Social         0.3879 0.6121
 
 ``` r
 
-splot(mcml_theory)
+splot(cluster_net)
 ```
 
-![](cograph-tutorial-nestimate_files/figure-html/fig-mcml-theory-1.png)
+![](cograph-tutorial-nestimate_files/figure-html/unnamed-chunk-18-1.png)
 
-Figure 20: MCML — theory-driven two-cluster partition (Regulatory
-vs. Social)
-
-### 8.2 Approach 2: Theory-driven clusters from a network object
-
-[`summarize_clusters()`](https://sonsoles.me/cograph/reference/summarize_clusters.html)
-provides the same result through a slightly different interface. When
-given a `netobject`, it uses the pre-computed weight matrix:
-
-``` r
-
-mcml_built <- summarize_clusters(net, clusters, type = "tna")
-splot(mcml_built)
-```
-
-![](cograph-tutorial-nestimate_files/figure-html/mcml-build-1.png)
-
-### 8.3 Converting MCML to individual network objects
-
+At the level of the clusters, both kinds of action are followed more
+often by a social action: a regulatory action by a social one with
+probability 0.60, and a social action by another social action with
+probability 0.61.
 [`as_tna()`](https://pak.dynasite.org/Nestimate/reference/as_tna.md)
-converts an MCML result into a `netobject_group` — a named list
-containing the macro network and each per-cluster network as individual
-`netobject` objects. This is useful when you want to analyze each
-cluster’s network independently (e.g., compute centrality, run
-bootstrap) or pass them to other functions.
+converts the levels into transition networks, one for the clusters and
+one for the actions within each cluster.
 
 ``` r
 
-tna_models <- as_tna(mcml_theory)
-names(tna_models)
+cluster_levels <- as_tna(cluster_net)
+splot(cluster_levels)
 ```
 
-    [1] "macro"      "Regulatory" "Social"    
+![](cograph-tutorial-nestimate_files/figure-html/unnamed-chunk-19-1.png)
 
-``` r
+## 9 How to cite this article
 
-splot(tna_models)
-```
-
-![](cograph-tutorial-nestimate_files/figure-html/fig-mcml-as-tna-1.png)
-
-Figure 21: MCML converted to individual networks — macro + per-cluster
-panels
-
-### 8.4 Summarize to a cluster-level network
-
-[`summarize_network()`](https://sonsoles.me/cograph/reference/summarize_network.html)
-from cograph takes a different approach: instead of a two-layer MCML
-visualization, it collapses the node-level network into a single
-cluster-level `cograph_network` where each cluster becomes one node.
-This is useful when you only need the macro view.
-
-``` r
-
-summary_net <- summarize_network(net, clusters)
-summary_net
-```
-
-    Cograph network: 2 nodes, 4 edges ( directed )
-    Source: matrix
-      Nodes (2): Regulatory, Social
-      Edges: 2 / 2 (density: 100.0%)
-      Weights: [1.660, 2.794]  |  mean: 2.227
-      Strongest edges:
-        Regulatory -> Social  2.794
-        Social -> Regulatory  1.660
-      Self-loops: 2  |  range: [1.206, 3.340]
-    Layout: none
-      Use as.data.frame() for the edge table, as.data.frame(what = "nodes") for the nodes.
-
-``` r
-
-splot(summary_net, node_size = 15, edge_labels = TRUE)
-```
-
-![](cograph-tutorial-nestimate_files/figure-html/fig-summarize-1.png)
-
-Figure 22: Cluster-level summary network — one node per cluster,
-aggregated edge weights
-
-> **MCML approaches summary**
->
-> | Approach | Function | Input | Output | Use when |
-> |----|----|----|----|----|
-> | Theory-driven | `csum(net, clusters)` | netobject + named list | `mcml` | You know the grouping |
-> | Theory-driven | `summarize_clusters(net, clusters)` | netobject + named list | `mcml` | Same, alternative API |
-> | Data-driven | `cluster_network(data, k)` | raw data + k | `netobject_group` | Exploratory clustering |
-> | Convert | `as_tna(mcml)` | mcml object | `netobject_group` | Per-cluster analysis |
-> | Collapse | `summarize_network(net, clusters)` | netobject + clusters | `cograph_network` | Macro-only view |
-
-------------------------------------------------------------------------
-
-## 9 The Complete Dispatch Chain
-
-Every Nestimate object routes through
-[`splot()`](https://sonsoles.me/cograph/reference/splot.html)
-automatically. The following table summarizes all supported object
-classes:
-
-| Nestimate class | Producer | [`splot()`](https://sonsoles.me/cograph/reference/splot.html) renders |
-|----|----|----|
-| `netobject` | [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md) | Standard network plot |
-| `net_bootstrap` | [`bootstrap_network()`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.md) | Stability-styled network |
-| `net_permutation` | `permutation(x, y)` | Coloured difference network |
-| `boot_glasso` | [`boot_glasso()`](https://pak.dynasite.org/Nestimate/reference/boot_glasso.md) | Regularized network with stability |
-| `netobject_group` | `build_network(group=)` | Multi-panel grid |
-| `net_bootstrap_group` | `bootstrap_network(group)` | Multi-panel bootstrap |
-| `net_permutation_group` | `permutation(group)` | Multi-panel comparisons |
-| `mcml` | [`csum()`](https://sonsoles.me/cograph/reference/csum.html) / [`summarize_clusters()`](https://sonsoles.me/cograph/reference/summarize_clusters.html) | Two-layer MCML plot |
-| `net_stability` | [`centrality_stability()`](https://pak.dynasite.org/Nestimate/reference/centrality_stability.md) | Stability drop-off curve |
-
-Each dispatcher respects all standard
-[`splot()`](https://sonsoles.me/cograph/reference/splot.html) arguments
-(`layout`, `node_fill`, `edge_color`, `title`, `minimum`, `threshold`,
-etc.), so the same customization API works everywhere.
-
-------------------------------------------------------------------------
+Saqr, M., López-Pernas, S., & Misiejuk, K. (2026). *Network estimation
+and visualization with Nestimate + cograph*. Nestimate.
+[HTML](https://pak.dynasite.org/Nestimate/articles/cograph-tutorial-nestimate.html)
+·
+[PDF](https://pak.dynasite.org/Nestimate/pdf/cograph-tutorial-nestimate.pdf)
 
 ## 10 References
 
 Epskamp, S., Borsboom, D., & Fried, E. I. (2018). Estimating
 psychological networks and their accuracy: A tutorial paper. *Behavior
 Research Methods*, 50(1), 195–212.
+https://doi.org/10.3758/s13428-017-0862-1
 
-------------------------------------------------------------------------
+López-Pernas, S., Tikka, S., & Saqr, M. (2025). Mining patterns and
+clusters with transition network analysis: A heterogeneity approach. In
+M. Saqr & S. López-Pernas (Eds.), *Advanced learning analytics methods:
+AI, precision and complexity* (pp. 447–468). Springer.
+https://doi.org/10.1007/978-3-031-95365-1_17
 
-``` r
+Peeters, W., Saqr, M., & Viberg, O. (2020). Applying learning analytics
+to map students’ self-regulated learning tactics in an academic writing
+course. In *Proceedings of the 28th International Conference on
+Computers in Education (ICCE 2020)* (pp. 245–254).
 
-sessionInfo()
-```
+Saqr, M., Beck, E., & López-Pernas, S. (2024). Psychological networks: A
+modern approach to analysis of learning and complex learning processes.
+In M. Saqr & S. López-Pernas (Eds.), *Learning analytics methods and
+tutorials: A practical guide using R* (pp. 639–671). Springer.
+https://doi.org/10.1007/978-3-031-54464-4_19
 
-    R version 4.6.2 (2026-10-29)
-    Platform: x86_64-pc-linux-gnu
-    Running under: Ubuntu 26.04.1 LTS
+Saqr, M., López-Pernas, S., & Misiejuk, K. (2026). Nestimate: An R
+package for dynamic, probabilistic, and high order network analysis.
+*Applied Psychological Measurement*.
+https://doi.org/10.1177/01466216261472019
 
-    Matrix products: default
-    BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3
-    LAPACK: /usr/lib/x86_64-linux-gnu/openblas-pthread/libopenblasp-r0.3.32.so;  LAPACK version 3.12.0
+Saqr, M., López-Pernas, S., & Tikka, S. (2025). Mapping relational
+dynamics with transition network analysis: A primer and tutorial. In M.
+Saqr & S. López-Pernas (Eds.), *Advanced learning analytics methods: AI,
+precision and complexity* (pp. 371–411). Springer.
+https://doi.org/10.1007/978-3-031-95365-1_15
 
-    locale:
-     [1] LC_CTYPE=C.UTF-8       LC_NUMERIC=C           LC_TIME=C.UTF-8
-     [4] LC_COLLATE=C.UTF-8     LC_MONETARY=C.UTF-8    LC_MESSAGES=C.UTF-8
-     [7] LC_PAPER=C.UTF-8       LC_NAME=C              LC_ADDRESS=C
-    [10] LC_TELEPHONE=C         LC_MEASUREMENT=C.UTF-8 LC_IDENTIFICATION=C
+Saqr, M., López-Pernas, S., Törmänen, T., Kaliisa, R., Misiejuk, K., &
+Tikka, S. (2025). Transition network analysis: A novel framework for
+modeling, visualizing, and identifying the temporal patterns of learners
+and learning processes. In *Proceedings of the 15th International
+Learning Analytics and Knowledge Conference (LAK25)* (pp. 351–361). ACM.
+https://doi.org/10.1145/3706468.3706513
 
-    time zone: UTC
-    tzcode source: system (glibc)
+Tikka, S., López-Pernas, S., & Saqr, M. (2025). tna: An R package for
+transition network analysis. *Applied Psychological Measurement*, 49(6),
+326–328. https://doi.org/10.1177/01466216251348840
 
-    attached base packages:
-    [1] stats     graphics  grDevices utils     datasets  methods   base
-
-    other attached packages:
-    [1] cograph_2.7.11   Nestimate_1.0.12
-
-    loaded via a namespace (and not attached):
-     [1] gtable_0.3.6        jsonlite_2.0.0      dplyr_1.2.1
-     [4] compiler_4.6.2      tidyselect_1.2.1    parallel_4.6.2
-     [7] scales_1.4.0        yaml_2.3.12         fastmap_1.2.0
-    [10] ggplot2_4.0.3       R6_2.6.1            labeling_0.4.3
-    [13] generics_0.1.4      igraph_2.3.4        knitr_1.52
-    [16] tibble_3.3.1        pillar_1.11.1       RColorBrewer_1.1-3
-    [19] rlang_1.3.0         xfun_0.62           S7_0.2.2
-    [22] otel_0.3.0          cli_3.6.6           withr_3.0.3
-    [25] magrittr_2.0.5      digest_0.6.39       grid_4.6.2
-    [28] tna_1.3.1           lifecycle_1.0.5     vctrs_0.7.3
-    [31] evaluate_1.0.5      glue_1.8.1          data.table_1.18.6.1
-    [34] farver_2.1.2        idiographic_0.3.4   rmarkdown_2.32
-    [37] tools_4.6.2         pkgconfig_2.0.3     htmltools_0.5.9    
+Zhang, C., López-Pernas, S., Wang, W., & Saqr, M. (2026). Mapping the
+clinical reasoning process in medical simulations using multi-cluster
+multi-layer transition network analysis. In *Mindful TEL: Learning
+technologies shaped with intention* (pp. 267–272). Springer.
+https://doi.org/10.1007/978-3-032-37982-5_43

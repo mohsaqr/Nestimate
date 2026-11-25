@@ -1,4 +1,4 @@
-# The session behind each sequence
+# Identify the session behind each sequence
 
 `session_ids()` names every sequence of a network, or of a clustering
 fitted on one, by the actor and session values it was built from, and
@@ -108,15 +108,13 @@ session_ids(net)
 #> 5        5      s2    b        s2 | b
 #> 6        6      s3    b        s3 | b
 
-# \donttest{
 fit <- build_mmm(net, k = 2, n_starts = 2, seed = 1)
 session_ids(fit)
 #>   sequence student step session_label cluster posterior
-#> 1        1      s1    a        s1 | a       2 0.9999906
-#> 2        2      s2    a        s2 | a       1 0.9999245
-#> 3        3      s3    a        s3 | a       1 0.9999830
-#> 4        4      s1    b        s1 | b       2 0.8881216
-#> 5        5      s2    b        s2 | b       1 1.0000000
-#> 6        6      s3    b        s3 | b       1 0.9999990
-# }
+#> 1        1      s1    a        s1 | a       2 0.9999998
+#> 2        2      s2    a        s2 | a       1 0.9999990
+#> 3        3      s3    a        s3 | a       1 0.9999999
+#> 4        4      s1    b        s1 | b       1 0.9999627
+#> 5        5      s2    b        s2 | b       1 0.9972903
+#> 6        6      s3    b        s3 | b       1 0.9999443
 ```

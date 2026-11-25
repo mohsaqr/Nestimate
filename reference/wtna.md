@@ -1,4 +1,4 @@
-# Window-based Transition Network Analysis
+# Build a window-based transition network from one-hot data
 
 `wtna()` builds a network from one-hot data, where each row is a time
 point and each code column holds 1 when that code is active, by counting
@@ -60,8 +60,9 @@ print(x, ...)
   The weights: `"frequency"` (default) keeps the counts, and
   `"relative"` divides each row by its sum (a row without counts stays
   zero). On a co-occurrence network `"relative"` gives an asymmetric
-  matrix, the co-occurrence conditional on the row's code, so keep
-  `"frequency"` when symmetric counts are needed.
+  matrix, the co-occurrence conditional on the row's code, so the
+  network is then directed (each cell its own edge); keep `"frequency"`
+  when symmetric counts are needed.
 
 - codes:
 
@@ -109,29 +110,34 @@ print(x, ...)
 
 ## Value
 
-For `method = "transition"` or `"cooccurrence"`: a `netobject` (class
-`c("netobject", "cograph_network")`, see
-[`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md))
-with `method` set to `"wtna_transition"` or `"wtna_cooccurrence"`.
-[`print()`](https://rdrr.io/r/base/print.html) shows the weights and,
-for transitions, the initial probabilities;
-[`extract_edges()`](https://pak.dynasite.org/Nestimate/reference/extract_edges.md)
-gives one row per edge,
-[`extract_initial_probs()`](https://pak.dynasite.org/Nestimate/reference/extract_initial_probs.md)
-the initial-state distribution of a transition network,
-[`cograph::splot()`](https://sonsoles.me/cograph/reference/splot.html)
-draws it,
-[`bootstrap_network()`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.md)
-resamples its actors, and
-[`permutation()`](https://pak.dynasite.org/Nestimate/reference/permutation.md)
-compares it with a second network by permuting actors. It is directed
-only for transitions, holds the input as given in `data`, and records
-the windowing settings (`type`, `window_size`, `mode`, `codes`, `actor`)
-in `params`. A transition network also stores the initial-state
-distribution in `initial`: for each actor (the first `actor` column when
-there are several), the codes active in its first row with an active
-code share its weight equally, and the shares are averaged over actors
-(without `actor`, the first row with an active code in the whole data).
+For `method = "transition"` or `"cooccurrence"`: a `netobject`, as
+[`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
+returns it, with `method` set to `"wtna_transition"` or
+`"wtna_cooccurrence"`. [`print()`](https://rdrr.io/r/base/print.html)
+shows the weights and, for transitions, the initial probabilities;
+
+- [`extract_edges()`](https://pak.dynasite.org/Nestimate/reference/extract_edges.md)
+  gives one row per edge;
+
+- [`extract_initial_probs()`](https://pak.dynasite.org/Nestimate/reference/extract_initial_probs.md)
+  gives the initial-state distribution of a transition network;
+
+- [`cograph::splot()`](https://sonsoles.me/cograph/reference/splot.html)
+  draws it;
+
+- [`bootstrap_network()`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.md)
+  resamples its actors, and
+  [`permutation()`](https://pak.dynasite.org/Nestimate/reference/permutation.md)
+  compares it with a second network by permuting actors.
+
+It is directed only for transitions, holds the input as given in `data`,
+and records the windowing settings (`type`, `window_size`, `mode`,
+`codes`, `actor`) in `params`. A transition network also stores the
+initial-state distribution in `initial`: for each actor (the first
+`actor` column when there are several), the codes active in its first
+row with an active code share its weight equally, and the shares are
+averaged over actors (without `actor`, the first row with an active code
+in the whole data).
 
 For `method = "both"`: a `wtna_mixed` object, a list of the `transition`
 and `cooccurrence` networks (each a `netobject` as above) and
@@ -175,7 +181,6 @@ oh <- matrix(c(1,0,0, 0,1,0, 0,0,1, 1,0,0), nrow = 4, byrow = TRUE,
              dimnames = list(NULL, c("A","B","C")))
 w <- wtna(oh)
 
-# \donttest{
 # Simple one-hot data
 df <- data.frame(
   A = c(1, 0, 1, 0, 1),
@@ -189,16 +194,17 @@ print(net)
 #> Network (method: wtna_transition) [directed]
 #>   Weights: [1.000, 2.000]  |  mean: 1.333
 #> 
-#>   Weight matrix:
-#>     A B C
-#>   A 2 2 0
-#>   B 1 1 0
-#>   C 1 1 0 
+#>   Strongest edges (6 of 6):
+#>    from to weight
+#>    A    A  2     
+#>    A    B  2     
+#>    B    A  1     
+#>    B    B  1     
+#>    C    A  1     
+#>    C    B  1      
 #> 
-#>   Initial probabilities:
-#>   A             1.000  ████████████████████████████████████████
-#>   B             0.000  
-#>   C             0.000  
+#>   extract_edges(include_self = TRUE) lists every edge; extract_transition_matrix() gives the weight matrix;
+#>   extract_initial_probs() the initial probabilities.
 
 # Both networks
 nets <- wtna(df, method = "both")
@@ -211,5 +217,4 @@ print(nets)   # the transition and the co-occurrence network
 
 # With windowing
 net <- wtna(df, window_size = 2, mode = "non-overlapping")
-# }
 ```

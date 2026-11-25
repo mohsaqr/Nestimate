@@ -1,4 +1,4 @@
-# Stability Landscape of a Transition Network
+# Estimate the stability landscape of a transition network
 
 `stability_landscape()` estimates the ball-in-cup landscape (Scheffer et
 al. 2009) of a transition network, which
@@ -16,15 +16,16 @@ gives every depth a percentile interval from resampling whole sequences.
 
 Depth is a property of the state alone. How often the process enters the
 state is its `share` of the observed time steps, reported beside the
-depth, and where the process goes when it leaves is in the exit
-probabilities (`summary(x, table = "exits")`), which the plot writes
-under each cup. With three states the result also reports the net
-circulation, the net probability flux \\\pi_i P\_{ij} - \pi_j P\_{ji}\\
-around the cycle, which stationarity makes equal on all three edges
-(Schnakenberg 1976): zero for a chain whose every transition is as
-common as its reverse. The depths pool every sequence and every time
-step; whether they change over the programme or along a covariate is
-what
+depth, and where it goes next is in the exit probabilities
+(`summary(x, table = "exits")`), the one-step transition probabilities
+\\P\_{ij}\\: their denominator includes the stays, so a state's exits
+sum to \\1 - P\_{ii}\\. The plot writes them under each cup. With three
+states the result also reports the net circulation, the net probability
+flux \\\pi_i P\_{ij} - \pi_j P\_{ji}\\ around the cycle, which
+stationarity makes equal on all three edges (Schnakenberg 1976): zero
+for a chain whose every transition is as common as its reverse. The
+depths pool every sequence and every time step; whether they change over
+time or along a covariate is what
 [`landscape_trend()`](https://pak.dynasite.org/Nestimate/reference/landscape_trend.md)
 shows, and how long the process takes to get from one state to another
 is given by
@@ -49,7 +50,7 @@ summary(object, table = c("cups", "exits", "circulation"), ...)
 print(x, digits = 2, ...)
 
 # S3 method for class 'net_landscape'
-plot(x, ...)
+plot(x, state_colors = NULL, ...)
 ```
 
 ## Arguments
@@ -63,10 +64,12 @@ plot(x, ...)
   [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
   of a
   [`build_clusters()`](https://pak.dynasite.org/Nestimate/reference/build_clusters.md)
-  result), a `tna` model, or a wide sequence data frame or matrix. A
-  network must carry its sequences; a network of another method (for
-  example `"glasso"`) raises an error of class `nestimate_not_markov`.
-  For the [`print()`](https://rdrr.io/r/base/print.html) and
+  result), a `tna` model or a `group_tna` (one landscape per group), or
+  a wide sequence data frame or matrix. A network must count one-step
+  transitions (a window wider than one position raises an error) and
+  carry its sequences; a network of another method (for example
+  `"glasso"`) raises an error of class `nestimate_not_markov`. For the
+  [`print()`](https://rdrr.io/r/base/print.html) and
   [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods: a
   `net_landscape` object.
 
@@ -120,6 +123,16 @@ plot(x, ...)
   For the [`print()`](https://rdrr.io/r/base/print.html) method: decimal
   places (the circulation gets two more). Default `2`.
 
+- state_colors:
+
+  For the [`plot()`](https://rdrr.io/r/graphics/plot.default.html)
+  method: colours for the states, for this figure only. Named,
+  `c(state = "#0072B2")`, it overrides the states it names; unnamed, it
+  gives one colour per state in `states` order. Default `NULL`: the
+  colours of the network the result came from (set with
+  [`set_state_colors()`](https://pak.dynasite.org/Nestimate/reference/set_state_colors.md)),
+  Okabe-Ito for the rest, as every figure of that network draws them.
+
 ## Value
 
 A `net_landscape` object. [`print()`](https://rdrr.io/r/base/print.html)
@@ -141,10 +154,11 @@ steps in the state), `stay` (\\P\_{ii}\\), `share` (share of observed
 time steps in the state), `n_from` (transitions out of the state,
 self-transitions included) and `resamples`. With `table = "exits"`: one
 row per network and pair of distinct states, with `group`, `from`, `to`,
-`probability` and `count`. With `table = "circulation"`: one row per
-network, with `group`, `cycle` (the direction of the net flow),
-`current`, `ci_lower`, `ci_upper` and `resamples` (resamples with a
-unique stationary distribution).
+`probability` (the one-step transition probability \\P\_{ij}\\, stays
+included in the denominator) and `count`. With `table = "circulation"`:
+one row per network, with `group`, `cycle` (the direction of the net
+flow), `current`, `ci_lower`, `ci_upper` and `resamples` (resamples with
+a unique stationary distribution).
 
 The object's fields:
 
@@ -183,10 +197,14 @@ them is a smooth join, and every rim is drawn at 0.
 
 ## Errors
 
+`nestimate_latency_resampling` for a latency network (or a group holding
+one); `nestimate_single_sequence` for a network or data resting on one
+sequence when `iter > 0`, whose intervals would have zero width;
 `nestimate_not_markov` for a network that is not a transition network;
 `nestimate_bad_input` for `states` that do not name every state once,
-fewer than two states, input without sequences, or a network whose
-weights cannot be rebuilt from its sequences;
+fewer than two states, input without sequences (a network built from an
+edge list included), an mcml layer combined by other than a sum, or a
+network whose weights cannot be rebuilt from its sequences;
 `nestimate_landscape_unestimable` for a state that is never left or
 input with no observed transition.
 

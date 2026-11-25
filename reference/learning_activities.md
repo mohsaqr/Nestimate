@@ -1,12 +1,13 @@
-# Online Learning Activity Indicators
+# Online learning activity indicators
 
-Simulated binary (one-hot) indicator time series of six online learning
-activities (Reading, Video, Forum, Quiz, Coding, Review) for 200
-students over 30 time points. Each row is one time point of one student
-and marks every activity active then (1) or not (0); at least one
-activity is active in every row, and several often are. Activities tend
-to continue from one time point to the next. The rows of each student
-are consecutive and in time order, so the data are ready for
+`learning_activities` is a simulated dataset of six online learning
+activities (Reading, Video, Forum, Quiz, Coding, Review) recorded as
+active or not for 200 students over 30 time points. Each row is one time
+point of one student and marks every activity active then (1) or not
+(0), one 0/1 column per activity; at least one activity is active in
+every row, and several often are. Activities tend to continue from one
+time point to the next. The rows of each student are consecutive and in
+time order, so the data are ready for
 [`wtna()`](https://pak.dynasite.org/Nestimate/reference/wtna.md) with
 `actor = "student"`.
 

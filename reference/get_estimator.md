@@ -1,4 +1,4 @@
-# Retrieve a Registered Estimator
+# Retrieve a registered estimator
 
 `get_estimator()` returns the registry entry of one estimator: its
 function, description and directedness, as

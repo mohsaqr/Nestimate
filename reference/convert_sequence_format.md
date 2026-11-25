@@ -1,4 +1,4 @@
-# Convert Sequence Data to Different Formats
+# Convert sequence data to counts, one-hot codes or transitions
 
 `convert_sequence_format()` turns wide or long sequence data into one of
 four data frames: per-sequence state counts, per-sequence state presence

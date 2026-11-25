@@ -1,4 +1,4 @@
-# Does Nesting Bias a Permutation Test?
+# Diagnose the effect of nesting on a permutation test
 
 `permutation_diagnostics()` shows what treating nested sequences as
 independent costs a network comparison. It runs
@@ -43,9 +43,12 @@ permutation_diagnostics(
   groups is diagnosed, or a `netobject`, compared with `y`. An `mcml`,
   whose layers hold different states, raises an error of class
   `nestimate_bad_input`. Only the transition methods `"relative"`,
-  `"frequency"` and `"co_occurrence"` are supported; any other method,
-  association networks and `wtna` among them, raises an error of class
-  `nestimate_actor_unsupported`.
+  `"frequency"` and `"co_occurrence"` are supported; any other method
+  raises `nestimate_actor_unsupported`, and a latency network, which is
+  not resampled, raises `nestimate_latency_resampling`. A `tna` model or
+  `group_tna` must keep its metadata, as one built with
+  [`tna::prepare_data()`](https://sonsoles.me/tna/reference/prepare_data.html)
+  does.
 
 - y:
 
@@ -56,7 +59,11 @@ permutation_diagnostics(
 
   The column identifying the actor each sequence belongs to, as in
   [`permutation()`](https://pak.dynasite.org/Nestimate/reference/permutation.md),
-  looked up in the networks' metadata or sequence data. A column not
+  looked up in the networks' metadata or sequence data. Several column
+  names, outermost first (`c("Group", "Student")`), are nested levels,
+  shuffled as
+  [`permutation()`](https://pak.dynasite.org/Nestimate/reference/permutation.md)
+  describes; the ICC is then that of the innermost level. A column not
   found, or one with missing values, raises an error of class
   `nestimate_actor_missing`. Required.
 
@@ -96,7 +103,8 @@ A data frame. With `level = "overall"`, one row per compared pair:
 - design:
 
   `"between"` (every actor in one group), `"within"` (every actor in
-  both groups) or `"mixed"`.
+  both groups) or `"mixed"`; with several `actor` levels, one
+  `"<level>: <design> (<n> actors)"` entry per level.
 
 - icc, icc_ci_lower, icc_ci_upper:
 
@@ -132,9 +140,11 @@ A data frame. With `level = "overall"`, one row per compared pair:
 
 - min_p_actor:
 
-  The smallest p-value the actor-level test can reach: one over the
+  The smallest p-value the exact actor-level test can give: one over the
   number of distinct arrangements of the actors, or `1 / (iter + 1)`,
-  whichever is larger.
+  whichever is larger. `p_global_actor` and the edge p-values are Monte
+  Carlo estimates, so with few arrangements they can fall below it by
+  chance.
 
 With `level = "edges"`, one row per edge present in either network, with
 the columns `pair`, `from`, `to`, `diff` (the observed difference,
@@ -165,7 +175,8 @@ compare it with a separate ordinary run.
 
 - `min_p_actor` above `alpha`:
 
-  Too few actors: the actor-level test cannot reject anything.
+  Too few actors: the exact actor-level test cannot reject anything, and
+  an actor-level p-value below `alpha` is Monte Carlo chance.
 
 ## References
 
@@ -186,31 +197,31 @@ Computation and Simulation*, 73(2), 85-113.
 
 ``` r
 # Students are nested in teams; Achiever is a team-level label.
-# iter = 50 keeps the example fast; a real analysis uses 1000 or more.
+# iter = 20 keeps the example fast; a real analysis uses 1000 or more.
 net <- build_network(group_regulation_long, method = "relative",
                      actor = "Actor", action = "Action", time = "Time",
                      group = "Achiever")
-permutation_diagnostics(net, actor = "Group", iter = 50, seed = 1)
+permutation_diagnostics(net, actor = "Group", iter = 20, seed = 1)
 #>          pair n_sequences n_actors  design          icc icc_ci_lower
 #> 1 High vs Low        2000      200 between -0.001697397 -0.005641197
 #>   icc_ci_upper deff_edges deff_global p_global_sequence p_global_actor
-#> 1  0.002246402   1.069592    1.186787        0.01960784     0.01960784
+#> 1  0.002246402   1.078364     0.59089        0.04761905     0.04761905
 #>   sig_edges_sequence sig_edges_actor edges_changed min_p_actor
-#> 1                 38              42             4  0.01960784
-head(permutation_diagnostics(net, actor = "Group", iter = 50,
+#> 1                 39              41             6  0.04761905
+head(permutation_diagnostics(net, actor = "Group", iter = 20,
                              level = "edges", seed = 1))
 #>          pair  from         to         diff          icc null_sd_sequence
-#> 1 High vs Low adapt   cohesion -0.014762566  0.010118088       0.03366031
-#> 2 High vs Low adapt  consensus  0.055773975 -0.003796296       0.04581149
-#> 3 High vs Low adapt coregulate -0.029891304  0.002498496       0.01144616
-#> 4 High vs Low adapt    discuss -0.032473790 -0.009052931       0.02089267
-#> 5 High vs Low adapt    emotion  0.030430928 -0.007376103       0.02759746
-#> 6 High vs Low adapt    monitor -0.006957293 -0.003562251       0.01333857
+#> 1 High vs Low adapt   cohesion -0.014762566  0.010118088      0.036283453
+#> 2 High vs Low adapt  consensus  0.055773975 -0.003796296      0.042620676
+#> 3 High vs Low adapt coregulate -0.029891304  0.002498496      0.009514316
+#> 4 High vs Low adapt    discuss -0.032473790 -0.009052931      0.021778030
+#> 5 High vs Low adapt    emotion  0.030430928 -0.007376103      0.026005108
+#> 6 High vs Low adapt    monitor -0.006957293 -0.003562251      0.014182196
 #>   null_sd_actor      deff p_sequence    p_actor changed
-#> 1    0.04169614 1.5344598 0.64705882 0.68627451   FALSE
-#> 2    0.04532698 0.9789597 0.21568627 0.27450980   FALSE
-#> 3    0.01121761 0.9604642 0.01960784 0.01960784   FALSE
-#> 4    0.01396427 0.4467334 0.15686275 0.03921569    TRUE
-#> 5    0.02870211 1.0816567 0.39215686 0.23529412   FALSE
-#> 6    0.01470229 1.2149298 0.74509804 0.60784314   FALSE
+#> 1    0.03879492 1.1432269 0.61904762 0.71428571   FALSE
+#> 2    0.04009983 0.8852061 0.28571429 0.23809524   FALSE
+#> 3    0.01245823 1.7145783 0.04761905 0.04761905   FALSE
+#> 4    0.01186471 0.2968088 0.14285714 0.09523810   FALSE
+#> 5    0.01889941 0.5281766 0.57142857 0.04761905    TRUE
+#> 6    0.01421303 1.0043530 0.66666667 0.66666667   FALSE
 ```

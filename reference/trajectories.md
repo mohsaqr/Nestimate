@@ -1,10 +1,10 @@
-# Student Engagement Trajectories
+# Student engagement trajectories
 
-Wide-format sequences of student engagement over the 15 successive
-courses of a programme, one row per student and one column per course.
-The states are `"Active"`, `"Average"` and `"Disengaged"`. A missing
-value occurs only as a run at the end of a row, which marks drop-out;
-two rows are missing throughout.
+`trajectories` is a dataset of the engagement states (`"Active"`,
+`"Average"` and `"Disengaged"`) of 138 students over the 15 successive
+courses of a programme. It is in wide format, one row per student and
+one column per course. A missing value occurs only as a run at the end
+of a row, which marks drop-out; two rows are missing throughout.
 
 ## Usage
 

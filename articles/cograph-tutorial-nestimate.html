@@ -18,6 +18,14 @@
 <link href="cograph-tutorial-nestimate_files/libs/quarto-html/light-border.css" rel="stylesheet">
 <!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Network Estimation and Visualization with Nestimate + cograph">
 <meta property="og:image" content="https://pak.dynasite.org/Nestimate/logo.svg">
+<meta name="citation_title" content="Network Estimation and Visualization with Nestimate + cograph">
+<meta name="citation_author" content="Saqr, Mohammed">
+<meta name="citation_author" content="López-Pernas, Sonsoles">
+<meta name="citation_author" content="Misiejuk, Kamila">
+<meta name="citation_publication_date" content="2026">
+<meta name="citation_publisher" content="Nestimate">
+<meta name="citation_pdf_url" content="https://pak.dynasite.org/Nestimate/pdf/cograph-tutorial-nestimate.pdf">
+<meta name="citation_abstract_html_url" content="https://pak.dynasite.org/Nestimate/articles/cograph-tutorial-nestimate.html">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -27,7 +35,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.12</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -42,8 +50,8 @@
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
 <li><a class="dropdown-item" href="../articles/transition-entropy.html">Transition Matrix Entropy</a></li>
     <li><a class="dropdown-item" href="../articles/transition-networks.html">Network Estimation and Analysis with Nestimate</a></li>
-    <li><a class="dropdown-item" href="../articles/sequence-comparison.html">Sequence Pattern Comparison: Early vs Late Human-AI Interactions</a></li>
-    <li><a class="dropdown-item" href="../articles/sequence-plots.html">Sequence Plots: heatmap, index, and distribution</a></li>
+    <li><a class="dropdown-item" href="../articles/sequence-comparison.html">Comparing Sequences Between Groups: Early vs Late Human-AI Interactions</a></li>
+    <li><a class="dropdown-item" href="../articles/sequence-plots.html">Sequence Plots</a></li>
     <li><a class="dropdown-item" href="../articles/clustering.html">Sequence Clustering</a></li>
     <li><a class="dropdown-item" href="../articles/markov-stability.html">Markov Stability Analysis</a></li>
     <li><hr class="dropdown-divider"></li>
@@ -82,29 +90,62 @@
     <section class="section level2" data-number="1"><h2 data-number="1" id="introduction">
 <span class="header-section-number">1</span> Introduction<a class="anchor" aria-label="anchor" href="#introduction"></a>
 </h2>
-<p><strong>Nestimate</strong> is a unified network estimation package for R. It provides a single entry point — <code><a href="../reference/build_network.html">build_network()</a></code> — that accepts sequence data, wide-format behavioral data, or numeric matrices and estimates networks using any of 10 built-in methods. The result is a <code>netobject</code> that inherits <code>cograph_network</code>, so every object produced by Nestimate can be plotted with <code><a href="https://sonsoles.me/cograph/reference/splot.html" class="external-link">splot()</a></code> directly.</p>
-<p>The core design principle is that <strong>estimation and visualization are separate concerns</strong>: Nestimate handles all computation (network construction, bootstrapping, permutation testing, clustering, multi-cluster analysis), while cograph handles all rendering. This separation means the analyst writes estimation code once and gets publication-ready figures without adapter code or manual class conversion.</p>
-<p>Beyond single-network estimation, Nestimate provides a complete statistical toolkit:</p>
-<ul>
-<li>
-<strong>Bootstrap stability analysis</strong> (<code>bootstrap_network</code>) — identifies which edges survive resampling and which are sampling artifacts.</li>
-<li>
-<strong>Permutation-based group comparison</strong> (<code>permutation</code>) — tests whether edges differ significantly between conditions.</li>
-<li>
-<strong>Multi-cluster multi-level analysis</strong> (<code>csum</code>, <code>summarize_clusters</code>) — aggregates node-level networks into cluster-level summaries for hierarchical visualization.</li>
-<li>
-<strong>Centrality stability</strong> (<code>centrality_stability</code>) — assesses whether centrality rankings are robust to case dropping.</li>
-<li>
-<strong>Group-level operations</strong> — bootstrapping, permutation testing, and plotting work on grouped networks with no additional code.</li>
-</ul>
-<p>This tutorial walks through the full pipeline with the <code>group_regulation_long</code> dataset shipped with Nestimate.</p>
-<hr></section><section class="section level2" data-number="2"><h2 data-number="2" id="data">
+<p>Nestimate (Saqr, López-Pernas, &amp; Misiejuk, 2026) estimates networks from sequence and panel data, and cograph draws them. The two packages divide the work: Nestimate computes the networks, their resampling, comparisons and clusterings, and returns objects that cograph’s <code><a href="https://sonsoles.me/cograph/reference/splot.html" class="external-link">splot()</a></code> draws directly. This tutorial follows one dataset through the steps of a transition network analysis (Saqr et al., 2025; Saqr, López-Pernas, &amp; Tikka, 2025), which has been used, for example, to map students’ self-regulated learning tactics (Peeters, Saqr, &amp; Viberg, 2020): estimating the network, checking the stability of its edges and centralities, comparing groups, and grouping the states into clusters.</p>
+<table class="table caption-top">
+<colgroup>
+<col style="width: 23%">
+<col style="width: 42%">
+<col style="width: 34%">
+</colgroup>
+<thead><tr class="header">
+<th>Step</th>
+<th>Nestimate</th>
+<th>cograph</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td>Estimate a network</td>
+<td><code><a href="../reference/build_network.html">build_network()</a></code></td>
+<td><code><a href="https://sonsoles.me/cograph/reference/splot.html" class="external-link">splot()</a></code></td>
+</tr>
+<tr class="even">
+<td>Stability of the edges</td>
+<td><code><a href="../reference/bootstrap_network.html">bootstrap_network()</a></code></td>
+<td>
+<code><a href="https://sonsoles.me/cograph/reference/splot.html" class="external-link">splot()</a></code>, <code><a href="https://sonsoles.me/cograph/reference/plot_bootstrap_forest.html" class="external-link">plot_bootstrap_forest()</a></code>
+</td>
+</tr>
+<tr class="odd">
+<td>Stability of the centralities</td>
+<td><code><a href="../reference/centrality_stability.html">centrality_stability()</a></code></td>
+<td><code><a href="https://sonsoles.me/cograph/reference/splot.html" class="external-link">splot()</a></code></td>
+</tr>
+<tr class="even">
+<td>Networks per group</td>
+<td><code>build_network(group = )</code></td>
+<td><code><a href="https://sonsoles.me/cograph/reference/splot.html" class="external-link">splot()</a></code></td>
+</tr>
+<tr class="odd">
+<td>Compare groups</td>
+<td><code><a href="../reference/permutation.html">permutation()</a></code></td>
+<td><code><a href="https://sonsoles.me/cograph/reference/splot.html" class="external-link">splot()</a></code></td>
+</tr>
+<tr class="even">
+<td>Clusters of states</td>
+<td>
+<code><a href="../reference/build_mcml.html">build_mcml()</a></code>, <code><a href="../reference/as_tna.html">as_tna()</a></code>
+</td>
+<td><code><a href="https://sonsoles.me/cograph/reference/splot.html" class="external-link">splot()</a></code></td>
+</tr>
+</tbody>
+</table></section><section class="section level2" data-number="2"><h2 data-number="2" id="data">
 <span class="header-section-number">2</span> Data<a class="anchor" aria-label="anchor" href="#data"></a>
 </h2>
-<p><code>group_regulation_long</code> is a long-format dataset of collaborative regulation behaviors coded across student groups. Each row is one coded action in a session, with columns identifying the actor, the group, achievement level, course, timestamp, and the regulation behavior.</p>
+<p><code>group_regulation_long</code> records the regulation actions of students working in groups, one row per action, with the student (<code>Actor</code>), the time (<code>Time</code>) and the action (<code>Action</code>). It is generated synthetically from the <code>group_regulation</code> dataset of the tna package (Tikka, López-Pernas, &amp; Saqr, 2025). The nine actions, <code>adapt</code>, <code>cohesion</code>, <code>consensus</code>, <code>coregulate</code>, <code>discuss</code>, <code>emotion</code>, <code>monitor</code>, <code>plan</code> and <code>synthesis</code>, are the nodes of the networks below. <code>Achiever</code> marks each student as a high or a low achiever.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"group_regulation_long"</span>, package <span class="op">=</span> <span class="st">"Nestimate"</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/mohsaqr/Nestimate" class="external-link">Nestimate</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://sonsoles.me/cograph/" class="external-link">cograph</a></span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">group_regulation_long</span><span class="op">)</span></span></code></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>  Actor Achiever Group Course                Time    Action
@@ -116,81 +157,64 @@
 6     1     High     1      A 2025-01-01 08:57:31 consensus</code></pre>
 </div>
 </div>
-<p>The nine regulation behaviors are: <code>adapt</code>, <code>cohesion</code>, <code>consensus</code>, <code>coregulate</code>, <code>discuss</code>, <code>emotion</code>, <code>monitor</code>, <code>plan</code>, and <code>synthesis</code>. These form the nodes of the networks we estimate below.</p>
-<hr></section><section class="section level2" data-number="3"><h2 data-number="3" id="estimating-networks">
-<span class="header-section-number">3</span> Estimating Networks<a class="anchor" aria-label="anchor" href="#estimating-networks"></a>
+</section><section class="section level2" data-number="3"><h2 data-number="3" id="estimating-networks">
+<span class="header-section-number">3</span> Estimating networks<a class="anchor" aria-label="anchor" href="#estimating-networks"></a>
 </h2>
-<section class="level2" data-number="3.1"><h3 data-number="3.1" id="a-single-network">
-<span class="header-section-number">3.1</span> A single network<a class="anchor" aria-label="anchor" href="#a-single-network"></a>
+<section class="level2" data-number="3.1"><h3 data-number="3.1" id="a-transition-network">
+<span class="header-section-number">3.1</span> A transition network<a class="anchor" aria-label="anchor" href="#a-transition-network"></a>
 </h3>
-<p><code><a href="../reference/build_network.html">build_network()</a></code> estimates a network from raw data. The <code>method</code> argument selects the estimation algorithm. Here we use <code>"relative"</code>, which computes row-normalized transition probabilities — the standard approach in transition network analysis (TNA). Unlike constructing a TNA model manually (preparing wide-format data, computing the transition matrix, normalizing), <code><a href="../reference/build_network.html">build_network()</a></code> handles all data preparation internally.</p>
+<p><code><a href="../reference/build_network.html">build_network()</a></code> estimates a network from the data. With <code>method = "relative"</code>, the weight of the edge from one action to another is the probability that the second follows the first, so each row of the weight matrix sums to 1.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">net</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_network.html">build_network</a></span><span class="op">(</span></span>
-<span>  <span class="va">group_regulation_long</span>,</span>
-<span>  action <span class="op">=</span> <span class="st">"Action"</span>, actor <span class="op">=</span> <span class="st">"Actor"</span>,</span>
-<span>  method <span class="op">=</span> <span class="st">"relative"</span></span>
-<span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">net</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_network.html">build_network</a></span><span class="op">(</span><span class="va">group_regulation_long</span>, action <span class="op">=</span> <span class="st">"Action"</span>,</span>
+<span>                     actor <span class="op">=</span> <span class="st">"Actor"</span>, time <span class="op">=</span> <span class="st">"Time"</span>, method <span class="op">=</span> <span class="st">"relative"</span><span class="op">)</span></span>
 <span><span class="va">net</span></span></code></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Transition Network (relative probabilities) [directed]
   Weights: [0.001, 0.498]  |  mean: 0.115
 
-  Weight matrix:
-             adapt cohesion consensus coregulate discuss emotion monitor  plan
-  adapt      0.000    0.273     0.477      0.022   0.059   0.120   0.033 0.016
-  cohesion   0.003    0.027     0.498      0.119   0.060   0.116   0.033 0.141
-  consensus  0.005    0.015     0.082      0.188   0.188   0.073   0.047 0.396
-  coregulate 0.016    0.036     0.135      0.023   0.274   0.172   0.086 0.239
-  discuss    0.071    0.048     0.321      0.084   0.195   0.106   0.022 0.012
-  emotion    0.002    0.325     0.320      0.034   0.102   0.077   0.036 0.100
-  monitor    0.011    0.056     0.159      0.058   0.375   0.091   0.018 0.216
-  plan       0.001    0.025     0.290      0.017   0.068   0.147   0.076 0.374
-  synthesis  0.235    0.034     0.466      0.044   0.063   0.071   0.012 0.075
-             synthesis
-  adapt          0.000
-  cohesion       0.004
-  consensus      0.008
-  coregulate     0.019
-  discuss        0.141
-  emotion        0.003
-  monitor        0.016
-  plan           0.002
-  synthesis      0.000
+  Strongest edges (10 of 78):
+   from      to        weight
+   cohesion  consensus 0.498
+   adapt     consensus 0.477
+   synthesis consensus 0.466
+   consensus plan      0.396
+   monitor   discuss   0.375
+   plan      plan      0.374
+   emotion   cohesion  0.325
+   discuss   consensus 0.321
+   emotion   consensus 0.320
+   plan      consensus 0.290
 
-  Initial probabilities:
-  consensus     0.214  ████████████████████████████████████████
-  plan          0.204  ██████████████████████████████████████
-  discuss       0.175  █████████████████████████████████
-  emotion       0.151  ████████████████████████████
-  monitor       0.144  ███████████████████████████
-  cohesion      0.060  ███████████
-  synthesis     0.019  ████
-  coregulate    0.019  ████
-  adapt         0.011  ██</code></pre>
+  extract_edges(include_self = TRUE) lists every edge; extract_transition_matrix() gives the weight matrix;
+  extract_initial_probs() the initial probabilities.</code></pre>
 </div>
-</div>
-<p>The returned <code>net</code> is a <code>netobject</code> (which inherits <code>cograph_network</code>), so <code><a href="https://sonsoles.me/cograph/reference/splot.html" class="external-link">splot()</a></code> renders it directly:</p>
-<div class="cell">
 <div class="sourceCode cell-code" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/extract_initial_probs.html">extract_initial_probs</a></span><span class="op">(</span><span class="va">net</span><span class="op">)</span></span></code></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>     adapt   cohesion  consensus coregulate    discuss    emotion    monitor
+    0.0115     0.0605     0.2140     0.0190     0.1755     0.1515     0.1440
+      plan  synthesis
+    0.2045     0.0195 </code></pre>
+</div>
+</div>
+<p>The strongest transitions lead to <code>consensus</code>: from <code>cohesion</code> (0.50), from <code>adapt</code> (0.48) and from <code>synthesis</code> (0.47). <code>consensus</code> is also the most frequent first action (0.21), followed by <code>plan</code> (0.20). The network is a <code>netobject</code>, which inherits from <code>cograph_network</code>, so <code><a href="https://sonsoles.me/cograph/reference/splot.html" class="external-link">splot()</a></code> draws it.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://sonsoles.me/cograph/reference/splot.html" class="external-link">splot</a></span><span class="op">(</span><span class="va">net</span><span class="op">)</span></span></code></pre></div>
 <div class="cell-output-display">
-<div id="fig-base" class="quarto-float quarto-figure quarto-figure-center">
-<figure class="quarto-float quarto-float-fig"><div aria-describedby="fig-base-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="cograph-tutorial-nestimate_files/figure-html/fig-base-1.png" width="768">
-</div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-base-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure 1: Collaborative regulation network — row-normalized transitions (relative method)
-</figcaption></figure>
+<div>
+<figure><p><img src="cograph-tutorial-nestimate_files/figure-html/unnamed-chunk-3-1.png" width="768"></p>
+</figure>
 </div>
 </div>
 </div>
-</section><section class="level2" data-number="3.2"><h3 data-number="3.2" id="available-estimators">
-<span class="header-section-number">3.2</span> Available estimators<a class="anchor" aria-label="anchor" href="#available-estimators"></a>
+</section><section class="level2" data-number="3.2"><h3 data-number="3.2" id="other-estimators">
+<span class="header-section-number">3.2</span> Other estimators<a class="anchor" aria-label="anchor" href="#other-estimators"></a>
 </h3>
-<p>Nestimate ships with 10 built-in estimators. Each is selected via the <code>method</code> argument to <code><a href="../reference/build_network.html">build_network()</a></code>:</p>
+<p><code>method</code> selects the estimator; <code><a href="../reference/list_estimators.html">list_estimators()</a></code> lists them.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode cell-code" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/list_estimators.html">list_estimators</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>                name                                                description
@@ -201,13 +225,14 @@ Figure 1: Collaborative regulation network — row-normalized transitions (rela
 5                gap             Gap-allowed transitions weighted by 1/distance
 6             glasso                EBICglasso regularized partial correlations
 7              ising             Ising model (L1-penalized logistic regression)
-8                mgm Mixed Graphical Model (nodewise lasso, EBIC, LW threshold)
-9              ngram      n-gram transitions (adjacent pairs per n-gram window)
-10              pcor                         Unregularized partial correlations
-11          relative                    Row-normalized transition probabilities
-12           reverse        Reverse (reply) transitions: transpose of frequency
-13              wtna                     Window-based TNA transitions (one-hot)
-14 wtna_cooccurrence                   Window-based TNA co-occurrence (one-hot)
+8            latency         Reply network weighted by response speed (latency)
+9                mgm Mixed Graphical Model (nodewise lasso, EBIC, LW threshold)
+10             ngram      n-gram transitions (adjacent pairs per n-gram window)
+11              pcor                         Unregularized partial correlations
+12          relative                    Row-normalized transition probabilities
+13           reverse        Reverse (reply) transitions: transpose of frequency
+14              wtna                     Window-based TNA transitions (one-hot)
+15 wtna_cooccurrence                   Window-based TNA co-occurrence (one-hot)
    directed
 1      TRUE
 2     FALSE
@@ -216,60 +241,49 @@ Figure 1: Collaborative regulation network — row-normalized transitions (rela
 5      TRUE
 6     FALSE
 7     FALSE
-8     FALSE
-9      TRUE
-10    FALSE
-11     TRUE
+8      TRUE
+9     FALSE
+10     TRUE
+11    FALSE
 12     TRUE
 13     TRUE
-14    FALSE</code></pre>
+14     TRUE
+15    FALSE</code></pre>
 </div>
 </div>
-<p>Different estimators answer different research questions. Directed methods (relative, frequency, attention) model sequential transitions — which behavior follows which. Undirected methods (glasso, pcor, cor, co_occurrence, ising) model co-occurrence or partial correlation structures — which behaviors tend to appear together. The choice of method should be driven by the theoretical question, not by convenience.</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">frequency_net</span>    <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_network.html">build_network</a></span><span class="op">(</span><span class="va">group_regulation_long</span>, action <span class="op">=</span> <span class="st">"Action"</span>,</span>
-<span>                                  actor <span class="op">=</span> <span class="st">"Actor"</span>, method <span class="op">=</span> <span class="st">"frequency"</span><span class="op">)</span></span>
-<span><span class="va">attention_net</span>    <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_network.html">build_network</a></span><span class="op">(</span><span class="va">group_regulation_long</span>, action <span class="op">=</span> <span class="st">"Action"</span>,</span>
-<span>                                  actor <span class="op">=</span> <span class="st">"Actor"</span>, method <span class="op">=</span> <span class="st">"attention"</span><span class="op">)</span></span>
-<span><span class="va">co_occurrence_net</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_network.html">build_network</a></span><span class="op">(</span><span class="va">group_regulation_long</span>, action <span class="op">=</span> <span class="st">"Action"</span>,</span>
-<span>                                   actor <span class="op">=</span> <span class="st">"Actor"</span>, method <span class="op">=</span> <span class="st">"co_occurrence"</span><span class="op">)</span></span></code></pre></div>
-</div>
-<p>Each of these is a <code>netobject</code> that works with <code><a href="https://sonsoles.me/cograph/reference/splot.html" class="external-link">splot()</a></code>:</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://sonsoles.me/cograph/reference/splot.html" class="external-link">splot</a></span><span class="op">(</span><span class="va">frequency_net</span><span class="op">)</span></span></code></pre></div>
-<div class="cell-output-display">
-<div id="fig-frequency" class="quarto-float quarto-figure quarto-figure-center">
-<figure class="quarto-float quarto-float-fig"><div aria-describedby="fig-frequency-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="cograph-tutorial-nestimate_files/figure-html/fig-frequency-1.png" width="768">
-</div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-frequency-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure 2: Frequency-based transition network (raw counts)
-</figcaption></figure>
-</div>
-</div>
-</div>
+<p>Fifteen estimators are available. The directed ones (<code>relative</code>, <code>frequency</code>, <code>attention</code>, <code>ngram</code>, <code>gap</code>, <code>reverse</code>, <code>latency</code>, <code>wtna</code>) describe which action follows which; the undirected ones (<code>cor</code>, <code>pcor</code>, <code>glasso</code>, <code>ising</code>, <code>mgm</code>, <code>co_occurrence</code>, <code>wtna_cooccurrence</code>) describe which actions or variables go together (Saqr, Beck, &amp; López-Pernas, 2024). <code>frequency</code> keeps the counts of the transitions instead of their probabilities, and <code>co_occurrence</code> counts how often two actions occur in the same sequence.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://sonsoles.me/cograph/reference/splot.html" class="external-link">splot</a></span><span class="op">(</span><span class="va">co_occurrence_net</span>, layout <span class="op">=</span> <span class="st">"spring"</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">frequency_net</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_network.html">build_network</a></span><span class="op">(</span><span class="va">group_regulation_long</span>, action <span class="op">=</span> <span class="st">"Action"</span>,</span>
+<span>                               actor <span class="op">=</span> <span class="st">"Actor"</span>, time <span class="op">=</span> <span class="st">"Time"</span>,</span>
+<span>                               method <span class="op">=</span> <span class="st">"frequency"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://sonsoles.me/cograph/reference/splot.html" class="external-link">splot</a></span><span class="op">(</span><span class="va">frequency_net</span><span class="op">)</span></span></code></pre></div>
 <div class="cell-output-display">
-<div id="fig-co-occurrence" class="quarto-float quarto-figure quarto-figure-center">
-<figure class="quarto-float quarto-float-fig"><div aria-describedby="fig-co-occurrence-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="cograph-tutorial-nestimate_files/figure-html/fig-co-occurrence-1.png" width="768">
-</div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-co-occurrence-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure 3: Co-occurrence network (undirected)
-</figcaption></figure>
+<div>
+<figure><p><img src="cograph-tutorial-nestimate_files/figure-html/unnamed-chunk-5-1.png" width="768"></p>
+</figure>
 </div>
 </div>
 </div>
-<hr></section></section><section class="section level2" data-number="4"><h2 data-number="4" id="bootstrap-stability">
-<span class="header-section-number">4</span> Bootstrap Stability<a class="anchor" aria-label="anchor" href="#bootstrap-stability"></a>
-</h2>
-<p>To ensure that the patterns we observe reflect genuine structure rather than sampling noise, we need bootstrap resampling. <code><a href="../reference/bootstrap_network.html">bootstrap_network()</a></code> resamples the data, refits the model at each iteration, and identifies which edges are stable. The result is a <code>net_bootstrap</code> object.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">co_occurrence_net</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_network.html">build_network</a></span><span class="op">(</span><span class="va">group_regulation_long</span>, action <span class="op">=</span> <span class="st">"Action"</span>,</span>
+<span>                                   actor <span class="op">=</span> <span class="st">"Actor"</span>, time <span class="op">=</span> <span class="st">"Time"</span>,</span>
+<span>                                   method <span class="op">=</span> <span class="st">"co_occurrence"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://sonsoles.me/cograph/reference/splot.html" class="external-link">splot</a></span><span class="op">(</span><span class="va">co_occurrence_net</span>, layout <span class="op">=</span> <span class="st">"spring"</span><span class="op">)</span></span></code></pre></div>
+<div class="cell-output-display">
+<div>
+<figure><p><img src="cograph-tutorial-nestimate_files/figure-html/unnamed-chunk-6-1.png" width="768"></p>
+</figure>
+</div>
+</div>
+</div>
+</section></section><section class="section level2" data-number="4"><h2 data-number="4" id="stability-of-the-edges">
+<span class="header-section-number">4</span> Stability of the edges<a class="anchor" aria-label="anchor" href="#stability-of-the-edges"></a>
+</h2>
+<p>An edge estimated from one sample may not hold in another. <code><a href="../reference/bootstrap_network.html">bootstrap_network()</a></code> resamples the sequences with replacement, re-estimates the network in each resample and reports, for each edge, its mean, its 95% interval and a p-value (Saqr et al., 2025). By default the p-value is the share of resamples in which the edge’s weight falls outside a consistency range of 0.75 to 1.25 times its original weight, so an edge with a small p-value keeps its size across resamples.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">265</span><span class="op">)</span></span>
 <span><span class="va">boot</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/bootstrap_network.html">bootstrap_network</a></span><span class="op">(</span><span class="va">net</span>, iter <span class="op">=</span> <span class="fl">1000</span><span class="op">)</span></span>
 <span><span class="va">boot</span></span></code></pre></div>
@@ -289,175 +303,55 @@ Bootstrap Network  [Transition Network (relative) | directed]
   CI         : 95%  |  Inference: stability  |  CR [0.75, 1.25]</code></pre>
 </div>
 </div>
-<section class="level2" data-number="4.1"><h3 data-number="4.1" id="styled-mode-default">
-<span class="header-section-number">4.1</span> Styled mode (default)<a class="anchor" aria-label="anchor" href="#styled-mode-default"></a>
-</h3>
-<p>Significant edges (p &lt; 0.05) appear <strong>solid dark blue</strong>; non-significant edges appear <strong>dashed grey</strong>. This immediately separates the stable network structure from noise.</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb13"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://sonsoles.me/cograph/reference/splot.html" class="external-link">splot</a></span><span class="op">(</span><span class="va">boot</span><span class="op">)</span></span></code></pre></div>
-<div class="cell-output-display">
-<div id="fig-boot-styled" class="quarto-float quarto-figure quarto-figure-center">
-<figure class="quarto-float quarto-float-fig"><div aria-describedby="fig-boot-styled-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="cograph-tutorial-nestimate_files/figure-html/fig-boot-styled-1.png" width="768">
-</div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-boot-styled-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure 4: Bootstrapped network — solid = stable edges, dashed = sampling artifacts
-</figcaption></figure>
-</div>
-</div>
-</div>
-</section><section class="level2" data-number="4.2"><h3 data-number="4.2" id="significant-edges-only">
-<span class="header-section-number">4.2</span> Significant edges only<a class="anchor" aria-label="anchor" href="#significant-edges-only"></a>
-</h3>
+<p>Of the 78 edges, 51 are stable at the 5% level. The strongest transitions are also the most precise: <code>cohesion</code> to <code>consensus</code> has a mean of 0.50 and an interval of [0.47, 0.52].</p>
+<p><code><a href="https://sonsoles.me/cograph/reference/splot.html" class="external-link">splot()</a></code> draws the stable edges solid and the others dashed; <code>display = "significant"</code> draws only the stable edges, <code>display = "full"</code> all edges alike, and <code>show_stars = TRUE</code> or <code>show_ci = TRUE</code> add the significance stars or the intervals to the edge labels.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb14"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://sonsoles.me/cograph/reference/splot.html" class="external-link">splot</a></span><span class="op">(</span><span class="va">boot</span>, display <span class="op">=</span> <span class="st">"significant"</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="https://sonsoles.me/cograph/reference/splot.html" class="external-link">splot</a></span><span class="op">(</span><span class="va">boot</span><span class="op">)</span></span></code></pre></div>
 <div class="cell-output-display">
-<div id="fig-boot-sig" class="quarto-float quarto-figure quarto-figure-center">
-<figure class="quarto-float quarto-float-fig"><div aria-describedby="fig-boot-sig-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="cograph-tutorial-nestimate_files/figure-html/fig-boot-sig-1.png" width="768">
-</div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-boot-sig-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure 5: Only statistically stable edges retained
-</figcaption></figure>
+<div>
+<figure><p><img src="cograph-tutorial-nestimate_files/figure-html/unnamed-chunk-8-1.png" width="768"></p>
+</figure>
 </div>
 </div>
 </div>
-</section><section class="level2" data-number="4.3"><h3 data-number="4.3" id="full-network-no-styling">
-<span class="header-section-number">4.3</span> Full network (no styling)<a class="anchor" aria-label="anchor" href="#full-network-no-styling"></a>
-</h3>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb15"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://sonsoles.me/cograph/reference/splot.html" class="external-link">splot</a></span><span class="op">(</span><span class="va">boot</span>, display <span class="op">=</span> <span class="st">"full"</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="https://sonsoles.me/cograph/reference/splot.html" class="external-link">splot</a></span><span class="op">(</span><span class="va">boot</span>, display <span class="op">=</span> <span class="st">"significant"</span><span class="op">)</span></span></code></pre></div>
 <div class="cell-output-display">
-<div id="fig-boot-full" class="quarto-float quarto-figure quarto-figure-center">
-<figure class="quarto-float quarto-float-fig"><div aria-describedby="fig-boot-full-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="cograph-tutorial-nestimate_files/figure-html/fig-boot-full-1.png" width="768">
-</div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-boot-full-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure 6: All edges shown with uniform styling (bootstrap weights)
-</figcaption></figure>
+<div>
+<figure><p><img src="cograph-tutorial-nestimate_files/figure-html/unnamed-chunk-9-1.png" width="768"></p>
+</figure>
 </div>
 </div>
 </div>
-</section><section class="level2" data-number="4.4"><h3 data-number="4.4" id="significance-stars-on-edge-labels">
-<span class="header-section-number">4.4</span> Significance stars on edge labels<a class="anchor" aria-label="anchor" href="#significance-stars-on-edge-labels"></a>
-</h3>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb16"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://sonsoles.me/cograph/reference/splot.html" class="external-link">splot</a></span><span class="op">(</span><span class="va">boot</span>, show_stars <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
-<div class="cell-output-display">
-<div id="fig-boot-stars" class="quarto-float quarto-figure quarto-figure-center">
-<figure class="quarto-float quarto-float-fig"><div aria-describedby="fig-boot-stars-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="cograph-tutorial-nestimate_files/figure-html/fig-boot-stars-1.png" width="768">
-</div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-boot-stars-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure 7: Bootstrap network with significance stars (*, **, ***)
-</figcaption></figure>
-</div>
-</div>
-</div>
-</section><section class="level2" data-number="4.5"><h3 data-number="4.5" id="confidence-interval-labels">
-<span class="header-section-number">4.5</span> Confidence interval labels<a class="anchor" aria-label="anchor" href="#confidence-interval-labels"></a>
-</h3>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://sonsoles.me/cograph/reference/splot.html" class="external-link">splot</a></span><span class="op">(</span><span class="va">boot</span>, show_ci <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 <div class="cell-output-display">
-<div id="fig-boot-ci" class="quarto-float quarto-figure quarto-figure-center">
-<figure class="quarto-float quarto-float-fig"><div aria-describedby="fig-boot-ci-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="cograph-tutorial-nestimate_files/figure-html/fig-boot-ci-1.png" width="768">
-</div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-boot-ci-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure 8: Bootstrap weights with 95% CI bounds on each edge label
-</figcaption></figure>
-</div>
-</div>
-</div>
 <div>
-<blockquote>
-<p><strong><code><a href="https://sonsoles.me/cograph/reference/splot.html" class="external-link">splot()</a></code> display modes for <code>net_bootstrap</code></strong></p>
-<table class="table caption-top">
-<colgroup>
-<col style="width: 50%">
-<col style="width: 50%">
-</colgroup>
-<thead><tr class="header">
-<th><code>display</code></th>
-<th>Description</th>
-</tr></thead>
-<tbody>
-<tr class="odd">
-<td>
-<code>"styled"</code> (default)</td>
-<td>Significant = solid blue, non-significant = dashed grey</td>
-</tr>
-<tr class="even">
-<td><code>"significant"</code></td>
-<td>Only significant edges</td>
-</tr>
-<tr class="odd">
-<td><code>"full"</code></td>
-<td>All edges, uniform styling</td>
-</tr>
-</tbody>
-</table>
-<p>Additional parameters: <code>show_stars</code>, <code>show_ci</code>, <code>inherit_style</code>.</p>
-</blockquote>
+<figure><p><img src="cograph-tutorial-nestimate_files/figure-html/unnamed-chunk-10-1.png" width="768"></p>
+</figure>
 </div>
-</section><section class="level2" data-number="4.6"><h3 data-number="4.6" id="forest-plots">
-<span class="header-section-number">4.6</span> Forest plots<a class="anchor" aria-label="anchor" href="#forest-plots"></a>
-</h3>
-<p>Forest plots provide a complementary view of bootstrap results, showing the point estimate and confidence interval for every edge. Three layouts are available:</p>
+</div>
+</div>
+<p>A forest plot shows the estimate and the interval of every edge; <code>layout</code> arranges the edges in a list, a circle or groups.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb18"><pre class="downlit sourceCode r">
+<div class="sourceCode cell-code" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://sonsoles.me/cograph/reference/plot_bootstrap_forest.html" class="external-link">plot_bootstrap_forest</a></span><span class="op">(</span><span class="va">boot</span>, show_ci <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 <div class="cell-output-display">
-<div id="fig-forest-default" class="quarto-float quarto-figure quarto-figure-center">
-<figure class="quarto-float quarto-float-fig"><div aria-describedby="fig-forest-default-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="cograph-tutorial-nestimate_files/figure-html/fig-forest-default-1.png" width="576">
-</div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-forest-default-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure 9: Bootstrap forest plot — default linear layout
-</figcaption></figure>
+<div>
+<figure><p><img src="cograph-tutorial-nestimate_files/figure-html/unnamed-chunk-11-1.png" width="768"></p>
+</figure>
 </div>
 </div>
 </div>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb19"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://sonsoles.me/cograph/reference/plot_bootstrap_forest.html" class="external-link">plot_bootstrap_forest</a></span><span class="op">(</span><span class="va">boot</span>, show_ci <span class="op">=</span> <span class="cn">TRUE</span>, layout <span class="op">=</span> <span class="st">"circular"</span><span class="op">)</span></span></code></pre></div>
-<div class="cell-output-display">
-<div id="fig-forest-circular" class="quarto-float quarto-figure quarto-figure-center">
-<figure class="quarto-float quarto-float-fig"><div aria-describedby="fig-forest-circular-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="cograph-tutorial-nestimate_files/figure-html/fig-forest-circular-1.png" width="768">
-</div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-forest-circular-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure 10: Bootstrap forest plot — circular layout
-</figcaption></figure>
-</div>
-</div>
-</div>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb20"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://sonsoles.me/cograph/reference/plot_bootstrap_forest.html" class="external-link">plot_bootstrap_forest</a></span><span class="op">(</span><span class="va">boot</span>, show_ci <span class="op">=</span> <span class="cn">TRUE</span>, layout <span class="op">=</span> <span class="st">"grouped"</span>, scale <span class="op">=</span> <span class="fl">0.55</span><span class="op">)</span></span></code></pre></div>
-<div class="cell-output-display">
-<div id="fig-forest-grouped" class="quarto-float quarto-figure quarto-figure-center">
-<figure class="quarto-float quarto-float-fig"><div aria-describedby="fig-forest-grouped-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="cograph-tutorial-nestimate_files/figure-html/fig-forest-grouped-1.png" width="768">
-</div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-forest-grouped-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure 11: Bootstrap forest plot — grouped by source node
-</figcaption></figure>
-</div>
-</div>
-</div>
-<hr></section></section><section class="section level2" data-number="5"><h2 data-number="5" id="centrality-stability">
-<span class="header-section-number">5</span> Centrality Stability<a class="anchor" aria-label="anchor" href="#centrality-stability"></a>
+</section><section class="section level2" data-number="5"><h2 data-number="5" id="stability-of-the-centralities">
+<span class="header-section-number">5</span> Stability of the centralities<a class="anchor" aria-label="anchor" href="#stability-of-the-centralities"></a>
 </h2>
-<p>Bootstrap alone tells us which edges are stable. To assess whether centrality rankings are robust, we need the case-dropping procedure from Epskamp et al. (2018): progressively remove increasing fractions of cases, recompute centrality, and correlate with the original ranking. The CS-coefficient is the maximum proportion of cases that can be dropped while maintaining a correlation above 0.7 in at least 95% of bootstrap samples.</p>
+<p>Centrality measures summarise each node’s position in the network. <code><a href="../reference/centrality_stability.html">centrality_stability()</a></code> drops increasing proportions of the sequences, recomputes the centralities, and correlates them with the centralities of the full data (Epskamp, Borsboom, &amp; Fried, 2018). The CS-coefficient is the largest proportion of sequences that can be dropped while the correlation stays above 0.7 in 95% of the resamples; Epskamp et al. (2018) treat values above 0.5 as acceptable.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb21"><pre class="downlit sourceCode r">
+<div class="sourceCode cell-code" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">265</span><span class="op">)</span></span>
 <span><span class="va">cs</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/centrality_stability.html">centrality_stability</a></span><span class="op">(</span><span class="va">net</span>, iter <span class="op">=</span> <span class="fl">500</span><span class="op">)</span></span>
 <span><span class="va">cs</span></span></code></pre></div>
@@ -470,525 +364,184 @@ Figure 11: Bootstrap forest plot — grouped by source node
     OutStrength      0.90
     Betweenness      0.90</code></pre>
 </div>
-</div>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb23"><pre class="downlit sourceCode r">
+<div class="sourceCode cell-code" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://sonsoles.me/cograph/reference/splot.html" class="external-link">splot</a></span><span class="op">(</span><span class="va">cs</span><span class="op">)</span></span></code></pre></div>
 <div class="cell-output-display">
-<div id="fig-stability" class="quarto-float quarto-figure quarto-figure-center">
-<figure class="quarto-float quarto-float-fig"><div aria-describedby="fig-stability-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="cograph-tutorial-nestimate_files/figure-html/fig-stability-1.png" width="768">
-</div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-stability-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure 12: Centrality stability — correlation with original ranking as cases are dropped
-</figcaption></figure>
+<div>
+<figure><p><img src="cograph-tutorial-nestimate_files/figure-html/unnamed-chunk-12-1.png" width="768"></p>
+</figure>
 </div>
 </div>
 </div>
-<p>A CS-coefficient above 0.5 is generally considered acceptable; above 0.7 is good (Epskamp et al., 2018). The horizontal dashed line marks the 0.7 threshold.</p>
-<hr></section><section class="section level2" data-number="6"><h2 data-number="6" id="group-networks">
-<span class="header-section-number">6</span> Group Networks<a class="anchor" aria-label="anchor" href="#group-networks"></a>
+<p>The CS-coefficients of in-strength, out-strength and betweenness are all 0.90: the ranking of the actions by these measures holds when 90% of the sequences are removed.</p>
+</section><section class="section level2" data-number="6"><h2 data-number="6" id="group-networks">
+<span class="header-section-number">6</span> Group networks<a class="anchor" aria-label="anchor" href="#group-networks"></a>
 </h2>
-<section class="level2" data-number="6.1"><h3 data-number="6.1" id="building-group-networks">
-<span class="header-section-number">6.1</span> Building group networks<a class="anchor" aria-label="anchor" href="#building-group-networks"></a>
-</h3>
-<p>Pass <code>group =</code> to <code><a href="../reference/build_network.html">build_network()</a></code> and it estimates a separate network per group level, returning a <code>netobject_group</code>. <code><a href="https://sonsoles.me/cograph/reference/splot.html" class="external-link">splot()</a></code> dispatches to <code><a href="https://sonsoles.me/cograph/reference/plot-results.html" class="external-link">plot_netobject_group()</a></code> and renders all groups in an automatic grid.</p>
+<p><code>group =</code> estimates one network per value of a covariate and returns a group of networks (López-Pernas, Tikka, &amp; Saqr, 2025). <code><a href="https://sonsoles.me/cograph/reference/splot.html" class="external-link">splot()</a></code> draws the groups side by side on a common scale, so edge widths can be compared across panels.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb21"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">group_net</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_network.html">build_network</a></span><span class="op">(</span><span class="va">group_regulation_long</span>, action <span class="op">=</span> <span class="st">"Action"</span>,</span>
+<span>                           actor <span class="op">=</span> <span class="st">"Actor"</span>, time <span class="op">=</span> <span class="st">"Time"</span>,</span>
+<span>                           method <span class="op">=</span> <span class="st">"relative"</span>, group <span class="op">=</span> <span class="st">"Achiever"</span><span class="op">)</span></span>
+<span><span class="va">group_net</span></span></code></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Group Networks (2 groups, group_col: Achiever)
+
+  Group  Nodes  Edges  Weights
+  High   9      76     [0.001, 0.576]
+  Low    9      75     [0.000, 0.462]</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb23"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://sonsoles.me/cograph/reference/splot.html" class="external-link">splot</a></span><span class="op">(</span><span class="va">group_net</span><span class="op">)</span></span></code></pre></div>
+<div class="cell-output-display">
+<div>
+<figure><p><img src="cograph-tutorial-nestimate_files/figure-html/unnamed-chunk-13-1.png" width="768"></p>
+</figure>
+</div>
+</div>
+</div>
+<p><code><a href="../reference/bootstrap_network.html">bootstrap_network()</a></code> on the group resamples each group.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb24"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">grp_net</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_network.html">build_network</a></span><span class="op">(</span></span>
-<span>  <span class="va">group_regulation_long</span>, method <span class="op">=</span> <span class="st">"relative"</span>,</span>
-<span>  action <span class="op">=</span> <span class="st">"Action"</span>, actor <span class="op">=</span> <span class="st">"Actor"</span>, time <span class="op">=</span> <span class="st">"Time"</span>,</span>
-<span>  group <span class="op">=</span> <span class="st">"Achiever"</span></span>
-<span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">grp_net</span><span class="op">)</span></span></code></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>[1] "High" "Low" </code></pre>
-</div>
-</div>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb26"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://sonsoles.me/cograph/reference/splot.html" class="external-link">splot</a></span><span class="op">(</span><span class="va">grp_net</span><span class="op">)</span></span></code></pre></div>
-<div class="cell-output-display">
-<div id="fig-group-default" class="quarto-float quarto-figure quarto-figure-center">
-<figure class="quarto-float quarto-float-fig"><div aria-describedby="fig-group-default-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="cograph-tutorial-nestimate_files/figure-html/fig-group-default-1.png" width="1152">
-</div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-group-default-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure 13: High vs. Low achievers — side-by-side on a common weight scale
-</figcaption></figure>
-</div>
-</div>
-</div>
-<p><code>common_scale = TRUE</code> (default) ensures both panels use the same maximum weight, so edge widths are directly comparable. Turn it off when you want each panel to use its own scale:</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb27"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://sonsoles.me/cograph/reference/splot.html" class="external-link">splot</a></span><span class="op">(</span><span class="va">grp_net</span>, common_scale <span class="op">=</span> <span class="cn">FALSE</span>, title_prefix <span class="op">=</span> <span class="st">"Achievers: "</span><span class="op">)</span></span></code></pre></div>
-<div class="cell-output-display">
-<div id="fig-group-noscale" class="quarto-float quarto-figure quarto-figure-center">
-<figure class="quarto-float quarto-float-fig"><div aria-describedby="fig-group-noscale-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="cograph-tutorial-nestimate_files/figure-html/fig-group-noscale-1.png" width="1152">
-</div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-group-noscale-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure 14: Each group on its own weight scale — emphasises internal structure
-</figcaption></figure>
-</div>
-</div>
-</div>
-</section><section class="level2" data-number="6.2"><h3 data-number="6.2" id="group-bootstrap">
-<span class="header-section-number">6.2</span> Group bootstrap<a class="anchor" aria-label="anchor" href="#group-bootstrap"></a>
-</h3>
-<p>Bootstrapping works on grouped networks. <code><a href="../reference/bootstrap_network.html">bootstrap_network()</a></code> applied to a <code>netobject_group</code> returns a <code>net_bootstrap_group</code> — one bootstrap result per group, rendered in a multi-panel grid.</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb28"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">265</span><span class="op">)</span></span>
-<span><span class="va">gboot</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/bootstrap_network.html">bootstrap_network</a></span><span class="op">(</span><span class="va">grp_net</span>, iter <span class="op">=</span> <span class="fl">500</span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb29"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://sonsoles.me/cograph/reference/splot.html" class="external-link">splot</a></span><span class="op">(</span><span class="va">gboot</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">group_boot</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/bootstrap_network.html">bootstrap_network</a></span><span class="op">(</span><span class="va">group_net</span>, iter <span class="op">=</span> <span class="fl">500</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://sonsoles.me/cograph/reference/splot.html" class="external-link">splot</a></span><span class="op">(</span><span class="va">group_boot</span><span class="op">)</span></span></code></pre></div>
 <div class="cell-output-display">
-<div id="fig-group-bootstrap" class="quarto-float quarto-figure quarto-figure-center">
-<figure class="quarto-float quarto-float-fig"><div aria-describedby="fig-group-bootstrap-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="cograph-tutorial-nestimate_files/figure-html/fig-group-bootstrap-1.png" width="1152">
-</div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-group-bootstrap-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure 15: Group-level bootstrap — original networks per cluster
-</figcaption></figure>
+<div>
+<figure><p><img src="cograph-tutorial-nestimate_files/figure-html/unnamed-chunk-14-1.png" width="768"></p>
+</figure>
 </div>
 </div>
 </div>
-<hr></section></section><section class="section level2" data-number="7"><h2 data-number="7" id="permutation-testing">
-<span class="header-section-number">7</span> Permutation Testing<a class="anchor" aria-label="anchor" href="#permutation-testing"></a>
+</section><section class="section level2" data-number="7"><h2 data-number="7" id="comparing-groups">
+<span class="header-section-number">7</span> Comparing groups<a class="anchor" aria-label="anchor" href="#comparing-groups"></a>
 </h2>
-<section class="level2" data-number="7.1"><h3 data-number="7.1" id="pairwise-comparison">
-<span class="header-section-number">7.1</span> Pairwise comparison<a class="anchor" aria-label="anchor" href="#pairwise-comparison"></a>
-</h3>
-<p><code><a href="../reference/permutation.html">permutation()</a></code> tests whether each edge differs significantly between two networks by comparing the observed difference to a permutation null distribution. Green edges indicate the first group is stronger; red edges indicate the second group is stronger.</p>
+<p><code><a href="../reference/permutation.html">permutation()</a></code> compares the networks of the groups edge by edge: it shuffles the group labels of the sequences, recomputes the difference of every edge, and compares the observed difference with the shuffled ones (Saqr et al., 2025). On a group of networks it compares every pair of groups.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb30"><pre class="downlit sourceCode r">
+<div class="sourceCode cell-code" id="cb25"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">265</span><span class="op">)</span></span>
-<span><span class="va">perm</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/permutation.html">permutation</a></span><span class="op">(</span><span class="va">grp_net</span><span class="op">$</span><span class="va">High</span>, <span class="va">grp_net</span><span class="op">$</span><span class="va">Low</span>, iter <span class="op">=</span> <span class="fl">1000</span><span class="op">)</span></span>
-<span><span class="va">perm</span></span></code></pre></div>
+<span><span class="va">group_perm</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/permutation.html">permutation</a></span><span class="op">(</span><span class="va">group_net</span>, iter <span class="op">=</span> <span class="fl">1000</span><span class="op">)</span></span>
+<span><span class="va">group_perm</span></span></code></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>Permutation Test: Transition Network (relative probabilities) [directed]
+<pre><code>Grouped Permutation Test
+Groups: High vs Low
+
+-- High vs Low --
+Permutation Test: Transition Network (relative probabilities) [directed]
   Iterations: 1000  |  Alpha: 0.05
   Nodes: 9  |  Edges tested: 78  |  Significant: 42
   Global test (networks differ overall?): M = 2.612 (p = 0.000999)  |  S = 0.210 (p = 0.000999)</code></pre>
 </div>
 </div>
+<p>The networks of high and low achievers differ: 42 of the 78 transitions differ at the 5% level, and the global statistic M, the sum of the absolute edge differences, is 2.61 (p = 0.001).</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb32"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://sonsoles.me/cograph/reference/splot.html" class="external-link">splot</a></span><span class="op">(</span><span class="va">perm</span><span class="op">)</span></span></code></pre></div>
-<div class="cell-output-display">
-<div id="fig-perm-sig" class="quarto-float quarto-figure quarto-figure-center">
-<figure class="quarto-float quarto-float-fig"><div aria-describedby="fig-perm-sig-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="cograph-tutorial-nestimate_files/figure-html/fig-perm-sig-1.png" width="768">
-</div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-perm-sig-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure 16: Permutation test — green = High &gt; Low, red = Low &gt; High (p &lt; 0.05)
-</figcaption></figure>
-</div>
-</div>
-</div>
-</section><section class="level2" data-number="7.2"><h3 data-number="7.2" id="show-non-significant-edges">
-<span class="header-section-number">7.2</span> Show non-significant edges<a class="anchor" aria-label="anchor" href="#show-non-significant-edges"></a>
-</h3>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb33"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://sonsoles.me/cograph/reference/splot.html" class="external-link">splot</a></span><span class="op">(</span><span class="va">perm</span>, show_nonsig <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
-<div class="cell-output-display">
-<div id="fig-perm-nonsig" class="quarto-float quarto-figure quarto-figure-center">
-<figure class="quarto-float quarto-float-fig"><div aria-describedby="fig-perm-nonsig-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="cograph-tutorial-nestimate_files/figure-html/fig-perm-nonsig-1.png" width="768">
-</div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-perm-nonsig-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure 17: All edges — coloured solid = significant, dashed grey = non-significant
-</figcaption></figure>
-</div>
-</div>
-</div>
-</section><section class="level2" data-number="7.3"><h3 data-number="7.3" id="with-significance-stars-and-effect-sizes">
-<span class="header-section-number">7.3</span> With significance stars and effect sizes<a class="anchor" aria-label="anchor" href="#with-significance-stars-and-effect-sizes"></a>
-</h3>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb34"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://sonsoles.me/cograph/reference/splot.html" class="external-link">splot</a></span><span class="op">(</span><span class="va">perm</span>, show_stars <span class="op">=</span> <span class="cn">TRUE</span>, show_effect <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
-<div class="cell-output-display">
-<div id="fig-perm-stars-effect" class="quarto-float quarto-figure quarto-figure-center">
-<figure class="quarto-float quarto-float-fig"><div aria-describedby="fig-perm-stars-effect-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="cograph-tutorial-nestimate_files/figure-html/fig-perm-stars-effect-1.png" width="768">
-</div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-perm-stars-effect-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure 18: Permutation test with stars and effect sizes (Cohen’s d in parentheses)
-</figcaption></figure>
-</div>
-</div>
-</div>
-<div>
-<blockquote>
-<p><strong><code><a href="https://sonsoles.me/cograph/reference/splot.html" class="external-link">splot()</a></code> parameters for <code>net_permutation</code></strong></p>
-<table class="table caption-top">
-<thead><tr class="header">
-<th>Parameter</th>
-<th>Default</th>
-<th>Description</th>
-</tr></thead>
-<tbody>
-<tr class="odd">
-<td><code>show_nonsig</code></td>
-<td><code>FALSE</code></td>
-<td>Show non-significant edges</td>
-</tr>
-<tr class="even">
-<td><code>edge_positive_color</code></td>
-<td><code>"#009900"</code></td>
-<td>Color when group 1 &gt; group 2</td>
-</tr>
-<tr class="odd">
-<td><code>edge_negative_color</code></td>
-<td><code>"#C62828"</code></td>
-<td>Color when group 2 &gt; group 1</td>
-</tr>
-<tr class="even">
-<td><code>show_stars</code></td>
-<td><code>TRUE</code></td>
-<td>Significance stars (*, **, ***)</td>
-</tr>
-<tr class="odd">
-<td><code>show_effect</code></td>
-<td><code>FALSE</code></td>
-<td>Effect size in parentheses</td>
-</tr>
-</tbody>
-</table>
-</blockquote>
-</div>
-</section><section class="level2" data-number="7.4"><h3 data-number="7.4" id="group-level-permutation">
-<span class="header-section-number">7.4</span> Group-level permutation<a class="anchor" aria-label="anchor" href="#group-level-permutation"></a>
-</h3>
-<p>When applied to a <code>netobject_group</code>, <code><a href="../reference/permutation.html">permutation()</a></code> runs all pairwise comparisons and returns a <code>net_permutation_group</code>. <code><a href="https://sonsoles.me/cograph/reference/splot.html" class="external-link">splot()</a></code> renders each comparison in a grid.</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb35"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">265</span><span class="op">)</span></span>
-<span><span class="va">gperm</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/permutation.html">permutation</a></span><span class="op">(</span><span class="va">grp_net</span>, iter <span class="op">=</span> <span class="fl">1000</span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb36"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://sonsoles.me/cograph/reference/splot.html" class="external-link">splot</a></span><span class="op">(</span><span class="va">gperm</span><span class="op">)</span></span></code></pre></div>
-<div class="cell-output-display">
-<div id="fig-group-perm" class="quarto-float quarto-figure quarto-figure-center">
-<figure class="quarto-float quarto-float-fig"><div aria-describedby="fig-group-perm-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="cograph-tutorial-nestimate_files/figure-html/fig-group-perm-1.png" width="768">
-</div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-group-perm-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure 19: Group-level permutation test — all pairwise comparisons
-</figcaption></figure>
-</div>
-</div>
-</div>
-<hr></section></section><section class="section level2" data-number="8"><h2 data-number="8" id="multi-cluster-multi-level-analysis-mcml">
-<span class="header-section-number">8</span> Multi-Cluster Multi-Level Analysis (MCML)<a class="anchor" aria-label="anchor" href="#multi-cluster-multi-level-analysis-mcml"></a>
-</h2>
-<p>A common analytical question is: given a network of individual states (nodes), can we group them into meaningful clusters and study how these clusters interact? The MCML (Multi-Cluster Multi-Level) pipeline does exactly this. It aggregates a node-level network into a cluster-level summary, producing both a macro-level view (cluster-to-cluster transitions) and per-cluster detail networks (within-cluster structure).</p>
-<p>There are several ways to build an MCML analysis, depending on whether you start from a pre-built network or from raw data, and whether you define clusters manually or discover them algorithmically.</p>
-<section class="level2" data-number="8.1"><h3 data-number="8.1" id="approach-1-theory-driven-clusters-from-a-network">
-<span class="header-section-number">8.1</span> Approach 1: Theory-driven clusters from a network<a class="anchor" aria-label="anchor" href="#approach-1-theory-driven-clusters-from-a-network"></a>
-</h3>
-<p>When domain knowledge dictates the grouping, define clusters as a named list of node labels and pass them to <code><a href="https://sonsoles.me/cograph/reference/csum.html" class="external-link">csum()</a></code>. For collaborative regulation, we can distinguish regulatory behaviors (monitoring, planning, coregulating, adapting) from social-communicative behaviors (cohesion, consensus, discussion, emotion, synthesis):</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb37"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">clusters</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
-<span>  Regulatory <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"monitor"</span>, <span class="st">"plan"</span>, <span class="st">"coregulate"</span>, <span class="st">"adapt"</span><span class="op">)</span>,</span>
-<span>  Social     <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"cohesion"</span>, <span class="st">"consensus"</span>, <span class="st">"discuss"</span>, <span class="st">"emotion"</span>, <span class="st">"synthesis"</span><span class="op">)</span></span>
-<span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">mcml_theory</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://sonsoles.me/cograph/reference/csum.html" class="external-link">csum</a></span><span class="op">(</span><span class="va">net</span>, <span class="va">clusters</span>, type <span class="op">=</span> <span class="st">"tna"</span><span class="op">)</span></span>
-<span><span class="va">mcml_theory</span></span></code></pre></div>
+<div class="sourceCode cell-code" id="cb27"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">group_perm</span><span class="op">)</span>, <span class="fl">10</span><span class="op">)</span></span></code></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>Cluster Summary
----------------
-Type: tna
-Method: sum
-Clusters: 2
-Nodes: 9
-Cluster sizes: 4, 5
-
-Macro (cluster-level) weights (2x2):
-  Inits: 0.318, 0.682
-           Regulatory Social
-Regulatory      0.302  0.698
-Social          0.332  0.668
-
-Per-cluster weights:
-  Regulatory (4 nodes)
-  Social (5 nodes)</code></pre>
+<pre><code>         group     from         to   weight_x   weight_y         diff
+1  High vs Low    adapt   cohesion 0.26241135 0.27717391 -0.014762566
+2  High vs Low    adapt  consensus 0.51773050 0.46195652  0.055773975
+3  High vs Low    adapt coregulate 0.00000000 0.02989130 -0.029891304
+4  High vs Low    adapt    discuss 0.03546099 0.06793478 -0.032473790
+5  High vs Low    adapt    emotion 0.14184397 0.11141304  0.030430928
+6  High vs Low    adapt    monitor 0.02836879 0.03532609 -0.006957293
+7  High vs Low    adapt       plan 0.01418440 0.01630435 -0.002119951
+8  High vs Low cohesion      adapt 0.00533049 0.00000000  0.005330490
+9  High vs Low cohesion   cohesion 0.04371002 0.00660502  0.037105002
+10 High vs Low cohesion  consensus 0.53624733 0.45046235  0.085784983
+   effect_size     p_value   sig
+1   -0.3922188 0.712287712 FALSE
+2    1.2669055 0.201798202 FALSE
+3   -2.4196843 0.011988012  TRUE
+4   -1.6142325 0.103896104 FALSE
+5    1.0508991 0.300699301 FALSE
+6   -0.4479287 0.665334665 FALSE
+7   -0.1965672 0.751248751 FALSE
+8    2.0799910 0.054945055 FALSE
+9    4.4791305 0.000999001  TRUE
+10   3.5701213 0.001998002  TRUE</code></pre>
 </div>
 </div>
-<p><code><a href="https://sonsoles.me/cograph/reference/splot.html" class="external-link">splot()</a></code> dispatches the <code>mcml</code> object to <code><a href="https://sonsoles.me/cograph/reference/plot_mcml.html" class="external-link">plot_mcml()</a></code>, rendering a two-layer visualization: the bottom layer shows within-cluster detail networks, the top layer shows the macro (cluster-to-cluster) summary.</p>
+<p><code>weight_x</code> and <code>weight_y</code> are the transition probabilities of high and low achievers, <code>diff</code> their difference, and <code>effect_size</code> the difference in standard deviations of the permuted differences. For example, low achievers move from <code>cohesion</code> to <code>coregulate</code> more often (0.17 against 0.08), and high achievers from <code>cohesion</code> to <code>consensus</code> (0.54 against 0.45).</p>
+<p><code><a href="https://sonsoles.me/cograph/reference/splot.html" class="external-link">splot()</a></code> draws the edges that differ, coloured by the group in which they are stronger.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb39"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://sonsoles.me/cograph/reference/splot.html" class="external-link">splot</a></span><span class="op">(</span><span class="va">mcml_theory</span><span class="op">)</span></span></code></pre></div>
-<div class="cell-output-display">
-<div id="fig-mcml-theory" class="quarto-float quarto-figure quarto-figure-center">
-<figure class="quarto-float quarto-float-fig"><div aria-describedby="fig-mcml-theory-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="cograph-tutorial-nestimate_files/figure-html/fig-mcml-theory-1.png" width="768">
-</div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-mcml-theory-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure 20: MCML — theory-driven two-cluster partition (Regulatory vs. Social)
-</figcaption></figure>
-</div>
-</div>
-</div>
-</section><section class="level2" data-number="8.2"><h3 data-number="8.2" id="approach-2-theory-driven-clusters-from-a-network-object">
-<span class="header-section-number">8.2</span> Approach 2: Theory-driven clusters from a network object<a class="anchor" aria-label="anchor" href="#approach-2-theory-driven-clusters-from-a-network-object"></a>
-</h3>
-<p><code><a href="https://sonsoles.me/cograph/reference/summarize_clusters.html" class="external-link">summarize_clusters()</a></code> provides the same result through a slightly different interface. When given a <code>netobject</code>, it uses the pre-computed weight matrix:</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb40"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">mcml_built</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://sonsoles.me/cograph/reference/summarize_clusters.html" class="external-link">summarize_clusters</a></span><span class="op">(</span><span class="va">net</span>, <span class="va">clusters</span>, type <span class="op">=</span> <span class="st">"tna"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://sonsoles.me/cograph/reference/splot.html" class="external-link">splot</a></span><span class="op">(</span><span class="va">mcml_built</span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode cell-code" id="cb29"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://sonsoles.me/cograph/reference/splot.html" class="external-link">splot</a></span><span class="op">(</span><span class="va">group_perm</span>, edge_positive_color <span class="op">=</span> <span class="st">"#4A6FE3"</span>,</span>
+<span>      edge_negative_color <span class="op">=</span> <span class="st">"#D33F6A"</span><span class="op">)</span></span></code></pre></div>
 <div class="cell-output-display">
 <div>
-<figure><p><img src="cograph-tutorial-nestimate_files/figure-html/mcml-build-1.png" width="768"></p>
+<figure><p><img src="cograph-tutorial-nestimate_files/figure-html/unnamed-chunk-17-1.png" width="768"></p>
 </figure>
 </div>
 </div>
 </div>
-</section><section class="level2" data-number="8.3"><h3 data-number="8.3" id="converting-mcml-to-individual-network-objects">
-<span class="header-section-number">8.3</span> Converting MCML to individual network objects<a class="anchor" aria-label="anchor" href="#converting-mcml-to-individual-network-objects"></a>
-</h3>
-<p><code><a href="../reference/as_tna.html">as_tna()</a></code> converts an MCML result into a <code>netobject_group</code> — a named list containing the macro network and each per-cluster network as individual <code>netobject</code> objects. This is useful when you want to analyze each cluster’s network independently (e.g., compute centrality, run bootstrap) or pass them to other functions.</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb41"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">tna_models</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/as_tna.html">as_tna</a></span><span class="op">(</span><span class="va">mcml_theory</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">tna_models</span><span class="op">)</span></span></code></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>[1] "macro"      "Regulatory" "Social"    </code></pre>
-</div>
-</div>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb43"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://sonsoles.me/cograph/reference/splot.html" class="external-link">splot</a></span><span class="op">(</span><span class="va">tna_models</span><span class="op">)</span></span></code></pre></div>
-<div class="cell-output-display">
-<div id="fig-mcml-as-tna" class="quarto-float quarto-figure quarto-figure-center">
-<figure class="quarto-float quarto-float-fig"><div aria-describedby="fig-mcml-as-tna-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="cograph-tutorial-nestimate_files/figure-html/fig-mcml-as-tna-1.png" width="1152">
-</div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-mcml-as-tna-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure 21: MCML converted to individual networks — macro + per-cluster panels
-</figcaption></figure>
-</div>
-</div>
-</div>
-</section><section class="level2" data-number="8.4"><h3 data-number="8.4" id="summarize-to-a-cluster-level-network">
-<span class="header-section-number">8.4</span> Summarize to a cluster-level network<a class="anchor" aria-label="anchor" href="#summarize-to-a-cluster-level-network"></a>
-</h3>
-<p><code><a href="https://sonsoles.me/cograph/reference/summarize_network.html" class="external-link">summarize_network()</a></code> from cograph takes a different approach: instead of a two-layer MCML visualization, it collapses the node-level network into a single cluster-level <code>cograph_network</code> where each cluster becomes one node. This is useful when you only need the macro view.</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb44"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">summary_net</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://sonsoles.me/cograph/reference/summarize_network.html" class="external-link">summarize_network</a></span><span class="op">(</span><span class="va">net</span>, <span class="va">clusters</span><span class="op">)</span></span>
-<span><span class="va">summary_net</span></span></code></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>Cograph network: 2 nodes, 4 edges ( directed )
-Source: matrix
-  Nodes (2): Regulatory, Social
-  Edges: 2 / 2 (density: 100.0%)
-  Weights: [1.660, 2.794]  |  mean: 2.227
-  Strongest edges:
-    Regulatory -&gt; Social  2.794
-    Social -&gt; Regulatory  1.660
-  Self-loops: 2  |  range: [1.206, 3.340]
-Layout: none
-  Use as.data.frame() for the edge table, as.data.frame(what = "nodes") for the nodes.</code></pre>
-</div>
-</div>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb46"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://sonsoles.me/cograph/reference/splot.html" class="external-link">splot</a></span><span class="op">(</span><span class="va">summary_net</span>, node_size <span class="op">=</span> <span class="fl">15</span>, edge_labels <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
-<div class="cell-output-display">
-<div id="fig-summarize" class="quarto-float quarto-figure quarto-figure-center">
-<figure class="quarto-float quarto-float-fig"><div aria-describedby="fig-summarize-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="cograph-tutorial-nestimate_files/figure-html/fig-summarize-1.png" width="768">
-</div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-summarize-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure 22: Cluster-level summary network — one node per cluster, aggregated edge weights
-</figcaption></figure>
-</div>
-</div>
-</div>
-<div>
-<blockquote>
-<p><strong>MCML approaches summary</strong></p>
-<table class="table caption-top">
-<colgroup>
-<col style="width: 20%">
-<col style="width: 20%">
-<col style="width: 20%">
-<col style="width: 20%">
-<col style="width: 20%">
-</colgroup>
-<thead><tr class="header">
-<th>Approach</th>
-<th>Function</th>
-<th>Input</th>
-<th>Output</th>
-<th>Use when</th>
-</tr></thead>
-<tbody>
-<tr class="odd">
-<td>Theory-driven</td>
-<td><code>csum(net, clusters)</code></td>
-<td>netobject + named list</td>
-<td><code>mcml</code></td>
-<td>You know the grouping</td>
-</tr>
-<tr class="even">
-<td>Theory-driven</td>
-<td><code>summarize_clusters(net, clusters)</code></td>
-<td>netobject + named list</td>
-<td><code>mcml</code></td>
-<td>Same, alternative API</td>
-</tr>
-<tr class="odd">
-<td>Data-driven</td>
-<td><code>cluster_network(data, k)</code></td>
-<td>raw data + k</td>
-<td><code>netobject_group</code></td>
-<td>Exploratory clustering</td>
-</tr>
-<tr class="even">
-<td>Convert</td>
-<td><code>as_tna(mcml)</code></td>
-<td>mcml object</td>
-<td><code>netobject_group</code></td>
-<td>Per-cluster analysis</td>
-</tr>
-<tr class="odd">
-<td>Collapse</td>
-<td><code>summarize_network(net, clusters)</code></td>
-<td>netobject + clusters</td>
-<td><code>cograph_network</code></td>
-<td>Macro-only view</td>
-</tr>
-</tbody>
-</table>
-</blockquote>
-</div>
-<hr></section></section><section class="section level2" data-number="9"><h2 data-number="9" id="the-complete-dispatch-chain">
-<span class="header-section-number">9</span> The Complete Dispatch Chain<a class="anchor" aria-label="anchor" href="#the-complete-dispatch-chain"></a>
+<p>Blue edges are stronger among high achievers and red edges among low achievers; <code>show_nonsig = TRUE</code> adds the edges that do not differ, and <code>show_stars = TRUE</code> the significance stars.</p>
+</section><section class="section level2" data-number="8"><h2 data-number="8" id="clusters-of-states">
+<span class="header-section-number">8</span> Clusters of states<a class="anchor" aria-label="anchor" href="#clusters-of-states"></a>
 </h2>
-<p>Every Nestimate object routes through <code><a href="https://sonsoles.me/cograph/reference/splot.html" class="external-link">splot()</a></code> automatically. The following table summarizes all supported object classes:</p>
-<table class="table caption-top">
-<colgroup>
-<col style="width: 33%">
-<col style="width: 33%">
-<col style="width: 33%">
-</colgroup>
-<thead><tr class="header">
-<th>Nestimate class</th>
-<th>Producer</th>
-<th>
-<code><a href="https://sonsoles.me/cograph/reference/splot.html" class="external-link">splot()</a></code> renders</th>
-</tr></thead>
-<tbody>
-<tr class="odd">
-<td><code>netobject</code></td>
-<td><code><a href="../reference/build_network.html">build_network()</a></code></td>
-<td>Standard network plot</td>
-</tr>
-<tr class="even">
-<td><code>net_bootstrap</code></td>
-<td><code><a href="../reference/bootstrap_network.html">bootstrap_network()</a></code></td>
-<td>Stability-styled network</td>
-</tr>
-<tr class="odd">
-<td><code>net_permutation</code></td>
-<td><code>permutation(x, y)</code></td>
-<td>Coloured difference network</td>
-</tr>
-<tr class="even">
-<td><code>boot_glasso</code></td>
-<td><code><a href="../reference/boot_glasso.html">boot_glasso()</a></code></td>
-<td>Regularized network with stability</td>
-</tr>
-<tr class="odd">
-<td><code>netobject_group</code></td>
-<td><code>build_network(group=)</code></td>
-<td>Multi-panel grid</td>
-</tr>
-<tr class="even">
-<td><code>net_bootstrap_group</code></td>
-<td><code>bootstrap_network(group)</code></td>
-<td>Multi-panel bootstrap</td>
-</tr>
-<tr class="odd">
-<td><code>net_permutation_group</code></td>
-<td><code>permutation(group)</code></td>
-<td>Multi-panel comparisons</td>
-</tr>
-<tr class="even">
-<td><code>mcml</code></td>
-<td>
-<code><a href="https://sonsoles.me/cograph/reference/csum.html" class="external-link">csum()</a></code> / <code><a href="https://sonsoles.me/cograph/reference/summarize_clusters.html" class="external-link">summarize_clusters()</a></code>
-</td>
-<td>Two-layer MCML plot</td>
-</tr>
-<tr class="odd">
-<td><code>net_stability</code></td>
-<td><code><a href="../reference/centrality_stability.html">centrality_stability()</a></code></td>
-<td>Stability drop-off curve</td>
-</tr>
-</tbody>
-</table>
-<p>Each dispatcher respects all standard <code><a href="https://sonsoles.me/cograph/reference/splot.html" class="external-link">splot()</a></code> arguments (<code>layout</code>, <code>node_fill</code>, <code>edge_color</code>, <code>title</code>, <code>minimum</code>, <code>threshold</code>, etc.), so the same customization API works everywhere.</p>
-<hr></section><section class="section level2" data-number="10"><h2 data-number="10" id="references">
+<p>The nine actions fall into two groups of behaviour: regulation of the task (<code>monitor</code>, <code>plan</code>, <code>coregulate</code>, <code>adapt</code>) and social interaction (<code>cohesion</code>, <code>consensus</code>, <code>discuss</code>, <code>emotion</code>, <code>synthesis</code>). <code><a href="../reference/build_mcml.html">build_mcml()</a></code> estimates a multi-cluster, multi-level network: a network of the clusters, and a network of the actions within each cluster (Zhang et al., 2026).</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb30"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">clusters</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>  Regulatory <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"monitor"</span>, <span class="st">"plan"</span>, <span class="st">"coregulate"</span>, <span class="st">"adapt"</span><span class="op">)</span>,</span>
+<span>  Social     <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"cohesion"</span>, <span class="st">"consensus"</span>, <span class="st">"discuss"</span>, <span class="st">"emotion"</span>, <span class="st">"synthesis"</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">cluster_net</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_mcml.html">build_mcml</a></span><span class="op">(</span><span class="va">net</span>, clusters <span class="op">=</span> <span class="va">clusters</span><span class="op">)</span></span>
+<span><span class="va">cluster_net</span></span></code></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>MCML Network
+============
+Type: tna  | Method: sum
+Nodes: 9  | Clusters: 2
+Transitions: 25533
+  Macro: 11997  | Per-cluster: 13536
+
+Clusters:
+  Regulatory (4): monitor, plan, coregulate, adapt
+  Social (5): cohesion, consensus, discuss, emotion, synthesis
+
+Macro (cluster-level) weights:
+           Regulatory Social
+Regulatory     0.4042 0.5958
+Social         0.3879 0.6121</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb32"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://sonsoles.me/cograph/reference/splot.html" class="external-link">splot</a></span><span class="op">(</span><span class="va">cluster_net</span><span class="op">)</span></span></code></pre></div>
+<div class="cell-output-display">
+<div>
+<figure><p><img src="cograph-tutorial-nestimate_files/figure-html/unnamed-chunk-18-1.png" width="768"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>At the level of the clusters, both kinds of action are followed more often by a social action: a regulatory action by a social one with probability 0.60, and a social action by another social action with probability 0.61. <code><a href="../reference/as_tna.html">as_tna()</a></code> converts the levels into transition networks, one for the clusters and one for the actions within each cluster.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb33"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">cluster_levels</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/as_tna.html">as_tna</a></span><span class="op">(</span><span class="va">cluster_net</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://sonsoles.me/cograph/reference/splot.html" class="external-link">splot</a></span><span class="op">(</span><span class="va">cluster_levels</span><span class="op">)</span></span></code></pre></div>
+<div class="cell-output-display">
+<div>
+<figure><p><img src="cograph-tutorial-nestimate_files/figure-html/unnamed-chunk-19-1.png" width="768"></p>
+</figure>
+</div>
+</div>
+</div>
+</section><section class="section level2" data-number="9"><h2 data-number="9" id="how-to-cite-this-article">
+<span class="header-section-number">9</span> How to cite this article<a class="anchor" aria-label="anchor" href="#how-to-cite-this-article"></a>
+</h2>
+<p>Saqr, M., López-Pernas, S., &amp; Misiejuk, K. (2026). <em>Network estimation and visualization with Nestimate + cograph</em>. Nestimate. <a href="https://pak.dynasite.org/Nestimate/articles/cograph-tutorial-nestimate.html">HTML</a> · <a href="https://pak.dynasite.org/Nestimate/pdf/cograph-tutorial-nestimate.pdf">PDF</a></p>
+</section><section class="section level2" data-number="10"><h2 data-number="10" id="references">
 <span class="header-section-number">10</span> References<a class="anchor" aria-label="anchor" href="#references"></a>
 </h2>
-<p>Epskamp, S., Borsboom, D., &amp; Fried, E. I. (2018). Estimating psychological networks and their accuracy: A tutorial paper. <em>Behavior Research Methods</em>, 50(1), 195–212.</p>
-<hr>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb47"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>R version 4.6.2 (2026-10-29)
-Platform: x86_64-pc-linux-gnu
-Running under: Ubuntu 26.04.1 LTS
-
-Matrix products: default
-BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3
-LAPACK: /usr/lib/x86_64-linux-gnu/openblas-pthread/libopenblasp-r0.3.32.so;  LAPACK version 3.12.0
-
-locale:
- [1] LC_CTYPE=C.UTF-8       LC_NUMERIC=C           LC_TIME=C.UTF-8
- [4] LC_COLLATE=C.UTF-8     LC_MONETARY=C.UTF-8    LC_MESSAGES=C.UTF-8
- [7] LC_PAPER=C.UTF-8       LC_NAME=C              LC_ADDRESS=C
-[10] LC_TELEPHONE=C         LC_MEASUREMENT=C.UTF-8 LC_IDENTIFICATION=C
-
-time zone: UTC
-tzcode source: system (glibc)
-
-attached base packages:
-[1] stats     graphics  grDevices utils     datasets  methods   base
-
-other attached packages:
-[1] cograph_2.7.11   Nestimate_1.0.12
-
-loaded via a namespace (and not attached):
- [1] gtable_0.3.6        jsonlite_2.0.0      dplyr_1.2.1
- [4] compiler_4.6.2      tidyselect_1.2.1    parallel_4.6.2
- [7] scales_1.4.0        yaml_2.3.12         fastmap_1.2.0
-[10] ggplot2_4.0.3       R6_2.6.1            labeling_0.4.3
-[13] generics_0.1.4      igraph_2.3.4        knitr_1.52
-[16] tibble_3.3.1        pillar_1.11.1       RColorBrewer_1.1-3
-[19] rlang_1.3.0         xfun_0.62           S7_0.2.2
-[22] otel_0.3.0          cli_3.6.6           withr_3.0.3
-[25] magrittr_2.0.5      digest_0.6.39       grid_4.6.2
-[28] tna_1.3.1           lifecycle_1.0.5     vctrs_0.7.3
-[31] evaluate_1.0.5      glue_1.8.1          data.table_1.18.6.1
-[34] farver_2.1.2        idiographic_0.3.4   rmarkdown_2.32
-[37] tools_4.6.2         pkgconfig_2.0.3     htmltools_0.5.9    </code></pre>
-</div>
-</div>
+<p>Epskamp, S., Borsboom, D., &amp; Fried, E. I. (2018). Estimating psychological networks and their accuracy: A tutorial paper. <em>Behavior Research Methods</em>, 50(1), 195–212. https://doi.org/10.3758/s13428-017-0862-1</p>
+<p>López-Pernas, S., Tikka, S., &amp; Saqr, M. (2025). Mining patterns and clusters with transition network analysis: A heterogeneity approach. In M. Saqr &amp; S. López-Pernas (Eds.), <em>Advanced learning analytics methods: AI, precision and complexity</em> (pp. 447–468). Springer. https://doi.org/10.1007/978-3-031-95365-1_17</p>
+<p>Peeters, W., Saqr, M., &amp; Viberg, O. (2020). Applying learning analytics to map students’ self-regulated learning tactics in an academic writing course. In <em>Proceedings of the 28th International Conference on Computers in Education (ICCE 2020)</em> (pp. 245–254).</p>
+<p>Saqr, M., Beck, E., &amp; López-Pernas, S. (2024). Psychological networks: A modern approach to analysis of learning and complex learning processes. In M. Saqr &amp; S. López-Pernas (Eds.), <em>Learning analytics methods and tutorials: A practical guide using R</em> (pp. 639–671). Springer. https://doi.org/10.1007/978-3-031-54464-4_19</p>
+<p>Saqr, M., López-Pernas, S., &amp; Misiejuk, K. (2026). Nestimate: An R package for dynamic, probabilistic, and high order network analysis. <em>Applied Psychological Measurement</em>. https://doi.org/10.1177/01466216261472019</p>
+<p>Saqr, M., López-Pernas, S., &amp; Tikka, S. (2025). Mapping relational dynamics with transition network analysis: A primer and tutorial. In M. Saqr &amp; S. López-Pernas (Eds.), <em>Advanced learning analytics methods: AI, precision and complexity</em> (pp. 371–411). Springer. https://doi.org/10.1007/978-3-031-95365-1_15</p>
+<p>Saqr, M., López-Pernas, S., Törmänen, T., Kaliisa, R., Misiejuk, K., &amp; Tikka, S. (2025). Transition network analysis: A novel framework for modeling, visualizing, and identifying the temporal patterns of learners and learning processes. In <em>Proceedings of the 15th International Learning Analytics and Knowledge Conference (LAK25)</em> (pp. 351–361). ACM. https://doi.org/10.1145/3706468.3706513</p>
+<p>Tikka, S., López-Pernas, S., &amp; Saqr, M. (2025). tna: An R package for transition network analysis. <em>Applied Psychological Measurement</em>, 49(6), 326–328. https://doi.org/10.1177/01466216251348840</p>
+<p>Zhang, C., López-Pernas, S., Wang, W., &amp; Saqr, M. (2026). Mapping the clinical reasoning process in medical simulations using multi-cluster multi-layer transition network analysis. In <em>Mindful TEL: Learning technologies shaped with intention</em> (pp. 267–272). Springer. https://doi.org/10.1007/978-3-032-37982-5_43</p>
 </section><script id="quarto-html-after-body" type="application/javascript">
 window.document.addEventListener("DOMContentLoaded", function (event) {
   const toggleBodyColorMode = (bsSheetEl) => {

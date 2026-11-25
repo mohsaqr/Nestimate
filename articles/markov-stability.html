@@ -15,6 +15,14 @@
 <script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Markov Stability Analysis">
+<meta name="citation_title" content="Markov Stability Analysis">
+<meta name="citation_author" content="Saqr, Mohammed">
+<meta name="citation_author" content="López-Pernas, Sonsoles">
+<meta name="citation_author" content="Misiejuk, Kamila">
+<meta name="citation_publication_date" content="2026">
+<meta name="citation_publisher" content="Nestimate">
+<meta name="citation_pdf_url" content="https://pak.dynasite.org/Nestimate/pdf/markov-stability.pdf">
+<meta name="citation_abstract_html_url" content="https://pak.dynasite.org/Nestimate/articles/markov-stability.html">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -24,7 +32,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.12</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -39,8 +47,8 @@
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
 <li><a class="dropdown-item" href="../articles/transition-entropy.html">Transition Matrix Entropy</a></li>
     <li><a class="dropdown-item" href="../articles/transition-networks.html">Network Estimation and Analysis with Nestimate</a></li>
-    <li><a class="dropdown-item" href="../articles/sequence-comparison.html">Sequence Pattern Comparison: Early vs Late Human-AI Interactions</a></li>
-    <li><a class="dropdown-item" href="../articles/sequence-plots.html">Sequence Plots: heatmap, index, and distribution</a></li>
+    <li><a class="dropdown-item" href="../articles/sequence-comparison.html">Comparing Sequences Between Groups: Early vs Late Human-AI Interactions</a></li>
+    <li><a class="dropdown-item" href="../articles/sequence-plots.html">Sequence Plots</a></li>
     <li><a class="dropdown-item" href="../articles/clustering.html">Sequence Clustering</a></li>
     <li><a class="dropdown-item" href="../articles/markov-stability.html">Markov Stability Analysis</a></li>
     <li><hr class="dropdown-divider"></li>
@@ -87,112 +95,95 @@ Misiejuk</h4>
 
     
     
-<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/mohsaqr/Nestimate" class="external-link">Nestimate</a></span><span class="op">)</span></span></code></pre></div>
-<p>Nestimate provides two functions for Markov-chain stability analysis
-of transition networks:</p>
+<p>In a complex-systems view of learning, a state is stable when
+students who reach it tend to remain in it and students who leave it
+tend to return (Saqr, Dever, et al. 2025; Saqr, López-Pernas &amp; Tikka
+2026). López-Pernas and Saqr (2024) described student engagement in
+these terms, as the momentum of achievement and the inertia of
+disengagement. Markov chain theory measures stability from a transition
+network (Kemeny &amp; Snell 1976). For a first-order chain with
+transition matrix
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>P</mi><annotation encoding="application/x-tex">P</annotation></semantics></math>
+and stationary distribution
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>π</mi><annotation encoding="application/x-tex">\pi</annotation></semantics></math>:</p>
 <ul>
-<li>
-<strong><code><a href="../reference/passage_time.html">passage_time()</a></code></strong> – computes the full
-matrix of mean first passage times (MFPT). Entry M[i, j] is the expected
-number of steps to travel from state <em>i</em> to state <em>j</em> for
-the first time. The diagonal equals the mean recurrence time 1/pi.</li>
-<li>
-<strong><code><a href="../reference/markov_stability.html">markov_stability()</a></code></strong> – computes
-per-state stability metrics: persistence, stationary probability, return
-time, sojourn time, and mean accessibility.</li>
+<li>the <em>persistence</em> of state
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>i</mi><annotation encoding="application/x-tex">i</annotation></semantics></math>
+is
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>P</mi><mrow><mi>i</mi><mi>i</mi></mrow></msub><annotation encoding="application/x-tex">P_{ii}</annotation></semantics></math>,
+the probability of remaining in it at the next step;</li>
+<li>the <em>sojourn time</em> is
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mi>/</mi><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><msub><mi>P</mi><mrow><mi>i</mi><mi>i</mi></mrow></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">1 / (1 - P_{ii})</annotation></semantics></math>,
+the expected number of consecutive steps spent in it once entered;</li>
+<li>the <em>stationary probability</em>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>π</mi><mi>i</mi></msub><annotation encoding="application/x-tex">\pi_i</annotation></semantics></math>
+is the long-run share of steps spent in it, and the <em>return time</em>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mi>/</mi><msub><mi>π</mi><mi>i</mi></msub></mrow><annotation encoding="application/x-tex">1 / \pi_i</annotation></semantics></math>
+is the expected number of steps between two visits;</li>
+<li>the <em>mean first passage time</em>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>m</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><annotation encoding="application/x-tex">m_{ij}</annotation></semantics></math>
+is the expected number of steps to reach state
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math>
+for the first time from state
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>i</mi><annotation encoding="application/x-tex">i</annotation></semantics></math>.</li>
 </ul>
-<p>Both functions accept a <code>netobject</code>,
-<code>cograph_network</code>, <code>tna</code> object, row-stochastic
-matrix, or a raw wide sequence data frame.</p>
-<hr>
+<p>In Nestimate (Saqr, López-Pernas &amp; Misiejuk 2026),
+<code><a href="../reference/passage_time.html">passage_time()</a></code> returns the matrix of mean first passage
+times and <code><a href="../reference/markov_stability.html">markov_stability()</a></code> the per-state measures. Both
+accept a network, a transition matrix, or a group of networks.</p>
 <div class="section level2">
 <h2 id="data">Data<a class="anchor" aria-label="anchor" href="#data"></a>
 </h2>
-<p><code>trajectories</code> contains 138 learners recorded at 15
-time-steps each with three engagement states: Active, Average, and
-Disengaged.</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">trajectories</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 138  15</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/vector.html" class="external-link">as.vector</a></span><span class="op">(</span><span class="va">trajectories</span><span class="op">)</span>, useNA <span class="op">=</span> <span class="st">"always"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;     Active    Average Disengaged       &lt;NA&gt; </span></span>
-<span><span class="co">#&gt;        703        813        354        200</span></span></code></pre></div>
-<hr>
+<p><code>trajectories</code> records the engagement state of 138
+students in each of the 15 successive courses of a program. The states
+are the three engagement states of Saqr and López-Pernas (2021):
+<code>Active</code>, <code>Average</code> and <code>Disengaged</code>.
+Saqr and López-Pernas (2021) and Saqr, López-Pernas, Jovanović and
+Gašević (2023) followed such engagement trajectories across the courses
+of a full program. The data have one row per student and one column per
+course; a missing value occurs only as a run at the end of a row and
+marks the point at which a student left the program.</p>
 </div>
 <div class="section level2">
-<h2 id="selecting-mostly-active-learners">Selecting mostly-active learners<a class="anchor" aria-label="anchor" href="#selecting-mostly-active-learners"></a>
+<h2 id="the-transition-network">The transition network<a class="anchor" aria-label="anchor" href="#the-transition-network"></a>
 </h2>
-<p>Does a learner who is mostly engaged stay out of disengagement for
-longer, or only visit it less often? To compare, we keep learners who
-were Active <strong>more than half the time</strong> (&gt; 7 of 15
-steps; missing weeks do not count as Active).</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">sub</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">trajectories</span>, <span class="fu"><a href="https://rdrr.io/r/base/colSums.html" class="external-link">rowSums</a></span><span class="op">(</span><span class="va">trajectories</span> <span class="op">==</span> <span class="st">"Active"</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">7</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">sub</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 42</span></span></code></pre></div>
-<hr>
-</div>
-<div class="section level2">
-<h2 id="sequence-plots">Sequence plots<a class="anchor" aria-label="anchor" href="#sequence-plots"></a>
-</h2>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/sequence_plot.html">sequence_plot</a></span><span class="op">(</span><span class="va">trajectories</span>, type <span class="op">=</span> <span class="st">"heatmap"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="markov-stability_files/figure-html/unnamed-chunk-4-1.png" class="r-plt" alt="" width="100%"></p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/sequence_plot.html">sequence_plot</a></span><span class="op">(</span><span class="va">sub</span>, type <span class="op">=</span> <span class="st">"heatmap"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="markov-stability_files/figure-html/unnamed-chunk-5-1.png" class="r-plt" alt="" width="100%"></p>
-<hr>
-</div>
-<div class="section level2">
-<h2 id="transition-networks">Transition networks<a class="anchor" aria-label="anchor" href="#transition-networks"></a>
-</h2>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">net_all</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_network.html">build_network</a></span><span class="op">(</span><span class="va">trajectories</span>, method <span class="op">=</span> <span class="st">"relative"</span><span class="op">)</span></span>
-<span><span class="va">net_sub</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_network.html">build_network</a></span><span class="op">(</span><span class="va">sub</span>, method <span class="op">=</span> <span class="st">"relative"</span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">net_all</span></span>
+<p><code><a href="../reference/build_network.html">build_network()</a></code> estimates the probability of moving from
+each state to each state between consecutive courses.</p>
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/mohsaqr/Nestimate" class="external-link">Nestimate</a></span><span class="op">)</span></span>
+<span><span class="va">net</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_network.html">build_network</a></span><span class="op">(</span><span class="va">trajectories</span>, method <span class="op">=</span> <span class="st">"relative"</span><span class="op">)</span></span>
+<span><span class="va">net</span></span>
 <span><span class="co">#&gt; Transition Network (relative probabilities) [directed]</span></span>
 <span><span class="co">#&gt;   Weights: [0.035, 0.698]  |  mean: 0.333</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   Weight matrix:</span></span>
-<span><span class="co">#&gt;              Active Average Disengaged</span></span>
-<span><span class="co">#&gt;   Active      0.698   0.267      0.035</span></span>
-<span><span class="co">#&gt;   Average     0.204   0.610      0.186</span></span>
-<span><span class="co">#&gt;   Disengaged  0.120   0.397      0.483 </span></span>
+<span><span class="co">#&gt;   Strongest edges (9 of 9):</span></span>
+<span><span class="co">#&gt;    from       to         weight</span></span>
+<span><span class="co">#&gt;    Active     Active     0.698 </span></span>
+<span><span class="co">#&gt;    Average    Average    0.610 </span></span>
+<span><span class="co">#&gt;    Disengaged Disengaged 0.483 </span></span>
+<span><span class="co">#&gt;    Disengaged Average    0.397 </span></span>
+<span><span class="co">#&gt;    Active     Average    0.267 </span></span>
+<span><span class="co">#&gt;    Average    Active     0.204 </span></span>
+<span><span class="co">#&gt;    Average    Disengaged 0.186 </span></span>
+<span><span class="co">#&gt;    Disengaged Active     0.120 </span></span>
+<span><span class="co">#&gt;    Active     Disengaged 0.035  </span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   Initial probabilities:</span></span>
-<span><span class="co">#&gt;   Active        0.382  ████████████████████████████████████████</span></span>
-<span><span class="co">#&gt;   Average       0.368  ██████████████████████████████████████</span></span>
-<span><span class="co">#&gt;   Disengaged    0.250  ██████████████████████████</span></span>
-<span><span class="va">net_sub</span></span>
-<span><span class="co">#&gt; Transition Network (relative probabilities) [directed]</span></span>
-<span><span class="co">#&gt;   Weights: [0.017, 0.819]  |  mean: 0.333</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   Weight matrix:</span></span>
-<span><span class="co">#&gt;              Active Average Disengaged</span></span>
-<span><span class="co">#&gt;   Active      0.819   0.164      0.017</span></span>
-<span><span class="co">#&gt;   Average     0.683   0.288      0.029</span></span>
-<span><span class="co">#&gt;   Disengaged  0.643   0.143      0.214 </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   Initial probabilities:</span></span>
-<span><span class="co">#&gt;   Active        0.762  ████████████████████████████████████████</span></span>
-<span><span class="co">#&gt;   Average       0.238  ████████████</span></span>
-<span><span class="co">#&gt;   Disengaged    0.000</span></span></code></pre></div>
-<p>In the mostly-active group nearly every state transitions
-predominantly back to Active, and the probability of entering Disengaged
-is almost zero.</p>
-<hr>
+<span><span class="co">#&gt;   extract_edges(include_self = TRUE) lists every edge; extract_transition_matrix() gives the weight matrix;</span></span>
+<span><span class="co">#&gt;   extract_initial_probs() the initial probabilities.</span></span></code></pre></div>
+<p>The probabilities leaving each state sum to 1. A student who is
+<code>Active</code> in one course is <code>Active</code> in the next
+with probability 0.698, <code>Average</code> with probability 0.267 and
+<code>Disengaged</code> with probability 0.035. The measures below are
+computed from this matrix, so they assume that the transition
+probabilities are the same in every course and that the next state
+depends only on the current one.</p>
 </div>
 <div class="section level2">
-<h2 id="mean-first-passage-times">Mean First Passage Times<a class="anchor" aria-label="anchor" href="#mean-first-passage-times"></a>
+<h2 id="mean-first-passage-times">Mean first passage times<a class="anchor" aria-label="anchor" href="#mean-first-passage-times"></a>
 </h2>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">pt_all</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/passage_time.html">passage_time</a></span><span class="op">(</span><span class="va">net_all</span><span class="op">)</span></span>
-<span><span class="va">pt_sub</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/passage_time.html">passage_time</a></span><span class="op">(</span><span class="va">net_sub</span><span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">pt_all</span>, digits <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">pt</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/passage_time.html">passage_time</a></span><span class="op">(</span><span class="va">net</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">pt</span>, digits <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Mean First Passage Times (3 states)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;            Active Average Disengaged</span></span>
@@ -202,48 +193,35 @@ is almost zero.</p>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Stationary distribution:</span></span>
 <span><span class="co">#&gt;     Active    Average Disengaged </span></span>
-<span><span class="co">#&gt;     0.3719     0.4431     0.1850</span></span></code></pre></div>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">pt_sub</span>, digits <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Mean First Passage Times (3 states)</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;            Active Average Disengaged</span></span>
-<span><span class="co">#&gt; Active       1.27    6.12      51.99</span></span>
-<span><span class="co">#&gt; Average      1.47    5.36      51.29</span></span>
-<span><span class="co">#&gt; Disengaged   1.54    6.28      41.75</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Stationary distribution:</span></span>
-<span><span class="co">#&gt;     Active    Average Disengaged </span></span>
-<span><span class="co">#&gt;     0.7895     0.1866     0.0240</span></span></code></pre></div>
-<p><strong>Active to Disengaged</strong> rises from 10.4 to 52.0 steps –
-a mostly-active learner takes five times as long to reach disengagement.
-The diagonal equals the mean recurrence time (how many steps between
-consecutive visits to the same state).</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">pt_all</span>, title <span class="op">=</span> <span class="st">"Full sample (n = 138)"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="markov-stability_files/figure-html/unnamed-chunk-10-1.png" class="r-plt" alt="" width="100%"></p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">pt_sub</span>, title <span class="op">=</span> <span class="st">"Mostly-active learners (n = 42)"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="markov-stability_files/figure-html/unnamed-chunk-11-1.png" class="r-plt" alt="" width="100%"></p>
-<p>In the mostly-active heatmap the Active column is uniformly dark
-(quickly reachable from any state) and the Disengaged column is
-uniformly pale (nearly unreachable).</p>
-<hr>
+<span><span class="co">#&gt;     0.3719     0.4431     0.1850</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">pt</span><span class="op">)</span></span></code></pre></div>
+<p><img src="markov-stability_files/figure-html/passage-1.png" class="r-plt" alt="" width="100%"></p>
+<p>Row
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>i</mi><annotation encoding="application/x-tex">i</annotation></semantics></math>,
+column
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math>
+of the matrix is the expected number of courses for a student in state
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>i</mi><annotation encoding="application/x-tex">i</annotation></semantics></math>
+to reach state
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math>
+for the first time; the diagonal is the return time. A student in
+<code>Active</code> takes 3.6 courses on average to reach
+<code>Average</code> and 10.4 courses to reach <code>Disengaged</code>.
+In the reverse direction, a student in <code>Disengaged</code> takes 6.2
+courses to reach <code>Active</code> and 2.8 courses to reach
+<code>Average</code>. Decline from <code>Active</code> to
+<code>Disengaged</code> is therefore slower than recovery in the
+opposite direction, and both pass mostly through <code>Average</code>.
+The values are expectations under the fitted chain; a value longer than
+the 15 courses of the program describes the chain, not a time that was
+observed.</p>
 </div>
 <div class="section level2">
-<h2 id="stationary-distribution">Stationary distribution<a class="anchor" aria-label="anchor" href="#stationary-distribution"></a>
+<h2 id="stability-of-the-states">Stability of the states<a class="anchor" aria-label="anchor" href="#stability-of-the-states"></a>
 </h2>
-<p>The stationary distribution is the long-run share of time spent in
-each state. <code><a href="../reference/markov_stability.html">markov_stability()</a></code> reports it per state as
-<code>stationary_prob</code>, beside the other per-state metrics
-described in the next section.</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">ms_all</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/markov_stability.html">markov_stability</a></span><span class="op">(</span><span class="va">net_all</span><span class="op">)</span></span>
-<span><span class="va">ms_sub</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/markov_stability.html">markov_stability</a></span><span class="op">(</span><span class="va">net_sub</span><span class="op">)</span></span>
-<span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">ms_all</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Most accessible state (attractor): Average</span></span>
-<span><span class="co">#&gt; Most persistent state (stickiest): Active</span></span>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">ms</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/markov_stability.html">markov_stability</a></span><span class="op">(</span><span class="va">net</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">ms</span><span class="op">)</span></span>
 <span><span class="co">#&gt;        state persistence stationary_prob return_time sojourn_time</span></span>
 <span><span class="co">#&gt; 1     Active      0.6976          0.3719        2.69         3.31</span></span>
 <span><span class="co">#&gt; 2    Average      0.6099          0.4431        2.26         2.56</span></span>
@@ -252,75 +230,182 @@ described in the next section.</p>
 <span><span class="co">#&gt; 1               6.99                 5.84</span></span>
 <span><span class="co">#&gt; 2               6.74                 3.20</span></span>
 <span><span class="co">#&gt; 3               4.47                 9.16</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">ms_sub</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Most accessible state (attractor): Active</span></span>
-<span><span class="co">#&gt; Most persistent state (stickiest): Active</span></span>
-<span><span class="co">#&gt;        state persistence stationary_prob return_time sojourn_time</span></span>
-<span><span class="co">#&gt; 1     Active      0.8191          0.7895        1.27         5.53</span></span>
-<span><span class="co">#&gt; 2    Average      0.2885          0.1866        5.36         1.41</span></span>
-<span><span class="co">#&gt; 3 Disengaged      0.2143          0.0240       41.75         1.27</span></span>
-<span><span class="co">#&gt;   avg_time_to_others avg_time_from_others</span></span>
-<span><span class="co">#&gt; 1              29.06                 1.50</span></span>
-<span><span class="co">#&gt; 2              26.38                 6.20</span></span>
-<span><span class="co">#&gt; 3               3.91                51.64</span></span></code></pre></div>
-<p>In the mostly-active group ~79% of long-run time is spent Active (vs
-37% in the full sample).</p>
-<hr>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">ms</span><span class="op">)</span></span></code></pre></div>
+<p><img src="markov-stability_files/figure-html/stability-1.png" class="r-plt" alt="" width="100%"></p>
+<p><code>persistence</code>, <code>stationary_prob</code>,
+<code>return_time</code> and <code>sojourn_time</code> are the measures
+defined above. <code>avg_time_to_others</code> is the mean passage time
+from the state to the other states, and
+<code>avg_time_from_others</code> the mean passage time from the other
+states to it; a state with a short <code>avg_time_from_others</code> is
+reached quickly from anywhere.</p>
+<p><code>Active</code> is the most persistent state: its persistence is
+0.698 and its sojourn time 3.31 courses. <code>Average</code> is the
+most accessible: it is reached from the other states in 3.20 courses on
+average, and it has the largest stationary probability, 0.443.
+<code>Disengaged</code> is the least persistent (0.483, a sojourn of
+1.93 courses) and the least accessible (9.16 courses), and it is the
+state students spend the least time in (0.185).</p>
 </div>
 <div class="section level2">
-<h2 id="markov-stability">Markov Stability<a class="anchor" aria-label="anchor" href="#markov-stability"></a>
+<h2 id="groups-of-students">Groups of students<a class="anchor" aria-label="anchor" href="#groups-of-students"></a>
 </h2>
-<p>The per-state table printed above contains:</p>
-<table class="table">
-<colgroup>
-<col width="47%">
-<col width="52%">
-</colgroup>
-<thead><tr class="header">
-<th>Column</th>
-<th>Meaning</th>
-</tr></thead>
-<tbody>
-<tr class="odd">
-<td><code>persistence</code></td>
-<td>P[i,i] – probability of staying at the next step</td>
-</tr>
-<tr class="even">
-<td><code>stationary_prob</code></td>
-<td>Long-run proportion of time in this state</td>
-</tr>
-<tr class="odd">
-<td><code>return_time</code></td>
-<td>Expected steps between consecutive visits (1/pi)</td>
-</tr>
-<tr class="even">
-<td><code>sojourn_time</code></td>
-<td>Expected consecutive steps before leaving (1/(1-P[i,i]))</td>
-</tr>
-<tr class="odd">
-<td><code>avg_time_to_others</code></td>
-<td>Mean MFPT leaving this state to all others</td>
-</tr>
-<tr class="even">
-<td><code>avg_time_from_others</code></td>
-<td>Mean MFPT from all other states arriving here</td>
-</tr>
-</tbody>
-</table>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">ms_all</span>, title <span class="op">=</span> <span class="st">"Full sample"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="markov-stability_files/figure-html/unnamed-chunk-13-1.png" class="r-plt" alt="" width="100%"></p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">ms_sub</span>, title <span class="op">=</span> <span class="st">"Mostly-active learners"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="markov-stability_files/figure-html/unnamed-chunk-14-1.png" class="r-plt" alt="" width="100%"></p>
-<p>Among the mostly-active learners, Active leads on persistence (0.82)
-and sojourn time (5.5 steps) – once a learner is active they stay active
-– and it is also the most accessible state
-(<code>avg_time_from_others</code> 1.5 steps). Disengaged has
-<code>avg_time_from_others</code> of 51.6 steps – effectively
-unreachable. In the full sample the most accessible state is Average
-(3.2 steps), and Disengaged is reached in 9.2 steps on average.</p>
-<hr>
+<p>A single chain for all students averages over students whose
+engagement develops differently. Sequence clustering groups the students
+by the similarity of their sequences (Saqr, López-Pernas, Helske, et
+al. 2024), and a transition network can then be estimated for each group
+(López-Pernas, Tikka &amp; Saqr 2025). <code><a href="../reference/build_clusters.html">build_clusters()</a></code>
+computes the Hamming distance between sequences, the number of courses
+in which two students are in different states (Hamming 1950), and
+partitions the students around medoids (Kaufman &amp; Rousseeuw 1990).
+Three clusters are used here as a working choice.</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">clusters</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_clusters.html">build_clusters</a></span><span class="op">(</span><span class="va">trajectories</span>, k <span class="op">=</span> <span class="fl">3</span>, seed <span class="op">=</span> <span class="fl">2026</span><span class="op">)</span></span>
+<span><span class="va">clusters</span></span>
+<span><span class="co">#&gt; Sequence Clustering [pam]</span></span>
+<span><span class="co">#&gt;   Sequences: 138  |  Clusters: 3</span></span>
+<span><span class="co">#&gt;   Dissimilarity: hamming</span></span>
+<span><span class="co">#&gt;   Quality: silhouette = 0.360</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;   Cluster  N           Mean within-dist  Medoid</span></span>
+<span><span class="co">#&gt;   1        47 (34.1%)  5.898             124</span></span>
+<span><span class="co">#&gt;   2        74 (53.6%)  8.389             44</span></span>
+<span><span class="co">#&gt;   3        17 (12.3%)  5.412             103</span></span></code></pre></div>
+<p>The three clusters have 47, 74 and 17 students. The average
+silhouette is 0.36 (Rousseeuw 1987), a moderate separation.
+<code><a href="../reference/build_network.html">build_network()</a></code> on the clustering estimates one transition
+network per cluster, and <code><a href="../reference/state_distribution.html">state_distribution()</a></code> shows the
+states that make up each cluster.</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">cluster_networks</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_network.html">build_network</a></span><span class="op">(</span><span class="va">clusters</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/state_distribution.html">state_distribution</a></span><span class="op">(</span><span class="va">cluster_networks</span><span class="op">)</span></span>
+<span><span class="co">#&gt;       group      state count proportion</span></span>
+<span><span class="co">#&gt; 1 Cluster 1     Active   528 0.75213675</span></span>
+<span><span class="co">#&gt; 2 Cluster 1    Average   139 0.19800570</span></span>
+<span><span class="co">#&gt; 3 Cluster 1 Disengaged    35 0.04985755</span></span>
+<span><span class="co">#&gt; 4 Cluster 2    Average   663 0.60382514</span></span>
+<span><span class="co">#&gt; 5 Cluster 2 Disengaged   263 0.23952641</span></span>
+<span><span class="co">#&gt; 6 Cluster 2     Active   172 0.15664845</span></span>
+<span><span class="co">#&gt; 7 Cluster 3 Disengaged    56 0.80000000</span></span>
+<span><span class="co">#&gt; 8 Cluster 3    Average    11 0.15714286</span></span>
+<span><span class="co">#&gt; 9 Cluster 3     Active     3 0.04285714</span></span></code></pre></div>
+<p>Cluster 1 is mostly <code>Active</code> (75% of its observed
+courses), cluster 2 mostly <code>Average</code> (60%), and cluster 3
+mostly <code>Disengaged</code> (80%).</p>
+<p><code><a href="../reference/passage_time.html">passage_time()</a></code> and <code><a href="../reference/markov_stability.html">markov_stability()</a></code>
+accept the group of networks and compute the measures for each cluster.
+<code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> returns one table with a row for each cluster and
+state.</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">cluster_pt</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/passage_time.html">passage_time</a></span><span class="op">(</span><span class="va">cluster_networks</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">cluster_pt</span><span class="op">)</span></span>
+<span><span class="co">#&gt;       group      state return_time stationary mean_out mean_in</span></span>
+<span><span class="co">#&gt; 1 Cluster 1     Active        1.33     0.7508    16.04    1.82</span></span>
+<span><span class="co">#&gt; 2 Cluster 1    Average        5.14     0.1947    13.11    5.77</span></span>
+<span><span class="co">#&gt; 3 Cluster 1 Disengaged       18.36     0.0545     3.79   25.35</span></span>
+<span><span class="co">#&gt; 4 Cluster 2     Active        6.60     0.1516     4.21    8.94</span></span>
+<span><span class="co">#&gt; 5 Cluster 2    Average        1.63     0.6137     7.16    1.89</span></span>
+<span><span class="co">#&gt; 6 Cluster 2 Disengaged        4.26     0.2347     5.57    6.11</span></span>
+<span><span class="co">#&gt; 7 Cluster 3     Active       23.00     0.0435     6.50   39.50</span></span>
+<span><span class="co">#&gt; 8 Cluster 3    Average        5.75     0.1739    18.75   10.00</span></span>
+<span><span class="co">#&gt; 9 Cluster 3 Disengaged        1.28     0.7826    26.50    2.25</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">cluster_pt</span><span class="op">)</span></span></code></pre></div>
+<p><img src="markov-stability_files/figure-html/cluster-passage-1.png" class="r-plt" alt="" width="100%"></p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">cluster_ms</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/markov_stability.html">markov_stability</a></span><span class="op">(</span><span class="va">cluster_networks</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">cluster_ms</span><span class="op">)</span></span>
+<span><span class="co">#&gt;       group      state persistence stationary_prob return_time sojourn_time</span></span>
+<span><span class="co">#&gt; 1 Cluster 1     Active      0.8048          0.7508        1.33         5.12</span></span>
+<span><span class="co">#&gt; 2 Cluster 1    Average      0.2984          0.1947        5.14         1.43</span></span>
+<span><span class="co">#&gt; 3 Cluster 1 Disengaged      0.3235          0.0545       18.36         1.48</span></span>
+<span><span class="co">#&gt; 4 Cluster 2     Active      0.3648          0.1516        6.60         1.57</span></span>
+<span><span class="co">#&gt; 5 Cluster 2    Average      0.6737          0.6137        1.63         3.06</span></span>
+<span><span class="co">#&gt; 6 Cluster 2 Disengaged      0.4309          0.2347        4.26         1.76</span></span>
+<span><span class="co">#&gt; 7 Cluster 3     Active      0.5000          0.0435       23.00         2.00</span></span>
+<span><span class="co">#&gt; 8 Cluster 3    Average      0.5000          0.1739        5.75         2.00</span></span>
+<span><span class="co">#&gt; 9 Cluster 3 Disengaged      0.8889          0.7826        1.28         9.00</span></span>
+<span><span class="co">#&gt;   avg_time_to_others avg_time_from_others</span></span>
+<span><span class="co">#&gt; 1              16.04                 1.82</span></span>
+<span><span class="co">#&gt; 2              13.11                 5.77</span></span>
+<span><span class="co">#&gt; 3               3.79                25.35</span></span>
+<span><span class="co">#&gt; 4               4.21                 8.94</span></span>
+<span><span class="co">#&gt; 5               7.16                 1.89</span></span>
+<span><span class="co">#&gt; 6               5.57                 6.11</span></span>
+<span><span class="co">#&gt; 7               6.50                39.50</span></span>
+<span><span class="co">#&gt; 8              18.75                10.00</span></span>
+<span><span class="co">#&gt; 9              26.50                 2.25</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">cluster_ms</span><span class="op">)</span></span></code></pre></div>
+<p><img src="markov-stability_files/figure-html/cluster-stability-1.png" class="r-plt" alt="" width="100%"></p>
+<p>In cluster 1, <code>Active</code> has persistence 0.805 and a sojourn
+time of 5.12 courses, and it is reached from the other states in 1.82
+courses on average. <code>Disengaged</code> is reached from the other
+states in 25.35 courses on average, longer than the program: under this
+cluster’s chain, students rarely reach it. In cluster 2,
+<code>Average</code> is the most persistent state (0.674, a sojourn of
+3.06 courses) and the most accessible (1.89 courses), and
+<code>Active</code> takes 8.94 courses to reach. In cluster 3,
+<code>Disengaged</code> has persistence 0.889 and a sojourn time of 9.00
+courses.</p>
+<p>The estimates of cluster 3 rest on few observations. Its 17 students
+contribute 2 transitions out of <code>Active</code> and 8 out of
+<code>Average</code>, so the persistence of those two states (0.500
+each) and the long passage times to <code>Active</code> (39.50 courses
+from the other states) are not reliable. The number of transitions out
+of each state can be checked with
+<code>build_network(clusters, method = "frequency")</code> before the
+measures are interpreted.</p>
+</div>
+<div class="section level2">
+<h2 id="how-to-cite-this-article">How to cite this article<a class="anchor" aria-label="anchor" href="#how-to-cite-this-article"></a>
+</h2>
+<p>Saqr, M., López-Pernas, S., &amp; Misiejuk, K. (2026). <em>Markov
+stability analysis</em>. Nestimate. <a href="https://pak.dynasite.org/Nestimate/articles/markov-stability.html">HTML</a>
+· <a href="https://pak.dynasite.org/Nestimate/pdf/markov-stability.pdf">PDF</a></p>
+</div>
+<div class="section level2">
+<h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
+</h2>
+<p>Hamming, R. W. (1950). Error detecting and error correcting codes.
+<em>Bell System Technical Journal</em>, 29(2), 147–160. <a href="https://doi.org/10.1002/j.1538-7305.1950.tb00463.x" class="external-link uri">https://doi.org/10.1002/j.1538-7305.1950.tb00463.x</a></p>
+<p>Kaufman, L., &amp; Rousseeuw, P. J. (1990). <em>Finding groups in
+data: An introduction to cluster analysis</em>. Wiley. <a href="https://doi.org/10.1002/9780470316801" class="external-link uri">https://doi.org/10.1002/9780470316801</a></p>
+<p>Kemeny, J. G., &amp; Snell, J. L. (1976). <em>Finite Markov
+chains</em>. Springer.</p>
+<p>López-Pernas, S., &amp; Saqr, M. (2024). How the dynamics of
+engagement explain the momentum of achievement and the inertia of
+disengagement: A complex systems theory approach. <em>Computers in Human
+Behavior</em>, 153, 108126. <a href="https://doi.org/10.1016/j.chb.2023.108126" class="external-link uri">https://doi.org/10.1016/j.chb.2023.108126</a></p>
+<p>López-Pernas, S., Tikka, S., &amp; Saqr, M. (2025). Mining patterns
+and clusters with transition network analysis: A heterogeneity approach.
+In M. Saqr &amp; S. López-Pernas (Eds.), <em>Advanced learning analytics
+methods: AI, precision and complexity</em> (pp. 447–468). Springer. <a href="https://doi.org/10.1007/978-3-031-95365-1_17" class="external-link uri">https://doi.org/10.1007/978-3-031-95365-1_17</a></p>
+<p>Rousseeuw, P. J. (1987). Silhouettes: A graphical aid to the
+interpretation and validation of cluster analysis. <em>Journal of
+Computational and Applied Mathematics</em>, 20, 53–65. <a href="https://doi.org/10.1016/0377-0427(87)90125-7" class="external-link uri">https://doi.org/10.1016/0377-0427(87)90125-7</a></p>
+<p>Saqr, M., &amp; López-Pernas, S. (2021). The longitudinal
+trajectories of online engagement over a full program. <em>Computers
+&amp; Education</em>, 175, 104325. <a href="https://doi.org/10.1016/j.compedu.2021.104325" class="external-link uri">https://doi.org/10.1016/j.compedu.2021.104325</a></p>
+<p>Saqr, M., Dever, D., López-Pernas, S., Gernigon, C., Marchand, G.,
+&amp; Kaplan, A. (2025). Complex dynamic systems in education: Beyond
+the static, the linear and the causal reductionism. In M. Saqr &amp; S.
+López-Pernas (Eds.), <em>Advanced learning analytics methods: AI,
+precision and complexity</em> (pp. 289–311). Springer. <a href="https://doi.org/10.1007/978-3-031-95365-1_12" class="external-link uri">https://doi.org/10.1007/978-3-031-95365-1_12</a></p>
+<p>Saqr, M., López-Pernas, S., Helske, S., Durand, M., Murphy, K.,
+Studer, M., &amp; Ritschard, G. (2024). Sequence analysis in education:
+Principles, technique, and tutorial with R. In M. Saqr &amp; S.
+López-Pernas (Eds.), <em>Learning analytics methods and tutorials: A
+practical guide using R</em> (pp. 321–354). Springer. <a href="https://doi.org/10.1007/978-3-031-54464-4_10" class="external-link uri">https://doi.org/10.1007/978-3-031-54464-4_10</a></p>
+<p>Saqr, M., López-Pernas, S., Jovanović, J., &amp; Gašević, D. (2023).
+Intense, turbulent, or wallowing in the mire: A longitudinal study of
+cross-course online tactics, strategies, and trajectories. <em>The
+Internet and Higher Education</em>, 57, 100902. <a href="https://doi.org/10.1016/j.iheduc.2022.100902" class="external-link uri">https://doi.org/10.1016/j.iheduc.2022.100902</a></p>
+<p>Saqr, M., López-Pernas, S., &amp; Misiejuk, K. (2026). Nestimate: An
+R package for dynamic, probabilistic, and high order network analysis.
+<em>Applied Psychological Measurement</em>. <a href="https://doi.org/10.1177/01466216261472019" class="external-link uri">https://doi.org/10.1177/01466216261472019</a></p>
+<p>Saqr, M., López-Pernas, S., &amp; Tikka, S. (2026). Modeling
+stability and change from a complex systems perspective. In M. Saqr, K.
+Misiejuk, &amp; S. López-Pernas (Eds.), <em>Innovations in analytics of
+learning dynamics</em> (pp. 51–61). Springer. <a href="https://doi.org/10.1007/978-3-032-34157-0_4" class="external-link uri">https://doi.org/10.1007/978-3-032-34157-0_4</a></p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

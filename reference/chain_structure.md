@@ -1,4 +1,4 @@
-# Qualitative structure of a discrete-time Markov chain
+# Classify the states and structure of a Markov chain
 
 `chain_structure()` describes the qualitative structure of a
 discrete-time Markov chain: the properties that depend only on which
@@ -35,13 +35,13 @@ print(x, ...)
 plot(x, show_values = TRUE, digits = 2L, ...)
 
 # S3 method for class 'chain_structure'
-summary(object, ...)
+summary(object, table = c("states", "absorption"), ...)
 
 # S3 method for class 'chain_structure_group'
 print(x, ...)
 
 # S3 method for class 'chain_structure_group'
-summary(object, ...)
+summary(object, table = c("states", "absorption"), ...)
 
 # S3 method for class 'summary_chain_structure'
 print(x, ...)
@@ -76,14 +76,14 @@ print(x, ...)
 - tol:
 
   The tolerance below which a transition probability counts as zero when
-  the support graph is built (it drives `classification`,
-  `communicating_classes`, `period` and `hitting_probabilities`), and
+  the support graph is built. Every structural result is read from that
+  graph, and the absorption results from the chain with those
+  transitions removed and each row rescaled to sum to 1. `tol` is also
   the tolerance of the reversibility check (detailed balance). Default
   `1e-10`. It does **not** govern the absorbing-state test: a state is
-  absorbing only when `P[i, i]` equals 1 to a fixed internal tolerance
-  of `.Machine$double.eps^0.5`, so raising `tol` to ignore tiny
-  transition probabilities never reclassifies a near-deterministic state
-  as absorbing.
+  absorbing only when `P[i, i]` equals 1 to within a fixed tolerance of
+  about 1.5e-8, so raising `tol` to ignore tiny transition probabilities
+  never reclassifies a near-deterministic state as absorbing.
 
 - ...:
 
@@ -110,21 +110,25 @@ print(x, ...)
   For the [`summary()`](https://rdrr.io/r/base/summary.html) methods: a
   `chain_structure` or `chain_structure_group` object.
 
+- table:
+
+  For [`summary()`](https://rdrr.io/r/base/summary.html): `"states"`
+  (default), one row per state, or `"absorption"`, one row per transient
+  state and closed class.
+
 ## Value
 
 A `chain_structure` object, or for a `netobject_group` a
-`chain_structure_group` (class `c("chain_structure_group", "list")`), a
-named list holding one `chain_structure` per network.
-[`print()`](https://rdrr.io/r/base/print.html) shows the chain-level
-properties (for a group, one block per network);
+`chain_structure_group`, a named list holding one `chain_structure` per
+network. [`print()`](https://rdrr.io/r/base/print.html) shows the
+chain-level properties (for a group, one block per network);
 [`summary()`](https://rdrr.io/r/base/summary.html) returns a data frame
-(see *Summary columns*): for a `chain_structure`, one row per state, of
-class `c("summary_chain_structure", "data.frame")`, carrying the
-chain-level flags `is_regular`, `is_irreducible`, `is_aperiodic`,
-`is_reversible`, `n_classes` and `absorbing_states` as attributes that
-its [`print()`](https://rdrr.io/r/base/print.html) method shows as a
-header above the table; for a `chain_structure_group`, a plain data
-frame with one row per group and state.
+(see *Summary columns*): for a `chain_structure`, a
+`summary_chain_structure` data frame with one row per state, carrying
+the chain-level flags as attributes that its
+[`print()`](https://rdrr.io/r/base/print.html) method shows above the
+table; for a `chain_structure_group`, a plain data frame with one row
+per group and state.
 [`plot()`](https://rdrr.io/r/graphics/plot.default.html) returns a
 `ggplot` heatmap of the hitting probabilities (see *Plot colours*). The
 [`print()`](https://rdrr.io/r/base/print.html) methods return their
@@ -157,8 +161,8 @@ The fields of a `chain_structure`:
 
 - `absorbing_states`:
 
-  Character vector of states with `P[i, i] = 1`, tested to within
-  `.Machine$double.eps^0.5`; `tol` does not relax this.
+  Character vector of states with `P[i, i]` equal to 1, to within about
+  1.5e-8; `tol` does not relax this.
 
 - `period`:
 
@@ -188,7 +192,8 @@ The fields of a `chain_structure`:
   `n x n` matrix whose `[i, j]` entry is the probability of ever
   reaching `j` from `i`, computed over the same `tol`-thresholded
   support graph as `classification`, so the two agree: a state in a
-  closed class has hitting probability 0 to every state outside it.
+  closed class has hitting probability 0 to every state outside it. The
+  absorption probabilities and times use the same thresholded chain.
 
 - `absorption_probabilities`:
 
@@ -226,11 +231,11 @@ The [`plot()`](https://rdrr.io/r/graphics/plot.default.html) method
 draws the hitting-probability matrix as a heatmap, with rows and columns
 ordered by communicating class (closed classes first, larger classes
 before smaller ones) so the block structure is visible. Cell colour runs
-from white (0) to dark blue (1) and encodes
-`P(ever reach j | start at i)`; the diagonal uses the return-time
-convention, `P(return to j in >= 1 steps)`. The state labels on both
-axes name each state's class, as in `Active (recurrent)`, and the
-subtitle lists the chain-level properties. A chain that is not
+from white (0) to dark blue (1) and encodes the probability of ever
+reaching the column state from the row state; the diagonal holds the
+probability of returning to the state in one or more steps. The state
+labels on both axes name each state's class, as in `Active (recurrent)`,
+and the subtitle lists the chain-level properties. A chain that is not
 irreducible shows zero entries between classes that cannot reach each
 other; when every state ends in one absorbing state, that state's column
 is all 1s.
@@ -239,22 +244,35 @@ is all 1s.
 
 [`summary()`](https://rdrr.io/r/base/summary.html) of a
 `chain_structure` returns one row per state, combining every per-state
-result: `state`, `classification`, `period`, `persistence` (the diagonal
-of the transition matrix), `return_probability` (the diagonal of the
-hitting matrix) and `sojourn_steps` (`1 / (1 - persistence)`, `Inf` for
-an absorbing state). An irreducible chain adds `stationary_probability`.
-A chain with transient states adds `absorption_probability` (one closed
-class) or one `absorbed_in_<class>` column per closed class (named as
-the columns of `absorption_probabilities`), and `mean_absorption_time`
-(steps to enter a closed class); these are `NA` for states that are not
-transient. Probabilities are rounded to 4 decimals and step counts to 2.
-Columns are ordered for readability: identifiers first, classification
-second, per-state results last.
+result:
+
+- `state`, `classification` and `period`;
+
+- `persistence`, the diagonal of the transition matrix;
+
+- `return_probability`, the diagonal of the hitting matrix;
+
+- `sojourn_steps`, `1 / (1 - persistence)` (`Inf` for an absorbing
+  state);
+
+- `stationary_probability`, for an irreducible chain;
+
+- for a chain with transient states: `mean_absorption_time`, the steps
+  to enter a closed class (`NA` for states that are not transient).
+
+Probabilities are rounded to 4 decimals and step counts to 2.
+
+`summary(table = "absorption")` returns one row per transient state and
+closed class: `state`, `class` (the class's states joined by `+`) and
+`probability`, the probability of ending in that class, unrounded; no
+rows when the chain has no transient state. Columns are ordered for
+readability: identifiers first, classification second, per-state results
+last.
 
 [`summary()`](https://rdrr.io/r/base/summary.html) of a
 `chain_structure_group` stacks these tables into one data frame with a
-`group` column first, one row per group and state; a column that only
-some groups have is `NA` for the others.
+`group` column first, one row per group and state (or state and class);
+a column that only some groups have is `NA` for the others.
 
 ## References
 

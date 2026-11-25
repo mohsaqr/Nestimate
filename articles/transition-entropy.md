@@ -1,10 +1,5 @@
 # Transition Matrix Entropy
 
-``` r
-
-library(Nestimate)
-```
-
 How predictable is a sequential process? The entropy rate of its
 transition matrix answers with a single number: the average uncertainty,
 in bits, about the next state given the current one (Shannon, 1948;
@@ -15,16 +10,18 @@ H = -\sum_i \pi_i \sum_j P_{ij} \log_2 P_{ij},
 ```
 
 where $`P`$ is the transition matrix and $`\pi`$ its stationary
-distribution (the eigenvector of $`P^\top`$ at $`\lambda = 1`$). This is
-the quantity Krejtz et al. (2015) introduced to behavioral research as
-gaze transition entropy and Krejtz et al. (2025) track in real time as
-mobile transition matrix entropy. Nestimate computes it for any
-transition network, decomposes it per state and per edge, tracks it over
+distribution (the eigenvector of $`P^\top`$ at $`\lambda = 1`$; Kemeny &
+Snell, 1976). This is the quantity Krejtz et al. (2015) introduced to
+behavioral research as gaze transition entropy and Krejtz et al. (2025)
+track in real time as mobile transition matrix entropy. Nestimate (Saqr
+et al., 2026) computes it for any transition network (Saqr et al.,
+2025a, 2025b), decomposes it per state and per edge, tracks it over
 time, and estimates it with Bayesian credible intervals.
 
 Throughout we use the bundled `group_regulation_long` data: 27,533
 timestamped regulation actions by students collaborating in groups,
-coded into nine states.
+coded into nine states, synthetically generated from the
+`group_regulation` dataset of the tna package (Tikka et al., 2025).
 
 ## The entropy of a transition network
 
@@ -33,6 +30,7 @@ accepts a fitted network, a transition matrix, or sequence data.
 
 ``` r
 
+library(Nestimate)
 net <- build_network(group_regulation_long, method = "relative",
                      actor = "Actor", action = "Action", time = "Time")
 te <- transition_entropy(net)
@@ -67,39 +65,26 @@ $`H(P_{i\cdot})`$. The summary and plot display those terms.
 ``` r
 
 summary(te)
-#> Transition Entropy Summary (bits)
-#> 
-#> Per-state contribution to h(P):
-#>       state stationary row_entropy row_entropy_norm contribution
-#>   consensus      0.250       2.393            0.755        0.597
-#>        plan      0.245       2.261            0.713        0.554
-#>     discuss      0.152       2.706            0.854        0.411
-#>     emotion      0.109       2.390            0.754        0.261
-#>  coregulate      0.082       2.640            0.833        0.216
-#>    cohesion      0.067       2.225            0.702        0.148
-#>     monitor      0.049       2.487            0.785        0.121
-#>   synthesis      0.027       2.248            0.709        0.060
-#>       adapt      0.021       2.006            0.633        0.042
-#>  contribution_pct
-#>              24.8
-#>              23.0
-#>              17.0
-#>              10.8
-#>               9.0
-#>               6.2
-#>               5.0
-#>               2.5
-#>               1.7
-#> 
-#> Chain-level summary:
-#>               quantity   raw normalised
-#>      entropy_rate h(P) 2.409      0.760
-#>       stationary H(pi) 2.782      0.878
-#>  redundancy H(pi)-h(P) 0.373      0.134
-#>       ceiling log_2(n) 3.170      1.000
-#> 
-#> Normalised: row entropy, h(P) and H(pi) are raw / log_2(n_states), in [0, 1];
-#>   redundancy is the relative redundancy (H(pi) - h(P)) / H(pi).
+#>        state stationary row_entropy row_entropy_norm contribution
+#> 1  consensus 0.24958879    2.392758        0.7548312   0.59720568
+#> 2       plan 0.24486443    2.260687        0.7131673   0.55356184
+#> 3    discuss 0.15179366    2.706071        0.8536704   0.41076445
+#> 4    emotion 0.10912423    2.390486        0.7541145   0.26085998
+#> 5 coregulate 0.08189694    2.639990        0.8328240   0.21620706
+#> 6   cohesion 0.06666042    2.224856        0.7018641   0.14830987
+#> 7    monitor 0.04864371    2.487425        0.7846952   0.12099758
+#> 8  synthesis 0.02659239    2.248109        0.7091995   0.05978260
+#> 9      adapt 0.02083543    2.005698        0.6327271   0.04178956
+#>   contribution_pct
+#> 1        24.785681
+#> 2        22.974341
+#> 3        17.047856
+#> 4        10.826408
+#> 5         8.973189
+#> 6         6.155268
+#> 7         5.021733
+#> 8         2.481142
+#> 9         1.734382
 plot(te)
 ```
 
@@ -130,38 +115,21 @@ ent
 #> Network (method: entropy) [directed]
 #>   Weights: [0.069, 5.482]  |  mean: 1.282
 #> 
-#>   Weight matrix:
-#>              adapt cohesion consensus coregulate discuss emotion monitor  plan
-#>   adapt      0.000    0.442     0.440      0.103   0.208   0.317   0.142 0.081
-#>   cohesion   0.069    0.391     1.386      1.012   0.671   0.996   0.450 1.102
-#>   consensus  0.379    0.934     3.065      4.693   4.696   2.848   2.136 5.482
-#>   coregulate 0.328    0.587     1.323      0.430   1.739   1.485   1.037 1.678
-#>   discuss    1.712    1.317     3.315      1.895   2.897   2.160   0.770 0.471
-#>   emotion    0.097    2.387     2.383      0.754   1.520   1.288   0.787 1.502
-#>   monitor    0.146    0.469     0.852      0.481   1.071   0.634   0.212 0.964
-#>   plan       0.099    1.359     5.265      1.025   2.677   4.130   2.860 5.393
-#>   synthesis  0.542    0.182     0.566      0.220   0.277   0.298   0.086 0.310
-#>              synthesis
-#>   adapt          0.000
-#>   cohesion       0.080
-#>   consensus      0.553
-#>   coregulate     0.366
-#>   discuss        2.510
-#>   emotion        0.108
-#>   monitor        0.193
-#>   plan           0.166
-#>   synthesis      0.000 
+#>   Strongest edges (10 of 78):
+#>    from      to         weight
+#>    consensus plan       5.482 
+#>    plan      plan       5.393 
+#>    plan      consensus  5.265 
+#>    consensus discuss    4.696 
+#>    consensus coregulate 4.693 
+#>    plan      emotion    4.130 
+#>    discuss   consensus  3.315 
+#>    consensus consensus  3.065 
+#>    discuss   discuss    2.897 
+#>    plan      monitor    2.860  
 #> 
-#>   Initial probabilities:
-#>   consensus     0.214  ████████████████████████████████████████
-#>   plan          0.204  ██████████████████████████████████████
-#>   discuss       0.175  █████████████████████████████████
-#>   emotion       0.151  ████████████████████████████
-#>   monitor       0.144  ███████████████████████████
-#>   cohesion      0.060  ███████████
-#>   synthesis     0.019  ████
-#>   coregulate    0.019  ████
-#>   adapt         0.011  ██
+#>   extract_edges(include_self = TRUE) lists every edge; extract_transition_matrix() gives the weight matrix;
+#>   extract_initial_probs() the initial probabilities.
 #> 
 #>   Scaling: share
 ```
@@ -212,31 +180,33 @@ summary(tr)
 #>         change
 #> 1 -0.007963838
 #> 2  0.114074796
-plot(tr)
+plot(tr, seed = 1)
 ```
 
 ![](transition-entropy_files/figure-html/trajectory-1.png)
 
-Each faint line is one 500-transition window stepped by 100; the bold
-curve is the loess trend per achievement group. Declining entropy is
-routinization — the group settling into predictable regulation; rising
-entropy is exploration; a level shift marks a phase change. The `change`
-column of the summary (last window minus first) gives each group’s net
-trend. Within a window the chain is routinely non-ergodic, so the
-per-window estimator weights rows by observed occupancy rather than the
-eigenvector stationary distribution; over long stationary stretches the
-two coincide.
+The entropy is computed in windows of 500 transitions stepped by 100;
+the curve is the loess trend of those windows (Cleveland, 1979) per
+achievement group, and the band its 95% interval from 200 resamples of
+the actors. Declining entropy is routinization — the group settling into
+predictable regulation; rising entropy is exploration; a level shift
+marks a phase change. The `change` column of the summary (last window
+minus first) gives each group’s net trend. Within a window the chain is
+routinely non-ergodic, so the per-window estimator weights rows by
+observed occupancy rather than the eigenvector stationary distribution;
+over long stationary stretches the two coincide.
 
 ## Bayesian estimation
 
-Plug-in entropy treats an edge observed three times exactly like one
-observed three thousand times.
+Plug-in entropy is biased in small samples (Paninski, 2003) and treats
+an edge observed three times exactly like one observed three thousand
+times.
 [`entropy_bayes()`](https://pak.dynasite.org/Nestimate/reference/entropy_bayes.md)
 places an independent Dirichlet posterior on each row of the transition
-matrix (Jeffreys prior 0.5 by default) and pushes Monte Carlo draws
-through the entropy formula, so every quantity — the entropy rate, each
-state’s branching entropy, each edge’s contribution — arrives with a
-credible interval that reflects how much data supports it.
+matrix (the Jeffreys (1946) prior, 0.5, by default) and pushes Monte
+Carlo draws through the entropy formula, so every quantity — the entropy
+rate, each state’s branching entropy, each edge’s contribution — arrives
+with a credible interval that reflects how much data supports it.
 
 ``` r
 
@@ -295,18 +265,66 @@ level.
   differences via the posterior draws; its pruned entropy network for a
   display without unstable edges.
 
+## How to cite this article
+
+Saqr, M. (2026). *Transition matrix entropy*. Nestimate.
+[HTML](https://pak.dynasite.org/Nestimate/articles/transition-entropy.html)
+· [PDF](https://pak.dynasite.org/Nestimate/pdf/transition-entropy.pdf)
+
 ## References
 
-Cover, T. M., & Thomas, J. A. (2006). *Elements of Information Theory*
-(2nd ed., ch. 4). Wiley.
+Cleveland, W. S. (1979). Robust locally weighted regression and
+smoothing scatterplots. *Journal of the American Statistical
+Association*, 74(368), 829–836.
+<https://doi.org/10.1080/01621459.1979.10481038>
+
+Cover, T. M., & Thomas, J. A. (2006). *Elements of information theory*
+(2nd ed.). Wiley. <https://doi.org/10.1002/047174882X>
+
+Jeffreys, H. (1946). An invariant form for the prior probability in
+estimation problems. *Proceedings of the Royal Society of London. Series
+A. Mathematical and Physical Sciences*, 186(1007), 453–461.
+<https://doi.org/10.1098/rspa.1946.0056>
+
+Kemeny, J. G., & Snell, J. L. (1976). *Finite Markov chains*. Springer.
 
 Krejtz, K., Duchowski, A., Szmidt, T., Krejtz, I., González Perilli, F.,
 Pires, A., Vilaró, A., & Villalobos, N. (2015). Gaze transition entropy.
-*ACM Transactions on Applied Perception*, 13(1), 4:1–4:20.
+*ACM Transactions on Applied Perception*, 13(1), 1–20.
+<https://doi.org/10.1145/2834121>
 
 Krejtz, K., Hughes, C. J., Stasiak, I., Duchowski, A., & Krejtz, I.
 (2025). Real-time mobile transition matrix entropy based on eye and head
-movements. *Proceedings of ETRA ’25*.
+movements. In *Proceedings of the 2025 Symposium on Eye Tracking
+Research and Applications (ETRA ’25)* (pp. 1–8). ACM.
+<https://doi.org/10.1145/3715669.3723128>
+
+Paninski, L. (2003). Estimation of entropy and mutual information.
+*Neural Computation*, 15(6), 1191–1253.
+<https://doi.org/10.1162/089976603321780272>
+
+Saqr, M., López-Pernas, S., & Misiejuk, K. (2026). Nestimate: An R
+package for dynamic, probabilistic, and high order network analysis.
+*Applied Psychological Measurement*.
+<https://doi.org/10.1177/01466216261472019>
+
+Saqr, M., López-Pernas, S., & Tikka, S. (2025a). Mapping relational
+dynamics with transition network analysis: A primer and tutorial. In M.
+Saqr & S. López-Pernas (Eds.), *Advanced learning analytics methods: AI,
+precision and complexity* (pp. 371–411). Springer.
+<https://doi.org/10.1007/978-3-031-95365-1_15>
+
+Saqr, M., López-Pernas, S., Törmänen, T., Kaliisa, R., Misiejuk, K., &
+Tikka, S. (2025b). Transition network analysis: A novel framework for
+modeling, visualizing, and identifying the temporal patterns of learners
+and learning processes. In *Proceedings of the 15th International
+Learning Analytics and Knowledge Conference (LAK25)* (pp. 351–361). ACM.
+<https://doi.org/10.1145/3706468.3706513>
 
 Shannon, C. E. (1948). A mathematical theory of communication. *Bell
-System Technical Journal*, 27, 379–423.
+System Technical Journal*, 27(3), 379–423.
+<https://doi.org/10.1002/j.1538-7305.1948.tb01338.x>
+
+Tikka, S., López-Pernas, S., & Saqr, M. (2025). tna: An R package for
+transition network analysis. *Applied Psychological Measurement*, 49(6),
+326–328. <https://doi.org/10.1177/01466216251348840>

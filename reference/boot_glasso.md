@@ -1,4 +1,4 @@
-# Bootstrap for Regularised Partial Correlation Networks
+# Bootstrap a graphical lasso network
 
 `boot_glasso()` assesses how accurately an EBIC graphical lasso network
 is estimated and how stable its centralities are, by resampling the
@@ -71,10 +71,13 @@ plot(x, type = "edges", measure = NULL, ...)
   `netobject` (or `cograph_network`) built with `method = "glasso"`,
   whose data are resampled; any `gamma`, `nlambda` or `cor_method` set
   in its `params` replaces the arguments of the same name, and its
-  `lambda.min.ratio`, `penalize.diagonal` and `refit` are used too, so
-  `original_pcor` is the network's weights. Any other network raises an
-  error. A correlation or covariance matrix is not accepted: a matrix is
-  always read as data, its rows as observations. For the
+  `lambda.min.ratio`, `penalize.diagonal`, `refit` and `threshold` are
+  used too, as is the network's own `threshold` when it has no
+  `scaling`, so `original_pcor` is the network's weights (for a scaled
+  network, its partial correlations before the scaling) and every
+  resample is thresholded alike. Any other network raises an error. A
+  correlation or covariance matrix is not accepted: a matrix is always
+  read as data, its rows as observations. For the
   [`print()`](https://rdrr.io/r/base/print.html) and
   [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods: a
   `boot_glasso`.
@@ -108,12 +111,15 @@ plot(x, type = "edges", measure = NULL, ...)
 - gamma:
 
   The EBIC hyperparameter; larger values give sparser networks. Default
-  `0.5`. Replaced by the value stored in a `netobject`.
+  `0.5`. For a `netobject`, the network's own value is used (the
+  estimator's default when none is stored) and a different one is
+  ignored with a warning of class `nestimate_ignored_argument`.
 
 - nlambda:
 
   The number of lambda values in the regularisation path, at least 2.
-  Default `100`. Replaced by the value stored in a `netobject`.
+  Default `100`. For a `netobject`, the network's own value, as for
+  `gamma`.
 
 - centrality:
 
@@ -127,16 +133,17 @@ plot(x, type = "edges", measure = NULL, ...)
 
 - centrality_fn:
 
-  A function for measures beyond the four built-in ones: it is called as
-  `centrality_fn(mat)` on the partial correlation matrix and returns a
-  named list of centrality vectors, such as `list(my_metric = ...)`.
-  Default `NULL`; a measure in `centrality` that is neither built in nor
-  returned by it raises an error.
+  A function for measures beyond the four built-in ones: it takes the
+  partial correlation matrix and returns a named list of centrality
+  vectors, such as `list(my_metric = ...)`. Default `NULL`; a measure in
+  `centrality` that is neither built in nor returned by it raises an
+  error.
 
 - cor_method:
 
   The correlation method: `"pearson"` (default), `"spearman"` or
-  `"kendall"`. Replaced by the value stored in a `netobject`.
+  `"kendall"`. For a `netobject`, the network's own value, as for
+  `gamma`.
 
 - ncores:
 
@@ -418,7 +425,7 @@ print(boot)
 #>     expected_influence:    0.00 [Unstable]
 #> 
 #>   Edge differences: 0/15 pairs significantly different
-#>   Timing: 1.0s (bootstrap: 0.6s, case-drop: 0.3s)
+#>   Timing: 2.8s (bootstrap: 1.7s, case-drop: 1.1s)
 summary(boot, type = "edges")
 #>     edge weight    ci_lower  ci_upper inclusion
 #> 1 A -- B      0 -0.11158199 0.2237159      0.35

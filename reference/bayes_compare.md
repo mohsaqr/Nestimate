@@ -1,4 +1,4 @@
-# Bayesian Dirichlet-Multinomial comparison of two transition networks
+# Compare two transition networks with a Bayesian Dirichlet model
 
 `bayes_compare()` compares two transition networks edge by edge and
 returns, for every transition, the posterior mean difference in
@@ -65,6 +65,9 @@ plot(x, significant_only = TRUE, title = NULL, ...)
 print(x, ...)
 
 # S3 method for class 'net_bayes_group'
+plot(x, significant_only = TRUE, title = NULL, ...)
+
+# S3 method for class 'net_bayes_group'
 summary(object, ...)
 ```
 
@@ -79,11 +82,13 @@ summary(object, ...)
   weights; otherwise, and for an `mcml`, an error of class
   `nestimate_bad_input` is raised. Both networks must use the same
   method and hold the same nodes; any other method raises an error,
-  because the model needs transition counts. For the
-  [`print()`](https://rdrr.io/r/base/print.html) and
+  because the model needs transition counts. A `tna` model or a
+  `group_tna` (package tna) is first rebuilt as a network from its own
+  sequences (see
+  [`as_netobject()`](https://pak.dynasite.org/Nestimate/reference/as_netobject.md)).
+  For the [`print()`](https://rdrr.io/r/base/print.html) and
   [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods: a
-  `net_bayes`, or for [`print()`](https://rdrr.io/r/base/print.html) a
-  `net_bayes_group`.
+  `net_bayes` or a `net_bayes_group`.
 
 - y:
 
@@ -264,9 +269,15 @@ For [`plot()`](https://rdrr.io/r/graphics/plot.default.html): with
 cograph installed, it draws the difference network with
 [`cograph::splot()`](https://sonsoles.me/cograph/reference/splot.html),
 each edge labelled with its posterior mean difference and credible
-interval, and returns the `cograph_network` invisibly; without cograph,
-it returns a `ggplot` chord diagram in which colour gives the direction
-of the difference and width its size.
+interval, blue (`#4A6FE3`) where `x` is higher and red (`#D33F6A`) where
+`y` is (`edge_positive_color` and `edge_negative_color` change them),
+and returns the `cograph_network` invisibly; without cograph, it returns
+a `ggplot` chord diagram in which colour gives the direction of the
+difference and width its size. For a `net_bayes_group`,
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) draws every
+comparison in turn, each titled with its name, and returns their results
+in a list named by comparison, invisibly; a group of one comparison
+returns that comparison's result.
 
 ## Details
 

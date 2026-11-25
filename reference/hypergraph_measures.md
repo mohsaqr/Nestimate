@@ -1,4 +1,4 @@
-# Structural measures for a hypergraph
+# Compute the structural measures of a hypergraph
 
 `hypergraph_measures()` computes the structural statistics of a
 hypergraph at three levels: for each node (how many hyperedges it

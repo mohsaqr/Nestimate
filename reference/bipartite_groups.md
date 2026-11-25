@@ -1,4 +1,4 @@
-# Build a Hypergraph from Group Memberships
+# Build a hypergraph from group memberships
 
 `bipartite_groups()` builds a hypergraph from long-format membership
 data, in which each row records that a `player` took part in a `group`
@@ -102,11 +102,10 @@ produces a single 3-hyperedge containing all three, not three pairwise
 edges AB, AC, BC. This avoids information loss when group interactions
 are the primary unit of analysis (Perc et al. 2013).
 
-Unlike
+`bipartite_groups()` takes group memberships as observed, while
 [`build_hypergraph()`](https://pak.dynasite.org/Nestimate/reference/build_hypergraph.md)
-(which derives hyperedges from a network's clique structure),
-`bipartite_groups()` takes group memberships directly. The two functions
-are complementary:
+infers groups from the cliques of a network. The two functions are
+complementary:
 
 - `bipartite_groups()` - when group membership is observed (sessions,
   transactions, co-authorships).

@@ -1,4 +1,4 @@
-# Extract Initial Probabilities from Model
+# Extract the initial-state probabilities of a network
 
 `extract_initial_probs()` returns the initial-state probabilities of a
 network: the share of sequences that start in each state. It reads a
@@ -35,9 +35,10 @@ summary(object, ...)
 
 - model:
 
-  The network: a `netobject`, a `tna`-family model, an `mcml`, or a list
-  holding an `initial` element. Input from which neither initial
-  probabilities nor a weight matrix can be read raises an error.
+  The network: a `netobject`, a group of networks (`netobject_group`), a
+  `tna`-family model, an `mcml`, or a list holding an `initial` element.
+  Input from which neither initial probabilities nor a weight matrix can
+  be read raises an error.
 
 - x:
 
@@ -64,6 +65,10 @@ differs from 1 by more than 1e-6), of class
 [`summary()`](https://rdrr.io/r/base/summary.html) returns a data frame
 with one row per state and the columns `state` and `prob`, sorted by
 decreasing probability.
+
+For a group of networks (`netobject_group`): a data frame with one row
+per network and state and the columns `group`, `state` and `prob`, the
+states in each network's order.
 
 For an `mcml`: a named list of plain numeric vectors, `macro` first and
 then one per cluster, taken as stored in each layer (`inits`).

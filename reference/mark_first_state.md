@@ -1,4 +1,4 @@
-# Mark leading-NA cells with an explicit state label
+# Fill leading missing cells with a start state
 
 `mark_first_state()` fills every missing cell before each sequence's
 first observed state with an explicit state, `"Start"` by default, and
@@ -35,10 +35,10 @@ mark_first_state(data, state = "Start", cols = NULL)
 - state:
 
   The label written into the leading missing cells, a single non-empty
-  string. Default `"Start"`. If the label already occurs in `data`, a
-  warning of class `nestimate_state_collision` is given and `_1`, `_2`,
-  ... is appended until it is unique, so the marker is never confused
-  with an observed state.
+  string. Default `"Start"`. A label that already occurs in `data` is
+  made unique with a suffix (`_1`, `_2`, ...) and raises the warning
+  `nestimate_state_collision`, so the marker is never confused with an
+  observed state.
 
 - cols:
 

@@ -1,4 +1,4 @@
-# Compare Network-Level Statistics of Two Networks
+# Test whether network-level statistics differ between two networks
 
 `vertex_compare()` tests whether two observed networks differ in their
 network-level statistics, the two-network test Snijders & Borgatti
@@ -57,7 +57,11 @@ plot(x, ...)
   the same statistics: a mismatch, such as a directed network's
   `reciprocity` against an undirected network, or two precomputed
   results with different `statistics`, raises an error rather than
-  comparing a subset. For the
+  comparing a subset. A `tna` model (package tna) is first rebuilt as a
+  network from its own sequences (see
+  [`as_netobject()`](https://pak.dynasite.org/Nestimate/reference/as_netobject.md)).
+  A latency network raises an error of class
+  `nestimate_latency_resampling`. For the
   [`print()`](https://rdrr.io/r/base/print.html) and
   [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods, `x`
   is a `net_vertex_comparison` result.
@@ -85,7 +89,9 @@ plot(x, ...)
 
   Statistics of your own, as a named list of functions, each taking the
   weight matrix and returning a single number. They are computed beside
-  the built-ins on the whole matrix, diagonal included. Default `NULL`.
+  the built-ins on the whole matrix, diagonal included. Each needs a
+  name of its own: a name used twice or taken by a built-in statistic
+  raises an error of class `nestimate_bad_input`. Default `NULL`.
 
 - directed:
 
@@ -104,10 +110,9 @@ plot(x, ...)
 
 - labels:
 
-  Two names for the networks, used in the print header, the plot axis
-  and the column names `observed_<label>` (made syntactic with
-  [`make.names()`](https://rdrr.io/r/base/make.names.html)). Default
-  `c("x", "y")`.
+  Two names for the networks, used in the print header and the plot
+  axis. The columns are always `observed_x` (the first network) and
+  `observed_y` (the second). Default `c("x", "y")`.
 
 - digits:
 
@@ -130,12 +135,12 @@ sizes and the first network's number of replicates, then the summary
 table with significance stars;
 [`summary()`](https://rdrr.io/r/base/summary.html) returns that table as
 a data frame with one row per statistic and the columns `statistic`, the
-two observed values (`observed_<label>`), `diff` (first minus second),
-`se_diff`, `z`, `p_value` (two-sided), `ci_lower` and `ci_upper`;
-[`plot()`](https://rdrr.io/r/graphics/plot.default.html) draws the
-differences with their intervals. When a statistic has no bootstrap
-variation in either network (both standard errors 0), its `z` and
-`p_value` are `NA`. The object holds:
+two observed values (`observed_x`, `observed_y`), `diff` (first minus
+second), `se_diff`, `z`, `p_value` (two-sided), `ci_lower` and
+`ci_upper`; [`plot()`](https://rdrr.io/r/graphics/plot.default.html)
+draws the differences with their intervals. When a statistic has no
+bootstrap variation in either network (both standard errors 0), its `z`
+and `p_value` are `NA`. The object holds:
 
 - summary:
 

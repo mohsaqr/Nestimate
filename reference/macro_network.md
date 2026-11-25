@@ -1,4 +1,4 @@
-# Cluster-Level Network, With One Cluster Expanded
+# Build the cluster-level network with chosen clusters expanded
 
 `macro_network()` returns the cluster-level (macro) network of an
 `mcml`, optionally with one or more clusters expanded back into their
@@ -113,26 +113,26 @@ macro_network(mc)                    # every cluster collapsed
 #> Transition Network (relative probabilities) [directed]
 #>   Weights: [0.333, 0.667]  |  mean: 0.500
 #> 
-#>   Weight matrix:
-#>         G1    G2
-#>   G1 0.400 0.600
-#>   G2 0.333 0.667 
+#>   Strongest edges (4 of 4):
+#>    from to weight
+#>    G2   G2 0.667 
+#>    G1   G2 0.600 
+#>    G1   G1 0.400 
+#>    G2   G1 0.333  
 #> 
-#>   Initial probabilities:
-#>   G1            0.750  ████████████████████████████████████████
-#>   G2            0.250  █████████████
+#>   extract_edges(include_self = TRUE) lists every edge; extract_transition_matrix() gives the weight matrix;
+#>   extract_initial_probs() the initial probabilities.
 macro_network(mc, expand = "G2")     # G2 shown as C and D
 #> Transition Network (relative probabilities) [directed]
 #>   Weights: [0.400, 1.000]  |  mean: 0.750
 #> 
-#>   Weight matrix:
-#>        C D  G1
-#>   C  0.0 1 0.0
-#>   D  0.0 0 1.0
-#>   G1 0.6 0 0.4 
+#>   Strongest edges (4 of 4):
+#>    from to weight
+#>    C    D  1.0   
+#>    D    G1 1.0   
+#>    G1   C  0.6   
+#>    G1   G1 0.4    
 #> 
-#>   Initial probabilities:
-#>   G1            0.750  ████████████████████████████████████████
-#>   C             0.250  █████████████
-#>   D             0.000  
+#>   extract_edges(include_self = TRUE) lists every edge; extract_transition_matrix() gives the weight matrix;
+#>   extract_initial_probs() the initial probabilities.
 ```

@@ -1,4 +1,4 @@
-# Multi-Cluster Multi-Level Aggregation for Psychometric Networks
+# Build an MCML model of a psychometric network
 
 `build_mcml_pc()` collapses a psychometric network whose nodes are
 assigned to clusters into a cluster-level (macro) network and one
@@ -281,6 +281,12 @@ plot(x, digits = 2, ...)
 
   The correlation used when estimating from raw data: `"pearson"`
   (default), `"spearman"` or `"polychoric"` (needs lavaan; see Details).
+  For a network, the correlation it was estimated with, unless given. A
+  network estimated with another correlation (such as `"kendall"`) is
+  read as it is when nothing is re-estimated, that is with
+  `within = "subnetwork"` and any `weighting` but `"factor"`; otherwise
+  it raises an error of class `nestimate_bad_input` unless `cor_method`
+  is given.
 
 - signed:
 
@@ -497,10 +503,9 @@ draw them without arrowheads.
 
 - [`plot()`](https://rdrr.io/r/graphics/plot.default.html) draws the
   macro (cluster-level) weights as a heatmap in the package's diverging
-  palette, with each weight printed in its tile. For the two-layer
-  network drawing use
-  [`cograph::plot_mcml()`](https://sonsoles.me/cograph/reference/plot_mcml.html),
-  which accepts `mcml_pc` objects and draws them undirected.
+  palette, with each weight printed in its tile.
+  [`cograph::plot_mcml()`](https://sonsoles.me/cograph/reference/plot_mcml.html)
+  draws both layers as undirected networks.
 
 ## References
 
@@ -522,14 +527,14 @@ correlation networks. *Psychological Methods*, 23(4), 617-634.
 
 ## See also
 
-[`build_mcml`](https://pak.dynasite.org/Nestimate/reference/build_mcml.md)
-for transition networks,
-[`loading_stability`](https://pak.dynasite.org/Nestimate/reference/loading_stability.md)
-for composite-weight stability,
-[`bootstrap_network`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.md)
+[`build_mcml()`](https://pak.dynasite.org/Nestimate/reference/build_mcml.md)
+for transition networks;
+[`loading_stability()`](https://pak.dynasite.org/Nestimate/reference/loading_stability.md)
+for the stability of the composite weights;
+[`bootstrap_network()`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.md)
 and
-[`vertex_bootstrap`](https://pak.dynasite.org/Nestimate/reference/vertex_bootstrap.md)
-for uncertainty on the macro network.
+[`vertex_bootstrap()`](https://pak.dynasite.org/Nestimate/reference/vertex_bootstrap.md)
+for the uncertainty of the macro network.
 
 ## Examples
 

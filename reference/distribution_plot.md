@@ -1,4 +1,4 @@
-# State Distribution Plot Over Time
+# Draw a state distribution plot
 
 `distribution_plot()` draws how the states are distributed at each time
 point: for every position column it counts the sequences in each state

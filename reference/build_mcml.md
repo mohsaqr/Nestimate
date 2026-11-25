@@ -1,4 +1,4 @@
-# Build MCML from Raw Transition Data
+# Build an MCML model of cluster and within-cluster transitions
 
 `build_mcml()` builds a Multi-Cluster Multi-Level (MCML) model from
 transitions: it recodes every state to its cluster and counts the
@@ -179,10 +179,10 @@ summary(object, ...)
   transition, and `"density"` divides each count by `n_i * n_j`. The
   other methods suit weighted edge lists and weight matrices, where each
   row is already a measurement rather than one observation. On sequences
-  and event logs the within-cluster networks likewise get 1 for each
-  observed pair of states under every method but `"sum"` (`"density"`
-  too, which is not divided by `n_i * n_j` there); on an edge list they
-  hold the aggregated weights.
+  and event logs the within-cluster networks keep the counts under
+  `"sum"` and `"density"` (which is not divided by `n_i * n_j` there)
+  and get 1 for each observed pair of states under the other methods; on
+  an edge list they hold the aggregated weights.
 
 - type:
 
@@ -308,10 +308,9 @@ summary(object, ...)
   those sequences, so passing one of them (or `actor`, `action`, `time`,
   `order`, `session`, `time_threshold`, `end_by`, `labels`, `from`,
   `to`, `weight`, `cols`) with a re-partition raises an error, as does
-  passing `clusters` together with `combine` or `expand`. An `mcml`
-  built from a matrix, from an edge list (it keeps only the
-  within-cluster edges) or with `compute_within = FALSE` raises an error
-  of class `nestimate_mcml_no_sequences`.
+  passing `clusters` together with `combine` or `expand`. Raises
+  `nestimate_mcml_no_sequences` on an `mcml` that keeps no sequences,
+  such as one built from a matrix or an edge list.
   [`sequence_plot()`](https://pak.dynasite.org/Nestimate/reference/sequence_plot.md)
   takes the same two arguments as display options: its `combine` draws
   what it draws for `build_mcml(x, combine = )`, while its `expand`
@@ -354,11 +353,13 @@ edge counts, weight range, weight matrix, initial probabilities and the
 size of the data it carries.
 [`summary()`](https://rdrr.io/r/base/summary.html) returns a data frame
 with one row per cluster, with columns `cluster`, `size`, `within_total`
-(the total absolute weight of the within-cluster network, `NA` when it
-was not built), `between_out` and `between_in` (the absolute macro
-weight leaving and entering the cluster, diagonal excluded); for an
-undirected macro network, `between_out` is the total incident weight and
-`between_in` is `NA`.
+(the total absolute weight of the within-cluster network, each
+observation once as on the macro diagonal: an undirected edge of a
+weight matrix once, an undirected transition count as its two halves;
+`NA` when it was not built), `between_out` and `between_in` (the
+absolute macro weight leaving and entering the cluster, diagonal
+excluded); for an undirected macro network, `between_out` is the total
+incident weight and `between_in` is `NA`.
 [`as_tna()`](https://pak.dynasite.org/Nestimate/reference/as_tna.md)
 turns the levels into a `netobject_group`,
 [`as_htna()`](https://pak.dynasite.org/Nestimate/reference/as_htna.md)

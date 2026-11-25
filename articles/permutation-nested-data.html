@@ -15,6 +15,14 @@
 <script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Nested sequences and the permutation test">
+<meta name="citation_title" content="Nested sequences and the permutation test">
+<meta name="citation_author" content="Saqr, Mohammed">
+<meta name="citation_author" content="López-Pernas, Sonsoles">
+<meta name="citation_author" content="Misiejuk, Kamila">
+<meta name="citation_publication_date" content="2026">
+<meta name="citation_publisher" content="Nestimate">
+<meta name="citation_pdf_url" content="https://pak.dynasite.org/Nestimate/pdf/permutation-nested-data.pdf">
+<meta name="citation_abstract_html_url" content="https://pak.dynasite.org/Nestimate/articles/permutation-nested-data.html">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -24,7 +32,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.12</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -39,8 +47,8 @@
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
 <li><a class="dropdown-item" href="../articles/transition-entropy.html">Transition Matrix Entropy</a></li>
     <li><a class="dropdown-item" href="../articles/transition-networks.html">Network Estimation and Analysis with Nestimate</a></li>
-    <li><a class="dropdown-item" href="../articles/sequence-comparison.html">Sequence Pattern Comparison: Early vs Late Human-AI Interactions</a></li>
-    <li><a class="dropdown-item" href="../articles/sequence-plots.html">Sequence Plots: heatmap, index, and distribution</a></li>
+    <li><a class="dropdown-item" href="../articles/sequence-comparison.html">Comparing Sequences Between Groups: Early vs Late Human-AI Interactions</a></li>
+    <li><a class="dropdown-item" href="../articles/sequence-plots.html">Sequence Plots</a></li>
     <li><a class="dropdown-item" href="../articles/clustering.html">Sequence Clustering</a></li>
     <li><a class="dropdown-item" href="../articles/markov-stability.html">Markov Stability Analysis</a></li>
     <li><hr class="dropdown-divider"></li>
@@ -67,23 +75,42 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.svg" class="logo" alt=""><h1>Nested sequences and the permutation test</h1>
-            
-      
-      <small class="dont-index">Source: <a href="https://github.com/mohsaqr/Nestimate/blob/main/vignettes/articles/permutation-nested-data.Rmd" class="external-link"><code>vignettes/articles/permutation-nested-data.Rmd</code></a></small>
+                        <h4 data-toc-skip class="author">Mohammed
+Saqr</h4>
+            <address class="author_afil">
+      University of Eastern
+Finland<br><h4 data-toc-skip class="author">Sonsoles
+López-Pernas</h4>
+            <address class="author_afil">
+      University of Eastern
+Finland<br><h4 data-toc-skip class="author">Kamila
+Misiejuk</h4>
+            <address class="author_afil">
+      FernUniversität in Hagen, Germany<br><small class="dont-index">Source: <a href="https://github.com/mohsaqr/Nestimate/blob/main/vignettes/articles/permutation-nested-data.Rmd" class="external-link"><code>vignettes/articles/permutation-nested-data.Rmd</code></a></small>
       <div class="d-none name"><code>permutation-nested-data.Rmd</code></div>
-    </div>
+    </address>
+</address>
+</address>
+</div>
 
     
     
 <p>Do high and low achievers regulate their group work differently, or
-do their teams? In <code>group_regulation_long</code>, 2,000 students
-work in 200 teams of 10, and the achievement level is given to the team,
-not to the student. A comparison of High and Low is therefore a
-comparison of teams. The students are nested in teams. The permutation
-test treats each student’s sequence as an independent unit, so a nesting
-effect, teammates behaving alike, would enter the comparison. This
-tutorial runs the comparison, checks for a nesting effect, and shows how
-to report it.</p>
+do their teams? In <code>group_regulation_long</code>, a synthetic
+dataset generated from the <code>group_regulation</code> data of the tna
+package (Tikka, López-Pernas &amp; Saqr 2025), 2,000 students work in
+200 teams of 10, and the achievement level is given to the team, not to
+the student. A comparison of High and Low is therefore a comparison of
+teams. The students are nested in teams. The permutation test treats
+each student’s sequence as an independent unit, so a nesting effect,
+teammates behaving alike, would enter the comparison. The arguments for
+nested data in Nestimate (Saqr, López-Pernas &amp; Misiejuk 2026) are
+<code>actor</code> in <code><a href="../reference/permutation.html">permutation()</a></code>,
+<code><a href="../reference/sequence_compare.html">sequence_compare()</a></code> and <code><a href="../reference/bootstrap_network.html">bootstrap_network()</a></code>,
+and <code>nested</code> with <code>actor</code> in
+<code><a href="../reference/mosaic_plot.html">mosaic_plot()</a></code>, <code><a href="../reference/mosaic_analysis.html">mosaic_analysis()</a></code> and
+<code><a href="../reference/mosaic_test.html">mosaic_test()</a></code>. Their defaults treat every sequence as an
+independent unit.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">achievers</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_network.html">build_network</a></span><span class="op">(</span><span class="va">group_regulation_long</span>, method <span class="op">=</span> <span class="st">"relative"</span>,</span>
 <span>                           actor <span class="op">=</span> <span class="st">"Actor"</span>, action <span class="op">=</span> <span class="st">"Action"</span>,</span>
@@ -113,17 +140,17 @@ transitions.</p>
 <span><span class="co">##   Global test (networks differ overall?): M = 2.612 (p = 0.000999)  |  S = 0.210 (p = 0.000999)</span></span></code></pre>
 <p><code><a href="../reference/permutation.html">permutation()</a></code> pools the 2,000 sequences, reassigns them
 to High and Low 1,000 times, and compares the observed differences with
-the reassigned ones. Two kinds of result are reported. The edge tests
-ask, for each transition, whether the High minus Low difference is
+the reassigned ones, as in the permutation test of transition network
+analysis (Saqr et al. 2025). Two kinds of result are reported. The edge
+tests ask, for each transition, whether the High minus Low difference is
 larger than the reassignments produce: 42 of 78 transitions are. The
 global test asks whether the two networks differ at all, with two
 statistics: M, the sum of all absolute edge differences, and S, the
 largest one. (These letters follow <code><a href="../reference/permutation.html">permutation()</a></code>’s
-convention; in the Network Comparison Test of van Borkulo et al., 2023,
-and in <code><a href="../reference/nct.html">nct()</a></code>, M is the largest edge difference and S the
-difference in global strength.) Both have p = 0.000999, the smallest
-value 1,000 reassignments can give: no reassignment produced a
-difference as large as the observed one.</p>
+convention; in the Network Comparison Test and in <code><a href="../reference/nct.html">nct()</a></code>, M
+is the largest edge difference and S the difference in global strength.)
+Both have p = 0.000999, the smallest value 1,000 reassignments can give:
+no reassignment produced a difference as large as the observed one.</p>
 <p>The test assumes that any student could have been in either group. In
 this design only whole teams could, so the next step accounts for the
 nesting.</p>
@@ -160,9 +187,9 @@ observations are close to independent, and an analysis that ignores the
 nesting gives nearly the same results as one that accounts for it.
 Accounting for nesting becomes necessary when the ICC is not negligible,
 and more so when units are large, because the design effect grows with
-both: approximately 1 + (m − 1) × ICC for units of size m (Kish, 1965).
-A commonly cited rule of thumb is that design effects below 2 do not
-lead to seriously misleading inferences (Muthén &amp; Satorra, 1995).
+both: Kish’s (1965) approximation is 1 + (m − 1) × ICC for units of size
+m. A commonly cited rule of thumb (Muthén &amp; Satorra 1995) is that
+design effects below 2 do not lead to seriously misleading inferences.
 Here the ICC is −0.002 and the design effect 1.03, so accounting for the
 nesting was not necessary, and the results with and without it were
 almost the same.</p>
@@ -171,8 +198,7 @@ almost the same.</p>
 <h2 id="the-nesting-diagnostics">The nesting diagnostics<a class="anchor" aria-label="anchor" href="#the-nesting-diagnostics"></a>
 </h2>
 <p>The intraclass correlation (ICC) is the proportion of the total
-variance that lies between units rather than within them (Shrout &amp;
-Fleiss, 1979):</p>
+variance that lies between units rather than within them:</p>
 <p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="normal">ICC</mtext><mo>=</mo><mfrac><msubsup><mi>σ</mi><mtext mathvariant="normal">between</mtext><mn>2</mn></msubsup><mrow><msubsup><mi>σ</mi><mtext mathvariant="normal">between</mtext><mn>2</mn></msubsup><mo>+</mo><msubsup><mi>σ</mi><mtext mathvariant="normal">within</mtext><mn>2</mn></msubsup></mrow></mfrac><mi>.</mi></mrow><annotation encoding="application/x-tex">\text{ICC} = \frac{\sigma^2_{\text{between}}}{\sigma^2_{\text{between}} + \sigma^2_{\text{within}}}.</annotation></semantics></math></p>
 <p>An ICC of 0 means that members of the same unit are no more alike
 than members of different units; an ICC of 1 means that all members of a
@@ -184,13 +210,13 @@ every student, the share of their transitions that is, for example,
 share across teams is computed within High and within Low. The
 transition ICCs are averaged with weights equal to transition frequency.
 The 95% interval comes from the jackknife, leaving out one team at a
-time (Efron &amp; Tibshirani, 1993).</p>
+time.</p>
 <p>The design effect is the ratio of the variance of an estimate under
 the nested design to its variance had the units been sampled
-independently (Kish, 1965). Here it is the variance of the reassigned
-differences when whole teams move, divided by the variance when single
-students move. A value of 1 means both reassignments give the same
-chance variation.</p>
+independently. Here it is the variance of the reassigned differences
+when whole teams move, divided by the variance when single students
+move. A value of 1 means both reassignments give the same chance
+variation.</p>
 <p><code><a href="../reference/permutation_diagnostics.html">permutation_diagnostics()</a></code> runs the ordinary and the
 team-level test on the same data and reports both with these two
 quantities, one row per compared pair:</p>
@@ -250,10 +276,199 @@ and p = 0.024 and is significant under both.</p>
 (<code>coregulate</code> to <code>adapt</code>, <code>emotion</code> to
 <code>plan</code>), with p-values between 0.047 and 0.072 under both
 tests. With seeds 2 to 4 a different set of two or three transitions
-changes, all with p-values between 0.04 and 0.07. These changes come
+changes, all with p-values between 0.038 and 0.068. These changes come
 from the finite number of reassignments, not from the nesting. The ICC
 indicates little evidence of a nesting effect, and the High–Low
 difference does not depend on the nesting of students in teams.</p>
+</div>
+<div class="section level2">
+<h2 id="mosaic-plots-of-nested-counts">Mosaic plots of nested counts<a class="anchor" aria-label="anchor" href="#mosaic-plots-of-nested-counts"></a>
+</h2>
+<p><code><a href="../reference/mosaic_plot.html">mosaic_plot()</a></code> computes the residuals of a
+group-by-action table. With <code>nested = TRUE</code> the counts are
+taken team by team (<code>actor = "Group"</code>), and the residuals
+allow for the dependence of actions within a team.
+<code>nested_method</code> selects the method: <code>"rao_scott"</code>
+(default), the chi-square corrected for the design effect of the cluster
+sample (Rao &amp; Scott, 1984); <code>"donner_klar"</code>, the
+chi-square adjusted by the intracluster correlation (Donner &amp; Klar,
+1994); <code>"cmh"</code>, the Cochran-Mantel-Haenszel test stratified
+by team (Landis, Heyman, &amp; Koch, 1978); <code>"gee"</code>, a
+generalized estimating equation with a cluster-robust covariance (Liang
+&amp; Zeger, 1986); and <code>"glmm"</code>, a generalized linear mixed
+model with a random effect per team (Breslow &amp; Clayton, 1993).
+<code>report = TRUE</code> prints the overall test and adds it to the
+plot as a subtitle.</p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/mosaic_plot.html">mosaic_plot</a></span><span class="op">(</span><span class="va">achievers</span>, seed <span class="op">=</span> <span class="fl">1</span>, left_angle <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span></code></pre></div>
+<p><img src="permutation-nested-data_files/figure-html/mosaic-default-1.png" class="r-plt" alt="" width="672"></p>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/mosaic_plot.html">mosaic_plot</a></span><span class="op">(</span><span class="va">achievers</span>, nested <span class="op">=</span> <span class="cn">TRUE</span>, actor <span class="op">=</span> <span class="st">"Group"</span>, report <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>            left_angle <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">##     method      test statistic       df      df2      p_value     n clusters</span></span>
+<span><span class="co">##  rao_scott Rao-Scott  37.21183 6.955041 1384.053 1.065954e-47 27533      200</span></span>
+<span><span class="co">##  design_effect icc</span></span>
+<span><span class="co">##      0.9335922  NA</span></span></code></pre>
+<p><img src="permutation-nested-data_files/figure-html/mosaic-nested-1.png" class="r-plt" alt="" width="672"></p>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/mosaic_plot.html">mosaic_plot</a></span><span class="op">(</span><span class="va">achievers</span>, nested <span class="op">=</span> <span class="cn">TRUE</span>, nested_method <span class="op">=</span> <span class="st">"donner_klar"</span>,</span>
+<span>            actor <span class="op">=</span> <span class="st">"Group"</span>, report <span class="op">=</span> <span class="cn">TRUE</span>, left_angle <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">##       method        test statistic df df2      p_value     n clusters</span></span>
+<span><span class="co">##  donner_klar Donner-Klar  277.9254  8  NA 2.038053e-55 27533      200</span></span>
+<span><span class="co">##  design_effect           icc</span></span>
+<span><span class="co">##              1 -0.0002752021</span></span></code></pre>
+<p><img src="permutation-nested-data_files/figure-html/mosaic-donner-klar-1.png" class="r-plt" alt="" width="672"></p>
+<p>The subtitle and the printed row give the test statistic, its degrees
+of freedom, the p-value, the number of teams, and the design effect or
+the intracluster correlation where the method estimates one.</p>
+<p>The three plots show the same pattern. Low achievers use
+<code>adapt</code> more often than expected under independence (residual
+11.3 with the Rao-Scott method) and High achievers
+<code>consensus</code> (9.2) and <code>cohesion</code> (5.2). The
+Rao-Scott design effect is 0.93 and the Donner-Klar intracluster
+correlation −0.0003, so counting team by team leaves the residuals and
+the test close to those of the pooled counts.</p>
+</div>
+<div class="section level2">
+<h2 id="tests-of-association-for-nested-counts">Tests of association for nested counts<a class="anchor" aria-label="anchor" href="#tests-of-association-for-nested-counts"></a>
+</h2>
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/mosaic_test.html">mosaic_test</a></span><span class="op">(</span><span class="va">achievers</span>, actor <span class="op">=</span> <span class="st">"Group"</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">##        method                    test statistic       df      df2      p_value</span></span>
+<span><span class="co">## 1       chisq                 Pearson 277.92541 8.000000       NA 2.038053e-55</span></span>
+<span><span class="co">## 2   rao_scott               Rao-Scott  37.21183 6.955041 1384.053 1.065954e-47</span></span>
+<span><span class="co">## 3 donner_klar             Donner-Klar 277.92541 8.000000       NA 2.038053e-55</span></span>
+<span><span class="co">## 4         cmh Cochran-Mantel-Haenszel        NA       NA       NA           NA</span></span>
+<span><span class="co">## 5         gee                GEE Wald 358.60471 8.000000       NA 1.317864e-72</span></span>
+<span><span class="co">## 6        glmm               GLMM Wald 269.91201 8.000000       NA 1.026755e-53</span></span>
+<span><span class="co">##       n clusters design_effect           icc</span></span>
+<span><span class="co">## 1 27533       NA            NA            NA</span></span>
+<span><span class="co">## 2 27533      200     0.9335922            NA</span></span>
+<span><span class="co">## 3 27533      200     1.0000000 -0.0002752021</span></span>
+<span><span class="co">## 4 27533       NA            NA            NA</span></span>
+<span><span class="co">## 5 27533      200            NA            NA</span></span>
+<span><span class="co">## 6 27533      200            NA            NA</span></span>
+<span><span class="co">##                                                                                                                                       note</span></span>
+<span><span class="co">## 1                                                                                                                                     &lt;NA&gt;</span></span>
+<span><span class="co">## 2                                                                                                                                     &lt;NA&gt;</span></span>
+<span><span class="co">## 3                                                                                                                                     &lt;NA&gt;</span></span>
+<span><span class="co">## 4                                               Cochran-Mantel-Haenszel stratifies by cluster, so both variables must vary within clusters</span></span>
+<span><span class="co">## 5 Wald test with a cluster-robust covariance; liberal unless the actors are many relative to the degrees of freedom (see ?mosaic_analysis)</span></span>
+<span><span class="co">## 6                                                                                                                                     &lt;NA&gt;</span></span></code></pre>
+<p><code><a href="../reference/mosaic_test.html">mosaic_test()</a></code> returns one row per test: Pearson’s
+chi-square on the pooled counts and the five tests for nested counts. A
+test that the design does not admit returns <code>NA</code> with the
+reason in <code>note</code>. The Cochran-Mantel-Haenszel test stratifies
+by team, and the achievement level is constant within each team, so it
+cannot be computed here and returns <code>NA</code>. <code>method</code>
+selects tests, and <code>level = "cells"</code> returns the residual of
+every cell.</p>
+<p>Every test that can be computed rejects independence: Pearson’s
+chi-square is 277.9 (8 df, p &lt;
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mn>10</mn><mrow><mi>−</mi><mn>54</mn></mrow></msup><annotation encoding="application/x-tex">10^{-54}</annotation></semantics></math>),
+the Rao-Scott F is 37.2 (6.96 and 1,384 df, p &lt;
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mn>10</mn><mrow><mi>−</mi><mn>46</mn></mrow></msup><annotation encoding="application/x-tex">10^{-46}</annotation></semantics></math>),
+the GEE Wald statistic 358.6 and the GLMM Wald statistic 269.9 (8 df
+each). The note to the GEE test states that its cluster-robust
+covariance is liberal unless the teams are many relative to the degrees
+of freedom; here there are 200 teams for 8 degrees of freedom.</p>
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="../reference/mosaic_test.html">mosaic_test</a></span><span class="op">(</span><span class="va">achievers</span>, method <span class="op">=</span> <span class="st">"rao_scott"</span>, actor <span class="op">=</span> <span class="st">"Group"</span>,</span>
+<span>                 level <span class="op">=</span> <span class="st">"cells"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">##      method group     state observed   residual</span></span>
+<span><span class="co">## 1 rao_scott  High     adapt      155 -11.349878</span></span>
+<span><span class="co">## 2 rao_scott   Low     adapt      399  11.349878</span></span>
+<span><span class="co">## 3 rao_scott  High  cohesion     1018   5.193551</span></span>
+<span><span class="co">## 4 rao_scott   Low  cohesion      821  -5.193551</span></span>
+<span><span class="co">## 5 rao_scott  High consensus     3651   9.233770</span></span>
+<span><span class="co">## 6 rao_scott   Low consensus     3146  -9.233770</span></span></code></pre>
+</div>
+<div class="section level2">
+<h2 id="sequence-patterns">Sequence patterns<a class="anchor" aria-label="anchor" href="#sequence-patterns"></a>
+</h2>
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/sequence_compare.html">sequence_compare</a></span><span class="op">(</span><span class="va">achievers</span>, sub <span class="op">=</span> <span class="fl">2</span><span class="op">:</span><span class="fl">3</span>, iter <span class="op">=</span> <span class="fl">1000</span>, actor <span class="op">=</span> <span class="st">"Group"</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## Sequence Comparison  [322 patterns | 2 groups: High, Low]</span></span>
+<span><span class="co">##   Lengths: 2, 3  |  min_freq: 5  |  permutation: 1000 iter (fdr), actor: Group (200 actors, between)</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">##  pattern                       group count prop resid  effect p      </span></span>
+<span><span class="co">##  discuss-&gt;consensus            High   851  0.07  12.60 14.71  0.00564</span></span>
+<span><span class="co">##  discuss-&gt;consensus            Low    418  0.03 -12.60 14.71  0.00564</span></span>
+<span><span class="co">##  consensus-&gt;discuss            High   789  0.06  11.65 14.27  0.00564</span></span>
+<span><span class="co">##  consensus-&gt;discuss            Low    401  0.03 -11.65 14.27  0.00564</span></span>
+<span><span class="co">##  discuss-&gt;adapt                High    48  0.00 -11.08 12.94  0.00564</span></span>
+<span><span class="co">##  discuss-&gt;adapt                Low    234  0.02  11.08 12.94  0.00564</span></span>
+<span><span class="co">##  consensus-&gt;discuss-&gt;consensus High   291  0.02  10.65 12.61  0.00564</span></span>
+<span><span class="co">##  consensus-&gt;discuss-&gt;consensus Low     87  0.01 -10.65 12.61  0.00564</span></span>
+<span><span class="co">##  discuss-&gt;consensus-&gt;discuss   High   198  0.02  10.27 12.08  0.00564</span></span>
+<span><span class="co">##  discuss-&gt;consensus-&gt;discuss   Low     41  0.00 -10.27 12.08  0.00564</span></span>
+<span><span class="co">##  cohesion-&gt;consensus-&gt;discuss  High   129  0.01   6.54  9.27  0.00564</span></span>
+<span><span class="co">##  cohesion-&gt;consensus-&gt;discuss  Low     44  0.00  -6.54  9.27  0.00564</span></span>
+<span><span class="co">##  plan-&gt;plan                    High   948  0.07  -8.73  9.01  0.00564</span></span>
+<span><span class="co">##  plan-&gt;plan                    Low   1356  0.11   8.73  9.01  0.00564</span></span>
+<span><span class="co">##  discuss-&gt;consensus-&gt;plan      High   302  0.03   5.65  8.35  0.00564</span></span>
+<span><span class="co">##  discuss-&gt;consensus-&gt;plan      Low    181  0.02  -5.65  8.35  0.00564</span></span>
+<span><span class="co">##  emotion-&gt;discuss-&gt;consensus   High    75  0.01   5.83  8.30  0.00564</span></span>
+<span><span class="co">##  emotion-&gt;discuss-&gt;consensus   Low     19  0.00  -5.83  8.30  0.00564</span></span>
+<span><span class="co">##  adapt-&gt;consensus              High    73  0.01  -6.20  8.26  0.00564</span></span>
+<span><span class="co">##  adapt-&gt;consensus              Low    170  0.01   6.20  8.26  0.00564</span></span>
+<span><span class="co">##   ... and 312 more patterns (624 rows); summary() returns them all</span></span></code></pre>
+<p>With <code>actor = "Group"</code>, the permutation test of each
+pattern reassigns whole teams. The header reports the actor column, the
+number of actors and the design: <code>between</code> when each team
+belongs to one group, <code>within</code> when every team has sequences
+in both groups, <code>mixed</code> otherwise.</p>
+<p>99 of the 322 patterns of two and three actions differ between High
+and Low at an FDR-adjusted p below 0.05.
+<code>discuss -&gt; consensus</code> makes up 6.7% of the patterns of
+High achievers and 3.3% of those of Low achievers, and
+<code>discuss -&gt; adapt</code> 0.4% against 1.8%. With 1,000
+reassignments and the FDR adjustment over 322 patterns, the smallest
+adjusted p-value is 0.0056.</p>
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu"><a href="../reference/sequence_compare.html">sequence_compare</a></span><span class="op">(</span><span class="va">achievers</span>, sub <span class="op">=</span> <span class="fl">2</span><span class="op">:</span><span class="fl">3</span>, iter <span class="op">=</span> <span class="fl">1000</span>, actor <span class="op">=</span> <span class="st">"Group"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<p><img src="permutation-nested-data_files/figure-html/patterns-plot-1.png" class="r-plt" alt="" width="768"></p>
+<p>The plot shows the ten patterns with the largest differences. Each
+bar is the pattern’s proportion in one group, labelled with its count,
+and its colour is the standardized residual: blue where the group uses
+the pattern more often than expected, red where less.
+<code>discuss -&gt; consensus</code> and
+<code>consensus -&gt; discuss</code> are blue for High achievers;
+<code>plan -&gt; plan</code> and <code>discuss -&gt; adapt</code> are
+blue for Low achievers.</p>
+</div>
+<div class="section level2">
+<h2 id="bootstrap">Bootstrap<a class="anchor" aria-label="anchor" href="#bootstrap"></a>
+</h2>
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">pooled</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_network.html">build_network</a></span><span class="op">(</span><span class="va">group_regulation_long</span>, method <span class="op">=</span> <span class="st">"relative"</span>,</span>
+<span>                        actor <span class="op">=</span> <span class="st">"Actor"</span>, action <span class="op">=</span> <span class="st">"Action"</span>, time <span class="op">=</span> <span class="st">"Time"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/bootstrap_network.html">bootstrap_network</a></span><span class="op">(</span><span class="va">pooled</span>, iter <span class="op">=</span> <span class="fl">1000</span>, seed <span class="op">=</span> <span class="fl">1</span>, actor <span class="op">=</span> <span class="st">"Group"</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">##   Edge                    Mean     95% CI          p</span></span>
+<span><span class="co">##   ------------------------------------------------</span></span>
+<span><span class="co">##   cohesion → consensus    0.498  [0.474, 0.522]  ***</span></span>
+<span><span class="co">##   adapt → consensus       0.477  [0.437, 0.520]  ***</span></span>
+<span><span class="co">##   synthesis → consensus   0.466  [0.423, 0.506]  ***</span></span>
+<span><span class="co">##   consensus → plan        0.396  [0.384, 0.408]  ***</span></span>
+<span><span class="co">##   monitor → discuss       0.376  [0.353, 0.400]  ***</span></span>
+<span><span class="co">##   ... and 46 more significant edges</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## Bootstrap Network  [Transition Network (relative) | directed]</span></span>
+<span><span class="co">##   Iterations : 1000  |  Nodes : 9</span></span>
+<span><span class="co">##   Edges      : 51 significant / 78 total</span></span>
+<span><span class="co">##   CI         : 95%  |  Inference: stability  |  CR [0.75, 1.25]</span></span>
+<span><span class="co">##   Actor      : Group (200 actors)</span></span>
+<span><span class="co">##   Nesting    : ICC = 0.006 [95% CI 0.002, 0.011]  |  Design effect (edges) = 1.03</span></span></code></pre>
+<p>With <code>actor = "Group"</code>, <code><a href="../reference/bootstrap_network.html">bootstrap_network()</a></code>
+resamples whole teams, and a resampled team contributes all of its
+sequences. The output adds the intracluster correlation and the design
+effect of the edges. 51 of the 78 edges keep their size, the ICC is
+0.006 (95% CI 0.002 to 0.011) and the design effect 1.03. The ICC is
+larger than in the permutation test because it is computed on the pooled
+network, where the difference between High and Low teams is part of the
+variance between teams.</p>
 </div>
 <div class="section level2">
 <h2 id="reporting">Reporting<a class="anchor" aria-label="anchor" href="#reporting"></a>
@@ -263,62 +478,124 @@ difference does not depend on the nesting of students in teams.</p>
 measurements, sessions in students), the two groups were compared with a
 permutation test that accounted for the nesting: in each of 1,000
 permutations, whole teams rather than single sequences were reassigned
-between the groups, so that sequences from the same team stayed together
-(Good, 2005). Units that belonged to one group were reassigned as a
-whole, and units that contributed to both groups, as in a
-repeated-measures design, had their sequences reassigned within the
-unit. The nesting effect was quantified with the intraclass correlation
-(ICC; Shrout &amp; Fleiss, 1979) and the design effect, the ratio of the
-variance under the nested design to the variance under independent
-sampling (Kish, 1965). The ICC indicated little evidence of a nesting
-effect (ICC = −0.002, 95% CI −0.006 to 0.002; design effect 1.03 across
-200 teams). The networks of high and low achievers differed overall (M =
-2.61, p &lt; .001), and 42 of 78 transitions differed at p &lt; .05.</p>
+between the groups, so that sequences from the same team stayed
+together. Units that belonged to one group were reassigned as a whole,
+and units that contributed to both groups, as in a repeated-measures
+design, had their sequences reassigned within the unit. The nesting
+effect was quantified with the intraclass correlation (ICC) and the
+design effect, the ratio of the variance under the nested design to the
+variance under independent sampling (ICC = −0.002, 95% CI −0.006 to
+0.002; design effect 1.03 across 200 teams). The networks of high and
+low achievers differed overall (M = 2.61, p &lt; .001), and 42 of 78
+transitions differed at p &lt; .05.</p>
 </blockquote>
 </div>
 <div class="section level2">
-<h2 id="when-to-use-which">When to use which<a class="anchor" aria-label="anchor" href="#when-to-use-which"></a>
+<h2 id="arguments-for-nested-data">Arguments for nested data<a class="anchor" aria-label="anchor" href="#arguments-for-nested-data"></a>
 </h2>
-<ul>
-<li>
-<code><a href="../reference/permutation.html">permutation()</a></code>: one sequence per student, with no
-grouping above the student.</li>
-<li>
-<code>permutation(actor = )</code>: several sequences per student,
-or students in teams, classes or other units. It handles units in one
-group, units in both groups, and mixtures, and reports the ICC and
-design effect.</li>
-<li>
-<code>paired = TRUE</code>: exactly one sequence per student in each
-of two conditions.</li>
-<li>
-<code><a href="../reference/permutation_diagnostics.html">permutation_diagnostics()</a></code>: to show next to each other
-what the ordinary and the team-level test conclude.</li>
-<li>
+<table class="table">
+<colgroup>
+<col width="33%">
+<col width="33%">
+<col width="33%">
+</colgroup>
+<thead><tr class="header">
+<th>Function</th>
+<th>Argument</th>
+<th>Effect</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td><code><a href="../reference/permutation.html">permutation()</a></code></td>
+<td><code>actor</code></td>
+<td>Reassigns whole actors when each actor belongs to one group;
+reassigns sequences within each actor that has sequences in both
+groups</td>
+</tr>
+<tr class="even">
+<td><code><a href="../reference/permutation_diagnostics.html">permutation_diagnostics()</a></code></td>
+<td><code>actor</code></td>
+<td>Reports the test with and without the actor-level reassignment, with
+the ICC and the design effect</td>
+</tr>
+<tr class="odd">
+<td><code><a href="../reference/sequence_compare.html">sequence_compare()</a></code></td>
+<td><code>actor</code></td>
+<td>The reassignment scheme of <code><a href="../reference/permutation.html">permutation()</a></code>, applied to
+the test of each pattern</td>
+</tr>
+<tr class="even">
+<td><code><a href="../reference/bootstrap_network.html">bootstrap_network()</a></code></td>
+<td><code>actor</code></td>
+<td>Resamples whole actors</td>
+</tr>
+<tr class="odd">
+<td>
+<code><a href="../reference/mosaic_plot.html">mosaic_plot()</a></code>, <code><a href="../reference/mosaic_analysis.html">mosaic_analysis()</a></code>
+</td>
+<td>
+<code>nested</code>, <code>nested_method</code>, <code>actor</code>,
+<code>report</code>
+</td>
+<td>Residuals and overall test from the counts of each actor</td>
+</tr>
+<tr class="even">
+<td><code><a href="../reference/mosaic_test.html">mosaic_test()</a></code></td>
+<td>
+<code>method</code>, <code>actor</code>, <code>level</code>
+</td>
+<td>Pearson’s test and the five nested tests in one table</td>
+</tr>
+</tbody>
+</table>
+<p>The design effect is the ratio of the variance of an estimate under
+the nested design to its variance under independent sampling. Kish’s
+approximation is 1 + (m − 1) × ICC for m observations per actor.
 <code>actor</code> applies to transition networks
 (<code>relative</code>, <code>frequency</code>,
-<code>co_occurrence</code>). Correlation networks do not keep the unit
-identifiers after estimation.</li>
-</ul>
+<code>co_occurrence</code>).</p>
+</div>
+<div class="section level2">
+<h2 id="how-to-cite-this-article">How to cite this article<a class="anchor" aria-label="anchor" href="#how-to-cite-this-article"></a>
+</h2>
+<p>Saqr, M., López-Pernas, S., &amp; Misiejuk, K. (2026). <em>Nested
+sequences and the permutation test</em>. Nestimate. <a href="https://pak.dynasite.org/Nestimate/articles/permutation-nested-data.html">HTML</a>
+· <a href="https://pak.dynasite.org/Nestimate/pdf/permutation-nested-data.pdf">PDF</a></p>
 </div>
 <div class="section level2">
 <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
 </h2>
-<p>Kish, L. (1965). <em>Survey Sampling</em>. Wiley.</p>
+<p>Breslow, N. E., &amp; Clayton, D. G. (1993). Approximate inference in
+generalized linear mixed models. <em>Journal of the American Statistical
+Association</em>, 88(421), 9–25. <a href="https://doi.org/10.1080/01621459.1993.10594284" class="external-link uri">https://doi.org/10.1080/01621459.1993.10594284</a></p>
+<p>Donner, A., &amp; Klar, N. (1994). Methods for comparing event rates
+in intervention studies when the unit of allocation is a cluster.
+<em>American Journal of Epidemiology</em>, 140(3), 279–289. <a href="https://doi.org/10.1093/oxfordjournals.aje.a117247" class="external-link uri">https://doi.org/10.1093/oxfordjournals.aje.a117247</a></p>
+<p>Kish, L. (1965). <em>Survey sampling</em>. Wiley.</p>
+<p>Landis, J. R., Heyman, E. R., &amp; Koch, G. G. (1978). Average
+partial association in three-way contingency tables: A review and
+discussion of alternative tests. <em>International Statistical
+Review</em>, 46(3), 237–254. <a href="https://doi.org/10.2307/1402373" class="external-link uri">https://doi.org/10.2307/1402373</a></p>
+<p>Liang, K.-Y., &amp; Zeger, S. L. (1986). Longitudinal data analysis
+using generalized linear models. <em>Biometrika</em>, 73(1), 13–22. <a href="https://doi.org/10.1093/biomet/73.1.13" class="external-link uri">https://doi.org/10.1093/biomet/73.1.13</a></p>
 <p>Muthén, B. O., &amp; Satorra, A. (1995). Complex sample data in
 structural equation modeling. <em>Sociological Methodology</em>, 25,
-267–316.</p>
-<p>Shrout, P. E., &amp; Fleiss, J. L. (1979). Intraclass correlations:
-Uses in assessing rater reliability. <em>Psychological Bulletin</em>,
-86(2), 420–428.</p>
-<p>van Borkulo, C. D., van Bork, R., Boschloo, L., Kossakowski, J. J.,
-Tio, P., Schoevers, R. A., Borsboom, D., &amp; Waldorp, L. J. (2023).
-Comparing network structures on three aspects: A permutation test.
-<em>Psychological Methods</em>, 28(6), 1273–1285.</p>
-<p>Efron, B., &amp; Tibshirani, R. J. (1993). <em>An Introduction to the
-Bootstrap</em>. Chapman &amp; Hall.</p>
-<p>Good, P. (2005). <em>Permutation, Parametric, and Bootstrap Tests of
-Hypotheses</em> (3rd ed.). Springer.</p>
+267–316. <a href="https://doi.org/10.2307/271070" class="external-link uri">https://doi.org/10.2307/271070</a></p>
+<p>Rao, J. N. K., &amp; Scott, A. J. (1984). On chi-squared tests for
+multiway contingency tables with cell proportions estimated from survey
+data. <em>The Annals of Statistics</em>, 12(1), 46–60. <a href="https://doi.org/10.1214/aos/1176346391" class="external-link uri">https://doi.org/10.1214/aos/1176346391</a></p>
+<p>Saqr, M., López-Pernas, S., &amp; Misiejuk, K. (2026). Nestimate: An
+R package for dynamic, probabilistic, and high order network analysis.
+<em>Applied Psychological Measurement</em>. <a href="https://doi.org/10.1177/01466216261472019" class="external-link uri">https://doi.org/10.1177/01466216261472019</a></p>
+<p>Saqr, M., López-Pernas, S., Törmänen, T., Kaliisa, R., Misiejuk, K.,
+&amp; Tikka, S. (2025). Transition network analysis: A novel framework
+for modeling, visualizing, and identifying the temporal patterns of
+learners and learning processes. In <em>Proceedings of the 15th
+International Learning Analytics and Knowledge Conference (LAK25)</em>
+(pp. 351–361). ACM. <a href="https://doi.org/10.1145/3706468.3706513" class="external-link uri">https://doi.org/10.1145/3706468.3706513</a></p>
+<p>Tikka, S., López-Pernas, S., &amp; Saqr, M. (2025). tna: An R package
+for transition network analysis. <em>Applied Psychological
+Measurement</em>, 49(6), 326–328. <a href="https://doi.org/10.1177/01466216251348840" class="external-link uri">https://doi.org/10.1177/01466216251348840</a></p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

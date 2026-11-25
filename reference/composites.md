@@ -1,4 +1,4 @@
-# Cluster Scores From a Psychometric MCML Fit
+# Compute cluster scores from a psychometric MCML fit
 
 `composites()` returns the per-observation cluster scores that the macro
 network of a re-estimated

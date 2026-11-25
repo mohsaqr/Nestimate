@@ -37,13 +37,17 @@ print(x, max_print = 12L, ...)
 - x, y:
 
   The two networks: `netobject`s, `cograph_network`s or square numeric
-  matrices. They must have the same number of nodes, with the same
-  labels in the same order, or an error is raised; any other kind of
-  object raises an error too. A matrix without dimnames is labelled
-  `V1`, `V2`, ..., so it matches only a network with those labels. The
-  difference is directed when `x` is a directed `netobject`; when `x` is
-  not a `netobject`, it is directed when `x`'s weights are not
-  symmetric. For the [`print()`](https://rdrr.io/r/base/print.html)
+  matrices. A `tna` model (package tna) is first rebuilt as a network
+  from its own sequences (see
+  [`as_netobject()`](https://pak.dynasite.org/Nestimate/reference/as_netobject.md)).
+  They must have the same number of nodes, with the same labels in the
+  same order, or an error is raised; any other kind of object raises an
+  error too. A matrix without dimnames is labelled `V1`, `V2`, ..., so
+  it matches only a network with those labels. The difference is
+  directed when either network is directed (a network by its own
+  `directed` flag, a matrix, or a `cograph_network` without that flag,
+  when its weights are not symmetric) or when the difference itself is
+  not symmetric. For the [`print()`](https://rdrr.io/r/base/print.html)
   method: `x` is the `netdifference` object.
 
 - max_print:

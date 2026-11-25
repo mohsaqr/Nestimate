@@ -1,4 +1,4 @@
-# Q-Analysis
+# Describe the q-connectivity of a simplicial complex
 
 `q_analysis()` describes how the maximal simplices of a simplicial
 complex (those not contained in a larger one) hang together, after Atkin

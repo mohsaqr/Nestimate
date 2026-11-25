@@ -1,4 +1,4 @@
-# Build a Multilevel Vector Autoregression (mlVAR) network
+# Estimate multilevel vector autoregression networks
 
 `build_mlvar()` fits a multilevel vector autoregression to intensive
 longitudinal panel data (ESM or EMA: many people, each measured on many

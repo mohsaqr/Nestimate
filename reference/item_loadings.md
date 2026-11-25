@@ -1,4 +1,4 @@
-# Item Diagnostics From a Psychometric MCML Fit
+# Tabulate the item loadings of a psychometric MCML fit
 
 `item_loadings()` returns the item table behind a
 [`build_mcml_pc()`](https://pak.dynasite.org/Nestimate/reference/build_mcml_pc.md)

@@ -1,4 +1,4 @@
-# Convert Action Column to One-Hot Encoding
+# Convert an action column to one-hot columns
 
 `action_to_onehot()` adds one 0/1 indicator column per state to a data
 frame with a categorical action column: the column of a row's state is 1

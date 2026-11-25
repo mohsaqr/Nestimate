@@ -1,4 +1,4 @@
-# Model Unit-Level Outcomes from Sequence or Network Predictors
+# Model a unit-level outcome from sequence or network predictors
 
 `outcome_model()` fits a regression of a unit-level outcome on predictor
 columns (pattern indicators, topological features from
@@ -96,11 +96,13 @@ plot(x, ...)
 - select:
 
   How the predictors are chosen: `"none"` (default) fits all of them;
-  `"split"` ranks them on a random half of the rows by the absolute z or
-  t statistic of a one-predictor
-  [`glm()`](https://rdrr.io/r/stats/glm.html) (without `adjust` or
-  `group`), keeps the best `n_select`, and fits the reported model on
-  the other half.
+  `"split"` ranks them on a random half of the rows (with a `group`, the
+  rows of a random half of the groups) by the absolute z or t statistic
+  of a one-predictor [`glm()`](https://rdrr.io/r/stats/glm.html)
+  (without `adjust` or `group`), keeps the best `n_select`, and fits the
+  reported model on the other half. With a `group`, fewer than two
+  groups in the complete rows raise an error of class
+  `nestimate_bad_input`.
 
 - n_select:
 
@@ -109,11 +111,8 @@ plot(x, ...)
 
 - correction:
 
-  The multiplicity correction, one of
-  [`stats::p.adjust.methods`](https://rdrr.io/r/stats/p.adjust.html),
-  passed to
-  [`stats::p.adjust()`](https://rdrr.io/r/stats/p.adjust.html). Default
-  `"BH"`.
+  The multiplicity correction, any method of
+  [p.adjust()](https://rdrr.io/r/stats/p.adjust.html). Default `"BH"`.
 
 - ci_level:
 
@@ -219,7 +218,8 @@ Choosing predictors by their association with the outcome and then
 testing them on the same rows invalidates the p-values. With
 `select = "split"` the data is halved: predictors are ranked on one half
 and the reported model is fitted on the other, so the returned inference
-is valid for the selected set. `select = "none"` (default) fits every
+is valid for the selected set. With a `group`, the groups are halved, so
+no group has rows in both halves. `select = "none"` (default) fits every
 supplied predictor and needs no split.
 
 ## See also

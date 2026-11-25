@@ -1,4 +1,4 @@
-# Extract Pathways from Higher-Order Network Objects
+# Extract pathways from a higher-order network
 
 `pathways()` turns a higher-order result into pathway strings in arrow
 notation, `"A B -> C"`: the states before the arrow lead, together, to
@@ -65,18 +65,26 @@ pathways(x, order = NULL, min_count = 1L, min_prob = 0, top = NULL, ...)
 
 - x:
 
-  The object to read: a `net_hon`, `net_hypa` or `net_mogen` (from
-  [`build_hon()`](https://pak.dynasite.org/Nestimate/reference/build_hon.md),
-  [`build_hypa()`](https://pak.dynasite.org/Nestimate/reference/build_hypa.md)
-  or
-  [`build_mogen()`](https://pak.dynasite.org/Nestimate/reference/build_mogen.md)),
-  a `netobject` built from sequences, a `net_association_rules` (from
-  [`association_rules()`](https://pak.dynasite.org/Nestimate/reference/association_rules.md))
-  or a `net_link_prediction` (from
-  [`predict_links()`](https://pak.dynasite.org/Nestimate/reference/predict_links.md)).
-  A `netobject` of an association method (whose rows are variables) or a
-  one-hot `netobject` raises an error of class `nestimate_bad_input`; a
-  network without its sequences stops `pathways()`.
+  The object to read:
+
+  - a
+    [`build_hon()`](https://pak.dynasite.org/Nestimate/reference/build_hon.md),
+    [`build_hypa()`](https://pak.dynasite.org/Nestimate/reference/build_hypa.md)
+    or
+    [`build_mogen()`](https://pak.dynasite.org/Nestimate/reference/build_mogen.md)
+    result;
+
+  - a `netobject` built from sequences;
+
+  - an
+    [`association_rules()`](https://pak.dynasite.org/Nestimate/reference/association_rules.md)
+    or
+    [`predict_links()`](https://pak.dynasite.org/Nestimate/reference/predict_links.md)
+    result.
+
+  A `netobject` of an association method, or a one-hot one, raises
+  `nestimate_bad_input`; a network without its sequences stops
+  `pathways()`.
 
 - ...:
 

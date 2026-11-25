@@ -94,7 +94,10 @@ plot(
 
   The first network: a `netobject`, a `cograph_network` or a numeric
   square matrix, or a `netobject_group` whose members `i` and `j` are
-  compared. For the [`print()`](https://rdrr.io/r/base/print.html) and
+  compared. A `tna` model or a `group_tna` (package tna) is first
+  rebuilt as a network from its own sequences (see
+  [`as_netobject()`](https://pak.dynasite.org/Nestimate/reference/as_netobject.md)).
+  For the [`print()`](https://rdrr.io/r/base/print.html) and
   [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods: a
   `net_comparison` object.
 
@@ -285,8 +288,11 @@ The measures, scalings and edge metrics mirror
 Szekely, Rizzo and Bakirov (2007), `NA` when one network is constant,
 and the RV coefficient that of Robert and Escoufier (1976). A network's
 own `directed` flag decides how its network metrics are computed; a
-plain matrix has none, so an asymmetric matrix is read as directed and a
-symmetric one as undirected.
+plain matrix has none, nor has a `cograph_network` without a `directed`
+field, so an asymmetric one is read as directed and a symmetric one as
+undirected, after its rows and columns are matched to the other
+network's nodes by name. A tna model is read by the `directed` flag of
+the network it is rebuilt into.
 
 ## References
 

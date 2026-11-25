@@ -1,4 +1,4 @@
-# Validate a netobject / cograph_network against the shared schema
+# Validate the structure of a network object
 
 `validate_netobject()` checks that an object meets the structure
 Nestimate `netobject`s and psychnets objects share, so either can be

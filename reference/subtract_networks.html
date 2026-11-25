@@ -33,7 +33,7 @@ of object, keeping, by default, only the credible differences."><meta property="
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.12</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -46,8 +46,8 @@ of object, keeping, by default, only the credible differences."><meta property="
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/transition-entropy.html">Transition Matrix Entropy</a></li>
     <li><a class="dropdown-item" href="../articles/transition-networks.html">Network Estimation and Analysis with Nestimate</a></li>
-    <li><a class="dropdown-item" href="../articles/sequence-comparison.html">Sequence Pattern Comparison: Early vs Late Human-AI Interactions</a></li>
-    <li><a class="dropdown-item" href="../articles/sequence-plots.html">Sequence Plots: heatmap, index, and distribution</a></li>
+    <li><a class="dropdown-item" href="../articles/sequence-comparison.html">Comparing Sequences Between Groups: Early vs Late Human-AI Interactions</a></li>
+    <li><a class="dropdown-item" href="../articles/sequence-plots.html">Sequence Plots</a></li>
     <li><a class="dropdown-item" href="../articles/clustering.html">Sequence Clustering</a></li>
     <li><a class="dropdown-item" href="../articles/markov-stability.html">Markov Stability Analysis</a></li>
     <li><hr class="dropdown-divider"></li>
@@ -100,14 +100,16 @@ of object, keeping, by default, only the credible differences.</p>
 
 <dl><dt id="arg-x-y">x, y<a class="anchor" aria-label="anchor" href="#arg-x-y"></a></dt>
 <dd><p>The two networks: <code>netobject</code>s, <code>cograph_network</code>s or square
-numeric matrices. They must have the same number of nodes, with the
-same labels in the same order, or an error is raised; any other kind of
-object raises an error too. A matrix without dimnames is labelled <code>V1</code>,
-<code>V2</code>, ..., so it matches only a network with those labels. The
-difference is directed when <code>x</code> is a directed
-<code>netobject</code>; when <code>x</code> is not a <code>netobject</code>, it is directed when <code>x</code>'s
-weights are not symmetric. For the <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> method: <code>x</code> is the
-<code>netdifference</code> object.</p></dd>
+numeric matrices. A <code>tna</code> model (package tna) is first rebuilt as a
+network from its own sequences (see <code><a href="as_netobject.html">as_netobject()</a></code>). They must have the
+same number of nodes, with the same labels in the same order, or an error
+is raised; any other kind of object raises an error too. A matrix without
+dimnames is labelled <code>V1</code>, <code>V2</code>, ..., so it matches only a network with
+those labels. The difference is directed when either network is
+directed (a network by its own <code>directed</code> flag, a matrix, or a
+<code>cograph_network</code> without that flag, when its weights are not
+symmetric) or when the difference itself is not
+symmetric. For the <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> method: <code>x</code> is the <code>netdifference</code> object.</p></dd>
 
 
 <dt id="arg-max-print">max_print<a class="anchor" aria-label="anchor" href="#arg-max-print"></a></dt>

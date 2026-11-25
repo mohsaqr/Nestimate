@@ -1,4 +1,4 @@
-# Prepare Data for TNA Analysis
+# Prepare sequence data for the tna package
 
 `prepare_for_tna()` returns the sequence columns of a data set as a wide
 data frame for

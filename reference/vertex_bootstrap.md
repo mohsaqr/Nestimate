@@ -1,4 +1,4 @@
-# Vertex Bootstrap for Network-Level Statistics
+# Bootstrap network-level statistics by resampling nodes
 
 `vertex_bootstrap()` resamples the nodes of one observed network and
 returns bootstrap standard errors, bias and confidence intervals for
@@ -54,10 +54,14 @@ plot(x, bins = 30, ...)
   The network: a `netobject` (from
   [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
   or any builder), a `cograph_network`, or a square numeric weight
-  matrix, with at least 3 nodes. Other input raises an error. For the
+  matrix, with at least 3 nodes. A `tna` model (package tna) is first
+  rebuilt as a network from its own sequences (see
+  [`as_netobject()`](https://pak.dynasite.org/Nestimate/reference/as_netobject.md)).
+  A latency network raises an error of class
+  `nestimate_latency_resampling`. Other input raises an error. For
   [`print()`](https://rdrr.io/r/base/print.html) and
-  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods: a
-  `net_vertex_bootstrap` result.
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html): a
+  `vertex_bootstrap()` result.
 
 - iter:
 
@@ -88,7 +92,9 @@ plot(x, bins = 30, ...)
 
   Statistics of your own, as a named list of functions, each taking the
   weight matrix and returning a single number. They are computed beside
-  the built-ins on the whole matrix, diagonal included. Default `NULL`.
+  the built-ins on the whole matrix, diagonal included. Each needs a
+  name of its own: a name used twice or taken by a built-in statistic
+  raises an error of class `nestimate_bad_input`. Default `NULL`.
 
 - directed:
 

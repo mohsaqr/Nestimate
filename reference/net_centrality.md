@@ -1,4 +1,4 @@
-# Compute Centrality Measures for a Network
+# Compute centrality measures for a network
 
 `net_centrality()` scores how central each node is in a network, for one
 or more measures, and returns one row per node. Strength sums a node's
@@ -26,8 +26,27 @@ net_centrality(
   invert = TRUE,
   normalize_diffusion = TRUE,
   centrality_fn = NULL,
+  format = c("long", "wide"),
   ...
 )
+
+# S3 method for class 'net_centrality'
+print(x, n = 20L, digits = 2L, ...)
+
+# S3 method for class 'net_centrality'
+summary(object, ...)
+
+# S3 method for class 'net_centrality_group'
+print(x, n = 20L, digits = 2L, ...)
+
+# S3 method for class 'net_centrality_group'
+summary(object, ...)
+
+# S3 method for class 'net_centrality_group'
+x[i, j, ...]
+
+# S3 method for class 'net_centrality'
+x[i, j, ...]
 
 # S3 method for class 'net_centrality'
 plot(
@@ -62,9 +81,11 @@ plot(
 - x:
 
   The network: a `netobject`, `netobject_group`, `mcml` or
-  `cograph_network`. For the
-  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods: the
-  result of `net_centrality()`.
+  `cograph_network`. A `tna` model or a `group_tna` (package tna) is
+  first rebuilt as a network from its own sequences (see
+  [`as_netobject()`](https://pak.dynasite.org/Nestimate/reference/as_netobject.md)).
+  For the [`plot()`](https://rdrr.io/r/graphics/plot.default.html)
+  methods: the result of `net_centrality()`.
 
 - measures:
 
@@ -109,9 +130,36 @@ plot(
   named list of centrality vectors, one per measure; list their names in
   `measures`. Default `NULL`.
 
+- format:
+
+  For a `netobject_group` or an `mcml`: `"long"` (default), one row per
+  network and node, or `"wide"`, one row per node with a
+  `<measure>_<network>` column per measure and network. Ignored for a
+  single network.
+
 - ...:
 
   Not used.
+
+- n:
+
+  For [`print()`](https://rdrr.io/r/base/print.html): the number of rows
+  shown. Default `20`.
+
+- digits:
+
+  For [`print()`](https://rdrr.io/r/base/print.html): the decimals
+  shown. Default `2`.
+
+- object:
+
+  For [`summary()`](https://rdrr.io/r/base/summary.html): a
+  `net_centrality` or `net_centrality_group` result.
+
+- i, j:
+
+  For `[`: rows and columns, as for a data frame. A subset of a
+  centrality result is a plain data frame.
 
 - reorder:
 
@@ -174,9 +222,15 @@ plot(
 For a `netobject` or `cograph_network`: a `net_centrality` data frame
 with one row per node, a `state` column and one column per requested
 measure (the node names are also the row names). For a `netobject_group`
-or an `mcml`: a `net_centrality_group`, a list of such data frames, one
-per network. [`plot()`](https://rdrr.io/r/graphics/plot.default.html)
-draws the measures per node.
+or an `mcml`: a `net_centrality_group` data frame with one row per
+network and node, a `group` column (the network's name), a `state`
+column and one column per measure; with `format = "wide"`, one row per
+node. The settings are attributes (`measures`, `groups`, `format`, ...).
+[`print()`](https://rdrr.io/r/base/print.html) shows the first `n` rows
+rounded, [`summary()`](https://rdrr.io/r/base/summary.html) returns
+every row as a plain data frame, and
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) draws the
+measures per node.
 
 For the [`plot()`](https://rdrr.io/r/graphics/plot.default.html)
 methods: a `ggplot` object.
@@ -227,8 +281,8 @@ net <- build_network(seqs, method = "relative")
 net_centrality(net)
 #> centralities computed excluding loops (diagonal). Pass `loops = TRUE` to include self-transitions.
 #> Warning: Diffusion is the same for every node, so it cannot be range-normalised and is NaN. Use `normalize_diffusion = FALSE` for the raw values.
-#>   state InStrength Betweenness Diffusion
-#> A     A          1           1       NaN
-#> B     B          1           1       NaN
-#> C     C          1           1       NaN
+#>  state InStrength Betweenness Diffusion
+#>  A     1          1           NaN      
+#>  B     1          1           NaN      
+#>  C     1          1           NaN      
 ```

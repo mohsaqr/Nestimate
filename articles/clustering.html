@@ -15,6 +15,14 @@
 <script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Sequence Clustering">
+<meta name="citation_title" content="Sequence Clustering">
+<meta name="citation_author" content="Saqr, Mohammed">
+<meta name="citation_author" content="López-Pernas, Sonsoles">
+<meta name="citation_author" content="Misiejuk, Kamila">
+<meta name="citation_publication_date" content="2026">
+<meta name="citation_publisher" content="Nestimate">
+<meta name="citation_pdf_url" content="https://pak.dynasite.org/Nestimate/pdf/clustering.pdf">
+<meta name="citation_abstract_html_url" content="https://pak.dynasite.org/Nestimate/articles/clustering.html">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -24,7 +32,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.12</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -39,8 +47,8 @@
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
 <li><a class="dropdown-item" href="../articles/transition-entropy.html">Transition Matrix Entropy</a></li>
     <li><a class="dropdown-item" href="../articles/transition-networks.html">Network Estimation and Analysis with Nestimate</a></li>
-    <li><a class="dropdown-item" href="../articles/sequence-comparison.html">Sequence Pattern Comparison: Early vs Late Human-AI Interactions</a></li>
-    <li><a class="dropdown-item" href="../articles/sequence-plots.html">Sequence Plots: heatmap, index, and distribution</a></li>
+    <li><a class="dropdown-item" href="../articles/sequence-comparison.html">Comparing Sequences Between Groups: Early vs Late Human-AI Interactions</a></li>
+    <li><a class="dropdown-item" href="../articles/sequence-plots.html">Sequence Plots</a></li>
     <li><a class="dropdown-item" href="../articles/clustering.html">Sequence Clustering</a></li>
     <li><a class="dropdown-item" href="../articles/markov-stability.html">Markov Stability Analysis</a></li>
     <li><hr class="dropdown-divider"></li>
@@ -87,687 +95,594 @@ Misiejuk</h4>
 
     
     
-<div class="section level2">
-<h2 id="introduction">Introduction<a class="anchor" aria-label="anchor" href="#introduction"></a>
-</h2>
-<p>Clusters represent subgroups within the data that share similar
-patterns. Such patterns may reflect similar temporal dynamics (when we
-are analyzing sequence data, for example) or relationships between
-variables (as is the case in psychological networks). Units within the
-same cluster are more similar to each other, while units in different
-clusters differ more substantially. In this vignette, we demonstrate how
-to perform clustering on sequence data using <code>Nestimate</code>.</p>
-</div>
+<p>A transition network estimated from all sequences describes an
+average process, which may describe none of the units that produced it.
+Clustering divides the sequences into groups whose members resemble each
+other more than they resemble the members of other groups, and a network
+can then be estimated for each group (López-Pernas, Tikka &amp; Saqr
+2025). Nestimate (Saqr, López-Pernas &amp; Misiejuk 2026) clusters
+sequences by the dissimilarity between them or with a mixture of Markov
+models, and turns either clustering into one network per cluster.</p>
+<table class="table">
+<colgroup>
+<col width="37%">
+<col width="62%">
+</colgroup>
+<thead><tr class="header">
+<th>Step</th>
+<th>Function</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td>Cluster by dissimilarity</td>
+<td><code><a href="../reference/build_clusters.html">build_clusters()</a></code></td>
+</tr>
+<tr class="even">
+<td>Compare numbers of clusters, distances and methods</td>
+<td><code><a href="../reference/cluster_choice.html">cluster_choice()</a></code></td>
+</tr>
+<tr class="odd">
+<td>Check a clustering</td>
+<td><code><a href="../reference/cluster_diagnostics.html">cluster_diagnostics()</a></code></td>
+</tr>
+<tr class="even">
+<td>Cluster with a mixture Markov model</td>
+<td>
+<code><a href="../reference/build_mmm.html">build_mmm()</a></code>, <code><a href="../reference/cluster_mmm.html">cluster_mmm()</a></code>,
+<code><a href="../reference/compare_mmm.html">compare_mmm()</a></code>
+</td>
+</tr>
+<tr class="odd">
+<td>One network per cluster</td>
+<td>
+<code><a href="../reference/build_network.html">build_network()</a></code> on a clustering</td>
+</tr>
+<tr class="even">
+<td>Clustering and networks in one call</td>
+<td><code><a href="../reference/cluster_network.html">cluster_network()</a></code></td>
+</tr>
+<tr class="odd">
+<td>Compare the clusters’ networks</td>
+<td><code><a href="../reference/permutation.html">permutation()</a></code></td>
+</tr>
+</tbody>
+</table>
 <div class="section level2">
 <h2 id="data">Data<a class="anchor" aria-label="anchor" href="#data"></a>
 </h2>
-<p>To illustrate clustering, we will use the <code>human_long</code>
-dataset, which contains 10,796 coded human interactions from 429
-human-AI pair programming sessions across 34 projects. Each row
-represents a single interaction event with a timestamp, session
-identifier, and action label.</p>
+<p><code>human_long</code> holds the coded human turns of 429 human-AI
+pair-programming (“vibe coding”) sessions, one row per action, coded
+into three clusters of codes: <code>Directive</code>,
+<code>Evaluative</code> and <code>Metacognitive</code>. The network
+holds one sequence per session, ordered by
+<code>order_in_session</code>; the <code>timestamp</code> column has the
+resolution of a day and would split the sessions that run over two days.
+Sessions range from 1 to 164 actions. Vibe coding, programming by
+conversation with an AI assistant (Sarkar &amp; Drosos 2025), has been
+studied with transition networks and sequence analysis (Saqr, Misiejuk
+&amp; López-Pernas 2026; Misiejuk et al. 2026).</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://sonsoles.me/cograph/" class="external-link">cograph</a></span><span class="op">)</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/mohsaqr/Nestimate" class="external-link">Nestimate</a></span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/mohsaqr/Nestimate" class="external-link">Nestimate</a></span><span class="op">)</span></span>
 <span><span class="co">#&gt; Registered S3 methods overwritten by 'Nestimate':</span></span>
 <span><span class="co">#&gt;   method            from       </span></span>
 <span><span class="co">#&gt;   plot.net_mlvar    idiographic</span></span>
 <span><span class="co">#&gt;   print.net_mlvar   idiographic</span></span>
 <span><span class="co">#&gt;   summary.net_mlvar idiographic</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Attaching package: 'Nestimate'</span></span>
-<span><span class="co">#&gt; The following object is masked from 'package:cograph':</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;     as_tna</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"human_long"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">human_long</span><span class="op">)</span></span>
-<span><span class="co">#&gt;   message_id   project   session_id  timestamp session_date      code</span></span>
-<span><span class="co">#&gt; 1       3439 Project_7 0086cabebd15 1772661600   2026-03-05   Specify</span></span>
-<span><span class="co">#&gt; 2       3439 Project_7 0086cabebd15 1772661600   2026-03-05   Command</span></span>
-<span><span class="co">#&gt; 3       3439 Project_7 0086cabebd15 1772661600   2026-03-05   Specify</span></span>
-<span><span class="co">#&gt; 4       3440 Project_7 0086cabebd15 1772661600   2026-03-05 Interrupt</span></span>
-<span><span class="co">#&gt; 5       3442 Project_7 0086cabebd15 1772661600   2026-03-05    Verify</span></span>
-<span><span class="co">#&gt; 6       3444 Project_7 0086cabebd15 1772661600   2026-03-05   Specify</span></span>
-<span><span class="co">#&gt;         cluster code_order order_in_session</span></span>
-<span><span class="co">#&gt; 1     Directive          1                1</span></span>
-<span><span class="co">#&gt; 2     Directive          2                2</span></span>
-<span><span class="co">#&gt; 3     Directive          3                3</span></span>
-<span><span class="co">#&gt; 4 Metacognitive          1                4</span></span>
-<span><span class="co">#&gt; 5    Evaluative          1                7</span></span>
-<span><span class="co">#&gt; 6     Directive          1               10</span></span></code></pre></div>
-<p>We can build a transition network using this dataset using
-<code>build_network</code>. We need to determine the <code>actor</code>
-(<code>session_id</code>), the <code>action</code>
-(<code>cluster</code>), and the <code>time</code>
-(<code>timestamp</code>). We will use the overall network object as the
-starting point to find subgroups since it structures the raw data into
-the appropriate units of analysis to perform clustering.</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">net</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_network.html">build_network</a></span><span class="op">(</span><span class="va">human_long</span>,</span>
-<span>                     method <span class="op">=</span> <span class="st">"tna"</span>,</span>
-<span>                     action <span class="op">=</span> <span class="st">"cluster"</span>,</span>
-<span>                     actor  <span class="op">=</span> <span class="st">"session_id"</span>,</span>
-<span>                     time   <span class="op">=</span> <span class="st">"timestamp"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Metadata aggregated per session: ties resolved by first occurrence in 'code' (99 sessions)</span></span></code></pre></div>
+<span><span class="va">net</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_network.html">build_network</a></span><span class="op">(</span><span class="va">human_long</span>, method <span class="op">=</span> <span class="st">"tna"</span>, action <span class="op">=</span> <span class="st">"cluster"</span>,</span>
+<span>                     actor <span class="op">=</span> <span class="st">"session_id"</span>, time <span class="op">=</span> <span class="st">"order_in_session"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Metadata aggregated per session: ties resolved by first occurrence in 'code' (76 sessions)</span></span></code></pre></div>
 </div>
 <div class="section level2">
-<h2 id="dissimilarity-based-clustering">Dissimilarity-based Clustering<a class="anchor" aria-label="anchor" href="#dissimilarity-based-clustering"></a>
+<h2 id="clustering-by-dissimilarity">Clustering by dissimilarity<a class="anchor" aria-label="anchor" href="#clustering-by-dissimilarity"></a>
 </h2>
-<p>Dissimilarity-based clustering groups units of analysis (in our case,
-sessions, since that is what we provided as <code>actor</code>) by
-directly comparing their observed sequences. In our case, each session
-is represented by its sequence of actions, and similarity between
-sessions is defined using a distance metric that quantifies how
-different two sequences are.</p>
-<p>To implement this method using <code>Nestimate</code>, we can use the
-<code><a href="../reference/build_clusters.html">build_clusters()</a></code> function, which takes either raw sequence
-data or a network object such as the <code>net</code> object that we
-estimated (which also stores the original sequences):</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">clust</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_clusters.html">build_clusters</a></span><span class="op">(</span><span class="va">net</span>, k <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">clust</span></span>
+<p><code><a href="../reference/build_clusters.html">build_clusters()</a></code> computes a distance between every pair
+of sequences and groups the sequences that are close (Saqr,
+López-Pernas, Helske, et al. 2024). It takes the network, which stores
+the sequences, or the sequences themselves. By default it uses the
+Hamming distance, the number of positions at which two sequences differ
+(Hamming 1950), and partitions the sequences around medoids (PAM;
+Kaufman &amp; Rousseeuw 1990), each cluster represented by its most
+central sequence.</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">clusters_hamming</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_clusters.html">build_clusters</a></span><span class="op">(</span><span class="va">net</span>, k <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
+<span><span class="va">clusters_hamming</span></span>
 <span><span class="co">#&gt; Sequence Clustering [pam]</span></span>
-<span><span class="co">#&gt;   Sequences: 526  |  Clusters: 3</span></span>
+<span><span class="co">#&gt;   Sequences: 429  |  Clusters: 3</span></span>
 <span><span class="co">#&gt;   Dissimilarity: hamming</span></span>
-<span><span class="co">#&gt;   Quality: silhouette = 0.280</span></span>
+<span><span class="co">#&gt;   Quality: silhouette = 0.215</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   Cluster  N            Mean within-dist  Medoid</span></span>
-<span><span class="co">#&gt;   1        260 (49.4%)  6.892             195</span></span>
-<span><span class="co">#&gt;   2        94 (17.9%)   50.083            335</span></span>
-<span><span class="co">#&gt;   3        172 (32.7%)  15.359            316</span></span></code></pre></div>
-<p>The default clustering mechanism uses <strong>Hamming
-distance</strong> (number of positions where sequences differ) with
-<strong>PAM</strong> (Partitioning Around Medoids).</p>
-<p>The printed result reports the cluster sizes, the mean within-cluster
-distance and medoid of each cluster, and the average silhouette width,
-which reflects the quality of the clustering (higher values indicate
-better separation between clusters). <code><a href="../reference/session_ids.html">session_ids()</a></code> returns
-which cluster each session belongs to, one row per session, keyed by the
-<code>session_id</code> it was built from, so the assignments can be
-joined back to the raw data:</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="../reference/session_ids.html">session_ids</a></span><span class="op">(</span><span class="va">clust</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt;   sequence   session_id   session_label cluster</span></span>
-<span><span class="co">#&gt; 1        1 0086cabebd15 0086cabebd15 s1       1</span></span>
-<span><span class="co">#&gt; 2        2 00bd84ef1666 00bd84ef1666 s1       1</span></span>
-<span><span class="co">#&gt; 3        3 00da7e5a052d 00da7e5a052d s1       2</span></span>
-<span><span class="co">#&gt; 4        4 0162fe521f0c 0162fe521f0c s1       2</span></span>
-<span><span class="co">#&gt; 5        5 01aa31285a12 01aa31285a12 s1       1</span></span>
-<span><span class="co">#&gt; 6        6 01eb3fbbd431 01eb3fbbd431 s1       3</span></span></code></pre></div>
-<div class="section level3">
-<h3 id="visualizing-clusters">Visualizing Clusters<a class="anchor" aria-label="anchor" href="#visualizing-clusters"></a>
-</h3>
-<p>The silhouette plot shows how well each sequence fits its assigned
-cluster. Values near 1 indicate good fit; values near 0 suggest the
-sequence is between clusters; negative values indicate possible
-misclassification.</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">clust</span>, type <span class="op">=</span> <span class="st">"silhouette"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="clustering_files/figure-html/cluster-plot-1.png" class="r-plt" alt="Silhouette plot showing cluster quality" width="672">
-The MDS (multidimensional scaling) plot projects the distance matrix to
-2D, showing cluster separation.</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">clust</span>, type <span class="op">=</span> <span class="st">"mds"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="clustering_files/figure-html/cluster-mds-1.png" class="r-plt" alt="MDS plot showing cluster separation" width="672"></p>
-</div>
-<div class="section level3">
-<h3 id="distance-metrics">Distance Metrics<a class="anchor" aria-label="anchor" href="#distance-metrics"></a>
-</h3>
-<p>A distance metric defines how (dis)similarity between sequences is
-measured. In other words, it quantifies how different two sequences are
-from each other. <code>Nestimate</code> currently supports 9 distance
-metrics for comparing sequences:</p>
+<span><span class="co">#&gt;   1        183 (42.7%)  7.345             111</span></span>
+<span><span class="co">#&gt;   2        106 (24.7%)  52.766            282</span></span>
+<span><span class="co">#&gt;   3        140 (32.6%)  14.881            265</span></span></code></pre></div>
+<p>The print shows each cluster’s size, mean within-cluster distance and
+medoid, and the average silhouette width, which compares each sequence’s
+distance to its own cluster with its distance to the nearest other one:
+near 1 for well-separated clusters, near 0 for overlapping ones
+(Rousseeuw 1987). The three clusters hold 183, 106 and 140 sessions,
+with a silhouette of 0.22.</p>
+<p><code>dissimilarity</code> selects the distance (Studer &amp;
+Ritschard 2016):</p>
 <table class="table">
 <colgroup>
-<col width="25%">
-<col width="41%">
-<col width="32%">
+<col width="35%">
+<col width="64%">
 </colgroup>
 <thead><tr class="header">
-<th>Metric</th>
-<th>Description</th>
-<th>Best for</th>
+<th>Distance</th>
+<th>What it compares</th>
 </tr></thead>
 <tbody>
 <tr class="odd">
 <td><code>hamming</code></td>
-<td>Positions where sequences differ</td>
-<td>Equal-length sequences</td>
+<td>the states at each position</td>
 </tr>
 <tr class="even">
-<td><code>lv</code></td>
-<td>Levenshtein (edit distance)</td>
-<td>Variable-length, insertions/deletions</td>
-</tr>
-<tr class="odd">
-<td><code>osa</code></td>
-<td>Optimal string alignment</td>
-<td>Edit distance + transpositions</td>
-</tr>
-<tr class="even">
-<td><code>dl</code></td>
-<td>Damerau-Levenshtein</td>
-<td>Full edit + adjacent transpositions</td>
+<td>
+<code>lv</code>, <code>osa</code>, <code>dl</code>
+</td>
+<td>the edits (insertions, deletions, substitutions, transpositions)
+that turn one sequence into the other</td>
 </tr>
 <tr class="odd">
 <td><code>lcs</code></td>
-<td>Longest common subsequence</td>
-<td>Preserving order, ignoring gaps</td>
+<td>the longest common subsequence</td>
 </tr>
 <tr class="even">
-<td><code>qgram</code></td>
-<td>Q-gram frequency difference</td>
-<td>Pattern-based similarity</td>
-</tr>
-<tr class="odd">
-<td><code>cosine</code></td>
-<td>Cosine of q-gram vectors</td>
-<td>Normalized pattern similarity</td>
-</tr>
-<tr class="even">
-<td><code>jaccard</code></td>
-<td>Jaccard index of q-grams</td>
-<td>Set-based pattern overlap</td>
+<td>
+<code>qgram</code>, <code>cosine</code>, <code>jaccard</code>
+</td>
+<td>the patterns of q consecutive states the sequences contain</td>
 </tr>
 <tr class="odd">
 <td><code>jw</code></td>
-<td>Jaro-Winkler</td>
-<td>Short strings, typo detection</td>
+<td>the Jaro-Winkler similarity of the sequences as strings</td>
 </tr>
 </tbody>
 </table>
-<p>Different metrics may produce different clustering results. You need
-to choose this based on your research question:</p>
-<ul>
-<li>
-<strong>Hamming</strong>: compares sequences position by position
-(best for aligned sequences of equal length).</li>
-<li>
-<strong>Edit distances</strong> (lv, osa, dl): allow insertions and
-deletions (best when sequences may be shifted or vary in length).</li>
-<li>
-<strong>LCS</strong>: captures shared subsequences (best when
-overall patterns matter more than exact alignment).</li>
-</ul>
-<p>We can specify which distance metric we want to use through the
-<code>dissimilarity</code> argument:</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Levenshtein distance (allows insertions/deletions)</span></span>
-<span><span class="va">clust_lv</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_clusters.html">build_clusters</a></span><span class="op">(</span><span class="va">net</span>, k <span class="op">=</span> <span class="fl">3</span>, dissimilarity <span class="op">=</span> <span class="st">"lv"</span><span class="op">)</span></span>
-<span><span class="va">clust_lv</span></span>
-<span><span class="co">#&gt; Sequence Clustering [pam]</span></span>
-<span><span class="co">#&gt;   Sequences: 526  |  Clusters: 3</span></span>
-<span><span class="co">#&gt;   Dissimilarity: lv</span></span>
-<span><span class="co">#&gt;   Quality: silhouette = 0.269</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   Cluster  N            Mean within-dist  Medoid</span></span>
-<span><span class="co">#&gt;   1        228 (43.3%)  9.588             245</span></span>
-<span><span class="co">#&gt;   2        183 (34.8%)  4.278             46</span></span>
-<span><span class="co">#&gt;   3        115 (21.9%)  34.472            420</span></span>
-<span></span>
-<span><span class="co"># Longest common subsequence</span></span>
-<span><span class="va">clust_lcs</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_clusters.html">build_clusters</a></span><span class="op">(</span><span class="va">net</span>, k <span class="op">=</span> <span class="fl">3</span>, dissimilarity <span class="op">=</span> <span class="st">"lcs"</span><span class="op">)</span></span>
-<span><span class="va">clust_lcs</span></span>
-<span><span class="co">#&gt; Sequence Clustering [pam]</span></span>
-<span><span class="co">#&gt;   Sequences: 526  |  Clusters: 3</span></span>
-<span><span class="co">#&gt;   Dissimilarity: lcs</span></span>
-<span><span class="co">#&gt;   Quality: silhouette = 0.184</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   Cluster  N            Mean within-dist  Medoid</span></span>
-<span><span class="co">#&gt;   1        185 (35.2%)  5.730             511</span></span>
-<span><span class="co">#&gt;   2        91 (17.3%)   42.419            420</span></span>
-<span><span class="co">#&gt;   3        250 (47.5%)  13.577            325</span></span></code></pre></div>
-<p>Some distance metrics may take additional arguments. For example, the
-Hamming distance accepts <strong>temporal weighting</strong> to
-emphasize earlier or later positions:</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Emphasize earlier positions (higher lambda = faster decay)</span></span>
-<span><span class="va">clust_weighted</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_clusters.html">build_clusters</a></span><span class="op">(</span><span class="va">net</span>, </span>
-<span>                               k <span class="op">=</span> <span class="fl">3</span>,</span>
-<span>                               dissimilarity <span class="op">=</span> <span class="st">"hamming"</span>,</span>
-<span>                               weighted <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>                               lambda <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span>
-<span><span class="va">clust_weighted</span></span>
-<span><span class="co">#&gt; Sequence Clustering [pam]</span></span>
-<span><span class="co">#&gt;   Sequences: 526  |  Clusters: 3</span></span>
-<span><span class="co">#&gt;   Dissimilarity: hamming (weighted, lambda = 0.5)</span></span>
-<span><span class="co">#&gt;   Quality: silhouette = 0.234</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   Cluster  N            Mean within-dist  Medoid</span></span>
-<span><span class="co">#&gt;   1        192 (36.5%)  0.623             492</span></span>
-<span><span class="co">#&gt;   2        303 (57.6%)  0.667             316</span></span>
-<span><span class="co">#&gt;   3        31 ( 5.9%)   0.946             525</span></span></code></pre></div>
-</div>
+<p><code>method</code> selects the clustering: <code>"pam"</code>
+(default) or a hierarchical clustering, which merges the closest
+sequences or groups step by step: <code>"ward.D2"</code> (Ward’s
+criterion, Ward 1963, as implemented by Murtagh &amp; Legendre 2014),
+<code>"ward.D"</code>, <code>"complete"</code>, <code>"average"</code>,
+<code>"single"</code>, <code>"mcquitty"</code> and
+<code>"centroid"</code>. The Hamming distance can also weight the
+positions (<code>weighted = TRUE</code>, with <code>lambda</code>
+setting how fast the weight decays), so that early differences count
+more.</p>
 <div class="section level3">
-<h3 id="clustering-methods">Clustering Methods<a class="anchor" aria-label="anchor" href="#clustering-methods"></a>
+<h3 id="distance-and-sequence-length">Distance and sequence length<a class="anchor" aria-label="anchor" href="#distance-and-sequence-length"></a>
 </h3>
-<p>By default, Nestimate uses PAM (Partitioning Around Medoids) to form
-clusters, which assigns each sequence to the cluster represented by the
-most central sequence (the medoid). Besides PAM, <code>Nestimate</code>
-supports hierarchical clustering methods, which build clusters step by
-step by progressively merging similar units into a tree-like structure
-(a dendrogram):</p>
-<ul>
-<li>
-<code>ward.D2</code> (“Ward’s Method, Squared Distances”): Minimizes
-the increase in within-cluster variance using squared distances.
-Typically produces compact, well-separated clusters.</li>
-<li>
-<code>ward.D</code> (“Ward’s Method”): An alternative implementation
-of Ward’s approach using a different distance formulation. Similar
-behavior, but results may vary slightly.</li>
-<li>
-<code>complete</code> (“Complete Linkage”): Defines the distance
-between clusters as the maximum distance between their members. Produces
-tight, compact clusters.</li>
-<li>
-<code>average</code> (“Average Linkage”): Uses the average distance
-between all pairs of points across clusters. Provides a balance between
-compactness and flexibility.</li>
-<li>
-<code>single</code> (“Single Linkage”): Uses the minimum distance
-between points in two clusters. Can capture chain-like structures but
-may lead to - loosely connected clusters.</li>
-<li>
-<code>mcquitty</code> (“McQuitty’s Method” / “WPGMA”): A weighted
-version of average linkage that gives equal weight to clusters
-regardless of size.</li>
-<li>
-<code>centroid</code> (“Centroid Linkage”): Defines cluster distance
-based on the distance between cluster centroids (means). Can produce
-intuitive groupings but may introduce inconsistencies in the
-hierarchy.</li>
-</ul>
-<p>To use any of these methods instead of PAM, we need to provide the
-<code>method</code> argument to <code>build_clusters</code>.</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Ward's method (minimizes within-cluster variance)</span></span>
-<span><span class="va">clust_ward</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_clusters.html">build_clusters</a></span><span class="op">(</span><span class="va">net</span>, k <span class="op">=</span> <span class="fl">3</span>, method <span class="op">=</span> <span class="st">"ward.D2"</span><span class="op">)</span></span>
-<span><span class="va">clust_ward</span></span>
-<span><span class="co">#&gt; Sequence Clustering [ward.D2]</span></span>
-<span><span class="co">#&gt;   Sequences: 526  |  Clusters: 3</span></span>
-<span><span class="co">#&gt;   Dissimilarity: hamming</span></span>
-<span><span class="co">#&gt;   Quality: silhouette = 0.569</span></span>
+<p>The Hamming and edit distances count positions or edits, so for
+sequences of unequal length they are driven by length.
+<code><a href="../reference/sequence_metrics.html">sequence_metrics()</a></code> compares the clusters of a grouped
+network on any index, here the number of actions
+(<code>valid_n</code>).</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">2026</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/sequence_metrics.html">sequence_metrics</a></span><span class="op">(</span><span class="fu"><a href="../reference/build_network.html">build_network</a></span><span class="op">(</span><span class="va">clusters_hamming</span><span class="op">)</span>, indices <span class="op">=</span> <span class="st">"valid_n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Sequence metrics by cluster  [1 indices | 3 groups: Cluster 1, Cluster 2, Cluster 3]</span></span>
+<span><span class="co">#&gt;   permutation of the one-way F: 1000 iter (BH), within session</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   Cluster  N            Mean within-dist</span></span>
-<span><span class="co">#&gt;   1        435 (82.7%)  13.148</span></span>
-<span><span class="co">#&gt;   2        83 (15.8%)   38.666</span></span>
-<span><span class="co">#&gt;   3        8 ( 1.5%)    92.964</span></span>
-<span></span>
-<span><span class="co"># Complete linkage</span></span>
-<span><span class="va">clust_complete</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_clusters.html">build_clusters</a></span><span class="op">(</span><span class="va">net</span>, k <span class="op">=</span> <span class="fl">3</span>, method <span class="op">=</span> <span class="st">"complete"</span><span class="op">)</span></span>
-<span><span class="va">clust_complete</span></span>
-<span><span class="co">#&gt; Sequence Clustering [complete]</span></span>
-<span><span class="co">#&gt;   Sequences: 526  |  Clusters: 3</span></span>
-<span><span class="co">#&gt;   Dissimilarity: hamming</span></span>
-<span><span class="co">#&gt;   Quality: silhouette = 0.802</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   Cluster  N            Mean within-dist</span></span>
-<span><span class="co">#&gt;   1        518 (98.5%)  21.523</span></span>
-<span><span class="co">#&gt;   2        7 ( 1.3%)    87.524</span></span>
-<span><span class="co">#&gt;   3        1 ( 0.2%)    0.000</span></span></code></pre></div>
+<span><span class="co">#&gt;  index   group     n   mean  sd    eta_sq F      p        p_adj   </span></span>
+<span><span class="co">#&gt;  valid_n Cluster 1 183  9.58  3.65 0.61   332.83 0.000999 0.000999</span></span>
+<span><span class="co">#&gt;  valid_n Cluster 2 106 56.50 29.42 0.61   332.83 0.000999 0.000999</span></span>
+<span><span class="co">#&gt;  valid_n Cluster 3 140 21.81  4.44 0.61   332.83 0.000999 0.000999</span></span></code></pre></div>
+<p>The three Hamming clusters are sessions of about 10, 57 and 22
+actions: the clustering separates short, long and medium sessions. The
+cosine distance compares the profiles of the patterns two sequences
+contain, normalised by their length, and groups sessions by what they
+contain.</p>
 </div>
+</div>
+<div class="section level2">
+<h2 id="choosing-the-clustering">Choosing the clustering<a class="anchor" aria-label="anchor" href="#choosing-the-clustering"></a>
+</h2>
+<p><code><a href="../reference/cluster_choice.html">cluster_choice()</a></code> fits every combination of
+<code>k</code>, <code>dissimilarity</code> and <code>method</code> it is
+given and returns one row per configuration with the average silhouette,
+the mean within-cluster distance, the cluster sizes and the ratio of the
+largest to the smallest cluster; <code>&lt;-- best</code> marks the
+highest silhouette. Its <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> method draws the sweep as
+lines (<code>type = "lines"</code>, silhouette against <code>k</code>),
+bars (<code>"bars"</code>, one per configuration), a heatmap
+(<code>"heatmap"</code>), the trade-off between silhouette and size
+ratio (<code>"tradeoff"</code>) or panels per method
+(<code>"facet"</code>).</p>
 <div class="section level3">
-<h3 id="choosing-k-dissimilarity-and-method">Choosing k, dissimilarity, and method<a class="anchor" aria-label="anchor" href="#choosing-k-dissimilarity-and-method"></a>
+<h3 id="number-of-clusters-and-method">Number of clusters and method<a class="anchor" aria-label="anchor" href="#number-of-clusters-and-method"></a>
 </h3>
-<p><code><a href="../reference/cluster_choice.html">cluster_choice()</a></code> sweeps any combination of
-<code>k</code>, <code>dissimilarity</code>, and <code>method</code> in a
-single call and returns one row per configuration with silhouette, mean
-within-cluster distance, and cluster-size balance. Pass a vector to any
-axis to sweep it; <code>dissimilarity = "all"</code> and
-<code>method = "all"</code> expand to every supported option.</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">ch</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/cluster_choice.html">cluster_choice</a></span><span class="op">(</span><span class="va">net</span>, k <span class="op">=</span> <span class="fl">2</span><span class="op">:</span><span class="fl">4</span>,</span>
-<span>                      method <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"pam"</span>, <span class="st">"ward.D2"</span>, <span class="st">"complete"</span>, <span class="st">"average"</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="va">ch</span></span>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">choice_k</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/cluster_choice.html">cluster_choice</a></span><span class="op">(</span><span class="va">net</span>, k <span class="op">=</span> <span class="fl">2</span><span class="op">:</span><span class="fl">4</span>, method <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"pam"</span>, <span class="st">"ward.D2"</span>,</span>
+<span>                                                    <span class="st">"average"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">choice_k</span></span>
 <span><span class="co">#&gt; Cluster Choice (sweep: k x method)</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;  k method   silhouette within_dist sizes      ratio   best    </span></span>
-<span><span class="co">#&gt;  2 pam      0.558      19.500      [108, 418]   3.870         </span></span>
-<span><span class="co">#&gt;  3 pam      0.280      17.379      [94, 260]    2.766         </span></span>
-<span><span class="co">#&gt;  4 pam      0.158      16.538      [94, 158]    1.681         </span></span>
-<span><span class="co">#&gt;  2 ward.D2  0.588      19.650      [91, 435]    4.780         </span></span>
-<span><span class="co">#&gt;  3 ward.D2  0.569      18.389      [8, 435]    54.375         </span></span>
-<span><span class="co">#&gt;  4 ward.D2  0.513      17.601      [8, 435]    54.375         </span></span>
-<span><span class="co">#&gt;  2 complete 0.810      22.609      [8, 518]    64.750         </span></span>
-<span><span class="co">#&gt;  3 complete 0.802      22.360      [1, 518]   518.000         </span></span>
-<span><span class="co">#&gt;  4 complete 0.781      22.265      [1, 518]   518.000         </span></span>
-<span><span class="co">#&gt;  2 average  0.824      23.400      [4, 522]   130.500 &lt;-- best</span></span>
-<span><span class="co">#&gt;  3 average  0.816      23.153      [1, 522]   522.000         </span></span>
-<span><span class="co">#&gt;  4 average  0.763      21.879      [1, 515]   515.000</span></span></code></pre></div>
-<p><code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> accepts an explicit <code>type =</code> so you
-can pick the chart that suits the sweep shape (<code>"lines"</code>,
-<code>"bars"</code>, <code>"heatmap"</code>, <code>"tradeoff"</code>,
-<code>"facet"</code>, or the default <code>"auto"</code>).</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">ch</span>, type <span class="op">=</span> <span class="st">"lines"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="clustering_files/figure-html/choose-k-plot-1.png" class="r-plt" alt="Silhouette across k for each clustering method" width="672"></p>
-<p>To compare several dissimilarities at a fixed <code>k</code>, pass a
-vector and use the <code>bars</code> plot type.
-<code>dissimilarity = "all"</code> expands to every supported metric
-(<code>hamming</code>, <code>osa</code>, <code>lv</code>,
-<code>dl</code>, <code>lcs</code>, <code>qgram</code>,
-<code>cosine</code>, <code>jaccard</code>, <code>jw</code>); some
-metrics require denser sequences than others, so for this short-sequence
-sample we name a curated subset directly. <code>abbrev = TRUE</code>
-shortens the metric names on the tick labels.</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">ch_d</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/cluster_choice.html">cluster_choice</a></span><span class="op">(</span><span class="va">net</span>, k <span class="op">=</span> <span class="fl">2</span>,</span>
-<span>                        dissimilarity <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"hamming"</span>, <span class="st">"lv"</span>, <span class="st">"lcs"</span><span class="op">)</span>,</span>
-<span>                        method <span class="op">=</span> <span class="st">"ward.D2"</span><span class="op">)</span></span>
-<span><span class="va">ch_d</span></span>
+<span><span class="co">#&gt;  k method  silhouette within_dist sizes      ratio   best    </span></span>
+<span><span class="co">#&gt;  2 pam     0.497      22.993      [116, 313]   2.698         </span></span>
+<span><span class="co">#&gt;  3 pam     0.215      21.027      [106, 183]   1.726         </span></span>
+<span><span class="co">#&gt;  4 pam     0.256      18.870      [24, 183]    7.625         </span></span>
+<span><span class="co">#&gt;  2 ward.D2 0.775      26.048      [11, 418]   38.000         </span></span>
+<span><span class="co">#&gt;  3 ward.D2 0.474      20.914      [11, 303]   27.545         </span></span>
+<span><span class="co">#&gt;  4 ward.D2 0.419      19.445      [11, 303]   27.545         </span></span>
+<span><span class="co">#&gt;  2 average 0.783      26.365      [9, 420]    46.667 &lt;-- best</span></span>
+<span><span class="co">#&gt;  3 average 0.776      26.042      [1, 420]   420.000         </span></span>
+<span><span class="co">#&gt;  4 average 0.770      25.792      [1, 420]   420.000</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">choice_k</span>, type <span class="op">=</span> <span class="st">"lines"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="clustering_files/figure-html/choice-k-1.png" class="r-plt" alt="Visualization" width="100%"></p>
+<p>With the Hamming distance, the highest silhouettes (0.78) belong to
+average linkage and Ward’s criterion, which put 9 or 11 sessions in one
+cluster and the rest in the other. A small cluster of very long sessions
+lies far from everything else and raises the silhouette without
+describing the data, which the size ratio (up to 420) shows. PAM gives
+balanced clusters with lower silhouettes.</p>
+</div>
+<div class="section level3">
+<h3 id="distance">Distance<a class="anchor" aria-label="anchor" href="#distance"></a>
+</h3>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">choice_distance</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/cluster_choice.html">cluster_choice</a></span><span class="op">(</span><span class="va">net</span>, k <span class="op">=</span> <span class="fl">2</span>,</span>
+<span>                                  dissimilarity <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"hamming"</span>, <span class="st">"lv"</span>, <span class="st">"lcs"</span>,</span>
+<span>                                                    <span class="st">"qgram"</span>, <span class="st">"cosine"</span>,</span>
+<span>                                                    <span class="st">"jaccard"</span><span class="op">)</span>,</span>
+<span>                                  method <span class="op">=</span> <span class="st">"pam"</span><span class="op">)</span></span>
+<span><span class="va">choice_distance</span></span>
 <span><span class="co">#&gt; Cluster Choice (sweep: dissimilarity)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;  dissimilarity silhouette within_dist sizes      ratio best    </span></span>
-<span><span class="co">#&gt;  hamming       0.588      19.650      [91, 435]  4.780 &lt;-- best</span></span>
-<span><span class="co">#&gt;  lv            0.584      15.375      [110, 416] 3.782         </span></span>
-<span><span class="co">#&gt;  lcs           0.514      17.544      [126, 400] 3.175</span></span></code></pre></div>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">ch_d</span>, type <span class="op">=</span> <span class="st">"bars"</span>, abbrev <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
-<p><img src="clustering_files/figure-html/choose-d-plot-1.png" class="r-plt" alt="Silhouette per dissimilarity at k = 2" width="672"></p>
-<p>A high silhouette can come from one big cluster and a tiny outlier
-cluster. The <code>tradeoff</code> type plots silhouette against the
-cluster-size ratio so you can see both axes at once.</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">ch_d</span>, type <span class="op">=</span> <span class="st">"tradeoff"</span>, abbrev <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
-<p><img src="clustering_files/figure-html/choose-tradeoff-1.png" class="r-plt" alt="Quality vs cluster-size balance" width="672"></p>
-<p>Higher silhouette indicates better-defined clusters. The
-<code>&lt;-- best</code> marker in the printed table is the
-silhouette-max row; <code>summary(ch)</code> returns the same sweep as a
-data frame whose <code>best</code> column marks that row. We select
-<code>ward.D2</code> with 2 clusters here.</p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">clust</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_clusters.html">build_clusters</a></span><span class="op">(</span><span class="va">net</span>, k <span class="op">=</span> <span class="fl">2</span>, method <span class="op">=</span> <span class="st">"ward.D2"</span>, seed <span class="op">=</span> <span class="fl">42</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">clust</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Sequence Clustering Summary</span></span>
-<span><span class="co">#&gt;   Method:        ward.D2 </span></span>
-<span><span class="co">#&gt;   Dissimilarity: hamming </span></span>
-<span><span class="co">#&gt;   Silhouette:    0.5877 </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Per-cluster statistics:</span></span>
-<span><span class="co">#&gt;  cluster size mean_within_dist</span></span>
-<span><span class="co">#&gt;        1  435         13.14836</span></span>
-<span><span class="co">#&gt;        2   91         50.72747</span></span>
-<span><span class="co">#&gt;   cluster size mean_within_dist</span></span>
-<span><span class="co">#&gt; 1       1  435         13.14836</span></span>
-<span><span class="co">#&gt; 2       2   91         50.72747</span></span></code></pre></div>
+<span><span class="co">#&gt;  hamming       0.497      22.993      [116, 313] 2.698 &lt;-- best</span></span>
+<span><span class="co">#&gt;  lv            0.494      17.682      [138, 291] 2.109         </span></span>
+<span><span class="co">#&gt;  lcs           0.488      20.368      [115, 314] 2.730         </span></span>
+<span><span class="co">#&gt;  qgram         0.470      20.136      [130, 299] 2.300         </span></span>
+<span><span class="co">#&gt;  cosine        0.419       0.183      [170, 259] 1.524         </span></span>
+<span><span class="co">#&gt;  jaccard       0.313       0.359      [162, 267] 1.648</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">choice_distance</span>, type <span class="op">=</span> <span class="st">"bars"</span>, abbrev <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+<p><img src="clustering_files/figure-html/choice-distance-1.png" class="r-plt" alt="Visualization" width="100%"></p>
+<p>With two clusters and PAM, the Hamming, edit and
+longest-common-subsequence distances have the highest silhouettes (0.49
+to 0.50), and their clusters are again separated by length. The cosine
+distance has a lower silhouette (0.42) and the most balanced clusters
+(170 and 259 sessions).</p>
 </div>
 <div class="section level3">
-<h3 id="validating-the-choice-with-cluster_diagnostics">Validating the choice with <code>cluster_diagnostics()</code><a class="anchor" aria-label="anchor" href="#validating-the-choice-with-cluster_diagnostics"></a>
+<h3 id="cosine-distance">Cosine distance<a class="anchor" aria-label="anchor" href="#cosine-distance"></a>
 </h3>
-<p>Once a clustering is fit, <code><a href="../reference/cluster_diagnostics.html">cluster_diagnostics()</a></code> returns
-a uniform diagnostic surface that works for both distance-based fits
-(<code>net_clustering</code>) and model-based fits
-(<code>net_mmm</code>, <code>net_mmm_clustering</code>). The print
-method shows per-cluster size, mean within-distance, and silhouette for
-distance-based fits; AvePP, mixing share, and per-cluster classification
-error for MMM fits.</p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">diag</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/cluster_diagnostics.html">cluster_diagnostics</a></span><span class="op">(</span><span class="va">clust</span><span class="op">)</span></span>
-<span><span class="va">diag</span></span>
-<span><span class="co">#&gt; Cluster Diagnostics (distance) [ward.D2 / hamming]</span></span>
-<span><span class="co">#&gt;   Sequences: 526  |  Clusters: 2</span></span>
-<span><span class="co">#&gt;   Quality: silhouette = 0.588</span></span>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">choice_cosine</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/cluster_choice.html">cluster_choice</a></span><span class="op">(</span><span class="va">net</span>, k <span class="op">=</span> <span class="fl">2</span><span class="op">:</span><span class="fl">4</span>, dissimilarity <span class="op">=</span> <span class="st">"cosine"</span>,</span>
+<span>                                method <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"pam"</span>, <span class="st">"ward.D2"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">choice_cosine</span></span>
+<span><span class="co">#&gt; Cluster Choice (sweep: k x method)</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;  k method  silhouette within_dist sizes      ratio  best    </span></span>
+<span><span class="co">#&gt;  2 pam     0.419      0.183       [170, 259]  1.524 &lt;-- best</span></span>
+<span><span class="co">#&gt;  3 pam     0.251      0.164       [102, 169]  1.657         </span></span>
+<span><span class="co">#&gt;  4 pam     0.284      0.148       [4, 169]   42.250         </span></span>
+<span><span class="co">#&gt;  2 ward.D2 0.397      0.187       [172, 257]  1.494         </span></span>
+<span><span class="co">#&gt;  3 ward.D2 0.416      0.170       [4, 257]   64.250         </span></span>
+<span><span class="co">#&gt;  4 ward.D2 0.332      0.151       [4, 190]   47.500</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">choice_cosine</span>, type <span class="op">=</span> <span class="st">"tradeoff"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="clustering_files/figure-html/choice-cosine-1.png" class="r-plt" alt="Visualization" width="100%"></p>
+<p>The trade-off plot places each configuration by its silhouette and
+its size ratio; the preferred configurations are high and to the left.
+Two clusters with PAM have the highest silhouette, 0.42, with clusters
+of 170 and 259 sessions. Three clusters with Ward’s criterion have a
+similar silhouette (0.42), but one of their clusters holds four
+sessions.</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">clusters</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_clusters.html">build_clusters</a></span><span class="op">(</span><span class="va">net</span>, k <span class="op">=</span> <span class="fl">2</span>, dissimilarity <span class="op">=</span> <span class="st">"cosine"</span><span class="op">)</span></span>
+<span><span class="va">clusters</span></span>
+<span><span class="co">#&gt; Sequence Clustering [pam]</span></span>
+<span><span class="co">#&gt;   Sequences: 429  |  Clusters: 2</span></span>
+<span><span class="co">#&gt;   Dissimilarity: cosine</span></span>
+<span><span class="co">#&gt;   Quality: silhouette = 0.419</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;   Cluster  N            Mean within-dist  Medoid</span></span>
+<span><span class="co">#&gt;   1        170 (39.6%)  0.247             171</span></span>
+<span><span class="co">#&gt;   2        259 (60.4%)  0.140             376</span></span></code></pre></div>
+</div>
+</div>
+<div class="section level2">
+<h2 id="diagnostics">Diagnostics<a class="anchor" aria-label="anchor" href="#diagnostics"></a>
+</h2>
+<p><code><a href="../reference/cluster_diagnostics.html">cluster_diagnostics()</a></code> reports one row per cluster for
+any clustering: for a dissimilarity clustering the size, the mean
+within-cluster distance and the silhouette, for a mixture Markov model
+the mixing share, the average posterior probability and the
+classification error.</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">diagnostics</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/cluster_diagnostics.html">cluster_diagnostics</a></span><span class="op">(</span><span class="va">clusters</span><span class="op">)</span></span>
+<span><span class="va">diagnostics</span></span>
+<span><span class="co">#&gt; Cluster Diagnostics (distance) [pam / cosine]</span></span>
+<span><span class="co">#&gt;   Sequences: 429  |  Clusters: 2</span></span>
+<span><span class="co">#&gt;   Quality: silhouette = 0.419</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   Cluster  N            Mean within-dist  Silhouette</span></span>
-<span><span class="co">#&gt;   1        435 (82.7%)  13.148            0.727</span></span>
-<span><span class="co">#&gt;   2        91 (17.3%)   50.727            -0.076</span></span></code></pre></div>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">diag</span>, type <span class="op">=</span> <span class="st">"silhouette"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="clustering_files/figure-html/cluster-diagnostics-plot-1.png" class="r-plt" alt="Per-observation silhouette by cluster" width="672"></p>
-<p><code>as.data.frame(diag)</code> returns the per-cluster table as a
-data frame for downstream use.</p>
-</div>
+<span><span class="co">#&gt;   1        170 (39.6%)  0.247             0.199</span></span>
+<span><span class="co">#&gt;   2        259 (60.4%)  0.140             0.564</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">diagnostics</span>, type <span class="op">=</span> <span class="st">"silhouette"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="clustering_files/figure-html/diagnostics-1.png" class="r-plt" alt="Visualization" width="100%"></p>
+<p>The second cluster is well separated (silhouette 0.56) and the first
+less so (0.20); the silhouette plot shows some sessions of the first
+cluster with negative values, closer to the other cluster than to their
+own.</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">clusters</span>, type <span class="op">=</span> <span class="st">"mds"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="clustering_files/figure-html/mds-1.png" class="r-plt" alt="Visualization" width="100%"></p>
+<p>The multidimensional scaling plot places the sessions in two
+dimensions so that their distances approximate the cosine distances,
+with a colour and a shape per cluster. The second cluster is compact;
+the first spreads widely.</p>
 </div>
 <div class="section level2">
-<h2 id="mixture-markov-models">Mixture Markov Models<a class="anchor" aria-label="anchor" href="#mixture-markov-models"></a>
+<h2 id="what-the-clusters-contain">What the clusters contain<a class="anchor" aria-label="anchor" href="#what-the-clusters-contain"></a>
 </h2>
-<p>Instead of clustering sequences based on how similar they are to one
-another, we can cluster them together based on their transition
-dynamics. Mixture Markov models (MMM) fit separate Markov models, and
-sequences are assigned to the cluster whose transition structure best
-matches their observed behavior.</p>
-<p>To implement MMM, we can use <code><a href="../reference/build_mmm.html">build_mmm()</a></code>, which returns
-a <code>net_mmm</code> object with full model details:</p>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">mmm_fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_mmm.html">build_mmm</a></span><span class="op">(</span><span class="va">net</span>, k <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">mmm_fit</span><span class="op">)</span></span>
+<p><code><a href="../reference/sequence_plot.html">sequence_plot()</a></code> draws the sessions of each cluster and
+the share of each state at each position; <code>trim = 0.9</code> keeps
+the positions that hold 90% of the actions, since few sessions are
+long.</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/sequence_plot.html">sequence_plot</a></span><span class="op">(</span><span class="va">clusters</span>, type <span class="op">=</span> <span class="st">"index"</span>, ncol <span class="op">=</span> <span class="fl">2</span>, nrow <span class="op">=</span> <span class="fl">1</span>, trim <span class="op">=</span> <span class="fl">0.9</span><span class="op">)</span></span></code></pre></div>
+<p><img src="clustering_files/figure-html/clusters-index-1.png" class="r-plt" alt="Visualization" width="100%"></p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/sequence_plot.html">sequence_plot</a></span><span class="op">(</span><span class="va">clusters</span>, type <span class="op">=</span> <span class="st">"distribution"</span>, ncol <span class="op">=</span> <span class="fl">2</span>, nrow <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>              trim <span class="op">=</span> <span class="fl">0.9</span><span class="op">)</span></span></code></pre></div>
+<p><img src="clustering_files/figure-html/clusters-distribution-1.png" class="r-plt" alt="Visualization" width="100%"></p>
+<p><code><a href="../reference/sequence_metrics.html">sequence_metrics()</a></code> compares the clusters on the indices
+that describe them.</p>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">2026</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/sequence_metrics.html">sequence_metrics</a></span><span class="op">(</span><span class="fu"><a href="../reference/build_network.html">build_network</a></span><span class="op">(</span><span class="va">clusters</span><span class="op">)</span>,</span>
+<span>                 indices <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"valid_n"</span>, <span class="st">"transition_rate"</span>,</span>
+<span>                             <span class="st">"longitudinal_entropy"</span>, <span class="st">"dominant_proportion"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Sequence metrics by cluster  [4 indices | 2 groups: Cluster 1, Cluster 2]</span></span>
+<span><span class="co">#&gt;   permutation of the one-way F: 1000 iter (BH), within session</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;  index                group     n   mean  sd    diff   g     g_lo  g_hi  eta_sq</span></span>
+<span><span class="co">#&gt;  valid_n              Cluster 1 170 33.61 30.75 -13.99 -0.61 -0.80 -0.41 0.08  </span></span>
+<span><span class="co">#&gt;  valid_n              Cluster 2 259 19.62 16.02 -13.99 -0.61 -0.80 -0.41 0.08  </span></span>
+<span><span class="co">#&gt;  transition_rate      Cluster 1 166  0.57  0.13  -0.12 -0.90 -1.11 -0.70 0.16  </span></span>
+<span><span class="co">#&gt;  transition_rate      Cluster 2 259  0.44  0.14  -0.12 -0.90 -1.11 -0.70 0.16  </span></span>
+<span><span class="co">#&gt;  longitudinal_entropy Cluster 1 170  0.85  0.16  -0.15 -0.83 -1.03 -0.63 0.14  </span></span>
+<span><span class="co">#&gt;  longitudinal_entropy Cluster 2 259  0.70  0.19  -0.15 -0.83 -1.03 -0.63 0.14  </span></span>
+<span><span class="co">#&gt;  dominant_proportion  Cluster 1 170  0.52  0.10   0.16  1.46  1.25  1.68 0.34  </span></span>
+<span><span class="co">#&gt;  dominant_proportion  Cluster 2 259  0.68  0.11   0.16  1.46  1.25  1.68 0.34  </span></span>
+<span><span class="co">#&gt;  F      p        p_adj   </span></span>
+<span><span class="co">#&gt;   37.95 0.000999 0.000999</span></span>
+<span><span class="co">#&gt;   37.95 0.000999 0.000999</span></span>
+<span><span class="co">#&gt;   82.58 0.000999 0.000999</span></span>
+<span><span class="co">#&gt;   82.58 0.000999 0.000999</span></span>
+<span><span class="co">#&gt;   70.85 0.000999 0.000999</span></span>
+<span><span class="co">#&gt;   70.85 0.000999 0.000999</span></span>
+<span><span class="co">#&gt;  220.61 0.000999 0.000999</span></span>
+<span><span class="co">#&gt;  220.61 0.000999 0.000999</span></span></code></pre></div>
+<p>The first cluster (170 sessions) alternates between directives and
+evaluations: it changes state more often (transition rate 0.57 against
+0.44) and spreads its actions more evenly (entropy 0.85 against 0.70).
+The second (259 sessions) is dominated by directives, which take 68% of
+a session against 52% (<code>dominant_proportion</code>). The first
+cluster’s sessions are also longer (34 against 20 actions, Hedges’ g =
+-0.61), so the clusters differ in length as well as in content.</p>
+</div>
+<div class="section level2">
+<h2 id="mixture-markov-models">Mixture Markov models<a class="anchor" aria-label="anchor" href="#mixture-markov-models"></a>
+</h2>
+<p>A mixture Markov model groups the sequences by their transitions: it
+fits one Markov chain per cluster and assigns each sequence to the chain
+that most probably generated it (Helske et al. 2024).
+<code><a href="../reference/compare_mmm.html">compare_mmm()</a></code> fits the model for several numbers of
+clusters and compares them with the BIC (Schwarz 1978), the AIC and the
+ICL (Biernacki, Celeux &amp; Govaert 2000), lower being better, and the
+average posterior probability of the assigned cluster (AvePP). Each
+model is estimated from 50 random starts; <code>seed</code> makes them
+reproducible.</p>
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">mixture_choice</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compare_mmm.html">compare_mmm</a></span><span class="op">(</span><span class="va">net</span>, k <span class="op">=</span> <span class="fl">2</span><span class="op">:</span><span class="fl">5</span>, seed <span class="op">=</span> <span class="fl">2026</span><span class="op">)</span></span>
+<span><span class="va">mixture_choice</span></span>
+<span><span class="co">#&gt; MMM Model Comparison</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;  k log_likelihood AIC      BIC      ICL      AvePP     Entropy   converged</span></span>
+<span><span class="co">#&gt;  2 -10029.568     20093.14 20162.18 20375.01 0.7957056 0.6128693  TRUE    </span></span>
+<span><span class="co">#&gt;  3 -10010.545     20073.09 20178.69 20517.41 0.7057432 0.5768109  TRUE    </span></span>
+<span><span class="co">#&gt;  4  -9997.471     20064.94 20207.09 20658.84 0.6255671 0.6202143  TRUE    </span></span>
+<span><span class="co">#&gt;  5  -9987.099     20062.20 20240.90 20746.91 0.5868660 0.6028683 FALSE    </span></span>
+<span><span class="co">#&gt;  best   </span></span>
+<span><span class="co">#&gt;  &lt;-- BIC</span></span>
+<span><span class="co">#&gt;         </span></span>
+<span><span class="co">#&gt;         </span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">mixture_choice</span><span class="op">)</span></span></code></pre></div>
+<p><img src="clustering_files/figure-html/mmm-choice-1.png" class="r-plt" alt="Visualization" width="100%"></p>
+<p>The BIC and the ICL are lowest with two clusters, which also have the
+highest AvePP (0.80). The AIC keeps decreasing with more clusters, and
+the five-cluster model does not converge.</p>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">mixture</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_mmm.html">build_mmm</a></span><span class="op">(</span><span class="va">net</span>, k <span class="op">=</span> <span class="fl">2</span>, seed <span class="op">=</span> <span class="fl">2026</span><span class="op">)</span></span>
+<span><span class="va">mixture</span></span>
 <span><span class="co">#&gt; Mixed Markov Model</span></span>
-<span><span class="co">#&gt;   Sequences: 526  |  Clusters: 2  |  States: 3</span></span>
-<span><span class="co">#&gt;   ICs: LL = -10074.921  |  BIC = 20256.351  |  AIC = 20183.841  |  ICL = 20536.529</span></span>
-<span><span class="co">#&gt;   Quality: AvePP = 0.782  |  Entropy = 0.642  |  Class.Err = 21.8%</span></span>
+<span><span class="co">#&gt;   Sequences: 429  |  Clusters: 2  |  States: 3</span></span>
+<span><span class="co">#&gt;   ICs: LL = -10029.568  |  BIC = 20162.181  |  AIC = 20093.136  |  ICL = 20375.009</span></span>
+<span><span class="co">#&gt;   Quality: AvePP = 0.796  |  Entropy = 0.613  |  Class.Err = 20.4%</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   Cluster  N            Mix%   AvePP</span></span>
-<span><span class="co">#&gt;   1        334 (63.5%)  55.7%  0.766</span></span>
-<span><span class="co">#&gt;   2        192 (36.5%)  44.3%  0.808</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; --- Cluster 1 (55.7%, n=334) ---</span></span>
-<span><span class="co">#&gt;               Directive Evaluative Metacognitive</span></span>
-<span><span class="co">#&gt; Directive         0.647      0.144         0.208</span></span>
-<span><span class="co">#&gt; Evaluative        0.549      0.269         0.181</span></span>
-<span><span class="co">#&gt; Metacognitive     0.429      0.257         0.314</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; --- Cluster 2 (44.3%, n=192) ---</span></span>
-<span><span class="co">#&gt;               Directive Evaluative Metacognitive</span></span>
-<span><span class="co">#&gt; Directive         0.565      0.301         0.134</span></span>
-<span><span class="co">#&gt; Evaluative        0.447      0.462         0.090</span></span>
-<span><span class="co">#&gt; Metacognitive     0.398      0.435         0.166</span></span>
-<span><span class="co">#&gt;   component     prior n_assigned mean_posterior     avepp</span></span>
-<span><span class="co">#&gt; 1         1 0.5566997        334      0.7663949 0.7663949</span></span>
-<span><span class="co">#&gt; 2         2 0.4433003        192      0.8080413 0.8080413</span></span></code></pre></div>
-<p>The <code>net_mmm</code> object contains posterior probabilities,
-model fit statistics (BIC, AIC, ICL), and one transition matrix per
-cluster; <code>build_network(mmm_fit)</code> turns those into
-per-cluster networks (see below). <code><a href="../reference/cluster_diagnostics.html">cluster_diagnostics()</a></code>
-works on it too, with MMM-specific columns (mixing share, average
-posterior probability, per-cluster classification error):</p>
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">diag_mmm</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/cluster_diagnostics.html">cluster_diagnostics</a></span><span class="op">(</span><span class="va">mmm_fit</span><span class="op">)</span></span>
-<span><span class="va">diag_mmm</span></span>
+<span><span class="co">#&gt;   1        155 (36.1%)  44.5%  0.834</span></span>
+<span><span class="co">#&gt;   2        274 (63.9%)  55.5%  0.774</span></span></code></pre></div>
+<p>In the first cluster (155 sessions) an evaluation is followed by
+another evaluation with probability 0.47 and a directive by an
+evaluation with probability 0.30. In the second (274 sessions)
+directives follow directives (0.65) and metacognitive actions follow
+metacognitive actions (0.31) more often. The model and the cosine
+clustering describe a similar division: sessions that alternate between
+directing and evaluating, and sessions that mostly direct.</p>
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">mixture_diagnostics</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/cluster_diagnostics.html">cluster_diagnostics</a></span><span class="op">(</span><span class="va">mixture</span><span class="op">)</span></span>
+<span><span class="va">mixture_diagnostics</span></span>
 <span><span class="co">#&gt; Cluster Diagnostics (mmm) [k = 2]</span></span>
-<span><span class="co">#&gt;   Sequences: 526  |  Clusters: 2  |  States: 3</span></span>
-<span><span class="co">#&gt;   Quality: AvePP = 0.782  |  Entropy = 0.642  |  Class.Err = 21.8%</span></span>
-<span><span class="co">#&gt;   ICs: LL = -10074.921  |  BIC = 20256.351  |  AIC = 20183.841  |  ICL = 20536.529</span></span>
+<span><span class="co">#&gt;   Sequences: 429  |  Clusters: 2  |  States: 3</span></span>
+<span><span class="co">#&gt;   Quality: AvePP = 0.796  |  Entropy = 0.613  |  Class.Err = 20.4%</span></span>
+<span><span class="co">#&gt;   ICs: LL = -10029.568  |  BIC = 20162.181  |  AIC = 20093.136  |  ICL = 20375.009</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   Cluster  N            Mix%   AvePP  Class.Err%</span></span>
-<span><span class="co">#&gt;   1        334 (63.5%)  55.7%  0.766  23.4%</span></span>
-<span><span class="co">#&gt;   2        192 (36.5%)  44.3%  0.808  19.2%</span></span></code></pre></div>
-<p>The <code>posterior</code> plot type shows the distribution of each
-sequence’s max posterior probability, faceted by cluster. Tight
-distributions near 1 indicate clean assignment; spread-out distributions
-indicate fuzzy clusters.</p>
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">diag_mmm</span>, type <span class="op">=</span> <span class="st">"posterior"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="clustering_files/figure-html/mmm-diagnostics-plot-1.png" class="r-plt" alt="Posterior certainty per MMM cluster" width="672"></p>
+<span><span class="co">#&gt;   1        155 (36.1%)  44.5%  0.834  16.6%</span></span>
+<span><span class="co">#&gt;   2        274 (63.9%)  55.5%  0.774  22.6%</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">mixture_diagnostics</span>, type <span class="op">=</span> <span class="st">"posterior"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="clustering_files/figure-html/mmm-diagnostics-1.png" class="r-plt" alt="Visualization" width="100%"></p>
+<p>The average posterior probability is 0.83 in the first cluster and
+0.77 in the second, and 20% of the sessions are expected to be
+misclassified. The posterior plot shows each cluster’s distribution of
+the sessions’ posterior probabilities; mass near 1 means clear
+assignments.</p>
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/sequence_plot.html">sequence_plot</a></span><span class="op">(</span><span class="va">mixture</span>, type <span class="op">=</span> <span class="st">"index"</span>, ncol <span class="op">=</span> <span class="fl">2</span>, nrow <span class="op">=</span> <span class="fl">1</span>, trim <span class="op">=</span> <span class="fl">0.9</span><span class="op">)</span></span></code></pre></div>
+<p><img src="clustering_files/figure-html/mmm-sequences-1.png" class="r-plt" alt="Visualization" width="100%"></p>
+<p><code><a href="../reference/cluster_mmm.html">cluster_mmm()</a></code> fits the same model and returns the same
+<code>net_mmm</code> object; it is the name under which the mixture
+model is reached from <code><a href="../reference/cluster_network.html">cluster_network()</a></code>.</p>
 </div>
 <div class="section level2">
-<h2 id="building-networks-per-cluster">Building Networks per Cluster<a class="anchor" aria-label="anchor" href="#building-networks-per-cluster"></a>
+<h2 id="networks-per-cluster">Networks per cluster<a class="anchor" aria-label="anchor" href="#networks-per-cluster"></a>
 </h2>
-<p>Once sequences are grouped, the goal is usually to compare <em>how
-transitions behave within each group</em>. A single transition network
-estimated on all sequences averages across the groups and hides the
-contrast. Estimating one network per cluster preserves each group’s
-distinct dynamics — same nodes, different edge weights.</p>
-<p>The result is a <code>netobject_group</code>: a list of
-<code>netobject</code>s sharing the same node set, one per cluster.
-Every group network supports the same downstream operations as a single
-<code>netobject</code> — plotting via <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code>, resampling
-via <code><a href="../reference/bootstrap_network.html">bootstrap_network()</a></code>, group-level edge comparison via
-<code><a href="../reference/permutation.html">permutation()</a></code>.</p>
-<p>Two paths produce the same <code>netobject_group</code>:</p>
-<ol style="list-style-type: decimal">
-<li>
-<strong>Manual</strong> — fit clustering with
-<code><a href="../reference/build_clusters.html">build_clusters()</a></code> or <code><a href="../reference/cluster_mmm.html">cluster_mmm()</a></code>, then pass
-the fitted clustering to <code><a href="../reference/build_network.html">build_network()</a></code>.</li>
-<li>
-<strong>Shortcut</strong> — <code><a href="../reference/cluster_network.html">cluster_network()</a></code> collapses
-fitting and network materialization into one call for either distance or
-MMM clustering.</li>
-</ol>
-<p>Distance clustering groups sessions by sequence similarity.
-Model-based MMM clustering groups them by which Markov model best
-explains each sequence’s transitions.</p>
-<table class="table">
-<colgroup>
-<col width="27%">
-<col width="48%">
-<col width="24%">
-</colgroup>
-<thead><tr class="header">
-<th>Function</th>
-<th>Clustering method</th>
-<th>Returns</th>
-</tr></thead>
-<tbody>
-<tr class="odd">
-<td><code><a href="../reference/build_clusters.html">build_clusters()</a></code></td>
-<td>Distance-based (Hamming, LCS, etc.)</td>
-<td><code>net_clustering</code></td>
-</tr>
-<tr class="even">
-<td><code><a href="../reference/cluster_mmm.html">cluster_mmm()</a></code></td>
-<td>Model-based (MMM)</td>
-<td><code>net_mmm</code></td>
-</tr>
-<tr class="odd">
-<td><code><a href="../reference/cluster_network.html">cluster_network()</a></code></td>
-<td>Distance-based or MMM</td>
-<td><code>netobject_group</code></td>
-</tr>
-</tbody>
-</table>
-<div class="section level3">
-<h3 id="from-build_clusters-to-per-cluster-networks">From <code>build_clusters()</code> to per-cluster networks<a class="anchor" aria-label="anchor" href="#from-build_clusters-to-per-cluster-networks"></a>
-</h3>
-<p><code><a href="../reference/build_clusters.html">build_clusters()</a></code> returns clustering only; pass it to
-<code><a href="../reference/build_network.html">build_network()</a></code> to get one network per cluster as a
-<code>netobject_group</code> (group networks). The shortcut
-<code><a href="../reference/cluster_network.html">cluster_network()</a></code> (below) does both steps in one call.</p>
-<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">clust</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_clusters.html">build_clusters</a></span><span class="op">(</span><span class="va">net</span>, k <span class="op">=</span> <span class="fl">2</span>, method <span class="op">=</span> <span class="st">"ward.D2"</span><span class="op">)</span></span>
-<span><span class="va">cluster_net</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_network.html">build_network</a></span><span class="op">(</span><span class="va">clust</span><span class="op">)</span></span>
-<span><span class="va">cluster_net</span></span>
-<span><span class="co">#&gt; Group Networks (2 clusters via ward.D2 / hamming)</span></span>
+<p>A clustering becomes one network per cluster in two ways.
+<code><a href="../reference/build_network.html">build_network()</a></code> on a clustering, from
+<code><a href="../reference/build_clusters.html">build_clusters()</a></code> or <code><a href="../reference/build_mmm.html">build_mmm()</a></code>, estimates a
+network for each cluster from the clustered sequences and returns a
+group of networks.</p>
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">cluster_networks</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_network.html">build_network</a></span><span class="op">(</span><span class="va">clusters</span><span class="op">)</span></span>
+<span><span class="va">cluster_networks</span></span>
+<span><span class="co">#&gt; Group Networks (2 clusters via pam / cosine)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   Group      Nodes  Edges  Weights         N</span></span>
-<span><span class="co">#&gt;   Cluster 1  3      9      [0.127, 0.634]  435 (82.7%)</span></span>
-<span><span class="co">#&gt;   Cluster 2  3      9      [0.109, 0.571]  91 (17.3%)</span></span></code></pre></div>
-<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">cluster_net</span><span class="op">)</span></span></code></pre></div>
-<p><img src="clustering_files/figure-html/cluster-networks-plot-1.png" class="r-plt" alt="Per-cluster transition networks" width="672"></p>
-</div>
-<div class="section level3">
-<h3 id="shortcut-cluster_network-distance-based">Shortcut: <code>cluster_network()</code> (distance-based)<a class="anchor" aria-label="anchor" href="#shortcut-cluster_network-distance-based"></a>
-</h3>
-<p>Combines <code><a href="../reference/build_clusters.html">build_clusters()</a></code> + <code><a href="../reference/build_network.html">build_network()</a></code>
-into one call.</p>
-<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co">## `cograph::cluster_network()` also exists with a different signature</span></span>
-<span><span class="co">## (matrix aggregation); qualify with `Nestimate::` to avoid masking.</span></span>
-<span><span class="va">grp_dist</span> <span class="op">&lt;-</span> <span class="fu">Nestimate</span><span class="fu">::</span><span class="fu"><a href="../reference/cluster_network.html">cluster_network</a></span><span class="op">(</span><span class="va">net</span>, k <span class="op">=</span> <span class="fl">2</span>, cluster_by <span class="op">=</span> <span class="st">"ward.D2"</span><span class="op">)</span></span>
-<span><span class="va">grp_dist</span></span>
-<span><span class="co">#&gt; Group Networks (2 clusters via ward.D2 / hamming)</span></span>
+<span><span class="co">#&gt;   Cluster 1  3      9      [0.105, 0.513]  170 (39.6%)</span></span>
+<span><span class="co">#&gt;   Cluster 2  3      9      [0.137, 0.685]  259 (60.4%)</span></span></code></pre></div>
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">cluster_networks</span><span class="op">)</span></span></code></pre></div>
+<p><img src="clustering_files/figure-html/networks-plot-1.png" class="r-plt" alt="Visualization" width="100%"></p>
+<p><code><a href="../reference/cluster_network.html">cluster_network()</a></code> does the clustering and the networks
+in one call: <code>cluster_by</code> takes the clustering method
+(<code>"pam"</code>, a hierarchical method, or <code>"mmm"</code> for
+the mixture model) and <code>dissimilarity</code> the distance.</p>
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">one_call</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/cluster_network.html">cluster_network</a></span><span class="op">(</span><span class="va">net</span>, k <span class="op">=</span> <span class="fl">2</span>, cluster_by <span class="op">=</span> <span class="st">"pam"</span>,</span>
+<span>                            dissimilarity <span class="op">=</span> <span class="st">"cosine"</span><span class="op">)</span></span>
+<span><span class="va">one_call</span></span>
+<span><span class="co">#&gt; Group Networks (2 clusters via pam / cosine)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   Group      Nodes  Edges  Weights         N</span></span>
-<span><span class="co">#&gt;   Cluster 1  3      9      [0.127, 0.634]  435 (82.7%)</span></span>
-<span><span class="co">#&gt;   Cluster 2  3      9      [0.109, 0.571]  91 (17.3%)</span></span></code></pre></div>
-</div>
-<div class="section level3">
-<h3 id="fitted-mmm-clustering-and-its-networks">Fitted MMM clustering and its networks<a class="anchor" aria-label="anchor" href="#fitted-mmm-clustering-and-its-networks"></a>
-</h3>
-<p><code><a href="../reference/cluster_mmm.html">cluster_mmm()</a></code> returns the fitted clustering object.
-Passing that fit to <code><a href="../reference/build_network.html">build_network()</a></code> materializes one
-transition network per fitted cluster.</p>
-<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">fit_mmm</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/cluster_mmm.html">cluster_mmm</a></span><span class="op">(</span><span class="va">net</span>, k <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
-<span><span class="va">grp_mmm</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_network.html">build_network</a></span><span class="op">(</span><span class="va">fit_mmm</span><span class="op">)</span></span>
-<span><span class="va">grp_mmm</span></span>
+<span><span class="co">#&gt;   Cluster 1  3      9      [0.105, 0.513]  170 (39.6%)</span></span>
+<span><span class="co">#&gt;   Cluster 2  3      9      [0.137, 0.685]  259 (60.4%)</span></span>
+<span><span class="fu"><a href="../reference/cluster_diagnostics.html">cluster_diagnostics</a></span><span class="op">(</span><span class="va">one_call</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Cluster Diagnostics (distance) [pam / cosine]</span></span>
+<span><span class="co">#&gt;   Sequences: 429  |  Clusters: 2</span></span>
+<span><span class="co">#&gt;   Quality: silhouette = 0.419</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;   Cluster  N            Mean within-dist  Silhouette</span></span>
+<span><span class="co">#&gt;   1        170 (39.6%)  0.247             0.199</span></span>
+<span><span class="co">#&gt;   2        259 (60.4%)  0.140             0.564</span></span></code></pre></div>
+<p>With the same settings, the two routes give the same clusters and the
+same networks, and <code><a href="../reference/cluster_diagnostics.html">cluster_diagnostics()</a></code> reads either. The
+two-step route keeps the clustering as its own object, to plot its
+silhouettes or its MDS projection and to describe the clusters before
+any network is estimated; the one-call route goes straight to the
+networks. <code><a href="../reference/cluster_network.html">cluster_network()</a></code> builds the per-cluster networks
+afresh with the network’s method; <code>inherit = TRUE</code> also gives
+them the source network’s threshold, scaling and estimator settings. For
+the mixture model,
+<code>cluster_network(net, k = 2, cluster_by = "mmm", seed = 2026)</code>
+and <code>build_network(mixture)</code> return the fitted chains as
+networks.</p>
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/build_network.html">build_network</a></span><span class="op">(</span><span class="va">mixture</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Group Networks (2 clusters from MMM)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   Group      Nodes  Edges  Weights         N</span></span>
-<span><span class="co">#&gt;   Cluster 1  3      9      [0.090, 0.565]  192 (36.5%)</span></span>
-<span><span class="co">#&gt;   Cluster 2  3      9      [0.144, 0.647]  334 (63.5%)</span></span></code></pre></div>
-<p><code><a href="../reference/cluster_diagnostics.html">cluster_diagnostics()</a></code> works directly on either fitted
-clustering object:</p>
-<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/cluster_diagnostics.html">cluster_diagnostics</a></span><span class="op">(</span><span class="va">grp_dist</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Cluster Diagnostics (distance) [ward.D2 / hamming]</span></span>
-<span><span class="co">#&gt;   Sequences: 526  |  Clusters: 2</span></span>
-<span><span class="co">#&gt;   Quality: silhouette = 0.588</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   Cluster  N            Mean within-dist  Silhouette</span></span>
-<span><span class="co">#&gt;   1        435 (82.7%)  13.148            0.727</span></span>
-<span><span class="co">#&gt;   2        91 (17.3%)   50.727            -0.076</span></span>
-<span><span class="fu"><a href="../reference/cluster_diagnostics.html">cluster_diagnostics</a></span><span class="op">(</span><span class="va">fit_mmm</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Cluster Diagnostics (mmm) [k = 2]</span></span>
-<span><span class="co">#&gt;   Sequences: 526  |  Clusters: 2  |  States: 3</span></span>
-<span><span class="co">#&gt;   Quality: AvePP = 0.782  |  Entropy = 0.642  |  Class.Err = 21.8%</span></span>
-<span><span class="co">#&gt;   ICs: LL = -10074.921  |  BIC = 20256.351  |  AIC = 20183.841  |  ICL = 20536.522</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   Cluster  N            Mix%   AvePP  Class.Err%</span></span>
-<span><span class="co">#&gt;   1        192 (36.5%)  44.3%  0.808  19.2%</span></span>
-<span><span class="co">#&gt;   2        334 (63.5%)  55.7%  0.766  23.4%</span></span></code></pre></div>
-<p>Each element of the group is a full <code>netobject</code> named by
-its cluster (<code>Cluster 1</code>, <code>Cluster 2</code>), so every
-verb that takes a network also takes the group and returns one result
-per cluster.</p>
+<span><span class="co">#&gt;   Cluster 1  3      9      [0.092, 0.563]  155 (36.1%)</span></span>
+<span><span class="co">#&gt;   Cluster 2  3      9      [0.151, 0.649]  274 (63.9%)</span></span></code></pre></div>
 </div>
-<div class="section level3">
-<h3 id="comparing-clusters">Comparing Clusters<a class="anchor" aria-label="anchor" href="#comparing-clusters"></a>
-</h3>
-<p>Clustering maximizes the separation between groups by construction,
-so some difference between the cluster networks is guaranteed. A
-permutation test asks which transition probabilities differ by more than
-reassigning sessions to clusters at random would produce:</p>
-<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">comparison</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/permutation.html">permutation</a></span><span class="op">(</span><span class="va">grp_dist</span>, iter <span class="op">=</span> <span class="fl">100</span><span class="op">)</span></span>
-<span><span class="va">comparison</span></span>
+<div class="section level2">
+<h2 id="comparing-the-clusters">Comparing the clusters<a class="anchor" aria-label="anchor" href="#comparing-the-clusters"></a>
+</h2>
+<p><code><a href="../reference/permutation.html">permutation()</a></code> compares the transition probabilities of
+the clusters edge by edge, by shuffling the cluster labels of the
+sessions.</p>
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">2026</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/permutation.html">permutation</a></span><span class="op">(</span><span class="va">cluster_networks</span>, iter <span class="op">=</span> <span class="fl">1000</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Grouped Permutation Test</span></span>
 <span><span class="co">#&gt; Groups: Cluster 1 vs Cluster 2 </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; -- Cluster 1 vs Cluster 2 --</span></span>
 <span><span class="co">#&gt; Permutation Test: Transition Network (relative probabilities) [directed]</span></span>
-<span><span class="co">#&gt;   Iterations: 100  |  Alpha: 0.05</span></span>
-<span><span class="co">#&gt;   Nodes: 3  |  Edges tested: 9  |  Significant: 3</span></span>
-<span><span class="co">#&gt;   Global test (networks differ overall?): M = 0.335 (p = 0.0495)  |  S = 0.096 (p = 0.0495)</span></span></code></pre></div>
-</div>
+<span><span class="co">#&gt;   Iterations: 1000  |  Alpha: 0.05</span></span>
+<span><span class="co">#&gt;   Nodes: 3  |  Edges tested: 9  |  Significant: 8</span></span>
+<span><span class="co">#&gt;   Global test (networks differ overall?): M = 1.057 (p = 0.000999)  |  S = 0.194 (p = 0.000999)</span></span></code></pre></div>
+<p>The clusters were formed to differ, so differences between their
+networks are expected by construction; the test shows which transitions
+the clusters differ in, not whether such groups exist in the
+population.</p>
 </div>
 <div class="section level2">
-<h2 id="workflow-summary">Workflow Summary<a class="anchor" aria-label="anchor" href="#workflow-summary"></a>
+<h2 id="how-to-cite-this-article">How to cite this article<a class="anchor" aria-label="anchor" href="#how-to-cite-this-article"></a>
 </h2>
-<p>The end-to-end path from raw sequence data to validated per-cluster
-networks:</p>
-<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># 1. Build the network from long-format data</span></span>
-<span><span class="va">net</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_network.html">build_network</a></span><span class="op">(</span><span class="va">human_long</span>, method <span class="op">=</span> <span class="st">"tna"</span>,</span>
-<span>                     actor <span class="op">=</span> <span class="st">"session_id"</span>,</span>
-<span>                     action <span class="op">=</span> <span class="st">"cluster"</span>,</span>
-<span>                     time   <span class="op">=</span> <span class="st">"timestamp"</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># 2. Sweep the parameter space</span></span>
-<span><span class="va">ch</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/cluster_choice.html">cluster_choice</a></span><span class="op">(</span><span class="va">net</span>, k <span class="op">=</span> <span class="fl">2</span><span class="op">:</span><span class="fl">5</span>,</span>
-<span>                     dissimilarity <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"hamming"</span>, <span class="st">"lcs"</span>, <span class="st">"cosine"</span><span class="op">)</span>,</span>
-<span>                     method <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"pam"</span>, <span class="st">"ward.D2"</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">ch</span>, type <span class="op">=</span> <span class="st">"facet"</span>, abbrev <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># 3. Pick a configuration and fit</span></span>
-<span><span class="va">clust</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_clusters.html">build_clusters</a></span><span class="op">(</span><span class="va">net</span>, k <span class="op">=</span> <span class="fl">2</span>,</span>
-<span>                         dissimilarity <span class="op">=</span> <span class="st">"hamming"</span>,</span>
-<span>                         method <span class="op">=</span> <span class="st">"ward.D2"</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># 4. Validate</span></span>
-<span><span class="va">diag</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/cluster_diagnostics.html">cluster_diagnostics</a></span><span class="op">(</span><span class="va">clust</span><span class="op">)</span></span>
-<span><span class="va">diag</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">diag</span>, type <span class="op">=</span> <span class="st">"silhouette"</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># 5. Build per-cluster networks</span></span>
-<span><span class="va">grp</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_network.html">build_network</a></span><span class="op">(</span><span class="va">clust</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># 6. Optional: model-based second opinion</span></span>
-<span><span class="va">mmm</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_mmm.html">build_mmm</a></span><span class="op">(</span><span class="va">net</span>, k <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu"><a href="../reference/cluster_diagnostics.html">cluster_diagnostics</a></span><span class="op">(</span><span class="va">mmm</span><span class="op">)</span>, type <span class="op">=</span> <span class="st">"posterior"</span><span class="op">)</span></span></code></pre></div>
+<p>Saqr, M., López-Pernas, S., &amp; Misiejuk, K. (2026). <em>Sequence
+clustering</em>. Nestimate. <a href="https://pak.dynasite.org/Nestimate/articles/clustering.html">HTML</a>
+· <a href="https://pak.dynasite.org/Nestimate/pdf/clustering.pdf">PDF</a></p>
+</div>
+<div class="section level2">
+<h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
+</h2>
+<p>Biernacki, C., Celeux, G., &amp; Govaert, G. (2000). Assessing a
+mixture model for clustering with the integrated completed likelihood.
+<em>IEEE Transactions on Pattern Analysis and Machine Intelligence</em>,
+22(7), 719–725. <a href="https://doi.org/10.1109/34.865189" class="external-link uri">https://doi.org/10.1109/34.865189</a></p>
+<p>Hamming, R. W. (1950). Error detecting and error correcting codes.
+<em>Bell System Technical Journal</em>, 29(2), 147–160. <a href="https://doi.org/10.1002/j.1538-7305.1950.tb00463.x" class="external-link uri">https://doi.org/10.1002/j.1538-7305.1950.tb00463.x</a></p>
+<p>Helske, J., Helske, S., Saqr, M., López-Pernas, S., &amp; Murphy, K.
+(2024). A modern approach to transition analysis and process mining with
+Markov models in education. In M. Saqr &amp; S. López-Pernas (Eds.),
+<em>Learning analytics methods and tutorials: A practical guide using
+R</em> (pp. 381–427). Springer. <a href="https://doi.org/10.1007/978-3-031-54464-4_12" class="external-link uri">https://doi.org/10.1007/978-3-031-54464-4_12</a></p>
+<p>Kaufman, L., &amp; Rousseeuw, P. J. (1990). <em>Finding groups in
+data: An introduction to cluster analysis</em>. Wiley. <a href="https://doi.org/10.1002/9780470316801" class="external-link uri">https://doi.org/10.1002/9780470316801</a></p>
+<p>López-Pernas, S., Tikka, S., &amp; Saqr, M. (2025). Mining patterns
+and clusters with transition network analysis: A heterogeneity approach.
+In M. Saqr &amp; S. López-Pernas (Eds.), <em>Advanced learning analytics
+methods: AI, precision and complexity</em> (pp. 447–468). Springer. <a href="https://doi.org/10.1007/978-3-031-95365-1_17" class="external-link uri">https://doi.org/10.1007/978-3-031-95365-1_17</a></p>
+<p>Misiejuk, K., López-Pernas, S., Oliveira, E., Rinja, D., &amp; Saqr,
+M. (2026). It takes two to vibe code: Profiling student-AI programming
+interactions processes and their high order structure. In
+<em>Proceedings of the 26th Koli Calling International Conference on
+Computing Education Research</em> (pp. 1–11). ACM. <a href="https://doi.org/10.1145/3856208.3856254" class="external-link uri">https://doi.org/10.1145/3856208.3856254</a></p>
+<p>Murtagh, F., &amp; Legendre, P. (2014). Ward’s hierarchical
+agglomerative clustering method: Which algorithms implement Ward’s
+criterion? <em>Journal of Classification</em>, 31(3), 274–295. <a href="https://doi.org/10.1007/s00357-014-9161-z" class="external-link uri">https://doi.org/10.1007/s00357-014-9161-z</a></p>
+<p>Rousseeuw, P. J. (1987). Silhouettes: A graphical aid to the
+interpretation and validation of cluster analysis. <em>Journal of
+Computational and Applied Mathematics</em>, 20, 53–65. <a href="https://doi.org/10.1016/0377-0427(87)90125-7" class="external-link uri">https://doi.org/10.1016/0377-0427(87)90125-7</a></p>
+<p>Saqr, M., López-Pernas, S., &amp; Misiejuk, K. (2026). Nestimate: An
+R package for dynamic, probabilistic, and high order network analysis.
+<em>Applied Psychological Measurement</em>. <a href="https://doi.org/10.1177/01466216261472019" class="external-link uri">https://doi.org/10.1177/01466216261472019</a></p>
+<p>Saqr, M., López-Pernas, S., Helske, S., Durand, M., Murphy, K.,
+Studer, M., &amp; Ritschard, G. (2024). Sequence analysis in education:
+Principles, technique, and tutorial with R. In M. Saqr &amp; S.
+López-Pernas (Eds.), <em>Learning analytics methods and tutorials: A
+practical guide using R</em> (pp. 321–354). Springer. <a href="https://doi.org/10.1007/978-3-031-54464-4_10" class="external-link uri">https://doi.org/10.1007/978-3-031-54464-4_10</a></p>
+<p>Saqr, M., Misiejuk, K., &amp; López-Pernas, S. (2026). Human-AI
+collaboration or obedient and often clueless AI in instruct, serve,
+repeat dynamics? <em>The Internet and Higher Education</em>, 70, 101087.
+<a href="https://doi.org/10.1016/j.iheduc.2026.101087" class="external-link uri">https://doi.org/10.1016/j.iheduc.2026.101087</a></p>
+<p>Sarkar, A., &amp; Drosos, I. (2025). Vibe coding: Programming through
+conversation with artificial intelligence. In <em>Proceedings of the
+36th Annual Conference of the Psychology of Programming Interest Group
+(PPIG 2025)</em>. <a href="https://doi.org/10.48550/arXiv.2506.23253" class="external-link uri">https://doi.org/10.48550/arXiv.2506.23253</a></p>
+<p>Schwarz, G. (1978). Estimating the dimension of a model. <em>The
+Annals of Statistics</em>, 6(2), 461–464. <a href="https://doi.org/10.1214/aos/1176344136" class="external-link uri">https://doi.org/10.1214/aos/1176344136</a></p>
+<p>Studer, M., &amp; Ritschard, G. (2016). What matters in differences
+between life trajectories: A comparative review of sequence
+dissimilarity measures. <em>Journal of the Royal Statistical Society:
+Series A (Statistics in Society)</em>, 179(2), 481–511. <a href="https://doi.org/10.1111/rssa.12125" class="external-link uri">https://doi.org/10.1111/rssa.12125</a></p>
+<p>Ward, J. H. (1963). Hierarchical grouping to optimize an objective
+function. <em>Journal of the American Statistical Association</em>,
+58(301), 236–244. <a href="https://doi.org/10.1080/01621459.1963.10500845" class="external-link uri">https://doi.org/10.1080/01621459.1963.10500845</a></p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

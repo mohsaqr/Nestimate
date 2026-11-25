@@ -68,11 +68,9 @@ plot(
   `netobject_group` (its members are compared individually and keep
   their names), `cograph_network`, `psychnet`, `mcml`, `tna`,
   `group_tna`, square numeric matrices, or one unnamed list of these.
-  Name the arguments to name the networks, as in
-  `compare_networks(early = a, late = b)`; an unnamed network is named
-  after its method, or `network_<i>`. Nested lists, non-square matrices
-  and other classes raise an error of class
-  `nestimate_compare_bad_input`. For the
+  Name the arguments to name the networks, as in `early = a, late = b`;
+  an unnamed network is named after its method. Any other input raises
+  an error. For the
   [`plot()`](https://rdrr.io/r/graphics/plot.default.html) method:
   passed to
   [`cograph::splot()`](https://sonsoles.me/cograph/reference/splot.html)
@@ -130,8 +128,9 @@ plot(
   it supports (see *Details*). The permutation and Bayesian tests need
   networks that carry their data and share one estimation method, and
   the Bayesian test needs `"relative"` or `"frequency"` networks;
-  otherwise an error of class `nestimate_compare_test_unsupported` is
-  raised.
+  otherwise the call raises `nestimate_compare_test_unsupported`. The
+  permutation and bootstrap tests raise `nestimate_latency_resampling`
+  on a latency network.
 
 - iter:
 
@@ -146,9 +145,9 @@ plot(
 
 - adjust:
 
-  The multiplicity correction for the permutation p-values, a method of
-  [`stats::p.adjust()`](https://rdrr.io/r/stats/p.adjust.html), applied
-  within each pair and separately to the edge and node tables, as
+  The multiplicity correction for the permutation p-values, any method
+  of [p.adjust()](https://rdrr.io/r/stats/p.adjust.html), applied within
+  each pair and separately to the edge and node tables, as
   [`permutation()`](https://pak.dynasite.org/Nestimate/reference/permutation.md)
   does. Default `"none"`.
 
@@ -169,8 +168,14 @@ plot(
 
 - seed:
 
-  An integer that makes the tests reproducible. Pair `i` uses
-  `seed + i`, so each pair's result does not depend on the others.
+  An integer that makes the tests reproducible. It is passed unchanged
+  to the test of every pair, so `test = "permutation"` gives the
+  p-values of
+  [`permutation()`](https://pak.dynasite.org/Nestimate/reference/permutation.md)
+  called with the same `seed`, and likewise for
+  [`bayes_compare()`](https://pak.dynasite.org/Nestimate/reference/bayes_compare.md)
+  and
+  [`vertex_compare()`](https://pak.dynasite.org/Nestimate/reference/vertex_compare.md).
   Default `NULL`.
 
 - actor:
@@ -181,9 +186,19 @@ plot(
   [`permutation()`](https://pak.dynasite.org/Nestimate/reference/permutation.md),
   which then shuffles whole actors; see its sections *Nested data and
   actor* and *ICC and design effect*. The ICC and design effects are
-  added to the global table under the category `"Nesting"`. It needs
-  `test = "permutation"`, otherwise an error of class
-  `nestimate_compare_actor_needs_permutation` is raised. Default `NULL`.
+  added to the global table under the category `"Nesting"`. Set it when
+  the networks come from groups made of different actors (each student
+  in one group): shuffling single sequences is then too liberal. When
+  the groups vary within the same actors (pre- and post-test sessions of
+  the same students), `actor` shuffles within each actor and the plain
+  test is also valid; see *Nested data and actor* in
+  [`permutation()`](https://pak.dynasite.org/Nestimate/reference/permutation.md).
+  It needs `test = "permutation"`, otherwise an error of class
+  `nestimate_compare_actor_needs_permutation` is raised. Several column
+  names, outermost first (`c("Group", "Student")`), are nested levels:
+  labels are shuffled at the level where they are assigned, within the
+  units above it, and the ICC is that of the innermost level. Default
+  `NULL`.
 
 - x:
 
@@ -203,17 +218,19 @@ plot(
   method: the view to draw, one per call. `"networks"` (default) draws
   each network once with
   [`cograph::splot()`](https://sonsoles.me/cograph/reference/splot.html);
-  `"difference"` draws the signed difference network of each pair;
-  `"edges"` is a ranked dumbbell of the largest edge differences, and
-  `"nodes"` the same for the centralities; `"global"` shows the 22
-  comparison metrics as points, plus the inference rows with their
-  p-values (and bootstrap intervals) when `test` was run; `"heatmap"`
-  the signed difference matrix; `"scatter"` the weights of one network
-  against the other's; and `"inference"` a forest of the edge
-  differences on the difference scale, with the credible intervals when
-  the Bayesian test ran and the p-value printed per edge. `"inference"`
-  needs `test`, otherwise an error of class `nestimate_compare_no_test`
-  is raised.
+  `"difference"` draws the signed difference network of each pair; with
+  `test = "permutation"` it is the graph of that pair's
+  [`permutation()`](https://pak.dynasite.org/Nestimate/reference/permutation.md)
+  result (significant differences, starred); `"edges"` is a ranked
+  dumbbell of the largest edge differences, and `"nodes"` the same for
+  the centralities; `"global"` shows the 22 comparison metrics as
+  points, plus the inference rows with their p-values (and bootstrap
+  intervals) when `test` was run; `"heatmap"` the signed difference
+  matrix; `"scatter"` the weights of one network against the other's;
+  and `"inference"` a forest of the edge differences on the difference
+  scale, with the credible intervals when the Bayesian test ran and the
+  p-value printed per edge. `"inference"` needs `test`, otherwise an
+  error of class `nestimate_compare_no_test` is raised.
 
 - pair:
 
@@ -260,14 +277,9 @@ A `net_network_comparison` object.
 (Pearson correlation, mean and largest absolute difference, the largest
 change) and returns `x` invisibly;
 [`summary()`](https://rdrr.io/r/base/summary.html) returns one row per
-pair;
-[`edge_differences()`](https://pak.dynasite.org/Nestimate/reference/comparison_tables.md),
-[`node_differences()`](https://pak.dynasite.org/Nestimate/reference/comparison_tables.md),
-[`global_differences()`](https://pak.dynasite.org/Nestimate/reference/comparison_tables.md)
-and
-[`network_metrics()`](https://pak.dynasite.org/Nestimate/reference/comparison_tables.md)
-return the full tables (see
-[comparison_tables](https://pak.dynasite.org/Nestimate/reference/comparison_tables.md));
+pair; the verbs of
+[comparison_tables](https://pak.dynasite.org/Nestimate/reference/comparison_tables.md)
+return the full tables;
 [`plot()`](https://rdrr.io/r/graphics/plot.default.html) draws one view
 per call. The object's fields:
 
@@ -299,6 +311,10 @@ per call. The object's fields:
 
 - `differences`: one `netdifference` object per pair (from
   [`subtract_networks()`](https://pak.dynasite.org/Nestimate/reference/subtract_networks.md));
+
+- `permutations`: with `test = "permutation"`, the
+  [`permutation()`](https://pak.dynasite.org/Nestimate/reference/permutation.md)
+  result of each pair, named by pair;
 
 - the settings `scaling`, `reference`, `measures`, `test`, `iter`,
   `alpha`, `adjust`, `paired`, `rope` and `actor`, with `directed` (one
@@ -356,37 +372,10 @@ tables), and otherwise the Bayesian one (edge table only).
 
 ## Errors
 
-The errors that `compare_networks()` and its verbs raise themselves have
-the class `nestimate_compare_error` and one of these:
-
-- `nestimate_compare_too_few`: fewer than two networks;
-
-- `nestimate_compare_bad_input`: an input of an unsupported class, a
-  non-square matrix or a nested list;
-
-- `nestimate_compare_dim_mismatch`: different numbers of nodes;
-
-- `nestimate_compare_node_mismatch`: node labels that differ in set or
-  order;
-
-- `nestimate_compare_na_weights`: missing weights;
-
-- `nestimate_compare_reference_unknown`,
-  `nestimate_compare_labels_length`, `nestimate_compare_scaling_domain`,
-  `nestimate_compare_scaling_inference`,
-  `nestimate_compare_test_unsupported` and
-  `nestimate_compare_actor_needs_permutation`: see the arguments;
-
-- `nestimate_compare_unknown_pair`: a `pair` that matches no comparison;
-
-- `nestimate_compare_no_nodes`: the node view or table of a comparison
-  without `measures`;
-
-- `nestimate_compare_no_test`: `plot(type = "inference")` without
-  `test`;
-
-- `nestimate_compare_unknown_measure`: selecting a measure the object
-  does not carry.
+Every error that `compare_networks()` and its verbs raise has the class
+`nestimate_compare_error`, so one handler catches them all. The one met
+most often is `nestimate_compare_node_mismatch`, raised when the
+networks do not share the same nodes in the same order.
 
 Plain argument-type checks raise unclassed errors, and errors from
 [`permutation()`](https://pak.dynasite.org/Nestimate/reference/permutation.md),
@@ -396,8 +385,8 @@ and
 keep their own classes (for example `nestimate_bad_actor` for
 `paired = TRUE` with `actor`).
 
-An unknown name in `measures` gives a warning of class
-`nestimate_compare_warning` and `nestimate_compare_unknown_measure`.
+An unknown name in `measures` is dropped with a
+`nestimate_compare_warning`.
 
 ## Reading the figures
 
@@ -408,8 +397,11 @@ plotted quantity is always `diff = a - b`. Colour never carries the sign
 alone: a solid line and a circular marker repeat "`a` higher", a dashed
 line and a square marker repeat "`b` higher", and the printed value
 carries its sign. When `test` was run, evidence is shown by opacity and
-a starred (edge and node views) or annotated (inference view) label: a
-non-significant difference is faded, never deleted.
+a starred (edge and node views; `**` for p below 0.01, `***` below
+0.001, as on the graph of
+[`permutation()`](https://pak.dynasite.org/Nestimate/reference/permutation.md))
+or annotated (inference view) label: a non-significant difference is
+faded, never deleted.
 
 ## See also
 
@@ -765,7 +757,7 @@ summary(cmp_perm)
 #>  share_higher_b mean_abs_diff max_abs_diff pearson spearman cosine jaccard
 #>            0.46          0.03         0.21    0.92     0.92   0.95    0.75
 #>              top_edge top_edge_higher n_sig_edges n_sig_nodes m_stat   m_p
-#>  discuss -> consensus            High          43          16   2.61 0.010
+#>  discuss -> consensus            High          39          16   2.61 0.010
 #>  s_stat   s_p
 #>    0.21 0.010
 plot(cmp_perm, type = "inference", top_n = 10)

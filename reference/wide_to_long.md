@@ -1,4 +1,4 @@
-# Convert Wide Sequences to Long Format
+# Convert wide sequences to long format
 
 `wide_to_long()` turns sequences in wide format (one row per sequence,
 one column per time point) into long format, with one row per sequence

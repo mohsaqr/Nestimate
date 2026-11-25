@@ -1,4 +1,4 @@
-# Sequence Plot (heatmap, index, or distribution)
+# Draw a sequence index plot, heatmap or distribution plot
 
 `sequence_plot()` draws categorical sequences: one row per sequence and
 one coloured cell per time point, or the share of sequences in each
@@ -47,6 +47,7 @@ sequence_plot(
   tree = NULL,
   group = NULL,
   periods = NULL,
+  period_unit = c("day", "week", "month"),
   fill = c("stretch", "pad"),
   actor = NULL,
   action = NULL,
@@ -151,7 +152,10 @@ print(x, ...)
   tna
 
   :   A `tna` model; its integer-coded sequences are decoded to their
-      state labels.
+      state labels. A `group_tna` is drawn as the group of networks it
+      converts to (see
+      [`as_netobject()`](https://pak.dynasite.org/Nestimate/reference/as_netobject.md)),
+      one panel per group.
 
   mcml
 
@@ -231,6 +235,16 @@ print(x, ...)
   raises an error of class `nestimate_bad_input`). `trim` then counts
   periods, not time points. Default `NULL` plots the sequences as they
   are.
+
+- period_unit:
+
+  With a date `periods` column (a `Date`, a `POSIXct` or text in the
+  form `"2026-03-05"`), the length of one block: `"day"` (default),
+  `"week"` (weeks starting on Monday, labelled by their Monday) or
+  `"month"` (labelled by their first day). Every week or month from the
+  first to the last is a block, so one in which nobody acted is an empty
+  block. `"week"` or `"month"` with a `periods` column that is not a
+  date raises an error of class `nestimate_bad_input`.
 
 - fill:
 
@@ -675,6 +689,7 @@ sequence_plot(fit)                                          # multichannel carpe
 sequence_plot(fit, type = "distribution",
               combine = list(Task = c("Cognitive", "Regulation")),
               expand = "Task")                              # merge, then open
+#> `state_colors`: 2 of 12 names are not drawn by this plot and were dropped: Cognitive, Regulation.
 
 
 # Colour by name: one state, one cluster, one combined group. Everything

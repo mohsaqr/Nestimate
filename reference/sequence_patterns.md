@@ -1,4 +1,4 @@
-# Discover Sequential Patterns
+# Discover sequential patterns
 
 `sequence_patterns()` finds the ordered patterns of states that occur in
 a set of sequences and returns one row per pattern with how often it
@@ -57,8 +57,18 @@ sequence_patterns(
   actor = NULL,
   action = NULL,
   time = NULL,
+  format = c("long", "wide"),
   ...
 )
+
+# S3 method for class 'net_sequence_patterns'
+print(x, n = 10L, digits = 2L, ...)
+
+# S3 method for class 'net_sequence_patterns'
+summary(object, ...)
+
+# S3 method for class 'net_sequence_patterns'
+x[i, j, ...]
 ```
 
 ## Arguments
@@ -108,14 +118,13 @@ sequence_patterns(
 
 - pattern:
 
-  A template to search for instead of discovering all patterns, such as
-  `"discuss->*->consensus"`: each `*` is one position holding any state
-  (`**` is two). Every concrete instance is returned as its own row
-  (`"discuss->plan->consensus"`, ...). States are joined by `"->"`
-  (spaces around it are allowed), and a template may mix fixed states
-  and wildcards or hold no wildcard at all. `type`, `len` and `gap` are
-  then ignored. An empty template, or one with an empty step such as
-  `"A->->B"` or a leading or trailing `"->"`, raises an error of class
+  A template to search for instead of discovering all patterns. Each `*`
+  stands for one position holding any state (`**` for two), so
+  `"A->*->B"` finds every three-state pattern from `A` to `B`, each
+  concrete instance as its own row. States are joined by `"->"` (spaces
+  around it are allowed), and a template may mix fixed states and
+  wildcards or hold no wildcard at all. `type`, `len` and `gap` are then
+  ignored. A template with an empty step, such as `"A->->B"`, raises
   `nestimate_bad_input`. Default `NULL`.
 
 - group:
@@ -159,15 +168,40 @@ sequence_patterns(
 
 - actor, action, time:
 
-  The actor, action and timestamp columns of a long event log, as in
-  [`extract_sequences()`](https://pak.dynasite.org/Nestimate/reference/extract_sequences.md):
-  setting `action` declares `x` an event log. Default `NULL`.
+  The actor, action and timestamp columns of a long event log; setting
+  `action` marks `x` as one. Default `NULL`.
+
+- format:
+
+  With `group`: `"long"` (default), one row per pattern and group, or
+  `"wide"`, one row per pattern with a column per group. Ignored without
+  `group`.
 
 - ...:
 
   Further arguments passed to
   [`prepare()`](https://pak.dynasite.org/Nestimate/reference/prepare.md)
   for a long event log, such as `time_threshold` or `order`.
+
+- n:
+
+  For [`print()`](https://rdrr.io/r/base/print.html) of a group
+  comparison: the number of patterns shown. Default `10`.
+
+- digits:
+
+  For [`print()`](https://rdrr.io/r/base/print.html): the decimals
+  shown. Default `2`; p-values show 3 significant digits.
+
+- object:
+
+  For [`summary()`](https://rdrr.io/r/base/summary.html): a group
+  comparison from `sequence_patterns(group = )`.
+
+- i, j:
+
+  For `[`: rows and columns, as for a data frame. A subset of a group
+  comparison is a plain data frame.
 
 ## Value
 
@@ -202,10 +236,20 @@ A data frame with one row per pattern, ordered by `support` (then
 
   Support relative to the independent presence of its states.
 
-With `group`, the columns `support_<group>` (the support within each
-group) follow; then `odds_ratio`, `or_lower` and `or_upper` for two
-groups, or `chisq` and `cramers_v` for more; then `p_value` and `p_adj`.
-The rows are then ordered by `p_value` (then `support`).
+With `group`, a data frame of class
+`c("net_sequence_patterns", "data.frame")` with one row per pattern and
+group: the columns above, then `group` and `group_support` (the share of
+the group's sequences that contain the pattern); then the pattern's
+test, which repeats on each group's row: `odds_ratio`, `or_lower` and
+`or_upper` for two groups, or `chisq` and `cramers_v` for more; then
+`p_value` and `p_adj`. Patterns are ordered by `p_value` (then
+`support`). With `format = "wide"`, one row per pattern with a
+`support_<group>` column per group instead. The settings are attributes
+(`group`, `groups`, `n_patterns`, `format`, `test`, `adjust`).
+[`print()`](https://rdrr.io/r/base/print.html) shows the first `n`
+patterns, rounded; [`summary()`](https://rdrr.io/r/base/summary.html)
+returns every row as a plain data frame, and a subset is a plain data
+frame.
 
 A state name that contains `"->"` or consists only of asterisks
 (reserved for wildcards) raises an error of class `nestimate_bad_input`.
@@ -322,39 +366,51 @@ sequence_patterns(trajectories, type = "repeated", len = 3:5,
 sequence_patterns(group_regulation_long, actor = "Actor",
                   action = "Action", time = "Time", len = 2,
                   group = "Achiever", top = 10)
-#>                pattern length occurrences  proportion n_sequences support
-#> 1       discuss->adapt      2         282 0.011044531         258  0.1290
-#> 2   discuss->consensus      2        1269 0.049700388         880  0.4400
-#> 3   consensus->discuss      2        1190 0.046606353         828  0.4140
-#> 4     adapt->consensus      2         243 0.009517096         222  0.1110
-#> 5     synthesis->adapt      2         153 0.005992245         146  0.0730
-#> 6      adapt->cohesion      2         139 0.005443935         137  0.0685
-#> 7   cohesion->cohesion      2          46 0.001801590          42  0.0210
-#> 8  coregulate->discuss      2         539 0.021109936         452  0.2260
-#> 9  cohesion->consensus      2         844 0.033055262         688  0.3440
-#> 10    emotion->discuss      2         289 0.011318686         267  0.1335
-#>          lift support_High support_Low odds_ratio   or_lower  or_upper
-#> 1  0.68884958        0.047       0.211  5.4182988 3.87371327 7.7074607
-#> 2  0.61153048        0.545       0.335  0.4207572 0.34950934 0.5060687
-#> 3  0.57539458        0.513       0.315  0.4367325 0.36230806 0.5259653
-#> 4  0.51218457        0.068       0.154  2.4938250 1.83313387 3.4206047
-#> 5  1.01946408        0.039       0.107  2.9509995 2.00246467 4.4251357
-#> 6  0.50203839        0.037       0.100  2.8904423 1.94036332 4.3856532
-#> 7  0.06362668        0.037       0.005  0.1308943 0.03998606 0.3357926
-#> 8  0.47258065        0.179       0.273  1.7218367 1.38415246 2.1454614
-#> 9  0.65619896        0.397       0.291  0.6235728 0.51515543 0.7542389
-#> 10 0.22848693        0.171       0.096  0.5149905 0.38979180 0.6774734
-#>         p_value        p_adj
-#> 1  2.456517e-29 1.645866e-27
-#> 2  3.328919e-21 1.115188e-19
-#> 3  2.782011e-19 6.213158e-18
-#> 4  9.461193e-10 1.584750e-08
-#> 5  4.688100e-09 6.282055e-08
-#> 6  2.408664e-08 2.689675e-07
-#> 7  3.434169e-07 3.286990e-06
-#> 8  6.173873e-07 5.170618e-06
-#> 9  7.443520e-07 5.541287e-06
-#> 10 9.992119e-07 6.694720e-06
+#> Sequence patterns by Achiever  [10 patterns | 2 groups: High, Low]
+#>   presence test: Fisher's exact, odds ratio against High (BH)
+#> 
+#>  pattern             n_sequences support group group_support odds_ratio
+#>  discuss->adapt      258         0.13    High  0.05          5.42      
+#>  discuss->adapt      258         0.13    Low   0.21          5.42      
+#>  discuss->consensus  880         0.44    High  0.54          0.42      
+#>  discuss->consensus  880         0.44    Low   0.34          0.42      
+#>  consensus->discuss  828         0.41    High  0.51          0.44      
+#>  consensus->discuss  828         0.41    Low   0.32          0.44      
+#>  adapt->consensus    222         0.11    High  0.07          2.49      
+#>  adapt->consensus    222         0.11    Low   0.15          2.49      
+#>  synthesis->adapt    146         0.07    High  0.04          2.95      
+#>  synthesis->adapt    146         0.07    Low   0.11          2.95      
+#>  adapt->cohesion     137         0.07    High  0.04          2.89      
+#>  adapt->cohesion     137         0.07    Low   0.10          2.89      
+#>  cohesion->cohesion   42         0.02    High  0.04          0.13      
+#>  cohesion->cohesion   42         0.02    Low   0.00          0.13      
+#>  coregulate->discuss 452         0.23    High  0.18          1.72      
+#>  coregulate->discuss 452         0.23    Low   0.27          1.72      
+#>  cohesion->consensus 688         0.34    High  0.40          0.62      
+#>  cohesion->consensus 688         0.34    Low   0.29          0.62      
+#>  emotion->discuss    267         0.13    High  0.17          0.51      
+#>  emotion->discuss    267         0.13    Low   0.10          0.51      
+#>  or_lower or_upper p_value  p_adj   
+#>  3.87     7.71     2.46e-29 1.65e-27
+#>  3.87     7.71     2.46e-29 1.65e-27
+#>  0.35     0.51     3.33e-21 1.12e-19
+#>  0.35     0.51     3.33e-21 1.12e-19
+#>  0.36     0.53     2.78e-19 6.21e-18
+#>  0.36     0.53     2.78e-19 6.21e-18
+#>  1.83     3.42     9.46e-10 1.58e-08
+#>  1.83     3.42     9.46e-10 1.58e-08
+#>  2.00     4.43     4.69e-09 6.28e-08
+#>  2.00     4.43     4.69e-09 6.28e-08
+#>  1.94     4.39     2.41e-08 2.69e-07
+#>  1.94     4.39     2.41e-08 2.69e-07
+#>  0.04     0.34     3.43e-07 3.29e-06
+#>  0.04     0.34     3.43e-07 3.29e-06
+#>  1.38     2.15     6.17e-07 5.17e-06
+#>  1.38     2.15     6.17e-07 5.17e-06
+#>  0.52     0.75     7.44e-07 5.54e-06
+#>  0.52     0.75     7.44e-07 5.54e-06
+#>  0.39     0.68     9.99e-07 6.69e-06
+#>  0.39     0.68     9.99e-07 6.69e-06
 
 sequence_patterns(trajectories, pattern = "Active->*->Disengaged")
 #>                          pattern length occurrences proportion n_sequences

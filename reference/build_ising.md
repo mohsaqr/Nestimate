@@ -1,25 +1,32 @@
-# Build an Ising Network
+# Estimate an Ising model
 
-`build_ising()` estimates an Ising network for binary (0/1) variables:
-each variable is regressed on all the others with L1-penalised logistic
-regression, the penalty is chosen by EBIC, and the two estimates of each
-edge are combined into one undirected weight (van Borkulo et al., 2014).
-It is
-[`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
-with `method = "ising"`, and needs the glmnet package. The settings go
-in `params`: `gamma` (the EBIC hyperparameter, default `0.25`),
-`nlambda` (default `100`) and `rule`, `"AND"` (default: an edge only
-when both regressions select it) or `"OR"` (when either does).
+`build_network(method = "ising")`, or for short `build_ising()`,
+estimates an Ising model of binary variables. The edge between two
+variables is their interaction, fitted by L1-penalised logistic
+regression of each variable on the others, with the penalty chosen by
+EBIC, and the two estimates of each edge combined into one undirected
+weight (van Borkulo et al., 2014). It needs the glmnet package.
 
 An edge is a conditional association between two variables given all the
-others; an absent edge means the penalty removed it. Check the stability
-of the edges with
-[`bootstrap_network()`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.md).
+others; an absent edge means the penalty removed it.
 
 ## Usage
 
 ``` r
-build_ising(data, actor = NULL, ...)
+build_ising(
+  data,
+  actor = NULL,
+  ...,
+  gamma = 0.25,
+  nlambda = 100L,
+  rule = c("AND", "OR"),
+  metadata_cols = NULL,
+  group = NULL,
+  scaling = NULL,
+  threshold = 0,
+  labels = NULL,
+  params = list()
+)
 ```
 
 ## Arguments
@@ -41,19 +48,70 @@ build_ising(data, actor = NULL, ...)
 - ...:
 
   Further arguments for
-  [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md),
-  such as `params` (`gamma`, `nlambda`, `rule`), `threshold`, `scaling`
-  or `group`. `method` cannot be given: it is always `"ising"` (error of
-  class `nestimate_bad_input`).
+  [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md).
+  `method` cannot be given (error of class `nestimate_bad_input`).
+
+- gamma:
+
+  The EBIC hyperparameter. Default `0.25`.
+
+- nlambda:
+
+  The number of penalties tried. Default `100`.
+
+- rule:
+
+  `"AND"` (default) keeps an edge when both regressions select it,
+  `"OR"` when either does.
+
+- metadata_cols:
+
+  Columns to keep as the network's metadata (covariates), never read as
+  variables. Default `NULL`.
+
+- group:
+
+  A column to split the data by: one network per value, returned as a
+  `netobject_group`. Default `NULL`.
+
+- scaling:
+
+  Rescaling applied to the weights after estimation, in the order given:
+  `"minmax"` rescales the weights to run from 0 to 1, over every cell
+  for the transition methods (tna's rule, so with no zero cell the
+  smallest weight becomes 0) and over the non-zero weights, into (0,
+  1\], for the other methods, `"max"` divides by the largest absolute
+  weight, `"rank"` replaces the non-zero weights by their ranks, and
+  `"normalize"` makes each row's absolute weights sum to 1; an
+  undirected network whose matrix it makes asymmetric becomes directed,
+  so both of a pair's values are kept as edges. Zero weights stay zero
+  under every option. Combine them as in `c("rank", "minmax")`. Default
+  `NULL` (none).
+
+- threshold:
+
+  Weights whose absolute value is below this are set to zero. Default
+  `0` (none).
+
+- labels:
+
+  New display labels for the nodes, applied after estimation: a
+  two-column data frame (`name`, `label`), a named character vector
+  `c(name = "label")` or a named list. It rewrites the node labels and
+  the weight matrix's dimnames; nodes not listed keep their names.
+  Default `NULL`.
+
+- params:
+
+  Settings for the estimator, as a named list. The network stores them,
+  so the resampling verbs re-estimate with the same settings. Default
+  [`list()`](https://rdrr.io/r/base/list.html).
 
 ## Value
 
-A `netobject` (a `netobject_group` with `group`), exactly as
+A `netobject` (a `netobject_group` with `group`), as
 [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
-returns it: print it for an overview, read the edges with
-[`extract_edges()`](https://pak.dynasite.org/Nestimate/reference/extract_edges.md),
-and draw it with
-[`cograph::splot()`](https://sonsoles.me/cograph/reference/splot.html).
+returns it.
 
 ## References
 
@@ -64,14 +122,27 @@ constructing networks from binary data. *Scientific Reports*, 4, 5918.
 
 ## See also
 
-[`build_network`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
+[`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
+for every method;
+[`build_mgm()`](https://pak.dynasite.org/Nestimate/reference/build_mgm.md)
+for mixed continuous and categorical variables.
 
 ## Examples
 
 ``` r
 if (requireNamespace("glmnet", quietly = TRUE)) {
   set.seed(1)
-  bin_data <- data.frame(matrix(rbinom(200, 1, 0.5), ncol = 5))
-  net <- build_ising(bin_data)
+  binary <- data.frame(matrix(rbinom(200, 1, 0.5), ncol = 5))
+  build_network(binary, method = "ising")
+  build_ising(binary, rule = "OR")
 }
+#> Ising Model Network [undirected]
+#>   Sample size: 40
+#> 
+#>   No edges: every weight is zero.
+#> 
+#>   extract_edges(include_self = TRUE) lists every edge; extract_transition_matrix() gives the weight matrix.
+#> 
+#>   Gamma: 0.25  |  Rule: OR
+#>   Thresholds: [-0.201, 0.405]
 ```

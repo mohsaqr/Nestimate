@@ -1,4 +1,4 @@
-# Count Path Frequencies in Trajectory Data
+# Count the paths of k states in trajectories
 
 `path_counts()` counts how often each path of `k` consecutive states (a
 k-gram) occurs across all trajectories, and returns one row per path,

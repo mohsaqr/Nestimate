@@ -1,4 +1,4 @@
-# Tidy per-actor endpoint summary of a wide-format sequence dataset
+# Tabulate the first and last states of each sequence
 
 `actor_endpoints()` returns one row per sequence (actor) of a
 wide-format sequence table, with its first and last observed states, the

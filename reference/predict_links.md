@@ -1,4 +1,4 @@
-# Predict Missing or Future Links in a Network
+# Predict missing or future links in a network
 
 `predict_links()` scores every pair of nodes for how strongly the
 network's structure suggests a link between them, with one or more
@@ -123,16 +123,17 @@ writes them as pathway strings. The object's fields:
 - predictions:
 
   Data frame, one row per node pair and index: `from`, `to`, `method`,
-  `score`, `existing` (whether the pair already has an edge) and `rank`,
-  sorted by score (highest first) within each index. An undirected
-  network lists each pair once.
+  `score`, `existing` (whether the pair already has an edge) and `rank`
+  (pairs with the same score share the lowest of their ranks), sorted by
+  score (highest first) within each index, tied pairs by name. An
+  undirected network lists each pair once.
 
 - consensus:
 
   Data frame, one row per node pair: `from`, `to`, `avg_rank` (the
   pair's mean rank over the indices that list it), `n_methods` (how many
-  do) and `consensus_rank`, ordered by `avg_rank`. `NULL` when only one
-  index was computed.
+  do) and `consensus_rank` (shared by equal `avg_rank`s), ordered by
+  `avg_rank`. `NULL` when only one index was computed.
 
 - scores:
 
@@ -141,6 +142,10 @@ writes them as pathway strings. The object's fields:
 - adjacency:
 
   The 0/1 adjacency matrix of the input network.
+
+- weights:
+
+  The weight matrix of the input network.
 
 - methods:
 
@@ -258,16 +263,16 @@ print(pred)
 #>   Methods: common_neighbors, resource_allocation, adamic_adar, jaccard, preferential_attachment, katz
 #> 
 #>   Top predicted links (consensus across 6 methods):
-#>     1. C -> B  (avg rank: 4.3, agreed: 6/6)
-#>     2. B -> A  (avg rank: 4.8, agreed: 6/6)
-#>     3. C -> A  (avg rank: 5.0, agreed: 6/6)
-#>     4. D -> C  (avg rank: 5.5, agreed: 6/6)
-#>     5. A -> D  (avg rank: 5.8, agreed: 6/6)
-#>     6. D -> A  (avg rank: 6.2, agreed: 6/6)
-#>     7. E -> D  (avg rank: 6.7, agreed: 6/6)
-#>     8. E -> C  (avg rank: 7.5, agreed: 6/6)
-#>     9. B -> E  (avg rank: 7.7, agreed: 6/6)
-#>     10. A -> E  (avg rank: 7.8, agreed: 6/6)
+#>     1. A -> D  (avg rank: 3.3, agreed: 6/6)
+#>     2. B -> E  (avg rank: 3.5, agreed: 6/6)
+#>     3. C -> B  (avg rank: 4.0, agreed: 6/6)
+#>     4. D -> C  (avg rank: 4.3, agreed: 6/6)
+#>     5. A -> E  (avg rank: 4.7, agreed: 6/6)
+#>     5. E -> C  (avg rank: 4.7, agreed: 6/6)
+#>     7. B -> A  (avg rank: 4.8, agreed: 6/6)
+#>     7. C -> A  (avg rank: 4.8, agreed: 6/6)
+#>     9. D -> A  (avg rank: 5.7, agreed: 6/6)
+#>     10. E -> D  (avg rank: 5.8, agreed: 6/6)
 #>     ... and 2 more predictions
 summary(pred)
 #>                    method n_predictions score_mean   score_sd score_max

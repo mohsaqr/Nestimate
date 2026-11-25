@@ -1,4 +1,4 @@
-# Prune a Network's Edges
+# Prune weak or non-significant edges from a network
 
 `net_prune()` removes weak or non-significant edges from a network and
 returns the pruned network with a record of what it removed, so the
@@ -78,9 +78,12 @@ net_prune(
 
 - x:
 
-  The network: a `netobject` or a `netobject_group`. Another class
-  raises an error. A network whose pruning is active raises an error of
-  class `nestimate_bad_input`; after
+  The network: a `netobject` or a `netobject_group`. A `tna` model or a
+  `group_tna` (package tna) is first rebuilt as a network from its own
+  sequences (see
+  [`as_netobject()`](https://pak.dynasite.org/Nestimate/reference/as_netobject.md)).
+  Another class raises an error. A network whose pruning is active
+  raises an error of class `nestimate_bad_input`; after
   [`net_deprune()`](https://pak.dynasite.org/Nestimate/reference/net_deprune.md)
   it can be pruned again with other settings, which replaces its pruning
   record.
@@ -119,15 +122,16 @@ net_prune(
   [`bootstrap_network()`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.md)
   on the group, matched to the networks by name, or `NULL` to bootstrap
   each network on its own. Another object, a bootstrap of another
-  network (its weights differ), a single `net_bootstrap` for a group, or
-  a group bootstrap missing one of the networks raises an error of class
-  `nestimate_bad_input`.
+  network (its weights or its data differ), a single `net_bootstrap` for
+  a group, or a group bootstrap missing one of the networks raises an
+  error of class `nestimate_bad_input`.
 
 - ...:
 
-  For `method = "bootstrap"` with `boot = NULL`: arguments passed to
+  Arguments for
   [`bootstrap_network()`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.md),
-  such as `iter`. Ignored otherwise.
+  such as `iter`, when `method = "bootstrap"` and `boot = NULL`; ignored
+  otherwise.
 
 ## Value
 
@@ -175,11 +179,11 @@ when the network stays weakly connected without it, so a network that is
 not weakly connected to begin with loses no edge to these two methods.
 `"disparity"` and `"bootstrap"` apply no connectivity check. Negative
 edges are never candidates for `"threshold"` and `"lowest"`, whatever
-their size. On a signed network, `"disparity"` treats negative edges as
-not significant and removes them at the default `level`; at a `level`
-above 0.5, a negative edge leaving a state with no positive outgoing
-edge (or entering one with no positive incoming edge) can stay.
-`"bootstrap"` removes the non-significant edges of either sign.
+their size. On a signed network, `"disparity"` reads the positive edges
+only, as the filter is defined for non-negative weights: the strengths
+and degrees it divides by are those of the positive edges, and every
+negative edge is removed. `"bootstrap"` removes the non-significant
+edges of either sign.
 
 On an undirected network an edge is a pair of cells: it is removed in
 both directions or kept in both, so the pruned matrix stays symmetric,

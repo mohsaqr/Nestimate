@@ -1,4 +1,4 @@
-# Higher-order hypergraph from a network's clique structure
+# Build a hypergraph from a network's cliques
 
 `build_hypergraph()` turns a network into a hypergraph by promoting its
 cliques to hyperedges: every set of 3 to `max_size` nodes that are all
@@ -6,11 +6,8 @@ tied to each other becomes a hyperedge, kept with probability `p`, and
 the pairwise edges can be kept as hyperedges of size 2. It takes a
 `netobject`, a bare `cograph_network`, a `simplicial_complex` or an
 adjacency or weight matrix, and returns a `net_hypergraph`, the input of
-the hypergraph verbs such as
-[`hypergraph_measures()`](https://pak.dynasite.org/Nestimate/reference/hypergraph_measures.md),
-[`hypergraph_centrality()`](https://pak.dynasite.org/Nestimate/reference/hypergraph_centrality.md)
-and
-[`clique_expansion()`](https://pak.dynasite.org/Nestimate/reference/clique_expansion.md).
+[`hypergraph_measures()`](https://pak.dynasite.org/Nestimate/reference/hypergraph_measures.md)
+and the other hypergraph verbs.
 
 A hyperedge built this way records that every pair of its nodes is tied
 in the thresholded network; a pairwise network cannot show whether those
@@ -50,7 +47,10 @@ summary(object, ...)
   cliques are found again up to `max_size`), or a numeric or logical
   adjacency or weight matrix (nodes are named `V1`, `V2`, ... when it
   has no row names). A tie counts in either direction, so a directed
-  network is symmetrised, and self-loops are ignored.
+  network is symmetrised, and self-loops are ignored. A `tna` model
+  (package tna) is first rebuilt as a network from its own sequences
+  (see
+  [`as_netobject()`](https://pak.dynasite.org/Nestimate/reference/as_netobject.md)).
 
 - p:
 

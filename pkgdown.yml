@@ -2,6 +2,7 @@ pandoc: 3.8.3
 pkgdown: 2.2.1
 pkgdown_sha: ~
 articles:
+  articles/cite-articles: cite-articles.html
   clustering: clustering.html
   articles/cograph-tutorial-nestimate: cograph-tutorial-nestimate.html
   articles/cograph-tutorial-simplicial: cograph-tutorial-simplicial.html
@@ -14,7 +15,7 @@ articles:
   transition-entropy: transition-entropy.html
   transition-networks: transition-networks.html
   articles/tutorial_model_assessment: tutorial_model_assessment.html
-last_built: 2026-11-09T20:28Z
+last_built: 2026-11-25T08:18Z
 urls:
   reference: https://pak.dynasite.org/Nestimate/reference
   article: https://pak.dynasite.org/Nestimate/articles

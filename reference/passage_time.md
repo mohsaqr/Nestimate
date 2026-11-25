@@ -1,4 +1,4 @@
-# Mean First Passage Times
+# Compute the mean first passage times of a Markov chain
 
 `passage_time()` computes the mean first passage times of a Markov
 chain: the entry in row \\i\\ and column \\j\\ is the expected number of
@@ -33,10 +33,10 @@ print(x, digits = 1, ...)
 print(x, ...)
 
 # S3 method for class 'net_mpt'
-summary(object, ...)
+summary(object, table = c("states", "pairs"), ...)
 
-# S3 method for class 'summary.net_mpt'
-print(x, ...)
+# S3 method for class 'net_mpt_group'
+summary(object, table = c("states", "pairs"), ...)
 
 # S3 method for class 'net_mpt'
 plot(
@@ -77,9 +77,7 @@ plot(
   gives one result per group. An association network (`cor`, `pcor`,
   `glasso`, `ising`, `mgm`) or negative weights raise an error of class
   `nestimate_not_markov`. For the
-  [`print()`](https://rdrr.io/r/base/print.html) methods: a `net_mpt`, a
-  `net_mpt_group`, or the result of
-  [`summary()`](https://rdrr.io/r/base/summary.html); for the
+  [`print()`](https://rdrr.io/r/base/print.html) and
   [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods: a
   `net_mpt` or `net_mpt_group`.
 
@@ -116,6 +114,15 @@ plot(
   For the [`summary()`](https://rdrr.io/r/base/summary.html) method: a
   `net_mpt`.
 
+- table:
+
+  For [`summary()`](https://rdrr.io/r/base/summary.html): `"states"`
+  (default), one row per state (`state`, `return_time`, `stationary`,
+  `mean_out`, `mean_in`), or `"pairs"`, one row per ordered pair of
+  states (`from`, `to`, `passage_time`, the mean number of steps from
+  `from` to first reach `to`; for `from` equal to `to`, the mean return
+  time).
+
 - log_scale:
 
   For the [`plot()`](https://rdrr.io/r/graphics/plot.default.html)
@@ -140,14 +147,13 @@ A `net_mpt` object; for a `netobject_group`, a `net_mpt_group`, a named
 list holding one `net_mpt` per group.
 [`print()`](https://rdrr.io/r/base/print.html) shows the passage-time
 matrix and the stationary distribution.
-[`summary()`](https://rdrr.io/r/base/summary.html) returns a
-`summary.net_mpt` object, a list holding the per-state table (`table`)
-and the summarised `net_mpt` (`object`); its
-[`print()`](https://rdrr.io/r/base/print.html) shows the table, one row
-per state: `state`, `return_time` (mean recurrence time), `stationary`
-(\\\pi_i\\), `mean_out` (the mean number of steps from the state to the
-others) and `mean_in` (the mean number of steps from the others to the
-state), rounded to 2 decimals (`stationary` to 4).
+[`summary()`](https://rdrr.io/r/base/summary.html) returns a data frame
+with one row per state: `state`, `return_time` (mean recurrence time),
+`stationary` (\\\pi_i\\), `mean_out` (the mean number of steps from the
+state to the others) and `mean_in` (the mean number of steps from the
+others to the state), rounded to 2 decimals (`stationary` to 4); with
+`table = "pairs"`, one row per ordered pair of states, the diagonal
+included (`from`, `to`, `passage_time`).
 [`plot()`](https://rdrr.io/r/graphics/plot.default.html) returns a
 `ggplot` heatmap of the matrix, rows the starting state and columns the
 target; for a `net_mpt_group`, one panel per group on a shared colour
@@ -176,6 +182,11 @@ their input invisibly. A `net_mpt` holds:
 - states:
 
   The state names.
+
+For [`summary()`](https://rdrr.io/r/base/summary.html) of a
+`net_mpt_group`: a data frame with one row per group and state (or pair,
+with `table = "pairs"`), the `group` column followed by the columns of
+the single-network table.
 
 ## Details
 

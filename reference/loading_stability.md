@@ -1,18 +1,17 @@
-# Composite-Weight Stability Under Case Resampling
+# Bootstrap the item weights of a psychometric MCML fit
 
 `loading_stability()` bootstraps the item weights of a
 [`build_mcml_pc()`](https://pak.dynasite.org/Nestimate/reference/build_mcml_pc.md)
-fit and returns a `pc_loading_stability` object with each item's
-observed signed weight, its bootstrap mean and standard deviation, a
-percentile interval and how often its sign flipped. Each replicate
-resamples the rows of the raw data with replacement, re-estimates the
-node-level network with the fit's estimator (`cor`, `pcor` or `glasso`;
-any other node-level method is re-estimated as `cor`) and correlation
-type, and reapplies the fitted weighting scheme, data-dependent and
-custom weights and the factor-analysis options included. A fit with a
-descriptive aggregation (`"average"`, `"escoufier"`, `"cancor"`) has its
-item-table weights, the `"strength"` weights, resampled.
-**Experimental.**
+fit and returns, for each item, its observed signed weight, its
+bootstrap mean and standard deviation, a percentile interval and how
+often its sign flipped. Each replicate resamples the rows of the raw
+data with replacement, re-estimates the node-level network with the
+fit's estimator (`cor`, `pcor` or `glasso`; any other node-level method
+is re-estimated as `cor`) and correlation type, and reapplies the fitted
+weighting scheme, data-dependent and custom weights and the
+factor-analysis options included. A fit with a descriptive aggregation
+(`"average"`, `"escoufier"`, `"cancor"`) has its item-table weights, the
+`"strength"` weights, resampled. **Experimental.**
 
 Wide intervals mean the weighting should not be over-interpreted. Equal
 weights keep their magnitudes in every replicate, so for them only the

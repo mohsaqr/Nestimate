@@ -6,10 +6,10 @@
   Entropy](https://pak.dynasite.org/Nestimate/articles/transition-entropy.md):
 - [Network Estimation and Analysis with
   Nestimate](https://pak.dynasite.org/Nestimate/articles/transition-networks.md):
-- [Sequence Pattern Comparison: Early vs Late Human-AI
+- [Comparing Sequences Between Groups: Early vs Late Human-AI
   Interactions](https://pak.dynasite.org/Nestimate/articles/sequence-comparison.md):
-- [Sequence Plots: heatmap, index, and
-  distribution](https://pak.dynasite.org/Nestimate/articles/sequence-plots.md):
+- [Sequence
+  Plots](https://pak.dynasite.org/Nestimate/articles/sequence-plots.md):
 - [Sequence
   Clustering](https://pak.dynasite.org/Nestimate/articles/clustering.md):
 - [Markov Stability
@@ -22,25 +22,30 @@ Full tutorials
 - [Network Estimation and Visualization with Nestimate +
   cograph](https://pak.dynasite.org/Nestimate/articles/cograph-tutorial-nestimate.md):
 
-  From raw sequence data to publication-ready statistical network plots
-  — build, bootstrap, compare, cluster, and visualize using Nestimate
-  and cograph together.
+  Estimating, resampling, comparing and clustering transition networks
+  with Nestimate, and drawing them with cograph.
 
 - [Higher-Order Network Analysis with Simplicial
   Complexes](https://pak.dynasite.org/Nestimate/articles/cograph-tutorial-simplicial.md):
 
-- [Tutorial: Model assessment for transition
-  networks](https://pak.dynasite.org/Nestimate/articles/tutorial_model_assessment.md):
+- [Model Assessment for Transition
+  Networks](https://pak.dynasite.org/Nestimate/articles/tutorial_model_assessment.md):
 
 - [Nested sequences and the permutation
   test](https://pak.dynasite.org/Nestimate/articles/permutation-nested-data.md):
 
-- [Comparing two networks with
+- [Comparing networks with
   compare_networks()](https://pak.dynasite.org/Nestimate/articles/compare-networks.md):
 
 ### Experimental
 
 New methods whose interface may still change
 
-- [Stability landscapes of engagement
-  (experimental)](https://pak.dynasite.org/Nestimate/articles/stability-landscapes.md):
+- [Stability of engagement: states, landscapes and
+  students](https://pak.dynasite.org/Nestimate/articles/stability-landscapes.md):
+
+### Resources
+
+Every article with its reference and PDF
+
+- [Resources](https://pak.dynasite.org/Nestimate/articles/cite-articles.md):

@@ -1,4 +1,4 @@
-# Magnitude difference between the frequency and probability views
+# Measure how far frequency and probability networks disagree
 
 `magnitude_difference()` measures, edge by edge, how far the two usual
 summaries of one set of sequences disagree: the raw transition counts
@@ -36,7 +36,17 @@ magnitude_difference(
 print(x, ...)
 
 # S3 method for class 'magnitude_difference'
-plot(x, type = c("stacked", "circular"), min_show = 0.01, title = NULL, ...)
+summary(object, n = NULL, ...)
+
+# S3 method for class 'magnitude_difference'
+plot(
+  x,
+  type = c("stacked", "circular"),
+  min_show = 0.01,
+  title = NULL,
+  state_colors = NULL,
+  ...
+)
 ```
 
 ## Arguments
@@ -79,14 +89,19 @@ plot(x, type = c("stacked", "circular"), min_show = 0.01, title = NULL, ...)
   `"rank_minmax"` replaces each matrix's values by their ranks scaled to
   \[0, 1\] (ordinal). `"minmax"` scales each matrix to \[0, 1\]
   separately, so the two maxima map to the same value although their
-  native ranges differ. `"none"` uses the raw weights.
+  native ranges differ. `"none"` uses the raw weights. A matrix whose
+  weights are all equal has no range to rescale and maps to the middle
+  of the target range (0.5, or for `"tna_range"` the middle of the
+  probability range).
 
 - format:
 
   The input format passed to
   [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md).
   `"auto"` (default) reads wide sequences when `action` is `NULL` and an
-  event log otherwise; `"long"` and `"wide"` force a reading.
+  event log otherwise; `"long"` and `"wide"` force a reading. `"long"`
+  needs `action`; without it, an error of class `nestimate_bad_input` is
+  raised.
 
 - x:
 
@@ -97,12 +112,29 @@ plot(x, type = c("stacked", "circular"), min_show = 0.01, title = NULL, ...)
 - ...:
 
   For the [`plot()`](https://rdrr.io/r/graphics/plot.default.html)
-  method: further settings of the drawing. `"stacked"` takes `threshold`
-  (the magnitude marked "small" in the colour key, default 10% of the
-  largest), `r_inner`, `r_outer`, `gap_rad`, `label_offset`,
-  `label_size` and `src_label_size`; `"circular"` takes `self_loops`
-  (default `TRUE`), `label_offset` and `edge_curve`. The
-  [`print()`](https://rdrr.io/r/base/print.html) method ignores it.
+  method: further settings of the drawing.
+
+  - `"stacked"`: `threshold` (the magnitude marked "small" in the colour
+    key, default 10% of the largest), the radii `r_inner`, `r_outer` and
+    `gap_rad`, and the labels `label_offset`, `label_size` and
+    `src_label_size`;
+
+  - `"circular"`: `self_loops` (default `TRUE`), `label_offset` and
+    `edge_curve`.
+
+  The [`print()`](https://rdrr.io/r/base/print.html) and
+  [`summary()`](https://rdrr.io/r/base/summary.html) methods ignore it.
+
+- object:
+
+  For the [`summary()`](https://rdrr.io/r/base/summary.html) method: a
+  `magnitude_difference` object.
+
+- n:
+
+  For the [`summary()`](https://rdrr.io/r/base/summary.html) method: the
+  number of edges to return, the largest differences first. Default
+  `NULL` returns every edge.
 
 - type:
 
@@ -126,12 +158,22 @@ plot(x, type = c("stacked", "circular"), min_show = 0.01, title = NULL, ...)
   method: the plot title. Default `NULL`, which names the metric and the
   scale.
 
+- state_colors:
+
+  For the [`plot()`](https://rdrr.io/r/graphics/plot.default.html)
+  method with `type = "stacked"`: colours for the source states, for
+  this figure only, named (`c(state = "#0072B2")`) or one per state in
+  `states` order. Default `NULL`: Okabe-Ito dealt in alphabetical order,
+  as every figure deals them.
+
 ## Value
 
 A `magnitude_difference` object.
 [`print()`](https://rdrr.io/r/base/print.html) reports the metric, the
 scale, the states, the number of edges and the minimum, quartiles, mean
 and maximum of the magnitude differences;
+[`summary()`](https://rdrr.io/r/base/summary.html) returns the edges,
+largest difference first;
 [`plot()`](https://rdrr.io/r/graphics/plot.default.html) draws them. The
 object's fields:
 
@@ -158,6 +200,13 @@ For the [`plot()`](https://rdrr.io/r/graphics/plot.default.html) method:
 a `ggplot` object. The [`print()`](https://rdrr.io/r/base/print.html)
 method returns `x` invisibly.
 
+For the [`summary()`](https://rdrr.io/r/base/summary.html) method: a
+data frame with one row per ordered pair of states and the columns
+`from`, `to`, `ftna`, `tna`, `signed` and `value`, sorted by `value`
+from largest to smallest (ties by `from`, then `to`). A positive
+`signed` marks an edge the probability view makes larger than the count
+view.
+
 ## See also
 
 [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md),
@@ -178,6 +227,13 @@ print(fit)
 #>   magnitude-difference summary (abs_diff):
 #>    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
 #> 0.00000 0.01143 0.03002 0.06035 0.06894 0.42910 
+summary(fit, n = 5)
+#>        from        to       ftna       tna    signed     value
+#> 1     adapt consensus 0.04830269 0.4774067 0.4291040 0.4291040
+#> 2 synthesis consensus 0.06042805 0.4662577 0.4058296 0.4058296
+#> 3  cohesion consensus 0.16776736 0.4979351 0.3301677 0.3301677
+#> 4   monitor   discuss 0.10694175 0.3754361 0.2684944 0.2684944
+#> 5     adapt  cohesion 0.02762993 0.2730845 0.2454545 0.2454545
 # \donttest{
 # The polar portrait shows which edges row-normalization promotes.
 plot(fit)                       # stacked polar portrait

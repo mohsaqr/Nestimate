@@ -1,4 +1,4 @@
-# Extract Transition Matrix from Model
+# Extract the transition matrix of a network
 
 `extract_transition_matrix()` returns the weight matrix of a network:
 for a transition network, the transition probabilities or counts between
@@ -23,9 +23,10 @@ summary(object, ...)
 
 - model:
 
-  The network: a `netobject`, a `tna`-family model, an `mcml`, a list
-  holding the matrix as `weights` (or, failing that, `transition_matrix`
-  or `transition`), or a weight matrix. Anything else raises an error.
+  The network: a `netobject`, a group of networks (`netobject_group`), a
+  `tna`-family model, an `mcml`, a list holding the matrix as `weights`
+  (or, failing that, `transition_matrix` or `transition`), or a weight
+  matrix. Anything else raises an error.
 
 - type:
 
@@ -59,6 +60,11 @@ ordinary matrix in arithmetic and indexing;
 [`summary()`](https://rdrr.io/r/base/summary.html) returns a data frame
 with one row per non-zero entry (self-transitions included) and the
 columns `from`, `to` and `weight`, sorted by decreasing absolute weight.
+
+For a group of networks (`netobject_group`): a named list of such
+matrices, one per network;
+[`extract_edges()`](https://pak.dynasite.org/Nestimate/reference/extract_edges.md)
+gives the same weights as one data frame with a `group` column.
 
 For an `mcml`: a named list of such matrices, `macro` first and then one
 per cluster.

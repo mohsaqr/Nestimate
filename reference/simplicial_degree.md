@@ -1,4 +1,4 @@
-# Simplicial Degree
+# Count the simplices that contain each node
 
 `simplicial_degree()` counts, for each node of a simplicial complex, how
 many simplices of each dimension contain it: edges (dimension 1),

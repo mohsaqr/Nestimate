@@ -1,4 +1,4 @@
-# Bayesian Transition Entropy
+# Estimate transition entropy with Bayesian credible intervals
 
 `entropy_bayes()` puts credible intervals on the entropy quantities of
 [`transition_entropy()`](https://pak.dynasite.org/Nestimate/reference/transition_entropy.md)
@@ -11,7 +11,8 @@ the redundancy, each state's branching entropy and stationary
 probability, and every edge's entropy contribution. Each is reported as
 a posterior mean with an equal-tailed credible interval. The counts are
 recovered from a network, a `tna` model, a count matrix or sequence data
-(see `x`); a `netobject_group` gives one result per group.
+(see `x`); a `netobject_group` or a `group_tna` gives one result per
+group.
 
 The practical purpose is to **exclude unstable estimates**: an edge
 whose contribution rests on a handful of observations has a wide
@@ -60,15 +61,14 @@ plot(x, top = 25, title = "Bayesian edge entropy contributions", ...)
 
 - x:
 
-  The transition counts: a frequency `netobject`
-  (`build_network(method = "frequency")`); a relative, frequency or
-  co-occurrence `netobject` that carries its data, recounted with the
+  The transition counts: a frequency `netobject`; a relative, frequency
+  or co-occurrence `netobject` that carries its data, recounted with the
   network's own start and end states, concatenation, windows and one-hot
-  units; a one-hot network built with `build_network(method = "wtna")`
-  or `"wtna_cooccurrence"`, with its data, recounted the same way (a
+  units; a one-hot network built with
+  [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md),
+  with its data, recounted the same way (a
   [`wtna()`](https://pak.dynasite.org/Nestimate/reference/wtna.md)
-  result, whose method is `"wtna_transition"`, currently raises
-  `nestimate_bad_input`); an unscaled frequency, co-occurrence or
+  result is not read yet); an unscaled frequency, co-occurrence or
   reverse network without data, whose weights are the counts; a network
   without a declared method whose weights are non-negative whole
   numbers, read as counts; a `tna` model; a count matrix (non-negative
@@ -81,8 +81,10 @@ plot(x, top = 25, title = "Bayesian edge entropy contributions", ...)
   never from the values: a scaled or relative network is recounted from
   its data. An association network, or any other network whose counts
   cannot be recovered, raises an error of class `nestimate_bad_input`; a
-  matrix of probabilities raises an error. A `netobject_group` gives one
-  result per group. For the
+  matrix of probabilities raises an error, and so does a network of one
+  state or with no observed transition (class `nestimate_bad_input`). A
+  `netobject_group`, or a `group_tna` (read as the networks it converts
+  to), gives one result per group. For the
   [`print()`](https://rdrr.io/r/base/print.html) and
   [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods: an
   `entropy_bayes()` result;
@@ -113,7 +115,8 @@ plot(x, top = 25, title = "Bayesian edge entropy contributions", ...)
 - base:
 
   The logarithm base, which sets the unit: `2` (default) for bits. Any
-  positive number other than 1.
+  finite number greater than 1; another value raises an error of class
+  `nestimate_bad_input`.
 
 - seed:
 
@@ -152,12 +155,12 @@ plot(x, top = 25, title = "Bayesian edge entropy contributions", ...)
 
 ## Value
 
-A `net_entropy_bayes` object, or for a `netobject_group` a
-`net_entropy_bayes_group`: a named list of them, one per group.
-[`print()`](https://rdrr.io/r/base/print.html) shows the posterior mean
-and credible interval of the entropy rate, stationary entropy and
-redundancy, and how many edges are credible; for a group, each group's
-entropy rate. For a group,
+A `net_entropy_bayes` object, or for a `netobject_group` (or a
+`group_tna`) a `net_entropy_bayes_group`: a named list of them, one per
+group. [`print()`](https://rdrr.io/r/base/print.html) shows the
+posterior mean and credible interval of the entropy rate, stationary
+entropy and redundancy, and how many edges are credible; for a group,
+each group's entropy rate. For a group,
 [`summary()`](https://rdrr.io/r/base/summary.html) returns the
 chain-level table of every group stacked, with a `group` column, and
 [`plot()`](https://rdrr.io/r/graphics/plot.default.html) draws the

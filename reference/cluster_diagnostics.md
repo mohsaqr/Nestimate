@@ -1,4 +1,4 @@
-# Cluster Diagnostics
+# Collect the quality measures of a clustering
 
 `cluster_diagnostics()` collects the quality measures of a clustering in
 one `net_cluster_diagnostics` object, laid out the same way whichever

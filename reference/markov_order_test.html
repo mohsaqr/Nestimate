@@ -49,7 +49,7 @@ build_mogen() model the longer memory."><meta property="og:image" content="https
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.12</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -62,8 +62,8 @@ build_mogen() model the longer memory."><meta property="og:image" content="https
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/transition-entropy.html">Transition Matrix Entropy</a></li>
     <li><a class="dropdown-item" href="../articles/transition-networks.html">Network Estimation and Analysis with Nestimate</a></li>
-    <li><a class="dropdown-item" href="../articles/sequence-comparison.html">Sequence Pattern Comparison: Early vs Late Human-AI Interactions</a></li>
-    <li><a class="dropdown-item" href="../articles/sequence-plots.html">Sequence Plots: heatmap, index, and distribution</a></li>
+    <li><a class="dropdown-item" href="../articles/sequence-comparison.html">Comparing Sequences Between Groups: Early vs Late Human-AI Interactions</a></li>
+    <li><a class="dropdown-item" href="../articles/sequence-plots.html">Sequence Plots</a></li>
     <li><a class="dropdown-item" href="../articles/clustering.html">Sequence Clustering</a></li>
     <li><a class="dropdown-item" href="../articles/markov-stability.html">Markov Stability Analysis</a></li>
     <li><hr class="dropdown-divider"></li>
@@ -141,19 +141,22 @@ order 1; when a higher order is selected, <code><a href="build_hon.html">build_h
 
 
 <dl><dt id="arg-data">data<a class="anchor" aria-label="anchor" href="#arg-data"></a></dt>
-<dd><p>The sequences: a data frame with one row per sequence and
-one column per position, a list of character vectors (one per
-sequence), a sequence <code>netobject</code> or <code>netobject_group</code> built with its
-data, or a <code><a href="prepare.html">prepare()</a></code> result (its sequence data is used). A data
-frame is read whole, so it must hold only positions: one column, or
-columns named as a numbered run (<code>T1</code>, <code>T2</code>, ...); anything else, such
-as an id column beside the positions, a column named <code>action</code>, or
-columns holding only 0 and 1, raises an error of class
-<code>nestimate_bad_input</code>, and the positions are then declared with
-<code><a href="build_network.html">build_network()</a></code> (<code>state_cols</code>, or <code>action</code> for an event log) and the
-network passed instead. A one-hot or association network raises the
-same error. Sequences are split at missing values: no window spans an
-<code>NA</code>, and pieces with fewer than two states are dropped.</p></dd>
+<dd><p>The sequences: a data frame with one row per sequence and one
+column per position, a list of character vectors (one per sequence), a
+sequence <code>netobject</code> or <code>netobject_group</code> built with its data, or a
+<code><a href="prepare.html">prepare()</a></code> result (its sequence data is used). A data frame is read
+whole, so it must hold only positions: one column, or columns named as a
+numbered run (<code>T1</code>, <code>T2</code>, ...); anything else, such as an id column beside
+the positions, a column named <code>action</code>, or columns holding only 0 and 1,
+raises an error of class <code>nestimate_bad_input</code>, and the positions are then
+declared with <code><a href="build_network.html">build_network()</a></code> (<code>state_cols</code>, or <code>action</code> for an event
+log) and the network passed instead. A one-hot or association network,
+a network built from an edge list (such as a layer of an edge-list
+<code><a href="build_mcml.html">build_mcml()</a></code>), an <code>mcml</code> object, and any list other than a plain list
+of state vectors raise the same error. Sequences are split at missing values: no window
+spans an <code>NA</code>, and pieces with fewer than two states are dropped. A <code>tna</code>
+model (package tna) or a bare <code>cograph_network</code> gives the sequences it
+carries, and a <code>group_tna</code> one result per group.</p></dd>
 
 
 <dt id="arg-max-order">max_order<a class="anchor" aria-label="anchor" href="#arg-max-order"></a></dt>
@@ -303,14 +306,13 @@ every count the null hypothesis conditions on, with no plug-in estimate
 and no refit per permutation. The windows of a sequence overlap, so
 this approximates the reference distribution of \(G^2\) rather than
 giving it exactly (an exact test would sample whole sequences with the
-same counts; Besag &amp; Mondal, 2013). The permutation p-value is
-<code>(number of permutations with a G^2 at least the observed + 1) / (n_perm + 1)</code>. An order at which no context holds both two different
+same counts; Besag &amp; Mondal, 2013). The permutation p-value is $$p = \frac{1 + B}{1 + n_{\mathrm{perm}}}$$ where \(B\) is the number of permutations whose \(G^2\) is at least the observed one. An order at which no context holds both two different
 extra states and two different successors has no degrees of freedom; it gets
 no p-value and counts as not rejected.</p>
 <p>The AIC and BIC columns come from the log-likelihood of each order's
 fitted chain and its cumulative number of parameters (see <code>dof</code>); BIC
 takes the number of observations (observed states) as the sample size.
-The deterministic columns agree with <code>tna::markov_order()</code> (tna 1.4.1
+The deterministic columns agree with <code><a href="https://sonsoles.me/tna/reference/markov_order.html" class="external-link">tna::markov_order()</a></code> (tna 1.4.1
 or later).</p>
     </div>
     <div class="section level2">

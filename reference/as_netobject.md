@@ -1,4 +1,4 @@
-# Coerce a network object to a Nestimate netobject
+# Convert a network from another package to a netobject
 
 `as_netobject()` converts a psychnets result (class
 `c("psychnet", "cograph_network")`) or any bare `cograph_network` into
@@ -35,8 +35,9 @@ as_netobject(x)
 
 - x:
 
-  The network to convert: a `psychnet` object, a `cograph_network` or a
-  `netobject`. Any other object raises an error.
+  The network to convert: a `psychnet` object, a `cograph_network`, a
+  `netobject`, or a `tna` model or `group_tna` (package tna). Any other
+  object raises an error.
 
 ## Value
 
@@ -44,7 +45,8 @@ A `netobject` (class `c("netobject", "cograph_network")`), read by the
 same verbs as one from
 [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md);
 [`validate_netobject()`](https://pak.dynasite.org/Nestimate/reference/validate_netobject.md)
-checks its structure.
+checks its structure. For a `group_tna`: a `netobject_group`, a named
+list with one such `netobject` per group.
 
 ## Details
 
@@ -59,6 +61,30 @@ its `meta`; without one, a symmetric weight matrix is taken as
 `"co_occurrence"` and any other as `"relative"`. A missing `directed`
 field is read as `TRUE`. Numeric state codes in the stored data of a
 converted tna model are decoded to their labels.
+
+For a `tna` model (package tna), the network is rebuilt with
+[`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
+from the sequences the model carries, with the method and the parameters
+stored in its attributes (`type`, `params`), and used only when the
+rebuilt weights equal the model's own. It then behaves as any network
+built from those sequences, in the resampling verbs too. A model that
+cannot be reproduced that way (scaled weights, no sequence data, or a
+type or parameter
+[`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
+does not reproduce) becomes a network of its weights without sequence
+data: verbs that only read weights accept it, and verbs that resample or
+read sequences raise an error of class `nestimate_tna_unrebuilt` that
+names the reason. A pruned model keeps its data, and Nestimate reads the
+data: it converts to the full network, with a warning of class
+`nestimate_tna_pruned`. A `group_tna` gives a `netobject_group`, one
+network per group, named as the groups are. The covariates the model
+keeps become the network's metadata: `actor` is read from the metadata
+the model keeps (`attr(model$data, "meta")`, kept when the model is
+built from
+[`tna::prepare_data()`](https://sonsoles.me/tna/reference/prepare_data.html));
+a model without it raises `nestimate_actor_missing`. Every verb that
+takes a network applies this conversion itself, so calling
+`as_netobject()` first is not needed.
 
 ## Note
 

@@ -1,13 +1,12 @@
-# Normalised hypergraph Laplacian
+# Compute the normalised Laplacian of a hypergraph
 
 `hypergraph_laplacian()` computes the normalised Laplacian of a
-hypergraph and returns it as a symmetric node-by-node matrix, the
-operator that
+hypergraph and returns it as a symmetric node-by-node matrix.
 [`hypergraph_cluster()`](https://pak.dynasite.org/Nestimate/reference/hypergraph_cluster.md)
 and
 [`hypergraph_transduction()`](https://pak.dynasite.org/Nestimate/reference/hypergraph_transduction.md)
-are built on. It comes in two forms. `type = "zhou"` is the Laplacian of
-Zhou, Huang and Schölkopf (2006), computed on the binary incidence
+are built on it. It comes in two forms. `type = "zhou"` is the Laplacian
+of Zhou, Huang and Schölkopf (2006), computed on the binary incidence
 pattern, so the values in the incidence cells play no part.
 `type = "random_walk"` is the Laplacian of Hayashi et al. (2020) for a
 random walk with edge-dependent vertex weights: the weighted incidence
@@ -15,7 +14,9 @@ cells (for example the summed weights
 [`bipartite_groups()`](https://pak.dynasite.org/Nestimate/reference/bipartite_groups.md)
 produces with `weight`) set where a walker that enters a hyperedge
 lands, and the walk, which is not reversible, is symmetrised through its
-stationary distribution (Chung 2005).
+stationary distribution (Chung 2005). Only a positive cell makes a node
+a member: a cell that is zero or negative (a net-negative summed weight)
+is not part of the hyperedge and carries no weight in either form.
 
 Both Laplacians are symmetric positive semi-definite with eigenvalues in
 \[0, 2\]. On a binary incidence with unit hyperedge weights the two
@@ -35,14 +36,14 @@ hypergraph_laplacian(hg, type = c("zhou", "random_walk"), edge_weights = NULL)
 
 - hg:
 
-  The hypergraph: a `net_hypergraph` from
+  A hypergraph, from
   [`build_hypergraph()`](https://pak.dynasite.org/Nestimate/reference/build_hypergraph.md)
   or
   [`bipartite_groups()`](https://pak.dynasite.org/Nestimate/reference/bipartite_groups.md),
-  with at least two nodes and one hyperedge. A hypergraph that is not
-  connected has no unique stationary distribution and raises an error of
-  class `nestimate_hypergraph_disconnected`; analyse its components
-  separately.
+  with at least two nodes and one hyperedge. Raises
+  `nestimate_hypergraph_disconnected` when the hypergraph is not
+  connected, since it then has no unique stationary distribution;
+  analyse its components separately.
 
 - type:
 
@@ -55,7 +56,7 @@ hypergraph_laplacian(hg, type = c("zhou", "random_walk"), edge_weights = NULL)
   Positive hyperedge weights, one per hyperedge in the order of the
   incidence columns. Default `NULL`, which gives unit weights for
   `"zhou"` and, for `"random_walk"`, the heuristic of Hayashi et al.:
-  the population standard deviation of each hyperedge's non-zero
+  the population standard deviation of each hyperedge's positive
   incidence cells plus one, which is 1 on a binary incidence. A vector
   of the wrong length, or with a value that is not finite and positive,
   raises an error.
@@ -108,5 +109,5 @@ hg <- bipartite_groups(events, player = "person", group = "meeting",
                        weight = "hours")
 L <- hypergraph_laplacian(hg, type = "random_walk")
 range(eigen(L, symmetric = TRUE, only.values = TRUE)$values)
-#> [1] -1.803454e-16  1.001279e+00
+#> [1] 4.403481e-17 1.001279e+00
 ```

@@ -1,8 +1,8 @@
-# List All Registered Estimators
+# List the registered estimators
 
 `list_estimators()` returns the estimators
 [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
-can call by name: the fourteen built-ins and any added with
+can call by name: the fifteen built-ins and any added with
 [`register_estimator()`](https://pak.dynasite.org/Nestimate/reference/register_estimator.md).
 Aliases such as `"tna"` or `"ebicglasso"` are not listed; the
 *Estimators* section of
@@ -44,13 +44,14 @@ list_estimators()
 #> 5                gap             Gap-allowed transitions weighted by 1/distance
 #> 6             glasso                EBICglasso regularized partial correlations
 #> 7              ising             Ising model (L1-penalized logistic regression)
-#> 8                mgm Mixed Graphical Model (nodewise lasso, EBIC, LW threshold)
-#> 9              ngram      n-gram transitions (adjacent pairs per n-gram window)
-#> 10              pcor                         Unregularized partial correlations
-#> 11          relative                    Row-normalized transition probabilities
-#> 12           reverse        Reverse (reply) transitions: transpose of frequency
-#> 13              wtna                     Window-based TNA transitions (one-hot)
-#> 14 wtna_cooccurrence                   Window-based TNA co-occurrence (one-hot)
+#> 8            latency         Reply network weighted by response speed (latency)
+#> 9                mgm Mixed Graphical Model (nodewise lasso, EBIC, LW threshold)
+#> 10             ngram      n-gram transitions (adjacent pairs per n-gram window)
+#> 11              pcor                         Unregularized partial correlations
+#> 12          relative                    Row-normalized transition probabilities
+#> 13           reverse        Reverse (reply) transitions: transpose of frequency
+#> 14              wtna                     Window-based TNA transitions (one-hot)
+#> 15 wtna_cooccurrence                   Window-based TNA co-occurrence (one-hot)
 #>    directed
 #> 1      TRUE
 #> 2     FALSE
@@ -59,11 +60,12 @@ list_estimators()
 #> 5      TRUE
 #> 6     FALSE
 #> 7     FALSE
-#> 8     FALSE
-#> 9      TRUE
-#> 10    FALSE
-#> 11     TRUE
+#> 8      TRUE
+#> 9     FALSE
+#> 10     TRUE
+#> 11    FALSE
 #> 12     TRUE
 #> 13     TRUE
-#> 14    FALSE
+#> 14     TRUE
+#> 15    FALSE
 ```

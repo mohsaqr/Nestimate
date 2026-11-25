@@ -1,4 +1,4 @@
-# Analytic certainty of network edges (Bayesian Dirichlet-Multinomial)
+# Estimate the Bayesian certainty of transition network edges
 
 `certainty()` gives each edge of a transition-probability network a
 posterior mean, standard deviation, credible interval and a decision on
@@ -54,7 +54,10 @@ print(x, ...)
   handled on its own. A bare `cograph_network` is recounted from the
   sequences it carries, and used only when they reproduce its weights;
   otherwise, and for an `mcml`, an error of class `nestimate_bad_input`
-  is raised. Another method or a scaled network raises an error. For the
+  is raised. A `tna` model or a `group_tna` (package tna) is first
+  rebuilt as a network from its own sequences (see
+  [`as_netobject()`](https://pak.dynasite.org/Nestimate/reference/as_netobject.md)).
+  Another method or a scaled network raises an error. For the
   [`print()`](https://rdrr.io/r/base/print.html) method: a
   `net_certainty` object.
 
@@ -117,8 +120,8 @@ result: `original` (the input network), `mean`, `sd`, `p_values`,
 `prior`, `ci_method = "analytic"` and `iter = NA` (no iterations).
 
 For a `netobject_group`: a named list of those objects, one per network,
-of class `c("net_certainty_group", "net_bootstrap_group", "list")`,
-printed and summarised by the `net_bootstrap_group` methods
+a `net_certainty_group`, printed and summarised as a
+`net_bootstrap_group`
 ([`summary()`](https://rdrr.io/r/base/summary.html) stacks the
 per-network tables with a `group` column).
 

@@ -1,4 +1,4 @@
-# Centrality Stability Coefficient (CS-coefficient)
+# Estimate the CS-coefficient of centrality indices
 
 `centrality_stability()` estimates how stable a network's centrality
 indices are under case-dropping (Epskamp, Borsboom & Fried, 2018). For
@@ -39,7 +39,8 @@ centrality_stability(
   normalize = FALSE,
   invert = TRUE,
   normalize_diffusion = TRUE,
-  seed = NULL
+  seed = NULL,
+  actor = NULL
 )
 
 # S3 method for class 'net_stability'
@@ -65,10 +66,13 @@ plot(x, ...)
   The network: a `netobject` from
   [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md),
   a bare `cograph_network` (converted to one), or a `netobject_group` or
-  `mcml`, each of whose networks is assessed. Any other object, or a
-  network built without its data, raises an error. For the
-  [`print()`](https://rdrr.io/r/base/print.html) methods: a
-  `net_stability` or `net_stability_group`; for the
+  `mcml`, each of whose networks is assessed. A `tna` model or a
+  `group_tna` (package tna) is first rebuilt as a network from its own
+  sequences (see
+  [`as_netobject()`](https://pak.dynasite.org/Nestimate/reference/as_netobject.md)).
+  Any other object, or a network built without its data, raises an
+  error. For the [`print()`](https://rdrr.io/r/base/print.html) methods:
+  a `net_stability` or `net_stability_group`; for the
   [`plot()`](https://rdrr.io/r/graphics/plot.default.html) method: a
   `net_stability`.
 
@@ -151,6 +155,18 @@ plot(x, ...)
   The session's own random stream is left as it was; a group's networks
   are each started from the same seed.
 
+- actor:
+
+  The column identifying the actor each sequence belongs to (for example
+  `"student_id"` for sessions nested in students), looked up in the
+  network's metadata or its wide sequence data, as in
+  [`bootstrap_network()`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.md).
+  With it, whole actors are dropped; see *Nested data and `actor`*.
+  Several column names, outermost first, are nested levels, of which the
+  outermost is dropped. Default `NULL`: sequences are dropped one by
+  one. Available for transition networks (relative, frequency,
+  co-occurrence).
+
 - ...:
 
   For the [`print()`](https://rdrr.io/r/base/print.html),
@@ -202,21 +218,29 @@ input invisibly. The `net_stability`'s fields:
 
   The settings used.
 
+- actor, n_actors:
+
+  With `actor` only: the actor column(s) and the number of actors cases
+  were dropped from.
+
 ## Details
 
 For transition methods, per-sequence count matrices are computed once
 and each draw only re-sums them; the network's `scaling` and `threshold`
 are applied to every re-estimated network as to the original. For the
 other methods the estimator is re-run on each subset with the network's
-`params` (after the multilevel decomposition, when the network was built
-with a `level` and an id column and its estimator is undirected). The
+`params`. A network built with `level` is refused (error class
+`nestimate_multilevel_resampling`): its stored data are already
+decomposed and carry no id column to decompose a subset again. The
 built-in measures are computed from the weight matrix directly, without
 igraph, as in
 [`net_centrality()`](https://pak.dynasite.org/Nestimate/reference/net_centrality.md):
 strength from row and column sums, betweenness and closeness from
 Floyd-Warshall shortest paths. A network that rests on one sequence, or
 one-hot data with no actor or session, has nothing to drop and raises an
-error of class `nestimate_single_sequence`.
+error of class `nestimate_single_sequence`. Latency networks are not
+resampled: a network built with `method = "latency"` raises an error of
+class `nestimate_latency_resampling`.
 
 Every draw counts towards `certainty`: a draw whose correlation is
 undefined (the measure is constant in it), and a draw whose network
@@ -236,6 +260,24 @@ relative to their size, so `"OutStrength"` of a `"relative"` network
 with `loops = TRUE`, which is 1 for every node up to rounding error, is
 dropped rather than correlated on that error. The same rule makes a
 measure constant in a draw an undefined correlation.
+
+## Nested data and `actor`
+
+Case-dropping treats the cases it drops as independent. When the
+sequences are nested in actors (several sessions per student), the
+remaining sequences of an actor stand in for the dropped ones, and the
+CS-coefficient overstates the stability. With `actor`, a case is an
+actor: `drop_prop` is the proportion of actors dropped, and all
+sequences of a dropped actor leave together, as in
+`tna::estimate_cs(actor = )`. A proportion that drops no actor
+(`n * p < 1`, likely with few actors) is not run and counts as not
+reaching `threshold`, with a warning of class
+`nestimate_drop_prop_skipped`; one actor may remain. With one sequence
+per actor, and proportions that drop at least one and leave at least
+two, the result is that of `actor = NULL`. A column that is absent or
+has missing values raises `nestimate_actor_missing`, fewer than two
+actors `nestimate_bad_actor`, and a network that is not a transition
+network `nestimate_actor_unsupported`.
 
 ## References
 

@@ -1,4 +1,4 @@
-# Build a Co-occurrence Network
+# Build a co-occurrence network of items in transactions
 
 `cooccurrence()` builds an undirected network of items that appear
 together in the same transaction (a document, a session, a record): an
@@ -79,9 +79,8 @@ cooccurrence(
   values is one transaction, holding the distinct `field` values of its
   rows (for example `"paper_id"` or `"session_id"`). Default `NULL`,
   where items co-occur within the same row. It needs a single `field`
-  column (several raise an error of class `nestimate_bad_input`).
-  Ignored, with a warning of class `nestimate_ignored_argument`, when
-  `sep` is set, which reads `field` as delimited.
+  column. Ignored, with a warning, when `sep` is set, since `sep` reads
+  `field` as delimited.
 
 - sep:
 
@@ -162,8 +161,7 @@ cooccurrence(
 
 - ...:
 
-  Not used; an argument given here is ignored with a warning of class
-  `nestimate_ignored_argument`.
+  Not used; an argument given here is ignored with a warning.
 
 - format:
 

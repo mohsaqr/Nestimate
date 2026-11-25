@@ -1,9 +1,9 @@
-# Register a Network Estimator
+# Register a network estimator
 
 `register_estimator()` adds an estimator function to the registry that
 [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
 reads, so that `build_network(data, method = name)` calls it the way it
-calls a built-in method; the package registers its fourteen built-in
+calls a built-in method; the package registers its fifteen built-in
 methods with this function when it loads. A name already in the registry
 is replaced, built-ins included, without a message.
 [`list_estimators()`](https://pak.dynasite.org/Nestimate/reference/list_estimators.md)
@@ -31,10 +31,10 @@ register_estimator(name, fn, description, directed)
   The name the estimator is called by, as `method` in
   [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md):
   a single non-empty string. A name already registered is replaced. A
-  name that is a method alias (such as `"tna"`) is stored with a warning
-  of class `nestimate_alias_shadowed`, because
+  method alias, such as `"tna"`, is stored with the warning
+  `nestimate_alias_shadowed`:
   [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
-  resolves the alias to the built-in method and never calls the
+  resolves an alias to its built-in method and never calls the
   registered function.
 
 - fn:

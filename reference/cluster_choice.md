@@ -1,4 +1,4 @@
-# Compare Clusterings Across k, Dissimilarity and Method
+# Compare clusterings across k, dissimilarities and methods
 
 `cluster_choice()` clusters the same sequences under every combination
 of the cluster counts, dissimilarities and algorithms given, each with

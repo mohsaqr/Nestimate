@@ -1,4 +1,4 @@
-# Extract Edge List with Weights
+# Extract the edge list of a network
 
 `extract_edges()` returns the edges of a network as a data frame, one
 row per edge with its weight, read from the weight matrix (rows are the
@@ -25,8 +25,8 @@ extract_edges(model, threshold = 0, include_self = FALSE, sort_by = "weight")
 
 - model:
 
-  The network: a `netobject`, a `tna`-family model, an `mcml` or a
-  weight matrix, as for
+  The network: a `netobject`, a group of networks (`netobject_group`), a
+  `tna`-family model, an `mcml` or a weight matrix, as for
   [`extract_transition_matrix()`](https://pak.dynasite.org/Nestimate/reference/extract_transition_matrix.md).
 
 - threshold:
@@ -64,6 +64,20 @@ columns:
 
   The edge weight (for a `"relative"` network, the transition
   probability).
+
+- n_replies:
+
+  For a `"latency"` network only: the number of replies the edge holds
+  (an integer).
+
+- median_latency:
+
+  For a `"latency"` network only: the median time of those replies, in
+  seconds.
+
+For a group of networks (`netobject_group`): one such data frame with a
+`group` column first, one row per network and edge, the networks in
+their order and each sorted by `sort_by`.
 
 For an `mcml`: a named list of such data frames, `macro` first and then
 one per cluster.

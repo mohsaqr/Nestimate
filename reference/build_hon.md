@@ -1,4 +1,4 @@
-# Build a Higher-Order Network (HON)
+# Build a higher-order network from sequences
 
 `build_hon()` builds a higher-order network from sequences with the
 BuildHON algorithm (Xu, Wickramarathne & Chawla, 2016) or its faster
@@ -67,7 +67,9 @@ summary(object, ...)
   are dropped; when none is left, an error is raised. A one-hot or
   association network, a `netobject_group`, a classed list, and a matrix
   or data frame of only 0 and 1 raise an error of class
-  `nestimate_bad_input`.
+  `nestimate_bad_input`. A state whose label contains `" -> "`, the
+  separator of the node names, also raises `nestimate_bad_input`: the
+  state `"A -> B"` and the node of B reached from A would be one node.
 
 - max_order:
 

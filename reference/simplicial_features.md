@@ -1,4 +1,4 @@
-# Tidy Topological Features for One or Many Networks
+# Tabulate the topological features of one or many networks
 
 `simplicial_features()` builds a simplicial complex for each network
 with
@@ -53,11 +53,9 @@ simplicial_features(
 
   The highest simplex dimension built, a whole number of at least 1 (a
   fractional value is truncated). Default `4`. When a network holds a
-  larger clique, the complex is truncated and
-  [`betti_numbers()`](https://pak.dynasite.org/Nestimate/reference/betti_numbers.md)
-  warns with class `nestimate_truncated_complex`; the warning concerns
-  the Betti number of dimension `max_dim`, so it affects `b1` only when
-  `max_dim = 1`.
+  larger clique, the complex is truncated and raises the warning
+  `nestimate_truncated_complex`, which concerns the Betti number of
+  dimension `max_dim`, so it affects `b1` only when `max_dim = 1`.
 
 - normalize:
 

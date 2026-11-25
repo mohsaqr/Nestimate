@@ -1,4 +1,4 @@
-# Persistence Landscape
+# Compute the persistence landscape of a persistence diagram
 
 `persistence_landscape()` computes the persistence landscape (Bubenik
 2015) of one homology dimension of a persistence diagram, evaluated on a

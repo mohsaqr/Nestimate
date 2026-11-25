@@ -1,6 +1,7 @@
 <urlset xmlns = 'http://www.sitemaps.org/schemas/sitemap/0.9'>
 <url><loc>https://pak.dynasite.org/Nestimate/404.html</loc></url>
 <url><loc>https://pak.dynasite.org/Nestimate/LICENSE-text.html</loc></url>
+<url><loc>https://pak.dynasite.org/Nestimate/articles/cite-articles.html</loc></url>
 <url><loc>https://pak.dynasite.org/Nestimate/articles/clustering.html</loc></url>
 <url><loc>https://pak.dynasite.org/Nestimate/articles/cograph-tutorial-nestimate.html</loc></url>
 <url><loc>https://pak.dynasite.org/Nestimate/articles/cograph-tutorial-simplicial.html</loc></url>
@@ -37,6 +38,7 @@
 <url><loc>https://pak.dynasite.org/Nestimate/reference/build_cna.html</loc></url>
 <url><loc>https://pak.dynasite.org/Nestimate/reference/build_cor.html</loc></url>
 <url><loc>https://pak.dynasite.org/Nestimate/reference/build_ftna.html</loc></url>
+<url><loc>https://pak.dynasite.org/Nestimate/reference/build_gap.html</loc></url>
 <url><loc>https://pak.dynasite.org/Nestimate/reference/build_gimme.html</loc></url>
 <url><loc>https://pak.dynasite.org/Nestimate/reference/build_glasso.html</loc></url>
 <url><loc>https://pak.dynasite.org/Nestimate/reference/build_hon.html</loc></url>
@@ -44,15 +46,20 @@
 <url><loc>https://pak.dynasite.org/Nestimate/reference/build_hypa.html</loc></url>
 <url><loc>https://pak.dynasite.org/Nestimate/reference/build_hypergraph.html</loc></url>
 <url><loc>https://pak.dynasite.org/Nestimate/reference/build_ising.html</loc></url>
+<url><loc>https://pak.dynasite.org/Nestimate/reference/build_latency.html</loc></url>
 <url><loc>https://pak.dynasite.org/Nestimate/reference/build_mcml.html</loc></url>
 <url><loc>https://pak.dynasite.org/Nestimate/reference/build_mcml_pc.html</loc></url>
+<url><loc>https://pak.dynasite.org/Nestimate/reference/build_mgm.html</loc></url>
 <url><loc>https://pak.dynasite.org/Nestimate/reference/build_mlvar.html</loc></url>
 <url><loc>https://pak.dynasite.org/Nestimate/reference/build_mmm.html</loc></url>
 <url><loc>https://pak.dynasite.org/Nestimate/reference/build_mogen.html</loc></url>
 <url><loc>https://pak.dynasite.org/Nestimate/reference/build_network.html</loc></url>
+<url><loc>https://pak.dynasite.org/Nestimate/reference/build_ngram.html</loc></url>
 <url><loc>https://pak.dynasite.org/Nestimate/reference/build_pcor.html</loc></url>
+<url><loc>https://pak.dynasite.org/Nestimate/reference/build_reverse.html</loc></url>
 <url><loc>https://pak.dynasite.org/Nestimate/reference/build_simplicial.html</loc></url>
 <url><loc>https://pak.dynasite.org/Nestimate/reference/build_tna.html</loc></url>
+<url><loc>https://pak.dynasite.org/Nestimate/reference/build_wtna.html</loc></url>
 <url><loc>https://pak.dynasite.org/Nestimate/reference/casedrop_reliability.html</loc></url>
 <url><loc>https://pak.dynasite.org/Nestimate/reference/centrality_stability.html</loc></url>
 <url><loc>https://pak.dynasite.org/Nestimate/reference/certainty.html</loc></url>
@@ -73,6 +80,7 @@
 <url><loc>https://pak.dynasite.org/Nestimate/reference/composites.html</loc></url>
 <url><loc>https://pak.dynasite.org/Nestimate/reference/convert_sequence_format.html</loc></url>
 <url><loc>https://pak.dynasite.org/Nestimate/reference/cooccurrence.html</loc></url>
+<url><loc>https://pak.dynasite.org/Nestimate/reference/daily_actions.html</loc></url>
 <url><loc>https://pak.dynasite.org/Nestimate/reference/distribution_plot.html</loc></url>
 <url><loc>https://pak.dynasite.org/Nestimate/reference/effects_table.html</loc></url>
 <url><loc>https://pak.dynasite.org/Nestimate/reference/entropy_bayes.html</loc></url>
@@ -106,12 +114,14 @@
 <url><loc>https://pak.dynasite.org/Nestimate/reference/macro_network.html</loc></url>
 <url><loc>https://pak.dynasite.org/Nestimate/reference/magnitude_difference.html</loc></url>
 <url><loc>https://pak.dynasite.org/Nestimate/reference/mark_first_state.html</loc></url>
+<url><loc>https://pak.dynasite.org/Nestimate/reference/mark_phases.html</loc></url>
 <url><loc>https://pak.dynasite.org/Nestimate/reference/mark_terminal_state.html</loc></url>
 <url><loc>https://pak.dynasite.org/Nestimate/reference/markov_order_test.html</loc></url>
 <url><loc>https://pak.dynasite.org/Nestimate/reference/markov_stability.html</loc></url>
 <url><loc>https://pak.dynasite.org/Nestimate/reference/mogen_transitions.html</loc></url>
 <url><loc>https://pak.dynasite.org/Nestimate/reference/mosaic_analysis.html</loc></url>
 <url><loc>https://pak.dynasite.org/Nestimate/reference/mosaic_plot.html</loc></url>
+<url><loc>https://pak.dynasite.org/Nestimate/reference/mosaic_test.html</loc></url>
 <url><loc>https://pak.dynasite.org/Nestimate/reference/nct.html</loc></url>
 <url><loc>https://pak.dynasite.org/Nestimate/reference/net_aggregate_weights.html</loc></url>
 <url><loc>https://pak.dynasite.org/Nestimate/reference/net_centrality.html</loc></url>

@@ -1,4 +1,4 @@
-# GIMME: Group Iterative Multiple Model Estimation
+# Estimate person-specific networks with GIMME
 
 `build_gimme()` estimates a directed network for each person from
 intensive longitudinal data with GIMME (group iterative multiple model
@@ -100,10 +100,9 @@ coefs(x, ...)
 
 - subcutoff:
 
-  Not used: reserved for subgrouping, which neither Nestimate nor
-  [`idiographic::fit_gimme()`](https://pak.dynasite.org/idiographic/reference/fit_gimme.html)
-  implements, and accepted for compatibility with gimme; it is not
-  passed on. Default `0.50`.
+  Not used. It is accepted for compatibility with gimme, where it sets
+  the subgrouping cutoff; subgrouping is not implemented, so the value
+  is not passed on. Default `0.50`.
 
 - paths:
 
@@ -166,8 +165,7 @@ coefs(x, ...)
 
 ## Value
 
-The `net_gimme` object (class
-`c("net_gimme", "cograph_network", "list")`) that
+The `net_gimme` object, also a `cograph_network`, that
 [`idiographic::fit_gimme()`](https://pak.dynasite.org/idiographic/reference/fit_gimme.html)
 returns; its [`print()`](https://rdrr.io/r/base/print.html),
 [`summary()`](https://rdrr.io/r/base/summary.html) and

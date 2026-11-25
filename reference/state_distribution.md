@@ -1,4 +1,4 @@
-# Per-Class State Distribution as a Tidy Data Frame
+# Tabulate the state distribution of each group
 
 `state_distribution()` counts how often each state occurs in the
 sequences behind a network and returns one row per group and state, with
@@ -10,11 +10,11 @@ network, named as in the group (or `"Group 1"`, `"Group 2"`, ...); an
 `mcml` one per cluster, with the node labels it was given in place of
 the raw codes. Missing and empty cells are not counted.
 
-The table is the one behind
-[`plot_state_frequencies()`](https://pak.dynasite.org/Nestimate/reference/plot_state_frequencies.md),
-and the per-group counterpart of
-[`state_frequencies()`](https://pak.dynasite.org/Nestimate/reference/state_frequencies.md),
-which counts the states of raw sequence data.
+This is the table that
+[`plot_state_frequencies()`](https://pak.dynasite.org/Nestimate/reference/plot_state_frequencies.md)
+draws. To count the states of raw sequence data, use
+[`state_frequencies()`](https://pak.dynasite.org/Nestimate/reference/state_frequencies.md)
+instead.
 
 ## Usage
 
@@ -47,10 +47,13 @@ state_distribution(x, ...)
   A `netobject`, `netobject_group`, `mcml` or `htna` network built from
   sequences, or the `state_freq` result of
   [`plot_state_frequencies()`](https://pak.dynasite.org/Nestimate/reference/plot_state_frequencies.md),
-  whose table is returned as drawn. A network without sequence data
-  raises an error; in a `netobject_group` or `mcml`, groups without it
-  are left out, and an error is raised only when none has any. Other
-  classes raise an error.
+  whose table is returned as drawn. A `tna` model or a `group_tna`
+  (package tna) is first rebuilt as a network from its own sequences
+  (see
+  [`as_netobject()`](https://pak.dynasite.org/Nestimate/reference/as_netobject.md)).
+  A network without sequence data raises an error; in a
+  `netobject_group` or `mcml`, groups without it are left out, and an
+  error is raised only when none has any. Other classes raise an error.
 
 - ...:
 

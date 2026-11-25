@@ -72,9 +72,14 @@ plot(x, panel = c("both", "ic", "permutation"), combined = TRUE, ...)
   then declared with
   [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
   (`state_cols`, or `action` for an event log) and the network passed
-  instead. A one-hot or association network raises the same error.
-  Sequences are split at missing values: no window spans an `NA`, and
-  pieces with fewer than two states are dropped.
+  instead. A one-hot or association network, a network built from an
+  edge list (such as a layer of an edge-list
+  [`build_mcml()`](https://pak.dynasite.org/Nestimate/reference/build_mcml.md)),
+  an `mcml` object, and any list other than a plain list of state
+  vectors raise the same error. Sequences are split at missing values:
+  no window spans an `NA`, and pieces with fewer than two states are
+  dropped. A `tna` model (package tna) or a bare `cograph_network` gives
+  the sequences it carries, and a `group_tna` one result per group.
 
 - max_order:
 
@@ -240,17 +245,19 @@ count the null hypothesis conditions on, with no plug-in estimate and no
 refit per permutation. The windows of a sequence overlap, so this
 approximates the reference distribution of \\G^2\\ rather than giving it
 exactly (an exact test would sample whole sequences with the same
-counts; Besag & Mondal, 2013). The permutation p-value is
-`(number of permutations with a G^2 at least the observed + 1) / (n_perm + 1)`.
-An order at which no context holds both two different extra states and
-two different successors has no degrees of freedom; it gets no p-value
-and counts as not rejected.
+counts; Besag & Mondal, 2013). The permutation p-value is \$\$p =
+\frac{1 + B}{1 + n\_{\mathrm{perm}}}\$\$ where \\B\\ is the number of
+permutations whose \\G^2\\ is at least the observed one. An order at
+which no context holds both two different extra states and two different
+successors has no degrees of freedom; it gets no p-value and counts as
+not rejected.
 
 The AIC and BIC columns come from the log-likelihood of each order's
 fitted chain and its cumulative number of parameters (see `dof`); BIC
 takes the number of observations (observed states) as the sample size.
-The deterministic columns agree with `tna::markov_order()` (tna 1.4.1 or
-later).
+The deterministic columns agree with
+[`tna::markov_order()`](https://sonsoles.me/tna/reference/markov_order.html)
+(tna 1.4.1 or later).
 
 ## Plot panels
 

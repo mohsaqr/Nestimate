@@ -1,13 +1,14 @@
 # Network Estimation and Analysis with Nestimate
 
-`Nestimate` is a unified framework for estimating, validating, and
-comparing networks from sequential and cross-sectional data. It
-implements two complementary paradigms: **Transition Network Analysis
-(TNA)**, which models the relational dynamics of temporal processes as
-weighted directed networks using stochastic Markov models; and
-**Psychological Network Analysis (PNA)**, which estimates the
-conditional dependency structure among variables using regularized
-partial correlations and graphical models. Both paradigms share the same
+`Nestimate` (Saqr et al., 2026) is a unified framework for estimating,
+validating, and comparing networks from sequential and cross-sectional
+data. It implements two complementary paradigms: **Transition Network
+Analysis (TNA)**, which models the relational dynamics of temporal
+processes as weighted directed networks using stochastic Markov models
+(Saqr et al., 2025c); and **Psychological Network Analysis (PNA)**,
+which estimates the conditional dependency structure among variables
+using regularized partial correlations and graphical models (Saqr et
+al., 2024). Both paradigms share the same
 [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
 interface, the same validation engine (bootstrap, permutation,
 centrality stability), and the same output format — enabling researchers
@@ -30,23 +31,29 @@ stochastic process: the specific ways in which the system changes or
 evolves is rather random and therefore cannot be strictly determined.
 That is, the transitions are probabilistically dependent on preceding
 states — a method that assumes events are probabilistically dependent on
-the preceding ones.
+the preceding ones. Modeling the temporal order of learning events has
+been used to study the temporal patterns of students’ interactions and
+self-regulation (Saqr et al., 2019) and to map students’ self-regulated
+learning tactics (Peeters et al., 2020). In network science, temporal
+networks keep the timing and order of interactions as part of the
+network (Holme & Saramäki, 2012; Holme, 2015).
 
 The main principle of TNA is representing the transition matrix between
 events as a graph to take full advantage of graph theory potentials and
-the wealth of network analysis. TNA brings network measures at the node,
-edge, and graph level; pattern mining through dyads, triads, and
-communities; clustering of sub-networks into typical behavioral
-strategies; and rigorous statistical validation at each edge through
-bootstrapping, permutation, and case-dropping techniques. Such
-statistical rigor that brings validation and hypothesis testing at each
-step of the analysis offers a method for researchers to build, verify,
-and advance existing theories on the basis of a robust scientific
-approach.
+the wealth of network analysis (Wasserman & Faust, 1994; Newman, 2018).
+TNA brings network measures at the node, edge, and graph level; pattern
+mining through dyads, triads, and communities; clustering of
+sub-networks into typical behavioral strategies; and rigorous
+statistical validation at each edge through bootstrapping, permutation,
+and case-dropping techniques. Such statistical rigor that brings
+validation and hypothesis testing at each step of the analysis offers a
+method for researchers to build, verify, and advance existing theories
+on the basis of a robust scientific approach.
 
 For a comprehensive introduction to TNA in learning analytics, see Saqr
-et al. (2025a) and Saqr (2024). For detailed tutorials on TNA clustering
-and heterogeneity analysis, see López-Pernas et al. (2025).
+et al. (2025a, 2025c). For detailed tutorials on TNA clustering and
+heterogeneity analysis, see López-Pernas et al. (2025). TNA is also
+implemented in the R package tna (Tikka et al., 2025).
 
 ### Data
 
@@ -54,9 +61,10 @@ The `human_long` dataset contains 10,796 coded human interaction turns
 from 429 human-AI pair programming sessions across 34 projects. Each row
 is a single turn, with `code` recording the interaction type,
 `session_id` identifying the session, and `timestamp` providing temporal
-ordering. For a detailed description of the dataset and coding scheme,
-see [Saqr
-(2026)](https://saqr.me/blog/2026/human-ai-interaction-cograph/).
+ordering. Vibe coding, programming by conversation with an AI assistant
+(Sarkar & Drosos, 2025), has been studied with transition networks and
+sequence analysis (Saqr, Misiejuk, & López-Pernas, 2026; Misiejuk et
+al., 2026).
 
 ``` r
 
@@ -123,47 +131,31 @@ print(net_tna)
 #> Transition Network (relative probabilities) [directed]
 #>   Weights: [0.018, 0.620]  |  mean: 0.111
 #> 
-#>   Weight matrix:
-#>             Command Correct Frustrate Inquire Interrupt Refine Request Specify
-#>   Command     0.235   0.088     0.055   0.066     0.035  0.038   0.155   0.280
-#>   Correct     0.093   0.091     0.138   0.057     0.054  0.112   0.120   0.278
-#>   Frustrate   0.103   0.115     0.176   0.075     0.047  0.171   0.111   0.125
-#>   Inquire     0.196   0.126     0.098   0.188     0.094  0.062   0.084   0.106
-#>   Interrupt   0.259   0.081     0.094   0.123     0.102  0.080   0.069   0.122
-#>   Refine      0.058   0.075     0.072   0.047     0.042  0.086   0.146   0.457
-#>   Request     0.096   0.019     0.044   0.067     0.051  0.033   0.039   0.620
-#>   Specify     0.263   0.058     0.081   0.072     0.167  0.074   0.070   0.172
-#>   Verify      0.224   0.079     0.164   0.118     0.043  0.097   0.116   0.083
-#>             Verify
-#>   Command    0.048
-#>   Correct    0.056
-#>   Frustrate  0.077
-#>   Inquire    0.044
-#>   Interrupt  0.069
-#>   Refine     0.018
-#>   Request    0.032
-#>   Specify    0.043
-#>   Verify     0.077 
+#>   Strongest edges (10 of 81):
+#>    from      to      weight
+#>    Request   Specify 0.620 
+#>    Refine    Specify 0.457 
+#>    Command   Specify 0.280 
+#>    Correct   Specify 0.278 
+#>    Specify   Command 0.263 
+#>    Interrupt Command 0.259 
+#>    Command   Command 0.235 
+#>    Verify    Command 0.224 
+#>    Inquire   Command 0.196 
+#>    Inquire   Inquire 0.188  
 #> 
-#>   Initial probabilities:
-#>   Specify       0.679  ████████████████████████████████████████
-#>   Command       0.175  ██████████
-#>   Request       0.055  ███
-#>   Interrupt     0.030  ██
-#>   Correct       0.019  █
-#>   Refine        0.019  █
-#>   Frustrate     0.013  █
-#>   Inquire       0.008  
-#>   Verify        0.002
+#>   extract_edges(include_self = TRUE) lists every edge; extract_transition_matrix() gives the weight matrix;
+#>   extract_initial_probs() the initial probabilities.
 ```
 
 #### Frequency Network (FTNA)
 
 The frequency method preserves raw transition counts rather than
-normalizing to conditional probabilities. This is useful when absolute
-frequencies matter — a transition occurring 500 times from a common
-state may be more practically important than one occurring 5 times from
-a rare state, even if the latter has a higher conditional probability.
+normalizing to conditional probabilities (Saqr et al., 2025b). This is
+useful when absolute frequencies matter — a transition occurring 500
+times from a common state may be more practically important than one
+occurring 5 times from a rare state, even if the latter has a higher
+conditional probability.
 
 ``` r
 
@@ -174,38 +166,21 @@ print(net_ftna)
 #> Transition Network (frequency counts) [directed]
 #>   Weights: [14.000, 732.000]  |  mean: 126.790
 #> 
-#>   Weight matrix:
-#>             Command Correct Frustrate Inquire Interrupt Refine Request Specify
-#>   Command       459     171       107     129        68     75     303     548
-#>   Correct        73      71       108      45        42     88      94     218
-#>   Frustrate      95     106       162      69        43    157     102     115
-#>   Inquire       160     103        80     154        77     51      69      87
-#>   Interrupt     191      60        69      91        75     59      51      90
-#>   Refine         45      59        56      37        33     67     114     357
-#>   Request        97      19        45      68        52     33      40     629
-#>   Specify       732     161       226     199       463    205     194     479
-#>   Verify        108      38        79      57        21     47      56      40
-#>             Verify
-#>   Command       94
-#>   Correct       44
-#>   Frustrate     71
-#>   Inquire       36
-#>   Interrupt     51
-#>   Refine        14
-#>   Request       32
-#>   Specify      120
-#>   Verify        37 
+#>   Strongest edges (10 of 81):
+#>    from    to        weight
+#>    Specify Command   732   
+#>    Request Specify   629   
+#>    Command Specify   548   
+#>    Specify Specify   479   
+#>    Specify Interrupt 463   
+#>    Command Command   459   
+#>    Refine  Specify   357   
+#>    Command Request   303   
+#>    Specify Frustrate 226   
+#>    Correct Specify   218    
 #> 
-#>   Initial probabilities:
-#>   Specify       0.679  ████████████████████████████████████████
-#>   Command       0.175  ██████████
-#>   Request       0.055  ███
-#>   Interrupt     0.030  ██
-#>   Correct       0.019  █
-#>   Refine        0.019  █
-#>   Frustrate     0.013  █
-#>   Inquire       0.008  
-#>   Verify        0.002
+#>   extract_edges(include_self = TRUE) lists every edge; extract_transition_matrix() gives the weight matrix;
+#>   extract_initial_probs() the initial probabilities.
 ```
 
 #### Attention Network (ATNA)
@@ -226,38 +201,21 @@ print(net_atna)
 #> Attention Network (decay-weighted transitions) [directed]
 #>   Weights: [11.018, 357.662]  |  mean: 71.690
 #> 
-#>   Weight matrix:
-#>             Command Correct Frustrate Inquire Interrupt  Refine Request Specify
-#>   Command   254.753  91.496    66.797  80.402    65.936  47.423 145.985 297.131
-#>   Correct    51.382  44.627    55.538  29.832    27.286  46.929  46.160 119.340
-#>   Frustrate  57.452  55.341    92.756  40.085    28.624  74.892  54.606  87.031
-#>   Inquire    85.134  56.787    43.046  81.061    38.782  29.220  40.091  69.990
-#>   Interrupt  94.228  31.160    36.365  46.634    48.698  30.005  28.457  67.398
-#>   Refine     36.306  37.008    37.761  24.197    21.236  51.087  58.478 167.226
-#>   Request    63.272  18.659    31.998  41.056    51.503  30.285  33.277 272.476
-#>   Specify   357.662  96.031   134.432 115.671   206.063 116.889 141.240 335.302
-#>   Verify     53.941  20.958    40.429  30.820    11.349  25.768  29.387  39.412
-#>             Verify
-#>   Command   53.492
-#>   Correct   22.847
-#>   Frustrate 32.765
-#>   Inquire   17.833
-#>   Interrupt 27.393
-#>   Refine    11.018
-#>   Request   21.781
-#>   Specify   76.312
-#>   Verify    23.444 
+#>   Strongest edges (10 of 81):
+#>    from    to        weight 
+#>    Specify Command   357.662
+#>    Specify Specify   335.302
+#>    Command Specify   297.131
+#>    Request Specify   272.476
+#>    Command Command   254.753
+#>    Specify Interrupt 206.063
+#>    Refine  Specify   167.226
+#>    Command Request   145.985
+#>    Specify Request   141.240
+#>    Specify Frustrate 134.432 
 #> 
-#>   Initial probabilities:
-#>   Specify       0.679  ████████████████████████████████████████
-#>   Command       0.175  ██████████
-#>   Request       0.055  ███
-#>   Interrupt     0.030  ██
-#>   Correct       0.019  █
-#>   Refine        0.019  █
-#>   Frustrate     0.013  █
-#>   Inquire       0.008  
-#>   Verify        0.002
+#>   extract_edges(include_self = TRUE) lists every edge; extract_transition_matrix() gives the weight matrix;
+#>   extract_initial_probs() the initial probabilities.
 ```
 
 #### Co-occurrence Network from Binary Data
@@ -277,14 +235,20 @@ print(net)
 #> Co-occurrence Network [undirected]
 #>   Weights: [2681.000, 6262.000]  |  mean: 3867.381
 #> 
-#>   Weight matrix:
-#>           Reading Video Forum Quiz Coding Review
-#>   Reading    6100  3169  3211 2891   3138   3113
-#>   Video      3169  6262  3183 2903   3278   3290
-#>   Forum      3211  3183  5692 2942   2958   3045
-#>   Quiz       2891  2903  2942 5379   2681   2725
-#>   Coding     3138  3278  2958 2681   5886   3183
-#>   Review     3113  3290  3045 2725   3183   6186
+#>   Strongest edges (10 of 21):
+#>    from    to      weight
+#>    Video   Video   6262  
+#>    Review  Review  6186  
+#>    Reading Reading 6100  
+#>    Coding  Coding  5886  
+#>    Forum   Forum   5692  
+#>    Quiz    Quiz    5379  
+#>    Video   Review  3290  
+#>    Video   Coding  3278  
+#>    Reading Forum   3211  
+#>    Coding  Review  3183   
+#> 
+#>   extract_edges(include_self = TRUE) lists every edge; extract_transition_matrix() gives the weight matrix.
 ```
 
 #### Window-based TNA (WTNA)
@@ -305,22 +269,21 @@ print(net_wtna)
 #> Network (method: wtna_transition) [directed]
 #>   Weights: [2493.000, 4314.000]  |  mean: 3025.056
 #> 
-#>   Weight matrix:
-#>           Reading Video Forum Quiz Coding Review
-#>   Reading    4297  2903  2908 2638   2935   3008
-#>   Video      2921  4314  2943 2651   2909   3018
-#>   Forum      2863  2875  3881 2675   2747   2902
-#>   Quiz       2691  2654  2706 3695   2518   2542
-#>   Coding     2814  3094  2767 2559   4005   2953
-#>   Review     2971  3113  2824 2493   2909   4206 
+#>   Strongest edges (10 of 36):
+#>    from    to      weight
+#>    Video   Video   4314  
+#>    Reading Reading 4297  
+#>    Review  Review  4206  
+#>    Coding  Coding  4005  
+#>    Forum   Forum   3881  
+#>    Quiz    Quiz    3695  
+#>    Review  Video   3113  
+#>    Coding  Video   3094  
+#>    Video   Review  3018  
+#>    Reading Review  3008   
 #> 
-#>   Initial probabilities:
-#>   Reading       0.209  ████████████████████████████████████████
-#>   Coding        0.194  █████████████████████████████████████
-#>   Video         0.179  ██████████████████████████████████
-#>   Review        0.151  █████████████████████████████
-#>   Quiz          0.141  ███████████████████████████
-#>   Forum         0.126  ████████████████████████
+#>   extract_edges(include_self = TRUE) lists every edge; extract_transition_matrix() gives the weight matrix;
+#>   extract_initial_probs() the initial probabilities.
 ```
 
 ``` r
@@ -330,22 +293,21 @@ print(net_wtna_rel)
 #> Network (method: wtna_transition) [directed]
 #>   Weights: [0.136, 0.225]  |  mean: 0.167
 #> 
-#>   Weight matrix:
-#>           Reading Video Forum  Quiz Coding Review
-#>   Reading   0.225 0.157 0.155 0.142  0.159  0.162
-#>   Video     0.156 0.225 0.157 0.142  0.159  0.161
-#>   Forum     0.160 0.161 0.210 0.150  0.156  0.162
-#>   Quiz      0.161 0.160 0.161 0.213  0.151  0.153
-#>   Coding    0.157 0.169 0.152 0.141  0.220  0.162
-#>   Review    0.162 0.167 0.152 0.136  0.159  0.224 
+#>   Strongest edges (10 of 36):
+#>    from    to      weight
+#>    Video   Video   0.225 
+#>    Reading Reading 0.225 
+#>    Review  Review  0.224 
+#>    Coding  Coding  0.220 
+#>    Quiz    Quiz    0.213 
+#>    Forum   Forum   0.210 
+#>    Coding  Video   0.169 
+#>    Review  Video   0.167 
+#>    Coding  Review  0.162 
+#>    Forum   Review  0.162  
 #> 
-#>   Initial probabilities:
-#>   Reading       0.500  ████████████████████████████████████████
-#>   Quiz          0.500  ████████████████████████████████████████
-#>   Video         0.000  
-#>   Forum         0.000  
-#>   Coding        0.000  
-#>   Review        0.000
+#>   extract_edges(include_self = TRUE) lists every edge; extract_transition_matrix() gives the weight matrix;
+#>   extract_initial_probs() the initial probabilities.
 ```
 
 #### Mixed Network (Transitions + Co-occurrences)
@@ -362,8 +324,8 @@ print(net_wtna_mixed)
 #> Mixed Window TNA (transition + co-occurrence)
 #> -- Transition (directed) --
 #>   Nodes: 6  |  Edges: 36
-#> -- Co-occurrence (undirected) --
-#>   Nodes: 6  |  Edges: 21
+#> -- Co-occurrence (row-normalised, directed) --
+#>   Nodes: 6  |  Edges: 36
 ```
 
 ### Validation
@@ -395,12 +357,12 @@ network_reliability(net_tna)
 #### Bootstrap Analysis
 
 Bootstrapping repeatedly draws samples from the original dataset with
-replacement to estimate the model for each sample. When edges
-consistently appear across the majority of the estimated models, they
-are considered stable and significant. The bootstrap also provides
-confidence intervals and p-values for each edge weight, offering a
-quantifiable measure of uncertainty and robustness for each transition
-in the network.
+replacement to estimate the model for each sample (Efron & Tibshirani,
+1994). When edges consistently appear across the majority of the
+estimated models, they are considered stable and significant. The
+bootstrap also provides confidence intervals and p-values for each edge
+weight, offering a quantifiable measure of uncertainty and robustness
+for each transition in the network.
 
 ``` r
 
@@ -425,12 +387,13 @@ boot
 #### Centrality Stability
 
 Centrality measures quantify the role or importance of each state in the
-process. Centrality stability analysis quantifies how robust centrality
-rankings are to case-dropping: the CS-coefficient is the maximum
-proportion of cases that can be dropped while maintaining a correlation
-of at least 0.7 with the original centrality values in at least 95% of
-the resamples. A CS-coefficient above 0.5 indicates stable rankings;
-below 0.25 indicates instability (Epskamp et al., 2018).
+process (Freeman, 1978; Opsahl et al., 2010). Centrality stability
+analysis quantifies how robust centrality rankings are to case-dropping:
+the CS-coefficient is the maximum proportion of cases that can be
+dropped while maintaining a correlation of at least 0.7 with the
+original centrality values in at least 95% of the resamples. A
+CS-coefficient above 0.5 indicates stable rankings; below 0.25 indicates
+instability (Epskamp et al., 2018).
 
 ``` r
 
@@ -529,7 +492,8 @@ whether those patterns are associated with external variables.
 
 The `group_regulation_long` dataset contains self-regulated learning
 sequences annotated with an `Achiever` covariate distinguishing high and
-low achievers.
+low achievers. It was synthetically generated from the
+`group_regulation` dataset of the tna package (Tikka et al., 2025).
 
 ``` r
 
@@ -589,12 +553,13 @@ Postgr
 ### Theoretical Grounding
 
 Psychological network analysis estimates the conditional dependency
-structure among a set of variables. Variables (e.g., symptoms, traits,
-behaviors) are represented as nodes, and edges represent partial
-correlations — the association between two variables after controlling
-for all others. This approach reveals which variables are directly
-connected versus those whose association is mediated through other
-variables (Saqr et al., 2024).
+structure among a set of variables (Borsboom et al., 2021; Epskamp &
+Fried, 2018). Variables (e.g., symptoms, traits, behaviors) are
+represented as nodes, and edges represent partial correlations — the
+association between two variables after controlling for all others. This
+approach reveals which variables are directly connected versus those
+whose association is mediated through other variables (Saqr et al.,
+2024).
 
 `Nestimate` supports three estimation methods for continuous
 psychological data, all accessed through the same
@@ -642,9 +607,9 @@ head(chatgpt_srl)
 
 The graphical lasso applies L1 regularization to the precision matrix
 (the inverse of the covariance matrix), producing a sparse network where
-weak or unreliable edges are shrunk to exactly zero. The `gamma`
-parameter controls sparsity through EBIC model selection — higher values
-yield sparser networks.
+weak or unreliable edges are shrunk to exactly zero (Friedman et al.,
+2008). The `gamma` parameter controls sparsity through EBIC model
+selection (Foygel & Drton, 2010) — higher values yield sparser networks.
 
 ``` r
 
@@ -654,13 +619,9 @@ net_glasso
 #> Partial Correlation Network (EBICglasso) [undirected]
 #>   Sample size: 1000
 #> 
-#>   Weight matrix:
-#>       CSU IV SE SR TA
-#>   CSU   0  0  0  0  0
-#>   IV    0  0  0  0  0
-#>   SE    0  0  0  0  0
-#>   SR    0  0  0  0  0
-#>   TA    0  0  0  0  0 
+#>   No edges: every weight is zero.
+#> 
+#>   extract_edges(include_self = TRUE) lists every edge; extract_transition_matrix() gives the weight matrix.
 #> 
 #>   Predictability (R²):
 #>   CSU           0.000  
@@ -672,45 +633,135 @@ net_glasso
 #>   Gamma: 0.50  |  Lambda: 0.0517
 ```
 
+## How to cite this article
+
+Saqr, M., López-Pernas, S., & Misiejuk, K. (2026). *Network estimation
+and analysis with Nestimate*. Nestimate.
+[HTML](https://pak.dynasite.org/Nestimate/articles/transition-networks.html)
+· [PDF](https://pak.dynasite.org/Nestimate/pdf/transition-networks.pdf)
+
 ## References
 
-Saqr, M. (2024). Temporal Network Analysis: Introduction, Methods and
-Analysis with R. In M. Saqr & S. López-Pernas (Eds.), *Learning
-Analytics Methods and Tutorials: A Practical Guide Using R*. Springer.
-<https://lamethods.org/book1/chapters/ch17-temporal-networks/ch17-tna.html>
+Borsboom, D., Deserno, M. K., Rhemtulla, M., Epskamp, S., Fried, E. I.,
+McNally, R. J., Robinaugh, D. J., Perugini, M., Dalege, J., Costantini,
+G., Isvoranu, A.-M., Wysocki, A. C., van Borkulo, C. D., van Bork, R., &
+Waldorp, L. J. (2021). Network analysis of multivariate data in
+psychological science. *Nature Reviews Methods Primers*, 1, 58.
+<https://doi.org/10.1038/s43586-021-00055-w>
 
-Saqr, M., Beck, E., & López-Pernas, S. (2024). Psychological Networks: A
-Modern Approach to Analysis of Learning and Complex Learning Processes.
-In M. Saqr & S. López-Pernas (Eds.), *Learning Analytics Methods and
-Tutorials: A Practical Guide Using R*. Springer.
-<https://lamethods.org/book1/chapters/ch19-psychological-networks/ch19-psych.html>
+Efron, B., & Tibshirani, R. J. (1994). *An introduction to the
+bootstrap*. Chapman and Hall/CRC.
+<https://doi.org/10.1201/9780429246593>
 
-Saqr, M., López-Pernas, S., & Tikka, S. (2025a). Mapping Relational
-Dynamics with Transition Network Analysis: A Primer and Tutorial. In M.
-Saqr & S. López-Pernas (Eds.), *Advanced Learning Analytics Methods: AI,
-Precision and Complexity*. Springer Nature Switzerland.
-<https://lamethods.org/book2/chapters/ch15-tna/ch15-tna.html>
-
-Saqr, M., López-Pernas, S., Törmänen, T., Kaliisa, R., Misiejuk, K., &
-Tikka, S. (2025b). Transition network analysis: A novel framework for
-modeling, visualizing, and identifying the temporal patterns of learners
-and learning processes. *Proceedings of the 15th International Learning
-Analytics and Knowledge Conference (LAK25)*. ACM.
-<https://doi.org/10.1145/3706468.3706513>
-
-López-Pernas, S., Tikka, S., & Saqr, M. (2025). Mining Patterns and
-Clusters with Transition Network Analysis: A Heterogeneity Approach. In
-M. Saqr & S. López-Pernas (Eds.), *Advanced Learning Analytics Methods:
-AI, Precision and Complexity*. Springer Nature Switzerland.
-<https://lamethods.org/book2/chapters/ch17-tna-clusters/ch17-tna-clusters.html>
+Epskamp, S., & Fried, E. I. (2018). A tutorial on regularized partial
+correlation networks. *Psychological Methods*, 23(4), 617–634.
+<https://doi.org/10.1037/met0000167>
 
 Epskamp, S., Borsboom, D., & Fried, E. I. (2018). Estimating
 psychological networks and their accuracy: A tutorial paper. *Behavior
 Research Methods*, 50(1), 195–212.
 <https://doi.org/10.3758/s13428-017-0862-1>
 
-Vogelsmeier, L.V.D.E., Oliveira, E., Misiejuk, K., López-Pernas, S., &
-Saqr, M. (2025). Delving into the psychology of Machines: Exploring the
-structure of self-regulated learning via LLM-generated survey responses.
-*Computers in Human Behavior*, 173, 108769.
+Foygel, R., & Drton, M. (2010). Extended Bayesian information criteria
+for Gaussian graphical models. *Advances in Neural Information
+Processing Systems*, 23, 604–612.
+
+Freeman, L. C. (1978). Centrality in social networks conceptual
+clarification. *Social Networks*, 1(3), 215–239.
+<https://doi.org/10.1016/0378-8733(78)90021-7>
+
+Friedman, J., Hastie, T., & Tibshirani, R. (2008). Sparse inverse
+covariance estimation with the graphical lasso. *Biostatistics*, 9(3),
+432–441. <https://doi.org/10.1093/biostatistics/kxm045>
+
+Holme, P. (2015). Modern temporal network theory: A colloquium. *The
+European Physical Journal B*, 88(9), 234.
+<https://doi.org/10.1140/epjb/e2015-60657-4>
+
+Holme, P., & Saramäki, J. (2012). Temporal networks. *Physics Reports*,
+519(3), 97–125. <https://doi.org/10.1016/j.physrep.2012.03.001>
+
+López-Pernas, S., Tikka, S., & Saqr, M. (2025). Mining patterns and
+clusters with transition network analysis: A heterogeneity approach. In
+M. Saqr & S. López-Pernas (Eds.), *Advanced learning analytics methods:
+AI, precision and complexity* (pp. 447–468). Springer.
+<https://doi.org/10.1007/978-3-031-95365-1_17>
+
+Misiejuk, K., López-Pernas, S., Oliveira, E., Rinja, D., & Saqr, M.
+(2026). It takes two to vibe code: Profiling student-AI programming
+interactions processes and their high order structure. In *Proceedings
+of the 26th Koli Calling International Conference on Computing Education
+Research* (pp. 1–11). ACM. <https://doi.org/10.1145/3856208.3856254>
+
+Newman, M. (2018). *Networks* (2nd ed.). Oxford University Press.
+<https://doi.org/10.1093/oso/9780198805090.001.0001>
+
+Opsahl, T., Agneessens, F., & Skvoretz, J. (2010). Node centrality in
+weighted networks: Generalizing degree and shortest paths. *Social
+Networks*, 32(3), 245–251.
+<https://doi.org/10.1016/j.socnet.2010.03.006>
+
+Peeters, W., Saqr, M., & Viberg, O. (2020). Applying learning analytics
+to map students’ self-regulated learning tactics in an academic writing
+course. In *Proceedings of the 28th International Conference on
+Computers in Education (ICCE 2020)* (pp. 245–254).
+
+Saqr, M., Beck, E., & López-Pernas, S. (2024). Psychological networks: A
+modern approach to analysis of learning and complex learning processes.
+In M. Saqr & S. López-Pernas (Eds.), *Learning analytics methods and
+tutorials: A practical guide using R* (pp. 639–671). Springer.
+<https://doi.org/10.1007/978-3-031-54464-4_19>
+
+Saqr, M., López-Pernas, S., & Misiejuk, K. (2026). Nestimate: An R
+package for dynamic, probabilistic, and high order network analysis.
+*Applied Psychological Measurement*.
+<https://doi.org/10.1177/01466216261472019>
+
+Saqr, M., López-Pernas, S., & Tikka, S. (2025a). Mapping relational
+dynamics with transition network analysis: A primer and tutorial. In M.
+Saqr & S. López-Pernas (Eds.), *Advanced learning analytics methods: AI,
+precision and complexity* (pp. 371–411). Springer.
+<https://doi.org/10.1007/978-3-031-95365-1_15>
+
+Saqr, M., López-Pernas, S., & Tikka, S. (2025b). Capturing the breadth
+and dynamics of the temporal processes with frequency transition network
+analysis: A primer and tutorial. In M. Saqr & S. López-Pernas (Eds.),
+*Advanced learning analytics methods: AI, precision and complexity*
+(pp. 413–446). Springer. <https://doi.org/10.1007/978-3-031-95365-1_16>
+
+Saqr, M., López-Pernas, S., Törmänen, T., Kaliisa, R., Misiejuk, K., &
+Tikka, S. (2025c). Transition network analysis: A novel framework for
+modeling, visualizing, and identifying the temporal patterns of learners
+and learning processes. In *Proceedings of the 15th International
+Learning Analytics and Knowledge Conference (LAK25)* (pp. 351–361). ACM.
+<https://doi.org/10.1145/3706468.3706513>
+
+Saqr, M., Misiejuk, K., & López-Pernas, S. (2026). Human-AI
+collaboration or obedient and often clueless AI in instruct, serve,
+repeat dynamics? *The Internet and Higher Education*, 70, 101087.
+<https://doi.org/10.1016/j.iheduc.2026.101087>
+
+Saqr, M., Nouri, J., & Fors, U. (2019). Time to focus on the temporal
+dimension of learning: A learning analytics study of the temporal
+patterns of students’ interactions and self-regulation. *International
+Journal of Technology Enhanced Learning*, 11(4), 398–412.
+<https://doi.org/10.1504/IJTEL.2019.102549>
+
+Sarkar, A., & Drosos, I. (2025). Vibe coding: Programming through
+conversation with artificial intelligence. In *Proceedings of the 36th
+Annual Conference of the Psychology of Programming Interest Group (PPIG
+2025)*. <https://doi.org/10.48550/arXiv.2506.23253>
+
+Tikka, S., López-Pernas, S., & Saqr, M. (2025). tna: An R package for
+transition network analysis. *Applied Psychological Measurement*, 49(6),
+326–328. <https://doi.org/10.1177/01466216251348840>
+
+Vogelsmeier, L. V. D. E., Oliveira, E., Misiejuk, K., López-Pernas, S.,
+& Saqr, M. (2025). Delving into the psychology of machines: Exploring
+the structure of self-regulated learning via LLM-generated survey
+responses. *Computers in Human Behavior*, 173, 108769.
 <https://doi.org/10.1016/j.chb.2025.108769>
+
+Wasserman, S., & Faust, K. (1994). *Social network analysis: Methods and
+applications*. Cambridge University Press.
+<https://doi.org/10.1017/CBO9780511815478>

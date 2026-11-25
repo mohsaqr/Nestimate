@@ -1,4 +1,4 @@
-# Bottleneck Distance Between Persistence Diagrams
+# Compute the bottleneck distance between persistence diagrams
 
 `bottleneck_distance()` returns the bottleneck distance between two
 persistence diagrams, one value per homology dimension. It takes two
@@ -60,13 +60,14 @@ The smallest feasible \\\varepsilon\\ is found by binary search over the
 candidate costs (every pairwise \\L\_\infty\\ distance and every
 diagonal projection), checking each with a Kuhn bipartite matching.
 
-Essential classes (`death = Inf` in VR mode, `death = 0` with
-`birth > 0` in clique mode, as
-[`persistence_landscape()`](https://pak.dynasite.org/Nestimate/reference/persistence_landscape.md)
-reads them; a `(0, 0)` pair is a zero-length finite point) are matched
-one-to-one within each dimension by their sorted births. When the two
-diagrams have different numbers of essential classes in a dimension, the
-distance for that dimension is `Inf`.
+Essential classes are matched one-to-one within each dimension by their
+sorted births. A class is essential when it never dies: death `Inf` in a
+Vietoris-Rips filtration, or death 0 with a positive birth in a clique
+filtration, as in
+[`persistence_landscape()`](https://pak.dynasite.org/Nestimate/reference/persistence_landscape.md).
+A `(0, 0)` pair is a finite point of length zero. When the two diagrams
+have different numbers of essential classes in a dimension, the distance
+for that dimension is `Inf`.
 
 ## References
 

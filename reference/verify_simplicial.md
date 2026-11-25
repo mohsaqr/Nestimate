@@ -1,4 +1,4 @@
-# Verify Simplicial Complex Against igraph
+# Verify a simplicial complex against igraph
 
 `verify_simplicial()` builds the clique complex of `mat` with
 [`build_simplicial()`](https://pak.dynasite.org/Nestimate/reference/build_simplicial.md)
@@ -6,14 +6,17 @@ and checks it against two independent references: its simplices against
 the cliques
 [`igraph::cliques()`](https://r.igraph.org/reference/cliques.html) finds
 in the same thresholded graph, and its Euler characteristic against the
-alternating sum of its Betti numbers (the Euler-Poincare theorem). It
-prints the result of each check and the Betti numbers, and is meant for
-testing. It needs igraph, and raises an error without it.
+alternating sum of its Betti numbers (the Euler-Poincare theorem). Its
+print method shows the result of each check and the Betti numbers; it is
+meant for testing. It needs igraph, and raises an error without it.
 
 ## Usage
 
 ``` r
 verify_simplicial(mat, threshold = 0)
+
+# S3 method for class 'net_simplicial_check'
+print(x, ...)
 ```
 
 ## Arguments
@@ -30,13 +33,24 @@ verify_simplicial(mat, threshold = 0)
   [`build_simplicial()`](https://pak.dynasite.org/Nestimate/reference/build_simplicial.md).
   Default `0`.
 
+- x:
+
+  For the print() method: a `net_simplicial_check` from
+  verify_simplicial().
+
+- ...:
+
+  For the print() method: not used.
+
 ## Value
 
-A list, invisibly: `cliques_match` (whether the simplices equal the
-cliques from
+A list of class `net_simplicial_check`: `cliques_match` (whether the
+simplices equal the cliques from
 [`igraph::cliques()`](https://r.igraph.org/reference/cliques.html)
-exactly), `n_simplices_ours`, `n_simplices_igraph`, `betti`, `euler` and
-`f_vector`. The two checks are printed as a side effect.
+exactly), `n_simplices_ours`, `n_simplices_igraph`, `betti`, `euler`,
+`euler_matches` (whether `euler` equals the alternating sum of `betti`)
+and `f_vector`. For the print() method: `x`, invisibly, after printing
+the two checks and the Betti numbers.
 
 ## Details
 

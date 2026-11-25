@@ -1,4 +1,4 @@
-# Mark terminal-NA cells with an explicit state label
+# Fill trailing missing cells with an end state
 
 `mark_terminal_state()` fills every missing cell after each sequence's
 last observed state with an explicit state, `"End"` by default, and
@@ -36,10 +36,10 @@ mark_terminal_state(data, state = "End", cols = NULL)
 - state:
 
   The label written into the trailing missing cells, a single non-empty
-  string. Default `"End"`. If the label already occurs in `data`, a
-  warning of class `nestimate_state_collision` is given and `_1`, `_2`,
-  ... is appended until it is unique, so the absorbing marker is never
-  confused with an observed state.
+  string. Default `"End"`. A label that already occurs in `data` is made
+  unique with a suffix (`_1`, `_2`, ...) and raises the warning
+  `nestimate_state_collision`, so the absorbing marker is never confused
+  with an observed state.
 
 - cols:
 

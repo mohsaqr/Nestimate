@@ -1,4 +1,4 @@
-# Rename the models of a `netobject_group`
+# Rename the networks of a network group
 
 `rename_models()` replaces the names of the networks in a
 `netobject_group` and returns the group with nothing else changed. The

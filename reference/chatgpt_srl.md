@@ -1,9 +1,10 @@
-# ChatGPT Self-Regulated Learning Scale Scores
+# ChatGPT scores on self-regulated learning scales
 
-Scores on five self-regulated learning (SRL) scales for 1,000 responses
-that ChatGPT generated to a validated SRL questionnaire. The data are
-part of a larger set comparing the responses of seven large language
-models with human norms.
+`chatgpt_srl` is a dataset of the scores on five self-regulated learning
+(SRL) scales of 1,000 responses that ChatGPT generated to a validated
+SRL questionnaire, one row per response and one column per scale. The
+data are part of a larger set comparing the responses of seven large
+language models with human norms.
 
 ## Usage
 
@@ -55,13 +56,9 @@ net
 #> Partial Correlation Network (EBICglasso) [undirected]
 #>   Sample size: 1000
 #> 
-#>   Weight matrix:
-#>       CSU IV SE SR TA
-#>   CSU   0  0  0  0  0
-#>   IV    0  0  0  0  0
-#>   SE    0  0  0  0  0
-#>   SR    0  0  0  0  0
-#>   TA    0  0  0  0  0 
+#>   No edges: every weight is zero.
+#> 
+#>   extract_edges(include_self = TRUE) lists every edge; extract_transition_matrix() gives the weight matrix.
 #> 
 #>   Predictability (R²):
 #>   CSU           0.000  

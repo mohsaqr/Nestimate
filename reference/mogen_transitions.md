@@ -1,4 +1,4 @@
-# Extract Transition Table from a MOGen Model
+# Extract the transitions of a MOGen model
 
 `mogen_transitions()` returns the transitions of a fitted
 [`build_mogen()`](https://pak.dynasite.org/Nestimate/reference/build_mogen.md)

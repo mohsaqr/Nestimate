@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>Comparing two networks with compare_networks() • Nestimate</title>
+<title>Comparing networks with compare_networks() • Nestimate</title>
 <!-- favicons --><link rel="icon" type="image/png" sizes="96x96" href="../favicon-96x96.png">
 <link rel="icon" type="”image/svg+xml”" href="../favicon.svg">
 <link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
@@ -14,7 +14,15 @@
 <link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Comparing two networks with compare_networks()">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Comparing networks with compare_networks()">
+<meta name="citation_title" content="Comparing networks with compare_networks()">
+<meta name="citation_author" content="Saqr, Mohammed">
+<meta name="citation_author" content="López-Pernas, Sonsoles">
+<meta name="citation_author" content="Misiejuk, Kamila">
+<meta name="citation_publication_date" content="2026">
+<meta name="citation_publisher" content="Nestimate">
+<meta name="citation_pdf_url" content="https://pak.dynasite.org/Nestimate/pdf/compare-networks.pdf">
+<meta name="citation_abstract_html_url" content="https://pak.dynasite.org/Nestimate/articles/compare-networks.html">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -24,7 +32,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.12</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -39,8 +47,8 @@
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
 <li><a class="dropdown-item" href="../articles/transition-entropy.html">Transition Matrix Entropy</a></li>
     <li><a class="dropdown-item" href="../articles/transition-networks.html">Network Estimation and Analysis with Nestimate</a></li>
-    <li><a class="dropdown-item" href="../articles/sequence-comparison.html">Sequence Pattern Comparison: Early vs Late Human-AI Interactions</a></li>
-    <li><a class="dropdown-item" href="../articles/sequence-plots.html">Sequence Plots: heatmap, index, and distribution</a></li>
+    <li><a class="dropdown-item" href="../articles/sequence-comparison.html">Comparing Sequences Between Groups: Early vs Late Human-AI Interactions</a></li>
+    <li><a class="dropdown-item" href="../articles/sequence-plots.html">Sequence Plots</a></li>
     <li><a class="dropdown-item" href="../articles/clustering.html">Sequence Clustering</a></li>
     <li><a class="dropdown-item" href="../articles/markov-stability.html">Markov Stability Analysis</a></li>
     <li><hr class="dropdown-divider"></li>
@@ -66,34 +74,325 @@
 
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
-      <img src="../logo.svg" class="logo" alt=""><h1>Comparing two networks with compare_networks()</h1>
-            
-      
-      <small class="dont-index">Source: <a href="https://github.com/mohsaqr/Nestimate/blob/main/vignettes/articles/compare-networks.Rmd" class="external-link"><code>vignettes/articles/compare-networks.Rmd</code></a></small>
+      <img src="../logo.svg" class="logo" alt=""><h1>Comparing networks with compare_networks()</h1>
+                        <h4 data-toc-skip class="author">Mohammed
+Saqr</h4>
+            <address class="author_afil">
+      University of Eastern
+Finland<br><h4 data-toc-skip class="author">Sonsoles
+López-Pernas</h4>
+            <address class="author_afil">
+      University of Eastern
+Finland<br><h4 data-toc-skip class="author">Kamila
+Misiejuk</h4>
+            <address class="author_afil">
+      FernUniversität in Hagen, Germany<br><small class="dont-index">Source: <a href="https://github.com/mohsaqr/Nestimate/blob/main/vignettes/articles/compare-networks.Rmd" class="external-link"><code>vignettes/articles/compare-networks.Rmd</code></a></small>
       <div class="d-none name"><code>compare-networks.Rmd</code></div>
-    </div>
+    </address>
+</address>
+</address>
+</div>
 
     
     
-<p>High and low achievers in <code>group_regulation_long</code> are
-compared with a permutation test (1,000 permutations).</p>
+<p>Do two groups, or two periods, produce different networks?
+<code><a href="../reference/compare_networks.html">compare_networks()</a></code> in Nestimate (Saqr, López-Pernas, &amp;
+Misiejuk, 2026) compares two or more networks edge by edge, node by node
+and on global metrics, and returns one object from which every table and
+plot is drawn. By default the comparison is descriptive;
+<code>test</code> adds a permutation test, a Bayesian comparison or a
+bootstrap of the network structure.</p>
+<table class="table">
+<thead><tr class="header">
+<th>Table</th>
+<th>Verb</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td>One row per pair of networks</td>
+<td><code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code></td>
+</tr>
+<tr class="even">
+<td>One row per pair and edge</td>
+<td><code><a href="../reference/comparison_tables.html">edge_differences()</a></code></td>
+</tr>
+<tr class="odd">
+<td>One row per pair, node and centrality measure</td>
+<td><code><a href="../reference/comparison_tables.html">node_differences()</a></code></td>
+</tr>
+<tr class="even">
+<td>One row per pair and global metric</td>
+<td><code><a href="../reference/comparison_tables.html">global_differences()</a></code></td>
+</tr>
+<tr class="odd">
+<td>One row per network and structural metric</td>
+<td><code><a href="../reference/comparison_tables.html">network_metrics()</a></code></td>
+</tr>
+</tbody>
+</table>
+<div class="section level2">
+<h2 id="data">Data<a class="anchor" aria-label="anchor" href="#data"></a>
+</h2>
+<p><code>group_regulation_long</code> records the regulation actions of
+2,000 students working in 200 teams of 10, generated synthetically from
+the <code>group_regulation</code> data of the tna package (Tikka,
+López-Pernas, &amp; Saqr, 2025). Achievement (<code>Achiever</code>,
+High or Low) is recorded per team. <code><a href="../reference/build_network.html">build_network()</a></code> with
+<code>group = "Achiever"</code> estimates one transition network per
+level.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">achievers</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_network.html">build_network</a></span><span class="op">(</span><span class="va">group_regulation_long</span>, method <span class="op">=</span> <span class="st">"relative"</span>,</span>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/mohsaqr/Nestimate" class="external-link">Nestimate</a></span><span class="op">)</span></span>
+<span><span class="va">achievers</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_network.html">build_network</a></span><span class="op">(</span><span class="va">group_regulation_long</span>, method <span class="op">=</span> <span class="st">"relative"</span>,</span>
 <span>                           actor <span class="op">=</span> <span class="st">"Actor"</span>, action <span class="op">=</span> <span class="st">"Action"</span>,</span>
 <span>                           time <span class="op">=</span> <span class="st">"Time"</span>, group <span class="op">=</span> <span class="st">"Achiever"</span><span class="op">)</span></span>
-<span><span class="va">cmp</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compare_networks.html">compare_networks</a></span><span class="op">(</span><span class="va">achievers</span>, test <span class="op">=</span> <span class="st">"permutation"</span>, iter <span class="op">=</span> <span class="fl">1000</span>, seed <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
-<span><span class="va">cmp</span></span></code></pre></div>
-<pre><code><span><span class="co">## Network comparison (permutation, iter = 1000, alpha = 0.05, adjust = none): 2 networks, 1 pairs, scaling = none</span></span>
+<span><span class="va">achievers</span></span></code></pre></div>
+<pre><code><span><span class="co">## Group Networks (2 groups, group_col: Achiever)</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">##   Group  Nodes  Edges  Weights</span></span>
+<span><span class="co">##   High   9      76     [0.001, 0.576]</span></span>
+<span><span class="co">##   Low    9      75     [0.000, 0.462]</span></span></code></pre>
+</div>
+<div class="section level2">
+<h2 id="describing-the-difference">Describing the difference<a class="anchor" aria-label="anchor" href="#describing-the-difference"></a>
+</h2>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">comparison</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compare_networks.html">compare_networks</a></span><span class="op">(</span><span class="va">achievers</span><span class="op">)</span></span>
+<span><span class="va">comparison</span></span></code></pre></div>
+<pre><code><span><span class="co">## Network comparison (descriptive): 2 networks, 1 pairs, scaling = none</span></span>
 <span><span class="co">##   networks: High (9 nodes, directed), Low (9 nodes, directed)</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">##  pair        pearson mean|diff| max|diff| largest change                    </span></span>
 <span><span class="co">##  High vs Low 0.92    0.03       0.21      discuss -&gt; consensus (High higher)</span></span>
-<span><span class="co">##  sig edges</span></span>
-<span><span class="co">##  42       </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Tables: summary(x), edge_differences(x), node_differences(x), global_differences(x), network_metrics(x). Plot: plot(x, type = ...)</span></span></code></pre>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">cmp</span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">comparison</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">##         pair network_a network_b n_cells n_differing share_higher_a</span></span>
+<span><span class="co">##  High vs Low      High       Low      81          78           0.51</span></span>
+<span><span class="co">##  share_higher_b mean_abs_diff max_abs_diff pearson spearman cosine jaccard</span></span>
+<span><span class="co">##            0.46          0.03         0.21    0.92     0.92   0.95    0.75</span></span>
+<span><span class="co">##              top_edge top_edge_higher</span></span>
+<span><span class="co">##  discuss -&gt; consensus            High</span></span></code></pre>
+<p>The comparison takes the difference High minus Low for each of the 81
+cells of the weight matrices, self-loops included. 78 cells differ; High
+is higher in 51% of them and Low in 46%. The mean absolute difference is
+0.03 and the largest, <code>discuss</code> to <code>consensus</code>,
+0.21. The two networks are alike overall: the edge weights correlate at
+0.92 (Pearson and Spearman), the cosine similarity is 0.95, and the
+Jaccard similarity of the edges present in each network is 0.75.</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/comparison_tables.html">global_differences</a></span><span class="op">(</span><span class="va">comparison</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">##         pair network_a network_b             category               metric</span></span>
+<span><span class="co">##  High vs Low      High       Low    Weight Deviations      Mean Abs. Diff.</span></span>
+<span><span class="co">##  High vs Low      High       Low    Weight Deviations    Median Abs. Diff.</span></span>
+<span><span class="co">##  High vs Low      High       Low    Weight Deviations            RMS Diff.</span></span>
+<span><span class="co">##  High vs Low      High       Low    Weight Deviations       Max Abs. Diff.</span></span>
+<span><span class="co">##  High vs Low      High       Low    Weight Deviations Rel. Mean Abs. Diff.</span></span>
+<span><span class="co">##  High vs Low      High       Low    Weight Deviations             CV Ratio</span></span>
+<span><span class="co">##  High vs Low      High       Low         Correlations              Pearson</span></span>
+<span><span class="co">##  High vs Low      High       Low         Correlations             Spearman</span></span>
+<span><span class="co">##  High vs Low      High       Low         Correlations              Kendall</span></span>
+<span><span class="co">##  High vs Low      High       Low         Correlations             Distance</span></span>
+<span><span class="co">##  High vs Low      High       Low      Dissimilarities            Euclidean</span></span>
+<span><span class="co">##  High vs Low      High       Low      Dissimilarities            Manhattan</span></span>
+<span><span class="co">##  High vs Low      High       Low      Dissimilarities             Canberra</span></span>
+<span><span class="co">##  High vs Low      High       Low      Dissimilarities          Bray-Curtis</span></span>
+<span><span class="co">##  High vs Low      High       Low      Dissimilarities            Frobenius</span></span>
+<span><span class="co">##  High vs Low      High       Low         Similarities               Cosine</span></span>
+<span><span class="co">##  High vs Low      High       Low         Similarities              Jaccard</span></span>
+<span><span class="co">##  High vs Low      High       Low         Similarities                 Dice</span></span>
+<span><span class="co">##  High vs Low      High       Low         Similarities              Overlap</span></span>
+<span><span class="co">##  High vs Low      High       Low         Similarities                   RV</span></span>
+<span><span class="co">##  High vs Low      High       Low Pattern Similarities       Rank Agreement</span></span>
+<span><span class="co">##  High vs Low      High       Low Pattern Similarities       Sign Agreement</span></span>
+<span><span class="co">##              key value</span></span>
+<span><span class="co">##    mean_abs_diff  0.03</span></span>
+<span><span class="co">##  median_abs_diff  0.02</span></span>
+<span><span class="co">##         rms_diff  0.05</span></span>
+<span><span class="co">##     max_abs_diff  0.21</span></span>
+<span><span class="co">##     rel_mean_abs  0.29</span></span>
+<span><span class="co">##         cv_ratio  1.10</span></span>
+<span><span class="co">##          pearson  0.92</span></span>
+<span><span class="co">##         spearman  0.92</span></span>
+<span><span class="co">##          kendall  0.77</span></span>
+<span><span class="co">##     distance_cor  0.92</span></span>
+<span><span class="co">##        euclidean  0.47</span></span>
+<span><span class="co">##        manhattan  2.61</span></span>
+<span><span class="co">##         canberra 19.76</span></span>
+<span><span class="co">##      bray_curtis  0.15</span></span>
+<span><span class="co">##        frobenius  0.22</span></span>
+<span><span class="co">##           cosine  0.95</span></span>
+<span><span class="co">##          jaccard  0.75</span></span>
+<span><span class="co">##             dice  0.85</span></span>
+<span><span class="co">##          overlap  0.85</span></span>
+<span><span class="co">##               rv  0.90</span></span>
+<span><span class="co">##   rank_agreement  0.82</span></span>
+<span><span class="co">##   sign_agreement  0.94</span></span></code></pre>
+<p><code><a href="../reference/comparison_tables.html">global_differences()</a></code> reports 22 metrics in five groups:
+deviations of the weights (mean, median, root mean square and largest
+absolute difference), correlations, dissimilarities (Euclidean,
+Manhattan, Canberra, Bray-Curtis, Frobenius), similarities (cosine,
+Jaccard, Dice, overlap and the RV coefficient, a correlation between
+matrices; Robert &amp; Escoufier, 1976), and the agreement of the ranks
+and signs of the weights.</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">comparison</span>, type <span class="op">=</span> <span class="st">"global"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="compare-networks_files/figure-html/global-plot-1.png" class="r-plt" alt="" width="864"></p>
+<p>Each panel is one group of metrics, with a dotted line at the value
+of identical networks: 1 for correlations and similarities, 0 for
+deviations and dissimilarities.</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/comparison_tables.html">network_metrics</a></span><span class="op">(</span><span class="va">comparison</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">##  network                      metric value</span></span>
+<span><span class="co">##     High                  Node Count     9</span></span>
+<span><span class="co">##     High                  Edge Count    76</span></span>
+<span><span class="co">##     High             Network Density     1</span></span>
+<span><span class="co">##     High               Mean Distance  0.04</span></span>
+<span><span class="co">##     High           Mean Out-Strength     1</span></span>
+<span><span class="co">##     High             SD Out-Strength     0</span></span>
+<span><span class="co">##     High            Mean In-Strength     1</span></span>
+<span><span class="co">##     High              SD In-Strength  0.91</span></span>
+<span><span class="co">##     High             Mean Out-Degree  8.44</span></span>
+<span><span class="co">##     High               SD Out-Degree  1.13</span></span>
+<span><span class="co">##     High Centralization (Out-Degree)  0.05</span></span>
+<span><span class="co">##     High  Centralization (In-Degree)  0.05</span></span>
+<span><span class="co">##     High                 Reciprocity  0.96</span></span>
+<span><span class="co">##      Low                  Node Count     9</span></span>
+<span><span class="co">##      Low                  Edge Count    75</span></span>
+<span><span class="co">##      Low             Network Density     1</span></span>
+<span><span class="co">##      Low               Mean Distance  0.06</span></span>
+<span><span class="co">##      Low           Mean Out-Strength     1</span></span>
+<span><span class="co">##      Low             SD Out-Strength     0</span></span>
+<span><span class="co">##      Low            Mean In-Strength     1</span></span>
+<span><span class="co">##      Low              SD In-Strength  0.72</span></span>
+<span><span class="co">##      Low             Mean Out-Degree  8.33</span></span>
+<span><span class="co">##      Low               SD Out-Degree  0.87</span></span>
+<span><span class="co">##      Low Centralization (Out-Degree)  0.06</span></span>
+<span><span class="co">##      Low  Centralization (In-Degree)  0.06</span></span>
+<span><span class="co">##      Low                 Reciprocity  0.94</span></span></code></pre>
+<p><code><a href="../reference/comparison_tables.html">network_metrics()</a></code> describes each network on its own.
+Both are almost complete (76 and 75 of 81 possible edges, density 1
+rounded), and their in-strengths are spread more widely in High (SD
+0.91) than in Low (0.72).</p>
+<div class="section level3">
+<h3 id="edges">Edges<a class="anchor" aria-label="anchor" href="#edges"></a>
+</h3>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="../reference/comparison_tables.html">edge_differences</a></span><span class="op">(</span><span class="va">comparison</span><span class="op">)</span>, <span class="fl">8</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">##         pair network_a network_b  from         to weight_a weight_b  diff</span></span>
+<span><span class="co">##  High vs Low      High       Low adapt      adapt        0        0     0</span></span>
+<span><span class="co">##  High vs Low      High       Low adapt   cohesion     0.26     0.28 -0.01</span></span>
+<span><span class="co">##  High vs Low      High       Low adapt  consensus     0.52     0.46  0.06</span></span>
+<span><span class="co">##  High vs Low      High       Low adapt coregulate        0     0.03 -0.03</span></span>
+<span><span class="co">##  High vs Low      High       Low adapt    discuss     0.04     0.07 -0.03</span></span>
+<span><span class="co">##  High vs Low      High       Low adapt    emotion     0.14     0.11  0.03</span></span>
+<span><span class="co">##  High vs Low      High       Low adapt    monitor     0.03     0.04 -0.01</span></span>
+<span><span class="co">##  High vs Low      High       Low adapt       plan     0.01     0.02     0</span></span>
+<span><span class="co">##  abs_diff rel_diff ratio log_ratio rank_a rank_b rank_diff percentile_diff</span></span>
+<span><span class="co">##         0       NA    NA         0      3   3.50     -0.50           -0.01</span></span>
+<span><span class="co">##      0.01     0.03  0.95     -0.01     70     70         0               0</span></span>
+<span><span class="co">##      0.06     0.06  1.12      0.04     79     81        -2           -0.02</span></span>
+<span><span class="co">##      0.03        1     0     -0.03      3     26       -23           -0.26</span></span>
+<span><span class="co">##      0.03     0.31  0.52     -0.03     35     40        -5           -0.06</span></span>
+<span><span class="co">##      0.03     0.12  1.27      0.03     58     54         4            0.05</span></span>
+<span><span class="co">##      0.01     0.11  0.80     -0.01     29     29         0               0</span></span>
+<span><span class="co">##         0     0.07  0.87         0     17     19        -2           -0.02</span></span>
+<span><span class="co">##   status higher</span></span>
+<span><span class="co">##  neither  equal</span></span>
+<span><span class="co">##     both    Low</span></span>
+<span><span class="co">##     both   High</span></span>
+<span><span class="co">##   only_b    Low</span></span>
+<span><span class="co">##     both    Low</span></span>
+<span><span class="co">##     both   High</span></span>
+<span><span class="co">##     both    Low</span></span>
+<span><span class="co">##     both    Low</span></span></code></pre>
+<p><code><a href="../reference/comparison_tables.html">edge_differences()</a></code> gives one row per cell: the two
+weights, their difference, its absolute value, the relative difference
+(<code>|a - b| / (|a| + |b|)</code>), the ratio, the ranks of the edge
+in each network, <code>status</code> (present in both networks, in one,
+or in neither) and <code>higher</code>, the network in which the edge is
+larger. <code>adapt</code> to <code>coregulate</code> exists only in Low
+(0 against 0.03).</p>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">comparison</span>, type <span class="op">=</span> <span class="st">"edges"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="compare-networks_files/figure-html/edges-plot-1.png" class="r-plt" alt="" width="864"></p>
+<p>The edge view draws the 20 largest differences as a line between the
+two weights, a diamond for High and a square for Low. The line is solid
+blue where High is higher and dashed red where Low is higher, and is
+labelled with the difference. <code>discuss</code> to
+<code>consensus</code> (0.42 in High, 0.21 in Low) and
+<code>synthesis</code> to <code>consensus</code> (0.58 against 0.39) are
+the largest differences in favour of High, and <code>synthesis</code> to
+<code>adapt</code> (0.14 against 0.30) in favour of Low.</p>
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">comparison</span>, type <span class="op">=</span> <span class="st">"networks"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="compare-networks_files/figure-html/networks-plot-1.png" class="r-plt" alt="" width="864"></p>
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">comparison</span>, type <span class="op">=</span> <span class="st">"difference"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="compare-networks_files/figure-html/difference-plot-1.png" class="r-plt" alt="" width="864"></p>
+<p>The networks view draws each network once; the difference view draws
+the signed difference network, blue for transitions stronger in High and
+red for transitions stronger in Low.</p>
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">comparison</span>, type <span class="op">=</span> <span class="st">"heatmap"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="compare-networks_files/figure-html/heatmap-plot-1.png" class="r-plt" alt="" width="864"></p>
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">comparison</span>, type <span class="op">=</span> <span class="st">"scatter"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="compare-networks_files/figure-html/scatter-plot-1.png" class="r-plt" alt="" width="864"></p>
+<p>The heatmap prints every cell of the difference matrix. The scatter
+plot sets each transition’s weight in High against its weight in Low;
+points on the diagonal are equal in both.</p>
+</div>
+<div class="section level3">
+<h3 id="nodes">Nodes<a class="anchor" aria-label="anchor" href="#nodes"></a>
+</h3>
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/comparison_tables.html">node_differences</a></span><span class="op">(</span><span class="va">comparison</span>, measure <span class="op">=</span> <span class="st">"InStrength"</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">##         pair network_a network_b       node    measure value_a value_b  diff</span></span>
+<span><span class="co">##  High vs Low      High       Low      adapt InStrength    0.22    0.45 -0.24</span></span>
+<span><span class="co">##  High vs Low      High       Low   cohesion InStrength    0.81    0.80  0.02</span></span>
+<span><span class="co">##  High vs Low      High       Low  consensus InStrength    2.95    2.42  0.54</span></span>
+<span><span class="co">##  High vs Low      High       Low coregulate InStrength    0.44    0.69 -0.25</span></span>
+<span><span class="co">##  High vs Low      High       Low    discuss InStrength    1.12    1.21 -0.09</span></span>
+<span><span class="co">##  High vs Low      High       Low    emotion InStrength       1    0.81  0.19</span></span>
+<span><span class="co">##  High vs Low      High       Low    monitor InStrength    0.30    0.39 -0.09</span></span>
+<span><span class="co">##  High vs Low      High       Low       plan InStrength    1.27    1.15  0.12</span></span>
+<span><span class="co">##  High vs Low      High       Low  synthesis InStrength    0.17    0.22 -0.05</span></span>
+<span><span class="co">##  abs_diff rank_a rank_b higher</span></span>
+<span><span class="co">##      0.24      2      3    Low</span></span>
+<span><span class="co">##      0.02      5      5   High</span></span>
+<span><span class="co">##      0.54      9      9   High</span></span>
+<span><span class="co">##      0.25      4      4    Low</span></span>
+<span><span class="co">##      0.09      7      8    Low</span></span>
+<span><span class="co">##      0.19      6      6   High</span></span>
+<span><span class="co">##      0.09      3      2    Low</span></span>
+<span><span class="co">##      0.12      8      7   High</span></span>
+<span><span class="co">##      0.05      1      1    Low</span></span></code></pre>
+<p><code><a href="../reference/comparison_tables.html">node_differences()</a></code> compares the centralities of each
+state, by default in-strength, out-strength and betweenness.
+<code>consensus</code> receives the most in both networks, more in High
+(2.95 against 2.42), and <code>adapt</code> and <code>coregulate</code>
+receive more in Low.</p>
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">comparison</span>, type <span class="op">=</span> <span class="st">"nodes"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="compare-networks_files/figure-html/nodes-plot-1.png" class="r-plt" alt="" width="864"></p>
+</div>
+</div>
+<div class="section level2">
+<h2 id="permutation-test">Permutation test<a class="anchor" aria-label="anchor" href="#permutation-test"></a>
+</h2>
+<p>The descriptive tables show where the networks differ, not whether a
+difference is larger than sampling would produce.
+<code>test = "permutation"</code> reassigns the sequences to the two
+groups 1,000 times, re-estimates both networks each time, and compares
+the observed difference of each edge and node measure with the
+reassigned ones (Saqr et al., 2025). Two global statistics test whether
+the networks differ at all: M, the sum of the absolute differences over
+all cells, and S, the largest.</p>
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">tested</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compare_networks.html">compare_networks</a></span><span class="op">(</span><span class="va">achievers</span>, test <span class="op">=</span> <span class="st">"permutation"</span>, iter <span class="op">=</span> <span class="fl">1000</span>,</span>
+<span>                           seed <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">tested</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##         pair network_a network_b n_cells n_differing share_higher_a</span></span>
 <span><span class="co">##  High vs Low      High       Low      81          78           0.51</span></span>
 <span><span class="co">##  share_higher_b mean_abs_diff max_abs_diff pearson spearman cosine jaccard</span></span>
@@ -102,102 +401,484 @@ compared with a permutation test (1,000 permutations).</p>
 <span><span class="co">##  discuss -&gt; consensus            High          42          16   2.61 0.001</span></span>
 <span><span class="co">##  s_stat   s_p</span></span>
 <span><span class="co">##    0.21 0.001</span></span></code></pre>
-<p>The networks are similar overall (Pearson 0.92, cosine 0.95, Jaccard
-0.75) but differ in 42 of 78 transitions and 16 of 27 node measures. The
-global test is significant (M = 2.61, p = 0.001).</p>
-<div class="section level2">
-<h2 id="networks">networks<a class="anchor" aria-label="anchor" href="#networks"></a>
-</h2>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">cmp</span>, type <span class="op">=</span> <span class="st">"networks"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="compare-networks_files/figure-html/unnamed-chunk-2-1.png" class="r-plt" alt="" width="864"></p>
-<p>The two networks side by side.</p>
+<p>42 of the 78 transitions and 16 of the 27 node measures differ at the
+5% level, and both global statistics are significant (M = 2.61, S =
+0.21, p = 0.001, the smallest p-value 1,000 permutations can give).
+<code>adjust</code> corrects the edge p-values for multiple testing, for
+example <code>adjust = "BH"</code>.</p>
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">tested</span>, type <span class="op">=</span> <span class="st">"inference"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="compare-networks_files/figure-html/inference-plot-1.png" class="r-plt" alt="" width="864"></p>
+<p>The inference view draws each edge difference as a bar from zero,
+with its p-value on the right; a filled marker is significant at
+0.05.</p>
 </div>
 <div class="section level2">
-<h2 id="difference">difference<a class="anchor" aria-label="anchor" href="#difference"></a>
+<h2 id="differences-in-centralities">Differences in centralities<a class="anchor" aria-label="anchor" href="#differences-in-centralities"></a>
 </h2>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">cmp</span>, type <span class="op">=</span> <span class="st">"difference"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="compare-networks_files/figure-html/unnamed-chunk-3-1.png" class="r-plt" alt="" width="864"></p>
-<p>High minus Low for each transition: blue is higher in High, red
-higher in Low; the line style also carries the sign.</p>
+<p><code>measures = "all"</code> compares nine centralities. In- and
+out-strength are the sums of a state’s incoming and outgoing transition
+probabilities (Opsahl, Agneessens, &amp; Skvoretz, 2010). Closeness is
+the inverse of the summed shortest-path distances to a state
+(<code>ClosenessIn</code>), from it (<code>ClosenessOut</code>) or
+ignoring direction (<code>Closeness</code>), and betweenness the number
+of shortest paths that pass through it (Freeman, 1978); a heavier edge
+is a shorter step. <code>BetweennessRSP</code> counts randomised
+shortest paths, which include routes slightly longer than the shortest
+(Kivimäki et al., 2016). <code>Diffusion</code> sums the weights of the
+walks of up to n steps that start at a state (Banerjee et al., 2013),
+and <code>Clustering</code> is the weighted clustering coefficient
+(Onnela et al., 2005). The permutation test gives each a p-value.</p>
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">centralities</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compare_networks.html">compare_networks</a></span><span class="op">(</span><span class="va">achievers</span>, measures <span class="op">=</span> <span class="st">"all"</span>,</span>
+<span>                                 test <span class="op">=</span> <span class="st">"permutation"</span>, iter <span class="op">=</span> <span class="fl">1000</span>, seed <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">centralities</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">##         pair network_a network_b n_cells n_differing share_higher_a</span></span>
+<span><span class="co">##  High vs Low      High       Low      81          78           0.51</span></span>
+<span><span class="co">##  share_higher_b mean_abs_diff max_abs_diff pearson spearman cosine jaccard</span></span>
+<span><span class="co">##            0.46          0.03         0.21    0.92     0.92   0.95    0.75</span></span>
+<span><span class="co">##              top_edge top_edge_higher n_sig_edges n_sig_nodes m_stat   m_p</span></span>
+<span><span class="co">##  discuss -&gt; consensus            High          42          55   2.61 0.001</span></span>
+<span><span class="co">##  s_stat   s_p</span></span>
+<span><span class="co">##    0.21 0.001</span></span></code></pre>
+<p>55 of the 81 node measures (nine states, nine measures) differ at the
+5% level: all nine closeness values, eight each for
+randomised-shortest-path betweenness and clustering, seven each for
+in-strength and in-closeness, five each for out-strength and diffusion,
+four for betweenness and two for out-closeness.</p>
+<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/comparison_tables.html">node_differences</a></span><span class="op">(</span><span class="va">centralities</span>, measure <span class="op">=</span> <span class="st">"Betweenness"</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">##         pair network_a network_b       node     measure value_a value_b diff</span></span>
+<span><span class="co">##  High vs Low      High       Low      adapt Betweenness       1       4   -3</span></span>
+<span><span class="co">##  High vs Low      High       Low   cohesion Betweenness       0       0    0</span></span>
+<span><span class="co">##  High vs Low      High       Low  consensus Betweenness      30      25    5</span></span>
+<span><span class="co">##  High vs Low      High       Low coregulate Betweenness       0       3   -3</span></span>
+<span><span class="co">##  High vs Low      High       Low    discuss Betweenness      16      14    2</span></span>
+<span><span class="co">##  High vs Low      High       Low    emotion Betweenness       5       3    2</span></span>
+<span><span class="co">##  High vs Low      High       Low    monitor Betweenness       0       0    0</span></span>
+<span><span class="co">##  High vs Low      High       Low       plan Betweenness      11       8    3</span></span>
+<span><span class="co">##  High vs Low      High       Low  synthesis Betweenness       7       0    7</span></span>
+<span><span class="co">##  abs_diff rank_a rank_b higher perm_effect perm_p perm_sig   sig    evidence</span></span>
+<span><span class="co">##         3      4      6    Low       -6.14  0.001     TRUE  TRUE permutation</span></span>
+<span><span class="co">##         0      2      2  equal           0  1.000    FALSE FALSE permutation</span></span>
+<span><span class="co">##         5      9      9   High        6.65  0.001     TRUE  TRUE permutation</span></span>
+<span><span class="co">##         3      2   4.50    Low       -0.93  0.289    FALSE FALSE permutation</span></span>
+<span><span class="co">##         2      8      8   High        1.81  0.224    FALSE FALSE permutation</span></span>
+<span><span class="co">##         2      5   4.50   High       13.80  0.001     TRUE  TRUE permutation</span></span>
+<span><span class="co">##         0      2      2  equal          NA  1.000    FALSE FALSE permutation</span></span>
+<span><span class="co">##         3      7      7   High        0.81  0.373    FALSE FALSE permutation</span></span>
+<span><span class="co">##         7      6      2   High       22.36  0.003     TRUE  TRUE permutation</span></span></code></pre>
+<p><code>consensus</code> lies on most shortest paths in both networks,
+more in High (30 against 25, p = 0.001). <code>synthesis</code> lies on
+7 shortest paths in High and none in Low (p = 0.003), and
+<code>emotion</code> on 5 against 3 (p = 0.001); <code>adapt</code> lies
+on more in Low (4 against 1, p = 0.001). <code>coregulate</code>,
+<code>discuss</code> and <code>plan</code> differ by 2 or 3 paths
+without significance.</p>
+<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/comparison_tables.html">node_differences</a></span><span class="op">(</span><span class="va">centralities</span>, measure <span class="op">=</span> <span class="st">"BetweennessRSP"</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">##         pair network_a network_b       node        measure value_a value_b diff</span></span>
+<span><span class="co">##  High vs Low      High       Low      adapt BetweennessRSP       1       1    0</span></span>
+<span><span class="co">##  High vs Low      High       Low   cohesion BetweennessRSP      26      13   13</span></span>
+<span><span class="co">##  High vs Low      High       Low  consensus BetweennessRSP     121      88   33</span></span>
+<span><span class="co">##  High vs Low      High       Low coregulate BetweennessRSP      30      25    5</span></span>
+<span><span class="co">##  High vs Low      High       Low    discuss BetweennessRSP      63      45   18</span></span>
+<span><span class="co">##  High vs Low      High       Low    emotion BetweennessRSP      48      26   22</span></span>
+<span><span class="co">##  High vs Low      High       Low    monitor BetweennessRSP      13       9    4</span></span>
+<span><span class="co">##  High vs Low      High       Low       plan BetweennessRSP      69      55   14</span></span>
+<span><span class="co">##  High vs Low      High       Low  synthesis BetweennessRSP       7       1    6</span></span>
+<span><span class="co">##  abs_diff rank_a rank_b higher perm_effect perm_p perm_sig   sig    evidence</span></span>
+<span><span class="co">##         0      1   1.50  equal          NA  1.000    FALSE FALSE permutation</span></span>
+<span><span class="co">##        13      4      4   High        7.25  0.001     TRUE  TRUE permutation</span></span>
+<span><span class="co">##        33      9      9   High       11.25  0.001     TRUE  TRUE permutation</span></span>
+<span><span class="co">##         5      5      5   High        2.61  0.019     TRUE  TRUE permutation</span></span>
+<span><span class="co">##        18      7      7   High        8.46  0.001     TRUE  TRUE permutation</span></span>
+<span><span class="co">##        22      6      6   High        9.90  0.001     TRUE  TRUE permutation</span></span>
+<span><span class="co">##         4      3      3   High        2.61  0.029     TRUE  TRUE permutation</span></span>
+<span><span class="co">##        14      8      8   High        5.53  0.001     TRUE  TRUE permutation</span></span>
+<span><span class="co">##         6      2   1.50   High        4.35  0.001     TRUE  TRUE permutation</span></span></code></pre>
+<p>Counting near-shortest routes as well, every state except
+<code>adapt</code> lies on more routes in High, and all eight
+differences are significant; <code>consensus</code> has 121 against
+88.</p>
+<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/comparison_tables.html">node_differences</a></span><span class="op">(</span><span class="va">centralities</span>, measure <span class="op">=</span> <span class="st">"Closeness"</span>, digits <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">##         pair network_a network_b       node   measure value_a value_b   diff</span></span>
+<span><span class="co">##  High vs Low      High       Low      adapt Closeness   0.026   0.024  0.002</span></span>
+<span><span class="co">##  High vs Low      High       Low   cohesion Closeness   0.028   0.025  0.003</span></span>
+<span><span class="co">##  High vs Low      High       Low  consensus Closeness   0.041   0.035  0.006</span></span>
+<span><span class="co">##  High vs Low      High       Low coregulate Closeness   0.020   0.022 -0.001</span></span>
+<span><span class="co">##  High vs Low      High       Low    discuss Closeness   0.031   0.022  0.009</span></span>
+<span><span class="co">##  High vs Low      High       Low    emotion Closeness   0.025   0.021  0.004</span></span>
+<span><span class="co">##  High vs Low      High       Low    monitor Closeness   0.021   0.018  0.003</span></span>
+<span><span class="co">##  High vs Low      High       Low       plan Closeness   0.028   0.026  0.002</span></span>
+<span><span class="co">##  High vs Low      High       Low  synthesis Closeness   0.027   0.023  0.004</span></span>
+<span><span class="co">##  abs_diff rank_a rank_b higher perm_effect perm_p perm_sig  sig    evidence</span></span>
+<span><span class="co">##     0.002      4      6   High       2.781  0.006     TRUE TRUE permutation</span></span>
+<span><span class="co">##     0.003      6      7   High       4.453  0.001     TRUE TRUE permutation</span></span>
+<span><span class="co">##     0.006      9      9   High       7.135  0.001     TRUE TRUE permutation</span></span>
+<span><span class="co">##     0.001      1      3    Low      -2.289  0.023     TRUE TRUE permutation</span></span>
+<span><span class="co">##     0.009      8      4   High      11.986  0.001     TRUE TRUE permutation</span></span>
+<span><span class="co">##     0.004      3      2   High       6.708  0.001     TRUE TRUE permutation</span></span>
+<span><span class="co">##     0.003      2      1   High       5.684  0.001     TRUE TRUE permutation</span></span>
+<span><span class="co">##     0.002      7      8   High       3.614  0.001     TRUE TRUE permutation</span></span>
+<span><span class="co">##     0.004      5      5   High       4.940  0.001     TRUE TRUE permutation</span></span></code></pre>
+<p>Closeness is higher in High for every state except
+<code>coregulate</code>.</p>
+<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">centralities</span>, type <span class="op">=</span> <span class="st">"nodes"</span>,</span>
+<span>     measure <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Betweenness"</span>, <span class="st">"BetweennessRSP"</span>, <span class="st">"Closeness"</span>, <span class="st">"Diffusion"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<p><img src="compare-networks_files/figure-html/centralities-plot-1.png" class="r-plt" alt="" width="864"></p>
+<p>The node view draws each state’s value in both networks, a diamond
+for High and a square for Low, joined by a solid blue line where High is
+higher and a dashed red line where Low is higher; stars mark the
+significant differences.</p>
 </div>
 <div class="section level2">
-<h2 id="edges">edges<a class="anchor" aria-label="anchor" href="#edges"></a>
+<h2 id="edge-betweenness">Edge betweenness<a class="anchor" aria-label="anchor" href="#edge-betweenness"></a>
 </h2>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">cmp</span>, type <span class="op">=</span> <span class="st">"edges"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="compare-networks_files/figure-html/unnamed-chunk-4-1.png" class="r-plt" alt="" width="864"></p>
-<p>The largest differences: <code>discuss</code> to
-<code>consensus</code> (0.42 vs 0.21) and <code>synthesis</code> to
-<code>consensus</code> (0.58 vs 0.39) are higher in High;
-<code>synthesis</code> to <code>adapt</code> is higher in Low (0.14 vs
-0.30). All have p = 0.001.</p>
+<p>Betweenness can also be computed for edges: the number of shortest
+paths between states that pass through an edge (Girvan &amp; Newman,
+2002). An edge with a high value carries many of the routes through the
+network. <code><a href="../reference/net_edge_betweenness.html">net_edge_betweenness()</a></code> returns one network per
+group whose weights are these counts, and <code><a href="../reference/permutation.html">permutation()</a></code>
+tests the difference of every edge: it reassigns the sequences between
+the groups, re-estimates both transition networks and recomputes their
+edge betweenness each time.</p>
+<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">edge_betweenness</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/net_edge_betweenness.html">net_edge_betweenness</a></span><span class="op">(</span><span class="va">achievers</span><span class="op">)</span></span>
+<span><span class="va">edge_betweenness</span></span></code></pre></div>
+<pre><code><span><span class="co">## Group Networks (2 groups)</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">##   Group  Nodes  Edges  Weights</span></span>
+<span><span class="co">##   High   9      24     [1.000, 15.000]</span></span>
+<span><span class="co">##   Low    9      29     [1.000, 14.000]</span></span></code></pre>
+<div class="sourceCode" id="cb36"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">routes</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/permutation.html">permutation</a></span><span class="op">(</span><span class="va">edge_betweenness</span>, iter <span class="op">=</span> <span class="fl">1000</span>, seed <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
+<span><span class="va">routes</span></span></code></pre></div>
+<pre><code><span><span class="co">## Grouped Permutation Test</span></span>
+<span><span class="co">## Groups: High vs Low </span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## -- High vs Low --</span></span>
+<span><span class="co">## Permutation Test: Edge-Betweenness Network [directed]</span></span>
+<span><span class="co">##   Iterations: 1000  |  Alpha: 0.05</span></span>
+<span><span class="co">##   Nodes: 9  |  Edges tested: 29  |  Significant: 10</span></span></code></pre>
+<div class="sourceCode" id="cb38"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">routes</span><span class="op">)</span>, <span class="va">sig</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">##          group       from         to weight_x weight_y diff effect_size</span></span>
+<span><span class="co">## 1  High vs Low      adapt   cohesion        2        4   -2  -44.766148</span></span>
+<span><span class="co">## 4  High vs Low   cohesion  consensus        7        3    4   14.910848</span></span>
+<span><span class="co">## 5  High vs Low   cohesion coregulate        0        4   -4  -14.910848</span></span>
+<span><span class="co">## 8  High vs Low  consensus    discuss       15       12    3   11.959977</span></span>
+<span><span class="co">## 11 High vs Low coregulate    discuss        4        6   -2   -5.064736</span></span>
+<span><span class="co">## 15 High vs Low    discuss      adapt        0        9   -9  -28.749445</span></span>
+<span><span class="co">## 16 High vs Low    discuss  consensus        7        4    3    3.062634</span></span>
+<span><span class="co">## 18 High vs Low    discuss  synthesis       15        8    7   22.360680</span></span>
+<span><span class="co">## 19 High vs Low    emotion   cohesion        6        4    2   13.801640</span></span>
+<span><span class="co">## 28 High vs Low  synthesis      adapt        9        3    6   10.341155</span></span>
+<span><span class="co">##        p_value  sig</span></span>
+<span><span class="co">## 1  0.000999001 TRUE</span></span>
+<span><span class="co">## 4  0.000999001 TRUE</span></span>
+<span><span class="co">## 5  0.000999001 TRUE</span></span>
+<span><span class="co">## 8  0.007992008 TRUE</span></span>
+<span><span class="co">## 11 0.000999001 TRUE</span></span>
+<span><span class="co">## 15 0.000999001 TRUE</span></span>
+<span><span class="co">## 16 0.015984016 TRUE</span></span>
+<span><span class="co">## 18 0.002997003 TRUE</span></span>
+<span><span class="co">## 19 0.000999001 TRUE</span></span>
+<span><span class="co">## 28 0.002997003 TRUE</span></span></code></pre>
+<p>Shortest paths run over 24 edges in High and 29 in Low, and 10 of the
+29 edges tested differ in the number of paths they carry. In Low, 9
+shortest paths pass through <code>discuss</code> to <code>adapt</code>
+and none in High; in High, <code>discuss</code> to
+<code>synthesis</code> carries 15 against 8 and <code>synthesis</code>
+to <code>adapt</code> 9 against 3.</p>
+<div class="sourceCode" id="cb40"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://sonsoles.me/cograph/" class="external-link">cograph</a></span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://sonsoles.me/cograph/reference/splot.html" class="external-link">splot</a></span><span class="op">(</span><span class="va">routes</span>, edge_positive_color <span class="op">=</span> <span class="st">"#4A6FE3"</span>,</span>
+<span>      edge_negative_color <span class="op">=</span> <span class="st">"#D33F6A"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="compare-networks_files/figure-html/edge-betweenness-plot-1.png" class="r-plt" alt="" width="864"></p>
+<p>cograph draws the edges that differ, blue where High carries more
+paths and red where Low does.</p>
+<p><code><a href="../reference/bayes_compare.html">bayes_compare()</a></code> is the Bayesian route. Edge betweenness
+is not a simple function of single transition probabilities, so it draws
+whole transition matrices from the Dirichlet posterior of each network,
+with the Jeffreys prior added to the counts, and recomputes edge
+betweenness on every one of 10,000 draws. <code>diff</code> is the
+posterior mean difference in the number of shortest paths, with its 95%
+credible interval; an edge is credibly different when the interval
+excludes zero.</p>
+<div class="sourceCode" id="cb41"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">routes_posterior</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/bayes_compare.html">bayes_compare</a></span><span class="op">(</span><span class="va">edge_betweenness</span>, seed <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
+<span><span class="va">routes_posterior</span></span></code></pre></div>
+<pre><code><span><span class="co">## Grouped Bayesian Dirichlet-Multinomial Comparison</span></span>
+<span><span class="co">## Comparisons: High vs Low </span></span>
+<span><span class="co">## Use summary() for combined edge-level results.</span></span></code></pre>
+<div class="sourceCode" id="cb43"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">routes_posterior</span><span class="op">)</span>, <span class="fl">8</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">##    comparison     from         to weight_x weight_y count_x count_y    diff</span></span>
+<span><span class="co">## 1 High vs Low    adapt   cohesion   1.9321   3.3765      37     102 -1.4444</span></span>
+<span><span class="co">## 2 High vs Low    adapt  consensus   6.0050   5.9339      73     170  0.0711</span></span>
+<span><span class="co">## 3 High vs Low    adapt coregulate   0.0000   0.0000       0      11  0.0000</span></span>
+<span><span class="co">## 4 High vs Low    adapt    discuss   0.0000   0.0166       5      25 -0.0166</span></span>
+<span><span class="co">## 5 High vs Low    adapt    emotion   0.9406   1.5377      20      41 -0.5971</span></span>
+<span><span class="co">## 6 High vs Low    adapt    monitor   0.0553   0.0341       4      13  0.0212</span></span>
+<span><span class="co">## 7 High vs Low    adapt       plan   0.0000   0.0000       2       6  0.0000</span></span>
+<span><span class="co">## 8 High vs Low cohesion      adapt   0.0000   0.0000       5       0  0.0000</span></span>
+<span><span class="co">##   effect_size ci_lower ci_upper ci_width p_difference p_value   sig</span></span>
+<span><span class="co">## 1 -2.00628791       -3        0        3       0.9999  0.0002 FALSE</span></span>
+<span><span class="co">## 2  0.16049834       -1        1        2       0.8894  0.2212 FALSE</span></span>
+<span><span class="co">## 3  0.00000000        0        0        0       1.0000  0.0000 FALSE</span></span>
+<span><span class="co">## 4 -0.09148479        0        0        0       1.0000  0.0000 FALSE</span></span>
+<span><span class="co">## 5 -0.98620607       -2        1        3       0.9713  0.0574 FALSE</span></span>
+<span><span class="co">## 6  0.06894516       -1        1        2       0.9472  0.1056 FALSE</span></span>
+<span><span class="co">## 7  0.00000000        0        0        0       1.0000  0.0000 FALSE</span></span>
+<span><span class="co">## 8  0.00000000        0        0        0       1.0000  0.0000 FALSE</span></span></code></pre>
+<p>2 of the 78 edges are credibly different: <code>discuss</code> to
+<code>consensus</code> carries 2.9 more shortest paths in High (95%
+interval 1 to 4), and <code>coregulate</code> to <code>consensus</code>
+carries one path in Low and almost none in High. Betweenness counts
+whole paths, so its posterior intervals run between whole numbers and
+are wide. <code>discuss</code> to <code>adapt</code>, which carries 7.1
+paths in Low and none in High on average, has an interval from −9 to 0:
+every draw has it lower in High (<code>p_difference</code> = 1), but the
+interval reaches zero, so it is not credibly different. The permutation
+test found 10 edges, the Bayesian comparison 2; the two answer the
+question in different ways, by reassigning whole sequences and by
+drawing transition probabilities independently.</p>
+<div class="sourceCode" id="cb45"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">routes_posterior</span><span class="op">)</span></span></code></pre></div>
+<p><img src="compare-networks_files/figure-html/edge-betweenness-bayes-plot-1.png" class="r-plt" alt="" width="864"></p>
 </div>
 <div class="section level2">
-<h2 id="nodes">nodes<a class="anchor" aria-label="anchor" href="#nodes"></a>
+<h2 id="bayesian-comparison">Bayesian comparison<a class="anchor" aria-label="anchor" href="#bayesian-comparison"></a>
 </h2>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">cmp</span>, type <span class="op">=</span> <span class="st">"nodes"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="compare-networks_files/figure-html/unnamed-chunk-5-1.png" class="r-plt" alt="" width="864"></p>
-<p>Centrality differences per state. <code>synthesis</code> has higher
-betweenness in High (7 vs 0, p = 0.003); <code>adapt</code> in Low (4 vs
-1, p = 0.001).</p>
+<p><code>test = "bayes"</code> models the transitions out of each state
+with a Dirichlet posterior in each network, with the Jeffreys prior of
+0.5 added to every count (Jeffreys, 1946; Johnston &amp; Jendoubi,
+2026), and draws the difference of every edge from the two posteriors
+(Gelman et al., 2013). It reports the posterior mean difference, its 95%
+credible interval and the probability of direction, the posterior
+probability that the difference has the sign of its mean (Makowski et
+al., 2019). <code>bayes_p</code> is <code>2 * (1 - pd)</code>, a
+two-sided p-value equivalent.</p>
+<div class="sourceCode" id="cb46"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">bayesian</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compare_networks.html">compare_networks</a></span><span class="op">(</span><span class="va">achievers</span>, test <span class="op">=</span> <span class="st">"bayes"</span>, iter <span class="op">=</span> <span class="fl">1000</span>,</span>
+<span>                             seed <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">bayesian</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">##         pair network_a network_b n_cells n_differing share_higher_a</span></span>
+<span><span class="co">##  High vs Low      High       Low      81          78           0.51</span></span>
+<span><span class="co">##  share_higher_b mean_abs_diff max_abs_diff pearson spearman cosine jaccard</span></span>
+<span><span class="co">##            0.46          0.03         0.21    0.92     0.92   0.95    0.75</span></span>
+<span><span class="co">##              top_edge top_edge_higher n_sig_edges</span></span>
+<span><span class="co">##  discuss -&gt; consensus            High          39</span></span></code></pre>
+<p>39 transitions have a 95% credible interval that excludes zero,
+against 42 significant in the permutation test; the two agree on 76 of
+the 81 cells. The posterior treats the transitions as independent
+counts, while the permutation test reassigns whole sequences.</p>
+<div class="sourceCode" id="cb48"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">bayesian</span>, type <span class="op">=</span> <span class="st">"inference"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="compare-networks_files/figure-html/bayes-plot-1.png" class="r-plt" alt="" width="864"></p>
+<div class="section level3">
+<h3 id="practical-equivalence">Practical equivalence<a class="anchor" aria-label="anchor" href="#practical-equivalence"></a>
+</h3>
+<p>A credible interval that excludes zero says the difference is not
+zero, not that it is large enough to matter. <code>rope</code> sets a
+region of practical equivalence around zero on the difference scale
+(Kruschke, 2018); here a difference of up to 0.02 in a transition
+probability is treated as negligible. Each edge is classed as
+<code>different</code> when its 95% credible interval lies entirely
+outside the region, <code>equivalent</code> when it lies entirely
+inside, and <code>undecided</code> otherwise.</p>
+<div class="sourceCode" id="cb49"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">equivalence</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compare_networks.html">compare_networks</a></span><span class="op">(</span><span class="va">achievers</span>, test <span class="op">=</span> <span class="st">"bayes"</span>, iter <span class="op">=</span> <span class="fl">1000</span>,</span>
+<span>                                seed <span class="op">=</span> <span class="fl">1</span>, rope <span class="op">=</span> <span class="fl">0.02</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="fu"><a href="../reference/comparison_tables.html">edge_differences</a></span><span class="op">(</span><span class="va">equivalence</span><span class="op">)</span>, <span class="va">bayes_decision</span> <span class="op">==</span> <span class="st">"different"</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">##         pair network_a network_b       from         to weight_a weight_b  diff</span></span>
+<span><span class="co">##  High vs Low      High       Low   cohesion   cohesion     0.04     0.01  0.04</span></span>
+<span><span class="co">##  High vs Low      High       Low   cohesion  consensus     0.54     0.45  0.09</span></span>
+<span><span class="co">##  High vs Low      High       Low   cohesion coregulate     0.08     0.17 -0.09</span></span>
+<span><span class="co">##  High vs Low      High       Low  consensus    discuss     0.23     0.14  0.10</span></span>
+<span><span class="co">##  High vs Low      High       Low  consensus       plan     0.36     0.43 -0.07</span></span>
+<span><span class="co">##  High vs Low      High       Low coregulate    discuss     0.23     0.31 -0.07</span></span>
+<span><span class="co">##  High vs Low      High       Low coregulate    emotion     0.20     0.15  0.06</span></span>
+<span><span class="co">##  High vs Low      High       Low    discuss      adapt     0.02     0.12 -0.10</span></span>
+<span><span class="co">##  High vs Low      High       Low    discuss  consensus     0.42     0.21  0.21</span></span>
+<span><span class="co">##  High vs Low      High       Low    discuss    discuss     0.17     0.22 -0.05</span></span>
+<span><span class="co">##  High vs Low      High       Low    discuss  synthesis     0.11     0.18 -0.07</span></span>
+<span><span class="co">##  High vs Low      High       Low    emotion    discuss     0.12     0.08  0.04</span></span>
+<span><span class="co">##  High vs Low      High       Low       plan    emotion     0.18     0.12  0.07</span></span>
+<span><span class="co">##  High vs Low      High       Low       plan       plan     0.33     0.42 -0.09</span></span>
+<span><span class="co">##  High vs Low      High       Low  synthesis      adapt     0.14     0.30 -0.16</span></span>
+<span><span class="co">##  High vs Low      High       Low  synthesis  consensus     0.58     0.39  0.19</span></span>
+<span><span class="co">##  High vs Low      High       Low  synthesis coregulate     0.01     0.07 -0.05</span></span>
+<span><span class="co">##  High vs Low      High       Low  synthesis    discuss     0.03     0.09 -0.06</span></span>
+<span><span class="co">##  High vs Low      High       Low  synthesis       plan     0.14     0.02  0.12</span></span>
+<span><span class="co">##  abs_diff rel_diff ratio log_ratio rank_a rank_b rank_diff percentile_diff</span></span>
+<span><span class="co">##      0.04     0.74  6.62      0.04     38     11        27            0.33</span></span>
+<span><span class="co">##      0.09     0.09  1.19      0.06     80     80         0               0</span></span>
+<span><span class="co">##      0.09     0.35  0.49     -0.08     47     63       -16           -0.20</span></span>
+<span><span class="co">##      0.10     0.26  1.70      0.08     68     59         9            0.11</span></span>
+<span><span class="co">##      0.07     0.08  0.84     -0.05     76     79        -3           -0.04</span></span>
+<span><span class="co">##      0.07     0.13  0.77     -0.06     69     74        -5           -0.06</span></span>
+<span><span class="co">##      0.06     0.17  1.40      0.05     66     60         6            0.07</span></span>
+<span><span class="co">##      0.10     0.67  0.20     -0.09     28     57       -29           -0.36</span></span>
+<span><span class="co">##      0.21     0.33  1.98      0.16     78     67        11            0.14</span></span>
+<span><span class="co">##      0.05     0.13  0.76     -0.04     63     69        -6           -0.07</span></span>
+<span><span class="co">##      0.07     0.25  0.60     -0.06     53     64       -11           -0.14</span></span>
+<span><span class="co">##      0.04     0.22  1.57      0.04     57     44        13            0.16</span></span>
+<span><span class="co">##      0.07     0.22  1.58      0.06     65     56         9            0.11</span></span>
+<span><span class="co">##      0.09     0.12  0.79     -0.06     74     78        -4           -0.05</span></span>
+<span><span class="co">##      0.16     0.35  0.48     -0.13  59.50     73    -13.50           -0.16</span></span>
+<span><span class="co">##      0.19     0.20  1.49      0.13     81     77         4            0.05</span></span>
+<span><span class="co">##      0.05     0.65  0.22     -0.05     18     39       -21           -0.26</span></span>
+<span><span class="co">##      0.06     0.51  0.33     -0.06  30.50     49    -18.50           -0.22</span></span>
+<span><span class="co">##      0.12     0.71  5.98      0.11  59.50     24     35.50            0.44</span></span>
+<span><span class="co">##  status higher bayes_diff bayes_ci_lower bayes_ci_upper bayes_pd bayes_p</span></span>
+<span><span class="co">##    both   High       0.04           0.02           0.05    1.000   0.000</span></span>
+<span><span class="co">##    both   High       0.09           0.04           0.13    1.000   0.000</span></span>
+<span><span class="co">##    both    Low      -0.08          -0.11          -0.05    1.000   0.000</span></span>
+<span><span class="co">##    both   High       0.10           0.08           0.12    1.000   0.000</span></span>
+<span><span class="co">##    both    Low      -0.07          -0.09          -0.04    1.000   0.000</span></span>
+<span><span class="co">##    both    Low      -0.07          -0.11          -0.03    1.000   0.000</span></span>
+<span><span class="co">##    both   High       0.06           0.02           0.09    1.000   0.000</span></span>
+<span><span class="co">##    both    Low      -0.10          -0.11          -0.08    1.000   0.000</span></span>
+<span><span class="co">##    both   High       0.21           0.18           0.24    1.000   0.000</span></span>
+<span><span class="co">##    both    Low      -0.05          -0.08          -0.03    1.000   0.000</span></span>
+<span><span class="co">##    both    Low      -0.07          -0.09          -0.05    1.000   0.000</span></span>
+<span><span class="co">##    both   High       0.04           0.02           0.07    1.000   0.000</span></span>
+<span><span class="co">##    both   High       0.07           0.05           0.09    1.000   0.000</span></span>
+<span><span class="co">##    both    Low      -0.09          -0.11          -0.07    1.000   0.000</span></span>
+<span><span class="co">##    both    Low      -0.16          -0.22          -0.10    1.000   0.000</span></span>
+<span><span class="co">##    both   High       0.19           0.11           0.26    1.000   0.000</span></span>
+<span><span class="co">##    both    Low      -0.05          -0.08          -0.02    1.000   0.000</span></span>
+<span><span class="co">##    both    Low      -0.06          -0.09          -0.02    0.998   0.004</span></span>
+<span><span class="co">##    both   High       0.12           0.08           0.16    1.000   0.000</span></span>
+<span><span class="co">##  bayes_sig bayes_p_rope bayes_decision  sig evidence</span></span>
+<span><span class="co">##       TRUE        0.010      different TRUE    bayes</span></span>
+<span><span class="co">##       TRUE        0.002      different TRUE    bayes</span></span>
+<span><span class="co">##       TRUE        0.000      different TRUE    bayes</span></span>
+<span><span class="co">##       TRUE        0.000      different TRUE    bayes</span></span>
+<span><span class="co">##       TRUE        0.000      different TRUE    bayes</span></span>
+<span><span class="co">##       TRUE        0.006      different TRUE    bayes</span></span>
+<span><span class="co">##       TRUE        0.015      different TRUE    bayes</span></span>
+<span><span class="co">##       TRUE        0.000      different TRUE    bayes</span></span>
+<span><span class="co">##       TRUE        0.000      different TRUE    bayes</span></span>
+<span><span class="co">##       TRUE        0.005      different TRUE    bayes</span></span>
+<span><span class="co">##       TRUE        0.000      different TRUE    bayes</span></span>
+<span><span class="co">##       TRUE        0.017      different TRUE    bayes</span></span>
+<span><span class="co">##       TRUE        0.000      different TRUE    bayes</span></span>
+<span><span class="co">##       TRUE        0.000      different TRUE    bayes</span></span>
+<span><span class="co">##       TRUE        0.000      different TRUE    bayes</span></span>
+<span><span class="co">##       TRUE        0.000      different TRUE    bayes</span></span>
+<span><span class="co">##       TRUE        0.018      different TRUE    bayes</span></span>
+<span><span class="co">##       TRUE        0.018      different TRUE    bayes</span></span>
+<span><span class="co">##       TRUE        0.000      different TRUE    bayes</span></span></code></pre>
+<p>19 transitions are different, 22 practically equivalent and 40
+undecided. The different ones include the largest differences of the
+descriptive comparison, such as <code>discuss</code> to
+<code>consensus</code> and <code>synthesis</code> to
+<code>adapt</code>.</p>
+</div>
+<div class="section level3">
+<h3 id="bayes_compare">
+<code>bayes_compare()</code><a class="anchor" aria-label="anchor" href="#bayes_compare"></a>
+</h3>
+<p><code><a href="../reference/bayes_compare.html">bayes_compare()</a></code> runs the same model on its own, with
+10,000 posterior draws by default. An edge is credibly different when
+its 95% interval excludes zero, its posterior mean difference exceeds
+0.01 in absolute value, and the interval bound nearest zero exceeds
+0.001.</p>
+<div class="sourceCode" id="cb51"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">posterior</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/bayes_compare.html">bayes_compare</a></span><span class="op">(</span><span class="va">achievers</span>, seed <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">posterior</span><span class="op">)</span>, <span class="fl">8</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">##    comparison     from         to    weight_x     weight_y count_x count_y</span></span>
+<span><span class="co">## 1 High vs Low    adapt   cohesion 0.257731959 0.2751677852      37     102</span></span>
+<span><span class="co">## 2 High vs Low    adapt  consensus 0.505154639 0.4577181208      73     170</span></span>
+<span><span class="co">## 3 High vs Low    adapt coregulate 0.003436426 0.0308724832       0      11</span></span>
+<span><span class="co">## 4 High vs Low    adapt    discuss 0.037800687 0.0684563758       5      25</span></span>
+<span><span class="co">## 5 High vs Low    adapt    emotion 0.140893471 0.1114093960      20      41</span></span>
+<span><span class="co">## 6 High vs Low    adapt    monitor 0.030927835 0.0362416107       4      13</span></span>
+<span><span class="co">## 7 High vs Low    adapt       plan 0.017182131 0.0174496644       2       6</span></span>
+<span><span class="co">## 8 High vs Low cohesion      adapt 0.005835544 0.0006565988       5       0</span></span>
+<span><span class="co">##            diff effect_size      ci_lower     ci_upper   ci_width p_difference</span></span>
+<span><span class="co">## 1 -0.0174358265 -0.40367227 -0.0996957548  0.069375472 0.16907123       0.6604</span></span>
+<span><span class="co">## 2  0.0474365184  0.97130014 -0.0477451105  0.141177354 0.18892246       0.8275</span></span>
+<span><span class="co">## 3 -0.0274360571 -2.65867974 -0.0485109892 -0.007643052 0.04086794       0.9922</span></span>
+<span><span class="co">## 4 -0.0306556886 -1.48677598 -0.0686210328  0.012374624 0.08099566       0.9274</span></span>
+<span><span class="co">## 5  0.0294840748  0.90266790 -0.0306187996  0.096729522 0.12734832       0.8170</span></span>
+<span><span class="co">## 6 -0.0053137757 -0.30862241 -0.0368038272  0.031956436 0.06876026       0.6535</span></span>
+<span><span class="co">## 7 -0.0002675338 -0.02069695 -0.0223225137  0.028841680 0.05116419       0.5454</span></span>
+<span><span class="co">## 8  0.0051789449  1.98117156  0.0008755307  0.011069356 0.01019383       0.9895</span></span>
+<span><span class="co">##   p_value   sig</span></span>
+<span><span class="co">## 1  0.6792 FALSE</span></span>
+<span><span class="co">## 2  0.3450 FALSE</span></span>
+<span><span class="co">## 3  0.0156  TRUE</span></span>
+<span><span class="co">## 4  0.1452 FALSE</span></span>
+<span><span class="co">## 5  0.3660 FALSE</span></span>
+<span><span class="co">## 6  0.6930 FALSE</span></span>
+<span><span class="co">## 7  0.9092 FALSE</span></span>
+<span><span class="co">## 8  0.0210 FALSE</span></span></code></pre>
+<p>The table gives each transition’s weight and count in both networks,
+the posterior mean difference, an effect size (the difference divided by
+its posterior standard deviation), the credible interval and the
+probability that the difference has the sign of its mean
+(<code>p_difference</code>). 38 transitions are credibly different.
+<code>adapt</code> to <code>coregulate</code> occurs 11 times in Low and
+never in High; its interval, [−0.049, −0.008], excludes zero.</p>
+<div class="sourceCode" id="cb53"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">posterior</span><span class="op">)</span></span></code></pre></div>
+<p><img src="compare-networks_files/figure-html/bayes-compare-plot-1.png" class="r-plt" alt="" width="864"></p>
+<p>The plot draws the credibly different transitions as a difference
+network, blue where High is higher and red where Low is higher, each
+edge labelled with its posterior mean difference and credible
+interval.</p>
+</div>
 </div>
 <div class="section level2">
-<h2 id="global">global<a class="anchor" aria-label="anchor" href="#global"></a>
+<h2 id="bootstrap-of-the-structure">Bootstrap of the structure<a class="anchor" aria-label="anchor" href="#bootstrap-of-the-structure"></a>
 </h2>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">cmp</span>, type <span class="op">=</span> <span class="st">"global"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="compare-networks_files/figure-html/unnamed-chunk-6-1.png" class="r-plt" alt="" width="864"></p>
-<p>The 22 similarity and distance metrics of
-<code>global_differences(cmp)</code>, grouped by category.</p>
-</div>
-<div class="section level2">
-<h2 id="heatmap">heatmap<a class="anchor" aria-label="anchor" href="#heatmap"></a>
-</h2>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">cmp</span>, type <span class="op">=</span> <span class="st">"heatmap"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="compare-networks_files/figure-html/unnamed-chunk-7-1.png" class="r-plt" alt="" width="864"></p>
-<p>Every cell of the High minus Low difference matrix, with its
-value.</p>
-</div>
-<div class="section level2">
-<h2 id="scatter">scatter<a class="anchor" aria-label="anchor" href="#scatter"></a>
-</h2>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">cmp</span>, type <span class="op">=</span> <span class="st">"scatter"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="compare-networks_files/figure-html/unnamed-chunk-8-1.png" class="r-plt" alt="" width="864"></p>
-<p>Each transition’s weight in High against Low; points on the diagonal
-are equal in both (Pearson 0.92).</p>
-</div>
-<div class="section level2">
-<h2 id="inference">inference<a class="anchor" aria-label="anchor" href="#inference"></a>
-</h2>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">cmp</span>, type <span class="op">=</span> <span class="st">"inference"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="compare-networks_files/figure-html/unnamed-chunk-9-1.png" class="r-plt" alt="" width="864"></p>
-<p>Edge differences with their permutation p-values; filled markers are
-significant at 0.05.</p>
+<p><code>test = "bootstrap"</code> resamples the nodes of each network
+(Snijders &amp; Borgatti, 1999; Davison &amp; Hinkley, 1997) and
+compares four structural measures: density, mean weight, centralization
+and reciprocity. It reads only the weight matrices, so it also works for
+matrices without data.</p>
+<div class="sourceCode" id="cb54"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">structural</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compare_networks.html">compare_networks</a></span><span class="op">(</span><span class="va">achievers</span>, test <span class="op">=</span> <span class="st">"bootstrap"</span>, iter <span class="op">=</span> <span class="fl">1000</span>,</span>
+<span>                               seed <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="fu"><a href="../reference/comparison_tables.html">global_differences</a></span><span class="op">(</span><span class="va">structural</span><span class="op">)</span>, <span class="va">category</span> <span class="op">==</span> <span class="st">"Structure (bootstrap)"</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">##         pair network_a network_b              category         metric</span></span>
+<span><span class="co">##  High vs Low      High       Low Structure (bootstrap)        density</span></span>
+<span><span class="co">##  High vs Low      High       Low Structure (bootstrap)    mean_weight</span></span>
+<span><span class="co">##  High vs Low      High       Low Structure (bootstrap) centralization</span></span>
+<span><span class="co">##  High vs Low      High       Low Structure (bootstrap)    reciprocity</span></span>
+<span><span class="co">##                  key value boot_observed_a boot_observed_b boot_se</span></span>
+<span><span class="co">##         boot_density  0.01            0.96            0.94    0.06</span></span>
+<span><span class="co">##     boot_mean_weight     0            0.12            0.12    0.04</span></span>
+<span><span class="co">##  boot_centralization  0.07            0.59            0.52    0.19</span></span>
+<span><span class="co">##     boot_reciprocity -0.04            0.40            0.43    0.13</span></span>
+<span><span class="co">##  boot_ci_lower boot_ci_upper boot_z boot_p boot_sig</span></span>
+<span><span class="co">##          -0.10          0.13   0.23  0.816    FALSE</span></span>
+<span><span class="co">##          -0.08          0.08   0.01  0.992    FALSE</span></span>
+<span><span class="co">##          -0.30          0.44   0.40  0.693    FALSE</span></span>
+<span><span class="co">##          -0.29          0.22  -0.28  0.783    FALSE</span></span></code></pre>
+<p>None of the four measures differs (p between 0.69 and 0.99): the two
+networks have the same overall structure, and they differ in which
+transitions carry the weight.</p>
 </div>
 <div class="section level2">
 <h2 id="accounting-for-nesting">Accounting for nesting<a class="anchor" aria-label="anchor" href="#accounting-for-nesting"></a>
 </h2>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<p>Students are nested in teams, and the achievement level is given per
+team. With <code>actor = "Group"</code>, the permutation test reassigns
+whole teams instead of single students, and
+<code><a href="../reference/comparison_tables.html">global_differences()</a></code> gains three <code>Nesting</code>
+rows.</p>
+<div class="sourceCode" id="cb56"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">nested</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compare_networks.html">compare_networks</a></span><span class="op">(</span><span class="va">achievers</span>, test <span class="op">=</span> <span class="st">"permutation"</span>, iter <span class="op">=</span> <span class="fl">1000</span>,</span>
 <span>                           seed <span class="op">=</span> <span class="fl">1</span>, actor <span class="op">=</span> <span class="st">"Group"</span><span class="op">)</span></span>
-<span><span class="va">nested</span></span></code></pre></div>
-<pre><code><span><span class="co">## Network comparison (permutation, iter = 1000, alpha = 0.05, adjust = none, actor = Group): 2 networks, 1 pairs, scaling = none</span></span>
-<span><span class="co">##   networks: High (9 nodes, directed), Low (9 nodes, directed)</span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">##  pair        pearson mean|diff| max|diff| largest change                    </span></span>
-<span><span class="co">##  High vs Low 0.92    0.03       0.21      discuss -&gt; consensus (High higher)</span></span>
-<span><span class="co">##  sig edges</span></span>
-<span><span class="co">##  42       </span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">## Tables: summary(x), edge_differences(x), node_differences(x), global_differences(x), network_metrics(x). Plot: plot(x, type = ...)</span></span></code></pre>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">tail</a></span><span class="op">(</span><span class="fu"><a href="../reference/comparison_tables.html">global_differences</a></span><span class="op">(</span><span class="va">nested</span>, digits <span class="op">=</span> <span class="fl">3</span><span class="op">)</span>, <span class="fl">5</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="fu"><a href="../reference/comparison_tables.html">global_differences</a></span><span class="op">(</span><span class="va">nested</span>, digits <span class="op">=</span> <span class="fl">3</span><span class="op">)</span>,</span>
+<span>       <span class="va">category</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Global Test (permutation)"</span>, <span class="st">"Nesting"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##         pair network_a network_b                  category</span></span>
 <span><span class="co">##  High vs Low      High       Low Global Test (permutation)</span></span>
 <span><span class="co">##  High vs Low      High       Low Global Test (permutation)</span></span>
@@ -208,16 +889,119 @@ significant at 0.05.</p>
 <span><span class="co">##  M (total absolute difference)      perm_M  2.612  0.001     TRUE</span></span>
 <span><span class="co">##                   S (max edge)      perm_S  0.210  0.001     TRUE</span></span>
 <span><span class="co">##                            ICC         icc -0.002     NA       NA</span></span>
-<span><span class="co">##          Design effect (edges)  deff_edges  1.009     NA       NA</span></span>
-<span><span class="co">##              Design effect (M) deff_global  1.169     NA       NA</span></span></code></pre>
-<p>Students are nested in teams, and the achievement level is given per
-team. With <code>actor = "Group"</code>, the permutation test reassigns
-whole teams instead of single students, and
-<code><a href="../reference/comparison_tables.html">global_differences()</a></code> gains three <code>Nesting</code> rows.
-The ICC is −0.002, which indicates little evidence of a nesting effect;
-the design effect is 1.01 for the transitions and 1.17 for M. The
-networks still differ overall (M = 2.61, p = 0.001), and 42 transitions
-remain significant.</p>
+<span><span class="co">##          Design effect (edges)  deff_edges  1.027     NA       NA</span></span>
+<span><span class="co">##              Design effect (M) deff_global  1.201     NA       NA</span></span></code></pre>
+<p>The intraclass correlation is −0.002, and the design effect is 1.03
+for the transitions and 1.20 for M. The networks still differ overall (M
+= 2.61, p = 0.001), and 42 transitions remain significant. The article
+on nested data describes these quantities.</p>
+</div>
+<div class="section level2">
+<h2 id="more-than-two-networks">More than two networks<a class="anchor" aria-label="anchor" href="#more-than-two-networks"></a>
+</h2>
+<p><code><a href="../reference/mark_phases.html">mark_phases()</a></code> divides each student’s actions into three
+phases of equal length, and <code><a href="../reference/build_network.html">build_network()</a></code> estimates one
+network per phase. Every student contributes to all three phases, so
+with <code>actor = "Actor"</code> the permutation test reassigns each
+student’s sequences between phases within the student.
+<code>reference = "early"</code> compares the other two phases with the
+first instead of comparing every pair.</p>
+<div class="sourceCode" id="cb58"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">phased</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mark_phases.html">mark_phases</a></span><span class="op">(</span><span class="va">group_regulation_long</span>, actor <span class="op">=</span> <span class="st">"Actor"</span>, time <span class="op">=</span> <span class="st">"Time"</span>,</span>
+<span>                      n <span class="op">=</span> <span class="fl">3</span>, labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"early"</span>, <span class="st">"middle"</span>, <span class="st">"late"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">phases</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_network.html">build_network</a></span><span class="op">(</span><span class="va">phased</span>, method <span class="op">=</span> <span class="st">"relative"</span>, actor <span class="op">=</span> <span class="st">"Actor"</span>,</span>
+<span>                        action <span class="op">=</span> <span class="st">"Action"</span>, time <span class="op">=</span> <span class="st">"Time"</span>, group <span class="op">=</span> <span class="st">"phase"</span><span class="op">)</span></span>
+<span><span class="va">over_time</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compare_networks.html">compare_networks</a></span><span class="op">(</span><span class="va">phases</span>, reference <span class="op">=</span> <span class="st">"early"</span>,</span>
+<span>                              test <span class="op">=</span> <span class="st">"permutation"</span>, iter <span class="op">=</span> <span class="fl">1000</span>, seed <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>                              actor <span class="op">=</span> <span class="st">"Actor"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">over_time</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">##             pair network_a network_b n_cells n_differing share_higher_a</span></span>
+<span><span class="co">##  early vs middle     early    middle      81          78           0.54</span></span>
+<span><span class="co">##    early vs late     early      late      81          77           0.49</span></span>
+<span><span class="co">##  share_higher_b mean_abs_diff max_abs_diff pearson spearman cosine jaccard</span></span>
+<span><span class="co">##            0.42          0.01         0.08    0.99     0.97   0.99    0.90</span></span>
+<span><span class="co">##            0.46          0.01         0.07    0.99     0.98   0.99    0.90</span></span>
+<span><span class="co">##                top_edge top_edge_higher n_sig_edges n_sig_nodes m_stat   m_p</span></span>
+<span><span class="co">##  synthesis -&gt; consensus          middle           6           1   0.98 0.712</span></span>
+<span><span class="co">##       adapt -&gt; cohesion            late           4           2   0.94 0.720</span></span>
+<span><span class="co">##  s_stat   s_p</span></span>
+<span><span class="co">##    0.08 0.546</span></span>
+<span><span class="co">##    0.07 0.673</span></span></code></pre>
+<p>The three phases are nearly identical: the edge weights correlate at
+0.99 with those of the early phase, and the largest difference is 0.08.
+Neither global test is significant (p = 0.71 and 0.72 for M). Six and
+four of the 78 transitions differ at the 5% level, about the four that
+78 tests at that level produce by chance; <code>adjust = "BH"</code>
+corrects the edge p-values for the number of tests.</p>
+<div class="sourceCode" id="cb60"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">over_time</span>, type <span class="op">=</span> <span class="st">"edges"</span>, pair <span class="op">=</span> <span class="st">"late"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="compare-networks_files/figure-html/phases-plot-1.png" class="r-plt" alt="" width="864"></p>
+<p><code>pair</code> selects the comparisons a view or a table shows, by
+the pair name, the two network names or one network name.</p>
+</div>
+<div class="section level2">
+<h2 id="how-to-cite-this-article">How to cite this article<a class="anchor" aria-label="anchor" href="#how-to-cite-this-article"></a>
+</h2>
+<p>Saqr, M., López-Pernas, S., &amp; Misiejuk, K. (2026). <em>Comparing
+networks with compare_networks()</em>. Nestimate. <a href="https://pak.dynasite.org/Nestimate/articles/compare-networks.html">HTML</a>
+· <a href="https://pak.dynasite.org/Nestimate/pdf/compare-networks.pdf">PDF</a></p>
+</div>
+<div class="section level2">
+<h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
+</h2>
+<p>Banerjee, A., Chandrasekhar, A. G., Duflo, E., &amp; Jackson, M. O.
+(2013). The diffusion of microfinance. <em>Science</em>, 341(6144),
+1236498. <a href="https://doi.org/10.1126/science.1236498" class="external-link uri">https://doi.org/10.1126/science.1236498</a></p>
+<p>Davison, A. C., &amp; Hinkley, D. V. (1997). <em>Bootstrap methods
+and their application</em>. Cambridge University Press. <a href="https://doi.org/10.1017/CBO9780511802843" class="external-link uri">https://doi.org/10.1017/CBO9780511802843</a></p>
+<p>Freeman, L. C. (1978). Centrality in social networks: Conceptual
+clarification. <em>Social Networks</em>, 1(3), 215–239. <a href="https://doi.org/10.1016/0378-8733(78)90021-7" class="external-link uri">https://doi.org/10.1016/0378-8733(78)90021-7</a></p>
+<p>Gelman, A., Carlin, J. B., Stern, H. S., Dunson, D. B., Vehtari, A.,
+&amp; Rubin, D. B. (2013). <em>Bayesian data analysis</em> (3rd ed.).
+CRC Press.</p>
+<p>Girvan, M., &amp; Newman, M. E. J. (2002). Community structure in
+social and biological networks. <em>Proceedings of the National Academy
+of Sciences</em>, 99(12), 7821–7826. <a href="https://doi.org/10.1073/pnas.122653799" class="external-link uri">https://doi.org/10.1073/pnas.122653799</a></p>
+<p>Jeffreys, H. (1946). An invariant form for the prior probability in
+estimation problems. <em>Proceedings of the Royal Society of London.
+Series A</em>, 186(1007), 453–461. <a href="https://doi.org/10.1098/rspa.1946.0056" class="external-link uri">https://doi.org/10.1098/rspa.1946.0056</a></p>
+<p>Johnston, L., &amp; Jendoubi, T. (2026). How delivery mode reshapes
+resource engagement: A Bayesian differential network analysis. <em>TNA
+Workshop 2026</em>.</p>
+<p>Kivimäki, I., Lebichot, B., Saramäki, J., &amp; Saerens, M. (2016).
+Two betweenness centrality measures based on randomized shortest paths.
+<em>Scientific Reports</em>, 6, 19668. <a href="https://doi.org/10.1038/srep19668" class="external-link uri">https://doi.org/10.1038/srep19668</a></p>
+<p>Kruschke, J. K. (2018). Rejecting or accepting parameter values in
+Bayesian estimation. <em>Advances in Methods and Practices in
+Psychological Science</em>, 1(2), 270–280. <a href="https://doi.org/10.1177/2515245918771304" class="external-link uri">https://doi.org/10.1177/2515245918771304</a></p>
+<p>Makowski, D., Ben-Shachar, M. S., Chen, S. H. A., &amp; Lüdecke, D.
+(2019). Indices of effect existence and significance in the Bayesian
+framework. <em>Frontiers in Psychology</em>, 10, 2767. <a href="https://doi.org/10.3389/fpsyg.2019.02767" class="external-link uri">https://doi.org/10.3389/fpsyg.2019.02767</a></p>
+<p>Onnela, J.-P., Saramäki, J., Kertész, J., &amp; Kaski, K. (2005).
+Intensity and coherence of motifs in weighted complex networks.
+<em>Physical Review E</em>, 71(6), 065103. <a href="https://doi.org/10.1103/PhysRevE.71.065103" class="external-link uri">https://doi.org/10.1103/PhysRevE.71.065103</a></p>
+<p>Opsahl, T., Agneessens, F., &amp; Skvoretz, J. (2010). Node
+centrality in weighted networks: Generalizing degree and shortest paths.
+<em>Social Networks</em>, 32(3), 245–251. <a href="https://doi.org/10.1016/j.socnet.2010.03.006" class="external-link uri">https://doi.org/10.1016/j.socnet.2010.03.006</a></p>
+<p>Robert, P., &amp; Escoufier, Y. (1976). A unifying tool for linear
+multivariate statistical methods: The RV-coefficient. <em>Journal of the
+Royal Statistical Society: Series C (Applied Statistics)</em>, 25(3),
+257–265. <a href="https://doi.org/10.2307/2347233" class="external-link uri">https://doi.org/10.2307/2347233</a></p>
+<p>Saqr, M., López-Pernas, S., &amp; Misiejuk, K. (2026). Nestimate: An
+R package for dynamic, probabilistic, and high order network analysis.
+<em>Applied Psychological Measurement</em>. <a href="https://doi.org/10.1177/01466216261472019" class="external-link uri">https://doi.org/10.1177/01466216261472019</a></p>
+<p>Saqr, M., López-Pernas, S., Törmänen, T., Kaliisa, R., Misiejuk, K.,
+&amp; Tikka, S. (2025). Transition network analysis: A novel framework
+for modeling, visualizing, and identifying the temporal patterns of
+learners and learning processes. In <em>Proceedings of the 15th
+International Learning Analytics and Knowledge Conference (LAK25)</em>
+(pp. 351–361). ACM. <a href="https://doi.org/10.1145/3706468.3706513" class="external-link uri">https://doi.org/10.1145/3706468.3706513</a></p>
+<p>Snijders, T. A. B., &amp; Borgatti, S. P. (1999). Non-parametric
+standard errors and tests for network statistics. <em>Connections</em>,
+22(2), 161–170.</p>
+<p>Tikka, S., López-Pernas, S., &amp; Saqr, M. (2025). tna: An R package
+for transition network analysis. <em>Applied Psychological
+Measurement</em>, 49(6), 326–328. <a href="https://doi.org/10.1177/01466216251348840" class="external-link uri">https://doi.org/10.1177/01466216251348840</a></p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

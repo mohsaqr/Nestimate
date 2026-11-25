@@ -1,4 +1,4 @@
-# Spectral clustering of hypergraph vertices
+# Cluster the nodes of a hypergraph spectrally
 
 `hypergraph_cluster()` partitions the nodes of a hypergraph into `k`
 clusters with the spectral algorithm of Hayashi et al. (2020,
@@ -76,9 +76,9 @@ plot(x, what = c("both", "spectrum", "embedding"), n_values = NULL, ...)
 
 - x:
 
-  For the [`print()`](https://rdrr.io/r/base/print.html) and
-  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods and
-  for `node_clusters()`: a `net_hypergraph_cluster` object.
+  For [`print()`](https://rdrr.io/r/base/print.html),
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) and
+  `node_clusters()`: a result of `hypergraph_cluster()`.
 
 - ...:
 

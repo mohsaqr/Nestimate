@@ -1,4 +1,4 @@
-# Undo Network Pruning
+# Undo the pruning of a network
 
 `net_deprune()` restores the weights a network had before
 [`net_prune()`](https://pak.dynasite.org/Nestimate/reference/net_prune.md),
@@ -58,14 +58,12 @@ net_deprune(pruned)
 #> Transition Network (relative probabilities) [directed]
 #>   Weights: [1.000, 1.000]  |  mean: 1.000
 #> 
-#>   Weight matrix:
-#>     A B C
-#>   A 0 1 0
-#>   B 0 0 1
-#>   C 1 0 0 
+#>   Strongest edges (3 of 3):
+#>    from to weight
+#>    A    B  1     
+#>    B    C  1     
+#>    C    A  1      
 #> 
-#>   Initial probabilities:
-#>   A             0.333  ████████████████████████████████████████
-#>   B             0.333  ████████████████████████████████████████
-#>   C             0.333  ████████████████████████████████████████
+#>   extract_edges(include_self = TRUE) lists every edge; extract_transition_matrix() gives the weight matrix;
+#>   extract_initial_probs() the initial probabilities.
 ```

@@ -1,4 +1,4 @@
-# Build a grouped node-level network (htna) from data and a clustering
+# Build a node-level network with clusters as node groups
 
 `as_htna()` builds the full node-level network from the original data
 with
@@ -20,8 +20,9 @@ it
 ([`bootstrap_network()`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.md),
 [`net_centrality()`](https://pak.dynasite.org/Nestimate/reference/net_centrality.md),
 [`permutation()`](https://pak.dynasite.org/Nestimate/reference/permutation.md)),
-and cograph draws it as a grouped network:
-`cograph::plot_htna(as_htna(data, clusters))`.
+and
+[`cograph::plot_htna()`](https://sonsoles.me/cograph/reference/plot_htna.html)
+draws it as a grouped network.
 
 ## Usage
 
@@ -140,22 +141,19 @@ net
 #> Transition Network (relative probabilities) [directed]
 #>   Weights: [0.500, 1.000]  |  mean: 0.750
 #> 
-#>   Weight matrix:
-#>       A   B   C   D E F
-#>   A 0.0 0.5 0.0 0.5 0 0
-#>   B 0.5 0.0 0.5 0.0 0 0
-#>   C 0.0 0.0 0.0 1.0 0 0
-#>   D 1.0 0.0 0.0 0.0 0 0
-#>   E 0.0 0.0 0.0 0.0 0 1
-#>   F 0.0 0.0 0.0 0.0 1 0 
+#>   Strongest edges (8 of 8):
+#>    from to weight
+#>    C    D  1.0   
+#>    D    A  1.0   
+#>    E    F  1.0   
+#>    F    E  1.0   
+#>    A    B  0.5   
+#>    A    D  0.5   
+#>    B    A  0.5   
+#>    B    C  0.5    
 #> 
-#>   Initial probabilities:
-#>   A             0.250  ████████████████████████████████████████
-#>   B             0.250  ████████████████████████████████████████
-#>   C             0.250  ████████████████████████████████████████
-#>   E             0.250  ████████████████████████████████████████
-#>   D             0.000  
-#>   F             0.000  
+#>   extract_edges(include_self = TRUE) lists every edge; extract_transition_matrix() gives the weight matrix;
+#>   extract_initial_probs() the initial probabilities.
 if (requireNamespace("cograph", quietly = TRUE)) cograph::plot_htna(net)
 #> Using 'groups' column for node groups
 ```

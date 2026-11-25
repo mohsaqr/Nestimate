@@ -1,4 +1,4 @@
-# Convert Long Format to Wide Sequences
+# Convert long event data to wide sequences
 
 `long_to_wide()` turns a long event table (one row per action) into wide
 sequences, with one row per sequence and one column per position (`V1`,

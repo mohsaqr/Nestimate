@@ -1,4 +1,4 @@
-# Promote the Layers of an mcml to Networks
+# Convert the layers of an MCML model to a group of networks
 
 `as_tna()` turns an `mcml` object into a `netobject_group`: one network
 for the cluster-level (macro) layer, followed by one per cluster for the
@@ -69,11 +69,17 @@ Each element is a `netobject` (class
 `c("netobject", "cograph_network")`) with the layer's weights, initial
 probabilities, node and edge tables and data, and records
 `method = "relative"` when the `mcml` holds row-normalised weights
-(`type = "tna"`), `method = "co_occurrence"` for symmetrised counts
-(`type = "cooccurrence"`), and `method = "frequency"` for counts (`type`
-`"raw"` or `"frequency"`) and for the aggregates of
+(`type = "tna"`) and `method = "frequency"` for counts (`type` `"raw"`,
+`"frequency"` or `"cooccurrence"`) and for the aggregates of
 [`cluster_summary()`](https://pak.dynasite.org/Nestimate/reference/cluster_summary.md).
-With `expand`, the `macro` element is the mixed-resolution network of
+An undirected `mcml` (`type = "cooccurrence"` or `directed = FALSE`)
+also records `params$symmetrize = TRUE`, and one built from a weighted
+edge list carries the edge weights in its data, so the resampling verbs
+recount each layer as it was fitted. An `mcml` built with a `method`
+other than `"sum"` records it as `params$aggregation`, so
+[`bootstrap_network()`](https://pak.dynasite.org/Nestimate/reference/bootstrap_network.md)
+combines the transitions of each resample the same way. With `expand`,
+the `macro` element is the mixed-resolution network of
 [`macro_network()`](https://pak.dynasite.org/Nestimate/reference/macro_network.md)
 instead of the fully collapsed one. The default method returns a `tna`
 model unchanged and raises an error for any other class.

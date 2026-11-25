@@ -1,4 +1,4 @@
-# The state colours an object will draw with
+# Get the state colours of an object
 
 `state_colors()` returns the palette an object draws with: the colours
 set with
@@ -31,8 +31,11 @@ state_colors(x, ...)
 
 - x:
 
-  A `netobject`, `netobject_group`, `mcml` or `htna`; any other object
-  raises an error.
+  A `netobject`, `netobject_group`, `mcml` or `htna`. A `tna` model or a
+  `group_tna` (package tna) is first rebuilt as a network from its own
+  sequences (see
+  [`as_netobject()`](https://pak.dynasite.org/Nestimate/reference/as_netobject.md)).
+  Any other object raises an error.
 
 - ...:
 

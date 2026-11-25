@@ -1,4 +1,4 @@
-# Discover Association Rules from Sequential or Transaction Data
+# Discover association rules in transactions or sequences
 
 `association_rules()` finds association rules of the form {A} -\> {B}
 with the Apriori algorithm (Agrawal & Srikant, 1994): sets of items that
@@ -82,9 +82,11 @@ plot(x, ...)
       transactions, columns are items, named `I1`, `I2`, ... when the
       matrix has no column names).
 
-  Binary input must hold only 0/1 or `TRUE`/`FALSE`: a missing cell or
-  any other value raises an error of class `nestimate_bad_input`. For
-  the [`print()`](https://rdrr.io/r/base/print.html) and
+  Binary input must hold only 0/1 or `TRUE`/`FALSE`: a missing cell, any
+  other value or two columns with one name raises an error of class
+  `nestimate_bad_input`. Input with no transaction (a one-hot network
+  with no complete window) gives an empty result. For the
+  [`print()`](https://rdrr.io/r/base/print.html) and
   [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods: a
   `net_association_rules` object.
 

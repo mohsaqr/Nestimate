@@ -1,4 +1,4 @@
-# Compute State Frequencies from Trajectory Data
+# Count state frequencies in trajectories
 
 `state_frequencies()` counts how often each state occurs across all
 trajectories, and returns one row per state, most frequent first.

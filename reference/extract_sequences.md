@@ -1,4 +1,4 @@
-# Extract Sequences in Wide Format
+# Extract sequences in wide format
 
 `extract_sequences()` returns the sequences behind a Nestimate input as
 a wide data frame, one row per sequence and one column per position. It
@@ -41,10 +41,13 @@ extract_sequences(
   [`prepare()`](https://pak.dynasite.org/Nestimate/reference/prepare.md);
   a long event log (set `action`); a wide data frame or character
   matrix; or a `netobject`, `netobject_group`, `cograph_network` or
-  `tna` model built from sequence data. A network estimated with an
-  association method (`cor`, `pcor`, `glasso`, `ising`, `mgm`) or from
-  one-hot codes, a network built from a matrix (it holds no sequences),
-  and any other input raise an error of class `nestimate_bad_input`.
+  `tna` model built from sequence data. A `group_tna` (package tna) is
+  read as the group of networks it converts to (see
+  [`as_netobject()`](https://pak.dynasite.org/Nestimate/reference/as_netobject.md)).
+  A network estimated with an association method (`cor`, `pcor`,
+  `glasso`, `ising`, `mgm`) or from one-hot codes, a network built from
+  a matrix (it holds no sequences), and any other input raise an error
+  of class `nestimate_bad_input`.
 
 - cols:
 

@@ -1,4 +1,4 @@
-# Per-Context Path Dependence at Order k
+# Measure the path dependence of each context at order k
 
 `path_dependence()` shows, context by context, where a first-order
 Markov chain misses what longer histories say about the next state. For
@@ -48,7 +48,8 @@ plot(x, top = 15L, title = NULL, ...)
   numbered run (`T1`, `T2`, ...); any other frame, a one-hot network and
   an association network raise an error of class `nestimate_bad_input`,
   and a network without its data stops `path_dependence()`. Paths that
-  touch a missing cell are left out. For the
+  touch a missing cell are left out. A `tna` model (package tna) or a
+  bare `cograph_network` gives the sequences it carries. For the
   [`print()`](https://rdrr.io/r/base/print.html) methods: a
   `net_path_dependence` object or its
   [`summary()`](https://rdrr.io/r/base/summary.html); for the

@@ -1,4 +1,4 @@
-# Transition Entropy of a Markov Chain
+# Compute the transition entropy of a Markov chain
 
 `transition_entropy()` measures how uncertain a Markov chain's next step
 is, at three levels: the branching entropy of each state (how evenly its
@@ -42,16 +42,13 @@ print(x, digits = 3, ...)
 print(x, ...)
 
 # S3 method for class 'net_transition_entropy_group'
-summary(object, ...)
+summary(object, table = c("states", "chain"), ...)
 
 # S3 method for class 'net_transition_entropy_group'
 plot(x, title = "Transition Entropy", fill = "#0072B2", ...)
 
 # S3 method for class 'net_transition_entropy'
-summary(object, ...)
-
-# S3 method for class 'summary.net_transition_entropy'
-print(x, digits = 3, ...)
+summary(object, table = c("states", "chain"), ...)
 
 # S3 method for class 'net_transition_entropy'
 plot(x, title = "Transition Entropy", fill = "#0072B2", ...)
@@ -72,19 +69,19 @@ plot(x, title = "Transition Entropy", fill = "#0072B2", ...)
   (`state_cols =` or `action =`) and pass that. A `netobject_group`
   gives one result per group. An association network (`cor`, `pcor`,
   `glasso`, `ising`, `mgm`) or a matrix with negative entries raises an
-  error of class `nestimate_not_markov`. For the
+  error of class `nestimate_not_markov`. A `group_tna` (package tna)
+  gives one result per group, as a `netobject_group` does. For the
   [`print()`](https://rdrr.io/r/base/print.html) and
   [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods: a
   `transition_entropy()` result;
   [`print()`](https://rdrr.io/r/base/print.html) also takes a group
-  result or the result of
-  [`summary()`](https://rdrr.io/r/base/summary.html).
+  result.
 
 - base:
 
   The logarithm base, which sets the unit: `2` (default) for bits,
-  `exp(1)` for nats, `10` for hartleys. Any positive number other than
-  1.
+  `exp(1)` for nats, `10` for hartleys. Any finite number greater than
+  1; another value raises an error of class `nestimate_bad_input`.
 
 - normalize:
 
@@ -95,10 +92,9 @@ plot(x, title = "Transition Entropy", fill = "#0072B2", ...)
 
 - digits:
 
-  For the [`print()`](https://rdrr.io/r/base/print.html) methods of a
-  result and of its summary: decimal places of the values. Default `3`.
-  A result's normalised values always print with three decimals, the
-  summary's percentages with one.
+  For the [`print()`](https://rdrr.io/r/base/print.html) methods:
+  decimal places of the values. Default `3`. The normalised values
+  always print with three decimals.
 
 - ...:
 
@@ -111,6 +107,12 @@ plot(x, title = "Transition Entropy", fill = "#0072B2", ...)
 
   For [`summary()`](https://rdrr.io/r/base/summary.html): a
   `transition_entropy()` result.
+
+- table:
+
+  For [`summary()`](https://rdrr.io/r/base/summary.html): `"states"`
+  (default), the per-state table, or `"chain"`, the chain-level
+  quantities.
 
 - title:
 
@@ -128,22 +130,20 @@ A `net_transition_entropy` object, or for a `netobject_group` a
 `net_transition_entropy_group`: a named list of them, one per group.
 [`print()`](https://rdrr.io/r/base/print.html) shows the entropy rate,
 stationary entropy and redundancy, raw and normalised, and for a group
-the entropy rate of each group. For a group,
-[`summary()`](https://rdrr.io/r/base/summary.html) returns a data frame
-with one row per group (`group`, `n_states`, the raw and normalised
-entropy rate and stationary entropy, `redundancy` and `unit`), and
+the entropy rate of each group.
+[`summary()`](https://rdrr.io/r/base/summary.html) returns a data frame.
+With `table = "states"` (default), one row per state (`state`, the
+stationary probability, raw and normalised branching entropy, the
+state's additive contribution \\\pi_i H(P\_{i\cdot})\\ to the entropy
+rate and that contribution as a percentage of it), sorted by
+contribution, largest first; for a group, with a `group` column first.
+With `table = "chain"`, one row per chain-level quantity (entropy rate,
+stationary entropy, redundancy and the ceiling, raw and normalised, with
+the unit); for a group, one row per group (`group`, `n_states`, the raw
+and normalised entropy rate and stationary entropy, `redundancy` and
+`unit`). For a group,
 [`plot()`](https://rdrr.io/r/graphics/plot.default.html) draws the bar
 chart below in one panel per group.
-[`summary()`](https://rdrr.io/r/base/summary.html) returns a
-`summary.net_transition_entropy` object, printed by its own
-[`print()`](https://rdrr.io/r/base/print.html) method, that holds
-`table`, one row per state (stationary probability, raw and normalised
-branching entropy, the state's additive contribution \\\pi_i
-H(P\_{i\cdot})\\ to the entropy rate and that contribution as a
-percentage of it), sorted by contribution, largest first; `chain`, one
-row per chain-level quantity (entropy rate, stationary entropy,
-redundancy and the ceiling, raw and normalised), with the unit; and the
-logarithm `base`.
 [`plot()`](https://rdrr.io/r/graphics/plot.default.html) returns a
 `ggplot` bar chart of each state's branching entropy, with bar widths
 proportional to the stationary probability (so a bar's area is
@@ -154,8 +154,8 @@ return their input invisibly. The object's fields:
 
 - row_entropy:
 
-  Named numeric vector of length \\n\\: each state's branching entropy
-  \\H(P\_{i\cdot}) = -\sum_j P\_{ij} \log_b P\_{ij}\\.
+  Named numeric vector, one value per state: its branching entropy
+  \$\$H(P\_{i\cdot}) = -\sum_j P\_{ij} \log_b P\_{ij}.\$\$
 
 - row_entropy_norm:
 
@@ -269,27 +269,14 @@ print(te)
 #> Normalised: h(P) and H(pi) are raw / log_2(n_states) (0 = deterministic, 1 = uniform);
 #>   redundancy is the relative redundancy (H(pi) - h(P)) / H(pi), not raw / log_2(n_states).
 summary(te)
-#> Transition Entropy Summary (bits)
-#> 
-#> Per-state contribution to h(P):
-#>       state stationary row_entropy row_entropy_norm contribution
-#>     Average      0.443       1.354            0.855        0.600
-#>      Active      0.372       1.040            0.656        0.387
-#>  Disengaged      0.185       1.403            0.885        0.260
-#>  contribution_pct
-#>              48.1
-#>              31.0
-#>              20.8
-#> 
-#> Chain-level summary:
-#>               quantity   raw normalised
-#>      entropy_rate h(P) 1.247      0.787
-#>       stationary H(pi) 1.501      0.947
-#>  redundancy H(pi)-h(P) 0.255      0.170
-#>       ceiling log_2(n) 1.585      1.000
-#> 
-#> Normalised: row entropy, h(P) and H(pi) are raw / log_2(n_states), in [0, 1];
-#>   redundancy is the relative redundancy (H(pi) - h(P)) / H(pi).
+#>        state stationary row_entropy row_entropy_norm contribution
+#> 1    Average  0.4431398    1.354486        0.8545857    0.6002268
+#> 2     Active  0.3719025    1.040453        0.6564530    0.3869472
+#> 3 Disengaged  0.1849577    1.403267        0.8853628    0.2595450
+#>   contribution_pct
+#> 1         48.14451
+#> 2         31.03724
+#> 3         20.81825
 plot(te)
 
 ```

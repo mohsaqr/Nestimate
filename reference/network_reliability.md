@@ -1,4 +1,4 @@
-# Split-Half Reliability for Network Estimates
+# Estimate the split-half reliability of a network
 
 `network_reliability()` measures how much a network's weights depend on
 the particular sample: it splits the sequences (for an association
@@ -52,13 +52,21 @@ plot(x, bins = 60L, combined = TRUE, ...)
   [`as_tna()`](https://pak.dynasite.org/Nestimate/reference/as_tna.md)
   first, and a bare `cograph_network` is read as a `netobject`. Each
   network is named by its argument name or, failing that, its method;
-  repeated names get a suffix (`"_1"`, `"_2"`, ...). A network without
-  its sequence data (which
+  repeated names get a suffix (`"_1"`, `"_2"`, ...). A `tna` model or a
+  `group_tna` (package tna) is first rebuilt as a network from its own
+  sequences (see
+  [`as_netobject()`](https://pak.dynasite.org/Nestimate/reference/as_netobject.md)).
+  A network without its sequence data (which
   [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
   keeps) raises an error, a network resting on one sequence an error of
-  class `nestimate_single_sequence`, and networks of different methods
-  with `scale = "none"` a warning of class `nestimate_mixed_methods`.
-  For the [`print()`](https://rdrr.io/r/base/print.html),
+  class `nestimate_single_sequence`, a sequence network with no observed
+  transition an error of class `nestimate_no_transition`, a network
+  built with `level` an error of class
+  `nestimate_multilevel_resampling`, a network built with
+  `method = "latency"` an error of class `nestimate_latency_resampling`,
+  and networks of different methods with `scale = "none"` a warning of
+  class `nestimate_mixed_methods`. For the
+  [`print()`](https://rdrr.io/r/base/print.html),
   [`summary()`](https://rdrr.io/r/base/summary.html) and
   [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods:
   ignored.

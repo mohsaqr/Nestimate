@@ -1,4 +1,4 @@
-# Transductive label spreading on a hypergraph
+# Classify unlabelled hypergraph nodes by label spreading
 
 `hypergraph_transduction()` classifies the unlabelled nodes of a
 hypergraph from a few labelled ones, by the label-spreading framework of
@@ -79,10 +79,10 @@ plot(x, ...)
 
 - x:
 
-  For the [`print()`](https://rdrr.io/r/base/print.html) and
-  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods and
-  for `label_predictions()` and `label_scores()`: a
-  `net_hypergraph_transduction` object.
+  For [`print()`](https://rdrr.io/r/base/print.html),
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html),
+  `label_predictions()` and `label_scores()`: a result of
+  `hypergraph_transduction()`.
 
 - ...:
 

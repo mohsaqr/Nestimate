@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>Sequence Plots: heatmap, index, and distribution • Nestimate</title>
+<title>Sequence Plots • Nestimate</title>
 <!-- favicons --><link rel="icon" type="image/png" sizes="96x96" href="../favicon-96x96.png">
 <link rel="icon" type="”image/svg+xml”" href="../favicon.svg">
 <link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
@@ -14,7 +14,15 @@
 <link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Sequence Plots: heatmap, index, and distribution">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Sequence Plots">
+<meta name="citation_title" content="Sequence Plots">
+<meta name="citation_author" content="Saqr, Mohammed">
+<meta name="citation_author" content="López-Pernas, Sonsoles">
+<meta name="citation_author" content="Misiejuk, Kamila">
+<meta name="citation_publication_date" content="2026">
+<meta name="citation_publisher" content="Nestimate">
+<meta name="citation_pdf_url" content="https://pak.dynasite.org/Nestimate/pdf/sequence-plots.pdf">
+<meta name="citation_abstract_html_url" content="https://pak.dynasite.org/Nestimate/articles/sequence-plots.html">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -24,7 +32,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.12</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -39,8 +47,8 @@
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
 <li><a class="dropdown-item" href="../articles/transition-entropy.html">Transition Matrix Entropy</a></li>
     <li><a class="dropdown-item" href="../articles/transition-networks.html">Network Estimation and Analysis with Nestimate</a></li>
-    <li><a class="dropdown-item" href="../articles/sequence-comparison.html">Sequence Pattern Comparison: Early vs Late Human-AI Interactions</a></li>
-    <li><a class="dropdown-item" href="../articles/sequence-plots.html">Sequence Plots: heatmap, index, and distribution</a></li>
+    <li><a class="dropdown-item" href="../articles/sequence-comparison.html">Comparing Sequences Between Groups: Early vs Late Human-AI Interactions</a></li>
+    <li><a class="dropdown-item" href="../articles/sequence-plots.html">Sequence Plots</a></li>
     <li><a class="dropdown-item" href="../articles/clustering.html">Sequence Clustering</a></li>
     <li><a class="dropdown-item" href="../articles/markov-stability.html">Markov Stability Analysis</a></li>
     <li><hr class="dropdown-divider"></li>
@@ -66,7 +74,7 @@
 
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
-      <img src="../logo.svg" class="logo" alt=""><h1>Sequence Plots: heatmap, index, and distribution</h1>
+      <img src="../logo.svg" class="logo" alt=""><h1>Sequence Plots</h1>
                         <h4 data-toc-skip class="author">Mohammed
 Saqr</h4>
             <address class="author_afil">
@@ -87,24 +95,61 @@ Misiejuk</h4>
 
     
     
-<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/mohsaqr/Nestimate" class="external-link">Nestimate</a></span><span class="op">)</span></span></code></pre></div>
+<p>A transition network summarises sequences in one matrix and, in doing
+so, leaves out who was in which state and when. Sequence plots keep
+every sequence visible (Gabadinho et al. 2011; Saqr, López-Pernas,
+Helske, et al. 2024). They show whether the transitions of a network
+come from most sequences or from a few, whether states cluster in time,
+and where sequences end. In Nestimate (Saqr, López-Pernas &amp; Misiejuk
+2026), <code><a href="../reference/sequence_plot.html">sequence_plot()</a></code> draws three kinds of sequence plot,
+selected with <code>type</code>:</p>
+<table class="table">
+<colgroup>
+<col width="34%">
+<col width="65%">
+</colgroup>
+<thead><tr class="header">
+<th><code>type</code></th>
+<th>What it shows</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td>
+<code>"heatmap"</code> (default)</td>
+<td>one row per sequence, sorted by similarity, with a dendrogram</td>
+</tr>
+<tr class="even">
+<td><code>"index"</code></td>
+<td>one row per sequence, in panels by group</td>
+</tr>
+<tr class="odd">
+<td><code>"distribution"</code></td>
+<td>the share of each state at each position</td>
+</tr>
+</tbody>
+</table>
+<p>The same three views read sequences of different lengths from an
+event log, divide each actor’s actions into periods such as days, and
+draw several channels at once for states grouped into clusters.</p>
 <div class="section level2">
-<h2 id="the-dataset">The dataset<a class="anchor" aria-label="anchor" href="#the-dataset"></a>
+<h2 id="data">Data<a class="anchor" aria-label="anchor" href="#data"></a>
 </h2>
-<p>A transition network summarises sequences into one matrix and, in
-doing so, throws away who did what and when. Sequence plots keep every
-sequence visible: they show whether a network’s dominant transitions
-come from most learners or from a few, whether states cluster in time,
-and where sequences end. <code>trajectories</code> ships with Nestimate:
-138 student sequences × 15 weeks, three states (<code>Active</code>,
-<code>Average</code>, <code>Disengaged</code>) plus <code>NA</code> for
-missed weeks; a run of <code>NA</code> at the end of a row marks
-drop-out.</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">trajectories</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">trajectories</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 138  15</span></span>
+<p><code>trajectories</code> records the engagement state of 138
+students in each of the 15 successive courses of a program, coded with
+the three engagement states of Saqr and López-Pernas (2021):
+<code>Active</code>, <code>Average</code> and <code>Disengaged</code>.
+Saqr and López-Pernas (2021) and Saqr, López-Pernas, Jovanović and
+Gašević (2023) followed such engagement trajectories across the courses
+of a full program. The data have one row per student and one column per
+course; a missing value occurs only as a run at the end of a row and
+marks the point at which a student left the program.</p>
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/mohsaqr/Nestimate" class="external-link">Nestimate</a></span><span class="op">)</span></span>
+<span><span class="co">#&gt; Registered S3 methods overwritten by 'Nestimate':</span></span>
+<span><span class="co">#&gt;   method            from       </span></span>
+<span><span class="co">#&gt;   plot.net_mlvar    idiographic</span></span>
+<span><span class="co">#&gt;   print.net_mlvar   idiographic</span></span>
+<span><span class="co">#&gt;   summary.net_mlvar idiographic</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">trajectories</span><span class="op">)</span></span>
 <span><span class="co">#&gt;      1         2            3            4            5            6           </span></span>
 <span><span class="co">#&gt; [1,] "Active"  "Disengaged" "Disengaged" "Disengaged" "Active"     "Active"    </span></span>
@@ -126,255 +171,357 @@ drop-out.</p>
 <span><span class="co">#&gt; [3,] "Active"  "Active"  "Active" </span></span>
 <span><span class="co">#&gt; [4,] "Average" "Active"  "Average"</span></span>
 <span><span class="co">#&gt; [5,] "Active"  "Average" "Average"</span></span>
-<span><span class="co">#&gt; [6,] "Average" "Average" "Average"</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/sort.html" class="external-link">sort</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/vector.html" class="external-link">as.vector</a></span><span class="op">(</span><span class="va">trajectories</span><span class="op">)</span><span class="op">)</span>, na.last <span class="op">=</span> <span class="cn">NA</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] "Active"     "Average"    "Disengaged"</span></span></code></pre></div>
-<p><code><a href="../reference/sequence_plot.html">sequence_plot()</a></code> is the single entry point for three
-views of this data:</p>
-<table class="table">
-<colgroup>
-<col width="25%">
-<col width="25%">
-<col width="25%">
-<col width="25%">
-</colgroup>
-<thead><tr class="header">
-<th><code>type</code></th>
-<th>What it shows</th>
-<th>Uses dendrogram?</th>
-<th>Facets?</th>
-</tr></thead>
-<tbody>
-<tr class="odd">
-<td>
-<code>"heatmap"</code> <em>(default)</em>
-</td>
-<td>dense carpet, rows sorted by a distance/dendrogram</td>
-<td>yes</td>
-<td>no</td>
-</tr>
-<tr class="even">
-<td><code>"index"</code></td>
-<td>carpet without dendrogram, row-gap optional</td>
-<td>no</td>
-<td>yes</td>
-</tr>
-<tr class="odd">
-<td><code>"distribution"</code></td>
-<td>stacked area / bar of state proportions over time</td>
-<td>no</td>
-<td>yes</td>
-</tr>
-</tbody>
-</table>
-<p>Defaults: the legend sits on the right (<code>legend = NULL</code>
-resolves to <code>"right"</code>), <code>frame = FALSE</code>.</p>
+<span><span class="co">#&gt; [6,] "Average" "Average" "Average"</span></span></code></pre></div>
 </div>
 <div class="section level2">
-<h2 id="type-heatmap-clustered-carpet">1. <code>type = "heatmap"</code> — clustered carpet<a class="anchor" aria-label="anchor" href="#type-heatmap-clustered-carpet"></a>
+<h2 id="sequences-sorted-by-similarity">Sequences sorted by similarity<a class="anchor" aria-label="anchor" href="#sequences-sorted-by-similarity"></a>
 </h2>
-<p>Start here. Sorting the rows by sequence similarity puts learners
-with the same trajectory next to each other, so recurring trajectories
-appear as bands and the dendrogram shows how many distinct groups the
-data suggest.</p>
-<div class="section level3">
-<h3 id="default-lcs-distance-ward-d2-dendrogram">1.1 Default — LCS distance, ward.D2 dendrogram<a class="anchor" aria-label="anchor" href="#default-lcs-distance-ward-d2-dendrogram"></a>
-</h3>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<p>A sequence index plot draws each sequence as a row of cells, one cell
+per position, coloured by state. With <code>type = "heatmap"</code>, the
+default, the rows are sorted so that similar sequences are next to each
+other. The dissimilarity between two sequences is computed with a
+sequence distance (Studer &amp; Ritschard 2016), by default the longest
+common subsequence (<code>sort = "lcs"</code>), and the sequences are
+ordered by a hierarchical clustering with Ward’s criterion (Ward 1963),
+as implemented in <code>ward.D2</code> (Murtagh &amp; Legendre 2014).
+The dendrogram on the left shows the clustering.</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/sequence_plot.html">sequence_plot</a></span><span class="op">(</span><span class="va">trajectories</span><span class="op">)</span></span></code></pre></div>
-<p><img src="sequence-plots_files/figure-html/h-default-1.png" class="r-plt" alt="" width="100%"></p>
-</div>
-<div class="section level3">
-<h3 id="switch-the-sort-strategy">1.2 Switch the sort strategy<a class="anchor" aria-label="anchor" href="#switch-the-sort-strategy"></a>
-</h3>
+<p><img src="sequence-plots_files/figure-html/heatmap-1.png" class="r-plt" alt="" width="100%"></p>
+<p>Each row is one student and each column one course; grey cells are
+the courses after a student left. Three bands are visible. A small band
+at the top holds students who are mostly disengaged and leave the
+program early. A large band in the middle holds students who are mostly
+average, with spells of disengagement. A band at the bottom holds
+students who are mostly active.</p>
+<p><code>sort</code> selects the distance or the order.
+<code>sort = "hamming"</code> counts the positions in which two
+sequences differ (Hamming 1950), and the other distances of
+<code><a href="../reference/build_clusters.html">build_clusters()</a></code> are available (<code>osa</code>,
+<code>lv</code>, <code>dl</code>, <code>qgram</code>,
+<code>cosine</code>, <code>jaccard</code>, <code>jw</code>).
+<code>sort = "frequency"</code>, <code>"start"</code> and
+<code>"end"</code> order the rows without a dendrogram: by how common
+the sequence is, or by its first or last state.</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/sequence_plot.html">sequence_plot</a></span><span class="op">(</span><span class="va">trajectories</span>, sort <span class="op">=</span> <span class="st">"start"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="sequence-plots_files/figure-html/heatmap-start-1.png" class="r-plt" alt="" width="100%"></p>
+<p>Sorted by the first state, the plot shows how the students who start
+in each state continue: many students who start active remain active for
+the first few courses, and many students who start disengaged move to
+the average state within one or two courses, while some leave.</p>
+<p><code>k</code> cuts the dendrogram into <code>k</code> groups and
+draws a line between them.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/sequence_plot.html">sequence_plot</a></span><span class="op">(</span><span class="va">trajectories</span>, sort <span class="op">=</span> <span class="st">"frequency"</span>,</span>
-<span>              main <span class="op">=</span> <span class="st">"sort = 'frequency'"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="sequence-plots_files/figure-html/h-freq-1.png" class="r-plt" alt="" width="100%"></p>
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/sequence_plot.html">sequence_plot</a></span><span class="op">(</span><span class="va">trajectories</span>, k <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span></code></pre></div>
+<p><img src="sequence-plots_files/figure-html/heatmap-k-1.png" class="r-plt" alt="" width="100%"></p>
+</div>
+<div class="section level2">
+<h2 id="sequences-by-group">Sequences by group<a class="anchor" aria-label="anchor" href="#sequences-by-group"></a>
+</h2>
+<p>When the sequences belong to known groups (clusters, conditions,
+cohorts), <code>type = "index"</code> draws one panel per group, so the
+groups are compared side by side. <code><a href="../reference/build_clusters.html">build_clusters()</a></code> groups
+the sequences, here by the Hamming distance and Ward’s criterion into
+three clusters, and <code><a href="../reference/sequence_plot.html">sequence_plot()</a></code> reads the clustering
+directly.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/sequence_plot.html">sequence_plot</a></span><span class="op">(</span><span class="va">trajectories</span>, sort <span class="op">=</span> <span class="st">"hamming"</span>,</span>
-<span>              main <span class="op">=</span> <span class="st">"sort = 'hamming'"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="sequence-plots_files/figure-html/h-hamming-1.png" class="r-plt" alt="" width="100%"></p>
+<code class="sourceCode R"><span><span class="va">clusters</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_clusters.html">build_clusters</a></span><span class="op">(</span><span class="va">trajectories</span>, k <span class="op">=</span> <span class="fl">3</span>,</span>
+<span>                           dissimilarity <span class="op">=</span> <span class="st">"hamming"</span>, method <span class="op">=</span> <span class="st">"ward.D2"</span><span class="op">)</span></span>
+<span><span class="va">clusters</span></span>
+<span><span class="co">#&gt; Sequence Clustering [ward.D2]</span></span>
+<span><span class="co">#&gt;   Sequences: 138  |  Clusters: 3</span></span>
+<span><span class="co">#&gt;   Dissimilarity: hamming</span></span>
+<span><span class="co">#&gt;   Quality: silhouette = 0.364</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;   Cluster  N           Mean within-dist</span></span>
+<span><span class="co">#&gt;   1        18 (13.0%)  5.333</span></span>
+<span><span class="co">#&gt;   2        72 (52.2%)  8.521</span></span>
+<span><span class="co">#&gt;   3        48 (34.8%)  5.776</span></span></code></pre></div>
+<p>The three clusters hold 18, 72 and 48 students, with an average
+silhouette of 0.36, a moderate separation.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/sequence_plot.html">sequence_plot</a></span><span class="op">(</span><span class="va">trajectories</span>, sort <span class="op">=</span> <span class="st">"start"</span>,</span>
-<span>              main <span class="op">=</span> <span class="st">"sort = 'start' (no dendrogram)"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="sequence-plots_files/figure-html/h-start-1.png" class="r-plt" alt="" width="100%"></p>
-<p>Available sorts: <code>lcs</code> (default), <code>frequency</code>,
-<code>start</code>, <code>end</code>, plus any
-<code><a href="../reference/build_clusters.html">build_clusters()</a></code> distance — <code>hamming</code>,
-<code>osa</code>, <code>lv</code>, <code>dl</code>, <code>qgram</code>,
-<code>cosine</code>, <code>jaccard</code>, <code>jw</code>.</p>
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/sequence_plot.html">sequence_plot</a></span><span class="op">(</span><span class="va">clusters</span>, type <span class="op">=</span> <span class="st">"index"</span>, ncol <span class="op">=</span> <span class="fl">3</span>, nrow <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></code></pre></div>
+<p><img src="sequence-plots_files/figure-html/index-clusters-1.png" class="r-plt" alt="" width="100%"></p>
+<p>Cluster 1 holds the students who are mostly disengaged and leave the
+program after a few courses. Cluster 2 holds students who are mostly
+average, with frequent spells of disengagement. Cluster 3 holds students
+who are mostly active throughout the program.</p>
 </div>
-<div class="section level3">
-<h3 id="cluster-separators-with-k">1.3 Cluster separators with <code>k</code><a class="anchor" aria-label="anchor" href="#cluster-separators-with-k"></a>
-</h3>
-<p>Cut the dendrogram into <code>k</code> groups and overlay thin
-horizontal lines at the cluster boundaries in the ordered rows. Tune
-with <code>k_color</code> and <code>k_line_width</code>.</p>
+<div class="section level2">
+<h2 id="the-distribution-of-states-over-time">The distribution of states over time<a class="anchor" aria-label="anchor" href="#the-distribution-of-states-over-time"></a>
+</h2>
+<p><code>type = "distribution"</code> draws the share of each state at
+each position as a stacked area. It shows when states are common, which
+a transition network pooled over time does not.</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/sequence_plot.html">sequence_plot</a></span><span class="op">(</span><span class="va">trajectories</span>, k <span class="op">=</span> <span class="fl">3</span>,</span>
-<span>              main <span class="op">=</span> <span class="st">"k = 3 — white separators"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="sequence-plots_files/figure-html/h-k3-1.png" class="r-plt" alt="" width="100%"></p>
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/sequence_plot.html">sequence_plot</a></span><span class="op">(</span><span class="va">trajectories</span>, type <span class="op">=</span> <span class="st">"distribution"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="sequence-plots_files/figure-html/distribution-1.png" class="r-plt" alt="" width="100%"></p>
+<p>With <code>na = TRUE</code>, the default, the grey band is the share
+of students who have left, and it grows in the later courses. With
+<code>na = FALSE</code>, the shares are taken among the students who
+remain.</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/sequence_plot.html">sequence_plot</a></span><span class="op">(</span><span class="va">trajectories</span>, k <span class="op">=</span> <span class="fl">5</span>,</span>
-<span>              k_color <span class="op">=</span> <span class="st">"black"</span>, k_line_width <span class="op">=</span> <span class="fl">1.2</span>,</span>
-<span>              main <span class="op">=</span> <span class="st">"k = 5 — thin black"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="sequence-plots_files/figure-html/h-k5-black-1.png" class="r-plt" alt="" width="100%"></p>
-</div>
-<div class="section level3">
-<h3 id="legend-position-custom-palette-title">1.4 Legend position, custom palette, title<a class="anchor" aria-label="anchor" href="#legend-position-custom-palette-title"></a>
-</h3>
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/sequence_plot.html">sequence_plot</a></span><span class="op">(</span><span class="va">trajectories</span>, type <span class="op">=</span> <span class="st">"distribution"</span>, na <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
+<p><img src="sequence-plots_files/figure-html/distribution-observed-1.png" class="r-plt" alt="" width="100%"></p>
+<p>Among the students who remain, the shares of the three states are
+similar in every course: about a third to a half are active, about two
+fifths average, and the rest disengaged. <code>geom = "bar"</code> draws
+bars instead of an area, and <code>scale = "count"</code> draws counts
+instead of shares.</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/sequence_plot.html">sequence_plot</a></span><span class="op">(</span><span class="va">trajectories</span>,</span>
-<span>              legend <span class="op">=</span> <span class="st">"bottom"</span>,</span>
-<span>              legend_title <span class="op">=</span> <span class="st">"Engagement"</span>,</span>
-<span>              state_colors <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"#009E73"</span>, <span class="st">"#E69F00"</span>, <span class="st">"#D55E00"</span><span class="op">)</span>,</span>
-<span>              main <span class="op">=</span> <span class="st">"Custom palette + bottom legend"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="sequence-plots_files/figure-html/h-legend-1.png" class="r-plt" alt="" width="100%"></p>
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/sequence_plot.html">sequence_plot</a></span><span class="op">(</span><span class="va">clusters</span>, type <span class="op">=</span> <span class="st">"distribution"</span>, ncol <span class="op">=</span> <span class="fl">3</span>, nrow <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></code></pre></div>
+<p><img src="sequence-plots_files/figure-html/distribution-clusters-1.png" class="r-plt" alt="" width="100%"></p>
+<p>By cluster, the distribution plot shows the composition of each
+cluster over the program. Most students of cluster 1 have left by the
+fifth course. Cluster 2 is mostly average throughout, with roughly a
+fifth to a third of its students disengaged in each course, and in
+cluster 3 the share of active students stays between about 0.6 and
+0.9.</p>
 </div>
-<div class="section level3">
-<h3 id="cell-borders-tick-thinning">1.5 Cell borders + <code>tick</code> thinning<a class="anchor" aria-label="anchor" href="#cell-borders-tick-thinning"></a>
-</h3>
+<div class="section level2">
+<h2 id="sequences-of-different-lengths">Sequences of different lengths<a class="anchor" aria-label="anchor" href="#sequences-of-different-lengths"></a>
+</h2>
+<p>An event log holds sequences of different lengths.
+<code><a href="../reference/sequence_plot.html">sequence_plot()</a></code> reads it with <code>actor</code> (whose
+actions form one sequence), <code>action</code> and <code>time</code>,
+as <code><a href="../reference/build_network.html">build_network()</a></code> does. <code>human_long</code> holds the
+coded human turns of 429 human-AI pair-programming (“vibe coding”)
+sessions (Saqr, Misiejuk &amp; López-Pernas 2026; Misiejuk et al. 2026);
+each session is one sequence of the three clusters of codes,
+<code>Directive</code>, <code>Evaluative</code> and
+<code>Metacognitive</code>. A few long sessions would stretch the time
+axis, so <code>trim = 0.9</code> keeps the positions that hold 90% of
+the actions.</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/sequence_plot.html">sequence_plot</a></span><span class="op">(</span><span class="va">trajectories</span>,</span>
-<span>              cell_border <span class="op">=</span> <span class="st">"grey60"</span>, tick <span class="op">=</span> <span class="fl">3</span>,</span>
-<span>              main <span class="op">=</span> <span class="st">"Cell grid + every-3rd tick"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="sequence-plots_files/figure-html/h-borders-1.png" class="r-plt" alt="" width="100%"></p>
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/sequence_plot.html">sequence_plot</a></span><span class="op">(</span><span class="va">human_long</span>, actor <span class="op">=</span> <span class="st">"session_id"</span>, action <span class="op">=</span> <span class="st">"cluster"</span>,</span>
+<span>              time <span class="op">=</span> <span class="st">"order_in_session"</span>, trim <span class="op">=</span> <span class="fl">0.9</span><span class="op">)</span></span></code></pre></div>
+<p><img src="sequence-plots_files/figure-html/event-log-1.png" class="r-plt" alt="" width="100%"></p>
+<p>The sorted rows separate a group of long sessions from many short
+ones, and grey cells mark the positions after a session ended. Almost
+every session opens with a directive.</p>
 </div>
-<div class="section level3">
-<h3 id="frame-true-brings-back-the-outer-box">1.6 <code>frame = TRUE</code> brings back the outer box<a class="anchor" aria-label="anchor" href="#frame-true-brings-back-the-outer-box"></a>
-</h3>
+<div class="section level2">
+<h2 id="periods">Periods<a class="anchor" aria-label="anchor" href="#periods"></a>
+</h2>
+<p>Learning activity can be examined at several time scales, and
+patterns that are invisible in one long sequence appear when the
+activity is organised by day, week or course (Saqr, Nouri &amp; Fors
+2019). Sequence analysis treats such data as sequences of states and
+plots them period by period (Saqr, López-Pernas, Helske, et al. 2024).
+When the actors do different numbers of actions in each period, however,
+a column of a sequence index plot no longer refers to one point in time.
+<code>daily_actions</code> records seven days of learning actions by 30
+students: <code>plan</code>, <code>read</code>, <code>write</code>,
+<code>discuss</code> and <code>review</code>. A student acts between 1
+and 41 times on one day (median 9), and a student’s busiest day has
+between 2 and 31 times as many actions as the quietest.</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/sequence_plot.html">sequence_plot</a></span><span class="op">(</span><span class="va">trajectories</span>, frame <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>              main <span class="op">=</span> <span class="st">"frame = TRUE"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="sequence-plots_files/figure-html/h-frame-1.png" class="r-plt" alt="" width="100%"></p>
-</div>
-</div>
-<div class="section level2">
-<h2 id="type-index-gap-ready-carpet-with-facets">2. <code>type = "index"</code> — gap-ready carpet with facets<a class="anchor" aria-label="anchor" href="#type-index-gap-ready-carpet-with-facets"></a>
-</h2>
-<p>Use it once the groups are known (clusters, conditions): each panel
-holds one group’s sequences, so groups are compared side by side. No
-dendrogram. Rows are sorted within each panel by <code>sort</code>.
-Supports <code>group</code> (vector or auto from a
-<code>net_clustering</code>) plus <code>ncol</code> / <code>nrow</code>
-facet grids.</p>
-<div class="section level3">
-<h3 id="single-panel">2.1 Single panel<a class="anchor" aria-label="anchor" href="#single-panel"></a>
-</h3>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">daily_actions</span><span class="op">)</span></span>
+<span><span class="co">#&gt;   student   day  action</span></span>
+<span><span class="co">#&gt; 1     s01 day 1  review</span></span>
+<span><span class="co">#&gt; 2     s01 day 1  review</span></span>
+<span><span class="co">#&gt; 3     s01 day 1   write</span></span>
+<span><span class="co">#&gt; 4     s01 day 1   write</span></span>
+<span><span class="co">#&gt; 5     s01 day 1 discuss</span></span>
+<span><span class="co">#&gt; 6     s01 day 1   write</span></span></code></pre></div>
+<p>Drawn on one time axis, each student’s week is one sequence, with the
+<em>t</em>-th action in column <em>t</em>.</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/sequence_plot.html">sequence_plot</a></span><span class="op">(</span><span class="va">trajectories</span>, type <span class="op">=</span> <span class="st">"index"</span>,</span>
-<span>              main <span class="op">=</span> <span class="st">"index — single panel"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="sequence-plots_files/figure-html/i-default-1.png" class="r-plt" alt="" width="100%"></p>
-</div>
-<div class="section level3">
-<h3 id="visible-row-gaps">2.2 Visible row gaps<a class="anchor" aria-label="anchor" href="#visible-row-gaps"></a>
-</h3>
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/sequence_plot.html">sequence_plot</a></span><span class="op">(</span><span class="va">daily_actions</span>, actor <span class="op">=</span> <span class="st">"student"</span>, action <span class="op">=</span> <span class="st">"action"</span>,</span>
+<span>              type <span class="op">=</span> <span class="st">"index"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="sequence-plots_files/figure-html/daily-single-1.png" class="r-plt" alt="" width="100%"></p>
+<p>Students did between 12 and 59 actions on days 1 to 3, so day 4
+begins anywhere from column 13 to column 60. A column mixes days, and
+the horizontal axis says nothing about when an action happened.</p>
+<p><code>periods = "day"</code> divides the axis into seven blocks of
+equal width, one per day, with one row per student.</p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/sequence_plot.html">sequence_plot</a></span><span class="op">(</span><span class="va">trajectories</span>, type <span class="op">=</span> <span class="st">"index"</span>, row_gap <span class="op">=</span> <span class="fl">0.25</span>,</span>
-<span>              main <span class="op">=</span> <span class="st">"index with row_gap = 0.25"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="sequence-plots_files/figure-html/i-gap-1.png" class="r-plt" alt="" width="100%"></p>
-</div>
-<div class="section level3">
-<h3 id="faceted-by-net_clustering-auto-22-for-k-3">2.3 Faceted by <code>net_clustering</code> (auto 2×2 for k = 3)<a class="anchor" aria-label="anchor" href="#faceted-by-net_clustering-auto-22-for-k-3"></a>
-</h3>
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/sequence_plot.html">sequence_plot</a></span><span class="op">(</span><span class="va">daily_actions</span>, actor <span class="op">=</span> <span class="st">"student"</span>, action <span class="op">=</span> <span class="st">"action"</span>,</span>
+<span>              periods <span class="op">=</span> <span class="st">"day"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="sequence-plots_files/figure-html/daily-stretch-1.png" class="r-plt" alt="" width="100%"></p>
+<p>With <code>fill = "stretch"</code>, the default, a student’s actions
+on one day fill that day’s block in equal shares: one action fills it,
+three take a third each, so the cells of a quiet day are wide and those
+of a busy day narrow. With the days aligned, each row reads as one
+student’s week. Most rows are dominated by one or two colours in every
+block: a student’s most frequent action accounts for 32% to 78% of their
+actions, and that preference holds from day to day. The students differ
+more from each other than a student’s days differ from one another.
+Stretching gives every day the same width whatever its volume, so the
+figure shows what a student did each day, not how much.</p>
+<p>Consecutive actions in the same state merge into one bar; 39% of
+consecutive actions here repeat the previous one.
+<code>cell_border = "white"</code> outlines every action, so each action
+is visible as its own share of the day.</p>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">cl</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_clusters.html">build_clusters</a></span><span class="op">(</span><span class="va">trajectories</span>, k <span class="op">=</span> <span class="fl">3L</span>,</span>
-<span>                   dissimilarity <span class="op">=</span> <span class="st">"hamming"</span>, method <span class="op">=</span> <span class="st">"ward.D2"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="../reference/sequence_plot.html">sequence_plot</a></span><span class="op">(</span><span class="va">cl</span>, type <span class="op">=</span> <span class="st">"index"</span>,</span>
-<span>              main <span class="op">=</span> <span class="st">"index faceted by build_clusters(k = 3)"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="sequence-plots_files/figure-html/i-cluster-1.png" class="r-plt" alt="" width="100%"></p>
-</div>
-<div class="section level3">
-<h3 id="force-a-13-row">2.4 Force a 1×3 row<a class="anchor" aria-label="anchor" href="#force-a-13-row"></a>
-</h3>
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/sequence_plot.html">sequence_plot</a></span><span class="op">(</span><span class="va">daily_actions</span>, actor <span class="op">=</span> <span class="st">"student"</span>, action <span class="op">=</span> <span class="st">"action"</span>,</span>
+<span>              periods <span class="op">=</span> <span class="st">"day"</span>, type <span class="op">=</span> <span class="st">"index"</span>, row_gap <span class="op">=</span> <span class="fl">0.15</span>,</span>
+<span>              cell_border <span class="op">=</span> <span class="st">"white"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="sequence-plots_files/figure-html/daily-border-1.png" class="r-plt" alt="" width="100%"></p>
+<p><code>fill = "pad"</code> gives every block as many slots as the
+busiest student-day, 41 here, and leaves the unused slots white. A slot
+is then the same position in the day for every student: the fifth slot
+is the fifth action of that day.</p>
 <div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/sequence_plot.html">sequence_plot</a></span><span class="op">(</span><span class="va">cl</span>, type <span class="op">=</span> <span class="st">"index"</span>, ncol <span class="op">=</span> <span class="fl">3</span>, nrow <span class="op">=</span> <span class="fl">1</span>,</span>
-<span>              main <span class="op">=</span> <span class="st">"index — ncol = 3, nrow = 1"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="sequence-plots_files/figure-html/i-row-1.png" class="r-plt" alt="" width="100%"></p>
-</div>
-</div>
-<div class="section level2">
-<h2 id="type-distribution-state-proportions-over-time">3. <code>type = "distribution"</code> — state proportions over
-time<a class="anchor" aria-label="anchor" href="#type-distribution-state-proportions-over-time"></a>
-</h2>
-<p>Stacked area or bar chart of state frequencies per time column. It
-answers <em>when</em> rather than <em>who</em>: the share of each state
-at each time step, which shows trends (such as rising disengagement)
-that a transition network, pooled over time, cannot.</p>
-<div class="section level3">
-<h3 id="default-stacked-area">3.1 Default stacked area<a class="anchor" aria-label="anchor" href="#default-stacked-area"></a>
-</h3>
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/sequence_plot.html">sequence_plot</a></span><span class="op">(</span><span class="va">daily_actions</span>, actor <span class="op">=</span> <span class="st">"student"</span>, action <span class="op">=</span> <span class="st">"action"</span>,</span>
+<span>              periods <span class="op">=</span> <span class="st">"day"</span>, type <span class="op">=</span> <span class="st">"index"</span>, row_gap <span class="op">=</span> <span class="fl">0.15</span>,</span>
+<span>              fill <span class="op">=</span> <span class="st">"pad"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="sequence-plots_files/figure-html/daily-pad-1.png" class="r-plt" alt="" width="100%"></p>
+<p>The padded plot shows the volume that stretching hides. With a median
+of 9 actions per day against 41 slots, most blocks are largely white,
+and the few long bars mark the busiest student-days. Padding shows how
+much each student did per day; stretching shows what it consisted
+of.</p>
+<p>The rows are ordered by clustering each student’s whole week, all
+days joined in order, with the longest-common-subsequence distance, and
+<code>k</code> cuts the dendrogram into groups.</p>
 <div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/sequence_plot.html">sequence_plot</a></span><span class="op">(</span><span class="va">trajectories</span>, type <span class="op">=</span> <span class="st">"distribution"</span>,</span>
-<span>              main <span class="op">=</span> <span class="st">"distribution — stacked area"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="sequence-plots_files/figure-html/d-area-1.png" class="r-plt" alt="" width="100%"></p>
-</div>
-<div class="section level3">
-<h3 id="stacked-bars-count-scale">3.2 Stacked bars, count scale<a class="anchor" aria-label="anchor" href="#stacked-bars-count-scale"></a>
-</h3>
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/sequence_plot.html">sequence_plot</a></span><span class="op">(</span><span class="va">daily_actions</span>, actor <span class="op">=</span> <span class="st">"student"</span>, action <span class="op">=</span> <span class="st">"action"</span>,</span>
+<span>              periods <span class="op">=</span> <span class="st">"day"</span>, k <span class="op">=</span> <span class="fl">3</span>, k_color <span class="op">=</span> <span class="st">"black"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="sequence-plots_files/figure-html/daily-clusters-1.png" class="r-plt" alt="" width="100%"></p>
+<p>The three groups follow the students’ preferred actions: the students
+at the top mostly discuss and plan, a small group in the middle mostly
+reads, and the students at the bottom mostly write and review.</p>
+<p>A network built with <code>session = "day"</code> holds one sequence
+per student and day, and
+<code>sequence_plot(net, periods = "day")</code> draws the same figure
+from the network.</p>
 <div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/sequence_plot.html">sequence_plot</a></span><span class="op">(</span><span class="va">trajectories</span>, type <span class="op">=</span> <span class="st">"distribution"</span>,</span>
-<span>              geom <span class="op">=</span> <span class="st">"bar"</span>, scale <span class="op">=</span> <span class="st">"count"</span>,</span>
-<span>              main <span class="op">=</span> <span class="st">"distribution — bars, count scale"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="sequence-plots_files/figure-html/d-bar-count-1.png" class="r-plt" alt="" width="100%"></p>
-</div>
-<div class="section level3">
-<h3 id="na-band-onoff">3.3 NA band on/off<a class="anchor" aria-label="anchor" href="#na-band-onoff"></a>
-</h3>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/sequence_plot.html">sequence_plot</a></span><span class="op">(</span><span class="va">trajectories</span>, type <span class="op">=</span> <span class="st">"distribution"</span>, na <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>              main <span class="op">=</span> <span class="st">"na = TRUE"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="sequence-plots_files/figure-html/d-na-true-1.png" class="r-plt" alt="" width="100%"></p>
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/sequence_plot.html">sequence_plot</a></span><span class="op">(</span><span class="va">trajectories</span>, type <span class="op">=</span> <span class="st">"distribution"</span>, na <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>              main <span class="op">=</span> <span class="st">"na = FALSE"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="sequence-plots_files/figure-html/d-na-false-1.png" class="r-plt" alt="" width="100%"></p>
-</div>
-<div class="section level3">
-<h3 id="faceted-by-cluster">3.4 Faceted by cluster<a class="anchor" aria-label="anchor" href="#faceted-by-cluster"></a>
-</h3>
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/sequence_plot.html">sequence_plot</a></span><span class="op">(</span><span class="va">cl</span>, type <span class="op">=</span> <span class="st">"distribution"</span>,</span>
-<span>              main <span class="op">=</span> <span class="st">"distribution by cluster (k = 3)"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="sequence-plots_files/figure-html/d-cluster-1.png" class="r-plt" alt="" width="100%"></p>
-</div>
+<code class="sourceCode R"><span><span class="va">daily_net</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_network.html">build_network</a></span><span class="op">(</span><span class="va">daily_actions</span>, method <span class="op">=</span> <span class="st">"relative"</span>,</span>
+<span>                           actor <span class="op">=</span> <span class="st">"student"</span>, action <span class="op">=</span> <span class="st">"action"</span>,</span>
+<span>                           session <span class="op">=</span> <span class="st">"day"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/sequence_plot.html">sequence_plot</a></span><span class="op">(</span><span class="va">daily_net</span>, periods <span class="op">=</span> <span class="st">"day"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="sequence-plots_files/figure-html/daily-network-1.png" class="r-plt" alt="" width="100%"></p>
+<p>For dates, <code>period_unit = "week"</code> or <code>"month"</code>
+groups a date column into weeks or months, one block each.</p>
 </div>
 <div class="section level2">
-<h2 id="cheat-sheet">Cheat sheet<a class="anchor" aria-label="anchor" href="#cheat-sheet"></a>
+<h2 id="several-channels">Several channels<a class="anchor" aria-label="anchor" href="#several-channels"></a>
 </h2>
-<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Always explore first with the default:</span></span>
-<span><span class="fu"><a href="../reference/sequence_plot.html">sequence_plot</a></span><span class="op">(</span><span class="va">trajectories</span><span class="op">)</span></span></code></pre></div>
-<p><img src="sequence-plots_files/figure-html/cheatsheet-1.png" class="r-plt" alt="" width="100%"></p>
-<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span></span>
-<span><span class="co"># Zoom in on cluster structure:</span></span>
-<span><span class="fu"><a href="../reference/sequence_plot.html">sequence_plot</a></span><span class="op">(</span><span class="va">trajectories</span>, k <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span></code></pre></div>
-<p><img src="sequence-plots_files/figure-html/cheatsheet-2.png" class="r-plt" alt="" width="100%"></p>
-<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/sequence_plot.html">sequence_plot</a></span><span class="op">(</span><span class="va">trajectories</span>, sort <span class="op">=</span> <span class="st">"hamming"</span>, k <span class="op">=</span> <span class="fl">4</span><span class="op">)</span></span></code></pre></div>
-<p><img src="sequence-plots_files/figure-html/cheatsheet-3.png" class="r-plt" alt="" width="100%"></p>
-<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span></span>
-<span><span class="co"># Compare cluster compositions:</span></span>
-<span><span class="va">cl</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_clusters.html">build_clusters</a></span><span class="op">(</span><span class="va">trajectories</span>, k <span class="op">=</span> <span class="fl">3</span>,</span>
-<span>                   dissimilarity <span class="op">=</span> <span class="st">"hamming"</span>, method <span class="op">=</span> <span class="st">"ward.D2"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="../reference/sequence_plot.html">sequence_plot</a></span><span class="op">(</span><span class="va">cl</span>, type <span class="op">=</span> <span class="st">"index"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="sequence-plots_files/figure-html/cheatsheet-4.png" class="r-plt" alt="" width="100%"></p>
-<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/sequence_plot.html">sequence_plot</a></span><span class="op">(</span><span class="va">cl</span>, type <span class="op">=</span> <span class="st">"distribution"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="sequence-plots_files/figure-html/cheatsheet-5.png" class="r-plt" alt="" width="100%"></p>
-<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span></span>
-<span><span class="co"># Polish for a paper:</span></span>
-<span><span class="fu"><a href="../reference/sequence_plot.html">sequence_plot</a></span><span class="op">(</span><span class="va">trajectories</span>, k <span class="op">=</span> <span class="fl">3</span>,</span>
+<p>When the states are grouped into clusters, <code><a href="../reference/build_mcml.html">build_mcml()</a></code>
+estimates a network of the clusters and of the states within each
+cluster, and <code><a href="../reference/sequence_plot.html">sequence_plot()</a></code> draws its sequences as several
+channels: a <code>Summary</code> channel coloured by cluster and one
+channel per cluster coloured by that cluster’s states, with the time
+spent in other clusters faded. The example groups the nine regulation
+actions of <code>group_regulation_long</code>, which is synthetically
+generated from the <code>group_regulation</code> data of the tna package
+(Tikka, López-Pernas &amp; Saqr 2025), into three clusters.</p>
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_mcml.html">build_mcml</a></span><span class="op">(</span></span>
+<span>  <span class="va">group_regulation_long</span>,</span>
+<span>  clusters <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>Cognitive  <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"discuss"</span>, <span class="st">"synthesis"</span>, <span class="st">"consensus"</span>,</span>
+<span>                                 <span class="st">"cohesion"</span><span class="op">)</span>,</span>
+<span>                  Regulation <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"plan"</span>, <span class="st">"monitor"</span>, <span class="st">"adapt"</span>, <span class="st">"coregulate"</span><span class="op">)</span>,</span>
+<span>                  Affective  <span class="op">=</span> <span class="st">"emotion"</span><span class="op">)</span>,</span>
+<span>  actor <span class="op">=</span> <span class="st">"Actor"</span>, action <span class="op">=</span> <span class="st">"Action"</span>, time <span class="op">=</span> <span class="st">"Time"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/sequence_plot.html">sequence_plot</a></span><span class="op">(</span><span class="va">fit</span>, type <span class="op">=</span> <span class="st">"distribution"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="sequence-plots_files/figure-html/mcml-1.png" class="r-plt" alt="" width="100%"></p>
+<p>The <code>Summary</code> channel shows that cognitive actions take
+the largest share at every position, followed by regulation and then
+affective actions; the grey band grows as sequences end. Each cluster’s
+channel shows which of its states carry that share. <code>combine</code>
+merges clusters into one channel, <code>expand</code> shows the states
+of a cluster in the <code>Summary</code> channel, and
+<code>rest = "none"</code> leaves out the other clusters.</p>
+</div>
+<div class="section level2">
+<h2 id="appearance">Appearance<a class="anchor" aria-label="anchor" href="#appearance"></a>
+</h2>
+<p>The legend position and title, the colours of the states, cell
+borders, the spacing of the axis ticks and an outer frame are set with
+arguments.</p>
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/sequence_plot.html">sequence_plot</a></span><span class="op">(</span><span class="va">trajectories</span>, k <span class="op">=</span> <span class="fl">3</span>,</span>
 <span>              state_colors <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"#009E73"</span>, <span class="st">"#E69F00"</span>, <span class="st">"#D55E00"</span><span class="op">)</span>,</span>
-<span>              legend_title <span class="op">=</span> <span class="st">"Engagement"</span>,</span>
-<span>              legend <span class="op">=</span> <span class="st">"bottom"</span>,</span>
-<span>              cell_border <span class="op">=</span> <span class="st">"grey70"</span>,</span>
+<span>              legend <span class="op">=</span> <span class="st">"bottom"</span>, legend_title <span class="op">=</span> <span class="st">"Engagement"</span>,</span>
+<span>              cell_border <span class="op">=</span> <span class="st">"grey70"</span>, tick <span class="op">=</span> <span class="fl">3</span>,</span>
 <span>              main <span class="op">=</span> <span class="st">"Student engagement trajectories"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="sequence-plots_files/figure-html/cheatsheet-6.png" class="r-plt" alt="" width="100%"></p>
+<p><img src="sequence-plots_files/figure-html/appearance-1.png" class="r-plt" alt="" width="100%"></p>
+</div>
+<div class="section level2">
+<h2 id="colours">Colours<a class="anchor" aria-label="anchor" href="#colours"></a>
+</h2>
+<p>The states are drawn in the Okabe-Ito colours, dealt in the
+alphabetical order of the states, so a state has the same colour in
+every figure. <code><a href="../reference/set_state_colors.html">set_state_colors()</a></code> sets other colours once,
+on the network; every object computed from it (clusters, groups,
+bootstraps, permutation tests, landscapes) and every figure of them,
+<code><a href="https://sonsoles.me/cograph/reference/splot.html" class="external-link">cograph::splot()</a></code> included, uses them.
+<code><a href="../reference/state_colors.html">state_colors()</a></code> lists the colours in use.</p>
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">engagement</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_network.html">build_network</a></span><span class="op">(</span><span class="va">trajectories</span>, method <span class="op">=</span> <span class="st">"relative"</span><span class="op">)</span></span>
+<span><span class="va">engagement</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/set_state_colors.html">set_state_colors</a></span><span class="op">(</span><span class="va">engagement</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>Active <span class="op">=</span> <span class="st">"#009E73"</span>,</span>
+<span>                                             Average <span class="op">=</span> <span class="st">"#56B4E9"</span>,</span>
+<span>                                             Disengaged <span class="op">=</span> <span class="st">"#D55E00"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/state_colors.html">state_colors</a></span><span class="op">(</span><span class="va">engagement</span><span class="op">)</span></span>
+<span><span class="co">#&gt;        state   color source</span></span>
+<span><span class="co">#&gt; 1     Active #009E73    set</span></span>
+<span><span class="co">#&gt; 2    Average #56B4E9    set</span></span>
+<span><span class="co">#&gt; 3 Disengaged #D55E00    set</span></span>
+<span><span class="fu"><a href="../reference/sequence_plot.html">sequence_plot</a></span><span class="op">(</span><span class="va">engagement</span>, k <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span></code></pre></div>
+<p><img src="sequence-plots_files/figure-html/colours-1.png" class="r-plt" alt="" width="100%"></p>
+<p><code>state_colors =</code> in a single call, as in the previous
+section, changes that figure only.</p>
+</div>
+<div class="section level2">
+<h2 id="how-to-cite-this-article">How to cite this article<a class="anchor" aria-label="anchor" href="#how-to-cite-this-article"></a>
+</h2>
+<p>Saqr, M., López-Pernas, S., &amp; Misiejuk, K. (2026). <em>Sequence
+plots</em>. Nestimate. <a href="https://pak.dynasite.org/Nestimate/articles/sequence-plots.html">HTML</a>
+· <a href="https://pak.dynasite.org/Nestimate/pdf/sequence-plots.pdf">PDF</a></p>
+</div>
+<div class="section level2">
+<h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
+</h2>
+<p>Gabadinho, A., Ritschard, G., Müller, N. S., &amp; Studer, M. (2011).
+Analyzing and visualizing state sequences in R with TraMineR.
+<em>Journal of Statistical Software</em>, 40(4). <a href="https://doi.org/10.18637/jss.v040.i04" class="external-link uri">https://doi.org/10.18637/jss.v040.i04</a></p>
+<p>Hamming, R. W. (1950). Error detecting and error correcting codes.
+<em>Bell System Technical Journal</em>, 29(2), 147–160. <a href="https://doi.org/10.1002/j.1538-7305.1950.tb00463.x" class="external-link uri">https://doi.org/10.1002/j.1538-7305.1950.tb00463.x</a></p>
+<p>Misiejuk, K., López-Pernas, S., Oliveira, E., Rinja, D., &amp; Saqr,
+M. (2026). It takes two to vibe code: Profiling student-AI programming
+interactions processes and their high order structure. In
+<em>Proceedings of the 26th Koli Calling International Conference on
+Computing Education Research</em> (pp. 1–11). ACM. <a href="https://doi.org/10.1145/3856208.3856254" class="external-link uri">https://doi.org/10.1145/3856208.3856254</a></p>
+<p>Murtagh, F., &amp; Legendre, P. (2014). Ward’s hierarchical
+agglomerative clustering method: Which algorithms implement Ward’s
+criterion? <em>Journal of Classification</em>, 31(3), 274–295. <a href="https://doi.org/10.1007/s00357-014-9161-z" class="external-link uri">https://doi.org/10.1007/s00357-014-9161-z</a></p>
+<p>Saqr, M., &amp; López-Pernas, S. (2021). The longitudinal
+trajectories of online engagement over a full program. <em>Computers
+&amp; Education</em>, 175, 104325. <a href="https://doi.org/10.1016/j.compedu.2021.104325" class="external-link uri">https://doi.org/10.1016/j.compedu.2021.104325</a></p>
+<p>Saqr, M., López-Pernas, S., &amp; Misiejuk, K. (2026). Nestimate: An
+R package for dynamic, probabilistic, and high order network analysis.
+<em>Applied Psychological Measurement</em>. <a href="https://doi.org/10.1177/01466216261472019" class="external-link uri">https://doi.org/10.1177/01466216261472019</a></p>
+<p>Saqr, M., López-Pernas, S., Helske, S., Durand, M., Murphy, K.,
+Studer, M., &amp; Ritschard, G. (2024). Sequence analysis in education:
+Principles, technique, and tutorial with R. In M. Saqr &amp; S.
+López-Pernas (Eds.), <em>Learning analytics methods and tutorials: A
+practical guide using R</em> (pp. 321–354). Springer. <a href="https://doi.org/10.1007/978-3-031-54464-4_10" class="external-link uri">https://doi.org/10.1007/978-3-031-54464-4_10</a></p>
+<p>Saqr, M., López-Pernas, S., Jovanović, J., &amp; Gašević, D. (2023).
+Intense, turbulent, or wallowing in the mire: A longitudinal study of
+cross-course online tactics, strategies, and trajectories. <em>The
+Internet and Higher Education</em>, 57, 100902. <a href="https://doi.org/10.1016/j.iheduc.2022.100902" class="external-link uri">https://doi.org/10.1016/j.iheduc.2022.100902</a></p>
+<p>Saqr, M., Misiejuk, K., &amp; López-Pernas, S. (2026). Human-AI
+collaboration or obedient and often clueless AI in instruct, serve,
+repeat dynamics? <em>The Internet and Higher Education</em>, 70, 101087.
+<a href="https://doi.org/10.1016/j.iheduc.2026.101087" class="external-link uri">https://doi.org/10.1016/j.iheduc.2026.101087</a></p>
+<p>Saqr, M., Nouri, J., &amp; Fors, U. (2019). Time to focus on the
+temporal dimension of learning: A learning analytics study of the
+temporal patterns of students’ interactions and self-regulation.
+<em>International Journal of Technology Enhanced Learning</em>, 11(4),
+398–412. <a href="https://doi.org/10.1504/IJTEL.2019.102549" class="external-link uri">https://doi.org/10.1504/IJTEL.2019.102549</a></p>
+<p>Studer, M., &amp; Ritschard, G. (2016). What matters in differences
+between life trajectories: A comparative review of sequence
+dissimilarity measures. <em>Journal of the Royal Statistical Society:
+Series A (Statistics in Society)</em>, 179(2), 481–511. <a href="https://doi.org/10.1111/rssa.12125" class="external-link uri">https://doi.org/10.1111/rssa.12125</a></p>
+<p>Tikka, S., López-Pernas, S., &amp; Saqr, M. (2025). tna: An R package
+for transition network analysis. <em>Applied Psychological
+Measurement</em>, 49(6), 326–328. <a href="https://doi.org/10.1177/01466216251348840" class="external-link uri">https://doi.org/10.1177/01466216251348840</a></p>
+<p>Ward, J. H. (1963). Hierarchical grouping to optimize an objective
+function. <em>Journal of the American Statistical Association</em>,
+58(301), 236–244. <a href="https://doi.org/10.1080/01621459.1963.10500845" class="external-link uri">https://doi.org/10.1080/01621459.1963.10500845</a></p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

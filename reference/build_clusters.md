@@ -1,4 +1,4 @@
-# Cluster Sequences by Dissimilarity
+# Cluster sequences by dissimilarity
 
 `build_clusters()` splits a set of sequences into `k` groups of similar
 sequences. It computes the dissimilarity between every pair of sequences
@@ -187,21 +187,19 @@ print(x, ...)
 
   How the relation between the covariates and the clusters is estimated;
   it never affects the clustering. `"auto"` (default) fits a multinomial
-  logit of cluster membership on the covariates: with Firth's
-  bias-reduced penalised likelihood
-  ([`brglm2::brmultinom()`](https://rdrr.io/pkg/brglm2/man/brmultinom.html),
-  finite under quasi-complete separation) when a cell of the
+  logit of cluster membership on the covariates. When a cell of the
   cluster-by-covariate table of a categorical covariate holds fewer than
-  5 sequences, and with
-  [`nnet::multinom()`](https://rdrr.io/pkg/nnet/man/multinom.html)
-  otherwise. `"firth"` forces the Firth fit, which is about 200 times
-  slower on well-conditioned data. `"multinom"` forces classical maximum
-  likelihood and warns that rare cells can give extreme odds ratios with
-  degenerate confidence intervals. `"chisq"` runs descriptive tests
-  instead of a logit, as WeightedCluster does: for each categorical
-  covariate a chi-square test with Cramer's V and standardised adjusted
-  residuals, for each numeric one a Kruskal-Wallis test with
-  eta-squared. Ignored without `covariates`.
+  5 sequences, it uses Firth's bias-reduced penalised likelihood
+  (package brglm2), which stays finite under quasi-complete separation;
+  otherwise it uses maximum likelihood (package nnet). `"firth"` forces
+  the Firth fit, which is about 200 times slower on well-conditioned
+  data. `"multinom"` forces classical maximum likelihood and warns that
+  rare cells can give extreme odds ratios with degenerate confidence
+  intervals. `"chisq"` runs descriptive tests instead of a logit, as
+  WeightedCluster does: for each categorical covariate a chi-square test
+  with Cramer's V and standardised adjusted residuals, for each numeric
+  one a Kruskal-Wallis test with eta-squared. Ignored without
+  `covariates`.
 
 - ...:
 
@@ -337,9 +335,18 @@ object's fields:
 
 - network_method, build_args:
 
-  For `netobject` input, the source network's method and stored build
-  arguments, so per-cluster networks can be rebuilt the same way. NULL
-  otherwise, and `build_args` is NULL for a one-hot network.
+  For `netobject` input, the source network's method and the arguments
+  that read its data, so per-cluster networks are of the same type. NULL
+  otherwise. For a one-hot network, `build_args` holds only the settings
+  that make its type in `params` (such as a co-occurrence network's
+  `type`), or is NULL when it has none.
+
+- network_settings:
+
+  For `netobject` input, the source network's `threshold` and `scaling`
+  when they are not the defaults and its estimator settings in `params`,
+  which `build_network(x, inherit = TRUE)` uses; NULL when there are
+  none.
 
 - metadata:
 

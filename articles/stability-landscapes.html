@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>Stability landscapes of engagement (experimental) • Nestimate</title>
+<title>Stability of engagement: states, landscapes and students • Nestimate</title>
 <!-- favicons --><link rel="icon" type="image/png" sizes="96x96" href="../favicon-96x96.png">
 <link rel="icon" type="”image/svg+xml”" href="../favicon.svg">
 <link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
@@ -14,7 +14,15 @@
 <link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Stability landscapes of engagement (experimental)">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Stability of engagement: states, landscapes and students">
+<meta name="citation_title" content="Stability of engagement: states, landscapes and students">
+<meta name="citation_author" content="Saqr, Mohammed">
+<meta name="citation_author" content="López-Pernas, Sonsoles">
+<meta name="citation_author" content="Misiejuk, Kamila">
+<meta name="citation_publication_date" content="2026">
+<meta name="citation_publisher" content="Nestimate">
+<meta name="citation_pdf_url" content="https://pak.dynasite.org/Nestimate/pdf/stability-landscapes.pdf">
+<meta name="citation_abstract_html_url" content="https://pak.dynasite.org/Nestimate/articles/stability-landscapes.html">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -24,7 +32,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.12</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -39,8 +47,8 @@
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
 <li><a class="dropdown-item" href="../articles/transition-entropy.html">Transition Matrix Entropy</a></li>
     <li><a class="dropdown-item" href="../articles/transition-networks.html">Network Estimation and Analysis with Nestimate</a></li>
-    <li><a class="dropdown-item" href="../articles/sequence-comparison.html">Sequence Pattern Comparison: Early vs Late Human-AI Interactions</a></li>
-    <li><a class="dropdown-item" href="../articles/sequence-plots.html">Sequence Plots: heatmap, index, and distribution</a></li>
+    <li><a class="dropdown-item" href="../articles/sequence-comparison.html">Comparing Sequences Between Groups: Early vs Late Human-AI Interactions</a></li>
+    <li><a class="dropdown-item" href="../articles/sequence-plots.html">Sequence Plots</a></li>
     <li><a class="dropdown-item" href="../articles/clustering.html">Sequence Clustering</a></li>
     <li><a class="dropdown-item" href="../articles/markov-stability.html">Markov Stability Analysis</a></li>
     <li><hr class="dropdown-divider"></li>
@@ -66,12 +74,24 @@
 
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
-      <img src="../logo.svg" class="logo" alt=""><h1>Stability landscapes of engagement (experimental)</h1>
-            
-      
-      <small class="dont-index">Source: <a href="https://github.com/mohsaqr/Nestimate/blob/main/vignettes/articles/stability-landscapes.Rmd" class="external-link"><code>vignettes/articles/stability-landscapes.Rmd</code></a></small>
+      <img src="../logo.svg" class="logo" alt=""><h1>Stability of engagement: states, landscapes and students</h1>
+                        <h4 data-toc-skip class="author">Mohammed
+Saqr</h4>
+            <address class="author_afil">
+      University of Eastern
+Finland<br><h4 data-toc-skip class="author">Sonsoles
+López-Pernas</h4>
+            <address class="author_afil">
+      University of Eastern
+Finland<br><h4 data-toc-skip class="author">Kamila
+Misiejuk</h4>
+            <address class="author_afil">
+      FernUniversität in Hagen, Germany<br><small class="dont-index">Source: <a href="https://github.com/mohsaqr/Nestimate/blob/main/vignettes/articles/stability-landscapes.Rmd" class="external-link"><code>vignettes/articles/stability-landscapes.Rmd</code></a></small>
       <div class="d-none name"><code>stability-landscapes.Rmd</code></div>
-    </div>
+    </address>
+</address>
+</address>
+</div>
 
     
     
@@ -79,47 +99,143 @@
 <code><a href="../reference/landscape_trend.html">landscape_trend()</a></code> and <code><a href="../reference/landscape_surface.html">landscape_surface()</a></code> are
 new in Nestimate 1.0.1; their arguments and output may change in later
 releases.</p>
-<p>Which engagement states are stable, which are easy to leave, and do
-students with different trajectories live in different landscapes? A
-stability landscape answers these questions by drawing the transition
-network as a ball in a set of cups (Scheffer et al. 2009). The depth of
-a cup is how long students stay in the state once they are there: a deep
-cup holds the ball, a shallow one lets it roll out at the next step.</p>
-<p>The data are <code>trajectories</code>: the engagement state of 138
-students in each of 15 consecutive courses, coded
+<p>Which engagement states hold students, how long does it take to move
+between them, and how stable is each student’s own sequence? This
+article answers these questions with Nestimate (Saqr, López-Pernas,
+&amp; Misiejuk, 2026) for the states of a whole cohort, for groups of
+students with different trajectories, over the program, and for each
+student.</p>
+<p>The questions come from longitudinal research on student engagement.
+Saqr and López-Pernas (2021) followed the engagement state of students
+in every course of a full program and found trajectories that stayed
+engaged, stayed in between, or were troubled; Saqr, López-Pernas,
+Jovanović and Gašević (2023) traced the trajectories of students’ online
+tactics and strategies in the same way. A single snapshot of engagement
+does not forecast achievement, while sustained engagement marks a stable
+academic trajectory (Saqr, López-Pernas, Helske, &amp; Hrastinski,
+2023). López-Pernas and Saqr (2024a) read the same dynamics as
+properties of a complex system, the momentum of achievement and the
+inertia of disengagement, and Vemuri et al. (2026) traced how
+disengagement persists among first-year students.</p>
+<p>In the complex-systems view of these studies (Saqr, Schreuder, &amp;
+López-Pernas, 2024; Saqr, Dever, et al., 2025), a stable state is an
+attractor that holds students and draws them back, and a stable student
+is one whose sequence stays in few states for long spells (Saqr,
+López-Pernas, &amp; Tikka, 2026). A stable average can hide change
+within students (López-Pernas, Conde, Raspopović Milić, &amp; Saqr,
+2026), so stability is measured here for the states and for each
+student.</p>
+<table class="table">
+<colgroup>
+<col width="50%">
+<col width="50%">
+</colgroup>
+<thead><tr class="header">
+<th>Question</th>
+<th>Function</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td>How long do students stay in each state, and where do they go when
+they leave?</td>
+<td><code><a href="../reference/stability_landscape.html">stability_landscape()</a></code></td>
+</tr>
+<tr class="even">
+<td>What are the persistence, return and sojourn times of each
+state?</td>
+<td><code><a href="../reference/markov_stability.html">markov_stability()</a></code></td>
+</tr>
+<tr class="odd">
+<td>How long does it take to reach one state from another?</td>
+<td><code><a href="../reference/passage_time.html">passage_time()</a></code></td>
+</tr>
+<tr class="even">
+<td>Is the chain one connected process?</td>
+<td><code><a href="../reference/chain_structure.html">chain_structure()</a></code></td>
+</tr>
+<tr class="odd">
+<td>Do groups of students live in different landscapes?</td>
+<td>
+<code><a href="../reference/stability_landscape.html">stability_landscape()</a></code> on a grouped network</td>
+</tr>
+<tr class="even">
+<td>Does the stability of each state change over the program?</td>
+<td><code><a href="../reference/landscape_trend.html">landscape_trend()</a></code></td>
+</tr>
+<tr class="odd">
+<td>Which state holds the students whose sequences are most stable?</td>
+<td><code><a href="../reference/landscape_surface.html">landscape_surface()</a></code></td>
+</tr>
+<tr class="even">
+<td>How stable is each student’s sequence?</td>
+<td><code><a href="../reference/sequence_metrics.html">sequence_metrics()</a></code></td>
+</tr>
+</tbody>
+</table>
+<div class="section level3">
+<h3 id="data">Data<a class="anchor" aria-label="anchor" href="#data"></a>
+</h3>
+<p><code>trajectories</code> records the engagement state of 138
+students in each of 15 consecutive courses, coded with the three
+engagement states of Saqr and López-Pernas (2021):
 <code>Disengaged</code>, <code>Average</code> or <code>Active</code>. A
 missing value marks a course the student did not take; most missing
 values are trailing runs, students who left the program.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">trajectories</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">#&gt;      1         2            3            4            5            6            7         8        </span></span>
-<span><span class="co">#&gt; [1,] "Active"  "Disengaged" "Disengaged" "Disengaged" "Active"     "Active"     "Active"  "Active" </span></span>
-<span><span class="co">#&gt; [2,] "Average" "Average"    "Average"    "Average"    "Average"    "Average"    "Average" "Average"</span></span>
-<span><span class="co">#&gt; [3,] "Average" "Active"     "Active"     "Active"     "Active"     "Active"     "Active"  "Active" </span></span>
-<span><span class="co">#&gt; [4,] "Active"  "Active"     "Active"     "Active"     "Active"     "Average"    "Average" "Active" </span></span>
-<span><span class="co">#&gt; [5,] "Active"  "Active"     "Active"     "Average"    "Active"     "Average"    "Active"  "Active" </span></span>
-<span><span class="co">#&gt; [6,] "Average" "Average"    "Disengaged" "Average"    "Disengaged" "Disengaged" "Average" "Average"</span></span>
-<span><span class="co">#&gt;      9         10           11        12           13        14        15       </span></span>
-<span><span class="co">#&gt; [1,] "Average" "Active"     "Average" "Active"     NA        NA        NA       </span></span>
-<span><span class="co">#&gt; [2,] "Average" "Active"     "Average" "Average"    "Average" "Average" "Average"</span></span>
-<span><span class="co">#&gt; [3,] "Active"  "Average"    "Active"  "Active"     "Active"  "Active"  "Active" </span></span>
-<span><span class="co">#&gt; [4,] "Active"  "Active"     "Average" "Active"     "Average" "Active"  "Average"</span></span>
-<span><span class="co">#&gt; [5,] "Active"  "Disengaged" "Active"  "Active"     "Active"  "Average" "Average"</span></span>
-<span><span class="co">#&gt; [6,] "Average" "Disengaged" "Average" "Disengaged" "Average" "Average" "Average"</span></span></code></pre>
-<p>The three states have a natural order, and the landscapes below are
-drawn in it.</p>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/mohsaqr/Nestimate" class="external-link">Nestimate</a></span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">trajectories</span>, <span class="fl">3</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">#&gt;      1         2            3            4            5         6         7         8        </span></span>
+<span><span class="co">#&gt; [1,] "Active"  "Disengaged" "Disengaged" "Disengaged" "Active"  "Active"  "Active"  "Active" </span></span>
+<span><span class="co">#&gt; [2,] "Average" "Average"    "Average"    "Average"    "Average" "Average" "Average" "Average"</span></span>
+<span><span class="co">#&gt; [3,] "Average" "Active"     "Active"     "Active"     "Active"  "Active"  "Active"  "Active" </span></span>
+<span><span class="co">#&gt;      9         10        11        12        13        14        15       </span></span>
+<span><span class="co">#&gt; [1,] "Average" "Active"  "Average" "Active"  NA        NA        NA       </span></span>
+<span><span class="co">#&gt; [2,] "Average" "Active"  "Average" "Average" "Average" "Average" "Average"</span></span>
+<span><span class="co">#&gt; [3,] "Active"  "Average" "Active"  "Active"  "Active"  "Active"  "Active"</span></span></code></pre>
+<p>The transition network (Saqr, López-Pernas, Törmänen, et al., 2025;
+Saqr, López-Pernas, &amp; Tikka, 2025) gives the probability of each
+state in the next course given the state in the current one. The three
+states have a natural order, and the landscapes are drawn in it.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">network</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_network.html">build_network</a></span><span class="op">(</span><span class="va">trajectories</span>, method <span class="op">=</span> <span class="st">"relative"</span><span class="op">)</span></span>
+<span><span class="va">network</span></span></code></pre></div>
+<pre><code><span><span class="co">#&gt; Transition Network (relative probabilities) [directed]</span></span>
+<span><span class="co">#&gt;   Weights: [0.035, 0.698]  |  mean: 0.333</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;   Strongest edges (9 of 9):</span></span>
+<span><span class="co">#&gt;    from       to         weight</span></span>
+<span><span class="co">#&gt;    Active     Active     0.698 </span></span>
+<span><span class="co">#&gt;    Average    Average    0.610 </span></span>
+<span><span class="co">#&gt;    Disengaged Disengaged 0.483 </span></span>
+<span><span class="co">#&gt;    Disengaged Average    0.397 </span></span>
+<span><span class="co">#&gt;    Active     Average    0.267 </span></span>
+<span><span class="co">#&gt;    Average    Active     0.204 </span></span>
+<span><span class="co">#&gt;    Average    Disengaged 0.186 </span></span>
+<span><span class="co">#&gt;    Disengaged Active     0.120 </span></span>
+<span><span class="co">#&gt;    Active     Disengaged 0.035  </span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;   extract_edges(include_self = TRUE) lists every edge; extract_transition_matrix() gives the weight matrix;</span></span>
+<span><span class="co">#&gt;   extract_initial_probs() the initial probabilities.</span></span></code></pre>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">engagement</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Disengaged"</span>, <span class="st">"Average"</span>, <span class="st">"Active"</span><span class="op">)</span></span></code></pre></div>
+<p>Active students stay Active with probability 0.70, Average students
+stay Average with 0.61, and Disengaged students stay Disengaged with
+0.48; a Disengaged student moves to Average more often (0.40) than to
+Active (0.12).</p>
+</div>
 <div class="section level2">
-<h2 id="the-landscape-of-all-students">The landscape of all students<a class="anchor" aria-label="anchor" href="#the-landscape-of-all-students"></a>
+<h2 id="the-states">The states<a class="anchor" aria-label="anchor" href="#the-states"></a>
 </h2>
 <div class="section level3">
-<h3 id="how-stable-is-each-engagement-state">How stable is each engagement state?<a class="anchor" aria-label="anchor" href="#how-stable-is-each-engagement-state"></a>
+<h3 id="how-long-do-students-stay-in-each-state">How long do students stay in each state?<a class="anchor" aria-label="anchor" href="#how-long-do-students-stay-in-each-state"></a>
 </h3>
-<p><code><a href="../reference/build_network.html">build_network()</a></code> estimates the transition network, the
-probability of moving from each state to each other state between
-consecutive courses. <code><a href="../reference/stability_landscape.html">stability_landscape()</a></code> turns it into a
-landscape. A state that is followed by itself with probability
+<p><code><a href="../reference/stability_landscape.html">stability_landscape()</a></code> draws the network as a ball in a
+set of cups (Scheffer et al., 2009), the basins of attraction of the
+complex-systems reading of engagement (López-Pernas &amp; Saqr, 2024a;
+Saqr, López-Pernas, &amp; Tikka, 2026). The warning signals that precede
+a shift between basins have been traced in students’ engagement long
+before drop-out (Saqr, López-Pernas, Tikka, &amp; Spitzer, 2026). A
+state that is followed by itself with probability
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>P</mi><mrow><mi>i</mi><mi>i</mi></mrow></msub><annotation encoding="application/x-tex">P_{ii}</annotation></semantics></math>
 is left after
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mi>/</mi><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><msub><mi>P</mi><mrow><mi>i</mi><mi>i</mi></mrow></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">1 / (1 - P_{ii})</annotation></semantics></math>
@@ -128,12 +244,11 @@ log of that stay,
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mrow><mi mathvariant="normal">log</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><msub><mi>P</mi><mrow><mi>i</mi><mi>i</mi></mrow></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">-\log(1 - P_{ii})</annotation></semantics></math>.
 Expected stay is then
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>e</mi><mtext mathvariant="normal">depth</mtext></msup><annotation encoding="application/x-tex">e^{\text{depth}}</annotation></semantics></math>,
-the escape-time law of a particle in a potential well (Kramers 1940); a
+the escape-time law of a particle in a potential well (Kramers, 1940); a
 state that is always left at once has depth 0. The intervals come from
-1000 resamples of students.</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">network</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_network.html">build_network</a></span><span class="op">(</span><span class="va">trajectories</span>, method <span class="op">=</span> <span class="st">"relative"</span><span class="op">)</span></span>
-<span><span class="va">landscape</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/stability_landscape.html">stability_landscape</a></span><span class="op">(</span><span class="va">network</span>, states <span class="op">=</span> <span class="va">engagement</span>, iter <span class="op">=</span> <span class="fl">1000</span>,</span>
+1,000 resamples of students.</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">landscape</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/stability_landscape.html">stability_landscape</a></span><span class="op">(</span><span class="va">network</span>, states <span class="op">=</span> <span class="va">engagement</span>, iter <span class="op">=</span> <span class="fl">1000</span>,</span>
 <span>                                 seed <span class="op">=</span> <span class="fl">2026</span><span class="op">)</span></span>
 <span><span class="va">landscape</span></span></code></pre></div>
 <pre><code><span><span class="co">#&gt; Stability landscape: 3 states, 1 network, 1000 resamples</span></span>
@@ -159,20 +274,125 @@ different things: Average holds 43% of the courses against 38% for
 Active, because students enter Average more often, but they leave it
 sooner.</p>
 <p>With three states the chain also has a net circulation, the part of
-the dynamics a landscape cannot show (Schnakenberg 1976): 0.009 per
+the dynamics a landscape cannot show (Schnakenberg, 1976): 0.009 per
 course [0.003, 0.016], running Active to Average to Disengaged and back
 to Active. Students decline one step at a time and recover by the direct
 jump more often than the reverse.</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">landscape</span><span class="op">)</span></span></code></pre></div>
 <p><img src="stability-landscapes_files/figure-html/landscape-plot-1.png" class="r-plt" alt="" width="1100"></p>
 <p>The ball sits at the bottom of each cup; the grey bars are the 95%
 intervals, and the right axis reads the depth as an expected stay. Under
 each cup are its expected stay, its share of courses and where students
-go when they leave it. Disengaged is shallow and drains towards Average
-(40% of disengaged courses are followed by an average one, 12% by an
-active one). Active is deep and, when left, is left for Average (27%)
-rather than for Disengaged (3%).</p>
+go when they leave it.</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">landscape</span>, table <span class="op">=</span> <span class="st">"exits"</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">#&gt;     group       from         to probability count</span></span>
+<span><span class="co">#&gt; 1 network Disengaged    Average  0.39692308   129</span></span>
+<span><span class="co">#&gt; 2 network Disengaged     Active  0.12000000    39</span></span>
+<span><span class="co">#&gt; 3 network    Average Disengaged  0.18641811   140</span></span>
+<span><span class="co">#&gt; 4 network    Average     Active  0.20372836   153</span></span>
+<span><span class="co">#&gt; 5 network     Active Disengaged  0.03495441    23</span></span>
+<span><span class="co">#&gt; 6 network     Active    Average  0.26747720   176</span></span></code></pre>
+<p>Students who leave Disengaged go to Average three times as often as
+to Active (0.40 against 0.12), and students who leave Active almost
+never drop straight to Disengaged (0.035, 23 transitions in the whole
+data). Re-engagement and disengagement both pass through Average.</p>
+</div>
+<div class="section level3">
+<h3 id="how-stable-is-each-state-as-a-markov-chain">How stable is each state as a Markov chain?<a class="anchor" aria-label="anchor" href="#how-stable-is-each-state-as-a-markov-chain"></a>
+</h3>
+<p><code><a href="../reference/markov_stability.html">markov_stability()</a></code> reports the Markov quantities behind
+the landscape for each state (Kemeny &amp; Snell, 1976; Helske et al.,
+2024): persistence (the probability of staying,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>P</mi><mrow><mi>i</mi><mi>i</mi></mrow></msub><annotation encoding="application/x-tex">P_{ii}</annotation></semantics></math>),
+the stationary probability (the long-run share of time in the state),
+the return time (the expected number of steps to come back after
+leaving,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mi>/</mi><msub><mi>π</mi><mi>i</mi></msub></mrow><annotation encoding="application/x-tex">1/\pi_i</annotation></semantics></math>),
+the sojourn time (the expected length of a stay,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mi>/</mi><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><msub><mi>P</mi><mrow><mi>i</mi><mi>i</mi></mrow></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">1 / (1 - P_{ii})</annotation></semantics></math>),
+and the mean time to and from the other states.</p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">markov</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/markov_stability.html">markov_stability</a></span><span class="op">(</span><span class="va">network</span><span class="op">)</span></span>
+<span><span class="va">markov</span></span></code></pre></div>
+<pre><code><span><span class="co">#&gt; Markov Stability Analysis (3 states) | attractor: Average | stickiest: Active</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;       state persistence stationary_prob return_time sojourn_time avg_time_to_others</span></span>
+<span><span class="co">#&gt;      Active      0.6976          0.3719        2.69         3.31               6.99</span></span>
+<span><span class="co">#&gt;     Average      0.6099          0.4431        2.26         2.56               6.74</span></span>
+<span><span class="co">#&gt;  Disengaged      0.4831          0.1850        5.41         1.93               4.47</span></span>
+<span><span class="co">#&gt;  avg_time_from_others</span></span>
+<span><span class="co">#&gt;                  5.84</span></span>
+<span><span class="co">#&gt;                  3.20</span></span>
+<span><span class="co">#&gt;                  9.16</span></span></code></pre>
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">markov</span><span class="op">)</span></span></code></pre></div>
+<p><img src="stability-landscapes_files/figure-html/markov-stability-1.png" class="r-plt" alt="" width="1100"></p>
+<p>The long run splits the time 0.44 Average, 0.37 Active and 0.19
+Disengaged. Disengaged is the least visited state and the slowest to
+return to (5.4 courses), and the other states are far from it: reaching
+Disengaged takes 9.2 courses on average from the other two states, while
+leaving it to reach them takes 4.5. Average is reached from the other
+states in 3.2 courses.</p>
+</div>
+<div class="section level3">
+<h3 id="how-long-does-it-take-to-reach-a-state">How long does it take to reach a state?<a class="anchor" aria-label="anchor" href="#how-long-does-it-take-to-reach-a-state"></a>
+</h3>
+<p><code><a href="../reference/passage_time.html">passage_time()</a></code> gives the full matrix of mean first
+passage times: the expected number of courses to reach the column state
+from the row state for the first time (Kemeny &amp; Snell, 1976). The
+diagonal is the return time.</p>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">passage</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/passage_time.html">passage_time</a></span><span class="op">(</span><span class="va">network</span>, states <span class="op">=</span> <span class="va">engagement</span><span class="op">)</span></span>
+<span><span class="va">passage</span></span></code></pre></div>
+<pre><code><span><span class="co">#&gt; Mean First Passage Times (3 states)</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;            Disengaged Average Active</span></span>
+<span><span class="co">#&gt; Disengaged        5.4     2.8    6.2</span></span>
+<span><span class="co">#&gt; Average           8.0     2.3    5.5</span></span>
+<span><span class="co">#&gt; Active           10.4     3.6    2.7</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Stationary distribution:</span></span>
+<span><span class="co">#&gt; Disengaged    Average     Active </span></span>
+<span><span class="co">#&gt;     0.1850     0.4431     0.3719</span></span></code></pre>
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">passage</span><span class="op">)</span></span></code></pre></div>
+<p><img src="stability-landscapes_files/figure-html/passage-1.png" class="r-plt" alt="" width="1100"></p>
+<p>A Disengaged student reaches Average in 2.8 courses and Active in
+6.2. An Active student reaches Disengaged only after 10.4 courses on
+average, the longest passage in the matrix, and almost always through
+Average (8.0 courses from Average). Re-engagement from Disengaged is
+faster than disengagement from Active. Saqr, López-Pernas and Tikka
+(2026) read this asymmetry, slow decline and faster recovery, as
+resilience: the system returns to its attractor more readily than it
+leaves it.</p>
+</div>
+<div class="section level3">
+<h3 id="is-the-chain-one-connected-process">Is the chain one connected process?<a class="anchor" aria-label="anchor" href="#is-the-chain-one-connected-process"></a>
+</h3>
+<p><code><a href="../reference/chain_structure.html">chain_structure()</a></code> classifies the states of the chain:
+which states communicate, which are recurrent or transient, whether any
+are absorbing, and whether the chain is irreducible, aperiodic and
+reversible (Kemeny &amp; Snell, 1976). The stationary distribution and
+the passage times above assume an irreducible chain.</p>
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">chain</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/chain_structure.html">chain_structure</a></span><span class="op">(</span><span class="va">network</span><span class="op">)</span></span>
+<span><span class="va">chain</span></span></code></pre></div>
+<pre><code><span><span class="co">#&gt; Chain structure  [3 states, 1 communicating classes]</span></span>
+<span><span class="co">#&gt;   irreducible: TRUE   aperiodic: TRUE   regular: TRUE   reversible: FALSE</span></span>
+<span><span class="co">#&gt;   recurrent classes: 1   transient classes: 0</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Use summary(x) for the per-state table, plot(x) for the heatmap.</span></span></code></pre>
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">chain</span><span class="op">)</span></span></code></pre></div>
+<p><img src="stability-landscapes_files/figure-html/chain-1.png" class="r-plt" alt="" width="1100"></p>
+<p>The three states form one communicating class, so every state can be
+reached from every other and nothing is absorbing. The chain is regular
+(some power of the matrix is positive everywhere) and not reversible:
+the flow from Active to Average to Disengaged and back to Active does
+not balance its reverse, which is the circulation the landscape
+reported.</p>
 </div>
 </div>
 <div class="section level2">
@@ -181,9 +401,15 @@ rather than for Disengaged (3%).</p>
 <div class="section level3">
 <h3 id="do-the-students-follow-distinct-trajectories">Do the students follow distinct trajectories?<a class="anchor" aria-label="anchor" href="#do-the-students-follow-distinct-trajectories"></a>
 </h3>
-<p><code><a href="../reference/build_clusters.html">build_clusters()</a></code> groups the sequences by their Hamming
-distance with partitioning around medoids, here into three clusters.</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<p>Engagement over a full program follows a small number of distinct
+trajectories (Saqr &amp; López-Pernas, 2021; Saqr, López-Pernas,
+Jovanović, &amp; Gašević, 2023). The VaSSTra method finds them by
+turning indicators into states and clustering the sequences of states
+(López-Pernas &amp; Saqr, 2024b). <code><a href="../reference/build_clusters.html">build_clusters()</a></code> groups
+the sequences by their Hamming distance with partitioning around medoids
+(Saqr, López-Pernas, Helske, et al., 2024), here into three
+clusters.</p>
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">clusters</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_clusters.html">build_clusters</a></span><span class="op">(</span><span class="va">trajectories</span>, k <span class="op">=</span> <span class="fl">3</span>, seed <span class="op">=</span> <span class="fl">2026</span><span class="op">)</span></span>
 <span><span class="va">clusters</span></span></code></pre></div>
 <pre><code><span><span class="co">#&gt; Sequence Clustering [pam]</span></span>
@@ -195,12 +421,7 @@ distance with partitioning around medoids, here into three clusters.</p>
 <span><span class="co">#&gt;   1        47 (34.1%)  5.898             124</span></span>
 <span><span class="co">#&gt;   2        74 (53.6%)  8.389             44</span></span>
 <span><span class="co">#&gt;   3        17 (12.3%)  5.412             103</span></span></code></pre>
-<p>The three clusters hold 47, 74 and 17 students, with an average
-silhouette of 0.36, a moderate separation. <code><a href="../reference/build_network.html">build_network()</a></code>
-on the clustering gives one transition network per cluster, and
-<code><a href="../reference/state_distribution.html">state_distribution()</a></code> describes what each cluster consists
-of.</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">cluster_networks</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_network.html">build_network</a></span><span class="op">(</span><span class="va">clusters</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/state_distribution.html">state_distribution</a></span><span class="op">(</span><span class="va">cluster_networks</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">#&gt;       group      state count proportion</span></span>
@@ -213,18 +434,26 @@ of.</p>
 <span><span class="co">#&gt; 7 Cluster 3 Disengaged    56 0.80000000</span></span>
 <span><span class="co">#&gt; 8 Cluster 3    Average    11 0.15714286</span></span>
 <span><span class="co">#&gt; 9 Cluster 3     Active     3 0.04285714</span></span></code></pre>
-<p>Cluster 1 is mostly active (75% of its observed courses), cluster 2
-mostly average (60%, with 24% disengaged), and cluster 3 mostly
-disengaged (80%). Cluster 3 also has little data: 70 observed courses
-for 17 students, out of 255 possible, because most of its students left
-the program early.</p>
+<p>The three clusters hold 47, 74 and 17 students, with an average
+silhouette of 0.36, a moderate separation. Cluster 1 is mostly active
+(75% of its observed courses), cluster 2 mostly average (60%, with 24%
+disengaged), and cluster 3 mostly disengaged (80%). Cluster 3 also has
+little data: 70 observed courses for 17 students, out of 255 possible,
+because most of its students left the program early.</p>
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/sequence_plot.html">sequence_plot</a></span><span class="op">(</span><span class="va">clusters</span>, type <span class="op">=</span> <span class="st">"index"</span>, ncol <span class="op">=</span> <span class="fl">3</span>, nrow <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></code></pre></div>
+<p><img src="stability-landscapes_files/figure-html/clusters-plot-1.png" class="r-plt" alt="" width="1100"></p>
+<p>Each row is one student and each column one course. Cluster 1 is
+mostly Active and cluster 2 mostly Average, with runs of Disengaged;
+most rows of cluster 3 end within the first courses, and the grey is the
+part of the program those students did not take.</p>
 </div>
 <div class="section level3">
 <h3 id="what-landscape-does-each-cluster-live-in">What landscape does each cluster live in?<a class="anchor" aria-label="anchor" href="#what-landscape-does-each-cluster-live-in"></a>
 </h3>
 <p>The same call on the grouped networks gives one landscape per
 cluster.</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">cluster_landscape</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/stability_landscape.html">stability_landscape</a></span><span class="op">(</span><span class="va">cluster_networks</span>, states <span class="op">=</span> <span class="va">engagement</span>,</span>
 <span>                                         iter <span class="op">=</span> <span class="fl">1000</span>, seed <span class="op">=</span> <span class="fl">2026</span><span class="op">)</span></span>
 <span><span class="va">cluster_landscape</span></span></code></pre></div>
@@ -245,10 +474,10 @@ cluster.</p>
 <span><span class="co">#&gt; Net circulation (per step):</span></span>
 <span><span class="co">#&gt;   Cluster 1, Active -&gt; Average -&gt; Disengaged -&gt; Active: 0.0045 [-0.0035, 0.014]</span></span>
 <span><span class="co">#&gt;   Cluster 2, Active -&gt; Average -&gt; Disengaged -&gt; Active: 0.0143 [0.0051, 0.0237]</span></span>
-<span><span class="co">#&gt;   Cluster 3, Disengaged -&gt; Average -&gt; Active -&gt; Disengaged: 0.0217 [0.0105, 0.0755] (401 of 1000 resamples have a stationary distribution)</span></span>
+<span><span class="co">#&gt;   Cluster 3, Disengaged -&gt; Average -&gt; Active -&gt; Disengaged: 0.0217 [0, 0.0639] (877 of 1000 resamples have a stationary distribution)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Exit probabilities: summary(x, table = "exits")</span></span></code></pre>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">cluster_landscape</span><span class="op">)</span></span></code></pre></div>
 <p><img src="stability-landscapes_files/figure-html/cluster-landscape-plot-1.png" class="r-plt" alt="" width="1100"></p>
 <p>The three clusters live in three different landscapes, each with one
@@ -265,25 +494,19 @@ zero (0.004 [-0.004, 0.014]).</li>
 <strong>Cluster 2</strong> has its deep cup at Average (1.12 [0.98,
 1.25], 3.1 courses per stay). Active is as shallow as Disengaged (0.45
 and 0.56), and 58% of active courses are followed by an average one. The
-circulation is clear of zero (0.014 [0.005, 0.024]): decline one step at
-a time, recovery by the direct jump.</li>
+circulation is clear of zero (0.014 [0.005, 0.024]).</li>
 <li>
 <strong>Cluster 3</strong> has its deep cup at Disengaged (2.20
 [1.65, 2.74], 9.0 courses per stay). Its other cups rest on very few
 transitions, 2 of them out of Active, so their intervals are wide:
 [0.00, 1.95] for Average and [0.00, Inf] for Active, an upper limit that
-is unbounded because Active is never left in some resamples. Only the
-Disengaged cup of this cluster is estimated with any precision.</li>
+is unbounded because Active is never left in some resamples.</li>
 </ul>
 </div>
 <div class="section level3">
 <h3 id="how-long-does-it-take-to-reach-engagement-in-each-cluster">How long does it take to reach engagement in each cluster?<a class="anchor" aria-label="anchor" href="#how-long-does-it-take-to-reach-engagement-in-each-cluster"></a>
 </h3>
-<p>The landscape shows how stable each state is. The mean first passage
-time from <code><a href="../reference/passage_time.html">passage_time()</a></code> turns this into time: the expected
-number of courses to reach one state from another for the first time
-(Kemeny and Snell 1976).</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/passage_time.html">passage_time</a></span><span class="op">(</span><span class="va">cluster_networks</span>, states <span class="op">=</span> <span class="va">engagement</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">#&gt; Mean First Passage Times -- 3 groups: Cluster 1, Cluster 2, Cluster 3</span></span>
 <span><span class="co">#&gt; </span></span>
@@ -326,9 +549,7 @@ number of courses to reach one state from another for the first time
 average, a cluster 2 student in 9.1 and a cluster 3 student in 44, far
 beyond the 15 courses of the program. In the other direction, Active to
 Disengaged takes 26.1 courses in cluster 1, 6.7 in cluster 2 and 2.0 in
-cluster 3. The cups of the landscape are the reason: in cluster 1 every
-road leads back to Active, in cluster 3 every road leads to
-Disengaged.</p>
+cluster 3.</p>
 </div>
 </div>
 <div class="section level2">
@@ -339,21 +560,20 @@ Disengaged.</p>
 </h3>
 <p><code><a href="../reference/landscape_trend.html">landscape_trend()</a></code> estimates the cup depths in a sliding
 window of five courses (courses 1-5, 2-6, …, 11-15) and draws one line
-per state, with intervals from resampling students. The program phase is
-not derived from the transitions, so the line shows how stability
-changes over time, not who was selected.</p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+per state, with intervals from resampling students across all windows at
+once.</p>
+<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">phase_trend</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/landscape_trend.html">landscape_trend</a></span><span class="op">(</span><span class="va">network</span>, along <span class="op">=</span> <span class="st">"phase"</span>, states <span class="op">=</span> <span class="va">engagement</span>,</span>
 <span>                               iter <span class="op">=</span> <span class="fl">500</span>, seed <span class="op">=</span> <span class="fl">2026</span><span class="op">)</span></span>
 <span><span class="va">phase_trend</span></span></code></pre></div>
-<pre><code><span><span class="co">#&gt; Stability landscape along programme phase (5-step windows): 3 states, 1 network, 500 resamples</span></span>
+<pre><code><span><span class="co">#&gt; Stability landscape along time (5-step windows): 3 states, 1 network, 500 resamples</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Cup depth (log of the expected stay; higher = more stable) at the two ends and its range:</span></span>
 <span><span class="co">#&gt;       state first at_first  last at_last  min  max</span></span>
 <span><span class="co">#&gt;  Disengaged   1-5     0.72 11-15    0.89 0.42 1.01</span></span>
 <span><span class="co">#&gt;     Average   1-5     0.98 11-15    1.10 0.77 1.10</span></span>
 <span><span class="co">#&gt;      Active   1-5     1.31 11-15    1.29 1.03 1.32</span></span></code></pre>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">phase_trend</span><span class="op">)</span></span></code></pre></div>
 <p><img src="stability-landscapes_files/figure-html/trend-plot-1.png" class="r-plt" alt="" width="1100"></p>
 <p>The order of the cups holds over the whole program: Active is the
@@ -366,11 +586,11 @@ students longest near the end of the program.</p>
 <div class="section level3">
 <h3 id="does-it-change-differently-in-each-cluster">Does it change differently in each cluster?<a class="anchor" aria-label="anchor" href="#does-it-change-differently-in-each-cluster"></a>
 </h3>
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">cluster_trend</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/landscape_trend.html">landscape_trend</a></span><span class="op">(</span><span class="va">cluster_networks</span>, along <span class="op">=</span> <span class="st">"phase"</span>,</span>
 <span>                                 states <span class="op">=</span> <span class="va">engagement</span>, iter <span class="op">=</span> <span class="fl">500</span>, seed <span class="op">=</span> <span class="fl">2026</span><span class="op">)</span></span>
 <span><span class="va">cluster_trend</span></span></code></pre></div>
-<pre><code><span><span class="co">#&gt; Stability landscape along programme phase (5-step windows): 3 states, 3 networks, 500 resamples</span></span>
+<pre><code><span><span class="co">#&gt; Stability landscape along time (5-step windows): 3 states, 3 networks, 500 resamples</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Cup depth (log of the expected stay; higher = more stable) at the two ends and its range:</span></span>
 <span><span class="co">#&gt;      group      state first at_first  last at_last  min  max</span></span>
@@ -385,7 +605,7 @@ students longest near the end of the program.</p>
 <span><span class="co">#&gt;  Cluster 3     Active   1-5     0.69 11-15      NA 0.69 0.69</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; 21 values not estimable (state never left, absent, or no stationary distribution).</span></span></code></pre>
-<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">cluster_trend</span><span class="op">)</span></span></code></pre></div>
 <p><img src="stability-landscapes_files/figure-html/cluster-trend-1.png" class="r-plt" alt="" width="1100"></p>
 <p>In cluster 1, Active is the deep cup in every window (1.45 to 1.89),
@@ -410,33 +630,34 @@ lower when students spend more of the window in the state, and a ridge
 at
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mi mathvariant="normal">log</mi></mrow><annotation encoding="application/x-tex">-\log</annotation></semantics></math>
 of the probability flux between two states, higher when the switch is
-rarer (Wang et al. 2008). The windows are six courses long.</p>
-<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+rarer (Wang, Xu, &amp; Wang, 2008). The windows are six courses
+long.</p>
+<div class="sourceCode" id="cb36"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">occupancy_trend</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/landscape_trend.html">landscape_trend</a></span><span class="op">(</span><span class="va">network</span>, along <span class="op">=</span> <span class="st">"phase"</span>,</span>
 <span>                                   depth <span class="op">=</span> <span class="st">"occupancy"</span>, window <span class="op">=</span> <span class="fl">6</span>,</span>
 <span>                                   states <span class="op">=</span> <span class="va">engagement</span>, iter <span class="op">=</span> <span class="fl">500</span>,</span>
 <span>                                   seed <span class="op">=</span> <span class="fl">2026</span><span class="op">)</span></span>
 <span><span class="va">occupancy_trend</span></span></code></pre></div>
-<pre><code><span><span class="co">#&gt; Stability landscape along programme phase (6-step windows): 3 states, 1 network, 500 resamples</span></span>
+<pre><code><span><span class="co">#&gt; Stability landscape along time (6-step windows): 3 states, 1 network, 500 resamples</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Cup potential (-log pi; lower = more time in the state) at the two ends and its range:</span></span>
 <span><span class="co">#&gt;       state first at_first  last at_last  min  max</span></span>
 <span><span class="co">#&gt;  Disengaged   1-6     1.62 10-15    1.73 1.54 1.79</span></span>
 <span><span class="co">#&gt;     Average   1-6     0.82 10-15    0.79 0.79 0.86</span></span>
 <span><span class="co">#&gt;      Active   1-6     1.02 10-15    1.00 0.89 1.08</span></span></code></pre>
-<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb38"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">occupancy_trend</span>, type <span class="op">=</span> <span class="st">"surface"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="stability-landscapes_files/figure-html/occupancy-surface-1.png" class="r-plt" alt="" width="880"></p>
 <p>For all students the landscape barely moves over the program. Average
 is the lowest channel in every window (0.79 to 0.86), Active a little
 higher (0.89 to 1.08) and Disengaged the highest (1.54 to 1.79).</p>
-<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb39"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">cluster_occupancy</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/landscape_trend.html">landscape_trend</a></span><span class="op">(</span><span class="va">cluster_networks</span>, along <span class="op">=</span> <span class="st">"phase"</span>,</span>
 <span>                                     depth <span class="op">=</span> <span class="st">"occupancy"</span>, window <span class="op">=</span> <span class="fl">6</span>,</span>
 <span>                                     states <span class="op">=</span> <span class="va">engagement</span>, iter <span class="op">=</span> <span class="fl">500</span>,</span>
 <span>                                     seed <span class="op">=</span> <span class="fl">2026</span><span class="op">)</span></span>
 <span><span class="va">cluster_occupancy</span></span></code></pre></div>
-<pre><code><span><span class="co">#&gt; Stability landscape along programme phase (6-step windows): 3 states, 3 networks, 500 resamples</span></span>
+<pre><code><span><span class="co">#&gt; Stability landscape along time (6-step windows): 3 states, 3 networks, 500 resamples</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Cup potential (-log pi; lower = more time in the state) at the two ends and its range:</span></span>
 <span><span class="co">#&gt;      group      state first at_first  last at_last  min  max</span></span>
@@ -448,10 +669,10 @@ higher (0.89 to 1.08) and Disengaged the highest (1.54 to 1.79).</p>
 <span><span class="co">#&gt;  Cluster 2     Active   1-6     1.95 10-15    2.01 1.76 2.09</span></span>
 <span><span class="co">#&gt;  Cluster 3 Disengaged   1-6     0.31 10-15      NA 0.31 0.31</span></span>
 <span><span class="co">#&gt;  Cluster 3    Average   1-6     1.58 10-15      NA 1.58 1.58</span></span>
-<span><span class="co">#&gt;  Cluster 3     Active   1-6     2.83 10-15      NA 2.83 2.83</span></span>
+<span><span class="co">#&gt;  Cluster 3     Active   1-6     2.83 10-15      NA 0.00 2.83</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; 54 values not estimable (state never left, absent, or no stationary distribution).</span></span></code></pre>
-<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
+<span><span class="co">#&gt; 53 values not estimable (state never left, absent, or no stationary distribution).</span></span></code></pre>
+<div class="sourceCode" id="cb41"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">cluster_occupancy</span>, type <span class="op">=</span> <span class="st">"surface"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="stability-landscapes_files/figure-html/cluster-occupancy-surface-1.png" class="r-plt" alt="" width="1760"></p>
 <p>The clusters’ channels are steady too, but at different states. In
@@ -472,14 +693,15 @@ or gone, and the chain of a window has no stationary distribution.</p>
 <p><code><a href="../reference/landscape_surface.html">landscape_surface()</a></code> adds a second axis: a per-student
 stability measure from <code><a href="../reference/sequence_metrics.html">sequence_metrics()</a></code>. At each value of
 the measure it computes the cup depths from the 30 students closest to
-that value, weighted by a tricube kernel (Cleveland 1979), so the
+that value, weighted by a tricube kernel (Cleveland, 1979), so the
 surface runs from the most stable students to the most volatile; the
 plot puts the most stable end in front. Six measures are used: self-loop
 tendency (the share of courses that repeat the previous state),
 longitudinal entropy, the complexity index, the longest spell, cyclic
 feedback (how often a state recurs two or more courses later) and
-initial-state persistence (the length of the opening spell).</p>
-<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
+initial-state persistence (the length of the opening spell). The last
+section defines them.</p>
+<div class="sourceCode" id="cb42"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">surface</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/landscape_surface.html">landscape_surface</a></span><span class="op">(</span><span class="va">network</span>, states <span class="op">=</span> <span class="va">engagement</span>,</span>
 <span>                             measure <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"self_loop_tendency"</span>,</span>
 <span>                                         <span class="st">"longitudinal_entropy"</span>,</span>
@@ -492,167 +714,462 @@ initial-state persistence (the length of the opening spell).</p>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Cup depth (log of the expected stay) at the low and the high end of each measure:</span></span>
 <span><span class="co">#&gt;                    measure      state  low depth_at_low  high depth_at_high</span></span>
-<span><span class="co">#&gt;         self_loop_tendency Disengaged 0.29         0.14  0.96          2.34</span></span>
+<span><span class="co">#&gt;         self_loop_tendency Disengaged 0.29         0.14  0.96          2.35</span></span>
 <span><span class="co">#&gt;         self_loop_tendency    Average 0.29         0.46  0.96          1.43</span></span>
-<span><span class="co">#&gt;         self_loop_tendency     Active 0.29         0.35  0.96          3.08</span></span>
-<span><span class="co">#&gt;       longitudinal_entropy Disengaged 0.11         1.95  0.96          0.57</span></span>
+<span><span class="co">#&gt;         self_loop_tendency     Active 0.29         0.35  0.96          3.09</span></span>
+<span><span class="co">#&gt;       longitudinal_entropy Disengaged 0.11         1.96  0.96          0.58</span></span>
 <span><span class="co">#&gt;       longitudinal_entropy    Average 0.11         1.42  0.96          0.57</span></span>
-<span><span class="co">#&gt;       longitudinal_entropy     Active 0.11         3.03  0.96          0.54</span></span>
-<span><span class="co">#&gt;           complexity_index Disengaged 0.15         2.46  0.76          0.33</span></span>
-<span><span class="co">#&gt;           complexity_index    Average 0.15         1.59  0.76          0.57</span></span>
-<span><span class="co">#&gt;           complexity_index     Active 0.15         3.14  0.76          0.39</span></span>
+<span><span class="co">#&gt;       longitudinal_entropy     Active 0.11         3.03  0.96          0.53</span></span>
+<span><span class="co">#&gt;           complexity_index Disengaged 0.15         2.49  0.76          0.33</span></span>
+<span><span class="co">#&gt;           complexity_index    Average 0.15         1.60  0.76          0.57</span></span>
+<span><span class="co">#&gt;           complexity_index     Active 0.15         3.15  0.76          0.39</span></span>
 <span><span class="co">#&gt;         max_spell_duration Disengaged 2.50         0.42 14.00          1.56</span></span>
-<span><span class="co">#&gt;         max_spell_duration    Average 2.50         0.47 14.00          1.59</span></span>
+<span><span class="co">#&gt;         max_spell_duration    Average 2.50         0.47 14.00          1.58</span></span>
 <span><span class="co">#&gt;         max_spell_duration     Active 2.50         0.51 14.00          2.94</span></span>
 <span><span class="co">#&gt;   cyclic_feedback_strength Disengaged 0.50         0.99  1.00          0.54</span></span>
 <span><span class="co">#&gt;   cyclic_feedback_strength    Average 0.50         0.77  1.00          0.89</span></span>
 <span><span class="co">#&gt;   cyclic_feedback_strength     Active 0.50         0.63  1.00          1.23</span></span>
-<span><span class="co">#&gt;  initial_state_persistence Disengaged 0.07         0.62  0.97          1.61</span></span>
-<span><span class="co">#&gt;  initial_state_persistence    Average 0.07         0.88  0.97          2.23</span></span>
-<span><span class="co">#&gt;  initial_state_persistence     Active 0.07         0.90  0.97          3.18</span></span>
+<span><span class="co">#&gt;  initial_state_persistence Disengaged 0.07         0.62  0.97          1.63</span></span>
+<span><span class="co">#&gt;  initial_state_persistence    Average 0.07         0.88  0.97          2.26</span></span>
+<span><span class="co">#&gt;  initial_state_persistence     Active 0.07         0.90  0.97          3.19</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Effective sequences per slice: network 5.1-73.0</span></span></code></pre>
-<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
+<span><span class="co">#&gt; Effective sequences per slice: network 5.0-73.0</span></span></code></pre>
+<div class="sourceCode" id="cb44"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">surface</span>, ncol <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span></code></pre></div>
 <p><img src="stability-landscapes_files/figure-html/surface-plot-1.png" class="r-plt" alt="" width="1650"></p>
 <p>Five of the six measures give the same answer. At the stable end
-every cup deepens and Active is the deepest, between 2.94 and 3.18 on
+every cup deepens and Active is the deepest, between 2.94 and 3.19 on
 all five measures, an expected stay of about 20 courses. Disengaged is
-the second deepest for self-loop tendency, entropy and complexity (1.95
-to 2.46, 7 to 12 courses): the most stable students are either stably
+the second deepest for self-loop tendency, entropy and complexity (1.96
+to 2.49, 7 to 12 courses): the most stable students are either stably
 active or, fewer of them, stably disengaged. At the volatile end all
-three cups are shallow and of similar depth (0.14 to 0.90), so no state
-holds the most volatile students for more than about two and a half
-courses. Cyclic feedback differs: as recurrence rises, the Active cup
-deepens (0.63 to 1.23) and the Disengaged cup becomes shallower (0.99 to
-0.54).</p>
-<p>These measures come from the same sequences as the depths, so the
-cups of the most stable students are deep by construction, self-loop
-tendency most of all. What the surface adds is which cup deepens as
-stability rises: Active first, Disengaged second.</p>
+three cups are shallow and of similar depth (0.14 to 0.90). Cyclic
+feedback differs: as recurrence rises, the Active cup deepens (0.63 to
+1.23) and the Disengaged cup becomes shallower (0.99 to 0.54).</p>
+<p>The measures come from the same sequences as the depths, so the cups
+of the most stable students are deep by construction, self-loop tendency
+most of all, and the depths at the stable end exceed any stay the
+15-course program can show. What the surface adds is which cup deepens
+as stability rises: Active first, Disengaged second.</p>
 </div>
 <div class="section level3">
 <h3 id="does-the-same-hold-inside-each-cluster">Does the same hold inside each cluster?<a class="anchor" aria-label="anchor" href="#does-the-same-hold-inside-each-cluster"></a>
 </h3>
-<p>The same call on the clusters, with two measures: self-loop tendency
-and longitudinal entropy.</p>
-<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb45"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">cluster_surface</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/landscape_surface.html">landscape_surface</a></span><span class="op">(</span><span class="va">cluster_networks</span>, states <span class="op">=</span> <span class="va">engagement</span>,</span>
 <span>                                     measure <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"self_loop_tendency"</span>,</span>
-<span>                                                 <span class="st">"longitudinal_entropy"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">#&gt; Warning: 4 of 150 slices rest on fewer than 5 effective sequences (minimum 4.0), often because many</span></span>
-<span><span class="co">#&gt; sequences share one value of the measure; their depths are unstable.</span></span></code></pre>
-<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">cluster_surface</span></span></code></pre></div>
+<span>                                                 <span class="st">"longitudinal_entropy"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">cluster_surface</span></span></code></pre></div>
 <pre><code><span><span class="co">#&gt; Landscape surface: 3 states, 3 networks x 2 measures, 30 nearest sequences per slice</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Cup depth (log of the expected stay) at the low and the high end of each measure:</span></span>
 <span><span class="co">#&gt;      group              measure      state  low depth_at_low high depth_at_high</span></span>
 <span><span class="co">#&gt;  Cluster 1   self_loop_tendency Disengaged 0.36         0.42 1.00          0.27</span></span>
-<span><span class="co">#&gt;  Cluster 1   self_loop_tendency    Average 0.36         0.30 1.00          0.54</span></span>
+<span><span class="co">#&gt;  Cluster 1   self_loop_tendency    Average 0.36         0.30 1.00          0.55</span></span>
 <span><span class="co">#&gt;  Cluster 1   self_loop_tendency     Active 0.36         0.91 1.00          2.86</span></span>
 <span><span class="co">#&gt;  Cluster 1 longitudinal_entropy Disengaged 0.00         0.00 0.94          0.47</span></span>
 <span><span class="co">#&gt;  Cluster 1 longitudinal_entropy    Average 0.00         0.27 0.94          0.36</span></span>
-<span><span class="co">#&gt;  Cluster 1 longitudinal_entropy     Active 0.00         3.05 0.94          1.01</span></span>
+<span><span class="co">#&gt;  Cluster 1 longitudinal_entropy     Active 0.00         3.07 0.94          1.01</span></span>
 <span><span class="co">#&gt;  Cluster 2   self_loop_tendency Disengaged 0.29         0.15 0.81          0.73</span></span>
-<span><span class="co">#&gt;  Cluster 2   self_loop_tendency    Average 0.29         0.62 0.81          1.92</span></span>
+<span><span class="co">#&gt;  Cluster 2   self_loop_tendency    Average 0.29         0.61 0.81          1.92</span></span>
 <span><span class="co">#&gt;  Cluster 2   self_loop_tendency     Active 0.29         0.22 0.81          0.88</span></span>
 <span><span class="co">#&gt;  Cluster 2 longitudinal_entropy Disengaged 0.36         0.62 0.99          0.57</span></span>
-<span><span class="co">#&gt;  Cluster 2 longitudinal_entropy    Average 0.36         1.79 0.99          0.64</span></span>
+<span><span class="co">#&gt;  Cluster 2 longitudinal_entropy    Average 0.36         1.80 0.99          0.64</span></span>
 <span><span class="co">#&gt;  Cluster 2 longitudinal_entropy     Active 0.36         0.23 0.99          0.40</span></span>
 <span><span class="co">#&gt;  Cluster 3   self_loop_tendency Disengaged 0.67         2.10 1.00          2.29</span></span>
 <span><span class="co">#&gt;  Cluster 3   self_loop_tendency    Average 0.67         0.68 1.00          0.83</span></span>
-<span><span class="co">#&gt;  Cluster 3   self_loop_tendency     Active 0.67         0.69 1.00          0.69</span></span>
-<span><span class="co">#&gt;  Cluster 3 longitudinal_entropy Disengaged 0.00         2.49 0.63          1.98</span></span>
+<span><span class="co">#&gt;  Cluster 3   self_loop_tendency     Active 0.67         0.69 1.00            NA</span></span>
+<span><span class="co">#&gt;  Cluster 3 longitudinal_entropy Disengaged 0.00         2.49 0.63          1.97</span></span>
 <span><span class="co">#&gt;  Cluster 3 longitudinal_entropy    Average 0.00         0.00 0.63          0.89</span></span>
 <span><span class="co">#&gt;  Cluster 3 longitudinal_entropy     Active 0.00         0.00 0.63          0.70</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Effective sequences per slice: Cluster 1 16.0-26.6, Cluster 2 11.8-27.8, Cluster 3 4.0-8.0</span></span></code></pre>
-<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
+<span><span class="co">#&gt; Effective sequences per slice: Cluster 1 15.8-26.5, Cluster 2 11.6-27.8, Cluster 3 4.0-8.0</span></span></code></pre>
+<div class="sourceCode" id="cb47"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">cluster_surface</span><span class="op">)</span></span></code></pre></div>
 <p><img src="stability-landscapes_files/figure-html/cluster-surface-plot-1.png" class="r-plt" alt="" width="1210"></p>
 <p>Within clusters, stability deepens the cluster’s own cup. In cluster
 1 the Active cup deepens from 0.91 for the students with the lowest
-self-loop tendency to 2.86 for the highest, and it is the deepest cup in
-every slice of both measures. In cluster 2 the Average cup deepens from
-0.62 to 1.92: the most stable cluster 2 students are stably average, not
+self-loop tendency to 2.86 for the highest, and it is the deepest cup at
+both ends of both measures. In cluster 2 the Average cup deepens from
+0.61 to 1.92: the most stable cluster 2 students are stably average, not
 stably active. Cluster 3 has 4 to 8 effective students per slice, so its
 surfaces show no more than its deep Disengaged cup.</p>
 </div>
 </div>
 <div class="section level2">
-<h2 id="when-to-use-which">When to use which<a class="anchor" aria-label="anchor" href="#when-to-use-which"></a>
+<h2 id="the-students">The students<a class="anchor" aria-label="anchor" href="#the-students"></a>
 </h2>
-<table class="table">
-<colgroup>
-<col width="55%">
-<col width="44%">
-</colgroup>
-<thead><tr class="header">
-<th>Question</th>
-<th>Method</th>
-</tr></thead>
-<tbody>
-<tr class="odd">
-<td>How long do students stay in each state, and where do they go when
-they leave?</td>
-<td>
-<code><a href="../reference/stability_landscape.html">stability_landscape()</a></code> on a transition network</td>
-</tr>
-<tr class="even">
-<td>Do subgroups live in different landscapes?</td>
-<td>
-<code><a href="../reference/stability_landscape.html">stability_landscape()</a></code> on a grouped network
-(<code><a href="../reference/build_network.html">build_network()</a></code> of <code><a href="../reference/build_clusters.html">build_clusters()</a></code>, or
-<code>group =</code>)</td>
-</tr>
-<tr class="odd">
-<td>How long does it take to reach a state?</td>
-<td><code><a href="../reference/passage_time.html">passage_time()</a></code></td>
-</tr>
-<tr class="even">
-<td>Does the stability of each state change over the program, or with a
-covariate such as a grade?</td>
-<td>
-<code><a href="../reference/landscape_trend.html">landscape_trend()</a></code> (<code>along = "phase"</code> or a
-covariate)</td>
-</tr>
-<tr class="odd">
-<td>Which state becomes the attractor as sequences become more
-stable?</td>
-<td>
-<code><a href="../reference/landscape_surface.html">landscape_surface()</a></code> with a
-<code><a href="../reference/sequence_metrics.html">sequence_metrics()</a></code> measure</td>
-</tr>
-</tbody>
-</table>
-<p>Run <code><a href="../reference/stability_landscape.html">stability_landscape()</a></code> first: it gives each state’s
-depth with an interval, its exits, and the net circulation, the part of
-the dynamics a landscape leaves out. Add <code><a href="../reference/passage_time.html">passage_time()</a></code>
-when the question is about time. Use <code><a href="../reference/landscape_surface.html">landscape_surface()</a></code> to
-ask which cup the stable sequences fall into, with the full sample or
-large clusters; a cluster whose slices rest on fewer than about ten
-effective sequences is too small for it.</p>
+<p>The network and the landscapes describe the states of a group, and a
+group-level description can misrepresent the students in it (Saqr, 2024;
+Saqr, Vogelsmeier, &amp; López-Pernas, 2024); in self-regulated
+learning, the average process does not reflect the process of individual
+students (Saqr &amp; López-Pernas, 2024). Saqr, López-Pernas and Tikka
+(2026) read stability from each student’s own sequence: a stable student
+visits few states, stays long in each, returns to the same state, and
+spends most of the program in one state that acts as their attractor.
+They group the sequence indices into three families, diversity of
+states, resistance to change and structural dynamics.
+<code><a href="../reference/sequence_metrics.html">sequence_metrics()</a></code> computes the indices, as
+<code>sequence_indices()</code> in codyna does (Tikka, López-Pernas,
+&amp; Saqr, 2026); most are also defined in TraMineR (Gabadinho et al.,
+2011). <code>indices</code> selects the ones returned.</p>
+<div class="section level3">
+<h3 id="how-varied-is-each-students-sequence">How varied is each student’s sequence?<a class="anchor" aria-label="anchor" href="#how-varied-is-each-students-sequence"></a>
+</h3>
+<p>The first family measures the diversity of states.
+<code>unique_states</code> counts the distinct states a student visits.
+<code>longitudinal_entropy</code> is the Shannon entropy of the
+student’s state proportions
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>p</mi><mi>s</mi></msub><annotation encoding="application/x-tex">p_s</annotation></semantics></math>,
+divided by the log of the number of states
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>S</mi><annotation encoding="application/x-tex">S</annotation></semantics></math>
+so that it runs from 0 to 1:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><msubsup><mo>∑</mo><mrow><mi>s</mi><mo>=</mo><mn>1</mn></mrow><mi>S</mi></msubsup><msub><mi>p</mi><mi>s</mi></msub><mrow><mi mathvariant="normal">log</mi><mo>⁡</mo></mrow><msub><mi>p</mi><mi>s</mi></msub><mi>/</mi><mrow><mi mathvariant="normal">log</mi><mo>⁡</mo></mrow><mi>S</mi></mrow><annotation encoding="application/x-tex">-\sum_{s=1}^{S} p_s \log p_s / \log S</annotation></semantics></math>.
+<code>simpson_diversity</code> is the probability that two courses drawn
+from the sequence are in different states,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mo>−</mo><msubsup><mo>∑</mo><mrow><mi>s</mi><mo>=</mo><mn>1</mn></mrow><mi>S</mi></msubsup><msubsup><mi>p</mi><mi>s</mi><mn>2</mn></msubsup></mrow><annotation encoding="application/x-tex">1 - \sum_{s=1}^{S} p_s^2</annotation></semantics></math>.
+Low values mean a sequence concentrated in one state, the mark of a
+strong attractor (Saqr, López-Pernas, &amp; Tikka, 2026).</p>
+<div class="sourceCode" id="cb48"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">diversity</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sequence_metrics.html">sequence_metrics</a></span><span class="op">(</span><span class="va">trajectories</span>,</span>
+<span>                              indices <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"valid_n"</span>, <span class="st">"unique_states"</span>,</span>
+<span>                                          <span class="st">"longitudinal_entropy"</span>,</span>
+<span>                                          <span class="st">"simpson_diversity"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">diversity</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">#&gt;     valid_n      unique_states   longitudinal_entropy simpson_diversity</span></span>
+<span><span class="co">#&gt;  Min.   : 0.00   Min.   :0.000   Min.   :0.0000       Min.   :0.0000   </span></span>
+<span><span class="co">#&gt;  1st Qu.:15.00   1st Qu.:2.000   1st Qu.:0.4416       1st Qu.:0.2400   </span></span>
+<span><span class="co">#&gt;  Median :15.00   Median :2.000   Median :0.5794       Median :0.4444   </span></span>
+<span><span class="co">#&gt;  Mean   :13.55   Mean   :2.283   Mean   :0.5583       Mean   :0.3821   </span></span>
+<span><span class="co">#&gt;  3rd Qu.:15.00   3rd Qu.:3.000   3rd Qu.:0.7426       3rd Qu.:0.4978   </span></span>
+<span><span class="co">#&gt;  Max.   :15.00   Max.   :3.000   Max.   :0.9878       Max.   :0.6578   </span></span>
+<span><span class="co">#&gt;                                  NAs    :2            NAs    :2</span></span></code></pre>
+<p>Two students have no observed course and get <code>NA</code> in every
+index, and 20 are observed for fewer than 15 courses: a sequence ends at
+its last observed course. The typical student visits two of the three
+states. The mean entropy is 0.56 and the mean Simpson diversity 0.38:
+the cohort is more varied than the mostly engaged students Saqr,
+López-Pernas and Tikka (2026) analysed (0.38 and 0.27).</p>
+<div class="sourceCode" id="cb50"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="fu"><a href="../reference/sequence_metrics.html">sequence_metrics</a></span><span class="op">(</span><span class="va">trajectories</span>,</span>
+<span>                        indices <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"first_state"</span>, <span class="st">"valid_n"</span>,</span>
+<span>                                    <span class="st">"unique_states"</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>       <span class="va">unique_states</span> <span class="op">==</span> <span class="fl">1</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">#&gt;     first_state valid_n unique_states</span></span>
+<span><span class="co">#&gt; 30   Disengaged       2             1</span></span>
+<span><span class="co">#&gt; 32       Active      15             1</span></span>
+<span><span class="co">#&gt; 33   Disengaged       1             1</span></span>
+<span><span class="co">#&gt; 82       Active      15             1</span></span>
+<span><span class="co">#&gt; 86       Active      15             1</span></span>
+<span><span class="co">#&gt; 94       Active      15             1</span></span>
+<span><span class="co">#&gt; 97   Disengaged       1             1</span></span>
+<span><span class="co">#&gt; 98   Disengaged       1             1</span></span>
+<span><span class="co">#&gt; 102  Disengaged       1             1</span></span>
+<span><span class="co">#&gt; 103  Disengaged       2             1</span></span>
+<span><span class="co">#&gt; 106  Disengaged       1             1</span></span>
+<span><span class="co">#&gt; 124      Active      15             1</span></span></code></pre>
+<p>The students who visit a single state are of two kinds. Five are
+Active in all 15 courses: a single attractor that held for the whole
+program. Seven are Disengaged and are observed for one or two courses
+only: their sequences are stable because they ended, not because they
+resisted change. A diversity of 0 needs <code>valid_n</code> beside it
+before it can be read as stability.</p>
+</div>
+<div class="section level3">
+<h3 id="how-strongly-does-each-student-resist-change">How strongly does each student resist change?<a class="anchor" aria-label="anchor" href="#how-strongly-does-each-student-resist-change"></a>
+</h3>
+<p>The second family measures resistance to change.
+<code>self_loop_tendency</code> is the share of a student’s transitions
+that stay in the same state and <code>transition_rate</code> the share
+that change it; the two sum to 1. <code>mean_spell_duration</code> and
+<code>max_spell_duration</code> are the mean and the longest run of one
+state, in courses. <code>initial_state_persistence</code> is the length
+of the opening spell as a share of the sequence,
+<code>initial_state_proportion</code> the share of the sequence spent in
+the first state, and <code>initial_state_influence_decay</code> the
+share of the first third spent in the first state minus the share of the
+last third, positive when the first state fades.</p>
+<div class="sourceCode" id="cb52"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="fu"><a href="../reference/sequence_metrics.html">sequence_metrics</a></span><span class="op">(</span><span class="va">trajectories</span>,</span>
+<span>                         indices <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"self_loop_tendency"</span>, <span class="st">"transition_rate"</span>,</span>
+<span>                                     <span class="st">"mean_spell_duration"</span>,</span>
+<span>                                     <span class="st">"max_spell_duration"</span>,</span>
+<span>                                     <span class="st">"initial_state_persistence"</span>,</span>
+<span>                                     <span class="st">"initial_state_proportion"</span>,</span>
+<span>                                     <span class="st">"initial_state_influence_decay"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">#&gt;  self_loop_tendency transition_rate  mean_spell_duration max_spell_duration</span></span>
+<span><span class="co">#&gt;  Min.   :0.2143     Min.   :0.0000   Min.   : 1.000      Min.   : 1.000    </span></span>
+<span><span class="co">#&gt;  1st Qu.:0.5000     1st Qu.:0.2143   1st Qu.: 1.667      1st Qu.: 4.000    </span></span>
+<span><span class="co">#&gt;  Median :0.5714     Median :0.4286   Median : 2.143      Median : 5.000    </span></span>
+<span><span class="co">#&gt;  Mean   :0.6278     Mean   :0.3722   Mean   : 3.189      Mean   : 6.169    </span></span>
+<span><span class="co">#&gt;  3rd Qu.:0.7857     3rd Qu.:0.5000   3rd Qu.: 3.750      3rd Qu.: 7.000    </span></span>
+<span><span class="co">#&gt;  Max.   :1.0000     Max.   :0.7857   Max.   :15.000      Max.   :15.000    </span></span>
+<span><span class="co">#&gt;  NAs    :7          NAs    :7        NAs    :2           NAs    :2         </span></span>
+<span><span class="co">#&gt;  initial_state_persistence initial_state_proportion initial_state_influence_decay</span></span>
+<span><span class="co">#&gt;  Min.   :0.06667           Min.   :0.06667          Min.   :-0.63333             </span></span>
+<span><span class="co">#&gt;  1st Qu.:0.06667           1st Qu.:0.31667          1st Qu.:-0.03333             </span></span>
+<span><span class="co">#&gt;  Median :0.13333           Median :0.60000          Median : 0.18333             </span></span>
+<span><span class="co">#&gt;  Mean   :0.28557           Mean   :0.55793          Mean   : 0.17439             </span></span>
+<span><span class="co">#&gt;  3rd Qu.:0.40000           3rd Qu.:0.80000          3rd Qu.: 0.33333             </span></span>
+<span><span class="co">#&gt;  Max.   :1.00000           Max.   :1.00000          Max.   : 1.00000             </span></span>
+<span><span class="co">#&gt;  NAs    :2                 NAs    :2                NAs    :2</span></span></code></pre>
+<p>Students repeat their state in 63% of transitions on average (median
+57%, range 21% to 100%), and change it in the other 37%. The median
+spell lasts 2.1 courses and the median longest spell 5 courses. The
+median opening spell covers 13% of the sequence, two courses of fifteen,
+although the first state takes 56% of the sequence on average, because
+students come back to it. The mean influence decay is 0.17: for most
+students the first state weakens over the program. The cohort resists
+change less than the mostly engaged students of Saqr, López-Pernas and
+Tikka (2026), whose mean self-loop tendency was 0.75 and initial-state
+persistence 0.45.</p>
+</div>
+<div class="section level3">
+<h3 id="where-does-each-students-sequence-settle">Where does each student’s sequence settle?<a class="anchor" aria-label="anchor" href="#where-does-each-students-sequence-settle"></a>
+</h3>
+<p>The third family describes the structure of a sequence.
+<code>cyclic_feedback_strength</code> is the largest share, over lags of
+two or more courses, of positions whose state recurs that many courses
+later. <code>dominant_state</code> is the student’s most frequent state,
+their attractor; <code>dominant_proportion</code> its share of the
+sequence and <code>dominant_max_spell</code> its longest spell.
+<code>transition_complexity</code> is the share of the six possible
+changes of state that the student makes at least once.
+<code>emergent_state</code> is a state that settles in later in the
+program and outlasts the opening.</p>
+<div class="sourceCode" id="cb54"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">structure_indices</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sequence_metrics.html">sequence_metrics</a></span><span class="op">(</span><span class="va">trajectories</span>,</span>
+<span>                                      indices <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"dominant_state"</span>,</span>
+<span>                                                  <span class="st">"dominant_proportion"</span>,</span>
+<span>                                                  <span class="st">"dominant_max_spell"</span>,</span>
+<span>                                                  <span class="st">"cyclic_feedback_strength"</span>,</span>
+<span>                                                  <span class="st">"transition_complexity"</span>,</span>
+<span>                                                  <span class="st">"emergent_state"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">structure_indices</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">#&gt;    dominant_state dominant_proportion dominant_max_spell cyclic_feedback_strength</span></span>
+<span><span class="co">#&gt;  Length   :138    Min.   :0.4000      Min.   : 1.000     Min.   :0.0000          </span></span>
+<span><span class="co">#&gt;  N.unique :  3    1st Qu.:0.5804      1st Qu.: 4.000     1st Qu.:0.6981          </span></span>
+<span><span class="co">#&gt;  N.blank  :  0    Median :0.6667      Median : 5.000     Median :1.0000          </span></span>
+<span><span class="co">#&gt;  Min.nchar:  6    Mean   :0.7091      Mean   : 6.096     Mean   :0.8267          </span></span>
+<span><span class="co">#&gt;  Max.nchar: 10    3rd Qu.:0.8667      3rd Qu.: 7.000     3rd Qu.:1.0000          </span></span>
+<span><span class="co">#&gt;  NAs      :  2    Max.   :1.0000      Max.   :15.000     Max.   :1.0000          </span></span>
+<span><span class="co">#&gt;                   NAs    :2           NAs    :2          NAs    :2               </span></span>
+<span><span class="co">#&gt;  transition_complexity   emergent_state</span></span>
+<span><span class="co">#&gt;  Min.   :0.0000        Length   :138   </span></span>
+<span><span class="co">#&gt;  1st Qu.:0.3333        N.unique :  3   </span></span>
+<span><span class="co">#&gt;  Median :0.3333        N.blank  :  0   </span></span>
+<span><span class="co">#&gt;  Mean   :0.4240        Min.nchar:  6   </span></span>
+<span><span class="co">#&gt;  3rd Qu.:0.6667        Max.nchar: 10   </span></span>
+<span><span class="co">#&gt;  Max.   :1.0000        NAs      : 33   </span></span>
+<span><span class="co">#&gt;  NAs    :2</span></span></code></pre>
+<p>The dominant state takes 71% of a student’s sequence on average and
+never less than 40%: every student has an attractor that holds at least
+two courses in five. Students use a third of the possible changes
+(median 0.33, two of six).</p>
+<div class="sourceCode" id="cb56"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/stats/aggregate.html" class="external-link">aggregate</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind</a></span><span class="op">(</span><span class="va">self_loop_tendency</span>, <span class="va">dominant_proportion</span>,</span>
+<span>                <span class="va">longitudinal_entropy</span>, <span class="va">mean_spell_duration</span><span class="op">)</span> <span class="op">~</span> <span class="va">dominant_state</span>,</span>
+<span>          data <span class="op">=</span> <span class="fu"><a href="../reference/sequence_metrics.html">sequence_metrics</a></span><span class="op">(</span><span class="va">trajectories</span><span class="op">)</span>, FUN <span class="op">=</span> <span class="va">median</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">#&gt;   dominant_state self_loop_tendency dominant_proportion longitudinal_entropy mean_spell_duration</span></span>
+<span><span class="co">#&gt; 1         Active          0.6666667           0.7333333            0.5793802            2.500000</span></span>
+<span><span class="co">#&gt; 2        Average          0.5714286           0.6666667            0.6289055            2.142857</span></span>
+<span><span class="co">#&gt; 3     Disengaged          0.6428571           0.7142857            0.5445684            2.000000</span></span></code></pre>
+<p>The attractors differ in how firmly they hold their students.
+Students whose attractor is Active are the most stable: the median
+student repeats their state in 67% of transitions, spends 73% of the
+program in Active and stays 2.5 courses at a time. Students whose
+attractor is Average are the least stable on three of the four indices;
+Disengaged students have the shortest spells (2.0 courses). The deepest
+cup of the landscape, Active, holds its individual students most firmly
+too.</p>
+</div>
+<div class="section level3">
+<h3 id="do-students-end-where-they-started">Do students end where they started?<a class="anchor" aria-label="anchor" href="#do-students-end-where-they-started"></a>
+</h3>
+<p>A complex system is sensitive to its initial conditions (Saqr,
+López-Pernas, &amp; Tikka, 2026): the state a student starts in may
+shape the state they end in.</p>
+<div class="sourceCode" id="cb58"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">first_last</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span><span class="fu"><a href="../reference/sequence_metrics.html">sequence_metrics</a></span><span class="op">(</span><span class="va">trajectories</span>,</span>
+<span>                                     indices <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"first_state"</span>,</span>
+<span>                                                 <span class="st">"last_state"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">first_last</span></span></code></pre></div>
+<pre><code><span><span class="co">#&gt;             last_state</span></span>
+<span><span class="co">#&gt; first_state  Active Average Disengaged</span></span>
+<span><span class="co">#&gt;   Active         26      21          5</span></span>
+<span><span class="co">#&gt;   Average        16      27          7</span></span>
+<span><span class="co">#&gt;   Disengaged      3      14         17</span></span></code></pre>
+<div class="sourceCode" id="cb60"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/mosaic_plot.html">mosaic_plot</a></span><span class="op">(</span><span class="va">first_last</span>, xlab <span class="op">=</span> <span class="st">"First state"</span>, ylab <span class="op">=</span> <span class="st">"Last state"</span>, seed <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></code></pre></div>
+<p><img src="stability-landscapes_files/figure-html/first-last-1.png" class="r-plt" alt="" width="1100"></p>
+<p>Half the students (70 of 136) end in the state they started in. The
+start carries most at the extremes: 26 of the 52 students who start
+Active end Active and only 5 end Disengaged, and 17 of the 34 who start
+Disengaged end Disengaged and only 3 end Active. The mosaic marks these
+cells by their standardised residuals: Active to Active and Disengaged
+to Disengaged occur more often than independence predicts, and the
+crossings between the extremes less often.</p>
+</div>
+<div class="section level3">
+<h3 id="how-much-of-each-sequence-is-spent-in-the-favourable-state">How much of each sequence is spent in the favourable state?<a class="anchor" aria-label="anchor" href="#how-much-of-each-sequence-is-spent-in-the-favourable-state"></a>
+</h3>
+<p><code>integrative_potential</code> weights each course by its
+position, so that time in Active late in the program counts more than
+time in Active at the start (Brzinsky-Fay, 2018); <code>favorable</code>
+names the favourable state.</p>
+<div class="sourceCode" id="cb61"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="fu"><a href="../reference/sequence_metrics.html">sequence_metrics</a></span><span class="op">(</span><span class="va">trajectories</span>, favorable <span class="op">=</span> <span class="st">"Active"</span>,</span>
+<span>                         indices <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"integrative_potential"</span>,</span>
+<span>                                     <span class="st">"complexity_index"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">#&gt;  integrative_potential complexity_index</span></span>
+<span><span class="co">#&gt;  Min.   :0.000000      Min.   :0.0000  </span></span>
+<span><span class="co">#&gt;  1st Qu.:0.008333      1st Qu.:0.4019  </span></span>
+<span><span class="co">#&gt;  Median :0.220833      Median :0.5243  </span></span>
+<span><span class="co">#&gt;  Mean   :0.346837      Mean   :0.4994  </span></span>
+<span><span class="co">#&gt;  3rd Qu.:0.613301      3rd Qu.:0.6411  </span></span>
+<span><span class="co">#&gt;  Max.   :1.000000      Max.   :0.7824  </span></span>
+<span><span class="co">#&gt;  NAs    :2             NAs    :2</span></span></code></pre>
+<p>The median student spends a position-weighted 22% of the program in
+Active (mean 0.35), and a quarter of the students spend almost none. The
+complexity index combines the families into one number per student:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0.4</mn><mo>×</mo></mrow><annotation encoding="application/x-tex">0.4 \times</annotation></semantics></math>
+entropy
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>+</mi><mn>0.4</mn><mo>×</mo></mrow><annotation encoding="application/x-tex">+ 0.4 \times</annotation></semantics></math>
+transition rate
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>+</mi><mn>0.2</mn><mo>×</mo></mrow><annotation encoding="application/x-tex">+ 0.2 \times</annotation></semantics></math>
+the coefficient of variation of the spell lengths (capped at 1), 0 for a
+student who never changes state. Its mean is 0.50 (range 0 to 0.78);
+built from entropy and the transition rate, it ranks the students much
+as those two do.</p>
+</div>
+</div>
+<div class="section level2">
+<h2 id="related-articles">Related articles<a class="anchor" aria-label="anchor" href="#related-articles"></a>
+</h2>
+<p>The predictability of the process (transition entropy, whether the
+next state depends on more than the current one, which histories change
+it) is covered in the transition-entropy vignette and the higher-order
+network article. The stability of the estimates (bootstrap, Bayesian
+certainty, split-half reliability, case-dropping of edges and
+centralities) is covered in the model assessment article.</p>
+</div>
+<div class="section level2">
+<h2 id="how-to-cite-this-article">How to cite this article<a class="anchor" aria-label="anchor" href="#how-to-cite-this-article"></a>
+</h2>
+<p>Saqr, M., López-Pernas, S., &amp; Misiejuk, K. (2026). <em>Stability
+of engagement: States, landscapes and students</em>. Nestimate. <a href="https://pak.dynasite.org/Nestimate/articles/stability-landscapes.html">HTML</a>
+· <a href="https://pak.dynasite.org/Nestimate/pdf/stability-landscapes.pdf">PDF</a></p>
 </div>
 <div class="section level2">
 <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
 </h2>
+<p>Brzinsky-Fay, C. (2018). Unused resources: Sequence and trajectory
+indicators. <em>International Symposium on Sequence Analysis and Related
+Methods</em>, Monte Verità.</p>
 <p>Cleveland, W. S. (1979). Robust locally weighted regression and
 smoothing scatterplots. <em>Journal of the American Statistical
-Association</em>, 74, 829–836.</p>
+Association</em>, 74(368), 829–836. <a href="https://doi.org/10.1080/01621459.1979.10481038" class="external-link uri">https://doi.org/10.1080/01621459.1979.10481038</a></p>
+<p>Gabadinho, A., Ritschard, G., Müller, N. S., &amp; Studer, M. (2011).
+Analyzing and visualizing state sequences in R with TraMineR.
+<em>Journal of Statistical Software</em>, 40(4), 1–37. <a href="https://doi.org/10.18637/jss.v040.i04" class="external-link uri">https://doi.org/10.18637/jss.v040.i04</a></p>
+<p>Helske, J., Helske, S., Saqr, M., López-Pernas, S., &amp; Murphy, K.
+(2024). A modern approach to transition analysis and process mining with
+Markov models in education. In M. Saqr &amp; S. López-Pernas (Eds.),
+<em>Learning analytics methods and tutorials</em> (pp. 381–427).
+Springer. <a href="https://doi.org/10.1007/978-3-031-54464-4_12" class="external-link uri">https://doi.org/10.1007/978-3-031-54464-4_12</a></p>
 <p>Kemeny, J. G., &amp; Snell, J. L. (1976). <em>Finite Markov
 chains</em>. Springer.</p>
 <p>Kramers, H. A. (1940). Brownian motion in a field of force and the
-diffusion model of chemical reactions. <em>Physica</em>, 7, 284–304.</p>
-<p>Scheffer, M., Bascompte, J., Brock, W. A., et al. (2009).
-Early-warning signals for critical transitions. <em>Nature</em>, 461,
-53–59.</p>
+diffusion model of chemical reactions. <em>Physica</em>, 7(4), 284–304.
+<a href="https://doi.org/10.1016/S0031-8914(40)90098-2" class="external-link uri">https://doi.org/10.1016/S0031-8914(40)90098-2</a></p>
+<p>López-Pernas, S., Conde, M. Á., Raspopović Milić, M., &amp; Saqr, M.
+(2026). Stable means, shifting patterns: Examining SRL through a complex
+dynamic systems lens. <em>Computers in Human Behavior Reports</em>, 22,
+101038. <a href="https://doi.org/10.1016/j.chbr.2026.101038" class="external-link uri">https://doi.org/10.1016/j.chbr.2026.101038</a></p>
+<p>López-Pernas, S., &amp; Saqr, M. (2024a). How the dynamics of
+engagement explain the momentum of achievement and the inertia of
+disengagement: A complex systems theory approach. <em>Computers in Human
+Behavior</em>, 153, 108126. <a href="https://doi.org/10.1016/j.chb.2023.108126" class="external-link uri">https://doi.org/10.1016/j.chb.2023.108126</a></p>
+<p>López-Pernas, S., &amp; Saqr, M. (2024b). Modeling the dynamics of
+longitudinal processes in education. A tutorial with R for the VaSSTra
+method. In M. Saqr &amp; S. López-Pernas (Eds.), <em>Learning analytics
+methods and tutorials</em> (pp. 355–379). Springer. <a href="https://doi.org/10.1007/978-3-031-54464-4_11" class="external-link uri">https://doi.org/10.1007/978-3-031-54464-4_11</a></p>
+<p>Saqr, M. (2024). Group-level analysis of engagement poorly reflects
+individual students’ processes: Why we need idiographic learning
+analytics. <em>Computers in Human Behavior</em>, 150, 107991. <a href="https://doi.org/10.1016/j.chb.2023.107991" class="external-link uri">https://doi.org/10.1016/j.chb.2023.107991</a></p>
+<p>Saqr, M., Dever, D., López-Pernas, S., Gernigon, C., Marchand, G.,
+&amp; Kaplan, A. (2025). Complex dynamic systems in education: Beyond
+the static, the linear and the causal reductionism. In M. Saqr &amp; S.
+López-Pernas (Eds.), <em>Advanced learning analytics methods: AI,
+precision and complexity</em> (pp. 289–311). Springer. <a href="https://doi.org/10.1007/978-3-031-95365-1_12" class="external-link uri">https://doi.org/10.1007/978-3-031-95365-1_12</a></p>
+<p>Saqr, M., &amp; López-Pernas, S. (2021). The longitudinal
+trajectories of online engagement over a full program. <em>Computers
+&amp; Education</em>, 175, 104325. <a href="https://doi.org/10.1016/j.compedu.2021.104325" class="external-link uri">https://doi.org/10.1016/j.compedu.2021.104325</a></p>
+<p>Saqr, M., &amp; López-Pernas, S. (2024). Mapping the self in
+self-regulation using complex dynamic systems approach. <em>British
+Journal of Educational Technology</em>, 55(4), 1376–1397. <a href="https://doi.org/10.1111/bjet.13452" class="external-link uri">https://doi.org/10.1111/bjet.13452</a></p>
+<p>Saqr, M., López-Pernas, S., Helske, S., Durand, M., Murphy, K.,
+Studer, M., &amp; Ritschard, G. (2024). Sequence analysis in education:
+Principles, technique, and tutorial with R. In M. Saqr &amp; S.
+López-Pernas (Eds.), <em>Learning analytics methods and tutorials</em>
+(pp. 321–354). Springer. <a href="https://doi.org/10.1007/978-3-031-54464-4_10" class="external-link uri">https://doi.org/10.1007/978-3-031-54464-4_10</a></p>
+<p>Saqr, M., López-Pernas, S., Helske, S., &amp; Hrastinski, S. (2023).
+The longitudinal association between engagement and achievement varies
+by time, students’ profiles, and achievement state: A full program
+study. <em>Computers &amp; Education</em>, 199, 104787. <a href="https://doi.org/10.1016/j.compedu.2023.104787" class="external-link uri">https://doi.org/10.1016/j.compedu.2023.104787</a></p>
+<p>Saqr, M., López-Pernas, S., Jovanović, J., &amp; Gašević, D. (2023).
+Intense, turbulent, or wallowing in the mire: A longitudinal study of
+cross-course online tactics, strategies, and trajectories. <em>The
+Internet and Higher Education</em>, 57, 100902. <a href="https://doi.org/10.1016/j.iheduc.2022.100902" class="external-link uri">https://doi.org/10.1016/j.iheduc.2022.100902</a></p>
+<p>Saqr, M., López-Pernas, S., &amp; Misiejuk, K. (2026). Nestimate: An
+R package for dynamic, probabilistic, and high order network analysis.
+<em>Applied Psychological Measurement</em>. <a href="https://doi.org/10.1177/01466216261472019" class="external-link uri">https://doi.org/10.1177/01466216261472019</a></p>
+<p>Saqr, M., López-Pernas, S., &amp; Tikka, S. (2025). Mapping
+relational dynamics with transition network analysis: A primer and
+tutorial. In M. Saqr &amp; S. López-Pernas (Eds.), <em>Advanced learning
+analytics methods: AI, precision and complexity</em> (pp. 371–411).
+Springer. <a href="https://doi.org/10.1007/978-3-031-95365-1_15" class="external-link uri">https://doi.org/10.1007/978-3-031-95365-1_15</a></p>
+<p>Saqr, M., López-Pernas, S., &amp; Tikka, S. (2026). Modeling
+stability and change from a complex systems perspective. In M. Saqr, K.
+Misiejuk, &amp; S. López-Pernas (Eds.), <em>Innovations in analytics of
+learning dynamics</em> (pp. 51–61). Springer. <a href="https://doi.org/10.1007/978-3-032-34157-0_4" class="external-link uri">https://doi.org/10.1007/978-3-032-34157-0_4</a></p>
+<p>Saqr, M., López-Pernas, S., Tikka, S., &amp; Spitzer, M. (2026).
+Early warning signals appear long before dropping out: An idiographic
+approach grounded in complex dynamic systems theory. In <em>Proceedings
+of the 16th International Learning Analytics and Knowledge Conference
+(LAK26)</em> (pp. 216–226). ACM. <a href="https://doi.org/10.1145/3785022.3785050" class="external-link uri">https://doi.org/10.1145/3785022.3785050</a></p>
+<p>Saqr, M., López-Pernas, S., Törmänen, T., Kaliisa, R., Misiejuk, K.,
+&amp; Tikka, S. (2025). Transition network analysis: A novel framework
+for modeling, visualizing, and identifying the temporal patterns of
+learners and learning processes. In <em>Proceedings of the 15th
+International Learning Analytics and Knowledge Conference (LAK25)</em>
+(pp. 351–361). ACM. <a href="https://doi.org/10.1145/3706468.3706513" class="external-link uri">https://doi.org/10.1145/3706468.3706513</a></p>
+<p>Saqr, M., Schreuder, M. J., &amp; López-Pernas, S. (2024). Why
+educational research needs a complex system revolution that embraces
+individual differences, heterogeneity, and uncertainty. In M. Saqr &amp;
+S. López-Pernas (Eds.), <em>Learning analytics methods and
+tutorials</em> (pp. 723–734). Springer. <a href="https://doi.org/10.1007/978-3-031-54464-4_22" class="external-link uri">https://doi.org/10.1007/978-3-031-54464-4_22</a></p>
+<p>Saqr, M., Vogelsmeier, L. V. D. E., &amp; López-Pernas, S. (2024).
+Capturing where the learning process takes place: A person-specific and
+person-centered primer. <em>Learning and Individual Differences</em>,
+113, 102492. <a href="https://doi.org/10.1016/j.lindif.2024.102492" class="external-link uri">https://doi.org/10.1016/j.lindif.2024.102492</a></p>
+<p>Scheffer, M., Bascompte, J., Brock, W. A., Brovkin, V., Carpenter, S.
+R., Dakos, V., Held, H., van Nes, E. H., Rietkerk, M., &amp; Sugihara,
+G. (2009). Early-warning signals for critical transitions.
+<em>Nature</em>, 461(7260), 53–59. <a href="https://doi.org/10.1038/nature08227" class="external-link uri">https://doi.org/10.1038/nature08227</a></p>
 <p>Schnakenberg, J. (1976). Network theory of microscopic and
 macroscopic behavior of master equation systems. <em>Reviews of Modern
-Physics</em>, 48, 571–585.</p>
+Physics</em>, 48(4), 571–585. <a href="https://doi.org/10.1103/RevModPhys.48.571" class="external-link uri">https://doi.org/10.1103/RevModPhys.48.571</a></p>
+<p>Tikka, S., López-Pernas, S., &amp; Saqr, M. (2026). <em>Analyzing
+complex dynamic systems with the R package codyna</em> [Preprint]. <a href="https://doi.org/10.13140/RG.2.2.19126.56646" class="external-link uri">https://doi.org/10.13140/RG.2.2.19126.56646</a></p>
+<p>Vemuri, P., López-Pernas, S., Poelmans, S., Snoeck, M., &amp; Saqr,
+M. (2026). The worrisome dynamics of persistent disengagement: A
+longitudinal study of university freshmen. <em>Journal of Computer
+Assisted Learning</em>, 42(3). <a href="https://doi.org/10.1002/jcal.70250" class="external-link uri">https://doi.org/10.1002/jcal.70250</a></p>
 <p>Wang, J., Xu, L., &amp; Wang, E. (2008). Potential landscape and flux
-framework of nonequilibrium networks. <em>PNAS</em>, 105,
-12271–12276.</p>
+framework of nonequilibrium networks: Robustness, dissipation, and
+coherence of biochemical oscillations. <em>Proceedings of the National
+Academy of Sciences</em>, 105(34), 12271–12276. <a href="https://doi.org/10.1073/pnas.0800579105" class="external-link uri">https://doi.org/10.1073/pnas.0800579105</a></p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

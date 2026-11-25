@@ -1,4 +1,4 @@
-# Compute Node Predictability
+# Compute the predictability of each node
 
 `predictability()` computes how well each node of an association network
 is predicted by the others: the proportion of its variance explained
@@ -32,6 +32,9 @@ predictability(object, ...)
 
 # S3 method for class 'netobject_group'
 predictability(object, ...)
+
+# Default S3 method
+predictability(object, ...)
 ```
 
 ## Arguments
@@ -40,7 +43,9 @@ predictability(object, ...)
 
   The network: a `netobject` estimated with `method = "glasso"`,
   `"pcor"` or `"cor"`, or a `netobject_ml` or `netobject_group` of them.
-  A network from any other method raises an error.
+  A tna model, `group_tna` or bare `cograph_network` is read as the
+  network it holds. A network from any other method, and any other
+  object, raises an error of class `nestimate_bad_input`.
 
 - ...:
 

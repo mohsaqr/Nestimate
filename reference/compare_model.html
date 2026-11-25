@@ -47,7 +47,7 @@ and a plot() that draws one view per call."><meta property="og:image" content="h
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.12</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -60,8 +60,8 @@ and a plot() that draws one view per call."><meta property="og:image" content="h
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/transition-entropy.html">Transition Matrix Entropy</a></li>
     <li><a class="dropdown-item" href="../articles/transition-networks.html">Network Estimation and Analysis with Nestimate</a></li>
-    <li><a class="dropdown-item" href="../articles/sequence-comparison.html">Sequence Pattern Comparison: Early vs Late Human-AI Interactions</a></li>
-    <li><a class="dropdown-item" href="../articles/sequence-plots.html">Sequence Plots: heatmap, index, and distribution</a></li>
+    <li><a class="dropdown-item" href="../articles/sequence-comparison.html">Comparing Sequences Between Groups: Early vs Late Human-AI Interactions</a></li>
+    <li><a class="dropdown-item" href="../articles/sequence-plots.html">Sequence Plots</a></li>
     <li><a class="dropdown-item" href="../articles/clustering.html">Sequence Clustering</a></li>
     <li><a class="dropdown-item" href="../articles/markov-stability.html">Markov Stability Analysis</a></li>
     <li><hr class="dropdown-divider"></li>
@@ -172,10 +172,11 @@ and a <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="extern
 
 
 <dl><dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
-<dd><p>The first network: a <code>netobject</code>, a <code>cograph_network</code> or a
-numeric square matrix, or a <code>netobject_group</code> whose members <code>i</code> and <code>j</code>
-are compared. For the <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> and <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> methods: a
-<code>net_comparison</code> object.</p></dd>
+<dd><p>The first network: a <code>netobject</code>, a <code>cograph_network</code> or a numeric
+square matrix, or a <code>netobject_group</code> whose members <code>i</code> and <code>j</code> are
+compared. A <code>tna</code> model or a <code>group_tna</code> (package tna) is first rebuilt as
+a network from its own sequences (see <code><a href="as_netobject.html">as_netobject()</a></code>). For the <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code>
+and <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> methods: a <code>net_comparison</code> object.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
@@ -348,8 +349,11 @@ returns the four ggplots invisibly as a named list.</p>
 Szekely, Rizzo and Bakirov (2007), <code>NA</code> when one network is constant, and
 the RV coefficient that of Robert and Escoufier (1976). A network's own
 <code>directed</code> flag decides how its network metrics are computed; a plain
-matrix has none, so an asymmetric matrix is read as directed and a
-symmetric one as undirected.</p>
+matrix has none, nor has a <code>cograph_network</code> without a <code>directed</code> field,
+so an asymmetric one is read as directed and a
+symmetric one as undirected, after its rows and columns are matched to
+the other network's nodes by name. A tna model is read by the <code>directed</code>
+flag of the network it is rebuilt into.</p>
     </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>

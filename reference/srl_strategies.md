@@ -1,8 +1,9 @@
-# Self-Regulated Learning Strategy Frequencies
+# Simulated counts of self-regulated learning strategies
 
-Simulated counts of how often 250 university students used 9
-self-regulated learning (SRL) strategies, in three clusters:
-metacognitive (Planning, Monitoring, Evaluating), cognitive
+`srl_strategies` is a simulated dataset of how often 250 university
+students used nine self-regulated learning (SRL) strategies, one row per
+student and one count column per strategy. The strategies form three
+clusters: metacognitive (Planning, Monitoring, Evaluating), cognitive
 (Elaboration, Organization, Rehearsal) and resource management
 (Help_Seeking, Time_Mgmt, Effort_Reg). Strategies of the same cluster
 were simulated to correlate moderately and those of different clusters
@@ -32,27 +33,20 @@ net
 #>   Sample size: 250
 #>   Weights: [0.020, 0.325]  |  +13 / -0 edges
 #> 
-#>   Weight matrix:
-#>                Planning Monitoring Evaluating Elaboration Organization Rehearsal
-#>   Planning        0.000      0.229      0.130       0.000        0.000     0.000
-#>   Monitoring      0.229      0.000      0.300       0.039        0.000     0.000
-#>   Evaluating      0.130      0.300      0.000       0.000        0.154     0.000
-#>   Elaboration     0.000      0.039      0.000       0.000        0.262     0.158
-#>   Organization    0.000      0.000      0.154       0.262        0.000     0.152
-#>   Rehearsal       0.000      0.000      0.000       0.158        0.152     0.000
-#>   Help_Seeking    0.000      0.000      0.000       0.000        0.000     0.000
-#>   Time_Mgmt       0.130      0.000      0.000       0.000        0.000     0.000
-#>   Effort_Reg      0.000      0.000      0.093       0.000        0.000     0.000
-#>                Help_Seeking Time_Mgmt Effort_Reg
-#>   Planning            0.000     0.130      0.000
-#>   Monitoring          0.000     0.000      0.000
-#>   Evaluating          0.000     0.000      0.093
-#>   Elaboration         0.000     0.000      0.000
-#>   Organization        0.000     0.000      0.000
-#>   Rehearsal           0.000     0.000      0.000
-#>   Help_Seeking        0.000     0.065      0.020
-#>   Time_Mgmt           0.065     0.000      0.325
-#>   Effort_Reg          0.020     0.325      0.000 
+#>   Strongest edges (10 of 13):
+#>    from         to           weight
+#>    Time_Mgmt    Effort_Reg   0.325 
+#>    Monitoring   Evaluating   0.300 
+#>    Elaboration  Organization 0.262 
+#>    Planning     Monitoring   0.229 
+#>    Elaboration  Rehearsal    0.158 
+#>    Evaluating   Organization 0.154 
+#>    Organization Rehearsal    0.152 
+#>    Planning     Time_Mgmt    0.130 
+#>    Planning     Evaluating   0.130 
+#>    Evaluating   Effort_Reg   0.093  
+#> 
+#>   extract_edges(include_self = TRUE) lists every edge; extract_transition_matrix() gives the weight matrix.
 #> 
 #>   Predictability (R²):
 #>   Monitoring    0.173  ████████████████████████████████████████

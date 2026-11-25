@@ -1,4 +1,4 @@
-# Build a Simplicial Complex
+# Build a simplicial complex
 
 `build_simplicial()` builds a simplicial complex, the higher-order
 structure of a network: besides nodes (0-simplices) and edges
@@ -87,15 +87,13 @@ plot(x, combined = TRUE, ...)
 - max_dim:
 
   The highest simplex dimension built (a k-simplex has k + 1 nodes), a
-  non-negative whole number. Default `10`. When a larger clique is cut
-  at this dimension, the clique or Vietoris-Rips complex is marked
-  truncated;
+  non-negative whole number. Default `10`. A larger clique is cut at
+  this dimension and the complex is marked truncated; its top Betti
+  number is then unreliable, and
   [`betti_numbers()`](https://pak.dynasite.org/Nestimate/reference/betti_numbers.md)
-  then warns with class `nestimate_truncated_complex`, as does
-  [`persistent_homology()`](https://pak.dynasite.org/Nestimate/reference/persistent_homology.md)
-  on a Vietoris-Rips complex. A pathway with more than `max_dim + 1`
-  distinct states is cut to its faces of that size, without the
-  truncated mark.
+  warns with `nestimate_truncated_complex`. A pathway with more than
+  `max_dim + 1` distinct states is cut to its faces of that size,
+  without the truncated mark.
 
 - max_pathways:
 
@@ -131,8 +129,7 @@ plot(x, combined = TRUE, ...)
   [`build_hypa()`](https://pak.dynasite.org/Nestimate/reference/build_hypa.md)
   or
   [`build_mogen()`](https://pak.dynasite.org/Nestimate/reference/build_mogen.md).
-  Any other construction or input does not read `...` and warns with
-  class `nestimate_ignored_argument` when it is given. For the
+  Other constructions ignore `...` with a warning. For the
   [`print()`](https://rdrr.io/r/base/print.html) and
   [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods:
   ignored.

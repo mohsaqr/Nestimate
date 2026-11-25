@@ -1,12 +1,12 @@
-# Markov Stability Analysis
+# Describe the stability of each state of a Markov chain
 
 `markov_stability()` describes how stable each state of a Markov chain
-is and returns a `net_markov_stability` object holding one row per
-state: its persistence (the probability of staying, \\P\_{ii}\\),
-stationary probability (\\\pi_i\\, the long-run share of steps spent in
-it), mean recurrence time, sojourn time (the expected number of
-consecutive steps in it, \\1/(1 - P\_{ii})\\), and the mean of its first
-passage times to the other states and of theirs to it, taken from
+is, one row per state: its persistence (the probability of staying,
+\\P\_{ii}\\), stationary probability (\\\pi_i\\, the long-run share of
+steps spent in it), mean recurrence time, sojourn time (the expected
+number of consecutive steps in it, \\1/(1 - P\_{ii})\\), and the mean of
+its first passage times to the other states and of theirs to it, taken
+from
 [`passage_time()`](https://pak.dynasite.org/Nestimate/reference/passage_time.md).
 It reads the same inputs as
 [`passage_time()`](https://pak.dynasite.org/Nestimate/reference/passage_time.md)
@@ -40,6 +40,9 @@ print(x, ...)
 # S3 method for class 'net_markov_stability'
 summary(object, ...)
 
+# S3 method for class 'net_markov_stability_group'
+summary(object, ...)
+
 # S3 method for class 'net_markov_stability'
 plot(
   x,
@@ -68,11 +71,11 @@ plot(
   transition weights, a non-negative numeric transition matrix, or a
   wide sequence data frame or character matrix (a `"relative"` network
   is estimated from it). A `netobject_group` gives one result per group.
-  An association network or negative weights raise an error of class
-  `nestimate_not_markov`. For the
+  An association network or negative weights raise
+  `nestimate_not_markov`. For
   [`print()`](https://rdrr.io/r/base/print.html) and
-  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods: a
-  `net_markov_stability` or `net_markov_stability_group`.
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html): a
+  `markov_stability()` result.
 
 - normalize:
 
@@ -112,12 +115,12 @@ plot(
 
 A `net_markov_stability` object; for a `netobject_group`, a
 `net_markov_stability_group`, a named list holding one such object per
-group. [`print()`](https://rdrr.io/r/base/print.html) shows the
-per-state table and returns its input invisibly.
-[`summary()`](https://rdrr.io/r/base/summary.html) prints the most
-accessible state (the lowest mean passage time from the other states)
-and the most persistent one (the longest sojourn time), and returns the
-per-state table as a data frame.
+group. [`print()`](https://rdrr.io/r/base/print.html) names the
+attractor (the state with the lowest mean passage time from the other
+states) and the stickiest state (the longest sojourn time) in its
+header, shows the per-state table and returns its input invisibly.
+[`summary()`](https://rdrr.io/r/base/summary.html) returns the per-state
+table as a data frame and prints nothing.
 [`plot()`](https://rdrr.io/r/graphics/plot.default.html) returns a
 `ggplot` with one panel of bars per metric and the states ordered by
 stationary probability; with `combined = FALSE`, invisibly, a list of
@@ -144,6 +147,11 @@ holds:
   The `net_mpt` from
   [`passage_time()`](https://pak.dynasite.org/Nestimate/reference/passage_time.md)
   the times come from.
+
+For [`summary()`](https://rdrr.io/r/base/summary.html) of a
+`net_markov_stability_group`: a data frame with one row per group and
+state, the `group` column followed by the columns of the single-network
+stability table.
 
 ## Details
 
@@ -175,7 +183,7 @@ Springer-Verlag.
 net <- build_network(as.data.frame(trajectories), method = "relative")
 ms  <- markov_stability(net)
 print(ms)
-#> Markov Stability Analysis
+#> Markov Stability Analysis (3 states) | attractor: Average | stickiest: Active
 #> 
 #>       state persistence stationary_prob return_time sojourn_time
 #>      Active      0.6976          0.3719        2.69         3.31

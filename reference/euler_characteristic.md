@@ -1,4 +1,4 @@
-# Euler Characteristic
+# Compute the Euler characteristic of a simplicial complex
 
 `euler_characteristic()` returns the Euler characteristic of a
 simplicial complex, \\\chi = \sum\_{k=0}^{d} (-1)^k f_k\\, where \\f_k\\

@@ -1,4 +1,4 @@
-# Remove a Registered Estimator
+# Remove a registered estimator
 
 `remove_estimator()` takes an estimator out of the registry, so
 [`build_network()`](https://pak.dynasite.org/Nestimate/reference/build_network.md)
