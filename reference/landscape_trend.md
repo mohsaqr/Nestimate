@@ -280,9 +280,9 @@ framework of nonequilibrium networks. *PNAS*, 105, 12271–12276.
 ``` r
 net <- build_network(trajectories, method = "relative")
 trend <- landscape_trend(net, along = "phase",
-  states = c("Disengaged", "Average", "Active"), iter = 50, seed = 1)
+  states = c("Disengaged", "Average", "Active"), iter = 20, seed = 1)
 trend
-#> Stability landscape along time (5-step windows): 3 states, 1 network, 50 resamples
+#> Stability landscape along time (5-step windows): 3 states, 1 network, 20 resamples
 #> 
 #> Cup depth (log of the expected stay; higher = more stable) at the two ends and its range:
 #>       state first at_first  last at_last  min  max
@@ -293,7 +293,7 @@ trend
 plot(trend)
 
 occupancy <- landscape_trend(net, depth = "occupancy", window = 6,
-  states = c("Disengaged", "Average", "Active"), iter = 50, seed = 1)
+  states = c("Disengaged", "Average", "Active"), iter = 20, seed = 1)
 plot(occupancy, type = "surface")
 
 # }

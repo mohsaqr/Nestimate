@@ -401,31 +401,31 @@ net <- build_network(group_regulation_long, method = "relative",
                      actor = "Actor", action = "Action", time = "Time",
                      group = "Achiever")
 set.seed(1)
-sequence_compare(net, sub = 2, iter = 100, actor = "Group")
+sequence_compare(net, sub = 2, iter = 20, actor = "Group")
 #> Sequence Comparison  [67 patterns | 2 groups: High, Low]
-#>   Lengths: 2  |  min_freq: 5  |  permutation: 100 iter (fdr), actor: Group (200 actors, between)
+#>   Lengths: 2  |  min_freq: 5  |  permutation: 20 iter (fdr), actor: Group (200 actors, between)
 #> 
-#>  pattern             group count prop resid  effect p     
-#>  discuss->consensus  High   851  0.07  12.60 15.68  0.0214
-#>  discuss->consensus  Low    418  0.03 -12.60 15.68  0.0214
-#>  discuss->adapt      High    48  0.00 -11.08 14.48  0.0214
-#>  discuss->adapt      Low    234  0.02  11.08 14.48  0.0214
-#>  consensus->discuss  High   789  0.06  11.65 14.11  0.0214
-#>  consensus->discuss  Low    401  0.03 -11.65 14.11  0.0214
-#>  cohesion->consensus High   503  0.04   5.78  9.89  0.0214
-#>  cohesion->consensus Low    341  0.03  -5.78  9.89  0.0214
-#>  plan->plan          High   948  0.07  -8.73  9.81  0.0214
-#>  plan->plan          Low   1356  0.11   8.73  9.81  0.0214
-#>  discuss->synthesis  High   213  0.02  -5.53  7.94  0.0214
-#>  discuss->synthesis  Low    344  0.03   5.53  7.94  0.0214
-#>  adapt->consensus    High    73  0.01  -6.20  7.80  0.0214
-#>  adapt->consensus    Low    170  0.01   6.20  7.80  0.0214
-#>  synthesis->adapt    High    40  0.00  -5.88  7.65  0.0214
-#>  synthesis->adapt    Low    113  0.01   5.88  7.65  0.0214
-#>  plan->emotion       High   527  0.04   5.19  7.33  0.0214
-#>  plan->emotion       Low    377  0.03  -5.19  7.33  0.0214
-#>  adapt->cohesion     High    37  0.00  -5.49  6.84  0.0214
-#>  adapt->cohesion     Low    102  0.01   5.49  6.84  0.0214
+#>  pattern               group count prop resid  effect p     
+#>  cohesion->consensus   High   503  0.04   5.78 14.65  0.0778
+#>  cohesion->consensus   Low    341  0.03  -5.78 14.65  0.0778
+#>  discuss->consensus    High   851  0.07  12.60 13.93  0.0778
+#>  discuss->consensus    Low    418  0.03 -12.60 13.93  0.0778
+#>  plan->plan            High   948  0.07  -8.73 13.21  0.0778
+#>  plan->plan            Low   1356  0.11   8.73 13.21  0.0778
+#>  consensus->discuss    High   789  0.06  11.65 12.24  0.0778
+#>  consensus->discuss    Low    401  0.03 -11.65 12.24  0.0778
+#>  discuss->adapt        High    48  0.00 -11.08 12.05  0.0778
+#>  discuss->adapt        Low    234  0.02  11.08 12.05  0.0778
+#>  discuss->synthesis    High   213  0.02  -5.53  9.72  0.0778
+#>  discuss->synthesis    Low    344  0.03   5.53  9.72  0.0778
+#>  cohesion->cohesion    High    41  0.00   5.34  9.03  0.0778
+#>  cohesion->cohesion    Low      5  0.00  -5.34  9.03  0.0778
+#>  emotion->consensus    High   521  0.04   4.60  8.32  0.0778
+#>  emotion->consensus    Low    388  0.03  -4.60  8.32  0.0778
+#>  coregulate->consensus High    97  0.01  -4.33  8.21  0.0778
+#>  coregulate->consensus Low    168  0.01   4.33  8.21  0.0778
+#>  adapt->consensus      High    73  0.01  -6.20  8.13  0.0778
+#>  adapt->consensus      Low    170  0.01   6.20  8.13  0.0778
 #>   ... and 57 more patterns (114 rows); summary() returns them all
 # }
 ```

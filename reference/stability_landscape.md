@@ -231,18 +231,18 @@ behavior of master equation systems. *Reviews of Modern Physics*, 48,
 ``` r
 net <- build_network(trajectories, method = "relative")
 land <- stability_landscape(net,
-  states = c("Disengaged", "Average", "Active"), iter = 50, seed = 1)
+  states = c("Disengaged", "Average", "Active"), iter = 20, seed = 1)
 land
-#> Stability landscape: 3 states, 1 network, 50 resamples
+#> Stability landscape: 3 states, 1 network, 20 resamples
 #> 
 #> Cups (depth = log of the expected stay; deeper = more stable):
 #>       state depth ci_lower ci_upper dwell stay share
-#>  Disengaged  0.66     0.51     0.83  1.93 0.48  0.19
-#>     Average  0.94     0.86     1.07  2.56 0.61  0.43
-#>      Active  1.20     1.04     1.34  3.31 0.70  0.38
+#>  Disengaged  0.66     0.52     0.85  1.93 0.48  0.19
+#>     Average  0.94     0.86     1.04  2.56 0.61  0.43
+#>      Active  1.20     1.04     1.36  3.31 0.70  0.38
 #> 
 #> Net circulation (per step):
-#>   Active -> Average -> Disengaged -> Active: 0.0092 [0.0038, 0.0157]
+#>   Active -> Average -> Disengaged -> Active: 0.0092 [0.0039, 0.0146]
 #> 
 #> Exit probabilities: summary(x, table = "exits")
 summary(land, table = "exits")

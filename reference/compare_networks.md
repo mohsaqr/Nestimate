@@ -750,16 +750,16 @@ achievers <- build_network(group_regulation_long, method = "relative",
                            actor = "Actor", action = "Action",
                            time = "Time", group = "Achiever")
 cmp_perm <- compare_networks(achievers, test = "permutation",
-                             iter = 100, seed = 1)
+                             iter = 20, seed = 1)
 summary(cmp_perm)
 #>         pair network_a network_b n_cells n_differing share_higher_a
 #>  High vs Low      High       Low      81          78           0.51
 #>  share_higher_b mean_abs_diff max_abs_diff pearson spearman cosine jaccard
 #>            0.46          0.03         0.21    0.92     0.92   0.95    0.75
 #>              top_edge top_edge_higher n_sig_edges n_sig_nodes m_stat   m_p
-#>  discuss -> consensus            High          39          16   2.61 0.010
+#>  discuss -> consensus            High          39          16   2.61 0.048
 #>  s_stat   s_p
-#>    0.21 0.010
+#>    0.21 0.048
 plot(cmp_perm, type = "inference", top_n = 10)
 
 # }

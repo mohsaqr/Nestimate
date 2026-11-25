@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -20,8 +20,8 @@
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/transition-entropy.html">Transition Matrix Entropy</a></li>
     <li><a class="dropdown-item" href="../articles/transition-networks.html">Network Estimation and Analysis with Nestimate</a></li>
-    <li><a class="dropdown-item" href="../articles/sequence-comparison.html">Comparing Sequences Between Groups: Early vs Late Human-AI Interactions</a></li>
     <li><a class="dropdown-item" href="../articles/sequence-plots.html">Sequence Plots</a></li>
+    <li><a class="dropdown-item" href="../articles/sequence-comparison.html">Comparing Sequences Between Groups: Early vs Late Human-AI Interactions</a></li>
     <li><a class="dropdown-item" href="../articles/clustering.html">Sequence Clustering</a></li>
     <li><a class="dropdown-item" href="../articles/markov-stability.html">Markov Stability Analysis</a></li>
     <li><hr class="dropdown-divider"></li>
@@ -43,10 +43,10 @@
     </div>
 
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="1.1.4" id="nestimate-114">Nestimate 1.1.4<a class="anchor" aria-label="anchor" href="#nestimate-114"></a></h2>
+<h2 class="pkg-version" data-toc-text="1.2.0" id="nestimate-120">Nestimate 1.2.0<a class="anchor" aria-label="anchor" href="#nestimate-120"></a></h2>
 <p>This version collects everything since 0.9.24, the last release on CRAN. Some results are refined and some functions now ask you to say what your columns are; see “Refined results” and “What works differently”.</p>
 <div class="section level3">
-<h3 id="new-1-1-4">New<a class="anchor" aria-label="anchor" href="#new-1-1-4"></a></h3>
+<h3 id="new-1-2-0">New<a class="anchor" aria-label="anchor" href="#new-1-2-0"></a></h3>
 <ul><li>
 <strong>Latency networks.</strong> <code>build_network(method = "latency")</code> builds a reply network in which faster replies carry more weight (Templeton et al. 2022).</li>
 <li>
@@ -68,7 +68,7 @@
 <li>Smaller additions: <code><a href="../reference/hypergraph_cluster.html">node_clusters()</a></code>, <code><a href="../reference/hypergraph_transduction.html">label_predictions()</a></code> and <code><a href="../reference/hypergraph_transduction.html">label_scores()</a></code>; <code><a href="../reference/nct.html">nct()</a></code> handles missing values and constant variables; <code><a href="../reference/extract_edges.html">extract_edges()</a></code> and <code><a href="../reference/extract_initial_probs.html">extract_initial_probs()</a></code> read a group of networks; the <code>build_*()</code> shortcuts take <code>group</code>, <code>scaling</code>, <code>threshold</code> and <code>params</code>; <code><a href="../reference/build_mcml.html">build_mcml()</a></code> reads edge lists; <code><a href="../reference/cooccurrence.html">cooccurrence()</a></code> and <code><a href="../reference/association_rules.html">association_rules()</a></code> read 0/1 tables (<code>format = "binary"</code>); <code><a href="../reference/compare_networks.html">compare_networks()</a></code> marks significant differences in its difference plot; <code>window_size</code> in <code>build_network(params = )</code> now works as in tna.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="refined-results-1-1-4">Refined results<a class="anchor" aria-label="anchor" href="#refined-results-1-1-4"></a></h3>
+<h3 id="refined-results-1-2-0">Refined results<a class="anchor" aria-label="anchor" href="#refined-results-1-2-0"></a></h3>
 <p>These functions give refined results since 0.9.24.</p>
 <ul><li>
 <code><a href="../reference/nct.html">nct()</a></code> reported the structure test as the strength test and the other way round, and <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> swapped the in- and out-strength spreads.</li>
@@ -85,7 +85,7 @@
 <li>Numbers were corrected in centrality (<code>BetweennessRSP</code>, betweenness ties, min-max normalisation), <code><a href="../reference/net_prune.html">net_prune()</a></code>, <code><a href="../reference/build_mmm.html">build_mmm()</a></code>, <code><a href="../reference/build_clusters.html">build_clusters()</a></code>, <code><a href="../reference/build_mcml.html">build_mcml()</a></code>, <code><a href="../reference/passage_time.html">passage_time()</a></code>, <code><a href="../reference/chain_structure.html">chain_structure()</a></code>, <code><a href="../reference/markov_stability.html">markov_stability()</a></code>, <code><a href="../reference/entropy_bayes.html">entropy_bayes()</a></code>, <code><a href="../reference/hypergraph_centrality.html">hypergraph_centrality()</a></code>, <code><a href="../reference/q_analysis.html">q_analysis()</a></code>, <code><a href="../reference/persistent_homology.html">persistent_homology()</a></code>, <code><a href="../reference/betti_numbers.html">betti_numbers()</a></code>, <code><a href="../reference/bottleneck_distance.html">bottleneck_distance()</a></code>, <code><a href="../reference/pathways.html">pathways()</a></code>, <code><a href="../reference/mogen_transitions.html">mogen_transitions()</a></code>, <code><a href="../reference/extract_initial_probs.html">extract_initial_probs()</a></code>, <code><a href="../reference/mosaic_analysis.html">mosaic_analysis()</a></code>, <code><a href="../reference/predict_links.html">predict_links()</a></code> (ties), <code><a href="../reference/evaluate_links.html">evaluate_links()</a></code>, and the smoothing of <code><a href="../reference/landscape_surface.html">landscape_surface()</a></code> and <code><a href="../reference/landscape_trend.html">landscape_trend()</a></code>.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="what-works-differently-1-1-4">What works differently<a class="anchor" aria-label="anchor" href="#what-works-differently-1-1-4"></a></h3>
+<h3 id="what-works-differently-1-2-0">What works differently<a class="anchor" aria-label="anchor" href="#what-works-differently-1-2-0"></a></h3>
 <ul><li>
 <strong>Say which column is which.</strong> Nestimate no longer guesses a column’s role from its name. Give <code>action</code>, <code>actor</code> and <code>time</code> for an event log, or <code>state_cols</code> for wide data, and <code>format = "onehot"</code> for 0/1 code columns. Extra columns in wide data (metadata, <code>actor</code>, <code>time</code>, <code>order</code>) are no longer read as states. Times must include a four-digit year.</li>
 <li>
@@ -107,11 +107,16 @@
 <code>seed =</code> no longer changes your session’s random numbers.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="colours-1-1-4">Colours<a class="anchor" aria-label="anchor" href="#colours-1-1-4"></a></h3>
+<h3 id="documentation-1-2-0">Documentation<a class="anchor" aria-label="anchor" href="#documentation-1-2-0"></a></h3>
+<ul><li>“Comparing sequences between groups” is now an article on the package website instead of a vignette installed with the package; its address, PDF and DOI are unchanged.</li>
+<li>Examples use 20 resamples (200 posterior draws) so they run quickly; a real analysis uses 1,000 or more.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="colours-1-2-0">Colours<a class="anchor" aria-label="anchor" href="#colours-1-2-0"></a></h3>
 <p>Every figure colours states the same way: with no colours set, states get colour-blind-safe Okabe-Ito colours in alphabetical order, and anything derived from a network keeps its colours. Plots that used rainbow, viridis or red-green now use these colours, with shapes or line types where colour alone separated groups.</p>
 </div>
 <div class="section level3">
-<h3 id="other-fixes-1-1-4">Other fixes<a class="anchor" aria-label="anchor" href="#other-fixes-1-1-4"></a></h3>
+<h3 id="other-fixes-1-2-0">Other fixes<a class="anchor" aria-label="anchor" href="#other-fixes-1-2-0"></a></h3>
 <ul><li>
 <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> of <code><a href="../reference/entropy_trajectory.html">entropy_trajectory()</a></code> dropped groups with few windows.</li>
 <li>

@@ -37,7 +37,7 @@ recur and how they relate to an outcome."><meta property="og:image" content="htt
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -50,8 +50,8 @@ recur and how they relate to an outcome."><meta property="og:image" content="htt
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/transition-entropy.html">Transition Matrix Entropy</a></li>
     <li><a class="dropdown-item" href="../articles/transition-networks.html">Network Estimation and Analysis with Nestimate</a></li>
-    <li><a class="dropdown-item" href="../articles/sequence-comparison.html">Comparing Sequences Between Groups: Early vs Late Human-AI Interactions</a></li>
     <li><a class="dropdown-item" href="../articles/sequence-plots.html">Sequence Plots</a></li>
+    <li><a class="dropdown-item" href="../articles/sequence-comparison.html">Comparing Sequences Between Groups: Early vs Late Human-AI Interactions</a></li>
     <li><a class="dropdown-item" href="../articles/clustering.html">Sequence Clustering</a></li>
     <li><a class="dropdown-item" href="../articles/markov-stability.html">Markov Stability Analysis</a></li>
     <li><hr class="dropdown-divider"></li>
@@ -490,9 +490,9 @@ Statistical Software, 40(4), 1-37. <a href="https://doi.org/10.18637/jss.v040.i0
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Metadata aggregated per session: ties resolved by first occurrence in 'session_date' (2 sessions), 'code' (125 sessions)</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Metadata aggregated per session: ties resolved by first occurrence in 'session_date' (2 sessions), 'code' (114 sessions)</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu">sequence_metrics</span><span class="op">(</span><span class="va">net</span>, iter <span class="op">=</span> <span class="fl">99</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">sequence_metrics</span><span class="op">(</span><span class="va">net</span>, iter <span class="op">=</span> <span class="fl">19</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Sequence metrics by phase  [19 indices | 2 groups: early, late]</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   permutation of the one-way F: 99 iter (BH), within session</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   permutation of the one-way F: 19 iter (BH), within session</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  index                 group n   mean  sd    diff  g     g_lo  g_hi  eta_sq</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  valid_n               early 425 12.44 12.00  0.40  0.03 -0.10  0.17 0.00  </span>
@@ -516,26 +516,26 @@ Statistical Software, 40(4), 1-37. <a href="https://doi.org/10.18637/jss.v040.i0
 <span class="r-out co"><span class="r-pr">#&gt;</span>  transition_complexity early 425  0.47  0.31  0.06  0.20  0.07  0.34 0.01  </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  transition_complexity late  429  0.53  0.27  0.06  0.20  0.07  0.34 0.01  </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  F     p    p_adj </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   0.24 0.01 0.0129</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   0.24 0.01 0.0129</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   0.24 0.05 0.0562</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   0.24 0.05 0.0562</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     NA NA   NA    </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     NA NA   NA    </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  20.03 0.01 0.0129</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  20.03 0.01 0.0129</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  35.24 0.01 0.0129</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  35.24 0.01 0.0129</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   4.38 0.01 0.0129</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   4.38 0.01 0.0129</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  46.76 0.01 0.0129</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  46.76 0.01 0.0129</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  52.75 0.01 0.0129</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  52.75 0.01 0.0129</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  75.70 0.01 0.0129</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  75.70 0.01 0.0129</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  75.70 0.01 0.0129</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  75.70 0.01 0.0129</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   8.65 0.01 0.0129</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   8.65 0.01 0.0129</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  20.03 0.05 0.0562</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  20.03 0.05 0.0562</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  35.24 0.05 0.0562</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  35.24 0.05 0.0562</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   4.38 0.05 0.0562</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   4.38 0.05 0.0562</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  46.76 0.05 0.0562</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  46.76 0.05 0.0562</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  52.75 0.05 0.0562</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  52.75 0.05 0.0562</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  75.70 0.05 0.0562</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  75.70 0.05 0.0562</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  75.70 0.05 0.0562</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  75.70 0.05 0.0562</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   8.65 0.05 0.0562</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   8.65 0.05 0.0562</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   ... and 9 more indices (18 rows); summary() returns them all</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>

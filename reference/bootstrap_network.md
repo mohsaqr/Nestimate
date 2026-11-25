@@ -415,30 +415,30 @@ seqs <- data.frame(
   V3 = sample(LETTERS[1:4], 30, TRUE), V4 = sample(LETTERS[1:4], 30, TRUE)
 )
 net <- build_network(seqs, method = "relative")
-boot <- bootstrap_network(net, iter = 100)
+boot <- bootstrap_network(net, iter = 20)
 print(boot)
 #> Bootstrap Network  [Transition Network (relative) | directed]
-#>   Iterations : 100  |  Nodes : 4
+#>   Iterations : 20  |  Nodes : 4
 #>   Edges      : 0 significant / 16 total
 #>   CI         : 95%  |  Inference: stability  |  CR [0.75, 1.25]
 summary(boot)
 #>    from to    weight      mean         sd   p_value   sig   ci_lower  ci_upper
-#> 1     A  A 0.1304348 0.1274665 0.08074773 0.6831683 FALSE 0.00000000 0.3022826
-#> 2     A  B 0.3043478 0.2997861 0.08278592 0.3663366 FALSE 0.14284091 0.4582168
-#> 3     A  C 0.1304348 0.1418228 0.07482973 0.6732673 FALSE 0.00000000 0.3000000
-#> 4     A  D 0.4347826 0.4309246 0.11390253 0.3267327 FALSE 0.24720280 0.6570000
-#> 5     B  A 0.1724138 0.1737516 0.06474250 0.5346535 FALSE 0.07821429 0.3180000
-#> 6     B  B 0.4137931 0.4205944 0.09336440 0.2970297 FALSE 0.23541667 0.5884848
-#> 7     B  C 0.2068966 0.2050824 0.07346017 0.4752475 FALSE 0.06981818 0.3420833
-#> 8     B  D 0.2068966 0.2005716 0.08216875 0.5049505 FALSE 0.05967023 0.3751667
-#> 9     C  A 0.4000000 0.3857941 0.10757329 0.3861386 FALSE 0.17766798 0.6044118
-#> 10    C  B 0.2000000 0.1884783 0.09391798 0.6534653 FALSE 0.04761905 0.3828755
-#> 11    C  C 0.1500000 0.1571277 0.07338105 0.6039604 FALSE 0.00000000 0.2994885
-#> 12    C  D 0.2500000 0.2686000 0.09868840 0.5544554 FALSE 0.10360963 0.4642308
-#> 13    D  A 0.1666667 0.1651025 0.08394913 0.6336634 FALSE 0.02261905 0.3436275
-#> 14    D  B 0.2222222 0.2362980 0.11192342 0.6930693 FALSE 0.00000000 0.4332589
-#> 15    D  C 0.4444444 0.4507200 0.14203236 0.3861386 FALSE 0.18312325 0.7498039
-#> 16    D  D 0.1666667 0.1478795 0.11004755 0.8118812 FALSE 0.00000000 0.3750000
+#> 1     A  A 0.1304348 0.1297305 0.07133158 0.6190476 FALSE 0.01759259 0.2400000
+#> 2     A  B 0.3043478 0.3259057 0.08222511 0.3333333 FALSE 0.19275000 0.4679091
+#> 3     A  C 0.1304348 0.1460403 0.08825357 0.7619048 FALSE 0.00000000 0.3000000
+#> 4     A  D 0.4347826 0.3983235 0.07417239 0.1904762 FALSE 0.27434615 0.5138158
+#> 5     B  A 0.1724138 0.1684285 0.06061560 0.5714286 FALSE 0.09522727 0.2937353
+#> 6     B  B 0.4137931 0.4099438 0.08906994 0.2380952 FALSE 0.24966667 0.5617759
+#> 7     B  C 0.2068966 0.2321093 0.07205804 0.6190476 FALSE 0.11255208 0.3420833
+#> 8     B  D 0.2068966 0.1895184 0.07979913 0.4761905 FALSE 0.06543040 0.3320513
+#> 9     C  A 0.4000000 0.4054543 0.08641272 0.3809524 FALSE 0.27329060 0.5488095
+#> 10    C  B 0.2000000 0.1645655 0.07307166 0.7142857 FALSE 0.05402047 0.2932143
+#> 11    C  C 0.1500000 0.1547167 0.06311232 0.7142857 FALSE 0.05402047 0.2544414
+#> 12    C  D 0.2500000 0.2752635 0.08933792 0.6190476 FALSE 0.14285714 0.4180556
+#> 13    D  A 0.1666667 0.1685830 0.07063025 0.4761905 FALSE 0.07599432 0.3102163
+#> 14    D  B 0.2222222 0.2256292 0.13134741 0.7619048 FALSE 0.00000000 0.4000000
+#> 15    D  C 0.4444444 0.4462158 0.14844535 0.2857143 FALSE 0.19500000 0.7496528
+#> 16    D  D 0.1666667 0.1595720 0.12504572 0.8095238 FALSE 0.00000000 0.3781250
 #>      cr_lower  cr_upper
 #> 1  0.09782609 0.1630435
 #> 2  0.22826087 0.3804348
@@ -461,19 +461,19 @@ summary(boot)
 teams <- build_network(group_regulation_long, method = "relative",
                        actor = "Actor", action = "Action", time = "Time",
                        group = "Achiever")
-bootstrap_network(teams, iter = 100, actor = "Group", seed = 1)
+bootstrap_network(teams, iter = 20, actor = "Group", seed = 1)
 #>   Edge                    High      Low     
 #>   --------------------------------------------
-#>   synthesis→consensus     0.579     0.388   
-#>   cohesion→consensus      0.536     0.451   
-#>   adapt→consensus         0.519     0.458   
-#>   consensus→plan          0.364     0.432   
-#>   discuss→consensus       0.424     0.215   
-#>   ... and 33 more shared significant edges
+#>   synthesis→consensus     0.571     0.386   
+#>   cohesion→consensus      0.536     0.449   
+#>   adapt→consensus         0.515     0.458   
+#>   consensus→plan          0.363     0.431   
+#>   discuss→consensus       0.427     0.216   
+#>   ... and 30 more shared significant edges
 #> 
-#> Grouped Bootstrap  [2 groups | 100 iterations | 95% CI]
-#>   High                  41 sig / 76 total  |  Group: 100 actors, ICC -0.003, design effect 1.02
-#>   Low                   44 sig / 75 total  |  Group: 100 actors, ICC -0.001, design effect 0.98
-#>   Shared (all groups)   38 edges
+#> Grouped Bootstrap  [2 groups | 20 iterations | 95% CI]
+#>   High                  40 sig / 76 total  |  Group: 100 actors, ICC -0.003, design effect 1.14
+#>   Low                   42 sig / 75 total  |  Group: 100 actors, ICC -0.001, design effect 0.99
+#>   Shared (all groups)   35 edges
 # }
 ```

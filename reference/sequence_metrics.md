@@ -445,9 +445,9 @@ net <- build_network(halves, actor = "session_id", action = "cluster",
 #> Metadata aggregated per session: ties resolved by first occurrence in 'session_date' (2 sessions), 'code' (125 sessions)
 #> Metadata aggregated per session: ties resolved by first occurrence in 'session_date' (2 sessions), 'code' (114 sessions)
 set.seed(1)
-sequence_metrics(net, iter = 99)
+sequence_metrics(net, iter = 19)
 #> Sequence metrics by phase  [19 indices | 2 groups: early, late]
-#>   permutation of the one-way F: 99 iter (BH), within session
+#>   permutation of the one-way F: 19 iter (BH), within session
 #> 
 #>  index                 group n   mean  sd    diff  g     g_lo  g_hi  eta_sq
 #>  valid_n               early 425 12.44 12.00  0.40  0.03 -0.10  0.17 0.00  
@@ -471,25 +471,25 @@ sequence_metrics(net, iter = 99)
 #>  transition_complexity early 425  0.47  0.31  0.06  0.20  0.07  0.34 0.01  
 #>  transition_complexity late  429  0.53  0.27  0.06  0.20  0.07  0.34 0.01  
 #>  F     p    p_adj 
-#>   0.24 0.01 0.0129
-#>   0.24 0.01 0.0129
+#>   0.24 0.05 0.0562
+#>   0.24 0.05 0.0562
 #>     NA NA   NA    
 #>     NA NA   NA    
-#>  20.03 0.01 0.0129
-#>  20.03 0.01 0.0129
-#>  35.24 0.01 0.0129
-#>  35.24 0.01 0.0129
-#>   4.38 0.01 0.0129
-#>   4.38 0.01 0.0129
-#>  46.76 0.01 0.0129
-#>  46.76 0.01 0.0129
-#>  52.75 0.01 0.0129
-#>  52.75 0.01 0.0129
-#>  75.70 0.01 0.0129
-#>  75.70 0.01 0.0129
-#>  75.70 0.01 0.0129
-#>  75.70 0.01 0.0129
-#>   8.65 0.01 0.0129
-#>   8.65 0.01 0.0129
+#>  20.03 0.05 0.0562
+#>  20.03 0.05 0.0562
+#>  35.24 0.05 0.0562
+#>  35.24 0.05 0.0562
+#>   4.38 0.05 0.0562
+#>   4.38 0.05 0.0562
+#>  46.76 0.05 0.0562
+#>  46.76 0.05 0.0562
+#>  52.75 0.05 0.0562
+#>  52.75 0.05 0.0562
+#>  75.70 0.05 0.0562
+#>  75.70 0.05 0.0562
+#>  75.70 0.05 0.0562
+#>  75.70 0.05 0.0562
+#>   8.65 0.05 0.0562
+#>   8.65 0.05 0.0562
 #>   ... and 9 more indices (18 rows); summary() returns them all
 ```

@@ -311,14 +311,14 @@ seqs <- data.frame(
   V3 = sample(LETTERS[1:4], 30, TRUE), V4 = sample(LETTERS[1:4], 30, TRUE)
 )
 net <- build_network(seqs, method = "relative")
-cs <- centrality_stability(net, iter = 100, seed = 42,
+cs <- centrality_stability(net, iter = 20, seed = 42,
   measures = c("InStrength", "OutStrength"))
 print(cs)
-#> Centrality Stability (100 iterations, threshold = 0.7)
+#> Centrality Stability (20 iterations, threshold = 0.7)
 #>   Drop proportions: 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9
 #> 
 #>   CS-coefficients:
 #>     InStrength       0.00
-#>     OutStrength      0.30
+#>     OutStrength      0.40
 # }
 ```

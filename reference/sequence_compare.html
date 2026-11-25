@@ -47,7 +47,7 @@ of whether a pattern is present in more sequences of one group."><meta property=
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -60,8 +60,8 @@ of whether a pattern is present in more sequences of one group."><meta property=
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/transition-entropy.html">Transition Matrix Entropy</a></li>
     <li><a class="dropdown-item" href="../articles/transition-networks.html">Network Estimation and Analysis with Nestimate</a></li>
-    <li><a class="dropdown-item" href="../articles/sequence-comparison.html">Comparing Sequences Between Groups: Early vs Late Human-AI Interactions</a></li>
     <li><a class="dropdown-item" href="../articles/sequence-plots.html">Sequence Plots</a></li>
+    <li><a class="dropdown-item" href="../articles/sequence-comparison.html">Comparing Sequences Between Groups: Early vs Late Human-AI Interactions</a></li>
     <li><a class="dropdown-item" href="../articles/clustering.html">Sequence Clustering</a></li>
     <li><a class="dropdown-item" href="../articles/markov-stability.html">Markov Stability Analysis</a></li>
     <li><hr class="dropdown-divider"></li>
@@ -446,31 +446,31 @@ tables. <em>Biometrics</em>, 29(1), 205–220. (standardised residuals)</p>
 <span class="r-in"><span>                     actor <span class="op">=</span> <span class="st">"Actor"</span>, action <span class="op">=</span> <span class="st">"Action"</span>, time <span class="op">=</span> <span class="st">"Time"</span>,</span></span>
 <span class="r-in"><span>                     group <span class="op">=</span> <span class="st">"Achiever"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu">sequence_compare</span><span class="op">(</span><span class="va">net</span>, sub <span class="op">=</span> <span class="fl">2</span>, iter <span class="op">=</span> <span class="fl">100</span>, actor <span class="op">=</span> <span class="st">"Group"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">sequence_compare</span><span class="op">(</span><span class="va">net</span>, sub <span class="op">=</span> <span class="fl">2</span>, iter <span class="op">=</span> <span class="fl">20</span>, actor <span class="op">=</span> <span class="st">"Group"</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Sequence Comparison  [67 patterns | 2 groups: High, Low]</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Lengths: 2  |  min_freq: 5  |  permutation: 100 iter (fdr), actor: Group (200 actors, between)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Lengths: 2  |  min_freq: 5  |  permutation: 20 iter (fdr), actor: Group (200 actors, between)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  pattern             group count prop resid  effect p     </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  discuss-&gt;consensus  High   851  0.07  12.60 15.68  0.0214</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  discuss-&gt;consensus  Low    418  0.03 -12.60 15.68  0.0214</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  discuss-&gt;adapt      High    48  0.00 -11.08 14.48  0.0214</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  discuss-&gt;adapt      Low    234  0.02  11.08 14.48  0.0214</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  consensus-&gt;discuss  High   789  0.06  11.65 14.11  0.0214</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  consensus-&gt;discuss  Low    401  0.03 -11.65 14.11  0.0214</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  cohesion-&gt;consensus High   503  0.04   5.78  9.89  0.0214</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  cohesion-&gt;consensus Low    341  0.03  -5.78  9.89  0.0214</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  plan-&gt;plan          High   948  0.07  -8.73  9.81  0.0214</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  plan-&gt;plan          Low   1356  0.11   8.73  9.81  0.0214</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  discuss-&gt;synthesis  High   213  0.02  -5.53  7.94  0.0214</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  discuss-&gt;synthesis  Low    344  0.03   5.53  7.94  0.0214</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  adapt-&gt;consensus    High    73  0.01  -6.20  7.80  0.0214</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  adapt-&gt;consensus    Low    170  0.01   6.20  7.80  0.0214</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  synthesis-&gt;adapt    High    40  0.00  -5.88  7.65  0.0214</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  synthesis-&gt;adapt    Low    113  0.01   5.88  7.65  0.0214</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  plan-&gt;emotion       High   527  0.04   5.19  7.33  0.0214</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  plan-&gt;emotion       Low    377  0.03  -5.19  7.33  0.0214</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  adapt-&gt;cohesion     High    37  0.00  -5.49  6.84  0.0214</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  adapt-&gt;cohesion     Low    102  0.01   5.49  6.84  0.0214</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  pattern               group count prop resid  effect p     </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  cohesion-&gt;consensus   High   503  0.04   5.78 14.65  0.0778</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  cohesion-&gt;consensus   Low    341  0.03  -5.78 14.65  0.0778</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  discuss-&gt;consensus    High   851  0.07  12.60 13.93  0.0778</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  discuss-&gt;consensus    Low    418  0.03 -12.60 13.93  0.0778</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  plan-&gt;plan            High   948  0.07  -8.73 13.21  0.0778</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  plan-&gt;plan            Low   1356  0.11   8.73 13.21  0.0778</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  consensus-&gt;discuss    High   789  0.06  11.65 12.24  0.0778</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  consensus-&gt;discuss    Low    401  0.03 -11.65 12.24  0.0778</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  discuss-&gt;adapt        High    48  0.00 -11.08 12.05  0.0778</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  discuss-&gt;adapt        Low    234  0.02  11.08 12.05  0.0778</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  discuss-&gt;synthesis    High   213  0.02  -5.53  9.72  0.0778</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  discuss-&gt;synthesis    Low    344  0.03   5.53  9.72  0.0778</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  cohesion-&gt;cohesion    High    41  0.00   5.34  9.03  0.0778</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  cohesion-&gt;cohesion    Low      5  0.00  -5.34  9.03  0.0778</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  emotion-&gt;consensus    High   521  0.04   4.60  8.32  0.0778</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  emotion-&gt;consensus    Low    388  0.03  -4.60  8.32  0.0778</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  coregulate-&gt;consensus High    97  0.01  -4.33  8.21  0.0778</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  coregulate-&gt;consensus Low    168  0.01   4.33  8.21  0.0778</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  adapt-&gt;consensus      High    73  0.01  -6.20  8.13  0.0778</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  adapt-&gt;consensus      Low    170  0.01   6.20  8.13  0.0778</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   ... and 57 more patterns (114 rows); summary() returns them all</span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>

@@ -263,14 +263,14 @@ print(pred)
 #>   Methods: common_neighbors, resource_allocation, adamic_adar, jaccard, preferential_attachment, katz
 #> 
 #>   Top predicted links (consensus across 6 methods):
-#>     1. A -> D  (avg rank: 3.3, agreed: 6/6)
+#>     1. A -> D  (avg rank: 3.2, agreed: 6/6)
 #>     2. B -> E  (avg rank: 3.5, agreed: 6/6)
 #>     3. C -> B  (avg rank: 4.0, agreed: 6/6)
 #>     4. D -> C  (avg rank: 4.3, agreed: 6/6)
 #>     5. A -> E  (avg rank: 4.7, agreed: 6/6)
-#>     5. E -> C  (avg rank: 4.7, agreed: 6/6)
-#>     7. B -> A  (avg rank: 4.8, agreed: 6/6)
-#>     7. C -> A  (avg rank: 4.8, agreed: 6/6)
+#>     6. B -> A  (avg rank: 4.8, agreed: 6/6)
+#>     6. C -> A  (avg rank: 4.8, agreed: 6/6)
+#>     6. E -> C  (avg rank: 4.8, agreed: 6/6)
 #>     9. D -> A  (avg rank: 5.7, agreed: 6/6)
 #>     10. E -> D  (avg rank: 5.8, agreed: 6/6)
 #>     ... and 2 more predictions

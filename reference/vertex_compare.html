@@ -37,7 +37,7 @@ them edge by edge."><meta property="og:image" content="https://pak.dynasite.org/
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -50,8 +50,8 @@ them edge by edge."><meta property="og:image" content="https://pak.dynasite.org/
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/transition-entropy.html">Transition Matrix Entropy</a></li>
     <li><a class="dropdown-item" href="../articles/transition-networks.html">Network Estimation and Analysis with Nestimate</a></li>
-    <li><a class="dropdown-item" href="../articles/sequence-comparison.html">Comparing Sequences Between Groups: Early vs Late Human-AI Interactions</a></li>
     <li><a class="dropdown-item" href="../articles/sequence-plots.html">Sequence Plots</a></li>
+    <li><a class="dropdown-item" href="../articles/sequence-comparison.html">Comparing Sequences Between Groups: Early vs Late Human-AI Interactions</a></li>
     <li><a class="dropdown-item" href="../articles/clustering.html">Sequence Clustering</a></li>
     <li><a class="dropdown-item" href="../articles/markov-stability.html">Markov Stability Analysis</a></li>
     <li><hr class="dropdown-divider"></li>
@@ -254,18 +254,18 @@ are available, <code><a href="permutation.html">permutation</a></code>.</p></div
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">net1</span> <span class="op">&lt;-</span> <span class="fu"><a href="build_network.html">build_network</a></span><span class="op">(</span><span class="va">s1</span>, method <span class="op">=</span> <span class="st">"relative"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">net2</span> <span class="op">&lt;-</span> <span class="fu"><a href="build_network.html">build_network</a></span><span class="op">(</span><span class="va">s2</span>, method <span class="op">=</span> <span class="st">"relative"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">cmp</span> <span class="op">&lt;-</span> <span class="fu">vertex_compare</span><span class="op">(</span><span class="va">net1</span>, <span class="va">net2</span>, iter <span class="op">=</span> <span class="fl">100</span>, seed <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">cmp</span> <span class="op">&lt;-</span> <span class="fu">vertex_compare</span><span class="op">(</span><span class="va">net1</span>, <span class="va">net2</span>, iter <span class="op">=</span> <span class="fl">20</span>, seed <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">cmp</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>        statistic observed_x observed_y        diff    se_diff          z</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1        density  0.5000000  0.5833333 -0.08333333 0.25478584 -0.3270721</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2    mean_weight  0.5000000  0.5714286 -0.07142857 0.09622256 -0.7423267</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3 centralization  0.3333333  0.0000000  0.33333333 0.24140627  1.3807981</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4    reciprocity  1.0000000  0.2500000  0.75000000 0.35488859  2.1133393</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      p_value    ci_lower  ci_upper</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 0.74361337 -0.58270441 0.4160377</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2 0.45788942 -0.26002131 0.1171642</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3 0.16734104 -0.13981427 0.8064809</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4 0.03457174  0.05443114 1.4455689</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1        density  0.5000000  0.5833333 -0.08333333 0.26593925 -0.3133548</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2    mean_weight  0.5000000  0.5714286 -0.07142857 0.04449008 -1.6054944</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3 centralization  0.3333333  0.0000000  0.33333333 0.25995502  1.2822731</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4    reciprocity  1.0000000  0.2500000  0.75000000 0.25843009  2.9021389</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       p_value   ci_lower   ci_upper</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 0.754011140 -0.6045647 0.43789802</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2 0.108385048 -0.1586275 0.01577038</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3 0.199746859 -0.1761691 0.84283581</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4 0.003706242  0.2434863 1.25651367</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

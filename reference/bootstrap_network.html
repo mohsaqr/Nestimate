@@ -61,7 +61,7 @@ use permutation()."><meta property="og:image" content="https://pak.dynasite.org/
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -74,8 +74,8 @@ use permutation()."><meta property="og:image" content="https://pak.dynasite.org/
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/transition-entropy.html">Transition Matrix Entropy</a></li>
     <li><a class="dropdown-item" href="../articles/transition-networks.html">Network Estimation and Analysis with Nestimate</a></li>
-    <li><a class="dropdown-item" href="../articles/sequence-comparison.html">Comparing Sequences Between Groups: Early vs Late Human-AI Interactions</a></li>
     <li><a class="dropdown-item" href="../articles/sequence-plots.html">Sequence Plots</a></li>
+    <li><a class="dropdown-item" href="../articles/sequence-comparison.html">Comparing Sequences Between Groups: Early vs Late Human-AI Interactions</a></li>
     <li><a class="dropdown-item" href="../articles/clustering.html">Sequence Clustering</a></li>
     <li><a class="dropdown-item" href="../articles/markov-stability.html">Markov Stability Analysis</a></li>
     <li><hr class="dropdown-divider"></li>
@@ -480,30 +480,30 @@ assessing rater reliability. <em>Psychological Bulletin</em>, 86(2),
 <span class="r-in"><span>  V3 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="va">LETTERS</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">4</span><span class="op">]</span>, <span class="fl">30</span>, <span class="cn">TRUE</span><span class="op">)</span>, V4 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="va">LETTERS</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">4</span><span class="op">]</span>, <span class="fl">30</span>, <span class="cn">TRUE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">net</span> <span class="op">&lt;-</span> <span class="fu"><a href="build_network.html">build_network</a></span><span class="op">(</span><span class="va">seqs</span>, method <span class="op">=</span> <span class="st">"relative"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">boot</span> <span class="op">&lt;-</span> <span class="fu">bootstrap_network</span><span class="op">(</span><span class="va">net</span>, iter <span class="op">=</span> <span class="fl">100</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">boot</span> <span class="op">&lt;-</span> <span class="fu">bootstrap_network</span><span class="op">(</span><span class="va">net</span>, iter <span class="op">=</span> <span class="fl">20</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">boot</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Bootstrap Network  [Transition Network (relative) | directed]</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Iterations : 100  |  Nodes : 4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Iterations : 20  |  Nodes : 4</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Edges      : 0 significant / 16 total</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   CI         : 95%  |  Inference: stability  |  CR [0.75, 1.25]</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">boot</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    from to    weight      mean         sd   p_value   sig   ci_lower  ci_upper</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1     A  A 0.1304348 0.1274665 0.08074773 0.6831683 FALSE 0.00000000 0.3022826</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2     A  B 0.3043478 0.2997861 0.08278592 0.3663366 FALSE 0.14284091 0.4582168</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3     A  C 0.1304348 0.1418228 0.07482973 0.6732673 FALSE 0.00000000 0.3000000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4     A  D 0.4347826 0.4309246 0.11390253 0.3267327 FALSE 0.24720280 0.6570000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5     B  A 0.1724138 0.1737516 0.06474250 0.5346535 FALSE 0.07821429 0.3180000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6     B  B 0.4137931 0.4205944 0.09336440 0.2970297 FALSE 0.23541667 0.5884848</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7     B  C 0.2068966 0.2050824 0.07346017 0.4752475 FALSE 0.06981818 0.3420833</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 8     B  D 0.2068966 0.2005716 0.08216875 0.5049505 FALSE 0.05967023 0.3751667</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 9     C  A 0.4000000 0.3857941 0.10757329 0.3861386 FALSE 0.17766798 0.6044118</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10    C  B 0.2000000 0.1884783 0.09391798 0.6534653 FALSE 0.04761905 0.3828755</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 11    C  C 0.1500000 0.1571277 0.07338105 0.6039604 FALSE 0.00000000 0.2994885</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 12    C  D 0.2500000 0.2686000 0.09868840 0.5544554 FALSE 0.10360963 0.4642308</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 13    D  A 0.1666667 0.1651025 0.08394913 0.6336634 FALSE 0.02261905 0.3436275</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 14    D  B 0.2222222 0.2362980 0.11192342 0.6930693 FALSE 0.00000000 0.4332589</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 15    D  C 0.4444444 0.4507200 0.14203236 0.3861386 FALSE 0.18312325 0.7498039</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 16    D  D 0.1666667 0.1478795 0.11004755 0.8118812 FALSE 0.00000000 0.3750000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1     A  A 0.1304348 0.1297305 0.07133158 0.6190476 FALSE 0.01759259 0.2400000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2     A  B 0.3043478 0.3259057 0.08222511 0.3333333 FALSE 0.19275000 0.4679091</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3     A  C 0.1304348 0.1460403 0.08825357 0.7619048 FALSE 0.00000000 0.3000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4     A  D 0.4347826 0.3983235 0.07417239 0.1904762 FALSE 0.27434615 0.5138158</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5     B  A 0.1724138 0.1684285 0.06061560 0.5714286 FALSE 0.09522727 0.2937353</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6     B  B 0.4137931 0.4099438 0.08906994 0.2380952 FALSE 0.24966667 0.5617759</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7     B  C 0.2068966 0.2321093 0.07205804 0.6190476 FALSE 0.11255208 0.3420833</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8     B  D 0.2068966 0.1895184 0.07979913 0.4761905 FALSE 0.06543040 0.3320513</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9     C  A 0.4000000 0.4054543 0.08641272 0.3809524 FALSE 0.27329060 0.5488095</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10    C  B 0.2000000 0.1645655 0.07307166 0.7142857 FALSE 0.05402047 0.2932143</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11    C  C 0.1500000 0.1547167 0.06311232 0.7142857 FALSE 0.05402047 0.2544414</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 12    C  D 0.2500000 0.2752635 0.08933792 0.6190476 FALSE 0.14285714 0.4180556</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 13    D  A 0.1666667 0.1685830 0.07063025 0.4761905 FALSE 0.07599432 0.3102163</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 14    D  B 0.2222222 0.2256292 0.13134741 0.7619048 FALSE 0.00000000 0.4000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 15    D  C 0.4444444 0.4462158 0.14844535 0.2857143 FALSE 0.19500000 0.7496528</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 16    D  D 0.1666667 0.1595720 0.12504572 0.8095238 FALSE 0.00000000 0.3781250</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>      cr_lower  cr_upper</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1  0.09782609 0.1630435</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2  0.22826087 0.3804348</span>
@@ -526,20 +526,20 @@ assessing rater reliability. <em>Psychological Bulletin</em>, 86(2),
 <span class="r-in"><span><span class="va">teams</span> <span class="op">&lt;-</span> <span class="fu"><a href="build_network.html">build_network</a></span><span class="op">(</span><span class="va">group_regulation_long</span>, method <span class="op">=</span> <span class="st">"relative"</span>,</span></span>
 <span class="r-in"><span>                       actor <span class="op">=</span> <span class="st">"Actor"</span>, action <span class="op">=</span> <span class="st">"Action"</span>, time <span class="op">=</span> <span class="st">"Time"</span>,</span></span>
 <span class="r-in"><span>                       group <span class="op">=</span> <span class="st">"Achiever"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu">bootstrap_network</span><span class="op">(</span><span class="va">teams</span>, iter <span class="op">=</span> <span class="fl">100</span>, actor <span class="op">=</span> <span class="st">"Group"</span>, seed <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">bootstrap_network</span><span class="op">(</span><span class="va">teams</span>, iter <span class="op">=</span> <span class="fl">20</span>, actor <span class="op">=</span> <span class="st">"Group"</span>, seed <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Edge                    High      Low     </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   --------------------------------------------</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   synthesis→consensus     0.579     0.388   </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   cohesion→consensus      0.536     0.451   </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   adapt→consensus         0.519     0.458   </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   consensus→plan          0.364     0.432   </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   discuss→consensus       0.424     0.215   </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   ... and 33 more shared significant edges</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   synthesis→consensus     0.571     0.386   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   cohesion→consensus      0.536     0.449   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   adapt→consensus         0.515     0.458   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   consensus→plan          0.363     0.431   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   discuss→consensus       0.427     0.216   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ... and 30 more shared significant edges</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Grouped Bootstrap  [2 groups | 100 iterations | 95% CI]</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   High                  41 sig / 76 total  |  Group: 100 actors, ICC -0.003, design effect 1.02</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Low                   44 sig / 75 total  |  Group: 100 actors, ICC -0.001, design effect 0.98</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Shared (all groups)   38 edges</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Grouped Bootstrap  [2 groups | 20 iterations | 95% CI]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   High                  40 sig / 76 total  |  Group: 100 actors, ICC -0.003, design effect 1.14</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Low                   42 sig / 75 total  |  Group: 100 actors, ICC -0.001, design effect 0.99</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Shared (all groups)   35 edges</span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>

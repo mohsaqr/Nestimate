@@ -47,7 +47,7 @@ cluster_network() in one call) to see how the groups differ."><meta property="og
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -60,8 +60,8 @@ cluster_network() in one call) to see how the groups differ."><meta property="og
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/transition-entropy.html">Transition Matrix Entropy</a></li>
     <li><a class="dropdown-item" href="../articles/transition-networks.html">Network Estimation and Analysis with Nestimate</a></li>
-    <li><a class="dropdown-item" href="../articles/sequence-comparison.html">Comparing Sequences Between Groups: Early vs Late Human-AI Interactions</a></li>
     <li><a class="dropdown-item" href="../articles/sequence-plots.html">Sequence Plots</a></li>
+    <li><a class="dropdown-item" href="../articles/sequence-comparison.html">Comparing Sequences Between Groups: Early vs Late Human-AI Interactions</a></li>
     <li><a class="dropdown-item" href="../articles/clustering.html">Sequence Clustering</a></li>
     <li><a class="dropdown-item" href="../articles/markov-stability.html">Markov Stability Analysis</a></li>
     <li><hr class="dropdown-divider"></li>
@@ -461,24 +461,24 @@ Computational and Applied Mathematics</em>, 20, 53–65.
 <span class="r-out co"><span class="r-pr">#&gt;</span> Sequence Clustering [pam]</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Sequences: 20  |  Clusters: 2</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Dissimilarity: hamming</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Quality: silhouette = 0.315</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Quality: silhouette = 0.243</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Cluster  N           Mean within-dist  Medoid</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   1        9 (45.0%)   2.333             5</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   2        11 (55.0%)  2.000             15</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   1        9 (45.0%)   2.250             1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   2        11 (55.0%)  2.291             16</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">cl</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Sequence Clustering Summary</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Method:        pam </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Dissimilarity: hamming </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Silhouette:    0.315 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Silhouette:    0.2433 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Per-cluster statistics:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  cluster size mean_within_dist</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>        1    9         2.333333</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>        2   11         2.000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        1    9         2.250000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        2   11         2.290909</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   cluster size mean_within_dist</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1       1    9         2.333333</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2       2   11         2.000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1       1    9         2.250000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2       2   11         2.290909</span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>

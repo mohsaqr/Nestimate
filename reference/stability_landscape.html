@@ -59,7 +59,7 @@ given by passage_time()."><meta property="og:image" content="https://pak.dynasit
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -72,8 +72,8 @@ given by passage_time()."><meta property="og:image" content="https://pak.dynasit
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/transition-entropy.html">Transition Matrix Entropy</a></li>
     <li><a class="dropdown-item" href="../articles/transition-networks.html">Network Estimation and Analysis with Nestimate</a></li>
-    <li><a class="dropdown-item" href="../articles/sequence-comparison.html">Comparing Sequences Between Groups: Early vs Late Human-AI Interactions</a></li>
     <li><a class="dropdown-item" href="../articles/sequence-plots.html">Sequence Plots</a></li>
+    <li><a class="dropdown-item" href="../articles/sequence-comparison.html">Comparing Sequences Between Groups: Early vs Late Human-AI Interactions</a></li>
     <li><a class="dropdown-item" href="../articles/clustering.html">Sequence Clustering</a></li>
     <li><a class="dropdown-item" href="../articles/markov-stability.html">Markov Stability Analysis</a></li>
     <li><hr class="dropdown-divider"></li>
@@ -311,18 +311,18 @@ behavior of master equation systems. <em>Reviews of Modern Physics</em>,
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">net</span> <span class="op">&lt;-</span> <span class="fu"><a href="build_network.html">build_network</a></span><span class="op">(</span><span class="va">trajectories</span>, method <span class="op">=</span> <span class="st">"relative"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">land</span> <span class="op">&lt;-</span> <span class="fu">stability_landscape</span><span class="op">(</span><span class="va">net</span>,</span></span>
-<span class="r-in"><span>  states <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Disengaged"</span>, <span class="st">"Average"</span>, <span class="st">"Active"</span><span class="op">)</span>, iter <span class="op">=</span> <span class="fl">50</span>, seed <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  states <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Disengaged"</span>, <span class="st">"Average"</span>, <span class="st">"Active"</span><span class="op">)</span>, iter <span class="op">=</span> <span class="fl">20</span>, seed <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">land</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Stability landscape: 3 states, 1 network, 50 resamples</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Stability landscape: 3 states, 1 network, 20 resamples</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Cups (depth = log of the expected stay; deeper = more stable):</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       state depth ci_lower ci_upper dwell stay share</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Disengaged  0.66     0.51     0.83  1.93 0.48  0.19</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     Average  0.94     0.86     1.07  2.56 0.61  0.43</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      Active  1.20     1.04     1.34  3.31 0.70  0.38</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Disengaged  0.66     0.52     0.85  1.93 0.48  0.19</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     Average  0.94     0.86     1.04  2.56 0.61  0.43</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      Active  1.20     1.04     1.36  3.31 0.70  0.38</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Net circulation (per step):</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Active -&gt; Average -&gt; Disengaged -&gt; Active: 0.0092 [0.0038, 0.0157]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Active -&gt; Average -&gt; Disengaged -&gt; Active: 0.0092 [0.0039, 0.0146]</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Exit probabilities: summary(x, table = "exits")</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">land</span>, table <span class="op">=</span> <span class="st">"exits"</span><span class="op">)</span></span></span>

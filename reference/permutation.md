@@ -573,46 +573,46 @@ d2 <- data.frame(V1 = sample(LETTERS[1:4], 20, TRUE),
                  V3 = sample(LETTERS[1:4], 20, TRUE))
 net1 <- build_network(d1, method = "relative")
 net2 <- build_network(d2, method = "relative")
-perm <- permutation(net1, net2, iter = 100, seed = 42)
+perm <- permutation(net1, net2, iter = 20, seed = 42)
 print(perm)
 #> Permutation Test: Transition Network (relative probabilities) [directed]
-#>   Iterations: 100  |  Alpha: 0.05
-#>   Nodes: 4  |  Edges tested: 16  |  Significant: 3
-#>   Global test (networks differ overall?): M = 3.858 (p = 0.0297)  |  S = 0.567 (p = 0.109)
+#>   Iterations: 20  |  Alpha: 0.05
+#>   Nodes: 4  |  Edges tested: 16  |  Significant: 2
+#>   Global test (networks differ overall?): M = 3.858 (p = 0.0952)  |  S = 0.567 (p = 0.143)
 summary(perm)
 #>    from to   weight_x  weight_y        diff effect_size    p_value   sig
-#> 1     A  A 0.33333333 0.2222222  0.11111111   0.6504300 0.49504950 FALSE
-#> 2     A  B 0.06666667 0.3333333 -0.26666667  -1.9871473 0.04950495  TRUE
-#> 3     A  C 0.20000000 0.2222222 -0.02222222  -0.1329339 0.93069307 FALSE
-#> 4     A  D 0.40000000 0.2222222  0.17777778   1.0449465 0.25742574 FALSE
-#> 5     B  A 0.30769231 0.3333333 -0.02564103  -0.1106148 0.98019802 FALSE
-#> 6     B  B 0.38461538 0.0000000  0.38461538   1.9215279 0.03960396  TRUE
-#> 7     B  C 0.23076923 0.2500000 -0.01923077  -0.1103038 0.99009901 FALSE
-#> 8     B  D 0.07692308 0.4166667 -0.33974359  -1.9910325 0.07920792 FALSE
-#> 9     C  A 0.33333333 0.1111111  0.22222222   1.0147102 0.38613861 FALSE
-#> 10    C  B 0.66666667 0.3333333  0.33333333   1.3787271 0.24752475 FALSE
-#> 11    C  C 0.00000000 0.2222222 -0.22222222  -1.3964532 0.26732673 FALSE
-#> 12    C  D 0.00000000 0.3333333 -0.33333333  -1.8265261 0.12871287 FALSE
-#> 13    D  A 0.00000000 0.5000000 -0.50000000  -1.8205956 0.10891089 FALSE
-#> 14    D  B 0.00000000 0.2000000 -0.20000000  -0.9828935 0.45544554 FALSE
-#> 15    D  C 0.33333333 0.2000000  0.13333333   0.5436513 0.56435644 FALSE
-#> 16    D  D 0.66666667 0.1000000  0.56666667   2.5117967 0.01980198  TRUE
+#> 1     A  A 0.33333333 0.2222222  0.11111111   0.7072043 0.52380952 FALSE
+#> 2     A  B 0.06666667 0.3333333 -0.26666667  -2.0679738 0.04761905  TRUE
+#> 3     A  C 0.20000000 0.2222222 -0.02222222  -0.1421124 0.90476190 FALSE
+#> 4     A  D 0.40000000 0.2222222  0.17777778   1.1120847 0.23809524 FALSE
+#> 5     B  A 0.30769231 0.3333333 -0.02564103  -0.1091872 1.00000000 FALSE
+#> 6     B  B 0.38461538 0.0000000  0.38461538   2.0383530 0.09523810 FALSE
+#> 7     B  C 0.23076923 0.2500000 -0.01923077  -0.1012939 1.00000000 FALSE
+#> 8     B  D 0.07692308 0.4166667 -0.33974359  -1.7822963 0.14285714 FALSE
+#> 9     C  A 0.33333333 0.1111111  0.22222222   0.8892224 0.42857143 FALSE
+#> 10    C  B 0.66666667 0.3333333  0.33333333   1.2204017 0.28571429 FALSE
+#> 11    C  C 0.00000000 0.2222222 -0.22222222  -1.3692569 0.23809524 FALSE
+#> 12    C  D 0.00000000 0.3333333 -0.33333333  -1.6800434 0.19047619 FALSE
+#> 13    D  A 0.00000000 0.5000000 -0.50000000  -1.6730600 0.14285714 FALSE
+#> 14    D  B 0.00000000 0.2000000 -0.20000000  -0.8021641 0.52380952 FALSE
+#> 15    D  C 0.33333333 0.2000000  0.13333333   0.4775517 0.66666667 FALSE
+#> 16    D  D 0.66666667 0.1000000  0.56666667   2.8652993 0.04761905  TRUE
 
 # Students are nested in teams, and Achiever is a team-level label:
 # permute whole teams, not single students
 net <- build_network(group_regulation_long, method = "relative",
                      actor = "Actor", action = "Action", time = "Time",
                      group = "Achiever")
-permutation(net, iter = 100, actor = "Group", seed = 1)
+permutation(net, iter = 20, actor = "Group", seed = 1)
 #> Grouped Permutation Test
 #> Groups: High vs Low 
 #> 
 #> -- High vs Low --
 #> Permutation Test: Transition Network (relative probabilities) [directed]
-#>   Iterations: 100  |  Alpha: 0.05  |  Actor: Group (200 actors)
-#>   Nodes: 9  |  Edges tested: 78  |  Significant: 43
-#>   Global test (networks differ overall?): M = 2.612 (p = 0.0099)  |  S = 0.210 (p = 0.0099)
+#>   Iterations: 20  |  Alpha: 0.05  |  Actor: Group (200 actors)
+#>   Nodes: 9  |  Edges tested: 78  |  Significant: 41
+#>   Global test (networks differ overall?): M = 2.612 (p = 0.0476)  |  S = 0.210 (p = 0.0476)
 #>   Nesting in Group: ICC = -0.002 [95% CI -0.006, 0.002]  |  between design
-#>   Design effect (1 = nesting does not matter): edges 1.03  |  global 1.26
+#>   Design effect (1 = nesting does not matter): edges 1.08  |  global 0.59
 # }
 ```

@@ -39,7 +39,7 @@ centrality rankings, centrality_stability()."><meta property="og:image" content=
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -52,8 +52,8 @@ centrality rankings, centrality_stability()."><meta property="og:image" content=
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/transition-entropy.html">Transition Matrix Entropy</a></li>
     <li><a class="dropdown-item" href="../articles/transition-networks.html">Network Estimation and Analysis with Nestimate</a></li>
-    <li><a class="dropdown-item" href="../articles/sequence-comparison.html">Comparing Sequences Between Groups: Early vs Late Human-AI Interactions</a></li>
     <li><a class="dropdown-item" href="../articles/sequence-plots.html">Sequence Plots</a></li>
+    <li><a class="dropdown-item" href="../articles/sequence-comparison.html">Comparing Sequences Between Groups: Early vs Late Human-AI Interactions</a></li>
     <li><a class="dropdown-item" href="../articles/clustering.html">Sequence Clustering</a></li>
     <li><a class="dropdown-item" href="../articles/markov-stability.html">Markov Stability Analysis</a></li>
     <li><hr class="dropdown-divider"></li>
@@ -254,13 +254,13 @@ network, with a legend below.</p></li>
 <span class="r-in"><span>  V3 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="va">LETTERS</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">4</span><span class="op">]</span>, <span class="fl">30</span>, <span class="cn">TRUE</span><span class="op">)</span>, V4 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="va">LETTERS</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">4</span><span class="op">]</span>, <span class="fl">30</span>, <span class="cn">TRUE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">net</span> <span class="op">&lt;-</span> <span class="fu"><a href="build_network.html">build_network</a></span><span class="op">(</span><span class="va">seqs</span>, method <span class="op">=</span> <span class="st">"relative"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">rel</span> <span class="op">&lt;-</span> <span class="fu">network_reliability</span><span class="op">(</span><span class="va">net</span>, iter <span class="op">=</span> <span class="fl">100</span>, seed <span class="op">=</span> <span class="fl">42</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">rel</span> <span class="op">&lt;-</span> <span class="fu">network_reliability</span><span class="op">(</span><span class="va">net</span>, iter <span class="op">=</span> <span class="fl">20</span>, seed <span class="op">=</span> <span class="fl">42</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">rel</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Split-Half Reliability (100 iterations, split = 50%)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Mean Abs. Diff.     mean = 0.1537  sd = 0.0300</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Median Abs. Diff.   mean = 0.1329  sd = 0.0322</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Pearson             mean = 0.2006  sd = 0.1882</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Max Abs. Diff.      mean = 0.3760  sd = 0.0972</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Split-Half Reliability (20 iterations, split = 50%)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Mean Abs. Diff.     mean = 0.1410  sd = 0.0336</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Median Abs. Diff.   mean = 0.1282  sd = 0.0380</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Pearson             mean = 0.2820  sd = 0.2027</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Max Abs. Diff.      mean = 0.3381  sd = 0.0708</span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>

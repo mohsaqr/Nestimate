@@ -81,7 +81,7 @@ evaluate_links(pred, extract_edges(net, threshold = 0.001))
 #> 3             adamic_adar 0.5833333         0.4500000          0.500
 #> 4                 jaccard 0.3333333         0.3213790          0.100
 #> 5 preferential_attachment 0.6875000         0.5500000          0.625
-#> 6                    katz 0.7916667         0.6304924          0.400
+#> 6                    katz 0.7916667         0.6373106          0.400
 #>   precision_at_10 precision_at_20
 #> 1       0.4666667             0.4
 #> 2       0.4666667             0.4

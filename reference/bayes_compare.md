@@ -325,9 +325,9 @@ s1 <- data.frame(V1 = c("A","B","C"), V2 = c("B","C","A"))
 s2 <- data.frame(V1 = c("A","C","B"), V2 = c("C","B","A"))
 n1 <- build_network(s1, method = "relative")
 n2 <- build_network(s2, method = "relative")
-bayes_compare(n1, n2, draws = 500, seed = 1)
+bayes_compare(n1, n2, draws = 200, seed = 1)
 #> Bayesian Dirichlet-Multinomial Comparison: Transition Network (relative probabilities) 
-#>   Prior: Dirichlet(0.50)  |  Draws: 500  |  CI: 95%
+#>   Prior: Dirichlet(0.50)  |  Draws: 200  |  CI: 95%
 #>   Thresholds: |mean diff| > 0.010, nearest CI bound > 0.001
 #>   Nodes: 3  |  Edges compared: 6  |  Credibly different: 0
 ```

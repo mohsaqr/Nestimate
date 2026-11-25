@@ -68,7 +68,7 @@ s1 <- data.frame(V1 = c("A", "B", "C"), V2 = c("B", "C", "A"))
 s2 <- data.frame(V1 = c("A", "C", "B"), V2 = c("C", "B", "A"))
 b <- bayes_compare(build_network(s1, method = "relative"),
                    build_network(s2, method = "relative"),
-                   draws = 500, seed = 1)
+                   draws = 200, seed = 1)
 as_netdifference(b, significant_only = FALSE)
 #> Network difference (x - y): 3 nodes, 6 differing edges
 #> Plot: cograph::splot(d) or cograph::plot_difference(d)

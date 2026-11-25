@@ -1280,10 +1280,10 @@ Example datasets
   Entropy](https://pak.dynasite.org/Nestimate/articles/transition-entropy.md):
 - [Network Estimation and Analysis with
   Nestimate](https://pak.dynasite.org/Nestimate/articles/transition-networks.md):
-- [Comparing Sequences Between Groups: Early vs Late Human-AI
-  Interactions](https://pak.dynasite.org/Nestimate/articles/sequence-comparison.md):
 - [Sequence
   Plots](https://pak.dynasite.org/Nestimate/articles/sequence-plots.md):
+- [Comparing Sequences Between Groups: Early vs Late Human-AI
+  Interactions](https://pak.dynasite.org/Nestimate/articles/sequence-comparison.md):
 - [Sequence
   Clustering](https://pak.dynasite.org/Nestimate/articles/clustering.md):
 - [Markov Stability

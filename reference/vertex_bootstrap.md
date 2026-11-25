@@ -236,18 +236,18 @@ seqs <- data.frame(
   T4 = c("test", "plan", "test", "debug", "plan", "code")
 )
 net <- build_network(seqs, method = "relative")
-vb <- vertex_bootstrap(net, iter = 100, seed = 1)
+vb <- vertex_bootstrap(net, iter = 20, seed = 1)
 summary(vb)
-#>        statistic  observed boot_mean    boot_sd        bias   ci_lower
-#> 1        density 0.8333333 0.8433333 0.13415153  0.01000000 0.58333333
-#> 2    mean_weight 0.3800000 0.3734656 0.05149123 -0.00653441 0.27899554
-#> 3 centralization 0.3589744 0.2255932 0.12632830 -0.13338118 0.04511327
-#> 4    reciprocity 0.5939850 0.5726307 0.16772881 -0.02135424 0.13107527
+#>        statistic  observed boot_mean    boot_sd         bias   ci_lower
+#> 1        density 0.8333333 0.8375000 0.14678574  0.004166667 0.58333333
+#> 2    mean_weight 0.3800000 0.3670985 0.04892453 -0.012901451 0.27669643
+#> 3 centralization 0.3589744 0.2014514 0.12319009 -0.157522953 0.05957928
+#> 4    reciprocity 0.5939850 0.5647842 0.11684516 -0.029200779 0.30201049
 #>    ci_upper
 #> 1 1.0000000
-#> 2 0.4725536
-#> 3 0.4635149
-#> 4 0.8545707
+#> 2 0.4417202
+#> 3 0.4499066
+#> 4 0.6952401
 # \donttest{
 plot(vb)
 

@@ -134,16 +134,16 @@ df <- data.frame(a1 = f + stats::rnorm(100), a2 = f + stats::rnorm(100),
 cl <- list(A = c("a1", "a2", "a3"), B = c("b1", "b2", "b3"))
 fit <- build_mcml_pc(df, cl, aggregation = "loadings",
                      method = "cor")
-stability <- loading_stability(fit, iter = 50, seed = 1)
+stability <- loading_stability(fit, iter = 20, seed = 1)
 stability
 #> Composite-Weight Stability (case bootstrap, experimental)
-#>   50 replicates | 95% percentile CIs
+#>   20 replicates | 95% percentile CIs
 #> 
 #>  node cluster weight boot_mean boot_sd ci_lower ci_upper sign_flips
-#>    a1       A  0.338     0.332   0.021    0.292    0.370          0
-#>    a2       A  0.336     0.339   0.018    0.308    0.375          0
-#>    a3       A  0.326     0.329   0.021    0.290    0.367          0
-#>    b1       B  0.316     0.317   0.022    0.276    0.348          0
-#>    b2       B  0.350     0.346   0.022    0.310    0.393          0
-#>    b3       B  0.334     0.337   0.015    0.307    0.360          0
+#>    a1       A  0.338     0.337   0.023    0.292    0.370          0
+#>    a2       A  0.336     0.334   0.019    0.303    0.371          0
+#>    a3       A  0.326     0.329   0.021    0.300    0.364          0
+#>    b1       B  0.316     0.315   0.025    0.262    0.352          0
+#>    b2       B  0.350     0.349   0.024    0.315    0.403          0
+#>    b3       B  0.334     0.336   0.017    0.313    0.368          0
 ```

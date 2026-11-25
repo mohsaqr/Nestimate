@@ -111,10 +111,10 @@ session_ids(net)
 fit <- build_mmm(net, k = 2, n_starts = 2, seed = 1)
 session_ids(fit)
 #>   sequence student step session_label cluster posterior
-#> 1        1      s1    a        s1 | a       2 0.9999998
-#> 2        2      s2    a        s2 | a       1 0.9999990
-#> 3        3      s3    a        s3 | a       1 0.9999999
-#> 4        4      s1    b        s1 | b       1 0.9999627
-#> 5        5      s2    b        s2 | b       1 0.9972903
-#> 6        6      s3    b        s3 | b       1 0.9999443
+#> 1        1      s1    a        s1 | a       1 0.9999912
+#> 2        2      s2    a        s2 | a       1 0.9999645
+#> 3        3      s3    a        s3 | a       1 0.9999912
+#> 4        4      s1    b        s1 | b       2 1.0000000
+#> 5        5      s2    b        s2 | b       2 1.0000000
+#> 6        6      s3    b        s3 | b       1 0.9999965
 ```

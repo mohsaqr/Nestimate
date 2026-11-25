@@ -196,12 +196,12 @@ seqs <- data.frame(
   V3 = sample(LETTERS[1:4], 30, TRUE), V4 = sample(LETTERS[1:4], 30, TRUE)
 )
 net <- build_network(seqs, method = "relative")
-rel <- network_reliability(net, iter = 100, seed = 42)
+rel <- network_reliability(net, iter = 20, seed = 42)
 print(rel)
-#> Split-Half Reliability (100 iterations, split = 50%)
-#>   Mean Abs. Diff.     mean = 0.1537  sd = 0.0300
-#>   Median Abs. Diff.   mean = 0.1329  sd = 0.0322
-#>   Pearson             mean = 0.2006  sd = 0.1882
-#>   Max Abs. Diff.      mean = 0.3760  sd = 0.0972
+#> Split-Half Reliability (20 iterations, split = 50%)
+#>   Mean Abs. Diff.     mean = 0.1410  sd = 0.0336
+#>   Median Abs. Diff.   mean = 0.1282  sd = 0.0380
+#>   Pearson             mean = 0.2820  sd = 0.2027
+#>   Max Abs. Diff.      mean = 0.3381  sd = 0.0708
 # }
 ```

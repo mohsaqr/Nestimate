@@ -339,20 +339,20 @@ seqs <- data.frame(
   V3 = sample(LETTERS[1:4], 30, TRUE)
 )
 net <- build_network(seqs, method = "relative")
-es  <- casedrop_reliability(net, iter = 50, drop_prop = c(0.1, 0.3, 0.5),
+es  <- casedrop_reliability(net, iter = 20, drop_prop = c(0.1, 0.3, 0.5),
                       seed = 1)
 print(es)
 #> Edge-weight Case-dropping Stability
 #>   Cases (resampled)     : 30
 #>   Edges assessed        : 12 (diagonal excluded)
-#>   Iterations / prop     : 50
+#>   Iterations / prop     : 20
 #>   Correlation method    : spearman
 #>   CS-coefficient (r)    : 0.10  (threshold=0.70, certainty=0.95)
 #> 
 #> Model-level reliability across iterations (mean +/- sd per drop):
 #>   drop_prop      p=0.1        p=0.3        p=0.5      
-#>   mean|diff|      0.028+- 0.007   0.062+- 0.014   0.095+- 0.018
-#>   median|diff|    0.021+- 0.008   0.052+- 0.014   0.085+- 0.023
-#>   cor             0.927+- 0.045   0.820+- 0.078   0.688+- 0.161
-#>   max|diff|       0.081+- 0.023   0.160+- 0.051   0.241+- 0.056
+#>   mean|diff|      0.026+- 0.005   0.072+- 0.019   0.104+- 0.020
+#>   median|diff|    0.019+- 0.008   0.062+- 0.020   0.087+- 0.016
+#>   cor             0.938+- 0.035   0.790+- 0.148   0.688+- 0.198
+#>   max|diff|       0.073+- 0.019   0.178+- 0.055   0.258+- 0.084
 ```

@@ -35,7 +35,7 @@ are compared on these statistics with vertex_compare()."><meta property="og:imag
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -48,8 +48,8 @@ are compared on these statistics with vertex_compare()."><meta property="og:imag
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/transition-entropy.html">Transition Matrix Entropy</a></li>
     <li><a class="dropdown-item" href="../articles/transition-networks.html">Network Estimation and Analysis with Nestimate</a></li>
-    <li><a class="dropdown-item" href="../articles/sequence-comparison.html">Comparing Sequences Between Groups: Early vs Late Human-AI Interactions</a></li>
     <li><a class="dropdown-item" href="../articles/sequence-plots.html">Sequence Plots</a></li>
+    <li><a class="dropdown-item" href="../articles/sequence-comparison.html">Comparing Sequences Between Groups: Early vs Late Human-AI Interactions</a></li>
     <li><a class="dropdown-item" href="../articles/clustering.html">Sequence Clustering</a></li>
     <li><a class="dropdown-item" href="../articles/markov-stability.html">Markov Stability Analysis</a></li>
     <li><hr class="dropdown-divider"></li>
@@ -285,18 +285,18 @@ centrality stability.</p></div>
 <span class="r-in"><span>  T4 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"test"</span>, <span class="st">"plan"</span>, <span class="st">"test"</span>, <span class="st">"debug"</span>, <span class="st">"plan"</span>, <span class="st">"code"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">net</span> <span class="op">&lt;-</span> <span class="fu"><a href="build_network.html">build_network</a></span><span class="op">(</span><span class="va">seqs</span>, method <span class="op">=</span> <span class="st">"relative"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">vb</span> <span class="op">&lt;-</span> <span class="fu">vertex_bootstrap</span><span class="op">(</span><span class="va">net</span>, iter <span class="op">=</span> <span class="fl">100</span>, seed <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">vb</span> <span class="op">&lt;-</span> <span class="fu">vertex_bootstrap</span><span class="op">(</span><span class="va">net</span>, iter <span class="op">=</span> <span class="fl">20</span>, seed <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">vb</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>        statistic  observed boot_mean    boot_sd        bias   ci_lower</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1        density 0.8333333 0.8433333 0.13415153  0.01000000 0.58333333</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2    mean_weight 0.3800000 0.3734656 0.05149123 -0.00653441 0.27899554</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3 centralization 0.3589744 0.2255932 0.12632830 -0.13338118 0.04511327</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4    reciprocity 0.5939850 0.5726307 0.16772881 -0.02135424 0.13107527</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        statistic  observed boot_mean    boot_sd         bias   ci_lower</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1        density 0.8333333 0.8375000 0.14678574  0.004166667 0.58333333</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2    mean_weight 0.3800000 0.3670985 0.04892453 -0.012901451 0.27669643</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3 centralization 0.3589744 0.2014514 0.12319009 -0.157522953 0.05957928</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4    reciprocity 0.5939850 0.5647842 0.11684516 -0.029200779 0.30201049</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    ci_upper</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1 1.0000000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2 0.4725536</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3 0.4635149</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4 0.8545707</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2 0.4417202</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3 0.4499066</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4 0.6952401</span>
 <span class="r-in"><span><span class="co"># \donttest{</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">vb</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="vertex_bootstrap-1.png" alt="" width="700" height="433"></span>

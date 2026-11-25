@@ -39,7 +39,7 @@ edges are read at once. plot() draws one view of the comparison per call."><meta
 
     <a class="navbar-brand me-2" href="../index.html">Nestimate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -52,8 +52,8 @@ edges are read at once. plot() draws one view of the comparison per call."><meta
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/transition-entropy.html">Transition Matrix Entropy</a></li>
     <li><a class="dropdown-item" href="../articles/transition-networks.html">Network Estimation and Analysis with Nestimate</a></li>
-    <li><a class="dropdown-item" href="../articles/sequence-comparison.html">Comparing Sequences Between Groups: Early vs Late Human-AI Interactions</a></li>
     <li><a class="dropdown-item" href="../articles/sequence-plots.html">Sequence Plots</a></li>
+    <li><a class="dropdown-item" href="../articles/sequence-comparison.html">Comparing Sequences Between Groups: Early vs Late Human-AI Interactions</a></li>
     <li><a class="dropdown-item" href="../articles/clustering.html">Sequence Clustering</a></li>
     <li><a class="dropdown-item" href="../articles/markov-stability.html">Markov Stability Analysis</a></li>
     <li><hr class="dropdown-divider"></li>
@@ -766,16 +766,16 @@ non-significant difference is faded, never deleted.</p>
 <span class="r-in"><span>                           actor <span class="op">=</span> <span class="st">"Actor"</span>, action <span class="op">=</span> <span class="st">"Action"</span>,</span></span>
 <span class="r-in"><span>                           time <span class="op">=</span> <span class="st">"Time"</span>, group <span class="op">=</span> <span class="st">"Achiever"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">cmp_perm</span> <span class="op">&lt;-</span> <span class="fu">compare_networks</span><span class="op">(</span><span class="va">achievers</span>, test <span class="op">=</span> <span class="st">"permutation"</span>,</span></span>
-<span class="r-in"><span>                             iter <span class="op">=</span> <span class="fl">100</span>, seed <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></span>
+<span class="r-in"><span>                             iter <span class="op">=</span> <span class="fl">20</span>, seed <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">cmp_perm</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>         pair network_a network_b n_cells n_differing share_higher_a</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  High vs Low      High       Low      81          78           0.51</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  share_higher_b mean_abs_diff max_abs_diff pearson spearman cosine jaccard</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            0.46          0.03         0.21    0.92     0.92   0.95    0.75</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>              top_edge top_edge_higher n_sig_edges n_sig_nodes m_stat   m_p</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  discuss -&gt; consensus            High          39          16   2.61 0.010</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  discuss -&gt; consensus            High          39          16   2.61 0.048</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  s_stat   s_p</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    0.21 0.010</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    0.21 0.048</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">cmp_perm</span>, type <span class="op">=</span> <span class="st">"inference"</span>, top_n <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="compare_networks-4.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
