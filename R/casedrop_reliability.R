@@ -172,7 +172,7 @@
 #'   V3 = sample(LETTERS[1:4], 30, TRUE)
 #' )
 #' net <- build_network(seqs, method = "relative")
-#' es  <- casedrop_reliability(net, iter = 50, drop_prop = c(0.1, 0.3, 0.5),
+#' es  <- casedrop_reliability(net, iter = 20, drop_prop = c(0.1, 0.3, 0.5),
 #'                       seed = 1)
 #' print(es)
 #'

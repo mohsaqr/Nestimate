@@ -203,7 +203,7 @@
 #' net <- build_network(halves, actor = "session_id", action = "cluster",
 #'                      group = "phase", method = "relative")
 #' set.seed(1)
-#' sequence_metrics(net, iter = 99)
+#' sequence_metrics(net, iter = 19)
 #'
 #' @seealso \code{\link{sequence_patterns}}, \code{\link{extract_sequences}}
 #' @export

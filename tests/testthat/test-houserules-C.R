@@ -1,6 +1,7 @@
 # House-rule fixes in the group C files (build_network, estimators, registry,
 # converters, extraction, frequencies, wtna): condition classes, contract
 # messages in place of deparsed calls, corrected printed text, new warnings.
+testthat::skip_on_cran()
 
 msg_of <- function(expr) {
   tryCatch({

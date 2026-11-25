@@ -1,6 +1,7 @@
 # Regression tests for the 2026-11-20 review findings (area "misc"):
 # A1-A10, B1-B3, B6, B10-B19 and P9. Every expected value is computed by hand
 # from the definition (see the comment above each expectation).
+testthat::skip_on_cran()
 
 # ---- A1: shortest-path ties are relative to the path length ----
 

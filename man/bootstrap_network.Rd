@@ -318,7 +318,7 @@ seqs <- data.frame(
   V3 = sample(LETTERS[1:4], 30, TRUE), V4 = sample(LETTERS[1:4], 30, TRUE)
 )
 net <- build_network(seqs, method = "relative")
-boot <- bootstrap_network(net, iter = 100)
+boot <- bootstrap_network(net, iter = 20)
 print(boot)
 summary(boot)
 
@@ -326,7 +326,7 @@ summary(boot)
 teams <- build_network(group_regulation_long, method = "relative",
                        actor = "Actor", action = "Action", time = "Time",
                        group = "Achiever")
-bootstrap_network(teams, iter = 100, actor = "Group", seed = 1)
+bootstrap_network(teams, iter = 20, actor = "Group", seed = 1)
 }
 
 }

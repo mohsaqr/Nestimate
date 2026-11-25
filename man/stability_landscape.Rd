@@ -171,7 +171,7 @@ with no observed transition.
 \examples{
 net <- build_network(trajectories, method = "relative")
 land <- stability_landscape(net,
-  states = c("Disengaged", "Average", "Active"), iter = 50, seed = 1)
+  states = c("Disengaged", "Average", "Active"), iter = 20, seed = 1)
 land
 summary(land, table = "exits")
 \donttest{

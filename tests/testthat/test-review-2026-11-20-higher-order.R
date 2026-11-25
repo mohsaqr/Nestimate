@@ -1,6 +1,7 @@
 # Regression tests for the review of 2026-11-20, higher-order area (H1-H17).
 # Each expectation failed on the code before the fix, and encodes a value
 # from the definition or a hand computation.
+testthat::skip_on_cran()
 
 # ---- H1: sequence_compare() permutation null ignores the min_freq filter ----
 

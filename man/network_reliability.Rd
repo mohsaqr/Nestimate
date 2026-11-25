@@ -146,7 +146,7 @@ seqs <- data.frame(
   V3 = sample(LETTERS[1:4], 30, TRUE), V4 = sample(LETTERS[1:4], 30, TRUE)
 )
 net <- build_network(seqs, method = "relative")
-rel <- network_reliability(net, iter = 100, seed = 42)
+rel <- network_reliability(net, iter = 20, seed = 42)
 print(rel)
 }
 

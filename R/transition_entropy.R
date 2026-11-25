@@ -1568,7 +1568,7 @@ plot.net_entropy_trajectory <- function(x, normalized = FALSE, span = 0.4,
 #' @examples
 #' net <- build_network(group_regulation_long, method = "relative",
 #'                      actor = "Actor", action = "Action", time = "Time")
-#' eb <- entropy_bayes(net, draws = 1000, seed = 1)
+#' eb <- entropy_bayes(net, draws = 200, seed = 1)
 #' eb
 #' summary(eb)
 #' plot(eb)

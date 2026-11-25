@@ -119,7 +119,7 @@
 #'   T4 = c("test", "plan", "test", "debug", "plan", "code")
 #' )
 #' net <- build_network(seqs, method = "relative")
-#' vb <- vertex_bootstrap(net, iter = 100, seed = 1)
+#' vb <- vertex_bootstrap(net, iter = 20, seed = 1)
 #' summary(vb)
 #' \donttest{
 #' plot(vb)
@@ -530,7 +530,7 @@ plot.net_vertex_bootstrap <- function(x, bins = 30, ...) {
 #' )
 #' net1 <- build_network(s1, method = "relative")
 #' net2 <- build_network(s2, method = "relative")
-#' cmp <- vertex_compare(net1, net2, iter = 100, seed = 1)
+#' cmp <- vertex_compare(net1, net2, iter = 20, seed = 1)
 #' summary(cmp)
 #'
 #' @export

@@ -301,7 +301,7 @@ net <- build_network(group_regulation_long, method = "relative",
                      actor = "Actor", action = "Action", time = "Time",
                      group = "Achiever")
 set.seed(1)
-sequence_compare(net, sub = 2, iter = 100, actor = "Group")
+sequence_compare(net, sub = 2, iter = 20, actor = "Group")
 }
 
 }

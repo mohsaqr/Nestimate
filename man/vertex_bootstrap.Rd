@@ -159,7 +159,7 @@ seqs <- data.frame(
   T4 = c("test", "plan", "test", "debug", "plan", "code")
 )
 net <- build_network(seqs, method = "relative")
-vb <- vertex_bootstrap(net, iter = 100, seed = 1)
+vb <- vertex_bootstrap(net, iter = 20, seed = 1)
 summary(vb)
 \donttest{
 plot(vb)

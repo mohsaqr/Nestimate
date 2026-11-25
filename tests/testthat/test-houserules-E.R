@@ -1,5 +1,6 @@
 # House-rule fixes in the comparison / pruning / permutation family:
 # classed input errors with named messages, corrected printed text.
+testthat::skip_on_cran()
 
 he_groups <- function() {
   build_network(group_regulation_long, method = "relative",

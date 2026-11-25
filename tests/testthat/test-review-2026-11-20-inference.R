@@ -1,6 +1,7 @@
 # Regression tests for the 2026-11-20 review of construction, latency, tna
 # input, bootstrap and permutation (findings C1-C14, I1-I11). Expected values
 # come from hand computations or from the definition of the quantity.
+testthat::skip_on_cran()
 
 # ---- Latency: not resampled (C1, C2/I1, C5, C6) ----
 

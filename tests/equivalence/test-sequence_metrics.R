@@ -87,3 +87,22 @@ test_that("on sequences with leading missing positions and internal gaps, TraMin
                                          "one spell and one transition; sequence_metrics() ends a spell at a gap, so",
                                          "spell lengths and transition shares differ on those sequences."))
 })
+
+# Moved from tests/testthat/test-sequence_metrics.R (1.2.0): with two groups the F of sequence_metrics(group =) is
+# the square of the pooled-variance two-sample t statistic.
+test_that("two-group F equals the squared pooled-variance t of stats::t.test()", {
+  d <- data.frame(T1 = c("A", "A", "B", "A", "A", "B", "B", "A"),
+                  T2 = c("B", "A", "B", "B", "A", "A", "B", "A"),
+                  T3 = c("A", "B", "A", "A", "B", "A", "A", "B"),
+                  T4 = c("B", "A", "A", "B", "A", "A", "A", "B"),
+                  cond = rep(c("x", "y"), each = 4), stringsAsFactors = FALSE)
+  per_seq <- sequence_metrics(d, meta = TRUE)
+  set.seed(1)
+  cmp <- sequence_metrics(d, group = "cond", iter = 50, format = "wide")
+  x <- per_seq$transition_rate[per_seq$cond == "x"]
+  y <- per_seq$transition_rate[per_seq$cond == "y"]
+  expect_reference(cmp$statistic[cmp$index == "transition_rate"],
+                   unname(stats::t.test(y, x, var.equal = TRUE)$statistic)^2, reference = "stats",
+                   covers = "sequence_metrics()", quantity = "F of transition_rate, two groups (t squared)",
+                   tolerance = 1e-12, measure = "relative")
+})

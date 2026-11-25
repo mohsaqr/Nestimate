@@ -1,4 +1,4 @@
-# Nestimate 1.1.4
+# Nestimate 1.2.0
 
 This version collects everything since 0.9.24, the last release on CRAN.
 Some results are refined and some functions now ask you to say what your
@@ -108,6 +108,14 @@ These functions give refined results since 0.9.24.
 * Arguments of `sequence_plot()` after `group` must be named.
 * `prepare_onehot()` and `plot_mosaic()` are no longer exported.
 * `seed =` no longer changes your session's random numbers.
+
+## Documentation
+
+* "Comparing sequences between groups" is now an article on the
+  package website instead of a vignette installed with the package;
+  its address, PDF and DOI are unchanged.
+* Examples use 20 resamples (200 posterior draws) so they run quickly;
+  a real analysis uses 1,000 or more.
 
 ## Colours
 

@@ -1,6 +1,7 @@
 # House-rule fixes in the simplicial, hypergraph and link-prediction files:
 # classed conditions, restored random state, corrected labels, and loops
 # replaced by vectorised code that returns the same values.
+testthat::skip_on_cran()
 
 hr_g_weights <- function() {
   matrix(c(0, .6, .5, 0,

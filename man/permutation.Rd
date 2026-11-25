@@ -411,7 +411,7 @@ d2 <- data.frame(V1 = sample(LETTERS[1:4], 20, TRUE),
                  V3 = sample(LETTERS[1:4], 20, TRUE))
 net1 <- build_network(d1, method = "relative")
 net2 <- build_network(d2, method = "relative")
-perm <- permutation(net1, net2, iter = 100, seed = 42)
+perm <- permutation(net1, net2, iter = 20, seed = 42)
 print(perm)
 summary(perm)
 
@@ -420,7 +420,7 @@ summary(perm)
 net <- build_network(group_regulation_long, method = "relative",
                      actor = "Actor", action = "Action", time = "Time",
                      group = "Achiever")
-permutation(net, iter = 100, actor = "Group", seed = 1)
+permutation(net, iter = 20, actor = "Group", seed = 1)
 }
 
 }

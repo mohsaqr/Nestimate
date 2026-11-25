@@ -420,7 +420,7 @@ utils::globalVariables(c("u", "y", "ymin", "ymax", "label", "state", "group", "v
 #' @examples
 #' net <- build_network(trajectories, method = "relative")
 #' land <- stability_landscape(net,
-#'   states = c("Disengaged", "Average", "Active"), iter = 50, seed = 1)
+#'   states = c("Disengaged", "Average", "Active"), iter = 20, seed = 1)
 #' land
 #' summary(land, table = "exits")
 #' \donttest{
@@ -1237,12 +1237,12 @@ plot.net_landscape_surface <- function(x, max_stay = 50, theta = 10, phi = 30,
 #' @examples
 #' net <- build_network(trajectories, method = "relative")
 #' trend <- landscape_trend(net, along = "phase",
-#'   states = c("Disengaged", "Average", "Active"), iter = 50, seed = 1)
+#'   states = c("Disengaged", "Average", "Active"), iter = 20, seed = 1)
 #' trend
 #' \donttest{
 #' plot(trend)
 #' occupancy <- landscape_trend(net, depth = "occupancy", window = 6,
-#'   states = c("Disengaged", "Average", "Active"), iter = 50, seed = 1)
+#'   states = c("Disengaged", "Average", "Active"), iter = 20, seed = 1)
 #' plot(occupancy, type = "surface")
 #' }
 #'

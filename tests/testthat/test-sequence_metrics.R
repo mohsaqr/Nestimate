@@ -112,7 +112,7 @@ test_that("a return to the first state emerges above half the opening spell", {
              stringsAsFactors = FALSE)
 }
 
-test_that("sequence_metrics(group =) reproduces hand-computed means, F and Hedges' g", {
+test_that("sequence_metrics(group =) reproduces hand-computed means and Hedges' g", {
   d <- .sm_groups_data()
   per_seq <- sequence_metrics(d, meta = TRUE)
   set.seed(1)
@@ -124,9 +124,7 @@ test_that("sequence_metrics(group =) reproduces hand-computed means, F and Hedge
   expect_equal(row$mean_x, mean(x))
   expect_equal(row$sd_y, sd(y))
   expect_equal(row$difference, mean(y) - mean(x))
-  # two groups: F is the square of the pooled-variance t statistic
-  tt <- stats::t.test(y, x, var.equal = TRUE)
-  expect_equal(row$statistic, unname(tt$statistic)^2)
+  # F against stats::t.test(): tests/equivalence/test-sequence_metrics.R
   # Hedges' g by hand
   sp <- sqrt(((4 - 1) * var(x) + (4 - 1) * var(y)) / 6)
   g <- (1 - 3 / (4 * 8 - 9)) * (mean(y) - mean(x)) / sp

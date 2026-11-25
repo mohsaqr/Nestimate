@@ -160,7 +160,7 @@
 #' s2 <- data.frame(V1 = c("A","C","B"), V2 = c("C","B","A"))
 #' n1 <- build_network(s1, method = "relative")
 #' n2 <- build_network(s2, method = "relative")
-#' bayes_compare(n1, n2, draws = 500, seed = 1)
+#' bayes_compare(n1, n2, draws = 200, seed = 1)
 #'
 #' @references
 #' Johnston, L. & Jendoubi, T. (2026). How Delivery Mode Reshapes Resource

@@ -208,12 +208,12 @@ than five usable sequences along a covariate.
 \examples{
 net <- build_network(trajectories, method = "relative")
 trend <- landscape_trend(net, along = "phase",
-  states = c("Disengaged", "Average", "Active"), iter = 50, seed = 1)
+  states = c("Disengaged", "Average", "Active"), iter = 20, seed = 1)
 trend
 \donttest{
 plot(trend)
 occupancy <- landscape_trend(net, depth = "occupancy", window = 6,
-  states = c("Disengaged", "Average", "Active"), iter = 50, seed = 1)
+  states = c("Disengaged", "Average", "Active"), iter = 20, seed = 1)
 plot(occupancy, type = "surface")
 }
 

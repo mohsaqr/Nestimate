@@ -89,3 +89,18 @@ test_that("cluster_mmm() and the compare_mmm() table follow from seqHMM's likeli
   expect_reference(summary(compared), expected, reference = "seqHMM", covers = c("compare_mmm()", "summary.mmm_compare()"),
                    quantity = "model comparison table, summary()", tolerance = 1e-8, measure = "relative", key = "k")
 })
+
+# Moved from tests/testthat/test-review-2026-11-20-mcml.R (1.2.0): covariate-dependent mixing adds (k - 1) x rank
+# free parameters, the count nnet::multinom() reports for the same model of cluster on covariates; a factor level
+# that never occurs adds no column to the rank.
+test_that("covariate mixing parameters equal the free parameters of nnet::multinom()", {
+  d <- data.frame(T1 = rep(c("A", "B"), each = 6))
+  d$T2 <- d$T1
+  cv <- data.frame(g = factor(rep(c("x", "y"), 6), levels = c("x", "y", "z")))
+  f <- suppressWarnings(build_mmm(d, covariates = cv, estimator = "multinom", n_starts = 1, seed = 1),
+                        classes = "nestimate_multinom_ml")
+  mn <- nnet::multinom(factor(f$assignments) ~ g, data = cv, trace = FALSE)
+  # n_params = 2 * 2 * 1 transition + 2 * 1 initial + mixing; the mixing part is what nnet counts
+  expect_reference(f$n_params - (4 + 2), mn$edf, reference = "nnet", covers = "build_mmm()",
+                   quantity = "free parameters of the covariate mixing, unused factor level", tolerance = 0)
+})

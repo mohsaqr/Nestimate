@@ -1,3 +1,5 @@
+testthat::skip_on_cran()
+
 test_that("Pearson mosaic tests reject invalid counts before pooling", {
   for (bad in list(-1, 0.5, NA_real_, Inf, "x")) {
     a <- array(2, c(2, 2, 3))

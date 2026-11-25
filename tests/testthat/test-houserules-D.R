@@ -2,6 +2,7 @@
 # association-rule files: classed conditions, warnings for ignored arguments,
 # corrected labels and printed text, and loops replaced by vectorised code
 # (checked against values computed independently here).
+testthat::skip_on_cran()
 
 .hrd_net <- function() {
   build_network(group_regulation_long, method = "relative",
@@ -177,22 +178,8 @@ test_that("sequence_compare() says how many sequences have no group", {
   expect_identical(summary(res), summary(complete))
 })
 
-test_that("sequence_compare() residuals are the standardised residuals of each 2 x G table", {
-  res <- summary(sequence_compare(trajectories, group = .hrd_halves(), sub = 2,
-                                  min_freq = 1, test = "chisq",
-                                  adjust = "none"))
-  counts <- cbind(res$freq_x, res$freq_y)
-  totals <- colSums(counts)
-  reference <- t(vapply(seq_len(nrow(counts)), function(i) {
-    two_by_g <- rbind(counts[i, ], totals - counts[i, ])
-    fit <- suppressWarnings(stats::chisq.test(two_by_g))
-    c(fit$stdres[1L, ], unname(fit$statistic), fit$p.value)
-  }, numeric(4L)))
-  expect_equal(res$resid_x, reference[, 1L], tolerance = 1e-12)
-  expect_equal(res$resid_y, reference[, 2L], tolerance = 1e-12)
-  expect_equal(res$statistic, reference[, 3L], tolerance = 1e-12)
-  expect_equal(res$p_value, reference[, 4L], tolerance = 1e-12)
-})
+# The 2 x G chi-square residuals are compared with stats::chisq.test() in
+# tests/equivalence/test-sequence_compare.R.
 
 # ---- association_rules.R ------------------------------------------------------
 

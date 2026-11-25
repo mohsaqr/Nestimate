@@ -1021,7 +1021,7 @@ build_mcml_pc <- function(x,
 #' cl <- list(A = c("a1", "a2", "a3"), B = c("b1", "b2", "b3"))
 #' fit <- build_mcml_pc(df, cl, aggregation = "loadings",
 #'                      method = "cor")
-#' stability <- loading_stability(fit, iter = 50, seed = 1)
+#' stability <- loading_stability(fit, iter = 20, seed = 1)
 #' stability
 #'
 #' @export

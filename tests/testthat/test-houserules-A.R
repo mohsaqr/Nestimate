@@ -1,6 +1,7 @@
 # House-rule fixes in transition_entropy.R, markov.R, markov_order.R,
 # chain_structure.R, path_dependence.R and stability_landscape.R:
 # classed conditions, clear errors in place of obscure ones, corrected labels.
+testthat::skip_on_cran()
 
 .hra_net <- function() {
   build_network(as.data.frame(trajectories), method = "relative")

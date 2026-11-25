@@ -240,7 +240,7 @@ halves <- mark_phases(human_long, actor = "session_id",
 net <- build_network(halves, actor = "session_id", action = "cluster",
                      group = "phase", method = "relative")
 set.seed(1)
-sequence_metrics(net, iter = 99)
+sequence_metrics(net, iter = 19)
 
 }
 \references{

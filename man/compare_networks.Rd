@@ -328,7 +328,7 @@ achievers <- build_network(group_regulation_long, method = "relative",
                            actor = "Actor", action = "Action",
                            time = "Time", group = "Achiever")
 cmp_perm <- compare_networks(achievers, test = "permutation",
-                             iter = 100, seed = 1)
+                             iter = 20, seed = 1)
 summary(cmp_perm)
 plot(cmp_perm, type = "inference", top_n = 10)
 }

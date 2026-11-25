@@ -10,11 +10,6 @@ author:
   - name: Kamila Misiejuk
     url: https://kamilamisiejuk.com
     affiliation: FernUniversität in Hagen, Germany
-output: rmarkdown::html_vignette
-vignette: >
-  %\VignetteIndexEntry{Comparing Sequences Between Groups: Early vs Late Human-AI Interactions}
-  %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{UTF-8}
 ---
 
 ```{r setup, include = FALSE}

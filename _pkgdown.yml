@@ -237,6 +237,7 @@ articles:
   contents:
   - starts_with("transition")
   - starts_with("sequence")
+  - articles/sequence-comparison
   - starts_with("clustering")
   - starts_with("markov")
 

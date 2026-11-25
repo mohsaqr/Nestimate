@@ -1,4 +1,6 @@
 # Regression oracles for R08/R09 from the 2026-10-30 review.
+testthat::skip_on_cran()
+
 test_that("landscapes replay weighting, concatenation and bootstrap units", {
   d <- data.frame(T1=c('A','A','B'),T2=c('A','B','A'),
                   T3=c('A',NA,'B'),T4=c('B',NA,'A'))

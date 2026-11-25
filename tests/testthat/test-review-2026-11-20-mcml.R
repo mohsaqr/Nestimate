@@ -1,6 +1,7 @@
 # Regression tests for the 2026-11-20 review of MCML, clustering and the
 # landscape / period plots. Every expected value is hand-computed from the
 # definition, not read off the code.
+testthat::skip_on_cran()
 
 # ---- K1 / K3: a resampled mcml layer is recounted as it was fitted ----
 # These rely on .precompute_per_sequence() honouring the `symmetrize` and
@@ -146,9 +147,7 @@ test_that("K7: an unused factor level adds no mixing parameter", {
   expect_equal(qr(stats::model.matrix(~ g, cv))$rank, 2L)
   expect_equal(f$n_params, 4 + 2 + 1 * 2)
   expect_equal(f$BIC, -2 * f$log_likelihood + 8 * log(12))
-  # nnet counts the same (k - 1) x rank
-  mn <- nnet::multinom(factor(f$assignments) ~ g, data = cv, trace = FALSE)
-  expect_equal(mn$edf, (f$k - 1) * 2)
+  # the same count against nnet::multinom(): tests/equivalence/test-build_mmm.R
 })
 
 # ---- K8: an undirected edge counts once ----
